@@ -1,7 +1,8 @@
 Scatterer
+---------------------------------------------------------------------------------
 
 Atmospheric scattering graphical effects for Kerbal Space Program
----------------------------------------------------------------------------------
+
 
 This project is based on the unity port of Proland by Justin Hawkes.
 
