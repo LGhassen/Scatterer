@@ -1,5 +1,5 @@
  You may use, distribute and copy Scatterer under the terms of GNU General
- Public License version 2, which is displayed below.
+ Public License version 3, which is displayed below.
  
  -------------------------------------------------------------------------
 
