@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{604EF0A2-B04D-4A3C-99AB-B039093AE098}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>scatterer</RootNamespace>
+    <AssemblyName>scatterer</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\..\3DMGAME-Kerbal.Space.Program.v0.24.2.559.Cracked-3DM\0.90\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\..\3DMGAME-Kerbal.Space.Program.v0.24.2.559.Cracked-3DM\0.90\Kerbal Space Program\KSP_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Framework\MonoBehaviourWindow.cs" />
+    <Compile Include="Core.cs" />
+    <Compile Include="Proland\Scripts\Core\Exceptions\CacheCapacityException.cs" />
+    <Compile Include="Proland\Scripts\Core\Exceptions\InvalidParameterException.cs" />
+    <Compile Include="Proland\Scripts\Core\Exceptions\InvalidStorageException.cs" />
+    <Compile Include="Proland\Scripts\Core\Exceptions\MissingTileException.cs" />
+    <Compile Include="Proland\Scripts\Core\Exceptions\ProlandException.cs" />
+    <Compile Include="Manager.cs" />
+    <Compile Include="Plugins\Math\Box2d.cs" />
+    <Compile Include="Plugins\Math\Box3d.cs" />
+    <Compile Include="Plugins\Math\Frustum.cs" />
+    <Compile Include="Plugins\Math\ImprovedPerlinNoise.cs" />
+    <Compile Include="Plugins\Math\MathUtility.cs" />
+    <Compile Include="Plugins\Math\Matrix2x2d.cs" />
+    <Compile Include="Plugins\Math\Matrix3x3.cs" />
+    <Compile Include="Plugins\Math\Matrix3x3d.cs" />
+    <Compile Include="Plugins\Math\Matrix4x4d.cs" />
+    <Compile Include="Plugins\Math\PerlinNoise.cs" />
+    <Compile Include="Plugins\Math\Quat.cs" />
+    <Compile Include="Plugins\Math\Seg2d.cs" />
+    <Compile Include="Plugins\Math\Vector2d.cs" />
+    <Compile Include="Plugins\Math\Vector2i.cs" />
+    <Compile Include="Plugins\Math\Vector3d2.cs" />
+    <Compile Include="Plugins\Math\Vector4d.cs" />
+    <Compile Include="Plugins\Utility\MeshFactory.cs" />
+    <Compile Include="SkyNode.cs" />
+    <Compile Include="SunNode.cs" />
+    <Compile Include="ShaderTool.cs" />
+    <Compile Include="EncodeFloat.cs" />
+    <Compile Include="Framework\MonoBehaviourExtended.cs" />
+    <Compile Include="Plugins\Containers\DictionaryQueue.cs" />
+    <Compile Include="Plugins\Containers\SetQueue.cs" />
+    <Compile Include="Framework\SkinsLibrary.cs" />
+    <Compile Include="Framework\ExtensionsUnity.cs" />
+    <Compile Include="viewDepthBuffer.cs" />
+    <Compile Include="ShaderReplacer.cs" />
+    <Compile Include="scatterPostProcess.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Proland\" />
+    <Folder Include="Plugins\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Proland\Materials\Atmo.meta" />
+    <None Include="Proland\Materials\Forest.meta" />
+    <None Include="Proland\Materials\Ocean.meta" />
+    <None Include="Proland\Materials\Terrain.meta" />
+    <None Include="Proland\Materials\Atmo\Sky.mat" />
+    <None Include="Proland\Materials\Atmo\Sky.mat.meta" />
+    <None Include="Proland\Materials\Atmo\SkyMap.mat" />
+    <None Include="Proland\Materials\Atmo\SkyMap.mat.meta" />
+    <None Include="Proland\Materials\Forest\ElevationFilter.mat" />
+    <None Include="Proland\Materials\Forest\ElevationFilter.mat.meta" />
+    <None Include="Proland\Materials\Forest\Render2DTrees.mat" />
+    <None Include="Proland\Materials\Forest\Render2DTrees.mat.meta" />
+    <None Include="Proland\Materials\Forest\Render3DTrees.mat" />
+    <None Include="Proland\Materials\Forest\Render3DTrees.mat.meta" />
+    <None Include="Proland\Materials\Forest\SlopeFilter.mat" />
+    <None Include="Proland\Materials\Forest\SlopeFilter.mat.meta" />
+    <None Include="Proland\Materials\Forest\UpSampleLcc.mat" />
+    <None Include="Proland\Materials\Forest\UpSampleLcc.mat.meta" />
+    <None Include="Proland\Materials\Ocean\InitDisplacement.mat" />
+    <None Include="Proland\Materials\Ocean\InitDisplacement.mat.meta" />
+    <None Include="Proland\Materials\Ocean\InitJacobians.mat" />
+    <None Include="Proland\Materials\Ocean\InitJacobians.mat.meta" />
+    <None Include="Proland\Materials\Ocean\InitSpectrum.mat" />
+    <None Include="Proland\Materials\Ocean\InitSpectrum.mat.meta" />
+    <None Include="Proland\Materials\Ocean\OceanFFT.mat" />
+    <None Include="Proland\Materials\Ocean\OceanFFT.mat.meta" />
+    <None Include="Proland\Materials\Ocean\OceanWhiteCaps.mat" />
+    <None Include="Proland\Materials\Ocean\OceanWhiteCaps.mat.meta" />
+    <None Include="Proland\Materials\Ocean\WhiteCapsPrecompute.mat" />
+    <None Include="Proland\Materials\Ocean\WhiteCapsPrecompute.mat.meta" />
+    <None Include="Proland\Materials\Terrain\Normals.mat" />
+    <None Include="Proland\Materials\Terrain\Normals.mat.meta" />
+    <None Include="Proland\Materials\Terrain\OriginalUpSampleElevation.mat" />
+    <None Include="Proland\Materials\Terrain\OriginalUpSampleElevation.mat.meta" />
+    <None Include="Proland\Materials\Terrain\Planet.meta" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests.meta" />
+    <None Include="Proland\Materials\Terrain\Terrain1.mat" />
+    <None Include="Proland\Materials\Terrain\Terrain1.mat.meta" />
+    <None Include="Proland\Materials\Terrain\TerrainHeightAsColor.mat" />
+    <None Include="Proland\Materials\Terrain\TerrainHeightAsColor.mat.meta" />
+    <None Include="Proland\Materials\Terrain\TerrainWithForests1.mat" />
+    <None Include="Proland\Materials\Terrain\TerrainWithForests1.mat.meta" />
+    <None Include="Proland\Materials\Terrain\UpSampleElevation.mat" />
+    <None Include="Proland\Materials\Terrain\UpSampleElevation.mat.meta" />
+    <None Include="Proland\Materials\Terrain\UpSampleOrtho.mat" />
+    <None Include="Proland\Materials\Terrain\UpSampleOrtho.mat.meta" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet1.mat" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet1.mat.meta" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet2.mat" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet2.mat.meta" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet3.mat" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet3.mat.meta" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet4.mat" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet4.mat.meta" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet5.mat" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet5.mat.meta" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet6.mat" />
+    <None Include="Proland\Materials\Terrain\Planet\Planet6.mat.meta" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests1.mat" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests1.mat.meta" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests2.mat" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests2.mat.meta" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests3.mat" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests3.mat.meta" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests4.mat" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests4.mat.meta" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests5.mat" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests5.mat.meta" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests6.mat" />
+    <None Include="Proland\Materials\Terrain\PlanetWithForests\PlanetWithForests6.mat.meta" />
+    <None Include="Proland\Scenes\Atmo\AtmoOnly.unity" />
+    <None Include="Proland\Scenes\Atmo\AtmoOnly.unity.meta" />
+    <None Include="Proland\Scenes\Atmo\PreprocessAtmo.unity" />
+    <None Include="Proland\Scenes\Atmo\PreprocessAtmo.unity.meta" />
+    <None Include="Proland\Scripts\Atmo.meta" />
+    <None Include="Proland\Scripts\Core.meta" />
+    <None Include="Proland\Scripts\Forest.meta" />
+    <None Include="Proland\Scripts\Ocean.meta" />
+    <None Include="Proland\Scripts\Terrain.meta" />
+    <None Include="Proland\Scripts\Atmo\PreProcessAtmo.cs.meta" />
+    <None Include="Proland\Scripts\Atmo\SkyNode.cs.meta" />
+    <None Include="Proland\Scripts\Atmo\SunNode.cs.meta" />
+    <None Include="Proland\Scripts\Core\Exceptions.meta" />
+    <None Include="Proland\Scripts\Core\Producer.meta" />
+    <None Include="Proland\Scripts\Core\Terrain.meta" />
+    <None Include="Proland\Scripts\Core\Utilities.meta" />
+    <None Include="Proland\Scripts\Core\Exceptions\CacheCapacityException.cs.meta" />
+    <None Include="Proland\Scripts\Core\Exceptions\InvalidParameterException.cs.meta" />
+    <None Include="Proland\Scripts\Core\Exceptions\InvalidStorageException.cs.meta" />
+    <None Include="Proland\Scripts\Core\Exceptions\MissingTileException.cs.meta" />
+    <None Include="Proland\Scripts\Core\Exceptions\ProlandException.cs.meta" />
+    <None Include="Proland\Shaders\Atmo\Atmosphere.cginc" />
+    <None Include="Proland\Shaders\Atmo\Atmosphere.cginc.meta" />
+    <None Include="Proland\Shaders\Atmo\CopyInscatter1.compute" />
+    <None Include="Proland\Shaders\Atmo\CopyInscatter1.compute.meta" />
+    <None Include="Proland\Shaders\Atmo\CopyInscatterN.compute" />
+    <None Include="Proland\Shaders\Atmo\CopyInscatterN.compute.meta" />
+    <None Include="Proland\Shaders\Atmo\CopyIrradiance.compute" />
+    <None Include="Proland\Shaders\Atmo\CopyIrradiance.compute.meta" />
+    <None Include="Proland\Shaders\Atmo\Inscatter1.compute" />
+    <None Include="Proland\Shaders\Atmo\Inscatter1.compute.meta" />
+    <None Include="Proland\Shaders\Atmo\InscatterN.compute" />
+    <None Include="Proland\Shaders\Atmo\InscatterN.compute.meta" />
+    <None Include="Proland\Shaders\Atmo\InscatterS.compute" />
+    <None Include="Proland\Shaders\Atmo\InscatterS.compute.meta" />
+    <None Include="Proland\Shaders\Atmo\Irradiance1.compute" />
+    <None Include="Proland\Shaders\Atmo\Irradiance1.compute.meta" />
+    <None Include="Proland\Shaders\Atmo\IrradianceN.compute" />
+    <None Include="Proland\Shaders\Atmo\IrradianceN.compute.meta" />
+    <None Include="Proland\Shaders\Atmo\PreprocessCommon.cginc" />
+    <None Include="Proland\Shaders\Atmo\PreprocessCommon.cginc.meta" />
+    <None Include="Proland\Shaders\Atmo\Transmittance.compute.meta" />
+    <None Include="Proland\Shaders\Core\Utility.cginc" />
+    <None Include="Proland\Shaders\Core\Utility.cginc.meta" />
+    <None Include="Proland\Textures\Atmo\inscatter.raw" />
+    <None Include="Proland\Textures\Atmo\irradiance.raw" />
+    <None Include="Proland\Textures\Atmo\sunglare.png" />
+    <None Include="Proland\Textures\Atmo\transmittance.raw" />
+    <None Include="Plugins\Containers.meta" />
+    <None Include="Plugins\Math.meta" />
+    <None Include="Plugins\Tasks.meta" />
+    <None Include="Plugins\Utility.meta" />
+    <None Include="Plugins\Math\Box2d.cs.meta" />
+    <None Include="Plugins\Math\Box3d.cs.meta" />
+    <None Include="Plugins\Math\FourierGPU.cs.meta" />
+    <None Include="Plugins\Math\Frustum.cs.meta" />
+    <None Include="Plugins\Math\ImprovedPerlinNoise.cs.meta" />
+    <None Include="Plugins\Math\ImprovedPerlinNoise3D.cginc" />
+    <None Include="Plugins\Math\ImprovedPerlinNoise3D.cginc.meta" />
+    <None Include="Plugins\Math\MathUtility.cs.meta" />
+    <None Include="Plugins\Math\Matrix2x2d.cs.meta" />
+    <None Include="Plugins\Math\Matrix3x3.cs.meta" />
+    <None Include="Plugins\Math\Matrix3x3d.cs.meta" />
+    <None Include="Plugins\Math\Matrix4x4d.cs.meta" />
+    <None Include="Plugins\Math\PerlinNoise.cs.meta" />
+    <None Include="Plugins\Math\Quat.cs.meta" />
+    <None Include="Plugins\Math\Seg2d.cs.meta" />
+    <None Include="Plugins\Math\Vector2d.cs.meta" />
+    <None Include="Plugins\Math\Vector2i.cs.meta" />
+    <None Include="Plugins\Math\Vector3d.cs.meta" />
+    <None Include="Plugins\Math\Vector4d.cs.meta" />
+    <None Include="Plugins\Utility\MeshFactory.cs.meta" />
+    <None Include="Proland\DecodedToFloat.shader" />
+    <None Include="ShaderList.cs" />
+    <None Include="Plugins\Containers\DictionaryQueue.cs.meta" />
+    <None Include="Plugins\Containers\SetQueue.cs.meta" />
+    <None Include="Proland\Scripts\Atmo\PreProcessAtmo.cs" />
+  </ItemGroup>
+</Project>
