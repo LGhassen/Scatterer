@@ -25,6 +25,9 @@ Shader "Sky/AtmosphereImageEffect"
 			#pragma target 3.0
 			#include "Atmosphere3.cginc"
 			
+			//the next line allows going over opengl 512 arithmetic ops limit
+			#pragma profileoption NumMathInstructionSlots=65535
+			
 			sampler2D _MainTex, _SkyDome;
 			uniform float _Scale;
 			uniform float _global_alpha;
@@ -84,8 +87,9 @@ Shader "Sky/AtmosphereImageEffect"
 				float4 col = tex2D(_MainTex, i.uv);
 				float4 skyCol = tex2D(_SkyDome, i.uv_depth);
 				
-				float dpth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));
+				float dpth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));				
 				float3 worldPos = (_inCamPos-_Globals_Origin + dpth * i.interpolatedRay);
+
 				
 				
 //				float3 relWorldPos = dpth * i.interpolatedRay; //relative to camera
@@ -114,16 +118,18 @@ Shader "Sky/AtmosphereImageEffect"
 				float3 extinction = float3(0,0,0);
 //				float3 inscatter = InScattering(_inCamPos*_Scale, worldPos*_Scale, extinction, 1.0);
 				//float3 inscatter = InScattering(_inCamPos+_Globals_Origin, absDir, absWorldPos, extinction, 1.0, dist);
-				float3 inscatter = _global_depth*  InScattering((_inCamPos-_Globals_Origin) , worldPos , extinction, 1.0, _Scale);
+				float3 inscatter =  InScattering((_inCamPos-_Globals_Origin) , worldPos , extinction, 1.0, _Scale);
+				
 //				col.rgb = col.rgb * extinction + inscatter;
-				col.rgb = col.rgb * extinction + inscatter;
+				col.rgb = col.rgb * extinction +  inscatter;
 				float visib=1;
-				if (dpth<=0.015){
-				visib=dpth/0.015;
+				if (dpth<=_global_depth){
+				visib=dpth/_global_depth;
 				}
 				
 				
-				return float4(hdr(col.rgb), _global_alpha*visib);				
+				return float4(hdr(col.rgb), visib);				
+				//return float4(hdr(col.rgb), _global_alpha*visib);				
 			    
 			}
 			
