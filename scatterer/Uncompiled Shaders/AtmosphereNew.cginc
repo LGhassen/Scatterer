@@ -149,9 +149,15 @@ float4 Texture4D(sampler2D table, float r, float mu, float muS, float nu)
 //	float4 B = tex2Dlod(table, float4((uNu + uMuS) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * (1.0 - _lerp) + tex2Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * _lerp;			
 
 	
+#if !defined(SHADER_API_OPENGL)	
+	float4 A = tex2Dlod(table, float4((uNu + uMuS) / RES_NU, uMu / RES_R + u_0,0.0,0.0)) * (1.0 - _lerp) + tex2Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_0,0.0,0.0)) * _lerp;
+	float4 B = tex2Dlod(table, float4((uNu + uMuS) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * (1.0 - _lerp) + tex2Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * _lerp;							
+
+#else	
 	float4 A = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_0)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_0)) * _lerp;
-	
 	float4 B = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_1)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1)) * _lerp;
+	
+#endif
 	
 	return (A * (1.0-u_frac) + B * u_frac);
 }
@@ -195,7 +201,11 @@ float3 Transmittance(float r, float mu)
     float2 uv = GetTransmittanceUV(r, mu);
 // tex2Dlod is faster but doesn't work with opengl, only dx9 and dx11
 //  return tex2Dlod(_Sky_Transmittance, float4(uv,0.0,0.0)).rgb;
+#if !defined(SHADER_API_OPENGL)	
+return tex2Dlod(_Sky_Transmittance, float4(uv,0.0,0.0)).rgb;
+#else
 return tex2D(_Sky_Transmittance,uv).rgb;
+#endif
 }
 
 // transmittance(=transparency) of atmosphere for ray (r,mu) of length d
@@ -251,8 +261,11 @@ float3 Irradiance(sampler2D samp, float r, float muS)
     float2 uv = GetIrradianceUV(r, muS);  
 // tex2Dlod is faster but doesn't work with opengl, only dx9 and dx11
 //   return tex2Dlod(samp,float4(uv,0.0,0.0)).rgb;    
+#if !defined(SHADER_API_OPENGL)	
+return tex2Dlod(samp,float4(uv,0.0,0.0)).rgb;    
+#else
 return tex2D(samp,uv).rgb;           
-  
+#endif
 }
 
 // Rayleigh phase function

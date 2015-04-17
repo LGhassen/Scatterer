@@ -1,19 +1,9 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="ShaderReplacer.cs">
+  <MonoDevelop.Ide.Workspace />
+  <MonoDevelop.Ide.Workbench ActiveDocument="C:\Users\ghoss\Downloads\PrecomputedAtmosphericScatterImageEffect\PrecomputedAtmosphericScatterImageEffect\Assets\Shaders\AtmosphericScatterNew.shader">
     <Files>
-      <File FileName="ShaderReplacer.cs" Line="86" Column="11" />
+      <File FileName="C:\Users\ghoss\Downloads\PrecomputedAtmosphericScatterImageEffect\PrecomputedAtmosphericScatterImageEffect\Assets\Shaders\AtmosphericScatterNew.shader" Line="1" Column="1" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="scatterer" expanded="True">
-            <Node name="Proland" expanded="True" />
-            <Node name="ShaderReplacer.cs" selected="True" />
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

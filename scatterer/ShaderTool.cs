@@ -42,7 +42,7 @@ namespace scatterer
 			UriBuilder uri = new UriBuilder(codeBase);
 			string path = Uri.UnescapeDataString(uri.Path);
 			
-			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "\\" + resource, FileMode.Open, FileAccess.Read));
+			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "/" + resource, FileMode.Open, FileAccess.Read));
 			string shaderContent = shaderStream.ReadToEnd();
 
 			Material Mat1= new Material(shaderContent);
@@ -55,7 +55,7 @@ namespace scatterer
 			UriBuilder uri = new UriBuilder(codeBase);
 			string path = Uri.UnescapeDataString(uri.Path);
 			
-			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "\\" + resource, FileMode.Open, FileAccess.Read));
+			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "/" + resource, FileMode.Open, FileAccess.Read));
 			string shaderContent = shaderStream.ReadToEnd();
 			Material Mat2= new Material(shaderContent);
 			return Mat2;
@@ -67,7 +67,7 @@ namespace scatterer
 			UriBuilder uri = new UriBuilder(codeBase);
 			string path = Uri.UnescapeDataString(uri.Path);
 			
-			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "\\" + resource, FileMode.Open, FileAccess.Read));
+			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "/" + resource, FileMode.Open, FileAccess.Read));
 			string shaderContent = shaderStream.ReadToEnd();
 			Material Mat2= new Material(shaderContent);
 			return Mat2.shader;

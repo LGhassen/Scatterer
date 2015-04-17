@@ -27,7 +27,7 @@ namespace scatterer
 	{
 		float postProcessingAlpha=0.95f;
 		float postProcessingScale=1f;
-		float postProcessDepth=1f;
+		float postProcessDepth=0.02f;
 		float postProcessExposure=0.18f;
 
 
@@ -437,9 +437,9 @@ namespace scatterer
 			//float SCALE = 1 / 100;
 
 			//mat.SetFloat("SCALE", SCALE);
-			mat.SetFloat ("Rg", Rg/1.0f);
-			mat.SetFloat("Rt", Rt/1.0f);
-			mat.SetFloat("Rl", RL/1.0f);
+			mat.SetFloat ("Rg", Rg/postProcessingScale);
+			mat.SetFloat("Rt", Rt/postProcessingScale);
+			mat.SetFloat("Rl", RL/postProcessingScale);
 //			mat.SetFloat("RES_R", 32.0f);
 //			mat.SetFloat("RES_MU", 128.0f);
 //			mat.SetFloat("RES_MU_S", 32.0f);
@@ -450,7 +450,7 @@ namespace scatterer
 			mat.SetFloat("RES_MU_S", RES_MU_S);
 			mat.SetFloat("RES_NU", RES_NU);
 
-			mat.SetFloat("SUN_INTENSITY", 50f);//
+			mat.SetFloat("SUN_INTENSITY", 100f);//
 
 //			mat.SetVector("EARTH_POS", new Vector3(0.0f, 6360010.0f, 0.0f));
 //			mat.SetVector("SUN_DIR", m_sun.transform.forward*-1.0f);
@@ -467,11 +467,14 @@ namespace scatterer
 
 		void UpdatePostProcessMaterial(Material mat)
 		{	
+			mat.SetFloat ("Rg", Rg/postProcessingScale);
+			mat.SetFloat("Rt", Rt/postProcessingScale);
+			mat.SetFloat("Rl", RL/postProcessingScale);
 
 			mat.SetFloat("_global_alpha", postProcessingAlpha);
 			mat.SetFloat("_Exposure", postProcessExposure);
-//			mat.SetFloat("_global_depth", postProcessDepth);
-			mat.SetFloat("_global_depth", 1);
+			mat.SetFloat("_global_depth", postProcessDepth);
+//			mat.SetFloat("_global_depth", 1);
 //			mat.SetFloat("_Scale", postProcessingScale);
 			mat.SetFloat("_Scale", 1);
 

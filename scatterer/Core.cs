@@ -16,8 +16,8 @@ namespace scatterer
     public class Core : MonoBehaviourWindow
     {
 		float postProcessingalpha=95f;
-		float postProcessDepth=100f;
-		float postProcessScale=100f;
+		float postProcessDepth=150f;
+		float postProcessScale=1000f;
 		float postProcessExposure=18f;
 		int nearPlane=299;
 		int farPlane=75000;
@@ -365,12 +365,12 @@ namespace scatterer
 
 
 				GUILayout.BeginHorizontal();
-				GUILayout.Label("Post Processing Depth (/100)");		
+				GUILayout.Label("Post Processing Depth (/10000)");		
 				postProcessDepth=(float)(Convert.ToDouble(GUILayout.TextField(postProcessDepth.ToString())));
 				
 				if(GUILayout.Button("Set"))
 				{
-					m_manager.SetPostProcessDepth(postProcessDepth/100);
+					m_manager.SetPostProcessDepth(postProcessDepth/10000);
 				}
 				GUILayout.EndHorizontal();
 
@@ -388,12 +388,12 @@ namespace scatterer
 
 
 				GUILayout.BeginHorizontal();
-				GUILayout.Label("Post Processing Scale (/100)");		
+				GUILayout.Label("Post Processing Scale (/1000)");		
 				postProcessScale=(float)(Convert.ToDouble(GUILayout.TextField(postProcessScale.ToString())));
 				
 				if(GUILayout.Button("Set"))
 				{
-					m_manager.SetPostProcessScale(postProcessScale/100);
+					m_manager.SetPostProcessScale(postProcessScale/1000);
 				}
 				GUILayout.EndHorizontal();
 
