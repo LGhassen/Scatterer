@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+using KSP.IO;
+
 namespace scatterer
 {
 	/*
@@ -13,6 +15,8 @@ namespace scatterer
 	 */
 	public class Manager : MonoBehaviour 
 	{
+
+
 		Core m_core;
 		//RenderTexture m_inscatter;
 		int updateCnt=0;
@@ -56,6 +60,14 @@ namespace scatterer
 		MaterialPropertyBlock m_propertyBlock;*/
 		Vector3 m_origin;
 		CelestialBody parentCelestialBody,sunCelestialBody;
+
+		public void saveSettings(){
+			m_skyNode.saveSettings ();
+		}
+
+		public void loadSettings(){
+			m_skyNode.loadSettings ();
+		}
 
 		public void enablePostprocess(){
 			m_skyNode.enablePostprocess ();
@@ -108,6 +120,10 @@ namespace scatterer
 
 		public void SetPostProcessAlpha(float postAlpha) {
 			m_skyNode.SetPostProcessAlpha (postAlpha);
+		}
+
+		public void SetAtmosphereGlobalScale(float gScale){
+			m_skyNode.SetAtmosphereGlobalScale (gScale);
 		}
 
 
@@ -258,7 +274,9 @@ namespace scatterer
 			m_sunNode.Start ();
 			m_skyNode = new SkyNode();
 			m_skyNode.setManager (this);
+			m_skyNode.loadSettings ();
 			m_skyNode.Start ();
+
 
 			/*//m_plantsNode = GetComponentInChildren<PlantsNode>();
 			//m_terrainNodes = GetComponentsInChildren<TerrainNode>();
@@ -381,6 +399,8 @@ namespace scatterer
 			m_radius = (float)parentCelestialBody.Radius;
 
 			m_skyNode.UpdateNode();
+
+
 
 			/*m_controller.UpdateController();
 			m_sunNode.UpdateNode();

@@ -5,6 +5,7 @@ using System.Text;
 
 
 using KSP;
+using KSP.IO;
 using UnityEngine;
 
 using KSPPluginFramework;
@@ -15,6 +16,10 @@ namespace scatterer
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
     public class Core : MonoBehaviourWindow
     {
+		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType<SkyNode>(null);
+		String parentPlanet="Kerbin";
+		float atmosphereGlobalScale=1000f;
+
 		float postProcessingalpha=95f;
 		float postProcessDepth=150f;
 		float postProcessScale=1000f;
@@ -35,7 +40,8 @@ namespace scatterer
 //float m_radius = 127200.0f;
 		RenderTexture m_transmit;
 		int bodyNumber;
-		int KerbinId;
+		//int KerbinId;
+		int PlanetId;
 		int SunId;
 		bool isActive;
 		CelestialBody[] celestialBodies;
@@ -56,12 +62,17 @@ namespace scatterer
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene==GameScenes.SPACECENTER ) {
 				isActive = true;
 
+				cfg.load ();
+				parentPlanet =cfg.GetValue<string>("Planet");
+				atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"))*1000f;
+
+
 				celestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType(typeof(CelestialBody));
-				KerbinId =0;
+				PlanetId =0;
 				SunId =0;
 				for (int k=0; k< celestialBodies.Length ;k++){
-					if (celestialBodies[k].GetName() == "Kerbin")
-						KerbinId=k;
+					if (celestialBodies[k].GetName() == parentPlanet)
+						PlanetId=k;
 					
 					if (celestialBodies[k].GetName() == "Sun")
 						SunId=k;
@@ -72,11 +83,11 @@ namespace scatterer
 
 
 				m_manager=new Manager();
-				m_manager.setParentCelestialBody(celestialBodies[KerbinId]);
+				m_manager.setParentCelestialBody(celestialBodies[PlanetId]);
 				m_manager.setSunCelestialBody(celestialBodies[SunId]);
 				m_manager.Awake();
 
-				m_radius = (float)celestialBodies [KerbinId].Radius;
+				m_radius = (float)celestialBodies [PlanetId].Radius;
 			}
 
 
@@ -142,24 +153,24 @@ namespace scatterer
 				//CAM DEBUG OPTIONS
 
 
-				GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
-				GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
-				GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
-				GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
-				GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
-				GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
-				GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
-				GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
-				GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
-				GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
-				GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
-				GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
-				GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
-
-				if (Camera.allCameras.Length == 7) {
-					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
-					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));
-				}
+//				GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
+//				GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
+//				GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
+//				GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
+//				GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
+//				GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
+//				GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
+//				GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
+//				GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
+//				GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
+//				GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
+//				GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
+//				GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
+//
+//				if (Camera.allCameras.Length == 7) {
+//					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
+//					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));
+//				}
 
 				 
 
@@ -193,7 +204,7 @@ namespace scatterer
 				GUILayout.EndHorizontal();
 				GUILayout.Label (String.Format ("body name:{0}", getBodyName (bodyNumber)));*/
 
-				DeactivateAtmosphere("Kerbin");
+				DeactivateAtmosphere(parentPlanet);
 
 				GUILayout.BeginHorizontal();
 				GUILayout.Label("Layer");				
@@ -218,54 +229,54 @@ namespace scatterer
 
 				GUILayout.EndHorizontal();
 
-				GUILayout.BeginHorizontal();
-
-							
-				//m_radius=(float)(Convert.ToDouble(GUILayout.TextField(m_radius.ToString())));
-
-				if(GUILayout.Button("transform from cam 0 to cam 1"))
-				{
-					m_manager.toggleCamTransform();
-				}
-				if(GUILayout.Button("CamToggle1"))
-				{
-					m_manager.toggleCam(1);
-				}
-				
-				if(GUILayout.Button("CamToggle2"))
-				{
-					m_manager.toggleCam(2);
-				}
-
-				GUILayout.EndHorizontal();
-
-
-
-				GUILayout.BeginHorizontal();
-
-				if(GUILayout.Button("CamToggle3"))
-				{
-					m_manager.toggleCam(3);
-				}
-				if(GUILayout.Button("CamToggle4"))
-				{
-					m_manager.toggleCam(4);
-				}
-
-				if(GUILayout.Button("CamToggle5"))
-				{
-					m_manager.toggleCam(5);
-				}
-
-				if(GUILayout.Button("CamToggle6"))
-				{
-					m_manager.toggleCam(6);
-				}
-
-
-
-
-				GUILayout.EndHorizontal();
+//				GUILayout.BeginHorizontal();
+//
+//							
+//				//m_radius=(float)(Convert.ToDouble(GUILayout.TextField(m_radius.ToString())));
+//
+//				if(GUILayout.Button("transform from cam 0 to cam 1"))
+//				{
+//					m_manager.toggleCamTransform();
+//				}
+//				if(GUILayout.Button("CamToggle1"))
+//				{
+//					m_manager.toggleCam(1);
+//				}
+//				
+//				if(GUILayout.Button("CamToggle2"))
+//				{
+//					m_manager.toggleCam(2);
+//				}
+//
+//				GUILayout.EndHorizontal();
+//
+//
+//
+//				GUILayout.BeginHorizontal();
+//
+//				if(GUILayout.Button("CamToggle3"))
+//				{
+//					m_manager.toggleCam(3);
+//				}
+//				if(GUILayout.Button("CamToggle4"))
+//				{
+//					m_manager.toggleCam(4);
+//				}
+//
+//				if(GUILayout.Button("CamToggle5"))
+//				{
+//					m_manager.toggleCam(5);
+//				}
+//
+//				if(GUILayout.Button("CamToggle6"))
+//				{
+//					m_manager.toggleCam(6);
+//				}
+//
+//
+//
+//
+//				GUILayout.EndHorizontal();
 
 //				GUILayout.BeginHorizontal();
 //				GUILayout.Label("Alpha Cutoff (/100)");		
@@ -398,32 +409,46 @@ namespace scatterer
 
 
 
+//				GUILayout.BeginHorizontal();
+//				GUILayout.Label("Far plane");		
+//				farPlane=(Convert.ToInt32(GUILayout.TextField(farPlane.ToString())));
+//				
+//				if(GUILayout.Button("Set"))
+//				{
+//					m_manager.SetFarPlane(farPlane);
+//				}
+//				GUILayout.EndHorizontal();
+//
+//
+//
+//				GUILayout.BeginHorizontal();
+//				GUILayout.Label("Near plane");		
+//				nearPlane=(Convert.ToInt32(GUILayout.TextField(nearPlane.ToString())));
+//				
+//				if(GUILayout.Button("Set"))
+//				{
+//					m_manager.SetNearPlane(nearPlane);
+//				}
+//				GUILayout.EndHorizontal();
+
+
 				GUILayout.BeginHorizontal();
-				GUILayout.Label("Far plane");		
-				farPlane=(Convert.ToInt32(GUILayout.TextField(farPlane.ToString())));
-				
-				if(GUILayout.Button("Set"))
-				{
-					m_manager.SetFarPlane(farPlane);
-				}
+				GUILayout.Label("Planet radius (display only)");		
+				GUILayout.TextField(celestialBodies[PlanetId].Radius.ToString());
 				GUILayout.EndHorizontal();
 
 
 
 				GUILayout.BeginHorizontal();
-				GUILayout.Label("Near plane");		
-				nearPlane=(Convert.ToInt32(GUILayout.TextField(nearPlane.ToString())));
+				GUILayout.Label("atmosphereGlobalScale (/1000)");		
+
+
+				atmosphereGlobalScale=(float)(Convert.ToDouble(GUILayout.TextField(atmosphereGlobalScale.ToString())));
 				
 				if(GUILayout.Button("Set"))
 				{
-					m_manager.SetNearPlane(nearPlane);
+					m_manager.SetAtmosphereGlobalScale(atmosphereGlobalScale/1000);
 				}
-				GUILayout.EndHorizontal();
-
-
-				GUILayout.BeginHorizontal();
-				GUILayout.Label("Kerbin radius");		
-				GUILayout.TextField(celestialBodies[KerbinId].Radius.ToString());
 				GUILayout.EndHorizontal();
 
 
@@ -431,6 +456,15 @@ namespace scatterer
 				GUILayout.Label("ManagerState");				
 				GUILayout.TextField(m_manager.getManagerState());
 				GUILayout.EndHorizontal();
+
+//				GUILayout.BeginHorizontal();
+//				if(GUILayout.Button("Save settings"))
+//					m_manager.saveSettings();
+//
+//				if(GUILayout.Button("Load settings"))
+//					m_manager.loadSettings();
+//
+//				GUILayout.EndHorizontal();
 
 
 
@@ -577,12 +611,12 @@ namespace scatterer
 		
 		public Transform getKerbinTransform()
 		{
-			return celestialBodies[KerbinId].GetTransform();
+			return celestialBodies[PlanetId].GetTransform();
 		}
 		
 		public Vector3d getKerbinWorldPos()
 		{
-			return celestialBodies[KerbinId].position;
+			return celestialBodies[PlanetId].position;
 		}
 		
 		public Vector3d getSunWorldPos()

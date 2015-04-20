@@ -3,10 +3,16 @@ using System.Collections;
 using System.IO;
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+
+using KSP.IO;
+
+
+
 
 
 
@@ -25,6 +31,9 @@ namespace scatterer
 	 */
 	public class SkyNode : MonoBehaviour 
 	{
+
+		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType<SkyNode>(null);
+
 		bool sunglareEnabled=true;
 		float sunglareCutoffAlt;
 
@@ -33,6 +42,7 @@ namespace scatterer
 
 
 
+		float atmosphereGlobalScale=1f;
 		float postProcessingAlpha=0.95f;
 		float postProcessingScale=1f;
 		float postProcessDepth=0.02f;
@@ -48,7 +58,7 @@ namespace scatterer
 		GameObject idek=new GameObject();
 //		MeshFilter MF;
 //		MeshRenderer mr;
-		float alphaCutoff=0.00f;
+		float alphaCutoff=0.001f;
 		float alphaGlobal=1f;
 		//float m_radius = 63600.0f*4;
 		float m_radius;// = 600000.0f;
@@ -71,13 +81,13 @@ namespace scatterer
 		int layer=15;
 		int cam=1;
 		
-		const float AVERAGE_GROUND_REFLECTANCE = 0.1f;
+		float AVERAGE_GROUND_REFLECTANCE = 0.1f;
 		//Half heights for the atmosphere air density (HR) and particle density (HM)
 		//This is the height in km that half the particles are found below
-		const float HR = 8.0f;
-		const float HM = 1.2f;
+		float HR = 8.0f;
+		float HM = 1.2f;
 		//scatter coefficient for mie
-		readonly Vector3 BETA_MSca = new Vector3(4e-3f,4e-3f,4e-3f);
+		Vector3 BETA_MSca = new Vector3(4e-3f,4e-3f,4e-3f);
 
 		public Material m_atmosphereMaterial;
 
@@ -98,12 +108,45 @@ namespace scatterer
 		
 		Mesh m_mesh;
 		
-		RenderTexture m_transmit, m_inscatter, m_irradiance, m_skyMap;//, m_inscatterGround, m_transmitGround;
+		RenderTexture m_transmit, m_inscatter, m_irradiance;//, m_skyMap;//, m_inscatterGround, m_transmitGround;
 
 		Manager m_manager;
 
 
+		public void loadSettings()
+		{
+			cfg.load ();
+			Rg =float.Parse(cfg.GetValue<string>("Rg"));
+			Rt =float.Parse(cfg.GetValue<string>("Rt"));
+			RL =float.Parse(cfg.GetValue<string>("RL"));
+			
+			m_betaR = cfg.GetValue<Vector3>("BETA_R");
+			BETA_MSca = cfg.GetValue<Vector3>("BETA_MSca");
+			m_mieG =float.Parse(cfg.GetValue<string>("MIE_G"));
+			
+			HR =float.Parse( cfg.GetValue<string>("HR"));
+			HM =float.Parse( cfg.GetValue<string>("HM"));
+			AVERAGE_GROUND_REFLECTANCE =float.Parse(cfg.GetValue<string>("AVERAGE_GROUND_REFLECTANCE"));
+			atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"));
 
+		}
+
+		public void saveSettings()
+		{
+			cfg ["Rg"] = Rg.ToString();
+			cfg ["Rt"] = Rt.ToString();
+			cfg ["RL"] = RL.ToString();
+
+			cfg ["BETA_R"] = m_betaR;
+			cfg ["BETA_MSca"] = BETA_MSca;
+			cfg ["MIE_G"] = m_mieG.ToString();
+			cfg ["HR"] = HR.ToString();
+			cfg ["HM"] = HM.ToString();
+			cfg ["AVERAGE_GROUND_REFLECTANCE"] = AVERAGE_GROUND_REFLECTANCE.ToString();
+
+			cfg.save ();
+			
+		}
 		
 		// Use this for initialization
 		public void Start() 
@@ -112,9 +155,12 @@ namespace scatterer
 			//Component.Destroy(cams[cam].gameObject.GetComponent<scatterPostprocess>());
 			m_radius=m_manager.GetRadius();
 			//m_radius = 600000.0f;
+
+//			Rt = (64200f / 63600f) * m_radius;
+//			RL = (64210.0f/63600f) * m_radius;
+			Rt = (Rt / Rg) * m_radius;
+			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
-			Rt = (64200f / 63600f) * m_radius;
-			RL = (64210.0f/63600f) * m_radius;
 
 			m_mesh = MeshFactory.MakePlane(2, 2, MeshFactory.PLANE.XY, false,false);
 			m_mesh.bounds = new Bounds(m_manager.getParentCelestialBody().transform.position, new Vector3(1e8f,1e8f, 1e8f));
@@ -188,7 +234,7 @@ namespace scatterer
 			//aniso defaults to to forceEnable on higher visual settings and causes artifacts
 			QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
 
-			sunglareCutoffAlt = Rt*0.995f;						
+			;						
 		}
 
 
@@ -258,11 +304,14 @@ namespace scatterer
 		// Update is called once per frame
 		public void UpdateNode() 
 		{
+
 			m_radius=m_manager.GetRadius();
 			//m_radius = 600000.0f;
+
+			Rt = (Rt / Rg) * m_radius;
+			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
-			Rt = (64200f / 63600f) * m_radius;
-			RL = (64210.0f/63600f) * m_radius;
+			sunglareCutoffAlt = Rt * 0.995f * atmosphereGlobalScale;
 
 			if (!initiated) { //gets the cameras, this isn't done at start() because the cameras still don't exist then and it crashes the game
 				cams = Camera.allCameras;
@@ -348,10 +397,11 @@ namespace scatterer
 		{	
 			//Sets uniforms that this or other gameobjects may need
 			if(mat == null) return;
-			mat.SetFloat("scale",Rg /  m_radius);
-			mat.SetFloat("Rg", Rg);
-			mat.SetFloat("Rt", Rt);
-			mat.SetFloat("RL", RL);
+			//mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
+			mat.SetFloat("scale",atmosphereGlobalScale);
+			mat.SetFloat("Rg", Rg*atmosphereGlobalScale);
+			mat.SetFloat("Rt", Rt*atmosphereGlobalScale);
+			mat.SetFloat("RL", RL*atmosphereGlobalScale);
 
 			mat.SetVector("betaR", m_betaR / 1000.0f);
 			mat.SetFloat("mieG", Mathf.Clamp(m_mieG, 0.0f, 0.99f));
@@ -374,13 +424,13 @@ namespace scatterer
 			//Consts, best leave these alone
 			mat.SetFloat("M_PI", Mathf.PI);
 
-			float SCALE = Rg / m_radius; //
+			//float SCALE = Rg / m_radius; //
 			//float SCALE = 1 / 100;
 
 			//mat.SetFloat("SCALE", SCALE);
-			mat.SetFloat ("Rg", Rg/postProcessingScale);
-			mat.SetFloat("Rt", Rt/postProcessingScale);
-			mat.SetFloat("Rl", RL/postProcessingScale);
+			mat.SetFloat ("Rg", Rg*atmosphereGlobalScale*postProcessingScale);
+			mat.SetFloat("Rt", Rt*atmosphereGlobalScale*postProcessingScale);
+			mat.SetFloat("Rl", RL*atmosphereGlobalScale*postProcessingScale);
 //			mat.SetFloat("RES_R", 32.0f);
 //			mat.SetFloat("RES_MU", 128.0f);
 //			mat.SetFloat("RES_MU_S", 32.0f);
@@ -408,9 +458,10 @@ namespace scatterer
 
 		void UpdatePostProcessMaterial(Material mat)
 		{	
-			mat.SetFloat ("Rg", Rg/postProcessingScale);
-			mat.SetFloat("Rt", Rt/postProcessingScale);
-			mat.SetFloat("Rl", RL/postProcessingScale);
+			//mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
+			mat.SetFloat ("Rg", Rg*atmosphereGlobalScale*postProcessingScale);
+			mat.SetFloat("Rt", Rt*atmosphereGlobalScale*postProcessingScale);
+			mat.SetFloat("Rl", RL*atmosphereGlobalScale*postProcessingScale);
 
 			mat.SetFloat("_global_alpha", postProcessingAlpha);
 			mat.SetFloat("_Exposure", postProcessExposure);
@@ -421,9 +472,6 @@ namespace scatterer
 
 //			print ("SCALE");
 //			print (postProcessingScale);
-
-
-
 
 
 			mat.SetVector ("_Globals_Origin", /*Vector3.zero-*/m_manager.getParentCelestialBody().transform.position);	
@@ -445,10 +493,10 @@ namespace scatterer
 			//Init uniforms that this or other gameobjects may need
 			if(mat == null) return;
 			
-			mat.SetFloat("scale",Rg /  m_radius);
-			mat.SetFloat("Rg", Rg);
-			mat.SetFloat("Rt", Rt);
-			mat.SetFloat("RL", RL);
+			mat.SetFloat("scale",Rg*atmosphereGlobalScale /  m_radius);
+			mat.SetFloat("Rg", Rg*atmosphereGlobalScale);
+			mat.SetFloat("Rt", Rt*atmosphereGlobalScale);
+			mat.SetFloat("RL", RL*atmosphereGlobalScale);
 
 			mat.SetFloat("TRANSMITTANCE_W", TRANSMITTANCE_W);
 			mat.SetFloat("TRANSMITTANCE_H", TRANSMITTANCE_H);
@@ -528,6 +576,10 @@ namespace scatterer
 			postProcessingScale=postScale;
 		}
 
+		public void SetAtmosphereGlobalScale(float gScale) {
+			atmosphereGlobalScale=gScale;
+		}
+
 		public void toggleSunglare()
 		{
 			if (sunglareEnabled) {
@@ -539,7 +591,7 @@ namespace scatterer
 			{
 				m_skyMaterial.SetTexture("_Sun_Glare", sunGlare);
 				sunglareEnabled=true;
-				alphaCutoff=0.00f;
+				alphaCutoff=0.001f;
 
 			
 			}
