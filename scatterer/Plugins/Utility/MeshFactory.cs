@@ -5,7 +5,9 @@ public static class MeshFactory
 {
 	public enum PLANE { XY, XZ, YZ };
 
-	public static Mesh MakePlane(int w, int h, PLANE plane = PLANE.XY, bool _01 = true, bool cw = false) 
+	//public static Mesh MakePlane(int w, int h, PLANE plane = PLANE.XY, bool _01 = true, bool cw = false)
+	//public static Mesh MakePlane(int w, int h, PLANE plane = PLANE.XY, bool _01 = true, bool cw) 
+	public static Mesh MakePlane(int w, int h, PLANE plane, bool _01, bool cw) 
 	{
 		
 		Vector3[] vertices = new Vector3[w*h];

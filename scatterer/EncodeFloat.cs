@@ -60,7 +60,8 @@ static public class EncodeFloat
 	}
 	
 	//Load 32 bit float data from raw file and write into render texture with option of returning raw loaded data
-	static public void WriteIntoRenderTexture(RenderTexture tex, int channels, string path, float[] fdata = null)
+		//static public void WriteIntoRenderTexture(RenderTexture tex, int channels, string path, float[] fdata = null)
+		static public void WriteIntoRenderTexture(RenderTexture tex, int channels, string path, float[] fdata)
 	{
 		if(tex == null)
 		{
@@ -93,7 +94,8 @@ static public class EncodeFloat
 	}
 	
 	//Load 16 bit float data from raw file and write into render texture with option of returning raw loaded data
-	static public void WriteIntoRenderTexture16bit(RenderTexture tex, int channels, string path, bool bigEndian, float[] fdata = null)
+		//static public void WriteIntoRenderTexture16bit(RenderTexture tex, int channels, string path, bool bigEndian, float[] fdata = null)
+		static public void WriteIntoRenderTexture16bit(RenderTexture tex, int channels, string path, bool bigEndian, float[] fdata)
 	{
 		if(tex == null)
 		{

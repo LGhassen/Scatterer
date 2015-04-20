@@ -121,7 +121,8 @@ public class Matrix3x3d
 	    return fDet;
 	}
 	
-	public bool Inverse(ref Matrix3x3d mInv, double tolerance = 1e-06)
+	//public bool Inverse(ref Matrix3x3d mInv, double tolerance = 1e-06)
+	public bool Inverse(ref Matrix3x3d mInv, double tolerance)
 	{
 	    // Invert a 3x3 using cofactors.  This is about 8 times faster than
 	    // the Numerical Recipes code which uses Gaussian elimination.
@@ -151,7 +152,8 @@ public class Matrix3x3d
 	    return true;
 	}
 	
-	public Matrix3x3d Inverse(double tolerance = 1e-06)
+	//public Matrix3x3d Inverse(double tolerance = 1e-06)
+	public Matrix3x3d Inverse(double tolerance)
 	{
 	    Matrix3x3d kInverse = new Matrix3x3d();
 	    Inverse(ref kInverse, tolerance);

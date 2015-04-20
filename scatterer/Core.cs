@@ -22,7 +22,7 @@ namespace scatterer
 		int nearPlane=299;
 		int farPlane=75000;
 
-		bool postprocessingEnabled=false;
+		bool postprocessingEnabled=true;
 		bool depthbufferEnabled=false;
 		float exposure = 20f;
 		int atmosphereToDisable=0;
@@ -105,6 +105,7 @@ namespace scatterer
 					file.WriteLine(shaderList[i].isSupported.ToString());
 				}*/
 
+
 			}
         }
 
@@ -133,7 +134,7 @@ namespace scatterer
 			GUILayout.EndHorizontal();
 
 			Camera[] cams = Camera.allCameras;
-			//int count = Camera.allCameras.Length;
+			int count = Camera.allCameras.Length;
 
 
 			if (isActive) {
@@ -141,7 +142,7 @@ namespace scatterer
 				//CAM DEBUG OPTIONS
 
 
-				/*GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
+				GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
 				GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
 				GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
 				GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
@@ -160,7 +161,7 @@ namespace scatterer
 					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));
 				}
 
-				 */
+				 
 
 
 				//END CAM DEBUG OPTIONS
@@ -266,20 +267,20 @@ namespace scatterer
 
 				GUILayout.EndHorizontal();
 
-				GUILayout.BeginHorizontal();
-				GUILayout.Label("Alpha Cutoff (/100)");		
-				alphaCutoff=(float)(Convert.ToDouble(GUILayout.TextField(alphaCutoff.ToString())));
-				
-				if(GUILayout.Button("Set"))
-				{
-					m_manager.SetAlphaCutoff(alphaCutoff/100);
-				}							
-
-				if(GUILayout.Button("Disable Atmo"))
-				{
-					DeactivateAtmosphere("Kerbin");
-				}
-				GUILayout.EndHorizontal();
+//				GUILayout.BeginHorizontal();
+//				GUILayout.Label("Alpha Cutoff (/100)");		
+//				alphaCutoff=(float)(Convert.ToDouble(GUILayout.TextField(alphaCutoff.ToString())));
+//				
+//				if(GUILayout.Button("Set"))
+//				{
+//					m_manager.SetAlphaCutoff(alphaCutoff/100);
+//				}							
+//
+//				if(GUILayout.Button("Disable Atmo"))
+//				{
+//					DeactivateAtmosphere("Kerbin");
+//				}
+//				GUILayout.EndHorizontal();
 
 			
 				GUILayout.BeginHorizontal();
@@ -422,6 +423,10 @@ namespace scatterer
 				GUILayout.EndHorizontal();
 
 
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Kerbin radius");		
+				GUILayout.TextField(celestialBodies[KerbinId].Radius.ToString());
+				GUILayout.EndHorizontal();
 
 
 				GUILayout.BeginHorizontal();

@@ -96,6 +96,12 @@ namespace scatterer
 			case "Terrain/PQS/Sphere Projection SURFACE QUAD":
 				replacementShader = GetShaderFromName("CompiledPQSProjectionSurfaceQuad");
 				break;
+			case "Terrain/Scaled Planet (Simple)":
+				replacementShader = GetShaderFromName("CompiledScaledPlanetSimple");
+				break;
+			case "Terrain/Scaled Planet (RimAerial)":
+				replacementShader = GetShaderFromName("CompiledScaledPlanetRimAerial");
+				break;
 			default:
 				return;
 				

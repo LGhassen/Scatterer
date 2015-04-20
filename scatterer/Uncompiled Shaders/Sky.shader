@@ -155,11 +155,15 @@ Shader "Proland/Atmo/Sky"
 			    
 			    float absValue=abs(finalColor);
 			    bool idek= absValue <= _Alpha_Cutoff;
+			    if (_Alpha_Cutoff==0.0){
+			    _Alpha_Cutoff=0.0001;
+			    }
+			    
 			    
 			    
 			    if (idek ){
 			    
-			    return float4 (hdr(finalColor),absValue*_Alpha_Global);}
+			    return float4 (hdr(finalColor),(absValue/_Alpha_Cutoff)*_Alpha_Global);}
 			    else
 			    
 				return float4(hdr(finalColor),_Alpha_Global);

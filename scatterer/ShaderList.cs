@@ -29,5 +29,15 @@ class DumpShaderList : MonoBehaviour
 		{
 			file.WriteLine(shaderList[i].ToString());
 		}
+
+		Material[] materials = Resources.FindObjectsOfTypeAll<Material>();
+
+		using (System.IO.StreamWriter file = new System.IO.StreamWriter(KSPUtil.ApplicationRootPath + "/LoadedShaders.txt"))
+			//foreach (var sh in sorted)
+			for (int i=0;i<materials.Length;i++)
+		{
+			file.WriteLine(materials[i].ToString());
+			file.WriteLine(materials[i].shader.ToString());
+		}
 	}
 }

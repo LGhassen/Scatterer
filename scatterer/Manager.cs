@@ -378,6 +378,8 @@ namespace scatterer
 			//Update the sky, sun and controller. These node are presumed to always be present
 			m_sunNode.setDirectionToSun (getDirectionToSun ());
 			m_sunNode.UpdateNode();
+			m_radius = (float)parentCelestialBody.Radius;
+
 			m_skyNode.UpdateNode();
 
 			/*m_controller.UpdateController();
@@ -415,6 +417,7 @@ namespace scatterer
 				if(node.gameObject.activeInHierarchy)
 					DrawTerrain(node);
 			}*/
+
 			updateCnt++;
 			managerState = "update done "+updateCnt.ToString();
 
