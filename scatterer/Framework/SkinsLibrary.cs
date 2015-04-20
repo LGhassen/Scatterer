@@ -209,7 +209,8 @@ namespace KSPPluginFramework
         /// <param name="SkinID">The string ID of the custom skin</param>
         /// <param name="NewSkin">The new GUISkin to add</param>
         /// <param name="SetAsCurrent">Whether we should immediately set this GUISkin to the current active skin</param>
-        internal static void AddSkin(String SkinID, GUISkin NewSkin, Boolean SetAsCurrent = false)
+		//internal static void AddSkin(String SkinID, GUISkin NewSkin, Boolean SetAsCurrent = false)
+		internal static void AddSkin(String SkinID, GUISkin NewSkin, Boolean SetAsCurrent)
         {
             NewSkin.name = SkinID;
             if (List.ContainsKey(SkinID))

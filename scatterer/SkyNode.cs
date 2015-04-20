@@ -25,6 +25,14 @@ namespace scatterer
 	 */
 	public class SkyNode : MonoBehaviour 
 	{
+		bool sunglareEnabled=true;
+		float sunglareCutoffAlt;
+
+		Texture2D sunGlare;
+		Texture2D black;
+
+		scatterPostprocess tmp;
+
 		float postProcessingAlpha=0.95f;
 		float postProcessingScale=1f;
 		float postProcessDepth=0.02f;
@@ -32,8 +40,10 @@ namespace scatterer
 
 
 
+		bool initiated=false;
 		Camera[] cams;
-		bool postprocessingEnabled=false;
+		Camera farCamera, scaledSpaceCamera;
+		bool postprocessingEnabled=true;
 		int waitBeforeReloadCnt=0;
 		GameObject idek=new GameObject();
 		MeshFilter MF;
@@ -102,11 +112,11 @@ namespace scatterer
 			//Component.Destroy(cams[cam].gameObject.GetComponent<scatterPostprocess>());
 			m_radius=m_manager.GetRadius();
 			//m_radius = 600000.0f;
-			Rg = 600000;
+			Rg = m_radius;
 			Rt = (64200f / 63600f) * m_radius;
 			RL = (64210.0f/63600f) * m_radius;
 
-			m_mesh = MeshFactory.MakePlane(2, 2, MeshFactory.PLANE.XY, false);
+			m_mesh = MeshFactory.MakePlane(2, 2, MeshFactory.PLANE.XY, false,false);
 			m_mesh.bounds = new Bounds(m_manager.getParentCelestialBody().transform.position, new Vector3(1e8f,1e8f, 1e8f));
 			
 
@@ -223,7 +233,8 @@ namespace scatterer
 
 
 			//Texture2D sunGlare = Resources.Load ("sunglare") as Texture2D;
-			Texture2D sunGlare = new Texture2D (512, 512);
+			sunGlare = new Texture2D (512, 512);
+			black = new Texture2D (512, 512);
 
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
@@ -231,6 +242,7 @@ namespace scatterer
 			path=Path.GetDirectoryName (path);
 
 			sunGlare.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + m_filePath, "sunglare.png")));
+			black.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + m_filePath, "black.png")));
 
 			if (sunGlare == null) {
 				print ("SUNGLARE NULL");
@@ -246,6 +258,8 @@ namespace scatterer
 				m_skyMaterial.SetTexture("_Sun_Glare", sunGlare);
 
 			}
+
+
 			
 			InitUniforms(m_skyMaterial);
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
@@ -255,11 +269,12 @@ namespace scatterer
 //			}
 
 
-
 			//InitUniforms(m_skyMapMaterial);
 
 			//aniso defaults to to forceEnable on higher visual settings and causes artifacts
 			QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
+
+			sunglareCutoffAlt = Rt*0.995f;
 
 			
 		}
@@ -285,7 +300,7 @@ namespace scatterer
 			//path = Path.GetDirectoryName(path1)+m_filePath + "/transmit.raw";			
 
 
-			EncodeFloat.WriteIntoRenderTexture (m_transmit, 3, path1);
+			EncodeFloat.WriteIntoRenderTexture (m_transmit, 3, path1,null);
 
 //			path = Application.dataPath + m_filePath + "/transmittanceGround.raw";
 //			//path = Path.GetDirectoryName(path1)+m_filePath + "/transmit.raw";			
@@ -293,7 +308,7 @@ namespace scatterer
 			
 			path1 = path + m_filePath + "/irradiance.raw";
 
-			EncodeFloat.WriteIntoRenderTexture (m_irradiance, 3, path1);
+			EncodeFloat.WriteIntoRenderTexture (m_irradiance, 3, path1,null);
 			
 			/*string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
@@ -301,7 +316,7 @@ namespace scatterer
 			string path = Path.GetDirectoryName(path1)+m_filePath + "/inscatter.raw";*/
 			path1 = path + m_filePath + "/inscatter.raw";
 
-			EncodeFloat.WriteIntoRenderTexture (m_inscatter, 4, path1);
+			EncodeFloat.WriteIntoRenderTexture (m_inscatter, 4, path1,null);
 
 //			path = Application.dataPath + m_filePath + "/inscatterGround.raw";
 //			EncodeFloat.WriteIntoRenderTexture (m_inscatterGround, 4, path);
@@ -343,6 +358,54 @@ namespace scatterer
 		// Update is called once per frame
 		public void UpdateNode() 
 		{
+			m_radius=m_manager.GetRadius();
+			//m_radius = 600000.0f;
+			Rg = m_radius;
+			Rt = (64200f / 63600f) * m_radius;
+			RL = (64210.0f/63600f) * m_radius;
+
+			if (!initiated) { //gets the cameras, this isn't done at start() because the cameras still don't exist then and it crashes the game
+				cams = Camera.allCameras;
+				
+				
+				for (int i=0; i<cams.Length; i++) 
+				{
+					if (cams [i].name == "Camera Scaled Space")
+						scaledSpaceCamera = cams [i];
+					if (cams [i].name == "Camera 01")
+						farCamera = cams [i];				
+				}
+
+				tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+
+				if(tmp != null) 
+				{
+					Component.Destroy (tmp);
+				}
+				
+				if (postprocessingEnabled) {
+					farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+				}
+				
+
+				initiated =true;
+			}
+
+
+			float alt = Vector3.Distance(farCamera.transform.position, m_manager.getParentCelestialBody ().transform.position);
+			if ((sunglareEnabled)^(alt < sunglareCutoffAlt)) //^ is XOR
+			{
+				toggleSunglare();
+			}
+
+			print ("ALT");
+			print (alt);
+			print ("cutoff");
+			print (sunglareCutoffAlt);
+
+
+
+
 
 			//if alt-tabbing/windowing and textures are lost
 
@@ -361,11 +424,19 @@ namespace scatterer
 				m_skyMaterial.SetFloat ("_Alpha_Cutoff", alphaCutoff);
 				m_skyMaterial.SetFloat ("_Alpha_Global", alphaGlobal);
 
+			//cams = Camera.allCameras;
+
 			if (postprocessingEnabled) {	
+
+				tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+				if (tmp == null){
+					farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+					tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+				}
 
 				InitPostprocessMaterial(m_atmosphereMaterial);			 	
 				UpdatePostProcessMaterial (m_atmosphereMaterial);
-				(cams[cam].gameObject.GetComponent<scatterPostprocess>()).setMaterial(m_atmosphereMaterial);
+				tmp.setMaterial(m_atmosphereMaterial);
 			}
 
 
@@ -373,7 +444,7 @@ namespace scatterer
 				m_manager.SetUniforms (m_skyMaterial);
 				m_skyMaterial.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ());
 
-				cams = Camera.allCameras;
+				
 				Graphics.DrawMesh (m_mesh, m_manager.getParentCelestialBody ().transform.position, new Quaternion (0, 1, 0, 0), m_skyMaterial, layer, cams [cam]);
 
 
@@ -410,8 +481,11 @@ namespace scatterer
 		{	
 			//Sets uniforms that this or other gameobjects may need
 			if(mat == null) return;
-
 			mat.SetFloat("scale",Rg /  m_radius);
+			mat.SetFloat("Rg", Rg);
+			mat.SetFloat("Rt", Rt);
+			mat.SetFloat("RL", RL);
+
 			mat.SetVector("betaR", m_betaR / 1000.0f);
 			mat.SetFloat("mieG", Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 			mat.SetTexture("_Sky_Transmittance", m_transmit);
@@ -532,13 +606,13 @@ namespace scatterer
 		
 	
 		public void SetNearPlane(int NR) {
-			cams[cam].gameObject.GetComponent<scatterPostprocess>().setNearPlane(NR);
+			farCamera.gameObject.GetComponent<scatterPostprocess>().setNearPlane(NR);
 		}
 		
 		
 		
 		public void SetFarPlane(int FR) {
-			cams[cam].gameObject.GetComponent<scatterPostprocess>().setFarPlane(FR);
+			farCamera.gameObject.GetComponent<scatterPostprocess>().setFarPlane(FR);
 		}
 
 
@@ -548,15 +622,23 @@ namespace scatterer
 		}
 
 		public void enablePostprocess(){
-
-			//Component.Destroy(cams[cam].gameObject.GetComponent<scatterPostprocess>());
-				cams[cam].gameObject.AddComponent(typeof(scatterPostprocess));
+			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+			if (tmp == null) {
+				farCamera.gameObject.AddComponent(typeof(scatterPostprocess));
+				tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+			}
+			//Component.Destroy(cams[cam].gameObject.GetComponent<scatterPostprocess>());				
 				//cams[cam+1].gameObject.AddComponent(typeof(scatterPostprocess));
 			postprocessingEnabled = true;
 		}
 		
 		public void disablePostprocess(){
-			Component.Destroy(cams[cam].gameObject.GetComponent<scatterPostprocess>());
+			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+			if (tmp != null) {
+				Component.Destroy (tmp);
+			}
+
+
 			//Component.Destroy(cams[cam+1].gameObject.GetComponent<scatterPostprocess>());
 			postprocessingEnabled = false;
 		}
@@ -576,6 +658,23 @@ namespace scatterer
 
 		public void SetPostProcessScale(float postScale) {
 			postProcessingScale=postScale;
+		}
+
+		public void toggleSunglare()
+		{
+			if (sunglareEnabled) {
+				m_skyMaterial.SetTexture ("_Sun_Glare", black);
+				sunglareEnabled = false;
+				alphaCutoff=0.2f;
+			} 
+			else 
+			{
+				m_skyMaterial.SetTexture("_Sun_Glare", sunGlare);
+				sunglareEnabled=true;
+				alphaCutoff=0.00f;
+
+			
+			}
 		}
 
 		

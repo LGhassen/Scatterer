@@ -1,9 +1,31 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace />
-  <MonoDevelop.Ide.Workbench ActiveDocument="C:\Users\ghoss\Downloads\PrecomputedAtmosphericScatterImageEffect\PrecomputedAtmosphericScatterImageEffect\Assets\Shaders\AtmosphericScatterNew.shader">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Core.cs">
     <Files>
-      <File FileName="C:\Users\ghoss\Downloads\PrecomputedAtmosphericScatterImageEffect\PrecomputedAtmosphericScatterImageEffect\Assets\Shaders\AtmosphericScatterNew.shader" Line="1" Column="1" />
+      <File FileName="SunNode.cs" Line="1" Column="1" />
+      <File FileName="SkyNode.cs" Line="1" Column="1" />
+      <File FileName="Core.cs" Line="360" Column="1" />
+      <File FileName="Manager.cs" Line="1" Column="1" />
+      <File FileName="ShaderReplacer.cs" Line="1" Column="1" />
+      <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Plugins\Math\Matrix2x2d.cs" Line="1" Column="1" />
+      <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Framework\SkinsLibrary.cs" Line="1" Column="1" />
+      <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\EncodeFloat.cs" Line="1" Column="1" />
+      <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Plugins\Utility\MeshFactory.cs" Line="1" Column="1" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="scatterer" expanded="True">
+            <Node name="Framework" expanded="True" />
+            <Node name="Plugins" expanded="True">
+              <Node name="Math" expanded="True" />
+              <Node name="Utility" expanded="True" />
+            </Node>
+            <Node name="Core.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

@@ -104,7 +104,8 @@ public class Matrix2x2d
 	    return m[0,0] * m[1,1] - m[1,0] * m[0,1];
 	}
 	
-	public bool Inverse(ref Matrix2x2d mInv, double tolerance = 1e-06)
+	//public bool Inverse(ref Matrix2x2d mInv, double tolerance = 1e-06)
+	public bool Inverse(ref Matrix2x2d mInv, double tolerance)
 	{
 	    double det = Determinant();
 	
@@ -121,7 +122,8 @@ public class Matrix2x2d
 	    return true;
 	}
 	
-	public Matrix2x2d Inverse(double tolerance = 1e-06)
+	//public Matrix2x2d Inverse(double tolerance = 1e-06)
+	public Matrix2x2d Inverse(double tolerance)
 	{
 	    Matrix2x2d kInverse = new Matrix2x2d();
 	    Inverse(ref kInverse, tolerance);
