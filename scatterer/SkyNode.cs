@@ -31,7 +31,7 @@ namespace scatterer
 		Texture2D sunGlare;
 		Texture2D black;
 
-		scatterPostprocess tmp;
+
 
 		float postProcessingAlpha=0.95f;
 		float postProcessingScale=1f;
@@ -46,8 +46,8 @@ namespace scatterer
 		bool postprocessingEnabled=true;
 		int waitBeforeReloadCnt=0;
 		GameObject idek=new GameObject();
-		MeshFilter MF;
-		MeshRenderer mr;
+//		MeshFilter MF;
+//		MeshRenderer mr;
 		float alphaCutoff=0.00f;
 		float alphaGlobal=1f;
 		//float m_radius = 63600.0f*4;
@@ -118,7 +118,6 @@ namespace scatterer
 
 			m_mesh = MeshFactory.MakePlane(2, 2, MeshFactory.PLANE.XY, false,false);
 			m_mesh.bounds = new Bounds(m_manager.getParentCelestialBody().transform.position, new Vector3(1e8f,1e8f, 1e8f));
-			
 
 			//The sky map is used to create a reflection of the sky for objects that need it (like the ocean)
 			//We don't need the skymap here, this is from the proland code
@@ -131,108 +130,37 @@ namespace scatterer
 			m_skyMap.Create();*/
 			
 
-
-
-						
 			//Inscatter is responsible for the change in the sky color as the sun moves
 			//The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture 
 			//and the shader manually performs the sample for the 4th dimension
-			//path = Application.dataPath + m_filePath + "/inscatter.raw";
-			//path = Path.GetDirectoryName(path1)+m_filePath + "/inscatter.raw";
-
 			m_inscatter = new RenderTexture(RES_MU_S * RES_NU, RES_MU * RES_R, 0, RenderTextureFormat.ARGBHalf);
-			//m_inscatter = new RenderTexture(RES_MU_S * RES_NU, RES_MU, 0, RenderTextureFormat.ARGBHalf);
-			//m_inscatter.volumeDepth = RES_R;
+
 			m_inscatter.wrapMode = TextureWrapMode.Clamp;
 			m_inscatter.filterMode = FilterMode.Bilinear;
-//			m_inscatter.anisoLevel = 1;
-			//m_inscatter.filterMode = FilterMode.Point;
-			//m_inscatter.useMipMap = true;
-//			m_inscatter.antiAliasing = 1;
-			//m_inscatter.mipMapBias = -4f;
-			//m_inscatter.isVolume = true;
-			//m_inscatter.enableRandomWrite = true;
-
-//			m_inscatterGround = new RenderTexture(RES_MU_S * RES_NU, RES_MU * RES_R, 0, RenderTextureFormat.ARGBHalf);
-//			//m_inscatter = new RenderTexture(RES_MU_S * RES_NU, RES_MU, 0, RenderTextureFormat.ARGBHalf);
-//			//m_inscatter.volumeDepth = RES_R;
-//			m_inscatterGround.wrapMode = TextureWrapMode.Clamp;
-//			m_inscatterGround.filterMode = FilterMode.Bilinear;
-
 
 
 
 
 			//Transmittance is responsible for the change in the sun color as it moves
-			//The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-
-
-			
+			//The raw file is a 2D array of 32 bit floats with a range of 0 to 1									
 			m_transmit = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBHalf);
 			m_transmit.wrapMode = TextureWrapMode.Clamp;
 			m_transmit.filterMode = FilterMode.Bilinear;
-//			m_transmit.anisoLevel = 1;
-//			m_transmit.antiAliasing = 1;
-			//m_transmit.filterMode =	FilterMode.Point;
-			//m_transmit.useMipMap = true;
-			//m_transmit.mipMapBias = -4f;
-			//m_transmit.enableRandomWrite = true;
-
-//			m_transmitGround = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBHalf);
-//			m_transmitGround.wrapMode = TextureWrapMode.Clamp;
-//			m_transmitGround.filterMode = FilterMode.Bilinear;
-
-
-
 									
 			//Iirradiance is responsible for the change in the sky color as the sun moves
-			//The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-
-			
+			//The raw file is a 2D array of 32 bit floats with a range of 0 to 1					
 			m_irradiance = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBHalf);
 			m_irradiance.wrapMode = TextureWrapMode.Clamp;
 			m_irradiance.filterMode = FilterMode.Bilinear;
-//			m_irradiance.anisoLevel = 1;
-//			m_irradiance.antiAliasing = 1;
-			//m_irradiance.filterMode = FilterMode.Point;
-			//m_irradiance.useMipMap = true;
-			//m_irradiance.mipMapBias = -4f;
-			//m_irradiance.enableRandomWrite = true;
 
 
-
-
-			/*m_transmit.Create();
-			m_inscatter.Create();
-			m_irradiance.Create();
-			
-			
-			string path = Application.dataPath + m_filePath + "/transmittance.raw";
-			//path = Path.GetDirectoryName(path1)+m_filePath + "/transmit.raw";			
-			EncodeFloat.WriteIntoRenderTexture (m_transmit, 3, path);
-			
-			path = Application.dataPath + m_filePath + "/irradiance.raw";
-			EncodeFloat.WriteIntoRenderTexture (m_irradiance, 3, path);
-			
-			/*string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			UriBuilder uri = new UriBuilder(codeBase);
-			string path1 = Uri.UnescapeDataString(uri.Path);
-			string path = Path.GetDirectoryName(path1)+m_filePath + "/inscatter.raw";*/
-			/*path = Application.dataPath + m_filePath + "/inscatter.raw";
-			EncodeFloat.WriteIntoRenderTexture (m_inscatter, 4, path);*/
 
 			initiateOrRestart ();			
 
-
-
-
-			//m_skyMapMaterial=new Material(ShaderTool.GetMatFromShader("CompiledSkyMap.shader"));
 			m_skyMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSky.shader"));
 
 
-
-			//Texture2D sunGlare = Resources.Load ("sunglare") as Texture2D;
 			sunGlare = new Texture2D (512, 512);
 			black = new Texture2D (512, 512);
 
@@ -246,12 +174,6 @@ namespace scatterer
 
 			if (sunGlare == null) {
 				print ("SUNGLARE NULL");
-				print ("SUNGLARE NULL");
-				print ("SUNGLARE NULL");
-				print ("SUNGLARE NULL");
-				print ("SUNGLARE NULL");
-				print ("SUNGLARE NULL");
-				print ("SUNGLARE NULL");
 
 			} else {
 				sunGlare.wrapMode = TextureWrapMode.Clamp;
@@ -259,24 +181,14 @@ namespace scatterer
 
 			}
 
-
-			
+						
 			InitUniforms(m_skyMaterial);
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
-//			if (postprocessingEnabled) {	
-//				InitPostprocessMaterial(m_atmosphereMaterial);			 	
-//				(cams[cam].gameObject.GetComponent<scatterPostprocess>()).setMaterial(m_atmosphereMaterial);
-//			}
-
-
-			//InitUniforms(m_skyMapMaterial);
 
 			//aniso defaults to to forceEnable on higher visual settings and causes artifacts
 			QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
 
-			sunglareCutoffAlt = Rt*0.995f;
-
-			
+			sunglareCutoffAlt = Rt*0.995f;						
 		}
 
 
@@ -286,8 +198,6 @@ namespace scatterer
 
 			m_inscatter.Create ();
 			m_transmit.Create ();
-//			m_inscatterGround.Create ();
-//			m_transmitGround.Create ();
 			m_irradiance.Create ();
 
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
@@ -297,30 +207,13 @@ namespace scatterer
 
 			
 			string path1 = path + m_filePath + "/transmittance.raw";
-			//path = Path.GetDirectoryName(path1)+m_filePath + "/transmit.raw";			
-
-
 			EncodeFloat.WriteIntoRenderTexture (m_transmit, 3, path1,null);
 
-//			path = Application.dataPath + m_filePath + "/transmittanceGround.raw";
-//			//path = Path.GetDirectoryName(path1)+m_filePath + "/transmit.raw";			
-//			EncodeFloat.WriteIntoRenderTexture (m_transmitGround, 3, path);
-			
 			path1 = path + m_filePath + "/irradiance.raw";
-
 			EncodeFloat.WriteIntoRenderTexture (m_irradiance, 3, path1,null);
-			
-			/*string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			UriBuilder uri = new UriBuilder(codeBase);
-			string path1 = Uri.UnescapeDataString(uri.Path);
-			string path = Path.GetDirectoryName(path1)+m_filePath + "/inscatter.raw";*/
+
 			path1 = path + m_filePath + "/inscatter.raw";
-
 			EncodeFloat.WriteIntoRenderTexture (m_inscatter, 4, path1,null);
-
-//			path = Application.dataPath + m_filePath + "/inscatterGround.raw";
-//			EncodeFloat.WriteIntoRenderTexture (m_inscatterGround, 4, path);
-
 		}
 
 		public void SetRadius(float rad) {
@@ -342,6 +235,13 @@ namespace scatterer
 			m_transmit.Release();
 			m_irradiance.Release();
 			m_inscatter.Release();
+
+			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+			
+			if(tmp != null) 
+			{
+				Component.Destroy (tmp);
+			}
 
 //			m_inscatterGround.Release();
 //			m_transmitGround.Release();
@@ -366,8 +266,7 @@ namespace scatterer
 
 			if (!initiated) { //gets the cameras, this isn't done at start() because the cameras still don't exist then and it crashes the game
 				cams = Camera.allCameras;
-				
-				
+								
 				for (int i=0; i<cams.Length; i++) 
 				{
 					if (cams [i].name == "Camera Scaled Space")
@@ -375,36 +274,35 @@ namespace scatterer
 					if (cams [i].name == "Camera 01")
 						farCamera = cams [i];				
 				}
+				scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 
-				tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
-
-				if(tmp != null) 
+				if(tmp!= null) 
 				{
 					Component.Destroy (tmp);
 				}
 				
 				if (postprocessingEnabled) {
 					farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+					if(farCamera.gameObject.GetComponent<scatterPostprocess> () != null)
+					{
+						initiated =true;
+					}
 				}
-				
 
+				else
+				{				
 				initiated =true;
+				}
 			}
 
+			print ("INITIATED");
+			print (initiated);
 
 			float alt = Vector3.Distance(farCamera.transform.position, m_manager.getParentCelestialBody ().transform.position);
 			if ((sunglareEnabled)^(alt < sunglareCutoffAlt)) //^ is XOR
 			{
 				toggleSunglare();
 			}
-
-			print ("ALT");
-			print (alt);
-			print ("cutoff");
-			print (sunglareCutoffAlt);
-
-
-
 
 
 			//if alt-tabbing/windowing and textures are lost
@@ -424,59 +322,28 @@ namespace scatterer
 				m_skyMaterial.SetFloat ("_Alpha_Cutoff", alphaCutoff);
 				m_skyMaterial.SetFloat ("_Alpha_Global", alphaGlobal);
 
-			//cams = Camera.allCameras;
+
 
 			if (postprocessingEnabled) {	
-
-				tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
-				if (tmp == null){
-					farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
-					tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
-				}
-
 				InitPostprocessMaterial(m_atmosphereMaterial);			 	
 				UpdatePostProcessMaterial (m_atmosphereMaterial);
-				tmp.setMaterial(m_atmosphereMaterial);
+				
+				if(farCamera.gameObject.GetComponent<scatterPostprocess> () == null) 
+				{
+					farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+				}
+
+				farCamera.gameObject.GetComponent<scatterPostprocess>().setMaterial(m_atmosphereMaterial);
 			}
-
-
-				//SetUniforms (m_skyMapMaterial);			
+		
 				m_manager.SetUniforms (m_skyMaterial);
 				m_skyMaterial.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ());
-
-				
+							
 				Graphics.DrawMesh (m_mesh, m_manager.getParentCelestialBody ().transform.position, new Quaternion (0, 1, 0, 0), m_skyMaterial, layer, cams [cam]);
 
-
-
-
-
-
-				//skyObject.layer = layer;
-
-
-
-				//GameObject idek = new GameObject();
-				//idek.la		yer=
-				//Vessel playerVessel=FlightGlobals.ActiveVessel;
-				//idek.transform.parent = m_manager.getParentCelestialBody ().transform;
-				//idek.layer = layer;
-				//mr.material = m_skyMaterial;
-				//mr.enabled = true;
-				//idek.collider.enabled = false;
-				//mr.collider.enabled = false;
-
-
-			
-				//Update the sky map if...
-				//The sun has moved
-				//Or if this is first frame
-				//And if this is not a deformed terrain (ie a planet). Planet sky map not supported
-				//if((!m_manager.IsDeformed() && m_manager.GetSunNode().GetHasMoved()) || Time.frameCount == 1)
-				//Graphics.Blit(null, m_skyMap, m_skyMapMaterial);
-
 		}
-		
+
+
 		public void SetUniforms(Material mat)
 		{	
 			//Sets uniforms that this or other gameobjects may need
@@ -625,7 +492,7 @@ namespace scatterer
 			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 			if (tmp == null) {
 				farCamera.gameObject.AddComponent(typeof(scatterPostprocess));
-				tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+				//tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 			}
 			//Component.Destroy(cams[cam].gameObject.GetComponent<scatterPostprocess>());				
 				//cams[cam+1].gameObject.AddComponent(typeof(scatterPostprocess));
@@ -636,6 +503,7 @@ namespace scatterer
 			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 			if (tmp != null) {
 				Component.Destroy (tmp);
+
 			}
 
 

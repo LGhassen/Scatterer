@@ -350,9 +350,7 @@ namespace scatterer
 						postprocessingEnabled=false;
 					}}
 				GUILayout.EndHorizontal();
-
-
-				
+														
 				GUILayout.BeginHorizontal();
 				GUILayout.Label("Post Processing Alpha (/100)");		
 				postProcessingalpha=(float)(Convert.ToDouble(GUILayout.TextField(postProcessingalpha.ToString())));
