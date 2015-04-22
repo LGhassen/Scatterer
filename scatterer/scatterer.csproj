@@ -78,6 +78,8 @@
     <Compile Include="ShaderReplacer.cs" />
     <Compile Include="scatterPostProcess.cs" />
     <Compile Include="ShaderList.cs" />
+    <Compile Include="isoSphere.cs" />
+    <Compile Include="drawSky.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

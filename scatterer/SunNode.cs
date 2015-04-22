@@ -9,14 +9,14 @@ namespace scatterer
 	 * NOTE - all scenes must contain a SunNode.
 	 */
 	
-
+	
 	public class SunNode : MonoBehaviour 
 	{
-
+		
 		Vector3 directionTosun;
 		//Dont change this
 		static readonly Vector3 Z_AXIS = new Vector3(0,0,1);
-
+		
 		[SerializeField]
 		Vector3 m_startSunDirection = Z_AXIS;
 		
@@ -48,10 +48,10 @@ namespace scatterer
 		public void Start() 
 		{
 			//if the sun direction entered is (0,0,0) which is not valid, change to default
-
-
+			
+			
 			//if(m_startSunDirection.magnitude < Mathf.Epsilon)
-				m_startSunDirection = Z_AXIS;
+			m_startSunDirection = Z_AXIS;
 			
 			//Vector3 tmp = m_manager.getDirectionToSun();
 			//tmp=tmp.normalized;
@@ -100,22 +100,22 @@ namespace scatterer
 			
 			m_hasMoved = false;
 			
-
+			
 			directionTosun=directionTosun.normalized;
-				
+			
 			m_hasMoved = true;
-
+			
 			
 			Quaternion q = Quaternion.FromToRotation(GetDirection(), Z_AXIS);
 			m_worldToLocalRotation = Matrix4x4.TRS(Vector3.zero, q, Vector3.one);
 			
 		}
-
+		
 		public Vector3 getSunNodeDirection()
 		{
 			return(directionTosun);
 		}
-
+		
 		public  void setDirectionToSun(Vector3 direction)
 		{
 			directionTosun=direction.normalized;
