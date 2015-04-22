@@ -4,6 +4,14 @@ using System.Linq;
 using System.Text;
 
 
+
+using System.IO;
+
+using System.Reflection;
+
+
+
+
 using KSP;
 using KSP.IO;
 using UnityEngine;
@@ -16,10 +24,15 @@ namespace scatterer
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
     public class Core : MonoBehaviourWindow
     {
+
+		int[] camTab;
+		int camTab0=1, camTab1=1, camTab2=1;
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType<SkyNode>(null);
 		String parentPlanet="Kerbin";
 		float atmosphereGlobalScale=1000f;
 
+		float inscatteringCoeff=80f;
+		float extinctionCoeff=30f;
 		float postProcessingalpha=95f;
 		float postProcessDepth=150f;
 		float postProcessScale=1000f;
@@ -32,9 +45,10 @@ namespace scatterer
 		float exposure = 20f;
 		int atmosphereToDisable=0;
 		float alphaCutoff=0f;
-		float alphaGlobal=100f;
+		float alphaGlobal=100f;	
 		int layer=15;
 		int cam=1;
+		int globalsCam=1;
 		//float m_radius = 63600.0f*4;
 		float m_radius;// = 600000.0f;
 //float m_radius = 127200.0f;
@@ -49,6 +63,14 @@ namespace scatterer
 		SunNode idek;
 
 		Manager m_manager;
+
+
+
+		public Transform GetScaledTransform(string body)
+		{
+			List<Transform> transforms = ScaledSpace.Instance.scaledSpaceTransforms;
+			return transforms.Single(n => n.name == body);
+		}
 
         internal override void Awake()
         {
@@ -88,10 +110,18 @@ namespace scatterer
 				m_manager.Awake();
 
 				m_radius = (float)celestialBodies [PlanetId].Radius;
+
+
 			}
 
 
 		}
+
+		internal override void LateUpdate()
+		{
+			m_manager.lateUdpate ();
+		}
+
 
         internal override void Update()
         {
@@ -101,6 +131,7 @@ namespace scatterer
                 Visible = !Visible;
 			if (isActive) {
 				m_manager.Update ();
+
 				//m_transmit=m_manager.getInscatter();
 
 				/*Shader[] shaderList =Resources.FindObjectsOfTypeAll<Shader> ();
@@ -228,6 +259,18 @@ namespace scatterer
 					cam = cam-1;
 
 				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Globals Cam");				
+				globalsCam=Convert.ToInt32(GUILayout.TextField(globalsCam.ToString()));
+				if(GUILayout.Button("+"))
+					globalsCam += 1;
+				
+				if(GUILayout.Button("-"))
+					globalsCam -= 1;
+				
+				GUILayout.EndHorizontal();
+				m_manager.setGlobalsCam(globalsCam);
 
 //				GUILayout.BeginHorizontal();
 //
@@ -452,9 +495,113 @@ namespace scatterer
 				GUILayout.EndHorizontal();
 
 
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Inscattering Coeff (/100)");		
+				
+				
+				inscatteringCoeff=(float)(Convert.ToDouble(GUILayout.TextField(inscatteringCoeff.ToString())));
+				
+				if(GUILayout.Button("Set"))
+				{
+					m_manager.SetInscatteringCoeff(inscatteringCoeff/100);
+				}
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Extinction Coeff (/100)");		
+				
+				
+				extinctionCoeff=(float)(Convert.ToDouble(GUILayout.TextField(extinctionCoeff.ToString())));
+				
+				if(GUILayout.Button("Set"))
+				{
+					m_manager.SetExtinctionCoeff(extinctionCoeff/100);
+				}
+				GUILayout.EndHorizontal();
+
+
+
+
 				GUILayout.BeginHorizontal();
 				GUILayout.Label("ManagerState");				
 				GUILayout.TextField(m_manager.getManagerState());
+				GUILayout.EndHorizontal();
+
+
+				GUILayout.BeginHorizontal();
+
+				GUILayout.Label("Cam 0");				
+
+				camTab0=Convert.ToInt32(GUILayout.TextField(camTab0.ToString()));
+
+				if(GUILayout.Button("+"))
+					camTab0 = camTab0+1;
+				
+				if(GUILayout.Button("-"))
+					camTab0 = camTab0-1;
+
+
+
+				m_manager.setCam(0,camTab0);				
+
+				GUILayout.EndHorizontal();
+
+
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Cam 1");				
+				camTab1=Convert.ToInt32(GUILayout.TextField(camTab1.ToString()));
+				if(GUILayout.Button("+"))
+					camTab1 = camTab1+1;
+				
+				if(GUILayout.Button("-"))
+					camTab1 = camTab1-1;
+				
+				GUILayout.EndHorizontal();
+				
+				m_manager.setCam(1,camTab1);
+
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Cam 2");				
+				camTab2=Convert.ToInt32(GUILayout.TextField(camTab2.ToString()));
+				if(GUILayout.Button("+"))
+					camTab2 = camTab2+1;
+				
+				if(GUILayout.Button("-"))
+					camTab2 = camTab2-1;
+				
+				GUILayout.EndHorizontal();
+				
+				m_manager.setCam(2,camTab2);
+
+
+
+				GUILayout.BeginHorizontal();
+				if(GUILayout.Button("Get sun shader"))
+				{
+					Transform transform = GetScaledTransform(parentPlanet);
+										
+					PQS pqs = celestialBodies[SunId].pqsController;
+
+					if (pqs != null)
+					{
+						MeshRenderer mr = (MeshRenderer)transform.GetComponent(typeof(MeshRenderer));
+						if (mr != null)
+						{
+//							mainTexture = mr.material.mainTexture;
+//							bumpTexture = mr.material.GetTexture("_BumpMap");
+//							originalPlanetShader = mr.material.shader;
+
+								print("planet shader: " + mr.material.shader);
+
+							
+						}
+					}
+
+
+				}
 				GUILayout.EndHorizontal();
 
 //				GUILayout.BeginHorizontal();

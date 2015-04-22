@@ -32,6 +32,8 @@ namespace scatterer
 		int[] cam=new int[10];
 		int transformCam=0;
 
+		int globalsCam=1;
+
 		[SerializeField]
 		int m_gridResolution = 25;
 
@@ -86,6 +88,11 @@ namespace scatterer
 				cam[i] = 1;
 		}
 
+		public void setCam(int i, int value){
+			//bindtocam1or0 = !bindtocam1or0;
+			cam [i] = value;
+		}
+
 		public void toggleCamTransform(){
 
 			transformCam++;
@@ -103,6 +110,11 @@ namespace scatterer
 		
 		public void SetFarPlane(int FR) {
 			m_skyNode.SetFarPlane (FR);
+		}
+
+		
+		public void setGlobalsCam(int whatever) {
+			globalsCam=whatever;
 		}
 
 
@@ -162,7 +174,7 @@ namespace scatterer
 
 		public Vector3 getDirectionToSun()
 		{
-			return(sunCelestialBody.GetTransform ().position-parentCelestialBody.GetTransform ().position);
+			return((sunCelestialBody.GetTransform ().position-parentCelestialBody.GetTransform ().position));
 		}
 
 		public int GetGridResolution() {
@@ -274,6 +286,7 @@ namespace scatterer
 			m_sunNode.Start ();
 			m_skyNode = new SkyNode();
 			m_skyNode.setManager (this);
+			m_skyNode.SetParentCelestialBody (parentCelestialBody);
 			m_skyNode.loadSettings ();
 			m_skyNode.Start ();
 
@@ -288,11 +301,13 @@ namespace scatterer
 			//make the mesh used to draw the terrain quads
 			m_quadMesh = MeshFactory.MakePlane(m_gridResolution,m_gridResolution);
 			m_quadMesh.bounds = new Bounds(Vector3.zero, new Vector3(1e8f, 1e8f, 1e8f));*/
-			managerState = "awake";
-
 			for (int i=0;i<10;i++){
 				cam[i]=1;
 			}
+
+			managerState = "awake";
+
+
 
 			m_radius = (float)parentCelestialBody.Radius;
 		}
@@ -301,89 +316,158 @@ namespace scatterer
 		{
 
 
-			//Sets uniforms that this or other gameobjects may need
-			if(mat == null) return;
 
-
-			/*mat.SetMatrix("_Globals_WorldToCamera", m_controller.GetView().GetWorldToCamera().ToMatrix4x4());
-			mat.SetMatrix("_Globals_CameraToWorld", m_controller.GetView().GetCameraToWorld().ToMatrix4x4() );
-			mat.SetMatrix("_Globals_CameraToScreen", m_controller.GetView().GetCameraToScreen().ToMatrix4x4());
-			mat.SetMatrix("_Globals_ScreenToCamera", m_controller.GetView().GetScreenToCamera().ToMatrix4x4());
-			mat.SetVector("_Globals_WorldCameraPos", m_controller.GetView().GetWorldCameraPos().ToVector3());
-			mat.SetVector("_Globals_Origin", m_origin);
-			mat.SetFloat("_Exposure", m_HDRExposure);*/
-
-			Camera[] cams = Camera.allCameras;
-
-
-//				if (cam [0] == 1) {
-//					mat.SetMatrix ("_Globals_WorldToCamera", cams [1].worldToCameraMatrix);
-//					mat.SetMatrix ("_Globals_CameraToWorld", cams [1].worldToCameraMatrix.inverse);
+//			if(mat == null) return;
+//			Camera[] cams = Camera.allCameras;
+//
+//			mat.SetMatrix ("_Globals_WorldToCamera", cams [transformCam].worldToCameraMatrix);
+//			mat.SetMatrix ("_Globals_CameraToWorld", cams [transformCam].worldToCameraMatrix.inverse);
+//
+////			mat.SetMatrix ("_Globals_WorldToCamera", cams [globalsCam].worldToCameraMatrix);
+////			mat.SetMatrix ("_Globals_CameraToWorld", cams [globalsCam].worldToCameraMatrix.inverse);
+//
+//			Matrix4x4 p = cams [cam [1]].projectionMatrix;
+//
+////			Matrix4x4 p = cams [globalsCam].projectionMatrix;
+//
+//				/*bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
+//			
+//			if(d3d) 
+//			{
+//			if(cams[1].actualRenderingPath == RenderingPath.DeferredLighting)
+//				{
+//					// Invert Y for rendering to a render texture
+//					for (int i = 0; i < 4; i++) {
+//						p[1,i] = -p[1,i];
+//					}
+//				}
+//				
+//				// Scale and bias depth range
+//				for (int i = 0; i < 4; i++) {
+//					p[2,i] = p[2,i]*0.5f + p[3,i]*0.5f;
+//				}
+//			}*/
+//
+//
+//			
+//				Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d (p);
+//
+//				if (cam [2] == 1) {
+//
+//					mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
+//					mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
 //				} else {
 //
-//					mat.SetMatrix ("_Globals_WorldToCamera", cams [0].worldToCameraMatrix);
-//					mat.SetMatrix ("_Globals_CameraToWorld", cams [0].worldToCameraMatrix.inverse);
+//					mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
+//					mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.ToMatrix4x4 ());
 //				}
-
-			mat.SetMatrix ("_Globals_WorldToCamera", cams [transformCam].worldToCameraMatrix);
-			mat.SetMatrix ("_Globals_CameraToWorld", cams [transformCam].worldToCameraMatrix.inverse);
-
-				Matrix4x4 p = cams [cam [1]].projectionMatrix;
-				/*bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
-			
-			if(d3d) 
-			{
-			if(cams[1].actualRenderingPath == RenderingPath.DeferredLighting)
-				{
-					// Invert Y for rendering to a render texture
-					for (int i = 0; i < 4; i++) {
-						p[1,i] = -p[1,i];
-					}
-				}
+//
+//			//	if (cam [6] == 1) {
+//				mat.SetVector ("_Globals_WorldCameraPos", cams [cam [3]].transform.position);
+//
+////				mat.SetVector ("_Globals_WorldCameraPos", cams [globalsCam].transform.position);
+//
+////				}
+////				else{
+////					mat.SetVector ("_Globals_WorldCameraPos",Vector3.zero- cams [cam [3]].transform.position);
+////				}
+//
+//				if (cam [4] == 1) {
+//					//Vector3 ayd=parentCelestialBody.transform.position;
+//					mat.SetVector ("_Globals_Origin", Vector3.zero-parentCelestialBody.transform.position);	
+//				} else {
+//					mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
+//				}
+//				//Vessel playerVessel=FlightGlobals.ActiveVessel;
+//				//mat.SetVector("_Globals_Origin", Vector3.zero-parentCelestialBody.transform.position);
+//				//mat.SetVector ("_Globals_Origin", Vector3.zero);
 				
-				// Scale and bias depth range
-				for (int i = 0; i < 4; i++) {
-					p[2,i] = p[2,i]*0.5f + p[3,i]*0.5f;
-				}
-			}*/
 
 
+			//NEW TESTING BLOCK /////////////////////////////////
+
+
+						if(mat == null) return;
+						Camera[] cams = Camera.allCameras;
 			
-				Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d (p);
+//						mat.SetMatrix ("_Globals_WorldToCamera", cams [cam [0]].cameraToWorldMatrix.inverse);
+//						mat.SetMatrix ("_Globals_CameraToWorld", cams [cam [0]].cameraToWorldMatrix);
+			
+			//			mat.SetMatrix ("_Globals_WorldToCamera", cams [globalsCam].worldToCameraMatrix);
+			//			mat.SetMatrix ("_Globals_CameraToWorld", cams [globalsCam].worldToCameraMatrix.inverse);
+			
+						Matrix4x4 p = cams [cam [1]].projectionMatrix;
+			
+			//			Matrix4x4 p = cams [globalsCam].projectionMatrix;
+			
+							/*bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
+						
+						if(d3d) 
+						{
+						if(cams[1].actualRenderingPath == RenderingPath.DeferredLighting)
+							{
+								// Invert Y for rendering to a render texture
+								for (int i = 0; i < 4; i++) {
+									p[1,i] = -p[1,i];
+								}
+							}
+							
+							// Scale and bias depth range
+							for (int i = 0; i < 4; i++) {
+								p[2,i] = p[2,i]*0.5f + p[3,i]*0.5f;
+							}
+						}*/
+			
+			
+						
+							Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d (p);
+			
+							if (cam [2] == 1) {
+			
+								mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
+								mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
+							} else {
+			
+								mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
+								mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.ToMatrix4x4 ());
+							}
+			
+						//	if (cam [6] == 1) {
+						mat.SetVector ("_Globals_WorldCameraPos", cams [cam [2]].transform.position);
+			
+			//				mat.SetVector ("_Globals_WorldCameraPos", cams [globalsCam].transform.position);
+			
+			//				}
+			//				else{
+			//					mat.SetVector ("_Globals_WorldCameraPos",Vector3.zero- cams [cam [3]].transform.position);
+			//				}
+			
+							if (cam [4] == 1) {
+								//Vector3 ayd=parentCelestialBody.transform.position;
+								mat.SetVector ("_Globals_Origin", Vector3.zero-parentCelestialBody.transform.position);	
+							} else {
+								mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
+							}
+							//Vessel playerVessel=FlightGlobals.ActiveVessel;
+							//mat.SetVector("_Globals_Origin", Vector3.zero-parentCelestialBody.transform.position);
+							//mat.SetVector ("_Globals_Origin", Vector3.zero);
 
-				if (cam [2] == 1) {
 
-					mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
-					mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
-				} else {
-
-					mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
-					mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.ToMatrix4x4 ());
-				}
-
-			//	if (cam [6] == 1) {
-				mat.SetVector ("_Globals_WorldCameraPos", cams [cam [3]].transform.position);
-//				}
-//				else{
-//					mat.SetVector ("_Globals_WorldCameraPos",Vector3.zero- cams [cam [3]].transform.position);
-//				}
-
-				if (cam [4] == 1) {
-					//Vector3 ayd=parentCelestialBody.transform.position;
-					mat.SetVector ("_Globals_Origin", Vector3.zero-parentCelestialBody.transform.position);	
-				} else {
-					mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
-				}
-				//Vessel playerVessel=FlightGlobals.ActiveVessel;
-				//mat.SetVector("_Globals_Origin", Vector3.zero-parentCelestialBody.transform.position);
-				//mat.SetVector ("_Globals_Origin", Vector3.zero);
-				mat.SetFloat ("_Exposure", m_HDRExposure);
+			mat.SetFloat ("_Exposure", m_HDRExposure);
 
 		}
 
 		public void setPostprocessUniforms(Material mat)
 		{
 
+		}
+
+		public void SetInscatteringCoeff(float inCoeff) {
+			m_skyNode.SetInscatteringCoeff(inCoeff);
+		}
+		
+		public void SetExtinctionCoeff(float exCoeff) {
+			m_skyNode.SetExtinctionCoeff(exCoeff);
 		}
 
 		
@@ -399,6 +483,7 @@ namespace scatterer
 			m_radius = (float)parentCelestialBody.Radius;
 
 			m_skyNode.UpdateNode();
+
 
 
 
@@ -441,6 +526,11 @@ namespace scatterer
 			updateCnt++;
 			managerState = "update done "+updateCnt.ToString();
 
+		}
+
+		public void lateUdpate()
+		{
+			m_skyNode.drawSky();
 		}
 
 		/*void DrawTerrain(TerrainNode node)

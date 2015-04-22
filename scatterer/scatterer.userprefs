@@ -1,22 +1,27 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="SkyNode.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Core.cs">
     <Files>
-      <File FileName="SunNode.cs" Line="1" Column="1" />
-      <File FileName="SkyNode.cs" Line="426" Column="1" />
-      <File FileName="Core.cs" Line="67" Column="86" />
-      <File FileName="Manager.cs" Line="300" Column="23" />
+      <File FileName="SunNode.cs" Line="83" Column="18" />
+      <File FileName="SkyNode.cs" Line="262" Column="14" />
+      <File FileName="Core.cs" Line="120" Column="5" />
+      <File FileName="Manager.cs" Line="531" Column="1" />
       <File FileName="ShaderReplacer.cs" Line="1" Column="1" />
       <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Plugins\Math\Matrix2x2d.cs" Line="1" Column="1" />
       <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\EncodeFloat.cs" Line="1" Column="1" />
       <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Plugins\Utility\MeshFactory.cs" Line="1" Column="1" />
+      <File FileName="viewDepthBuffer.cs" Line="1" Column="1" />
+      <File FileName="ShaderTool.cs" Line="1" Column="1" />
+      <File FileName="isoSphere.cs" Line="1" Column="1" />
+      <File FileName="drawSky.cs" Line="1" Column="1" />
+      <File FileName="scatterPostProcess.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="scatterer" expanded="True">
             <Node name="Proland" expanded="True" />
-            <Node name="SkyNode.cs" selected="True" />
+            <Node name="Core.cs" selected="True" />
           </Node>
         </State>
       </Pad>
