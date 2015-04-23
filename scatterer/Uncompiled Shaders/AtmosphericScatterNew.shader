@@ -40,6 +40,9 @@ Shader "Sky/AtmosphereImageEffect"
 			uniform float4x4 _FrustumCorners;
 			uniform float4 _MainTex_TexelSize;
 			
+			uniform float _inscatteringCoeff;
+			uniform float _extinctionCoeff;
+			
 			uniform float4x4 _Globals_CameraToWorld;
 			//uniform float4x4 _Globals_ScreenToCamera;
 			//uniform float3 _Globals_WorldCameraPos;
@@ -85,6 +88,7 @@ Shader "Sky/AtmosphereImageEffect"
 			half4 frag(v2f i) : COLOR 
 			{
 				float4 col = tex2D(_MainTex, i.uv);
+				float4 col2=col;//
 				float4 skyCol = tex2D(_SkyDome, i.uv_depth);
 				
 				float dpth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));				
@@ -121,14 +125,34 @@ Shader "Sky/AtmosphereImageEffect"
 				float3 inscatter =  InScattering((_inCamPos-_Globals_Origin) , worldPos , extinction, 1.0, _Scale);
 				
 //				col.rgb = col.rgb * extinction + inscatter;
-				col.rgb = col.rgb * extinction +  inscatter;
+//				col.rgb =  col.rgb *(1-_extinctionCoeff) + col.rgb * extinction * _extinctionCoeff +  inscatter * _inscatteringCoeff;
+				
+				
+
+				col2.rgb =   col.rgb * extinction + inscatter;
+				
+				
+				
+				
+				
 				float visib=1;
 				if (dpth<=_global_depth){
 				visib=dpth/_global_depth;
 				}
 				
 				
-				return float4(hdr(col.rgb), visib);				
+				if (length(inscatter)<_extinctionCoeff)
+				{
+					return float4( hdr(col2.rgb) * (length(inscatter)/_extinctionCoeff)  +  col.rgb * (1-(length(inscatter)/_extinctionCoeff) ), _global_alpha*visib);
+				}
+				
+				
+				//if (length(inscatter)>_inscatteringCoeff)
+				//{
+					return float4(hdr(col2.rgb), _global_alpha*visib);
+				//}
+
+				//return float4(hdr(col2.rgb), visib);							
 				//return float4(hdr(col.rgb), _global_alpha*visib);				
 			    
 			}
