@@ -82,6 +82,7 @@
     </Compile>
     <Compile Include="isoSphere.cs" />
     <Compile Include="drawSky.cs" />
+    <Compile Include="updateAtCameraRythm.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -15,34 +15,34 @@ namespace scatterer
 	 */
 	public class Manager : MonoBehaviour 
 	{
-
-
+		
+		
 		//update counter and manager state, used to know if the manager is working
 		int updateCnt=0;
 		string managerState="not initialized";
-
+		
 		//parent core
 		Core m_core;
-
-
+		
+		
 		int[] cam=new int[7];
 		
 		[SerializeField]
 		float m_radius= 600000.0f;
 		
-
+		
 		//OceanNode m_oceanNode;
 		public SkyNode m_skyNode;
 		SunNode m_sunNode;
-				
+		
 		CelestialBody parentCelestialBody;
 		CelestialBody sunCelestialBody;
-										
+		
 		// Initialization
 		public void Awake() 
 		{
 			managerState = "waking up";
-
+			
 			m_sunNode = new SunNode();
 			m_sunNode.Start ();
 			m_skyNode = new SkyNode();
@@ -50,35 +50,35 @@ namespace scatterer
 			m_skyNode.SetParentCelestialBody (parentCelestialBody);
 			m_skyNode.loadSettings ();
 			m_skyNode.Start ();
-
+			
 			for (int i=0;i<7;i++)
 			{
 				cam[i]=1;
 			}
-
+			
 			m_radius = (float)parentCelestialBody.Radius;
-
+			
 			managerState = "awake";
 		}
-
+		
 		
 		public void Update () 
 		{
 			managerState = "updating";
-
+			
 			//Update the sky and sun
 			m_sunNode.setDirectionToSun (getDirectionToSun ());
 			m_sunNode.UpdateNode();
 			m_radius = (float)parentCelestialBody.Radius;
-
+			
 			m_skyNode.UpdateNode();
-
+			
 			updateCnt++;
 			managerState = "update done "+updateCnt.ToString();
 			//print (managerState);
 		}
 		
-
+		
 		public void setParentCelestialBody (CelestialBody parent)
 		{
 			parentCelestialBody = parent;
@@ -91,7 +91,13 @@ namespace scatterer
 		
 		public Vector3 getDirectionToSun()
 		{
-			return((sunCelestialBody.GetTransform ().position-parentCelestialBody.GetTransform ().position));
+			if (m_skyNode.debugSettings [0]) {
+				return((sunCelestialBody.GetTransform ().position - parentCelestialBody.GetTransform ().position));
+			} else {
+				return((ScaledSpace.LocalToScaledSpace(sunCelestialBody.GetTransform ().position)-ScaledSpace.LocalToScaledSpace(parentCelestialBody.GetTransform ().position)));
+			
+			}
+
 		}
 		
 		
@@ -126,4 +132,3 @@ namespace scatterer
 		}		
 	}
 }
-
