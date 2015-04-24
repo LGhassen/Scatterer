@@ -14,7 +14,7 @@ namespace scatterer
 		Manager m_manager;
 		SkyNode m_skynode;
 
-		public Material m_skyMaterial;
+		public Material skyMat;
 		Vector3 position;
 		Mesh m_mesh;
 
@@ -25,7 +25,7 @@ namespace scatterer
 		public void settings(Material inSkyMat, Vector3 inPos, Mesh inMesh, Manager inManager, SkyNode inSkyNode, Camera incam,int inlayer)
 		{
 			position = inPos;
-			m_skyMaterial = inSkyMat;
+			skyMat = inSkyMat;
 			m_mesh = inMesh;
 			m_skynode = inSkyNode;
 			m_manager = inManager;
@@ -34,13 +34,16 @@ namespace scatterer
 		}
 
 
-		public void OnPostRender() 
+		public void OnPostRender()
 		{
-			m_skyMaterial.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
-			m_skynode.SetUniforms (m_skyMaterial);
-			m_skyMaterial.SetPass(0);
+
+			skyMat.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
+			m_skynode.InitUniforms(skyMat);
+			m_skynode.SetUniforms (skyMat);
+			skyMat.SetPass(0);
 
 			Graphics.DrawMeshNow(m_mesh, position, Quaternion.identity);
+			//			Graphics.DrawMesh(m_mesh, position, Quaternion.identity,m_skyMaterial,layer,cam);
 
 		}		
 	}

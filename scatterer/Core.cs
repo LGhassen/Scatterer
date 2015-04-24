@@ -25,7 +25,11 @@ namespace scatterer
 	public class Core : MonoBehaviourWindow
 	{
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType<SkyNode>(null);
-				
+
+		MeshRenderer mr = new MeshRenderer ();
+
+		//bool[] debugSettings= new bool[5];
+		
 		//postprocessing properties
 		//float inscatteringCoeff=85f; //useless, removed from shader too
 		float extinctionCoeff=70f;
@@ -33,13 +37,19 @@ namespace scatterer
 		float postProcessDepth=150f;
 		float postProcessScale=1000f;
 		float postProcessExposure=18f;
-		
+
+		int renderQueue=2000;
+		int renderQueue2=2010;
+
+
+		float apparentDistance=1000f;
+
 		//sky properties
 		float exposure = 20f;
 		float alphaGlobal=100f;
 		int layer=15;
 		int cam=1;
-
+		
 		//other stuff
 		float atmosphereGlobalScale=1000f;
 		float m_radius;// = 600000.0f;
@@ -50,8 +60,8 @@ namespace scatterer
 		Manager m_manager;
 		bool depthbufferEnabled=false;
 		bool isActive;
-						
-
+		
+		
 		public Transform GetScaledTransform(string body)
 		{
 			List<Transform> transforms = ScaledSpace.Instance.scaledSpaceTransforms;
@@ -66,19 +76,24 @@ namespace scatterer
 			isActive = false;
 			
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene==GameScenes.SPACECENTER )
+
 			{
 				isActive = true;
+
+//				for (int j=0;j<5;j++){
+//					debugSettings[j]=false;
+//				}
 				
 				//read parent planet from config
 				cfg.load ();
 				parentPlanet =cfg.GetValue<string>("Planet");
 				atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"))*1000f;
-
+				
 				//find sun and parent planet
 				celestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType(typeof(CelestialBody));
 				PlanetId =0;
 				SunId =0;
-
+				
 				for (int k=0; k< celestialBodies.Length ; k++)
 				{
 					if (celestialBodies[k].GetName() == parentPlanet)
@@ -87,7 +102,7 @@ namespace scatterer
 					if (celestialBodies[k].GetName() == "Sun")
 						SunId=k;
 				}
-												
+				
 				m_manager=new Manager();
 				m_manager.setParentCelestialBody(celestialBodies[PlanetId]);
 				m_manager.setSunCelestialBody(celestialBodies[SunId]);
@@ -96,9 +111,9 @@ namespace scatterer
 				m_radius = (float)celestialBodies [PlanetId].Radius;								
 			}					
 		}
-				
-
-
+		
+		
+		
 		internal override void Update()
 		{			
 			//toggle whether its visible or not
@@ -144,29 +159,29 @@ namespace scatterer
 			{
 				//setting up lots of properties here, not the most elegant way to do it
 				//but since the GUI is just for testing It'll remain here for now
-
+				
 				
 				//CAM DEBUG OPTIONS								
-				//				GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
-				//				GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
-				//				GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
-				//				GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
-				//				GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
-				//				GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
-				//				GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
-				//				GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
-				//				GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
-				//				GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
-				//				GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
-				//				GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
-				//				GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
-				//
-				//				if (Camera.allCameras.Length == 7) {
-				//					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
-				//					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));
-				//				}															
+								GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
+								GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
+								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
+								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
+								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
+								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
+								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
+				
+								if (Camera.allCameras.Length == 7) {
+									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
+									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));
+								}															
 				//END CAM DEBUG OPTIONS
-
+				
 				
 				DeactivateAtmosphere (parentPlanet);
 				
@@ -193,7 +208,7 @@ namespace scatterer
 				
 				GUILayout.EndHorizontal ();
 				
-
+				
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Alpha Global (/100)");
@@ -320,15 +335,15 @@ namespace scatterer
 				
 				
 				
-//				GUILayout.BeginHorizontal ();
-//				GUILayout.Label ("Inscattering Coeff (/100)");
-//				inscatteringCoeff = (float)(Convert.ToDouble (GUILayout.TextField (inscatteringCoeff.ToString ())));
-//				
-//				if (GUILayout.Button ("Set"))
-//				{
-//					m_manager.m_skyNode.SetInscatteringCoeff (inscatteringCoeff / 100);
-//				}
-//				GUILayout.EndHorizontal ();
+				//				GUILayout.BeginHorizontal ();
+				//				GUILayout.Label ("Inscattering Coeff (/100)");
+				//				inscatteringCoeff = (float)(Convert.ToDouble (GUILayout.TextField (inscatteringCoeff.ToString ())));
+				//				
+				//				if (GUILayout.Button ("Set"))
+				//				{
+				//					m_manager.m_skyNode.SetInscatteringCoeff (inscatteringCoeff / 100);
+				//				}
+				//				GUILayout.EndHorizontal ();
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Extinction Coeff (/100)");
@@ -341,37 +356,99 @@ namespace scatterer
 					m_manager.m_skyNode.SetExtinctionCoeff (extinctionCoeff / 100);
 				}
 				GUILayout.EndHorizontal ();
+
+
+				for (int j=0;j<7;j++){
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label (String.Format("Debug setting:{0}", j.ToString()));	
+				GUILayout.TextField(m_manager.m_skyNode.debugSettings[j].ToString());
 				
+				if (GUILayout.Button ("Toggle"))
+				{
+						m_manager.m_skyNode.debugSettings[j] = !m_manager.m_skyNode.debugSettings[j];
+				}
+				GUILayout.EndHorizontal ();
+				}
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Apparent distance (/10000)");
+				apparentDistance = (float)(Convert.ToDouble (GUILayout.TextField (apparentDistance.ToString ())));
 				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.apparentDistance= apparentDistance/1000f;
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("RenderQueue");
+				renderQueue = Convert.ToInt32 (GUILayout.TextField (renderQueue.ToString ()));
 				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.renderQueue= renderQueue;
+				}
+				GUILayout.EndHorizontal ();
+
+
+
+				if (mr==null){
+				//								//Snippet from RbRay's EVE
+													Transform transform = GetScaledTransform (parentPlanet);													
+													{
+														mr = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
+														if (mr != null)
+														{														
+															print ("planet shader: " + mr.material.shader);	
+															print("RENDER QUEUE"+mr.material.renderQueue);
+														}
+													}										
+				}
+
+
+
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("RenderQueue Kerbin");
+				renderQueue2 = Convert.ToInt32 (GUILayout.TextField (renderQueue2.ToString ()));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					mr.material.renderQueue = renderQueue2;
+				}
+				GUILayout.EndHorizontal ();
+
+				print("KERBIN RENDER QUEUE"+mr.material.renderQueue);
+				
+								
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("ManagerState");
 				GUILayout.TextField (m_manager.getManagerState ());
 				GUILayout.EndHorizontal ();
-
 				
-//				GUILayout.BeginHorizontal ();
-//				//Snippet from RbRay's EVE
-//				if (GUILayout.Button ("Get Planet shader"))
-//				{
-//					Transform transform = GetScaledTransform (parentPlanet);
-//					
-//					PQS pqs = celestialBodies [PlanetId].pqsController;
-//					
-//					if (pqs != null)
-//					{
-//						MeshRenderer mr = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
-//						if (mr != null)
-//						{														
-//							print ("planet shader: " + mr.material.shader);														
-//						}
-//					}										
-//				}
-//				GUILayout.EndHorizontal ();
+				
+//								GUILayout.BeginHorizontal ();
+//								//Snippet from RbRay's EVE
+//								if (GUILayout.Button ("Get Planet shader"))
+//								{
+//									Transform transform = GetScaledTransform (parentPlanet);
+//									
+//									PQS pqs = celestialBodies [PlanetId].pqsController;
+//									
+//									if (pqs != null)
+//									{
+//										MeshRenderer mr = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
+//										if (mr != null)
+//										{														
+//											print ("planet shader: " + mr.material.shader);														
+//										}
+//									}										
+//								}
+//								GUILayout.EndHorizontal ();
 			}
 		}
-
+		
 		
 		
 		//snippet by Thomas P. from KSPforum

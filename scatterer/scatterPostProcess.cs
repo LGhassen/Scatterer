@@ -45,13 +45,13 @@ public class scatterPostprocess : MonoBehaviour
 		//in to the shader. The code below calculates the position of the frustum corners
 		//This method has been adapted from the global fog image effect
 		
-//		float CAMERA_NEAR = GetComponent<Camera>().nearClipPlane;
-			float CAMERA_NEAR = nearPlane;
+		float CAMERA_NEAR = GetComponent<Camera>().nearClipPlane;
+//			float CAMERA_NEAR = nearPlane;
 //			print ("NEAR CLIP PLANE");
 //			print(CAMERA_NEAR);
 
-//		float CAMERA_FAR = GetComponent<Camera>().farClipPlane;
-			float CAMERA_FAR = farPlane;
+		float CAMERA_FAR = GetComponent<Camera>().farClipPlane;
+//			float CAMERA_FAR = farPlane;
 
 //			print ("NEAR CLIP PLANE");
 //			print(CAMERA_FAR);
