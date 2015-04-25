@@ -6,8 +6,8 @@ namespace scatterer
 
 public class scatterPostprocess : MonoBehaviour
 {
-		int nearPlane=299;
-		int farPlane=750000;
+//		int nearPlane=299;
+//		int farPlane=750000;
 	
 	public Material m_atmosphereImageEffect;
 	
@@ -17,15 +17,15 @@ public class scatterPostprocess : MonoBehaviour
 		m_atmosphereImageEffect = mat;					
 	}
 
-	public void setFarPlane(int far)
-	{
-		farPlane = far;					
-	}
-
-	public void setNearPlane(int near)
-	{
-		nearPlane = near;					
-	}
+//	public void setFarPlane(int far)
+//	{
+//		farPlane = far;					
+//	}
+//
+//	public void setNearPlane(int near)
+//	{
+//		nearPlane = near;					
+//	}
 
 		
 	void Start()
@@ -70,6 +70,9 @@ public class scatterPostprocess : MonoBehaviour
 		
 		Vector3 topLeft = (GetComponent<Camera>().transform.forward * CAMERA_NEAR - toRight + toTop);
 		float CAMERA_SCALE = topLeft.magnitude * CAMERA_FAR/CAMERA_NEAR;	
+
+			print ("CAMERA SCALE=");
+			print (CAMERA_SCALE);
 		
 		topLeft.Normalize();
 		topLeft *= CAMERA_SCALE;
@@ -85,28 +88,11 @@ public class scatterPostprocess : MonoBehaviour
 		Vector3 bottomLeft = (GetComponent<Camera>().transform.forward * CAMERA_NEAR - toRight - toTop);
 		bottomLeft.Normalize();
 		bottomLeft *= CAMERA_SCALE;
-		
-//		frustumCorners.SetRow (0, topLeft); 
-//		frustumCorners.SetRow (1, topRight);		
-//		frustumCorners.SetRow (2, bottomRight);
-//		frustumCorners.SetRow (3, bottomLeft);		
 
-//			frustumCorners.SetRow (3, topLeft); 
-//			frustumCorners.SetRow (0, topRight);		
-//			frustumCorners.SetRow (1, bottomRight);
-//			frustumCorners.SetRow (2, bottomLeft);	
-		
-
-						frustumCorners.SetRow (0, topLeft); 
-						frustumCorners.SetRow (1, topRight);		
-						frustumCorners.SetRow (2, bottomRight);
-						frustumCorners.SetRow (3, bottomLeft);	
-
-//			frustumCorners.SetRow (0, topLeft); 
-//			frustumCorners.SetRow (3, topRight);		
-//			frustumCorners.SetRow (2, bottomRight);
-//			frustumCorners.SetRow (1, bottomLeft);	
-
+		frustumCorners.SetRow (0, topLeft); 
+		frustumCorners.SetRow (1, topRight);		
+		frustumCorners.SetRow (2, bottomRight);
+		frustumCorners.SetRow (3, bottomLeft);	
 
 		m_atmosphereImageEffect.SetMatrix ("_FrustumCorners", frustumCorners);
 		

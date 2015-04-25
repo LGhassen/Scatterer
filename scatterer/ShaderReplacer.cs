@@ -99,7 +99,7 @@ namespace scatterer
 			case "Terrain/Scaled Planet (Simple)": //not this
 				replacementShader = GetShaderFromName("CompiledScaledPlanetSimple");
 				break;
-			case "Terrain/Scaled Planet (RimAerial)": //not this
+			case "Terrain/Scaled Planet (RimAerial)": //I think this one is kerbin from orbit
 				replacementShader = GetShaderFromName("CompiledScaledPlanetRimAerial");
 				break;
 			case "Unlit/Transparent":	//not this one

@@ -49,14 +49,14 @@ namespace scatterer
 
 			skyMat.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
 
-			if (debug6){
+//			if (debug6){
 				tester.transform.parent = parentCelestialBody.transform;
-			}
-			
-			else{
-				Transform celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
-				tester.transform.parent = celestialTransform;
-			}
+//			}
+//			
+//			else{
+//				Transform celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+//				tester.transform.parent = celestialTransform;
+//			}
 
 
 			m_skynode.InitUniforms(skyMat);
