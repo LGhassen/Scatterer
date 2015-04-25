@@ -32,6 +32,7 @@ namespace scatterer
 		//bool inScaledSpace=false;
 		
 		public bool[] debugSettings= new bool[7];
+		public float[] additionalScales=new float[10];
 		
 		public float apparentDistance=1f;
 		
@@ -62,6 +63,8 @@ namespace scatterer
 		static PQS CurrentPQS=null;
 		static bool inScaledSpace { get { return !(CurrentPQS != null && CurrentPQS.isActive);
 			} }
+
+		PQS testPQS;
 		
 		Vector3 position;
 		
@@ -71,7 +74,7 @@ namespace scatterer
 		public bool postprocessingEnabled=true;
 		int waitBeforeReloadCnt=0;
 		
-		float alphaCutoff=0f;
+		float alphaCutoff=0.001f;
 		float alphaGlobal=1f;
 		
 		float m_radius;// = 600000.0f;
@@ -206,6 +209,9 @@ namespace scatterer
 			//QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
 			
 			CurrentPQS = parentCelestialBody.pqsController;
+			testPQS = parentCelestialBody.pqsController;
+
+
 			
 			for (int j=0; j<7; j++)
 			{
@@ -223,6 +229,11 @@ namespace scatterer
 			//
 			//			}
 			//
+
+			for (int j=0; j<10; j++)
+			{
+				additionalScales[j]=1f;
+			}
 
 			tester = new GameObject ();
 			MF = tester.AddComponent<MeshFilter>();
@@ -260,33 +271,46 @@ namespace scatterer
 		public void UpdateNode()
 		{
 			
-			
-			m_radius=m_manager.GetRadius();
+
+//			testPQS = parentCelestialBody.pqsController;
+//			print ("MAX PQS DETAIL DISTANCE");
+//			print (testPQS.maxDetailDistance);
+//
+//			print ("PQS visible radius");
+//			print (testPQS.visibleRadius);
+//
+//
+//			print ("PQS visible altitude");
+//			print (testPQS.visibleAltitude);
+//
+//			testPQS.isActive = true;
+
+
+
+			m_radius = m_manager.GetRadius ();
 			//m_radius = 600000.0f;
 			
 			Rt = (Rt / Rg) * m_radius;
 			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
-			sunglareCutoffAlt = Rt * 0.995f * atmosphereGlobalScale;
+			sunglareCutoffAlt = Rt /*  *0.995f*/ * atmosphereGlobalScale;
 			
 			//			if(inScaledSpace)
 			//			{
 			//				position=(ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name)).position;
 			//			}
 			//			else{
-			position= parentCelestialBody.transform.position;
+			position = parentCelestialBody.transform.position;
 			//			}
 			
 			//			print ("In scaled Space");
 			//			print (inScaledSpace);
 			
 			
-			if (!initiated)   //gets the cameras, this isn't done at start() because the cameras still don't exist then and it crashes the game
-			{
+			if (!initiated) {   //gets the cameras, this isn't done at start() because the cameras still don't exist then and it crashes the game
 				cams = Camera.allCameras;
 				
-				for (int i=0; i<cams.Length; i++)
-				{
+				for (int i=0; i<cams.Length; i++) {
 					if (cams [i].name == "Camera ScaledSpace")
 						scaledSpaceCamera = cams [i];
 					if (cams [i].name == "Camera 01")
@@ -294,23 +318,29 @@ namespace scatterer
 				}
 				scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 				
-				if(tmp!= null)
-				{
+				if (tmp != null) {
 					Component.Destroy (tmp);
 				}
+
+
+				m_skyMaterialScaled.renderQueue = 2001;
 				
-				if (postprocessingEnabled)
+				Transform transform = GetScaledTransform (parentCelestialBody.name);	///duplciate from Core but this is just a placeholder												
 				{
-					farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
-					if(farCamera.gameObject.GetComponent<scatterPostprocess> () != null)
-					{
-						initiated =true;
+					MeshRenderer planetMR = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
+					if (planetMR != null) {														
+						planetMR.material.renderQueue = 2002;
 					}
-				}
+				}	
+
 				
-				else
-				{
-					initiated =true;
+				if (postprocessingEnabled) {
+					farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+					if (farCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
+						initiated = true;
+					}
+				} else {
+					initiated = true;
 				}
 			}
 			
@@ -320,45 +350,70 @@ namespace scatterer
 			
 			
 			
-			float alt = Vector3.Distance(farCamera.transform.position, parentCelestialBody.transform.position);
-			if ((sunglareEnabled)^(alt < sunglareCutoffAlt)) //^ is XOR
-			{
-				toggleSunglare();
+			float alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
+			if ((sunglareEnabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
+				toggleSunglare ();
 			}
 			
 			
 			//if alt-tabbing/windowing and rendertextures are lost
 			//this loads them back up
 			//you have to wait for a frame of two because if you do it immediately they don't get loaded
-			if (!m_inscatter.IsCreated ())
-			{
+			if (!m_inscatter.IsCreated ()) {
 				waitBeforeReloadCnt++;
-				if (waitBeforeReloadCnt>=2)
-				{
+				if (waitBeforeReloadCnt >= 2) {
 					
 					initiateOrRestart ();
 					print ("Scatterer: reloaded scattering tables");
-					waitBeforeReloadCnt=0;
+					waitBeforeReloadCnt = 0;
 				}
 			}
 			
 			//adding post processing to camera
-			if (postprocessingEnabled)
-			{
-				InitPostprocessMaterial(m_atmosphereMaterial);
-				UpdatePostProcessMaterial (m_atmosphereMaterial);
+			if ((!inScaledSpace) || (MapView.MapIsEnabled)) {
+				if (postprocessingEnabled) {
+					InitPostprocessMaterial (m_atmosphereMaterial);
+					UpdatePostProcessMaterial (m_atmosphereMaterial);
 				
-				if(farCamera.gameObject.GetComponent<scatterPostprocess> () == null)
-				{
-					farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+					if (scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
+						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> ());
+					}
+
+
+					if (farCamera.gameObject.GetComponent<scatterPostprocess> () == null) {
+						farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+					}
+				
+					farCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
 				}
-				
-				farCamera.gameObject.GetComponent<scatterPostprocess>().setMaterial(m_atmosphereMaterial);
 			}
+
+			else 
+			
+			{
+				if (postprocessingEnabled) {
+					InitPostprocessMaterial (m_atmosphereMaterial);
+					UpdatePostProcessMaterial (m_atmosphereMaterial);
+					
+					if (farCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
+						Component.Destroy(farCamera.gameObject.GetComponent<scatterPostprocess> ());
+					}
+
+					if (scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> () == null) {
+						scaledSpaceCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+					}
+					
+					scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
+				}						
+			
+			}
+
+
+
 			
 			//adding sky to camera
 			
-			if (!inScaledSpace)
+			if ((!inScaledSpace)||(MapView.MapIsEnabled))   ///For now I disabled the effect in mapview because it still lags behind
 			{
 				MR.enabled = false;
 				if (farCamera.gameObject.GetComponent<drawSky> () == null)
@@ -392,10 +447,21 @@ namespace scatterer
 				
 				//			InitUniforms (m_skyMaterialScaled);
 				//			SetUniforms(m_skyMaterialScaled);
-				
-				m_skyMaterialScaled.renderQueue=renderQueue;
-				print ("RENDERQUEUE");
-				print (renderQueue);
+
+///				moved to !intialized block
+
+//				m_skyMaterialScaled.renderQueue=2001;
+//
+//				Transform transform = GetScaledTransform (parentCelestialBody.name);	///duplciate from Core but this is just a placeholder												
+//				{
+//					MeshRenderer planetMR = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
+//					if (planetMR != null)
+//					{														
+//						planetMR.material.renderQueue = 2002;
+//					}
+//				}										
+			
+
 				MF.mesh = m_mesh;
 				//m_skyMaterial.renderQueue = 2000;
 				MR.sharedMaterial = m_skyMaterial;
@@ -551,20 +617,48 @@ namespace scatterer
 		
 		void InitPostprocessMaterial(Material mat)
 		{
+
+			float totalscale = 1;
+			for (int j=0; j<10; j++)
+			{
+				totalscale=totalscale*additionalScales[j];
+			}
+
 			mat.SetTexture("_Transmittance", m_transmit);
 			mat.SetTexture("_Inscatter", m_inscatter);
 			
 			//Consts, best leave these alone
 			mat.SetFloat("M_PI", Mathf.PI);
-			mat.SetFloat ("Rg", Rg*atmosphereGlobalScale*postProcessingScale);
-			mat.SetFloat("Rt", Rt*atmosphereGlobalScale*postProcessingScale);
-			mat.SetFloat("Rl", RL*atmosphereGlobalScale*postProcessingScale);
+			mat.SetFloat ("Rg", Rg*atmosphereGlobalScale*postProcessingScale*totalscale);
+			mat.SetFloat("Rt", Rt*atmosphereGlobalScale*postProcessingScale*totalscale);
+			mat.SetFloat("Rl", RL*atmosphereGlobalScale*postProcessingScale*totalscale);
 			mat.SetFloat("RES_R", RES_R);
 			mat.SetFloat("RES_MU", RES_MU);
 			mat.SetFloat("RES_MU_S", RES_MU_S);
 			mat.SetFloat("RES_NU", RES_NU);
 			mat.SetFloat("SUN_INTENSITY", 100f);//
-			mat.SetVector("_inCamPos", cams[cam].transform.position);
+//			mat.SetVector("_inCamPos", cams[cam].transform.position);
+
+			if (debugSettings [0]) {
+				mat.SetVector("_inCamPos", farCamera.transform.position);
+			}
+
+			else 
+			{	if (!debugSettings [4]) 
+				
+				{
+					Vector3 pos= ScaledSpace.LocalToScaledSpace(scaledSpaceCamera.transform.position);
+					mat.SetVector("_inCamPos", pos);
+				}
+
+				else    //if (!debugSettings [0])
+				{
+					mat.SetVector("_inCamPos", scaledSpaceCamera.transform.position);
+				}
+
+
+			}
+
 			mat.SetVector("SUN_DIR", m_manager.GetSunNodeDirection());
 		}
 		
@@ -572,24 +666,63 @@ namespace scatterer
 		void UpdatePostProcessMaterial(Material mat)
 		{
 			//mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
-			mat.SetFloat ("Rg", Rg*atmosphereGlobalScale*postProcessingScale);
-			mat.SetFloat("Rt", Rt*atmosphereGlobalScale*postProcessingScale);
-			mat.SetFloat("Rl", RL*atmosphereGlobalScale*postProcessingScale);
+//			mat.SetFloat ("Rg", Rg*atmosphereGlobalScale*postProcessingScale);
+//			mat.SetFloat("Rt", Rt*atmosphereGlobalScale*postProcessingScale);
+//			mat.SetFloat("Rl", RL*atmosphereGlobalScale*postProcessingScale);
+
+			float totalscale  = 1;
+			float totalscale2 = 1;
+			for (int j=0; j<5; j++)
+			{
+				totalscale=totalscale*additionalScales[j];
+			}
+
+			for (int j=6; j<10; j++)
+			{
+				totalscale2=totalscale2*additionalScales[j];
+			}
+
+			mat.SetFloat ("Rg", Rg*atmosphereGlobalScale*totalscale);
+			mat.SetFloat("Rt", Rt*atmosphereGlobalScale*totalscale);
+			mat.SetFloat("Rl", RL*atmosphereGlobalScale*totalscale);
 			
 			//mat.SetFloat("_inscatteringCoeff", inscatteringCoeff);
 			mat.SetFloat("_extinctionCoeff", extinctionCoeff);
 			mat.SetFloat("_global_alpha", postProcessingAlpha);
 			mat.SetFloat("_Exposure", postProcessExposure);
 			mat.SetFloat("_global_depth", postProcessDepth);
+			mat.SetFloat("_global_depth2", totalscale2);
 			
 			mat.SetFloat("_Scale", postProcessingScale);
 			//			mat.SetFloat("_Scale", 1);
-			
-			mat.SetVector ("_Globals_Origin", /*Vector3.zero-*/parentCelestialBody.transform.position);
+
 			
 			//			mat.SetMatrix ("_Globals_CameraToWorld", cams [0].worldToCameraMatrix.inverse);
-			mat.SetMatrix ("_Globals_CameraToWorld", cams [0].worldToCameraMatrix.inverse);
-			mat.SetVector ("_CameraForwardDirection", cams [cam].transform.forward);
+			if (debugSettings [1]) {
+				mat.SetMatrix ("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
+			}
+			else
+			{
+				mat.SetMatrix ("_Globals_CameraToWorld", scaledSpaceCamera.worldToCameraMatrix.inverse);
+			}
+
+			if (debugSettings [2]) {
+				mat.SetVector ("_CameraForwardDirection", farCamera.transform.forward);
+			} else {
+				mat.SetVector ("_CameraForwardDirection", scaledSpaceCamera.transform.forward);
+			}
+
+			if (debugSettings [3]) {
+				mat.SetVector ("_Globals_Origin", /*Vector3.zero-*/parentCelestialBody.transform.position);
+			} else
+			
+			{
+
+				Transform celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+				Vector3 idek =celestialTransform.position;
+				mat.SetVector ("_Globals_Origin", /*Vector3.zero-*/ idek);
+			}
+
 			//mat.SetVector("betaR", m_betaR / (Rg / m_radius));
 			//			mat.SetVector("betaR", m_betaR / (postProcessDepth));
 			mat.SetVector("betaR", new Vector4(2.9e-3f, 0.675e-2f, 1.655e-2f, 0.0f));
@@ -629,15 +762,15 @@ namespace scatterer
     GUI.DrawTexture(new Rect(0,0,512, 512), m_skyMap);
         }*/
 		
-		public void SetNearPlane(int NR)
-		{
-			farCamera.gameObject.GetComponent<scatterPostprocess>().setNearPlane(NR);
-		}
-		
-		public void SetFarPlane(int FR)
-		{
-			farCamera.gameObject.GetComponent<scatterPostprocess>().setFarPlane(FR);
-		}
+//		public void SetNearPlane(int NR)
+//		{
+//			farCamera.gameObject.GetComponent<scatterPostprocess>().setNearPlane(NR);
+//		}
+//		
+//		public void SetFarPlane(int FR)
+//		{
+//			farCamera.gameObject.GetComponent<scatterPostprocess>().setFarPlane(FR);
+//		}
 		
 		public void setManager(Manager manager)
 		{
@@ -777,17 +910,25 @@ namespace scatterer
 			{
 				m_skyMaterial.SetTexture ("_Sun_Glare", black);
 				sunglareEnabled = false;
-				alphaCutoff=0f;
+				alphaCutoff=0.5f;
 			}
 			else
 			{
 				m_skyMaterial.SetTexture("_Sun_Glare", sunGlare);
 				sunglareEnabled=true;
-				alphaCutoff=0f;
+				alphaCutoff=0.001f;
 				
 				
 			}
 		}
+
+		public Transform GetScaledTransform(string body)
+		{
+			List<Transform> transforms = ScaledSpace.Instance.scaledSpaceTransforms;
+			return transforms.Single(n => n.name == body);
+		}
+
+
 		
 		//		public RenderTexture getInscatter()
 		//		{

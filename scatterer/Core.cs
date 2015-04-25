@@ -28,6 +28,8 @@ namespace scatterer
 
 		MeshRenderer mr = new MeshRenderer ();
 
+		public float[] additionalScales=new float[10];
+
 		//bool[] debugSettings= new bool[5];
 		
 		//postprocessing properties
@@ -79,6 +81,11 @@ namespace scatterer
 
 			{
 				isActive = true;
+
+				for (int j=0; j<10; j++)
+				{
+					additionalScales[j]=1000f;
+				}
 
 //				for (int j=0;j<5;j++){
 //					debugSettings[j]=false;
@@ -162,24 +169,24 @@ namespace scatterer
 				
 				
 				//CAM DEBUG OPTIONS								
-								GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
-								GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
-								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
-								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
-								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
-								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
-								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
-				
-								if (Camera.allCameras.Length == 7) {
-									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
-									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));
-								}															
+//								GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
+//								GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
+//								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
+//								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
+//								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
+//								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
+//								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
+//				
+//								if (Camera.allCameras.Length == 7) {
+//									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
+//									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));
+//								}															
 				//END CAM DEBUG OPTIONS
 				
 				
@@ -370,6 +377,21 @@ namespace scatterer
 				GUILayout.EndHorizontal ();
 				}
 
+				for (int j=0;j<10;j++){
+
+				GUILayout.BeginHorizontal ();
+
+				GUILayout.Label (String.Format("AdditionalScale:{0}", j.ToString()));	
+
+				additionalScales[j]= (float) Convert.ToDouble(GUILayout.TextField(additionalScales[j].ToString()));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.additionalScales[j] = additionalScales[j]/1000f;
+				}
+				GUILayout.EndHorizontal ();
+				}
+
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Apparent distance (/10000)");
 				apparentDistance = (float)(Convert.ToDouble (GUILayout.TextField (apparentDistance.ToString ())));
@@ -389,6 +411,7 @@ namespace scatterer
 					m_manager.m_skyNode.renderQueue= renderQueue;
 				}
 				GUILayout.EndHorizontal ();
+							
 
 
 
@@ -399,8 +422,8 @@ namespace scatterer
 														mr = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
 														if (mr != null)
 														{														
-															print ("planet shader: " + mr.material.shader);	
-															print("RENDER QUEUE"+mr.material.renderQueue);
+//															print ("planet shader: " + mr.material.shader);	
+//															print("RENDER QUEUE"+mr.material.renderQueue);
 														}
 													}										
 				}
@@ -418,7 +441,7 @@ namespace scatterer
 				}
 				GUILayout.EndHorizontal ();
 
-				print("KERBIN RENDER QUEUE"+mr.material.renderQueue);
+//				print("KERBIN RENDER QUEUE"+mr.material.renderQueue);
 				
 								
 				
@@ -447,7 +470,8 @@ namespace scatterer
 //								}
 //								GUILayout.EndHorizontal ();
 			}
-		}
+	}
+
 		
 		
 		

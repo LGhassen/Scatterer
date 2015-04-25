@@ -1,20 +1,20 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="drawSky.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="scatterPostProcess.cs">
     <Files>
-      <File FileName="scatterPostProcess.cs" Line="1" Column="1" />
-      <File FileName="SkyNode.cs" Line="421" Column="54" />
-      <File FileName="Core.cs" Line="421" Column="56" />
-      <File FileName="drawSky.cs" Line="34" Column="4" />
+      <File FileName="scatterPostProcess.cs" Line="81" Column="24" />
+      <File FileName="SkyNode.cs" Line="674" Column="35" />
+      <File FileName="Core.cs" Line="1" Column="1" />
+      <File FileName="drawSky.cs" Line="1" Column="1" />
       <File FileName="Manager.cs" Line="1" Column="1" />
       <File FileName="ShaderReplacer.cs" Line="1" Column="1" />
-      <File FileName="updateAtCameraRythm.cs" Line="11" Column="34" />
+      <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="scatterer" expanded="True">
-            <Node name="drawSky.cs" selected="True" />
+            <Node name="scatterPostProcess.cs" selected="True" />
           </Node>
         </State>
       </Pad>
