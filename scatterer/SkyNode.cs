@@ -30,9 +30,14 @@ namespace scatterer
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType<SkyNode>(null);
 		
 		//bool inScaledSpace=false;
+
+		public static Dictionary<string, PSystemBody> prefabs = new Dictionary<string, PSystemBody>();
 		
 		public bool[] debugSettings= new bool[7];
 		public float[] additionalScales=new float[10];
+
+		PSystemBody[] pSystemBodies;
+		ScaledSpaceFader kerbinPsystemBody;
 		
 		public float apparentDistance=1f;
 		
@@ -50,7 +55,7 @@ namespace scatterer
 		Texture2D black;
 		
 		//atmosphere properties
-		float extinctionCoeff=0.3f;
+		float extinctionCoeff=0.7f;
 		float atmosphereGlobalScale=1f;
 		float postProcessingAlpha=0.78f;
 		float postProcessingScale=1f;
@@ -61,8 +66,7 @@ namespace scatterer
 		float m_HDRExposure= 0.2f;
 		
 		static PQS CurrentPQS=null;
-		static bool inScaledSpace { get { return !(CurrentPQS != null && CurrentPQS.isActive);
-			} }
+		public bool inScaledSpace { get { return !(CurrentPQS != null && CurrentPQS.isActive);}}
 
 		PQS testPQS;
 		
@@ -70,7 +74,7 @@ namespace scatterer
 		
 		bool initiated=false;
 		Camera[] cams;
-		Camera farCamera, scaledSpaceCamera;
+		Camera farCamera, scaledSpaceCamera, nearCamera;
 		public bool postprocessingEnabled=true;
 		int waitBeforeReloadCnt=0;
 		
@@ -212,6 +216,7 @@ namespace scatterer
 			testPQS = parentCelestialBody.pqsController;
 
 
+
 			
 			for (int j=0; j<7; j++)
 			{
@@ -265,12 +270,43 @@ namespace scatterer
 			
 			
 			//			MR.enabled = true;
+
+
+//			pSystemBodies = (PSystemBody[])UnityEngine.Object.FindObjectsOfType(typeof(PSystemBody));
+//			print ("NUMBER FOUND");
+//			print (pSystemBodies.Length);
+//
+//			kerbinPsystemBody=ScaledSpace.Instance.transform.FindChild("Kerbin").gameObject.GetComponentInChildren<ScaledSpaceFader>();
+//
+//			if (kerbinPsystemBody == null) {
+//				print ("NULL");
+//			}
+//				else{
+//					print ("NOT NULL");
+//				print("fadeStart");
+//
+//				print(kerbinPsystemBody.fadeStart);
+//
+//				print("fadeEnd");
+//
+//				print(kerbinPsystemBody.fadeEnd);
+//
+//			
+//			}
 			
 		}
 		
 		public void UpdateNode()
 		{
-			
+
+
+
+			var cbTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> (true).Where (mod => mod.transform.parent == CurrentPQS.transform).FirstOrDefault (); 
+
+			cbTransform.deactivateAltitude = 5000000;
+
+			//print ("Deactivate altitude");
+			//print(cbTransform.deactivateAltitude);
 
 //			testPQS = parentCelestialBody.pqsController;
 //			print ("MAX PQS DETAIL DISTANCE");
@@ -284,6 +320,17 @@ namespace scatterer
 //			print (testPQS.visibleAltitude);
 //
 //			testPQS.isActive = true;
+
+
+
+//			print ("fade start");
+//			print (parentCelestialBody.scaledBody.GetComponent<ScaledSpaceFader> ().fadeStart);
+//
+//			print ("fade end");
+//			print (parentCelestialBody.scaledBody.GetComponent<ScaledSpaceFader>().fadeEnd);
+
+
+
 
 
 
@@ -315,6 +362,8 @@ namespace scatterer
 						scaledSpaceCamera = cams [i];
 					if (cams [i].name == "Camera 01")
 						farCamera = cams [i];
+					if (cams [i].name == "Camera 00")
+						nearCamera = cams [i];
 				}
 				scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 				
@@ -325,13 +374,13 @@ namespace scatterer
 
 				m_skyMaterialScaled.renderQueue = 2001;
 				
-				Transform transform = GetScaledTransform (parentCelestialBody.name);	///duplciate from Core but this is just a placeholder												
-				{
-					MeshRenderer planetMR = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
-					if (planetMR != null) {														
-						planetMR.material.renderQueue = 2002;
-					}
-				}	
+//				Transform transform = GetScaledTransform (parentCelestialBody.name);	///duplciate from Core but this is just a placeholder												
+//				{
+//					MeshRenderer planetMR = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
+//					if (planetMR != null) {														
+//						planetMR.material.renderQueue = 2002;
+//					}
+//				}	
 
 				
 				if (postprocessingEnabled) {
@@ -353,6 +402,74 @@ namespace scatterer
 			float alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
 			if ((sunglareEnabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
 				toggleSunglare ();
+			}
+
+			if (alt<sunglareCutoffAlt){
+				alphaCutoff=0.001f;}
+			else
+			{
+				if(alt < 5*sunglareCutoffAlt-4*m_radius)
+				{					
+					alphaCutoff=0.299f * (alt-sunglareCutoffAlt)/(5*(sunglareCutoffAlt-m_radius)) +0.001f;
+				}
+				else
+					alphaCutoff=0.3f;
+			}
+
+
+
+			if (alt < (100000 + m_radius)) {
+				extinctionCoeff = 0.7f;
+			}
+				else 
+			{
+				extinctionCoeff=0.7f +(1.1f/300000f) * (alt-m_radius-100000f);
+			}
+
+			if (alt < (80000 + m_radius)) 
+			{
+				postProcessDepth=(150f + (alt-m_radius)*(1350f/ 80000f)) /10000f;
+				//postProcessDepth=(150 + (alt-m_radius)*(3350/ 80000))/1000f;
+			}
+//
+//			else
+//			{
+//				postProcessDepth=(2500f + (alt-m_radius-80000f)*(4000f/ 3200000f)) /10000f;
+//			}
+//
+//			print ("POSTPROCESS DEPTH");
+//			print (postProcessDepth*10000f);
+
+			if ((alt > 1000000f +m_radius) && (!inScaledSpace)) 
+			{
+				farCamera.farClipPlane = 7000000;
+
+				//				farCamera.nearClipPlane = alt - m_radius - 350000f;
+				farCamera.nearClipPlane = 100000f;
+
+				nearCamera.farClipPlane = 099999f;
+			}
+
+
+
+			else{
+
+				if ((alt > 200000f +m_radius) && (!inScaledSpace)) {
+					farCamera.farClipPlane = 2000000;
+					//				farCamera.nearClipPlane = alt - m_radius - 350000f;
+					farCamera.nearClipPlane = 150000f;
+					nearCamera.farClipPlane = 149999f;
+				}
+
+
+
+			else 			
+			{
+				farCamera.farClipPlane = 750000f;
+				farCamera.nearClipPlane = 300f;
+				nearCamera.farClipPlane = 300f;
+			}
+
 			}
 			
 			
@@ -387,26 +504,26 @@ namespace scatterer
 					farCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
 				}
 			}
-
-			else 
-			
-			{
-				if (postprocessingEnabled) {
-					InitPostprocessMaterial (m_atmosphereMaterial);
-					UpdatePostProcessMaterial (m_atmosphereMaterial);
-					
-					if (farCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
-						Component.Destroy(farCamera.gameObject.GetComponent<scatterPostprocess> ());
-					}
-
-					if (scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> () == null) {
-						scaledSpaceCamera.gameObject.AddComponent (typeof(scatterPostprocess));
-					}
-					
-					scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
-				}						
-			
-			}
+//
+//			else 
+//			
+//			{
+//				if (postprocessingEnabled) {
+//					InitPostprocessMaterial (m_atmosphereMaterial);
+//					UpdatePostProcessMaterial (m_atmosphereMaterial);
+//					
+//					if (farCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
+//						Component.Destroy(farCamera.gameObject.GetComponent<scatterPostprocess> ());
+//					}
+//
+//					if (scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> () == null) {
+//						scaledSpaceCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+//					}
+//					
+//					scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
+//				}						
+//			
+//			}
 
 
 
@@ -512,7 +629,33 @@ namespace scatterer
 //						}
 			
 
-			
+//			kerbinPsystemBody=ScaledSpace.Instance.transform.FindChild("Kerbin").gameObject.GetComponentInChildren<ScaledSpaceFader>();
+//			
+//			if (kerbinPsystemBody == null) {
+//				print ("NULL");
+//			}
+//			else{
+//				print ("NOT NULL");
+//				print("fadeStart");
+//				kerbinPsystemBody.fadeStart=110000;
+//				print(kerbinPsystemBody.fadeStart);
+//				
+//				print("fadeEnd");
+//				kerbinPsystemBody.fadeEnd=200000;
+//				print(kerbinPsystemBody.fadeEnd);
+//				
+//				
+//			}
+
+//			if (inScaledSpace) {
+//				print ("In scaled space");
+//			}
+//				else{
+//
+//					print ("In normal space");
+//				}
+
+
 		}
 		
 		
@@ -927,6 +1070,20 @@ namespace scatterer
 			List<Transform> transforms = ScaledSpace.Instance.scaledSpaceTransforms;
 			return transforms.Single(n => n.name == body);
 		}
+
+//		public void findPrefabBodies(PSystemBody body)
+//		{
+//			prefabs[((CelestialBody)body.celestialBody).name] = body;
+//			using (List<PSystemBody>.Enumerator enumerator = ((List<PSystemBody>)body.children).GetEnumerator())
+//			{
+//				while (enumerator.MoveNext())
+//					this.findPrefabBodies(enumerator.Current);
+//
+//
+//			}
+//		}
+
+
 
 
 		
