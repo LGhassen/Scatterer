@@ -31,7 +31,7 @@ namespace scatterer
 		float m_radius= 600000.0f;
 		
 		
-		//OceanNode m_oceanNode;
+		OceanWhiteCaps m_oceanNode;
 		public SkyNode m_skyNode;
 		SunNode m_sunNode;
 		
@@ -45,11 +45,17 @@ namespace scatterer
 			
 			m_sunNode = new SunNode();
 			m_sunNode.Start ();
+
 			m_skyNode = new SkyNode();
 			m_skyNode.setManager (this);
 			m_skyNode.SetParentCelestialBody (parentCelestialBody);
 			m_skyNode.loadSettings ();
 			m_skyNode.Start ();
+
+			m_oceanNode = new OceanWhiteCaps();
+			m_oceanNode.setManager (this);
+			m_oceanNode.Start ();
+
 			
 			for (int i=0;i<7;i++)
 			{
@@ -67,11 +73,20 @@ namespace scatterer
 			managerState = "updating";
 			
 			//Update the sky and sun
+
+
 			m_sunNode.setDirectionToSun (getDirectionToSun ());
 			m_sunNode.UpdateNode();
 			m_radius = (float)parentCelestialBody.Radius;
 			
 			m_skyNode.UpdateNode();
+
+
+//			if (m_oceanNode != null)
+				m_oceanNode.UpdateNode ();
+//			else {
+//				print ("OCEAN NODE NULL");
+//			}
 			
 			updateCnt++;
 			managerState = "update done "+updateCnt.ToString();
@@ -119,9 +134,13 @@ namespace scatterer
 			return m_sunNode.GetWorldToLocalRotation();
 		}
 		
-		//		public OceanNode GetOceanNode() {
-		//			return m_oceanNode;
-		//		}
+		public OceanNode GetOceanNode() {
+			return m_oceanNode;
+		}
+
+		public SkyNode GetSkyNode() {
+			return m_skyNode;
+		}
 		
 		public void SetSunNodeUniforms(Material mat){
 			m_sunNode.SetUniforms (mat);

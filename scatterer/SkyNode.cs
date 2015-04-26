@@ -74,7 +74,7 @@ namespace scatterer
 		
 		bool initiated=false;
 		Camera[] cams;
-		Camera farCamera, scaledSpaceCamera, nearCamera;
+		public Camera farCamera, scaledSpaceCamera, nearCamera;
 		public bool postprocessingEnabled=true;
 		int waitBeforeReloadCnt=0;
 		
@@ -117,7 +117,7 @@ namespace scatterer
 		Material m_skyMaterialScaled;
 		
 		//		[SerializeField]
-		//		Material m_skyMapMaterial;
+		Material m_skyMapMaterial;
 		
 		//scatter coefficient for rayliegh
 		[SerializeField]
@@ -128,10 +128,12 @@ namespace scatterer
 		float m_mieG = 0.85f;
 		
 		string m_filePath = "/Proland/Textures/Atmo";
+
+		public Matrix4x4d m_cameraToScreenMatrix;
 		
 		Mesh m_mesh;
 		
-		RenderTexture m_transmit, m_inscatter, m_irradiance;//, m_skyMap;//, m_inscatterGround, m_transmitGround;
+		RenderTexture m_transmit, m_inscatter, m_irradiance, m_skyMap;//, m_inscatterGround, m_transmitGround;
 		
 		Manager m_manager;
 		
@@ -151,7 +153,17 @@ namespace scatterer
 			
 			m_mesh = isoSphere.Create ();
 			m_mesh.bounds = new Bounds(parentCelestialBody.transform.position, new Vector3(1e8f,1e8f, 1e8f));
-			
+
+			//The sky map is used to create a reflection of the sky for objects that need it (like the ocean)
+			m_skyMap = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGBHalf);
+			m_skyMap.filterMode = FilterMode.Trilinear;
+			m_skyMap.wrapMode = TextureWrapMode.Clamp;
+			m_skyMap.anisoLevel = 9;
+			m_skyMap.useMipMap = true;
+			//m_skyMap.mipMapBias = -0.5f;
+			m_skyMap.Create();
+
+
 			//Inscatter is responsible for the change in the sky color as the sun moves
 			//The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture
@@ -177,6 +189,7 @@ namespace scatterer
 			initiateOrRestart ();
 			m_skyMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSky.shader"));
 			m_skyMaterialScaled=new Material(ShaderTool.GetMatFromShader2("CompiledSkyScaled.shader"));
+			m_skyMapMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSkyMap.shader"));
 			//m_skyMaterial.renderQueue = 2000;
 			
 			sunGlare = new Texture2D (512, 512);
@@ -206,6 +219,8 @@ namespace scatterer
 			
 			InitUniforms(m_skyMaterial);
 			InitUniforms(m_skyMaterialScaled);
+			InitUniforms(m_skyMapMaterial);
+
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 			
 			//aniso defaults to to forceEnable on higher visual settings and causes artifacts
@@ -655,6 +670,9 @@ namespace scatterer
 //					print ("In normal space");
 //				}
 
+			SetUniforms(m_skyMapMaterial);
+			Graphics.Blit(null, m_skyMap, m_skyMapMaterial);
+
 
 		}
 		
@@ -705,7 +723,7 @@ namespace scatterer
 			mat.SetTexture("_Sky_Transmittance", m_transmit);
 			mat.SetTexture("_Sky_Inscatter", m_inscatter);
 			mat.SetTexture("_Sky_Irradiance", m_irradiance);
-			//mat.SetTexture("_Sky_Map", m_skyMap);
+			mat.SetTexture("_Sky_Map", m_skyMap);
 			mat.SetFloat("_Sun_Intensity", 100f);
 			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun().normalized);
 			//			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun());
@@ -725,7 +743,7 @@ namespace scatterer
 			}
 			
 			
-			Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d (p);
+			m_cameraToScreenMatrix = new Matrix4x4d (p);
 			mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
 			mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
 			
@@ -1009,6 +1027,7 @@ namespace scatterer
 			m_inscatter.Create ();
 			m_transmit.Create ();
 			m_irradiance.Create ();
+			m_skyMap.Create();
 			
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
