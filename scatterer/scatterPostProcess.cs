@@ -71,8 +71,8 @@ public class scatterPostprocess : MonoBehaviour
 		Vector3 topLeft = (GetComponent<Camera>().transform.forward * CAMERA_NEAR - toRight + toTop);
 		float CAMERA_SCALE = topLeft.magnitude * CAMERA_FAR/CAMERA_NEAR;	
 
-			print ("CAMERA SCALE=");
-			print (CAMERA_SCALE);
+//			print ("CAMERA SCALE=");
+//			print (CAMERA_SCALE);
 		
 		topLeft.Normalize();
 		topLeft *= CAMERA_SCALE;
