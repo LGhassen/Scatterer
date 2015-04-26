@@ -28,6 +28,18 @@ namespace scatterer
 
 		MeshRenderer mr = new MeshRenderer ();
 
+		int fadeStart=55000;
+		int fadeEnd=60000;
+
+		int farplane=60000;
+		int nearplane=60000;
+
+		float rimBlend=100f;
+		float rimpower=600f;
+
+
+
+
 		public float[] additionalScales=new float[10];
 
 		//bool[] debugSettings= new bool[5];
@@ -74,9 +86,16 @@ namespace scatterer
 		{
 			WindowCaption = "Scatterer mod: alt+f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
-			Visible = true;						
+			Visible = false;						
 			isActive = false;
 			
+
+			if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+			{
+				ReactivateAtmosphere (parentPlanet, rimBlend, rimpower);
+			}
+
+
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene==GameScenes.SPACECENTER )
 
 			{
@@ -100,9 +119,21 @@ namespace scatterer
 				celestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType(typeof(CelestialBody));
 				PlanetId =0;
 				SunId =0;
-				
+
+				Transform transform; // this next bit finds kerbin and the sun, and sets all the plaents to renderqueue 2002
+									 //so they don't get clipped over by the amospheres (renderqueue 2001)
+
 				for (int k=0; k< celestialBodies.Length ; k++)
 				{
+						transform = GetScaledTransform (celestialBodies[k].name);													
+						{
+							mr = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
+							if (mr != null)
+							{															
+								mr.material.renderQueue=2002;
+							}
+						}										
+
 					if (celestialBodies[k].GetName() == parentPlanet)
 						PlanetId=k;
 					
@@ -124,20 +155,43 @@ namespace scatterer
 		internal override void Update()
 		{			
 			//toggle whether its visible or not
-			if ((Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && Input.GetKeyDown(KeyCode.F11))
+			if ((Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && (Input.GetKeyDown(KeyCode.F11)||(Input.GetKeyDown(KeyCode.F10))))
 				Visible = !Visible;
 			if (isActive)
 			{
 				m_manager.Update ();
+
+				if ((!MapView.MapIsEnabled)&&(!m_manager.m_skyNode.inScaledSpace))
+				{
+					DeactivateAtmosphere(parentPlanet);
+					//print ("STOCK ATMO DISABLED");
+				}
+				
+				else
+				{
+					rimBlend=100f;   //kerbin settings, not sure about other planets
+					rimpower=600f;
+					ReactivateAtmosphere(parentPlanet,rimBlend,rimpower);
+					//print ("STOCK ATMO ENABLED");
+					
+				}
 			}
+
+
 		}
-		
+			
 		void OnGUI()
 		{
 			//debugging for rendertextures, not needed anymore but might be when I implement oceans
 			//	GUI.DrawTexture(new Rect(250,250,512,512), m_transmit, ScaleMode.StretchToFill, false);
 			//	GUI.DrawTexture(new Rect(250,250,512,512), RenderTexture.active, ScaleMode.StretchToFill, false);
 		}
+
+//		public override void OnDestroy()
+//		{
+//			base.OnDestroy ();
+//			ReactivateAtmosphere(parentPlanet,rimBlend,rimpower);
+//		}
 		
 		internal override void DrawWindow(int id)
 		{
@@ -185,12 +239,11 @@ namespace scatterer
 //				
 //								if (Camera.allCameras.Length == 7) {
 //									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
-//									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));
-//								}															
+//					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));}
+//																							
 				//END CAM DEBUG OPTIONS
 				
-				
-				DeactivateAtmosphere (parentPlanet);
+
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Layer");
@@ -352,98 +405,210 @@ namespace scatterer
 				//				}
 				//				GUILayout.EndHorizontal ();
 				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Extinction Coeff (/100)");
-				
-				
-				extinctionCoeff = (float)(Convert.ToDouble (GUILayout.TextField (extinctionCoeff.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.SetExtinctionCoeff (extinctionCoeff / 100);
-				}
-				GUILayout.EndHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Extinction Coeff (/100)");
+//				
+//				
+//				extinctionCoeff = (float)(Convert.ToDouble (GUILayout.TextField (extinctionCoeff.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.SetExtinctionCoeff (extinctionCoeff / 100);
+//				}
+//				GUILayout.EndHorizontal ();
 
 
-				for (int j=0;j<7;j++){
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label (String.Format("Debug setting:{0}", j.ToString()));	
-				GUILayout.TextField(m_manager.m_skyNode.debugSettings[j].ToString());
-				
-				if (GUILayout.Button ("Toggle"))
-				{
-						m_manager.m_skyNode.debugSettings[j] = !m_manager.m_skyNode.debugSettings[j];
-				}
-				GUILayout.EndHorizontal ();
-				}
+//				for (int j=0;j<7;j++){
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label (String.Format("Debug setting:{0}", j.ToString()));	
+//				GUILayout.TextField(m_manager.m_skyNode.debugSettings[j].ToString());
+//				
+//				if (GUILayout.Button ("Toggle"))
+//				{
+//						m_manager.m_skyNode.debugSettings[j] = !m_manager.m_skyNode.debugSettings[j];
+//				}
+//				GUILayout.EndHorizontal ();
+//				}
 
-				for (int j=0;j<10;j++){
+//				for (int j=0;j<10;j++){
+//
+//				GUILayout.BeginHorizontal ();
+//
+//				GUILayout.Label (String.Format("AdditionalScale:{0}", j.ToString()));	
+//
+//				additionalScales[j]= (float) Convert.ToDouble(GUILayout.TextField(additionalScales[j].ToString()));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.additionalScales[j] = additionalScales[j]/1000f;
+//				}
+//				GUILayout.EndHorizontal ();
+//				}
 
-				GUILayout.BeginHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Apparent distance (/10000)");
+//				apparentDistance = (float)(Convert.ToDouble (GUILayout.TextField (apparentDistance.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.apparentDistance= apparentDistance/1000f;
+//				}
+//				GUILayout.EndHorizontal ();
 
-				GUILayout.Label (String.Format("AdditionalScale:{0}", j.ToString()));	
-
-				additionalScales[j]= (float) Convert.ToDouble(GUILayout.TextField(additionalScales[j].ToString()));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.additionalScales[j] = additionalScales[j]/1000f;
-				}
-				GUILayout.EndHorizontal ();
-				}
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Apparent distance (/10000)");
-				apparentDistance = (float)(Convert.ToDouble (GUILayout.TextField (apparentDistance.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.apparentDistance= apparentDistance/1000f;
-				}
-				GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("RenderQueue");
-				renderQueue = Convert.ToInt32 (GUILayout.TextField (renderQueue.ToString ()));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.renderQueue= renderQueue;
-				}
-				GUILayout.EndHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("RenderQueue");
+//				renderQueue = Convert.ToInt32 (GUILayout.TextField (renderQueue.ToString ()));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.renderQueue= renderQueue;
+//				}
+//				GUILayout.EndHorizontal ();
 							
 
 
 
-				if (mr==null){
-				//								//Snippet from RbRay's EVE
-													Transform transform = GetScaledTransform (parentPlanet);													
-													{
-														mr = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
-														if (mr != null)
-														{														
-//															print ("planet shader: " + mr.material.shader);	
-//															print("RENDER QUEUE"+mr.material.renderQueue);
-														}
-													}										
-				}
+//				if (mr==null){
+//				//								//Snippet from RbRay's EVE
+//													Transform transform = GetScaledTransform (parentPlanet);													
+//													{
+//														mr = (MeshRenderer)transform.GetComponent (typeof(MeshRenderer));
+//														if (mr != null)
+//														{														
+////															print ("planet shader: " + mr.material.shader);	
+////															print("RENDER QUEUE"+mr.material.renderQueue);
+//														}
+//													}										
+//				}
 
 
 
 
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("RenderQueue Kerbin");
-				renderQueue2 = Convert.ToInt32 (GUILayout.TextField (renderQueue2.ToString ()));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					mr.material.renderQueue = renderQueue2;
-				}
-				GUILayout.EndHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("RenderQueue Kerbin");
+//				renderQueue2 = Convert.ToInt32 (GUILayout.TextField (renderQueue2.ToString ()));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					mr.material.renderQueue = renderQueue2;
+//				}
+//				GUILayout.EndHorizontal ();
 
 //				print("KERBIN RENDER QUEUE"+mr.material.renderQueue);
+
+//				GUILayout.BeginHorizontal ();												
+//				if (GUILayout.Button ("Enable Sun"))
+//				{
+//					Sun.Instance.sunFlare.gameObject.SetActive(true);
+//				}
+//
+//
+//				if (GUILayout.Button ("Disable Sun"))
+//				{
+//					Sun.Instance.sunFlare.gameObject.SetActive(false);
+//				}
+//				GUILayout.EndHorizontal ();
 				
-								
+				ScaledSpaceFader kerbinPsystemBody=ScaledSpace.Instance.transform.FindChild("Kerbin").gameObject.GetComponentInChildren<ScaledSpaceFader>();
+
+//				if (kerbinPsystemBody == null) {
+//					print ("NULL");
+//				}
+//				else{
+//					print ("NOT NULL");
+//					print("fadeStart");
+//					
+//					print(kerbinPsystemBody.fadeStart);
+//					
+//					print("fadeEnd");
+//					
+//					print(kerbinPsystemBody.fadeEnd);
+//				}
+				
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Fade Start");
+//				fadeStart = Convert.ToInt32 (GUILayout.TextField (fadeStart.ToString ()));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					kerbinPsystemBody.fadeStart=fadeStart;
+//				}
+//				GUILayout.EndHorizontal ();
+//
+//
+//
+//
+//				
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Fade End");
+//				fadeEnd = Convert.ToInt32 (GUILayout.TextField (fadeEnd.ToString ()));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					kerbinPsystemBody.fadeEnd=fadeEnd;
+//				}
+//				GUILayout.EndHorizontal ();
+
+//				print("FAR PLANE=");
+//				print(cams[cam].farClipPlane);
+//
+//				print("near plane =");
+//				print(cams[cam].nearClipPlane);
+
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Far Plane of current camera");
+//				farplane = Convert.ToInt32 (GUILayout.TextField (farplane.ToString ()));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					cams[cam].farClipPlane=farplane;
+//				}
+//				GUILayout.EndHorizontal ();
+//
+//
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Near Plane of current camera");
+//				nearplane = Convert.ToInt32 (GUILayout.TextField (nearplane.ToString ()));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					cams[cam].nearClipPlane=nearplane;
+//				}
+//				GUILayout.EndHorizontal ();
+
+
+//				GUILayout.BeginHorizontal ();
+//
+//				GUILayout.Label ("Rim Blend (/100)");
+//				rimBlend = (float)(Convert.ToDouble (GUILayout.TextField (rimBlend.ToString ())));
+//
+//				GUILayout.EndHorizontal ();
+//
+//
+//				GUILayout.BeginHorizontal ();
+//				
+//				GUILayout.Label ("Rim Power (/100)");
+//				rimpower = (float)(Convert.ToDouble (GUILayout.TextField (rimpower.ToString ())));
+//				
+//				GUILayout.EndHorizontal ();
+
+
+
+//				if ((!MapView.MapIsEnabled)&&(!m_manager.m_skyNode.inScaledSpace))
+//				{
+//					DeactivateAtmosphere(parentPlanet);
+//					//print ("STOCK ATMO DISABLED");
+//				}
+//
+//				else
+//				{
+//					rimBlend=100f;   //kerbin settings, not sure about other planets
+//					rimpower=600f;
+//					ReactivateAtmosphere(parentPlanet,rimBlend,rimpower);
+//					//print ("STOCK ATMO ENABLED");
+//				
+//				}
+
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("ManagerState");
@@ -489,16 +654,44 @@ namespace scatterer
 					
 					// Reset the shader parameters
 					Material sharedMaterial = t.renderer.sharedMaterial;
+
+
+
 					//sharedMaterial.SetTexture(Shader.PropertyToID("_rimColorRamp"), null);
-					//sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), 0);
-					//sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), 0);
+					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), 0);
+					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), 0);
 					
 					// Stop our script
 					i = t.childCount + 10;
 				}
 			}
 		}
-		
-		
+
+		public void ReactivateAtmosphere(string name, float inRimBlend, float inRimPower)
+		{
+			Transform t = ScaledSpace.Instance.transform.FindChild(name);
+			
+			for (int i = 0; i < t.childCount; i++)
+			{
+				if (t.GetChild(i).gameObject.layer == 9)
+				{
+					// Reactivate the Athmosphere-renderer
+					t.GetChild(i).gameObject.GetComponent<MeshRenderer>().gameObject.SetActive(true);
+					
+					// Reset the shader parameters
+					Material sharedMaterial = t.renderer.sharedMaterial;
+					
+										
+					//sharedMaterial.SetTexture(Shader.PropertyToID("_rimColorRamp"), null);
+					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), inRimBlend/100f);
+					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), inRimPower/100f);
+					
+					// Stop our script
+					i = t.childCount + 10;
+				}
+			}
+		}
+
+
 	}
 }
