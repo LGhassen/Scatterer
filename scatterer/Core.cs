@@ -52,16 +52,18 @@ namespace scatterer
 		float postProcessScale=1000f;
 		float postProcessExposure=18f;
 
-		int renderQueue=2000;
+		public int renderQueue=2000;
 		int renderQueue2=2010;
 
 
 		float apparentDistance=1000f;
 
+		public Camera chosenCamera;
+
 		//sky properties
 		float exposure = 20f;
 		float alphaGlobal=100f;
-		int layer=15;
+		public int layer=15;
 		int cam=1;
 		
 		//other stuff
@@ -144,6 +146,7 @@ namespace scatterer
 				m_manager=new Manager();
 				m_manager.setParentCelestialBody(celestialBodies[PlanetId]);
 				m_manager.setSunCelestialBody(celestialBodies[SunId]);
+				m_manager.SetCore(this);
 				m_manager.Awake();
 				
 				m_radius = (float)celestialBodies [PlanetId].Radius;								
@@ -176,6 +179,8 @@ namespace scatterer
 					
 				}
 			}
+
+
 
 
 		}
@@ -223,24 +228,24 @@ namespace scatterer
 				
 				
 				//CAM DEBUG OPTIONS								
-//								GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
-//								GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
-//								GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
-//								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
-//								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
-//								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
-//								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
-//								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
-//								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
-//								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
-//								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
-//								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
-//								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
-//				
-//								if (Camera.allCameras.Length == 7) {
-//									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
-//					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));}
-//																							
+								GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
+								GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
+								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
+								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
+								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
+								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
+								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
+								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
+				
+								if (Camera.allCameras.Length == 7) {
+									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
+					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));}
+																							
 				//END CAM DEBUG OPTIONS
 				
 
@@ -405,17 +410,17 @@ namespace scatterer
 				//				}
 				//				GUILayout.EndHorizontal ();
 				
-//				GUILayout.BeginHorizontal ();
-//				GUILayout.Label ("Extinction Coeff (/100)");
-//				
-//				
-//				extinctionCoeff = (float)(Convert.ToDouble (GUILayout.TextField (extinctionCoeff.ToString ())));
-//				
-//				if (GUILayout.Button ("Set"))
-//				{
-//					m_manager.m_skyNode.SetExtinctionCoeff (extinctionCoeff / 100);
-//				}
-//				GUILayout.EndHorizontal ();
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Extinction Coeff (/100)");
+				
+				
+				extinctionCoeff = (float)(Convert.ToDouble (GUILayout.TextField (extinctionCoeff.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.SetExtinctionCoeff (extinctionCoeff / 100);
+				}
+				GUILayout.EndHorizontal ();
 
 
 //				for (int j=0;j<7;j++){
@@ -455,15 +460,15 @@ namespace scatterer
 //				}
 //				GUILayout.EndHorizontal ();
 
-//				GUILayout.BeginHorizontal ();
-//				GUILayout.Label ("RenderQueue");
-//				renderQueue = Convert.ToInt32 (GUILayout.TextField (renderQueue.ToString ()));
-//				
-//				if (GUILayout.Button ("Set"))
-//				{
-//					m_manager.m_skyNode.renderQueue= renderQueue;
-//				}
-//				GUILayout.EndHorizontal ();
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("RenderQueue");
+				renderQueue = Convert.ToInt32 (GUILayout.TextField (renderQueue.ToString ()));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.renderQueue= renderQueue;
+				}
+				GUILayout.EndHorizontal ();
 							
 
 
@@ -634,6 +639,10 @@ namespace scatterer
 //									}										
 //								}
 //								GUILayout.EndHorizontal ();
+			
+				chosenCamera=cams[cam];
+			
+			
 			}
 	}
 

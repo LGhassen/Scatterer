@@ -1,31 +1,27 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Ocean\OceanFFT.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Ocean\OceanNode.cs">
     <Files>
-      <File FileName="SkyNode.cs" Line="1" Column="1" />
-      <File FileName="Core.cs" Line="1" Column="1" />
-      <File FileName="Ocean\OceanNode.cs" Line="52" Column="21" />
-      <File FileName="Ocean\OceanWhiteCaps.cs" Line="19" Column="23" />
-      <File FileName="Ocean\OceanFFT.cs" Line="13" Column="48" />
-      <File FileName="Manager.cs" Line="1" Column="1" />
+      <File FileName="SkyNode.cs" Line="155" Column="4" />
+      <File FileName="Core.cs" Line="149" Column="29" />
+      <File FileName="Ocean\OceanNode.cs" Line="250" Column="5" />
+      <File FileName="Ocean\OceanWhiteCaps.cs" Line="1" Column="1" />
+      <File FileName="Ocean\OceanFFT.cs" Line="1" Column="1" />
+      <File FileName="Manager.cs" Line="36" Column="21" />
       <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Ocean\RTUtility.cs" Line="1" Column="1" />
       <File FileName="Plugins\Math\Matrix4x4d.cs" Line="1" Column="1" />
       <File FileName="Ocean\Node.cs" Line="1" Column="1" />
       <File FileName="EncodeFloat.cs" Line="1" Column="1" />
       <File FileName="ShaderTool.cs" Line="1" Column="1" />
-      <File FileName="Ocean\FourierGPU.cs" Line="225" Column="1" />
-      <File FileName="Ocean\WriteFloat.cs" Line="62" Column="4" />
+      <File FileName="Ocean\FourierGPU.cs" Line="1" Column="1" />
+      <File FileName="Ocean\WriteFloat.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
-        <State expanded="True">
+        <State expanded="True" selected="True">
           <Node name="scatterer" expanded="True">
-            <Node name="Ocean" expanded="True">
-              <Node name="OceanFFT.cs" selected="True" />
-            </Node>
-            <Node name="Plugins" expanded="True">
-              <Node name="Math" expanded="True" />
-            </Node>
+            <Node name="Ocean" expanded="True" />
+            <Node name="Plugins" expanded="True" />
           </Node>
         </State>
       </Pad>

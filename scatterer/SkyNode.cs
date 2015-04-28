@@ -433,19 +433,19 @@ namespace scatterer
 
 
 
-			if (alt < (100000 + m_radius)) {
-				extinctionCoeff = 0.7f;
-			}
-				else 
-			{
-				extinctionCoeff=0.7f +(1.1f/300000f) * (alt-m_radius-100000f);
-			}
-
-			if (alt < (80000 + m_radius)) 
-			{
-				postProcessDepth=(150f + (alt-m_radius)*(1350f/ 80000f)) /10000f;
-				//postProcessDepth=(150 + (alt-m_radius)*(3350/ 80000))/1000f;
-			}
+//			if (alt < (100000 + m_radius)) {
+//				extinctionCoeff = 0.7f;
+//			}
+//				else 
+//			{
+//				extinctionCoeff=0.7f +(1.1f/300000f) * (alt-m_radius-100000f);
+//			}
+//
+//			if (alt < (80000 + m_radius)) 
+//			{
+//				postProcessDepth=(150f + (alt-m_radius)*(1350f/ 80000f)) /10000f;
+//				//postProcessDepth=(150 + (alt-m_radius)*(3350/ 80000))/1000f;
+//			}
 //
 //			else
 //			{
