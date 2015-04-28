@@ -40,7 +40,8 @@ namespace scatterer
 	public void OnPreRender()
 		{
 //			if (m_oceanNode != null) {
-				m_oceanNode.updateStuff ();
+//				m_oceanNode.updateStuff ();
+			m_oceanNode.updateStuff ();
 //				print("UPDATED OCEAN NODE STUFF");
 //			}
 //

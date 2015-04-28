@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <string name="Planet">Kerbin</string>
+    <string name="Rg">6000000</string>
+    <string name="Rt">6113206</string>
+    <string name="RL">6115094</string>
+    <vector3 name="BETA_R">
+        <x>0.0058</x>
+        <y>0.0135</y>
+        <z>0.0331</z>
+    </vector3>
+    <vector3 name="BETA_MSca">
+        <x>0.004</x>
+        <y>0.004</y>
+        <z>0.004</z>
+    </vector3>
+    <string name="MIE_G">0.85</string>
+    <string name="HR">8</string>
+    <string name="HM">1.2</string>
+    <string name="AVERAGE_GROUND_REFLECTANCE">0.1</string>
+    <string name="atmosphereGlobalScale">1</string>
+</config>

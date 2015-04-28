@@ -54,6 +54,7 @@ namespace scatterer
 
 			m_oceanNode = new OceanWhiteCaps();
 			m_oceanNode.setManager (this);
+			m_oceanNode.setCore (m_core);
 
 			m_oceanNode.Start ();
 
