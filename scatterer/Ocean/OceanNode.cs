@@ -47,6 +47,7 @@ namespace scatterer
 	{
 		
 		Manager m_manager;
+		Core m_core;
 		
 		[SerializeField]
 		protected Material m_oceanMaterial;
@@ -187,6 +188,27 @@ namespace scatterer
 		
 		public virtual void UpdateNode()
 		{
+
+			if ((m_manager.m_skyNode.farCamera) != (null)) {
+				if (m_manager.m_skyNode.farCamera.gameObject.GetComponent<OceanUpdateAtCameraRythm> () == null) {
+					m_manager.m_skyNode.farCamera.gameObject.AddComponent (typeof(OceanUpdateAtCameraRythm));
+
+				}
+
+
+
+				if (m_manager.m_skyNode.farCamera.gameObject.GetComponent<OceanUpdateAtCameraRythm> () != null) {
+					m_manager.m_skyNode.farCamera.gameObject.GetComponent<OceanUpdateAtCameraRythm> ().m_oceanNode = this;
+				}
+
+				else print ("NULL OCEAN NODE");
+
+			}
+
+			else print ("NULL FAR CAM");
+
+			/*
+
 			//Calculates the required data for the projected grid
 			
 			// compute ltoo = localToOcean transform, where ocean frame = tangent space at
@@ -205,6 +227,8 @@ namespace scatterer
 			
 			//			float radius = m_manager.IsDeformed() ? m_manager.GetRadius() : 0.0f;
 			float radius = m_manager.GetRadius ();
+			print ("radius");
+			print (radius);
 			
 			if ((radius == 0.0 && cl.z > m_zmin) ||
 			    (radius > 0.0 && cl.Magnitude() > radius + m_zmin) ||
@@ -229,7 +253,7 @@ namespace scatterer
 			}
 			else
 			{
-				// planet ocean
+//				 planet ocean
 				uz = cl.Normalized() ; // unit z vector of ocean frame, in local space
 //				uz.x=cl.normalized.x;
 //				uz.y=cl.normalized.y;
@@ -244,7 +268,34 @@ namespace scatterer
 					ux = Vector3d2.UnitZ().Cross(uz).Normalized();
 				}
 				uy = uz.Cross(ux); // unit y vector
-				oo = uz * radius; // origin of ocean frame, in local space
+//				oo = uz * radius; // origin of ocean frame, in local space
+
+				Vector3 tmp=(m_manager.GetSkyNode().farCamera.transform.position);//-m_manager.parentCelestialBody.transform.position).normalized;
+//				oo=uz;
+				oo= new Vector3d2();
+				oo.x= tmp.x;
+				oo.y= tmp.y;
+				oo.z= tmp.z;
+
+				oo=oo-100*uz;
+
+
+
+
+//				Vector3 tmp=m_manager.GetSkyNode().farCamera.transform.position-m_manager.parentCelestialBody.transform.position;
+//				Vector3 tmp=m_manager.GetSkyNode().farCamera.transform.position-m_manager.parentCelestialBody.transform.position;
+
+//				oo=m_manager.GetSkyNode().farCamera.transform.position-m_manager.parentCelestialBody.transform.position;
+//				oo=uz* tmp.magnitude;
+
+				//				oo=new Vector3d2(tmp.x,tmp.y,tmp.z);
+//				oo.x=tmp.x;
+//				oo.y=tmp.y;
+//				oo.z=tmp.z;
+				print ("origin");
+				print (oo);
+				print ("uz");
+				print (uz);
 			}
 			
 			Matrix4x4d ltoo = new Matrix4x4d(
@@ -266,6 +317,7 @@ namespace scatterer
 			
 			//Matrix4x4d stoc = GetView().GetScreenToCamera();
 			Matrix4x4d stoc = m_manager.GetSkyNode().m_cameraToScreenMatrix.Inverse();
+//			Matrix4x4d stoc = m_manager.GetSkyNode().m_cameraToScreenMatrix.Inverse();
 //			Matrix4x4d stoc = new Matrix4x4d (stoc1.m00, stoc1.m01, stoc1.m02, stoc1.m03,
 //			                                stoc1.m10, stoc1.m11, stoc1.m12, stoc1.m13,
 //			                                stoc1.m20, stoc1.m21, stoc1.m22, stoc1.m23,
@@ -288,14 +340,14 @@ namespace scatterer
 			Vector3d2 horizon1, horizon2;
 			Vector3d2 offset = new Vector3d2(-m_offset.x, -m_offset.y, oc.z);
 			
-			if (radius == 0.0)
-			{
-				//Terrain ocean
-				horizon1 = new Vector3d2(-(h * 1e-6 + A0.z) / B.z, -dA.z / B.z, 0.0);
-				horizon2 = Vector3d2.Zero();
-			}
-			else
-			{
+//			if (radius == 0.0)
+//			{
+//				//Terrain ocean
+//				horizon1 = new Vector3d2(-(h * 1e-6 + A0.z) / B.z, -dA.z / B.z, 0.0);
+//				horizon2 = Vector3d2.Zero();
+//			}
+//			else
+//			{
 				//Planet ocean
 				double h1 = h * (h + 2.0 * radius);
 				double h2 = (h + radius) * (h + radius);
@@ -308,7 +360,7 @@ namespace scatterer
 				
 				horizon1 = new Vector3d2(-beta0, -beta1, 0.0);
 				horizon2 = new Vector3d2(beta0 * beta0 - gamma0, 2.0 * (beta0 * beta1 - gamma1), beta1 * beta1 - gamma2);
-			}
+//			}
 			
 			//			Vector3d2 sunDir = new Vector3d2(m_manager.GetSunNode().GetDirection());
 			Vector3d2 sunDir = new Vector3d2 (m_manager.getDirectionToSun ().normalized);
@@ -331,11 +383,308 @@ namespace scatterer
 			//m_manager.SetUniforms(m_oceanMaterial);
 			
 			//Draw each mesh that makes up the projected grid
-			foreach( Mesh mesh in m_screenGrids)
+			foreach (Mesh mesh in m_screenGrids) {
 //				Graphics.DrawMesh(mesh, Matrix4x4.identity, m_oceanMaterial, 0, Camera.main);
-				Graphics.DrawMesh(mesh, Matrix4x4.identity, m_oceanMaterial, 15, m_manager.GetSkyNode().farCamera);
+//				Graphics.DrawMesh(mesh, Matrix4x4.identity, m_oceanMaterial, 15, m_manager.GetSkyNode().farCamera);
+				print ("OCEAN RENDERQUEUE");
+				print (m_oceanMaterial.renderQueue);
+
+				print ("DRAW OCEAN");
+				print (m_drawOcean);
+
+				//m_oceanMaterial.renderQueue=m_manager.GetCore().renderQueue;
+				mesh.bounds= new Bounds(Vector3.zero, new Vector3(1e30f,1e30f, 1e30f));
+//				Graphics.DrawMesh (mesh, Matrix4x4.identity, m_oceanMaterial, 15, m_manager.GetSkyNode ().farCamera);
+
+//				Graphics.DrawMesh (mesh, m_manager.parentCelestialBody.transform.position ,Quaternion.identity, m_oceanMaterial, 15, m_manager.GetSkyNode ().farCamera);
+//				Graphics.DrawMesh (mesh, new Vector3(1000,1000,1000),Quaternion.identity, m_oceanMaterial, 15, m_manager.GetSkyNode ().nearCamera);
+
+				Graphics.DrawMesh (mesh, Matrix4x4.identity, m_oceanMaterial, 15, m_manager.GetSkyNode ().nearCamera);
+
+//				Graphics.DrawMesh(mesh, Matrix4x4.identity, m_oceanMaterial, 15, m_manager.GetSkyNode().nearCamera);
+//				if ((m_manager.GetCore ().chosenCamera != null)) {
+//					Graphics.DrawMesh (mesh, Matrix4x4.identity, m_oceanMaterial, m_manager.GetCore ().layer, m_manager.GetCore ().chosenCamera);
+//				} else {
+//					print ("CAM AND LAYER NULL");
+//				}
+			}*/
 
 			
+		}
+
+		public void updateStuff(){
+			print ("UPDATING STUFF");
+
+
+//
+//			
+//			
+//			if ((m_manager.m_skyNode.farCamera) != (null)) {
+//				if (m_manager.m_skyNode.farCamera.gameObject.GetComponent<OceanUpdateAtCameraRythm> () == null) {
+//					m_manager.m_skyNode.farCamera.gameObject.AddComponent (typeof(OceanUpdateAtCameraRythm));
+//					
+//				}
+//				
+//				
+//				
+//				if (m_manager.m_skyNode.farCamera.gameObject.GetComponent<OceanUpdateAtCameraRythm> () != null) {
+//					m_manager.m_skyNode.farCamera.gameObject.GetComponent<OceanUpdateAtCameraRythm> ().m_oceanNode = this;
+//				}
+//				
+//				else print ("NULL OCEAN NODE");
+//				
+//			}
+//			
+//			else print ("NULL FAR CAM");
+			
+			//Calculates the required data for the projected grid
+			
+			// compute ltoo = localToOcean transform, where ocean frame = tangent space at
+			// camera projection on sphere radius in local space
+			
+			//			Matrix4x4d ctol = GetView().GetCameraToWorld();
+			Matrix4x4 ctol1 = m_manager.GetSkyNode ().farCamera.cameraToWorldMatrix;
+			
+			Matrix4x4d ctol = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, ctol1.m03,
+			                                  ctol1.m10, ctol1.m11, ctol1.m12, ctol1.m13,
+			                                  ctol1.m20, ctol1.m21, ctol1.m22, ctol1.m23,
+			                                  ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
+			
+			//Vector3d2 cl = ctol * Vector3d2.Zero(); // camera in local space
+
+			//modified to camera in local space relative to planet's origin
+			Vector3d tmp = (m_manager.GetSkyNode ().farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+			Vector3d2 cl = new Vector3d2 ();
+
+			cl.x = tmp.x;
+			cl.y = tmp.y;
+			cl.z = tmp.z;
+
+
+			
+			
+			//			float radius = m_manager.IsDeformed() ? m_manager.GetRadius() : 0.0f;
+			float radius = m_manager.GetRadius ();
+			print ("radius");
+			print (radius);
+			
+//			if ((radius == 0.0 && cl.z > m_zmin) ||
+//			    (radius > 0.0 && cl.Magnitude() > radius + m_zmin) ||
+//			    (radius < 0.0 && (new Vector2d(cl.y, cl.z)).Magnitude() < -radius - m_zmin))
+//			{
+//				m_oldLtoo = Matrix4x4d.Identity();
+//				m_offset = Vector3d2.Zero();
+//				m_drawOcean = false;
+//				return;
+//			}
+			
+			m_drawOcean = true;
+			Vector3d2 ux, uy, uz, oo;
+			
+//			if(radius == 0.0f)
+//			{
+//				//terrain ocean
+//				ux = Vector3d2.UnitX();
+//				uy = Vector3d2.UnitY();
+//				uz = Vector3d2.UnitZ();
+//				oo = new Vector3d2(cl.x, cl.y, 0.0);
+//			}
+//			else
+			{
+				//				 planet ocean
+				uz = cl.Normalized() ; // unit z vector of ocean frame, in local space
+				//				uz.x=cl.normalized.x;
+				//				uz.y=cl.normalized.y;
+				//				uz.z=cl.normalized.z;
+				
+				if (m_oldLtoo != Matrix4x4d.Identity())
+				{
+					ux = (new Vector3d2(m_oldLtoo.m[1,0], m_oldLtoo.m[1,1], m_oldLtoo.m[1,2])).Cross(uz).Normalized();
+				}
+				else
+				{
+					ux = Vector3d2.UnitZ().Cross(uz).Normalized();
+				}
+
+				uy = uz.Cross(ux); // unit y vector
+				//				oo = uz * radius; // origin of ocean frame, in local space
+				
+				//Vector3 tmp=(m_manager.GetSkyNode().farCamera.transform.position);//-m_manager.parentCelestialBody.transform.position);
+				tmp=m_manager.parentCelestialBody.transform.position;
+				print ("KERBIN POS");
+				print (tmp);
+				//				oo=uz;
+//				oo= new Vector3d2();
+//				oo.x= tmp.x;
+//				oo.y= tmp.y;
+//				oo.z= 20;
+
+				oo=Vector3d2.Zero();
+
+				print ("CL");
+				print(cl);
+				
+//				oo=oo-100*uz;
+				
+				
+				
+				
+				//				Vector3 tmp=m_manager.GetSkyNode().farCamera.transform.position-m_manager.parentCelestialBody.transform.position;
+				//				Vector3 tmp=m_manager.GetSkyNode().farCamera.transform.position-m_manager.parentCelestialBody.transform.position;
+				
+				//				oo=m_manager.GetSkyNode().farCamera.transform.position-m_manager.parentCelestialBody.transform.position;
+				//				oo=uz* tmp.magnitude;
+				
+				//				oo=new Vector3d2(tmp.x,tmp.y,tmp.z);
+				//				oo.x=tmp.x;
+				//				oo.y=tmp.y;
+				//				oo.z=tmp.z;
+				print ("origin");
+				print (oo);
+				print ("uz");
+				print (uz);
+			}
+			
+			Matrix4x4d ltoo = new Matrix4x4d(
+				ux.x, ux.y, ux.z, -ux.Dot(oo),
+				uy.x, uy.y, uy.z, -uy.Dot(oo),
+				uz.x, uz.y, uz.z, -uz.Dot(oo),
+				0.0,  0.0,  0.0,  1.0);
+			
+			// compute ctoo = cameraToOcean transform
+			Matrix4x4d ctoo = ltoo * ctol;
+			Vector3d2 delta=new Vector3d2(0,0,0);
+			
+			if (m_oldLtoo != Matrix4x4d.Identity())
+			{
+				/*Vector3d2 */delta = ltoo * (m_oldLtoo.Inverse() * Vector3d2.Zero());
+				m_offset += delta;
+
+			}
+			
+			m_oldLtoo = ltoo;
+
+			print ("DELTA NEW");
+			print (delta.x);
+			print (delta.y);
+			print (delta.z);
+//			print ("m_offset");
+//			print (m_offset);
+			
+			//Matrix4x4d stoc = GetView().GetScreenToCamera();
+			Matrix4x4d stoc = m_manager.GetSkyNode().m_cameraToScreenMatrix.Inverse();
+			//			Matrix4x4d stoc = m_manager.GetSkyNode().m_cameraToScreenMatrix.Inverse();
+			//			Matrix4x4d stoc = new Matrix4x4d (stoc1.m00, stoc1.m01, stoc1.m02, stoc1.m03,
+			//			                                stoc1.m10, stoc1.m11, stoc1.m12, stoc1.m13,
+			//			                                stoc1.m20, stoc1.m21, stoc1.m22, stoc1.m23,
+			//			                                stoc1.m30, stoc1.m31, stoc1.m32, stoc1.m33);
+			
+			
+			
+			Vector3d2 oc = ctoo * Vector3d2.Zero();
+			print ("OC");
+			print (oc);
+			
+//			double h = oc.z;
+
+			Vector3d tmp2=m_manager.GetSkyNode().farCamera.transform.position-m_manager.parentCelestialBody.transform.position;
+			double h = tmp2.magnitude - radius;
+
+//			print ("H");
+//			print (h);
+			
+			Vector4d stoc_w = (stoc * Vector4d.UnitW()).XYZ0();
+			Vector4d stoc_x = (stoc * Vector4d.UnitX()).XYZ0();
+			Vector4d stoc_y = (stoc * Vector4d.UnitY()).XYZ0();
+			
+			Vector3d2 A0 = (ctoo * stoc_w).XYZ();
+			Vector3d2 dA = (ctoo * stoc_x).XYZ();
+			Vector3d2 B =  (ctoo * stoc_y).XYZ();
+			
+			Vector3d2 horizon1, horizon2;
+//			Vector3d2 offset = new Vector3d2(-m_offset.x, -m_offset.y, oc.z);
+
+//			Vector3d2 offset = new Vector3d2(-m_offset.x, -m_offset.y, h);
+			Vector3d2 offset = new Vector3d2(oc.x, oc.y, h);
+
+			print ("offset");
+			print (offset);
+			
+			//			if (radius == 0.0)
+			//			{
+			//				//Terrain ocean
+			//				horizon1 = new Vector3d2(-(h * 1e-6 + A0.z) / B.z, -dA.z / B.z, 0.0);
+			//				horizon2 = Vector3d2.Zero();
+			//			}
+			//			else
+			//			{
+			//Planet ocean
+			double h1 = h * (h + 2.0 * radius);
+			double h2 = (h + radius) * (h + radius);
+			double alpha = B.Dot(B) * h1 - B.z * B.z * h2;
+
+			double beta0 = (A0.Dot(B) * h1 - B.z * A0.z * h2) / alpha;
+			double beta1 = (dA.Dot(B) * h1 - B.z * dA.z * h2) / alpha;
+
+			double gamma0 = (A0.Dot(A0) * h1 - A0.z * A0.z * h2) / alpha;
+			double gamma1 = (A0.Dot(dA) * h1 - A0.z * dA.z * h2) / alpha;
+			double gamma2 = (dA.Dot(dA) * h1 - dA.z * dA.z * h2) / alpha;
+			
+			horizon1 = new Vector3d2(-beta0, -beta1, 0.0);
+			horizon2 = new Vector3d2(beta0 * beta0 - gamma0, 2.0 * (beta0 * beta1 - gamma1), beta1 * beta1 - gamma2);
+			//			}
+			
+			//			Vector3d2 sunDir = new Vector3d2(m_manager.GetSunNode().GetDirection());
+			Vector3d2 sunDir = new Vector3d2 (m_manager.getDirectionToSun ().normalized);
+			Vector3d2 oceanSunDir = ltoo.ToMatrix3x3d() * sunDir;
+			
+			m_oceanMaterial.SetVector("_Ocean_SunDir", oceanSunDir.ToVector3());
+
+			m_oceanMaterial.SetVector("_Ocean_Horizon1", horizon1.ToVector3());
+			m_oceanMaterial.SetVector("_Ocean_Horizon2", horizon2.ToVector3());
+
+			m_oceanMaterial.SetMatrix("_Ocean_CameraToOcean", ctoo.ToMatrix4x4());
+			m_oceanMaterial.SetMatrix("_Ocean_OceanToCamera", ctoo.Inverse().ToMatrix4x4());
+
+			m_oceanMaterial.SetVector("_Ocean_CameraPos", offset.ToVector3());
+
+			m_oceanMaterial.SetVector("_Ocean_Color", m_oceanUpwellingColor * 0.1f);
+			m_oceanMaterial.SetVector("_Ocean_ScreenGridSize", new Vector2((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
+			m_oceanMaterial.SetFloat("_Ocean_Radius", radius);
+			
+			
+			
+			m_manager.GetSkyNode().SetUniforms(m_oceanMaterial);
+			//			m_manager.GetSunNode().SetUniforms(m_oceanMaterial);
+			//m_manager.SetUniforms(m_oceanMaterial);
+			
+			//Draw each mesh that makes up the projected grid
+			foreach (Mesh mesh in m_screenGrids) {
+				//				Graphics.DrawMesh(mesh, Matrix4x4.identity, m_oceanMaterial, 0, Camera.main);
+				//				Graphics.DrawMesh(mesh, Matrix4x4.identity, m_oceanMaterial, 15, m_manager.GetSkyNode().farCamera);
+				print ("OCEAN RENDERQUEUE");
+				print (m_oceanMaterial.renderQueue);
+//				
+//				print ("DRAW OCEAN");
+//				print (m_drawOcean);
+				
+				m_oceanMaterial.renderQueue=m_manager.GetCore().renderQueue;
+				mesh.bounds= new Bounds(Vector3.zero, new Vector3(1e30f,1e30f, 1e30f));
+				//				Graphics.DrawMesh (mesh, Matrix4x4.identity, m_oceanMaterial, 15, m_manager.GetSkyNode ().farCamera);
+				
+				//				Graphics.DrawMesh (mesh, m_manager.parentCelestialBody.transform.position ,Quaternion.identity, m_oceanMaterial, 15, m_manager.GetSkyNode ().farCamera);
+				//				Graphics.DrawMesh (mesh, new Vector3(1000,1000,1000),Quaternion.identity, m_oceanMaterial, 15, m_manager.GetSkyNode ().nearCamera);
+				
+				Graphics.DrawMesh (mesh, m_manager.parentCelestialBody.transform.position, Quaternion.identity, m_oceanMaterial, 15, m_manager.GetSkyNode ().nearCamera);
+				
+				//				Graphics.DrawMesh(mesh, Matrix4x4.identity, m_oceanMaterial, 15, m_manager.GetSkyNode().nearCamera);
+				//				if ((m_manager.GetCore ().chosenCamera != null)) {
+				//					Graphics.DrawMesh (mesh, Matrix4x4.identity, m_oceanMaterial, m_manager.GetCore ().layer, m_manager.GetCore ().chosenCamera);
+				//				} else {
+				//					print ("CAM AND LAYER NULL");
+				//				}
+			}
+
 		}
 		
 		public void SetUniforms(Material mat)
@@ -346,12 +695,19 @@ namespace scatterer
 			mat.SetFloat("_Ocean_Sigma", GetMaxSlopeVariance());
 			mat.SetVector("_Ocean_Color", m_oceanUpwellingColor * 0.1f);
 			mat.SetFloat("_Ocean_DrawBRDF", (m_drawOcean) ? 0.0f : 1.0f);
+
+
 			mat.SetFloat("_Ocean_Level", m_oceanLevel);
 		}
 		
 		public void setManager(Manager manager)
 		{
 			m_manager=manager;
+		}
+
+		public void setCore(Core core)
+		{
+			m_core=core;
 		}
 		
 	}

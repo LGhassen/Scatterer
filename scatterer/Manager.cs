@@ -35,7 +35,7 @@ namespace scatterer
 		public SkyNode m_skyNode;
 		SunNode m_sunNode;
 		
-		CelestialBody parentCelestialBody;
+		public CelestialBody parentCelestialBody;
 		CelestialBody sunCelestialBody;
 		
 		// Initialization
@@ -54,6 +54,7 @@ namespace scatterer
 
 			m_oceanNode = new OceanWhiteCaps();
 			m_oceanNode.setManager (this);
+
 			m_oceanNode.Start ();
 
 			
@@ -148,6 +149,10 @@ namespace scatterer
 		
 		public void SetCore(Core core){
 			m_core=core;
-		}		
+		}
+
+		public Core GetCore(){
+			return (m_core);
+		}	
 	}
 }

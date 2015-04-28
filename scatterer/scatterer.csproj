@@ -90,6 +90,7 @@
     <Compile Include="Ocean\FourierGPU.cs" />
     <Compile Include="Ocean\RTUtility.cs" />
     <Compile Include="Ocean\Node.cs" />
+    <Compile Include="Ocean\OceanUpdateAtCameraRythm.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
