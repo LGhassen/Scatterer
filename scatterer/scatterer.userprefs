@@ -1,13 +1,13 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Ocean\OceanNode.cs">
     <Files>
-      <File FileName="SkyNode.cs" Line="615" Column="1" />
-      <File FileName="Core.cs" Line="149" Column="19" />
-      <File FileName="Ocean\OceanNode.cs" Line="90" Column="14" />
+      <File FileName="SkyNode.cs" Line="746" Column="12" />
+      <File FileName="Core.cs" Line="1" Column="1" />
+      <File FileName="Ocean\OceanNode.cs" Line="262" Column="76" />
       <File FileName="Ocean\OceanWhiteCaps.cs" Line="1" Column="1" />
       <File FileName="Ocean\OceanFFT.cs" Line="1" Column="1" />
-      <File FileName="Manager.cs" Line="57" Column="33" />
+      <File FileName="Manager.cs" Line="1" Column="1" />
       <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Ocean\RTUtility.cs" Line="1" Column="1" />
       <File FileName="Plugins\Math\Matrix4x4d.cs" Line="1" Column="1" />
       <File FileName="Ocean\Node.cs" Line="1" Column="1" />
@@ -16,7 +16,7 @@
       <File FileName="Ocean\FourierGPU.cs" Line="1" Column="1" />
       <File FileName="Ocean\WriteFloat.cs" Line="1" Column="1" />
       <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
-      <File FileName="Ocean\OceanUpdateAtCameraRythm.cs" Line="43" Column="1" />
+      <File FileName="Ocean\OceanUpdateAtCameraRythm.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
