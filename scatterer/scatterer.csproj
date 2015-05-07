@@ -32,10 +32,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\3DMGAME-Kerbal.Space.Program.v0.24.2.559.Cracked-3DM\0.90\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\KSP\1.0\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\3DMGAME-Kerbal.Space.Program.v0.24.2.559.Cracked-3DM\0.90\Kerbal Space Program\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\KSP\1.0\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -83,14 +83,6 @@
     <Compile Include="isoSphere.cs" />
     <Compile Include="drawSky.cs" />
     <Compile Include="updateAtCameraRythm.cs" />
-    <Compile Include="Ocean\OceanFFT.cs" />
-    <Compile Include="Ocean\OceanNode.cs" />
-    <Compile Include="Ocean\OceanWhiteCaps.cs" />
-    <Compile Include="Ocean\WriteFloat.cs" />
-    <Compile Include="Ocean\FourierGPU.cs" />
-    <Compile Include="Ocean\RTUtility.cs" />
-    <Compile Include="Ocean\Node.cs" />
-    <Compile Include="Ocean\OceanUpdateAtCameraRythm.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -249,5 +241,13 @@
     <None Include="Ocean\OceanNode.cs.meta" />
     <None Include="Ocean\OceanWhiteCaps.cs.meta" />
     <None Include="Ocean\WriteFloat.cs.meta" />
+    <None Include="Ocean\OceanFFT.cs" />
+    <None Include="Ocean\OceanNode.cs" />
+    <None Include="Ocean\OceanWhiteCaps.cs" />
+    <None Include="Ocean\WriteFloat.cs" />
+    <None Include="Ocean\FourierGPU.cs" />
+    <None Include="Ocean\RTUtility.cs" />
+    <None Include="Ocean\Node.cs" />
+    <None Include="Ocean\OceanUpdateAtCameraRythm.cs" />
   </ItemGroup>
 </Project>
