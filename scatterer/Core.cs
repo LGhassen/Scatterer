@@ -64,7 +64,7 @@ namespace scatterer
 		float exposure = 20f;
 		float alphaGlobal=100f;
 		public int layer=15;
-		int cam=1;
+		int cam=2;
 		
 		//other stuff
 		float atmosphereGlobalScale=1000f;
@@ -228,23 +228,23 @@ namespace scatterer
 				
 				
 				//CAM DEBUG OPTIONS								
-								GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
-								GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
-								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
-								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
-								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
-								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
-								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
-								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
-				
-								if (Camera.allCameras.Length == 7) {
-									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
-					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));}
+//								GUILayout.Label(String.Format("Number of cams:{0}",count.ToString()));
+//								GUILayout.Label (String.Format ("cam1pos:{0}", cams [0].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam1Name:{0}", cams [0].name));
+//								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam2pos:{0}", cams [1].name));
+//								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam3pos:{0}", cams [2].name));
+//								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam4pos:{0}", cams [3].name));
+//								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam5pos:{0}", cams [4].name));
+//								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].transform.position.ToString ()));
+//								GUILayout.Label (String.Format ("cam6pos:{0}", cams [5].name));
+//				
+//								if (Camera.allCameras.Length == 7) {
+//									GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].transform.position.ToString ()));
+//					GUILayout.Label (String.Format ("cam7pos:{0}", cams [6].name));}
 																							
 				//END CAM DEBUG OPTIONS
 				
@@ -514,7 +514,7 @@ namespace scatterer
 //				}
 //				GUILayout.EndHorizontal ();
 				
-				ScaledSpaceFader kerbinPsystemBody=ScaledSpace.Instance.transform.FindChild("Kerbin").gameObject.GetComponentInChildren<ScaledSpaceFader>();
+//				ScaledSpaceFader kerbinPsystemBody=ScaledSpace.Instance.transform.FindChild("Kerbin").gameObject.GetComponentInChildren<ScaledSpaceFader>();
 
 //				if (kerbinPsystemBody == null) {
 //					print ("NULL");
