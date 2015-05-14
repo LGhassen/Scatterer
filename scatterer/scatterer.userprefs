@@ -1,11 +1,12 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="SkyNode.cs">
     <Files>
       <File FileName="Manager.cs" Line="1" Column="1" />
-      <File FileName="Core.cs" Line="1" Column="1" />
-      <File FileName="SkyNode.cs" Line="391" Column="10" />
+      <File FileName="Core.cs" Line="516" Column="35" />
+      <File FileName="SkyNode.cs" Line="64" Column="42" />
       <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
+      <File FileName="ShaderTool.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
