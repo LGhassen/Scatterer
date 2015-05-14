@@ -94,6 +94,14 @@ namespace scatterer
 			managerState = "update done "+updateCnt.ToString();
 			//print (managerState);
 		}
+
+		public void OnDestroy()
+		{
+			m_skyNode.OnDestroy ();
+			Destroy (m_skyNode);
+			Destroy (m_sunNode);
+
+		}
 		
 		
 		public void setParentCelestialBody (CelestialBody parent)

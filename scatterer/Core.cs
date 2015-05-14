@@ -28,6 +28,10 @@ namespace scatterer
 
 		MeshRenderer mr = new MeshRenderer ();
 
+		bool initiated=false;
+
+		float alphaCutoff=100f;
+
 		int fadeStart=55000;
 		int fadeEnd=60000;
 
@@ -36,6 +40,9 @@ namespace scatterer
 
 		float rimBlend=100f;
 		float rimpower=600f;
+
+		Camera[] cams;
+		int count;
 
 
 
@@ -141,6 +148,7 @@ namespace scatterer
 					
 					if (celestialBodies[k].GetName() == "Sun")
 						SunId=k;
+//					mr.enabled=false;
 				}
 				
 				m_manager=new Manager();
@@ -149,7 +157,12 @@ namespace scatterer
 				m_manager.SetCore(this);
 				m_manager.Awake();
 				
-				m_radius = (float)celestialBodies [PlanetId].Radius;								
+				m_radius = (float)celestialBodies [PlanetId].Radius;
+
+//				MeshRenderer sunMR=
+//					(MeshRenderer)celestialBodies[SunId].GetComponent (typeof(MeshRenderer));
+//				sunMR.enabled=false;
+
 			}					
 		}
 		
@@ -192,11 +205,16 @@ namespace scatterer
 			//	GUI.DrawTexture(new Rect(250,250,512,512), RenderTexture.active, ScaleMode.StretchToFill, false);
 		}
 
-//		public override void OnDestroy()
-//		{
+		internal override void OnDestroy()
+		{
 //			base.OnDestroy ();
 //			ReactivateAtmosphere(parentPlanet,rimBlend,rimpower);
-//		}
+//			m_manager.m_skyNode.OnDestroy ();
+//			Destroy(m_manager.m_skyNode);
+			m_manager.OnDestroy ();
+			Destroy (m_manager);
+
+		}
 		
 		internal override void DrawWindow(int id)
 		{
@@ -216,9 +234,12 @@ namespace scatterer
 			if (GUILayout.Button ("Hide"))
 				Visible = !Visible;
 			GUILayout.EndHorizontal ();
-			
-			Camera[] cams = Camera.allCameras;
-			int count = Camera.allCameras.Length;
+
+			if (!initiated) {
+				cams = Camera.allCameras;
+				count = Camera.allCameras.Length;
+				initiated=true;
+			}
 			
 			
 			if (isActive)
@@ -284,6 +305,16 @@ namespace scatterer
 					m_manager.m_skyNode.SetAlphaGlobal (alphaGlobal / 100);
 				}
 				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Alpha Cutoff (/10000)");
+				alphaCutoff = (float)(Convert.ToDouble (GUILayout.TextField (alphaCutoff.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.SetAlphaCutoff (alphaCutoff / 10000);
+				}
+				GUILayout.EndHorizontal ();
 				
 				
 				GUILayout.BeginHorizontal ();
@@ -322,7 +353,7 @@ namespace scatterer
 				
 				if (GUILayout.Button ("Toggle PostProcessing"))
 				{
-					
+
 					if (!m_manager.m_skyNode.postprocessingEnabled)
 					{
 						m_manager.m_skyNode.enablePostprocess ();
@@ -467,6 +498,22 @@ namespace scatterer
 				if (GUILayout.Button ("Set"))
 				{
 					m_manager.m_skyNode.renderQueue= renderQueue;
+				}
+				GUILayout.EndHorizontal ();
+
+//				GUILayout.BeginHorizontal ();
+//
+//				if (GUILayout.Button ("Destroy tester"))
+//				{
+//					m_manager.m_skyNode.destroyTester();
+//				}
+//				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				
+				if (GUILayout.Button ("Toggle stock sunglare"))
+				{
+					m_manager.m_skyNode.toggleStockSunglare();
 				}
 				GUILayout.EndHorizontal ();
 							
