@@ -51,6 +51,7 @@ namespace scatterer
 			m_skyNode.SetParentCelestialBody (parentCelestialBody);
 			m_skyNode.loadSettings ();
 			m_skyNode.Start ();
+			m_skyNode.loadFromConfigNode ();
 
 //			m_oceanNode = new OceanWhiteCaps();
 //			m_oceanNode.setManager (this);
