@@ -32,6 +32,8 @@ namespace scatterer
 
 		float alphaCutoff=100f;
 
+
+
 		int fadeStart=55000;
 		int fadeEnd=60000;
 
@@ -55,7 +57,7 @@ namespace scatterer
 		//float inscatteringCoeff=85f; //useless, removed from shader too
 		float extinctionCoeff=70f;
 		float postProcessingalpha=78f;
-		float postProcessDepth=150f;
+		float postProcessDepth=200f;
 		float postProcessScale=1000f;
 		float postProcessExposure=18f;
 
@@ -93,6 +95,8 @@ namespace scatterer
 		
 		internal override void Awake()
 		{
+
+
 			WindowCaption = "Scatterer mod: alt+f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
 			Visible = true;						
@@ -109,6 +113,8 @@ namespace scatterer
 
 			{
 				isActive = true;
+
+//				loadFromConfigNode();
 
 				for (int j=0; j<10; j++)
 				{
@@ -156,6 +162,9 @@ namespace scatterer
 				m_manager.setSunCelestialBody(celestialBodies[SunId]);
 				m_manager.SetCore(this);
 				m_manager.Awake();
+				getSettingsFromSkynode();
+
+
 				
 				m_radius = (float)celestialBodies [PlanetId].Radius;
 
@@ -442,14 +451,14 @@ namespace scatterer
 				//				GUILayout.EndHorizontal ();
 				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Extinction Coeff (/100)");
+				GUILayout.Label ("Extinction Coeff (/10000)");
 				
 				
 				extinctionCoeff = (float)(Convert.ToDouble (GUILayout.TextField (extinctionCoeff.ToString ())));
 				
 				if (GUILayout.Button ("Set"))
 				{
-					m_manager.m_skyNode.SetExtinctionCoeff (extinctionCoeff / 100);
+					m_manager.m_skyNode.SetExtinctionCoeff (extinctionCoeff / 10000);
 				}
 				GUILayout.EndHorizontal ();
 
@@ -509,11 +518,36 @@ namespace scatterer
 //				}
 //				GUILayout.EndHorizontal ();
 
+//				GUILayout.BeginHorizontal ();
+//				
+//				if (GUILayout.Button ("Toggle stock sunglare"))
+//				{
+//					m_manager.m_skyNode.toggleStockSunglare();
+//				}
+//				GUILayout.EndHorizontal ();
+
 				GUILayout.BeginHorizontal ();
 				
-				if (GUILayout.Button ("Toggle stock sunglare"))
+				if (GUILayout.Button ("Save settings"))
 				{
-					m_manager.m_skyNode.toggleStockSunglare();
+					m_manager.m_skyNode.saveToConfigNode();
+				}
+
+				if (GUILayout.Button ("Load settings"))
+				{
+					m_manager.m_skyNode.loadFromConfigNode();
+					getSettingsFromSkynode();
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+
+				GUILayout.Label (String.Format("ForceOFF aniso"));	
+				GUILayout.TextField(m_manager.m_skyNode.forceOFFaniso.ToString());
+						
+				if (GUILayout.Button ("Toggle"))
+				{
+					m_manager.m_skyNode.toggleAniso();
 				}
 				GUILayout.EndHorizontal ();
 							
@@ -721,6 +755,24 @@ namespace scatterer
 					i = t.childCount + 10;
 				}
 			}
+		}
+
+			public void getSettingsFromSkynode() {
+
+			extinctionCoeff = 10000 * m_manager.m_skyNode.extinctionCoeff;
+
+			atmosphereGlobalScale = 1000 * m_manager.m_skyNode.atmosphereGlobalScale;
+			postProcessingalpha = 100 * m_manager.m_skyNode.postProcessingAlpha;
+			postProcessScale = 1000 * m_manager.m_skyNode.postProcessingScale;
+			postProcessDepth = 10000 * m_manager.m_skyNode.postProcessDepth;
+
+
+			postProcessExposure = 100* m_manager.m_skyNode.postProcessExposure;
+			exposure = 100* m_manager.m_skyNode.m_HDRExposure;
+			alphaCutoff = 10000 * m_manager.m_skyNode.alphaCutoff;
+			alphaGlobal = 100 * m_manager.m_skyNode.alphaGlobal;
+
+
 		}
 
 		public void ReactivateAtmosphere(string name, float inRimBlend, float inRimPower)
