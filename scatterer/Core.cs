@@ -97,9 +97,9 @@ namespace scatterer
 		{
 
 
-			WindowCaption = "Scatterer mod: alt+f11 toggle";
+			WindowCaption = "Scatterer mod: alt+f10/f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
-			Visible = true;						
+			Visible = false;						
 			isActive = false;
 			
 

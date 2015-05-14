@@ -26,6 +26,8 @@ namespace scatterer
 		
 		[Persistent] public bool forceOFFaniso;
 
+		bool coronasDisabled=false;
+
 		public int renderQueue=2000;
 		public int renderQueue2=2010;
 		Matrix4x4 p;
@@ -338,6 +340,8 @@ namespace scatterer
 		public void UpdateNode()
 		{
 
+
+
 //			print ("m_skyMaterialScaled.renderQueue");
 //			print (m_skyMaterialScaled.renderQueue);
 			
@@ -391,7 +395,7 @@ namespace scatterer
 			Rt = (Rt / Rg) * m_radius;
 			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
-			sunglareCutoffAlt = Rt /*  *0.995f*/ * atmosphereGlobalScale;
+			sunglareCutoffAlt = (Rt + Rt-Rg) /*  *0.995f*/ * atmosphereGlobalScale;
 			
 			//			if(inScaledSpace)
 			//			{
@@ -472,6 +476,10 @@ namespace scatterer
 			alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
 			if ((sunglareEnabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
 				toggleSunglare ();
+			}
+
+			if ((coronasDisabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
+				toggleCoronas ();
 			}
 
 			if ((!stocksunglareEnabled) ^ (alt < sunglareCutoffAlt-1000)) { //^ is XOR
@@ -847,6 +855,19 @@ namespace scatterer
 			}
 			
 			mat.SetFloat ("_Exposure", m_HDRExposure);
+
+//			int childCnt = 0;
+//			Transform scaledSunTransform=ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == "Sun");
+//			foreach (Transform child in scaledSunTransform)
+//			{
+//				print(childCnt);
+//				print(child.gameObject.name);
+//				childCnt++;
+//				MeshRenderer temp;
+//				temp = child.gameObject.GetComponent<MeshRenderer>();
+////				temp.enabled=false;
+//				print(temp.enabled);
+//			}
 		}
 		
 		void InitPostprocessMaterial(Material mat)
@@ -1174,6 +1195,19 @@ namespace scatterer
 				
 				
 			}
+		}
+
+		public void toggleCoronas(){
+
+			Transform scaledSunTransform=ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == "Sun");
+			foreach (Transform child in scaledSunTransform)
+			{
+				MeshRenderer temp;
+				temp = child.gameObject.GetComponent<MeshRenderer>();
+				temp.enabled=coronasDisabled;
+			}
+
+			coronasDisabled=!coronasDisabled;
 		}
 
 		public void toggleStockSunglare()
