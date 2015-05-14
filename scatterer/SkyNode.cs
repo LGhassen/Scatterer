@@ -24,6 +24,8 @@ namespace scatterer
 	public class SkyNode : MonoBehaviour
 	{
 		
+		[Persistent] public bool forceOFFaniso;
+
 		public int renderQueue=2000;
 		public int renderQueue2=2010;
 		Matrix4x4 p;
@@ -64,22 +66,23 @@ namespace scatterer
 		//Matrix4x4 m_sun_worldToLocalRotation;
 		
 		bool sunglareEnabled=true;
-		bool stocksunglareEnabled=false;
+		bool stocksunglareEnabled=true;
 		float sunglareCutoffAlt;
 		
 		Texture2D sunGlare;
 		Texture2D black;
 
 		//atmosphere properties
-		float extinctionCoeff=0.7f;
-		float atmosphereGlobalScale=1f;
-		float postProcessingAlpha=0.78f;
-		float postProcessingScale=1f;
-		float postProcessDepth=0.02f;
-		float postProcessExposure=0.18f;
+
+		[Persistent] public float extinctionCoeff=0.7f;
+		[Persistent] public float atmosphereGlobalScale=1f;
+		[Persistent] public float postProcessingAlpha=0.78f;
+		[Persistent] public float postProcessingScale=1f;
+		[Persistent] public float postProcessDepth=0.02f;
+		[Persistent] public float postProcessExposure=0.18f;
 		//		float inscatteringCoeff=0.8f; //useless, I also removed it from shader
 		
-		float m_HDRExposure= 0.2f;
+		[Persistent] public float m_HDRExposure= 0.2f;
 		
 		static PQS CurrentPQS=null;
 		public bool inScaledSpace { get { return !(CurrentPQS != null && CurrentPQS.isActive);}}
@@ -94,8 +97,8 @@ namespace scatterer
 		public bool postprocessingEnabled=true;
 		int waitBeforeReloadCnt=0;
 		
-		float alphaCutoff=0.001f;
-		float alphaGlobal=1f;
+		[Persistent] public float alphaCutoff=0.001f;
+		[Persistent] public float alphaGlobal=1f;
 		
 		float m_radius;// = 600000.0f;
 		//The radius of the planet (Rg), radius of the atmosphere (Rt)
@@ -144,6 +147,7 @@ namespace scatterer
 		float m_mieG = 0.85f;
 		
 		string m_filePath = "/Proland/Textures/Atmo";
+//		string path;
 		
 		public Matrix4x4d m_cameraToScreenMatrix;
 		
@@ -209,14 +213,14 @@ namespace scatterer
 			m_skyMaterialScaled=new Material(ShaderTool.GetMatFromShader2("CompiledSkyScaled.shader"));
 			//m_skyMapMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSkyMap.shader"));
 			//m_skyMaterial.renderQueue = 2000;
-			m_skyMaterialScaled.renderQueue = 2002;
+			m_skyMaterialScaled.renderQueue = 2003;
 			
 			sunGlare = new Texture2D (512, 512);
 			black = new Texture2D (512, 512);
 			
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
-			string path = Uri.UnescapeDataString(uri.Path);
+			path = Uri.UnescapeDataString(uri.Path);
 			path=Path.GetDirectoryName (path);
 			
 			sunGlare.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + m_filePath, "sunglare.png")));
@@ -242,13 +246,14 @@ namespace scatterer
 			
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 			
-			//aniso defaults to to forceEnable on higher visual settings and causes artifacts
-			//no longer needed since I switched to the new mesh
-			//QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
+
+			if (forceOFFaniso) {
+				QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
+			}
 			
 			CurrentPQS = parentCelestialBody.pqsController;
 			testPQS = parentCelestialBody.pqsController;
-			
+
 			
 			
 			
@@ -332,10 +337,16 @@ namespace scatterer
 		
 		public void UpdateNode()
 		{
+
+//			print ("m_skyMaterialScaled.renderQueue");
+//			print (m_skyMaterialScaled.renderQueue);
 			
-			m_skyMaterialScaled.renderQueue = renderQueue;
+//			m_skyMaterialScaled.renderQueue = renderQueue;
 //			Sun.Instance.sunFlare.enabled = false;
 //			var cbTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> (true).Where (mod => mod.transform.parent == CurrentPQS.transform).FirstOrDefault (); 
+
+
+
 
 
 //			if (!initiated) {
@@ -463,8 +474,12 @@ namespace scatterer
 				toggleSunglare ();
 			}
 
-			print ("alphacutoff");
-			print (alphaCutoff);
+			if ((!stocksunglareEnabled) ^ (alt < sunglareCutoffAlt-1000)) { //^ is XOR
+				toggleStockSunglare();
+			}
+
+//			print ("alphacutoff");
+//			print (alphaCutoff);
 			
 //			if (alt<sunglareCutoffAlt){
 //				alphaCutoff=0.0001f;}
@@ -1092,7 +1107,7 @@ namespace scatterer
 			
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
-			string path = Uri.UnescapeDataString(uri.Path);
+			path = Uri.UnescapeDataString(uri.Path);
 			path=Path.GetDirectoryName (path);
 			
 			
@@ -1111,7 +1126,8 @@ namespace scatterer
 		public void OnDestroy()
 		{
 			//base.OnDestroy();
-			
+			saveToConfigNode ();
+
 			m_transmit.Release();
 			m_irradiance.Release();
 			m_inscatter.Release();
@@ -1147,14 +1163,14 @@ namespace scatterer
 				m_skyMaterialScaled.SetTexture ("_Sun_Glare", black);
 				sunglareEnabled = false;
 //				alphaCutoff=0.5f;
-				m_skyMaterialScaled.renderQueue = 2003;
+				m_skyMaterialScaled.renderQueue = 2001;
 			}
 			else
 			{
 				m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
 				sunglareEnabled=true;
 //				alphaCutoff=0.001f;
-				m_skyMaterialScaled.renderQueue = 2002;
+				m_skyMaterialScaled.renderQueue = 2003;
 				
 				
 			}
@@ -1181,6 +1197,19 @@ namespace scatterer
 
 			}
 			stocksunglareEnabled = !stocksunglareEnabled;
+		}
+
+		public void toggleAniso(){
+			if (forceOFFaniso) { 
+				QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+			}
+
+			else
+			{ 
+				QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
+			}
+
+			forceOFFaniso = !forceOFFaniso;
 		}
 		
 		public Transform GetScaledTransform(string body)
@@ -1242,6 +1271,31 @@ namespace scatterer
 			cfg ["AVERAGE_GROUND_REFLECTANCE"] = AVERAGE_GROUND_REFLECTANCE.ToString();
 			
 			cfg.save ();
+		}
+
+		public void loadFromConfigNode() {
+			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/Settings.txt");
+
+			extinctionCoeff = (float)(Convert.ToDouble(cnToLoad.GetValue ("extinctionCoeff")));
+
+			atmosphereGlobalScale = (float)(Convert.ToDouble(cnToLoad.GetValue ("atmosphereGlobalScale")));
+			postProcessingAlpha = (float)(Convert.ToDouble(cnToLoad.GetValue ("postProcessingAlpha")));
+			postProcessingScale = (float)(Convert.ToDouble(cnToLoad.GetValue ("postProcessingScale")));
+			postProcessDepth = (float)(Convert.ToDouble(cnToLoad.GetValue ("postProcessDepth")));
+
+
+			postProcessExposure = (float)(Convert.ToDouble(cnToLoad.GetValue ("postProcessExposure")));
+			m_HDRExposure = (float)(Convert.ToDouble(cnToLoad.GetValue ("m_HDRExposure")));
+			alphaCutoff = (float)(Convert.ToDouble(cnToLoad.GetValue ("alphaCutoff")));
+			alphaGlobal = (float)(Convert.ToDouble(cnToLoad.GetValue ("alphaGlobal")));
+			forceOFFaniso = Convert.ToBoolean(cnToLoad.GetValue ("forceOFFaniso"));
+
+		}
+
+
+		public void saveToConfigNode() {
+			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
+			cnTemp.Save(path+"/config/Settings.txt");
 		}
 		
 	}
