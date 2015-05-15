@@ -500,15 +500,15 @@ namespace scatterer
 //				}
 //				GUILayout.EndHorizontal ();
 
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("RenderQueue");
-				renderQueue = Convert.ToInt32 (GUILayout.TextField (renderQueue.ToString ()));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.renderQueue= renderQueue;
-				}
-				GUILayout.EndHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("RenderQueue");
+//				renderQueue = Convert.ToInt32 (GUILayout.TextField (renderQueue.ToString ()));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.renderQueue= renderQueue;
+//				}
+//				GUILayout.EndHorizontal ();
 
 //				GUILayout.BeginHorizontal ();
 //
