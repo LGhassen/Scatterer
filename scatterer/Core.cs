@@ -9,9 +9,6 @@ using System.IO;
 
 using System.Reflection;
 
-
-
-
 using KSP;
 using KSP.IO;
 using UnityEngine;
@@ -25,6 +22,8 @@ namespace scatterer
 	public class Core : MonoBehaviourWindow
 	{
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType<SkyNode>(null);
+
+		[Persistent] List<String> scattererPlanets= new List<String> {};// { "Kerbin", "Duna", "Eeloo" };
 
 		MeshRenderer mr = new MeshRenderer ();
 
@@ -99,7 +98,7 @@ namespace scatterer
 
 			WindowCaption = "Scatterer mod: alt+f10/f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
-			Visible = false;						
+			Visible = true;						
 			isActive = false;
 			
 
@@ -108,13 +107,16 @@ namespace scatterer
 				ReactivateAtmosphere (parentPlanet, rimBlend, rimpower);
 			}
 
+//			savePlanetsList ();
+
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene==GameScenes.SPACECENTER )
 
 			{
 				isActive = true;
 
-//				loadFromConfigNode();
+
+
 
 				for (int j=0; j<10; j++)
 				{
@@ -202,9 +204,15 @@ namespace scatterer
 				}
 			}
 
-
-
-
+			loadPlanetsList();
+			print (scattererPlanets.Count);
+//
+			print (scattererPlanets [0]);
+			print (scattererPlanets [1]);
+			print (scattererPlanets [2]);
+//
+//			print ("QualitySettings.activeColorSpace");
+//			print (QualitySettings.activeColorSpace);
 		}
 			
 		void OnGUI()
@@ -798,6 +806,38 @@ namespace scatterer
 					i = t.childCount + 10;
 				}
 			}
+		}
+
+		public void savePlanetsList() {
+
+			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+			UriBuilder uri = new UriBuilder(codeBase);
+			string path = Uri.UnescapeDataString(uri.Path);
+			path=Path.GetDirectoryName (path);
+
+			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
+			cnTemp.Save(path+"/config/PlanetsList.txt");
+		}
+
+		public void loadPlanetsList() {
+			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+			UriBuilder uri = new UriBuilder(codeBase);
+			string path = Uri.UnescapeDataString(uri.Path);
+			path=Path.GetDirectoryName (path);
+
+			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/PlanetsList.txt");
+
+//			scattererPlanets=cnToLoad.
+
+			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
+
+
+//			print(cnToLoad.GetValues ("scattererPlanets"));
+//			for (int i=0; i<scattererPlanets.Length; i++) {
+//				print (cnToLoad.GetValues ("scattererPlanets")[i]);
+//				scattererPlanets[i] = cnToLoad.GetValues ("scattererPlanets")[i];
+//			}
+
 		}
 
 

@@ -18,7 +18,7 @@ public class ViewDepthBuffer : MonoBehaviour
 	{
 
 		m_depthBufferShader = ShaderTool.GetMatFromShader2 ("CompiledViewDepthBuffer.shader");
-		GetComponent<Camera>().depthTextureMode |= DepthTextureMode.Depth;
+		GetComponent<Camera>().depthTextureMode |= DepthTextureMode.DepthNormals;
 	}
 	
 	void OnRenderImage(RenderTexture source, RenderTexture destination) 

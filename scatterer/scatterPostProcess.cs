@@ -31,7 +31,7 @@ public class scatterPostprocess : MonoBehaviour
 	void Start()
 	{
 		
-		GetComponent<Camera>().depthTextureMode |= DepthTextureMode.Depth;
+		GetComponent<Camera>().depthTextureMode |= DepthTextureMode.DepthNormals;
 	}
 	
 	void OnRenderImage(RenderTexture source, RenderTexture destination) 
