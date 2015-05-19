@@ -1,21 +1,19 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Core.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="..\..\..\Proland_v44\Proland_v4\Assets\Proland\Scripts\Atmo\SkyNode.cs">
     <Files>
-      <File FileName="SkyNode.cs" Line="1" Column="1" />
-      <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
-      <File FileName="ShaderTool.cs" Line="1" Column="1" />
+      <File FileName="..\..\..\Proland_v44\Proland_v4\Assets\Proland\Scripts\Atmo\SkyNode.cs" Line="24" Column="1" />
+      <File FileName="..\..\..\Proland_v44\Proland_v4\Assets\Proland\Shaders\Atmo\Sky.shader" Line="1" Column="1" />
+      <File FileName="..\..\..\Proland_v44\Proland_v4\Assets\Proland\Shaders\Atmo\AtmosphereNew.cginc" Line="1" Column="1" />
+      <File FileName="..\..\..\Proland_v44\Proland_v4\Assets\Proland\Shaders\Atmo\Atmosphere.cginc" Line="1" Column="1" />
+      <File FileName="..\..\..\Proland_v44\Proland_v4\Assets\Proland\Scripts\Core\Utilities\Manager.cs" Line="1" Column="1" />
       <File FileName="Core.cs" Line="1" Column="1" />
-      <File FileName="Manager.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="scatterer" expanded="True">
-            <Node name="Framework" expanded="True" />
-            <Node name="Ocean" expanded="True" />
             <Node name="Core.cs" selected="True" />
-            <Node name="scatterPostProcess.cs" expanded="True" />
           </Node>
         </State>
       </Pad>
