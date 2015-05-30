@@ -31,6 +31,10 @@ namespace scatterer
 
 		float alphaCutoff=100f;
 
+		float terrainReflectance=100;
+		float sunIntensity=100;
+		float irradianceFactor=100;
+
 
 
 		int fadeStart=55000;
@@ -44,6 +48,9 @@ namespace scatterer
 
 		Camera[] cams;
 		int count;
+
+		float oceanSigma = 0.04156494f;
+		float oceanThreshold=25f;
 
 
 
@@ -72,7 +79,7 @@ namespace scatterer
 		float exposure = 20f;
 		float alphaGlobal=100f;
 		public int layer=15;
-		int cam=2;
+		int cam=1;
 		
 		//other stuff
 		float atmosphereGlobalScale=1000f;
@@ -205,11 +212,11 @@ namespace scatterer
 			}
 
 			loadPlanetsList();
-			print (scattererPlanets.Count);
-//
-			print (scattererPlanets [0]);
-			print (scattererPlanets [1]);
-			print (scattererPlanets [2]);
+//			print (scattererPlanets.Count);
+////
+//			print (scattererPlanets [0]);
+//			print (scattererPlanets [1]);
+//			print (scattererPlanets [2]);
 //
 //			print ("QualitySettings.activeColorSpace");
 //			print (QualitySettings.activeColorSpace);
@@ -467,6 +474,65 @@ namespace scatterer
 				if (GUILayout.Button ("Set"))
 				{
 					m_manager.m_skyNode.SetExtinctionCoeff (extinctionCoeff / 10000);
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Terrain reflectance (/100)");
+				
+				
+				terrainReflectance = (float)(Convert.ToDouble (GUILayout.TextField (terrainReflectance.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.terrainReflectance=terrainReflectance/100f;
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Sun Intensity");
+				
+				
+				sunIntensity = (float)(Convert.ToDouble (GUILayout.TextField (sunIntensity.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.sunIntensity = sunIntensity;
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Irradiance Factor /100");
+				
+				
+				irradianceFactor = (float)(Convert.ToDouble (GUILayout.TextField (irradianceFactor.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.irradianceFactor = irradianceFactor / 100f;
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Ocean Threshold");
+								
+				oceanThreshold = (float)(Convert.ToDouble (GUILayout.TextField (oceanThreshold.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode._Ocean_Threshold = oceanThreshold;
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Ocean sigma");
+				
+				
+				oceanSigma = float.Parse(GUILayout.TextField(oceanSigma.ToString("00000000.0000000")));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.oceanSigma = oceanSigma;
 				}
 				GUILayout.EndHorizontal ();
 

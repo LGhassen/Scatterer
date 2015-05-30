@@ -83,6 +83,14 @@
     <Compile Include="isoSphere.cs" />
     <Compile Include="drawSky.cs" />
     <Compile Include="updateAtCameraRythm.cs" />
+    <Compile Include="Ocean\OceanFFT.cs" />
+    <Compile Include="Ocean\OceanNode.cs" />
+    <Compile Include="Ocean\OceanWhiteCaps.cs" />
+    <Compile Include="Ocean\WriteFloat.cs" />
+    <Compile Include="Ocean\FourierGPU.cs" />
+    <Compile Include="Ocean\RTUtility.cs" />
+    <Compile Include="Ocean\Node.cs" />
+    <Compile Include="Ocean\OceanUpdateAtCameraRythm.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -241,13 +249,5 @@
     <None Include="Ocean\OceanNode.cs.meta" />
     <None Include="Ocean\OceanWhiteCaps.cs.meta" />
     <None Include="Ocean\WriteFloat.cs.meta" />
-    <None Include="Ocean\OceanFFT.cs" />
-    <None Include="Ocean\OceanNode.cs" />
-    <None Include="Ocean\OceanWhiteCaps.cs" />
-    <None Include="Ocean\WriteFloat.cs" />
-    <None Include="Ocean\FourierGPU.cs" />
-    <None Include="Ocean\RTUtility.cs" />
-    <None Include="Ocean\Node.cs" />
-    <None Include="Ocean\OceanUpdateAtCameraRythm.cs" />
   </ItemGroup>
 </Project>
