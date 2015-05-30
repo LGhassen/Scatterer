@@ -32,6 +32,12 @@ namespace scatterer
 		public int renderQueue2=2010;
 		Matrix4x4 p;
 
+		public float terrainReflectance=1f;
+		public float sunIntensity=100f;
+		public float irradianceFactor =1f;
+		public float oceanSigma = 0.04156494f;
+		public float _Ocean_Threshold = 25f;
+
 		string codeBase;
 		UriBuilder uri;
 		string path;
@@ -133,12 +139,12 @@ namespace scatterer
 		
 		//Material idekk;
 		
-		[SerializeField]
-		Material m_skyMaterial;
+//		[SerializeField]
+//		Material m_skyMaterial;
 		Material m_skyMaterialScaled;
 		
 		//		[SerializeField]
-		//Material m_skyMapMaterial;
+		Material m_skyMapMaterial;
 		
 		//scatter coefficient for rayliegh
 		[SerializeField]
@@ -155,7 +161,7 @@ namespace scatterer
 		
 		Mesh m_mesh;
 		
-		RenderTexture m_transmit, m_inscatter, m_irradiance;//, m_skyMap;//, m_inscatterGround, m_transmitGround;
+		RenderTexture m_transmit, m_inscatter, m_irradiance, m_skyMap;//, m_inscatterGround, m_transmitGround;
 		
 		Manager m_manager;
 
@@ -179,13 +185,13 @@ namespace scatterer
 			m_mesh.bounds = new Bounds(parentCelestialBody.transform.position, new Vector3(1e8f,1e8f, 1e8f));
 			
 			//The sky map is used to create a reflection of the sky for objects that need it (like the ocean)
-//			m_skyMap = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGBHalf);
-//			m_skyMap.filterMode = FilterMode.Trilinear;
-//			m_skyMap.wrapMode = TextureWrapMode.Clamp;
-//			m_skyMap.anisoLevel = 9;
-//			m_skyMap.useMipMap = true;
-//			//m_skyMap.mipMapBias = -0.5f;
-//			m_skyMap.Create();
+			m_skyMap = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGBHalf);
+			m_skyMap.filterMode = FilterMode.Trilinear;
+			m_skyMap.wrapMode = TextureWrapMode.Clamp;
+			m_skyMap.anisoLevel = 9;
+			m_skyMap.useMipMap = true;
+			//m_skyMap.mipMapBias = -0.5f;
+			m_skyMap.Create();
 			
 			
 			//Inscatter is responsible for the change in the sky color as the sun moves
@@ -211,9 +217,9 @@ namespace scatterer
 			
 			
 			initiateOrRestart ();
-			m_skyMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSky.shader"));
+//			m_skyMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSky.shader"));
 			m_skyMaterialScaled=new Material(ShaderTool.GetMatFromShader2("CompiledSkyScaled.shader"));
-			//m_skyMapMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSkyMap.shader"));
+			m_skyMapMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSkyMap.shader"));
 			//m_skyMaterial.renderQueue = 2000;
 			m_skyMaterialScaled.renderQueue = 2003;
 			
@@ -236,15 +242,16 @@ namespace scatterer
 			else
 			{
 				sunGlare.wrapMode = TextureWrapMode.Clamp;
-				m_skyMaterial.SetTexture("_Sun_Glare", sunGlare);
+//				m_skyMaterial.SetTexture("_Sun_Glare", sunGlare);
+				m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
 			}
 			
-			m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
+
 			
 			
-			InitUniforms(m_skyMaterial);
+//			InitUniforms(m_skyMaterial);
 			InitUniforms(m_skyMaterialScaled);
-			//InitUniforms(m_skyMapMaterial);
+			InitUniforms(m_skyMapMaterial);
 			
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 			
@@ -421,6 +428,11 @@ namespace scatterer
 					if (cams [i].name == "Camera 00")
 						nearCamera = cams [i];
 				}
+
+//				print("scaledspace cam near clipplane");
+//				print (scaledSpaceCamera.nearClipPlane);
+//				print("scaledSpaceCamer far clipplane");
+//				print(scaledSpaceCamera.farClipPlane);
 
 
 
@@ -752,8 +764,8 @@ namespace scatterer
 			//					print ("In normal space");
 			//				}
 			
-//			SetUniforms(m_skyMapMaterial);
-//			Graphics.Blit(null, m_skyMap, m_skyMapMaterial);
+			SetUniforms(m_skyMapMaterial);
+			Graphics.Blit(null, m_skyMap, m_skyMapMaterial);
 			
 			
 		}
@@ -805,7 +817,7 @@ namespace scatterer
 			mat.SetTexture("_Sky_Transmittance", m_transmit);
 			mat.SetTexture("_Sky_Inscatter", m_inscatter);
 			mat.SetTexture("_Sky_Irradiance", m_irradiance);
-			//mat.SetTexture("_Sky_Map", m_skyMap);
+			mat.SetTexture("_Sky_Map", m_skyMap);
 			mat.SetFloat("_Sun_Intensity", 100f);
 			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun().normalized);
 			//			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun());
@@ -869,6 +881,120 @@ namespace scatterer
 //				print(temp.enabled);
 //			}
 		}
+
+
+		public void SetOceanUniforms(Material mat)
+		{
+			//Sets uniforms that this or other gameobjects may need
+			if(mat == null) return;
+			//mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
+			
+//			mat.SetFloat ("_Alpha_Cutoff", alphaCutoff);
+//			mat.SetFloat ("_Alpha_Global", alphaGlobal);
+			
+			mat.SetFloat("scale",atmosphereGlobalScale);
+			mat.SetFloat("Rg", Rg*atmosphereGlobalScale);
+			mat.SetFloat("Rt", Rt*atmosphereGlobalScale);
+			mat.SetFloat("RL", RL*atmosphereGlobalScale);
+
+			
+			
+//			//			if (debugSettings[1])
+//			if(!MapView.MapIsEnabled)
+//			{
+//				
+//				mat.SetMatrix ("_Globals_WorldToCamera", farCamera.worldToCameraMatrix);
+//				mat.SetMatrix ("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
+//			}
+//			
+//			else
+//			{
+//				mat.SetMatrix ("_Globals_WorldToCamera", scaledSpaceCamera.worldToCameraMatrix);
+//				mat.SetMatrix ("_Globals_CameraToWorld", scaledSpaceCamera.worldToCameraMatrix.inverse);
+//			}
+			
+			
+			
+			mat.SetVector("betaR", m_betaR / 1000.0f);
+			mat.SetFloat("mieG", Mathf.Clamp(m_mieG, 0.0f, 0.99f));
+			mat.SetTexture("_Sky_Transmittance", m_transmit);
+			mat.SetTexture("_Sky_Inscatter", m_inscatter);
+			mat.SetTexture("_Sky_Irradiance", m_irradiance);
+			mat.SetTexture("_Sky_Map", m_skyMap);
+			mat.SetFloat("_Sun_Intensity", 100f);
+			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun().normalized);
+			//			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun());
+			
+			
+			//			//copied from m_manager's set uniforms
+			
+			Matrix4x4 p;
+			//			if (debugSettings [2])
+//			if(!MapView.MapIsEnabled)
+//			{
+			float tmpNearclip = m_manager.GetCore ().chosenCamera.nearClipPlane;
+			float tmpFarclip = m_manager.GetCore ().chosenCamera.farClipPlane;
+
+			m_manager.GetCore ().chosenCamera.nearClipPlane=0.01f;
+			m_manager.GetCore ().chosenCamera.farClipPlane=750000f;
+
+				p = m_manager.GetCore().chosenCamera.projectionMatrix;
+
+			m_manager.GetCore ().chosenCamera.nearClipPlane=tmpNearclip;
+			m_manager.GetCore ().chosenCamera.farClipPlane=tmpFarclip;
+
+//			p = scaledSpaceCamera.projectionMatrix;
+//			}
+//			else
+//			{
+//				p = scaledSpaceCamera.projectionMatrix;
+//			}
+			
+			
+			m_cameraToScreenMatrix = new Matrix4x4d (p);
+			mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
+			mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
+			
+			//			if (debugSettings [3])
+			{
+				mat.SetVector ("_Globals_WorldCameraPos", farCamera.transform.position);
+			}
+			//			else
+			//			{
+			//				Vector3 newpos= ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position);
+			//				//				m_skyMaterial.SetVector ("_Globals_WorldCameraPos", scaledSpaceCamera.transform.position);
+			//				mat.SetVector ("_Globals_WorldCameraPos", newpos);
+			//			}
+			
+			//			if (debugSettings [4])
+			if(!MapView.MapIsEnabled)
+			{
+				mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
+			}
+			else
+			{
+				
+				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+				idek =celestialTransform.position;
+				mat.SetVector ("_Globals_Origin", idek);
+				
+			}
+			
+			mat.SetFloat ("_Exposure", m_HDRExposure);
+			
+			//			int childCnt = 0;
+			//			Transform scaledSunTransform=ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == "Sun");
+			//			foreach (Transform child in scaledSunTransform)
+			//			{
+			//				print(childCnt);
+			//				print(child.gameObject.name);
+			//				childCnt++;
+			//				MeshRenderer temp;
+			//				temp = child.gameObject.GetComponent<MeshRenderer>();
+			////				temp.enabled=false;
+			//				print(temp.enabled);
+			//			}
+		}
 		
 		void InitPostprocessMaterial(Material mat)
 		{
@@ -881,6 +1007,9 @@ namespace scatterer
 			
 			mat.SetTexture("_Transmittance", m_transmit);
 			mat.SetTexture("_Inscatter", m_inscatter);
+			mat.SetTexture("_Irradiance", m_irradiance);
+
+
 			
 			//Consts, best leave these alone
 			mat.SetFloat("M_PI", Mathf.PI);
@@ -891,7 +1020,13 @@ namespace scatterer
 			mat.SetFloat("RES_MU", RES_MU);
 			mat.SetFloat("RES_MU_S", RES_MU_S);
 			mat.SetFloat("RES_NU", RES_NU);
-			mat.SetFloat("SUN_INTENSITY", 100f);//
+
+			mat.SetFloat("SKY_W", SKY_W);
+			mat.SetFloat("SKY_H", SKY_H);
+
+			mat.SetFloat("_Ocean_Sigma", oceanSigma);//
+
+			mat.SetFloat("SUN_INTENSITY", sunIntensity);//
 			//			mat.SetVector("_inCamPos", cams[cam].transform.position);
 			
 			if (debugSettings [0]) {
@@ -947,10 +1082,16 @@ namespace scatterer
 			mat.SetFloat("_Exposure", postProcessExposure);
 			mat.SetFloat("_global_depth", postProcessDepth);
 			mat.SetFloat("_global_depth2", totalscale2);
+
+			mat.SetFloat("terrain_reflectance", terrainReflectance);
+			mat.SetFloat("_irradianceFactor", irradianceFactor);
 			
 			mat.SetFloat("_Scale", postProcessingScale);
 			//			mat.SetFloat("_Scale", 1);
-			
+
+			mat.SetFloat ("_Ocean_Sigma", oceanSigma);
+			mat.SetFloat ("_Ocean_Threshold", _Ocean_Threshold);
+
 			
 			//			mat.SetMatrix ("_Globals_CameraToWorld", cams [0].worldToCameraMatrix.inverse);
 			if (debugSettings [1]) {
@@ -982,8 +1123,8 @@ namespace scatterer
 			//			mat.SetVector("betaR", m_betaR / (postProcessDepth));
 			mat.SetVector("betaR", new Vector4(2.9e-3f, 0.675e-2f, 1.655e-2f, 0.0f));
 			mat.SetFloat("mieG", 0.4f);
-			mat.SetVector("SUN_DIR", /*Vector3.zero-*/m_manager.GetSunNodeDirection());
-			mat.SetFloat("SUN_INTENSITY", 100f);
+			mat.SetVector("SUN_DIR", m_manager.GetSunNodeDirection());
+			mat.SetFloat("SUN_INTENSITY", sunIntensity);
 		}
 		
 		
@@ -1124,7 +1265,7 @@ namespace scatterer
 			m_inscatter.Create ();
 			m_transmit.Create ();
 			m_irradiance.Create ();
-			//m_skyMap.Create();
+			m_skyMap.Create();
 			
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
@@ -1152,6 +1293,7 @@ namespace scatterer
 			m_transmit.Release();
 			m_irradiance.Release();
 			m_inscatter.Release();
+			m_skyMap.Release ();
 			
 			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 			
@@ -1159,7 +1301,7 @@ namespace scatterer
 			{
 				Component.Destroy (tmp);
 			}
-			//m_skyMap.Release();
+			m_skyMap.Release();
 
 			if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () != null)
 			{
