@@ -31,6 +31,8 @@ namespace scatterer
 
 		public float postRotX=0f,postRotY=0f,postRotZ=180f,postDist=8000f;
 
+		public float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
+
 		bool coronasDisabled=false;
 
 		public int renderQueue=2000;
@@ -498,13 +500,15 @@ namespace scatterer
 
 			}
 
-//			atmosphereMesh.transform.parent = FlightCamera.fetch.transform;
+//			atmosphereMesh.transform.parent = farCamera.transform;
 			//atmosphereMesh.transform.position = Vector3.zero;
 			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
 
 			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
 			atmosphereMesh.transform.rotation = farCamera.transform.rotation;
 			atmosphereMesh.transform.Rotate (new Vector3 (postRotX, postRotY, postRotZ), Space.Self);
+
+			atmosphereMesh.transform.localScale.Set (postScaleX, postScaleY, postScaleZ);
 
 			//parent = farCamera.transform;
 			//atmosphereMesh.transform.localRotation=new Vector3(
