@@ -2,10 +2,23 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
   <MonoDevelop.Ide.Workbench ActiveDocument="SkyNode.cs">
     <Files>
-      <File FileName="Ocean\OceanNode.cs" Line="362" Column="18" />
-      <File FileName="Core.cs" Line="76" Column="25" />
-      <File FileName="SkyNode.cs" Line="935" Column="30" />
+      <File FileName="Core.cs" Line="9" Column="1" />
+      <File FileName="SkyNode.cs" Line="499" Column="47" />
+      <File FileName="Manager.cs" Line="1" Column="1" />
+      <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
+      <File FileName="SimplePostProcessCube.cs" Line="1" Column="1" />
+      <File FileName="scatterPostProcess.cs" Line="90" Column="67" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="scatterer" expanded="True">
+            <Node name="Ocean" expanded="True" />
+            <Node name="SkyNode.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

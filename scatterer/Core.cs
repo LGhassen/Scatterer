@@ -31,6 +31,11 @@ namespace scatterer
 
 		float alphaCutoff=100f;
 
+		float postRotX=0f,postRotY=0f,postRotZ=180f,postDist=8000f;
+
+		float oceanNearPlane=0.01f;
+		float oceanFarPlane=750000f;
+
 		float terrainReflectance=100;
 		float sunIntensity=100;
 		float irradianceFactor=100;
@@ -52,12 +57,17 @@ namespace scatterer
 		float oceanSigma = 0.04156494f;
 		float oceanThreshold=25f;
 
+		float theta =1.0f;
+		float phi=1.0f;
+
+		float oceanLevel=0f;
+
 
 
 
 		public float[] additionalScales=new float[10];
 
-		//bool[] debugSettings= new bool[5];
+		public bool[] debugSettings= new bool[5];
 		
 		//postprocessing properties
 		//float inscatteringCoeff=85f; //useless, removed from shader too
@@ -130,9 +140,9 @@ namespace scatterer
 					additionalScales[j]=1000f;
 				}
 
-//				for (int j=0;j<5;j++){
-//					debugSettings[j]=false;
-//				}
+				for (int j=0;j<5;j++){
+					debugSettings[j]=false;
+				}
 				
 				//read parent planet from config
 				cfg.load ();
@@ -478,73 +488,155 @@ namespace scatterer
 				GUILayout.EndHorizontal ();
 
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Terrain reflectance (/100)");
+				GUILayout.Label ("Post rot&dist");
 				
 				
-				terrainReflectance = (float)(Convert.ToDouble (GUILayout.TextField (terrainReflectance.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.terrainReflectance=terrainReflectance/100f;
-				}
-				GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Sun Intensity");
-				
-				
-				sunIntensity = (float)(Convert.ToDouble (GUILayout.TextField (sunIntensity.ToString ())));
+				postRotX = (float)(Convert.ToDouble (GUILayout.TextField (postRotX.ToString ())));
+				postRotY = (float)(Convert.ToDouble (GUILayout.TextField (postRotY.ToString ())));
+				postRotZ = (float)(Convert.ToDouble (GUILayout.TextField (postRotZ.ToString ())));
+				postDist = (float)(Convert.ToDouble (GUILayout.TextField (postDist.ToString ())));
 				
 				if (GUILayout.Button ("Set"))
 				{
-					m_manager.m_skyNode.sunIntensity = sunIntensity;
-				}
-				GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Irradiance Factor /100");
-				
-				
-				irradianceFactor = (float)(Convert.ToDouble (GUILayout.TextField (irradianceFactor.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.irradianceFactor = irradianceFactor / 100f;
-				}
-				GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Ocean Threshold");
-								
-				oceanThreshold = (float)(Convert.ToDouble (GUILayout.TextField (oceanThreshold.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode._Ocean_Threshold = oceanThreshold;
-				}
-				GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Ocean sigma");
-				
-				
-				oceanSigma = float.Parse(GUILayout.TextField(oceanSigma.ToString("00000000.0000000")));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.oceanSigma = oceanSigma;
+					m_manager.m_skyNode.postRotX = postRotX;
+					m_manager.m_skyNode.postRotY = postRotY;
+					m_manager.m_skyNode.postRotZ = postRotZ;
+					m_manager.m_skyNode.postDist = postDist;
 				}
 				GUILayout.EndHorizontal ();
 
 
-//				for (int j=0;j<7;j++){
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Terrain reflectance (/100)");
+//				
+//				
+//				terrainReflectance = (float)(Convert.ToDouble (GUILayout.TextField (terrainReflectance.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.terrainReflectance=terrainReflectance/100f;
+//				}
+//				GUILayout.EndHorizontal ();
+
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Sun Intensity");
+//				
+//				
+//				sunIntensity = (float)(Convert.ToDouble (GUILayout.TextField (sunIntensity.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.sunIntensity = sunIntensity;
+//				}
+//				GUILayout.EndHorizontal ();
+
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Irradiance Factor /100");
+//				
+//				
+//				irradianceFactor = (float)(Convert.ToDouble (GUILayout.TextField (irradianceFactor.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.irradianceFactor = irradianceFactor / 100f;
+//				}
+//				GUILayout.EndHorizontal ();
+
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Ocean Threshold");
+//								
+//				oceanThreshold = (float)(Convert.ToDouble (GUILayout.TextField (oceanThreshold.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode._Ocean_Threshold = oceanThreshold;
+//				}
+//				GUILayout.EndHorizontal ();
+//
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Ocean sigma");
+//				
+//				
+//				oceanSigma = float.Parse(GUILayout.TextField(oceanSigma.ToString("00000000.0000000")));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.oceanSigma = oceanSigma;
+//				}
+//				GUILayout.EndHorizontal ();
+
+
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Ocean Near plane");
+//				
+//				
+//				oceanNearPlane = float.Parse(GUILayout.TextField(oceanNearPlane.ToString("00000000.0000000")));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.oceanNearPlane = oceanNearPlane;
+//				}
+//				GUILayout.EndHorizontal ();
+//
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Ocean far plane");
+//				
+//				
+//				oceanFarPlane = float.Parse(GUILayout.TextField(oceanFarPlane.ToString("00000000.0000000")));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.oceanFarPlane = oceanFarPlane;
+//				}
+//				GUILayout.EndHorizontal ();
+//
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("THETA");
+//				
+//				
+//				theta = float.Parse(GUILayout.TextField(theta.ToString("00000000.0000000")));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.GetOceanNode().theta = theta;
+//				}
+//				GUILayout.EndHorizontal ();
+//
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("PHI");
+//				
+//				
+//				phi = float.Parse(GUILayout.TextField(phi.ToString("00000000.0000000")));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.GetOceanNode().phi = phi;
+//				}
+//				GUILayout.EndHorizontal ();
+//
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("ocean Level");
+//				
+//				
+//				oceanLevel = float.Parse(GUILayout.TextField(oceanLevel.ToString("00000000.0000000")));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.GetOceanNode().m_oceanLevel = oceanLevel;
+//				}
+//				GUILayout.EndHorizontal ();
+
+
+
+
+//				for (int j=0;j<5;j++){
 //				GUILayout.BeginHorizontal ();
 //				GUILayout.Label (String.Format("Debug setting:{0}", j.ToString()));	
-//				GUILayout.TextField(m_manager.m_skyNode.debugSettings[j].ToString());
+//				GUILayout.TextField(debugSettings[j].ToString());
 //				
 //				if (GUILayout.Button ("Toggle"))
 //				{
-//						m_manager.m_skyNode.debugSettings[j] = !m_manager.m_skyNode.debugSettings[j];
+//						debugSettings[j] = !debugSettings[j];
 //				}
 //				GUILayout.EndHorizontal ();
 //				}
