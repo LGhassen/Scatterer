@@ -49,6 +49,9 @@ namespace scatterer
 
 		Manager m_manager;
 		Core m_core;
+
+		public float theta =1.0f;
+		public float phi=1.0f;
 		
 		[SerializeField]
 		protected Material m_oceanMaterial;
@@ -58,7 +61,7 @@ namespace scatterer
 		
 		//Sea level in meters
 		[SerializeField]
-		protected float m_oceanLevel = 0.0f;
+		public float m_oceanLevel = 0.0f;
 		double h=0;
 		//The maximum altitude at which the ocean must be displayed.
 		[SerializeField]
@@ -73,6 +76,7 @@ namespace scatterer
 		GameObject[] waterGameObjects;
 		MeshRenderer[] waterMeshRenderers;
 		MeshFilter[] waterMeshFilters;
+
 		Matrix4x4d m_oldlocalToOcean;
 		Matrix4x4d m_oldworldToOcean;
 		Vector3d2 m_offset;
@@ -139,6 +143,7 @@ namespace scatterer
 
 
 				waterGameObjects[i] = new GameObject();
+				waterGameObjects[i].transform.parent=m_manager.parentCelestialBody.transform;
 				waterMeshFilters[i] = waterGameObjects[i].AddComponent<MeshFilter>();
 				waterMeshFilters[i].mesh.Clear ();
 				waterMeshFilters[i].mesh = m_screenGrids[i];
@@ -199,6 +204,7 @@ namespace scatterer
 					p.x = (uv.x-0.5f)*2.0f;
 					p.y = (uv.y-0.5f)*2.0f;
 					
+//					Vector3 pos = new Vector3(p.x, p.y, 0.0f);
 					Vector3 pos = new Vector3(p.x, p.y, 0.0f);
 					Vector3 norm = new Vector3(0.0f, 0.0f, 1.0f);
 					
@@ -292,7 +298,10 @@ namespace scatterer
 				//				print ("RENDERQUEUE");
 				//				print(m_oceanMaterial.renderQueue);
 				//mesh.bounds = new Bounds (Vector3.zero, new Vector3 (1e30f, 1e30f, 1e30f));
-				//Graphics.DrawMesh (mesh, Vector3.zero,Quaternion.identity, m_oceanMaterial, m_core.layer, m_core.chosenCamera);
+//				Graphics.DrawMesh (mesh, Vector3.zero,Quaternion.identity, m_oceanMaterial, m_core.layer, m_core.chosenCamera);
+
+//				Graphics.DrawMesh (mesh, Vector3.zero,Quaternion.identity, m_oceanMaterial, m_core.layer, m_manager.m_skyNode.farCamera);
+//				Graphics.DrawMesh (mesh, Vector3.zero,Quaternion.identity, m_oceanMaterial, m_core.layer, m_manager.m_skyNode.nearCamera);
 				
 			}	
 			
@@ -351,11 +360,11 @@ namespace scatterer
 
 			//Vector3d planetPos = m_manager.parentCelestialBody.transform.position;
 
-			Matrix4x4d worldToLocal = new Matrix4x4d( m_manager.parentCelestialBody.transform.worldToLocalMatrix);
+			Matrix4x4d worldToLocal = new Matrix4x4d (m_manager.parentCelestialBody.transform.worldToLocalMatrix);
 
 			Vector4 translation = m_manager.parentCelestialBody.transform.worldToLocalMatrix.inverse.GetColumn (3);
 
-			Matrix4x4d worldToLocal2= new Matrix4x4d (1, 0, 0, -translation.x ,
+			Matrix4x4d worldToLocal2 = new Matrix4x4d (1, 0, 0, -translation.x,
 			                                          0, 1, 0, -translation.y,
 			                                          0, 0, 1, -translation.z,
 			                                          0, 0, 0, 1);
@@ -365,17 +374,20 @@ namespace scatterer
 
 
 			//Matrix4x4d camToLocal = cameraToWorld.Inverse ();// * worldToLocal.Inverse();
-			Matrix4x4d camToLocal =  worldToLocal2 * cameraToWorld ;
+
+			Matrix4x4d camToLocal = worldToLocal2 * cameraToWorld;
+//			Matrix4x4d camToLocal = ModifiedWorldToCameraMatrix ();
+
 //			Matrix4x4d camToLocal = cameraToWorld ;
 
 //			print ("WORLD TO LOCAL");
 //			print (worldToLocal);
 
-//			print ("CAM TO LOCAL");
+//			print ("CAM T		O LOCAL");
 //			print (camToLocal);
 
 			//cl = camToLocal * Vector3d2.Zero ();
-			cl = camToLocal * Vector3d2.Zero ();
+			/*Vector3d2*/ cl = camToLocal * Vector3d2.Zero ();
 
 //			print ("CL");
 //			print (cl);
@@ -402,13 +414,17 @@ namespace scatterer
 			
 			uy = uz.Cross(ux); // unit y vector
 			
-			h = cl.Magnitude() - radius;
-			Vector3d tmp2=m_core.chosenCamera.transform.position-m_manager.parentCelestialBody.transform.position;
+//			h = cl.Magnitude() - radius;
+//			print ("h=");
+//			print (h);
+//			h = cl.Magnitude();
+//			Vector3d tmp2=m_core.chosenCamera.transform.position-m_manager.parentCelestialBody.transform.position;
 			
 			oo = uz * (radius); // origin of ocean frame, in local space
-			oo.x = oo.x;
-			oo.y = oo.y;
-			oo.z = oo.z;
+//			oo = uz;
+//			oo.x = oo.x;
+//			oo.y = oo.y;
+//			oo.z = oo.z;
 			
 			//local to ocean transform
 			//computed from oo and ux, uy, uz should be correct
@@ -420,6 +436,7 @@ namespace scatterer
 
 
 			Matrix4x4d cameraToOcean = localToOcean * camToLocal;
+//			cameraToOcean = cameraToOcean.Inverse ();
 //			Matrix4x4d cameraToOcean = OceanToWorld.Inverse() * cameraToWorld;
 			Vector3d2 delta=new Vector3d2(0,0,0);
 			
@@ -432,8 +449,14 @@ namespace scatterer
 			m_oldlocalToOcean = localToOcean;
 
 
-						
-			Matrix4x4d stoc = ModifiedProjectionMatrix (m_manager.m_skyNode.scaledSpaceCamera).Inverse();
+			Matrix4x4d ctos = ModifiedProjectionMatrix (m_core.chosenCamera);
+			Matrix4x4d stoc = ctos.Inverse();
+//			Matrix4x4d stoc = new Matrix4x4d (1.23614492203479, 0, 0, 0,
+//				0, 0.577350279552042, 0, 0,
+//					0, 0, 0, -1,
+//			                                 0, 0, -0.000249974703487648, 0.000249974763086261);
+//			print ("STOC");
+//			print (stoc);
 //			Matrix4x4d stoc = Matrix4x4d.Identity();
 
 //			Matrix4x4 p = camera.projectionMatrix;
@@ -455,6 +478,8 @@ namespace scatterer
 
 			//			h = tmp2.magnitude - radius;
 			h = oc.z;
+//			print ("oc.z");
+//			print (h);
 //			print ("h=");
 //			print (h);
 
@@ -502,12 +527,17 @@ namespace scatterer
 			
 			m_oceanMaterial.SetMatrix("_Ocean_CameraToOcean", cameraToOcean.ToMatrix4x4());
 			m_oceanMaterial.SetMatrix("_Ocean_OceanToCamera", cameraToOcean.Inverse().ToMatrix4x4());
+
+			m_oceanMaterial.SetMatrix ("_Globals_CameraToScreen", ctos.ToMatrix4x4 ());
+			m_oceanMaterial.SetMatrix ("_Globals_ScreenToCamera", stoc.ToMatrix4x4 ());
 			
 			m_oceanMaterial.SetVector("_Ocean_CameraPos", offset.ToVector3());
 			
 			m_oceanMaterial.SetVector("_Ocean_Color", m_oceanUpwellingColor * 0.1f);
 			m_oceanMaterial.SetVector("_Ocean_ScreenGridSize", new Vector2((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
 			m_oceanMaterial.SetFloat("_Ocean_Radius", (float)radius);
+
+			m_oceanMaterial.SetFloat("scale", 1);
 			
 			m_manager.GetSkyNode().SetOceanUniforms(m_oceanMaterial);
 			
@@ -536,23 +566,76 @@ namespace scatterer
 		{
 			m_core=core;
 		}
-		
-		public static Quaternion QuaternionFromMatrix(Matrix4x4 m) {
-			// Adapted from: http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
-			Quaternion q = new Quaternion();
-			q.w = Mathf.Sqrt( Mathf.Max( 0, 1 + m[0,0] + m[1,1] + m[2,2] ) ) / 2; 
-			q.x = Mathf.Sqrt( Mathf.Max( 0, 1 + m[0,0] - m[1,1] - m[2,2] ) ) / 2; 
-			q.y = Mathf.Sqrt( Mathf.Max( 0, 1 - m[0,0] + m[1,1] - m[2,2] ) ) / 2; 
-			q.z = Mathf.Sqrt( Mathf.Max( 0, 1 - m[0,0] - m[1,1] + m[2,2] ) ) / 2; 
-			q.x = Mathf.Sign( q.x * ( m[2,1] - m[1,2] ) );
-			q.y = Mathf.Sign( q.y * ( m[0,2] - m[2,0] ) );
-			q.z = Mathf.Sign( q.z * ( m[1,0] - m[0,1] ) );
-			return q;
+
+
+		public Matrix4x4d ModifiedWorldToCameraMatrix()
+		{
+			
+//			Vector3d po = new Vector3d(m_position.x0, m_position.y0, 0.0);
+			Vector3d px = new Vector3d(1.0, 0.0, 0.0);                        //
+			Vector3d py = new Vector3d(0.0, 1.0, 0.0);                        //
+			Vector3d pz = new Vector3d(0.0, 0.0, 1.0);
+			
+//			double ct = Math.Cos(m_position.theta);                        //
+//			double st = Math.Sin(m_position.theta);                        //
+//			double cp = Math.Cos(m_position.phi);                        //
+//			double sp = Math.Sin(m_position.phi);                        //
+
+			double ct = Math.Cos(theta);                        //
+			double st = Math.Sin(theta);                        //
+			double cp = Math.Cos(phi);                        //
+			double sp = Math.Sin(phi);                        //
+			
+			Vector3d cx = px * cp + py * sp;
+			Vector3d cy = (px*-1.0) * sp*ct + py * cp*ct + pz * st;
+			Vector3d cz = px * sp*st - py * cp*st + pz * ct;
+			
+//			m_worldPos = po + cz * m_position.distance;
+			Vector3 m_worldPos = m_manager.parentCelestialBody.transform.position -m_core.chosenCamera.transform.position ;
+			
+			
+//			if (m_worldPos.z < m_groundHeight + 10.0) {
+//				m_worldPos.z = m_groundHeight + 10.0;
+//			}
+			
+			Matrix4x4d view = new Matrix4x4d(	cx.x, cx.y, cx.z, 0.0,
+			                                 cy.x, cy.y, cy.z, 0.0,
+			                                 cz.x, cz.y, cz.z, 0.0,
+			                                 0.0, 0.0, 0.0, 1.0);
+			
+			Matrix4x4d m_worldToCameraMatrix = view * Matrix4x4d.Translate(m_worldPos * -1.0f);
+			if (m_core.debugSettings[0])
+			m_worldToCameraMatrix.m[0,0] *= -1.0;
+			else
+			m_worldToCameraMatrix.m[0,0] *= 1.0;
+
+			if (m_core.debugSettings[1])
+			m_worldToCameraMatrix.m[0,1] *= -1.0;
+			else
+			m_worldToCameraMatrix.m[0,1] *= 1.0;
+
+			if (m_core.debugSettings[2])
+			m_worldToCameraMatrix.m[0,2] *= -1.0;
+			else
+			m_worldToCameraMatrix.m[0,2] *= 1.0;
+
+			if (m_core.debugSettings[3])
+			m_worldToCameraMatrix.m[0,3] *= -1.0;
+			else
+			m_worldToCameraMatrix.m[0,3] *= 1.0;
+
+			return m_worldToCameraMatrix;
+
+//			m_cameraToWorldMatrix = m_worldToCameraMatrix.Inverse();
+			
+//			camera.worldToCameraMatrix = m_worldToCameraMatrix.ToMatrix4x4();
+//			camera.transform.position = m_worldPos.ToVector3();
+			
 		}
 
 		public Matrix4x4d ModifiedProjectionMatrix(Camera inCam)
 		{ 
-			
+			/*
 //			float h = (float)(GetHeight() - m_groundHeight);
 //			camera.nearClipPlane = 0.1f * h;
 //			camera.farClipPlane = 1e6f * h;
@@ -579,7 +662,55 @@ namespace scatterer
 //			}
 			
 			Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d(p);
-			inCam.projectionMatrix = m_cameraToScreenMatrix.ToMatrix4x4();
+			inCam.projectionMatrix = m_cameraToScreenMatrix.ToMatrix4x4(); */
+
+			Matrix4x4 p;
+			//			if (debugSettings [2])
+			//			if(!MapView.MapIsEnabled)
+			//			{
+			float tmpNearclip = inCam.nearClipPlane;
+			float tmpFarclip = inCam.farClipPlane;
+			
+			inCam.nearClipPlane = m_manager.m_skyNode.oceanNearPlane;
+			inCam.farClipPlane = m_manager.m_skyNode.oceanFarPlane;
+			
+			//			float h = (float)(GetHeight() - m_groundHeight);
+			//			m_manager.GetCore ().chosenCamera.nearClipPlane = 0.1f * (alt - m_radius);
+			//			m_manager.GetCore ().chosenCamera.farClipPlane = 1e6f * (alt - m_radius);
+			
+			p = inCam.projectionMatrix;
+
+			{
+				//				if(camera.actualRenderingPath == RenderingPath.DeferredLighting)
+//				{
+//					// Invert Y for rendering to a render texture
+//										for (int i = 0; i < 4; i++) {
+//											p[1,i] = -p[1,i];
+//										}
+//				}
+				
+				// Scale and bias depth range
+				for (int i = 0; i < 4; i++) {
+					p[2,i] = p[2,i]*0.5f + p[3,i]*0.5f;
+				}
+			}
+			
+			//			p = scaledSpaceCamera.projectionMatrix;
+			
+			inCam.nearClipPlane=tmpNearclip;
+			inCam.farClipPlane=tmpFarclip;
+			
+			//			p = scaledSpaceCamera.projectionMatrix;
+			//			}
+			//			else
+			//			{
+			//				p = scaledSpaceCamera.projectionMatrix;
+			//			}
+			
+			
+			Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d (p);
+
+
 			return m_cameraToScreenMatrix;
 			//m_screenToCameraMatrix = m_cameraToScreenMatrix.Inverse();
 		}

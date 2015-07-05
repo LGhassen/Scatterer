@@ -26,11 +26,19 @@ namespace scatterer
 		
 		[Persistent] public bool forceOFFaniso;
 
+		SimplePostProcessCube hp;
+		GameObject atmosphereMesh;
+
+		public float postRotX=0f,postRotY=0f,postRotZ=180f,postDist=8000f;
+
 		bool coronasDisabled=false;
 
 		public int renderQueue=2000;
 		public int renderQueue2=2010;
 		Matrix4x4 p;
+
+		public float oceanNearPlane=0.01f;
+		public float oceanFarPlane=750000f;
 
 		public float terrainReflectance=1f;
 		public float sunIntensity=100f;
@@ -256,7 +264,12 @@ namespace scatterer
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 			
 
-			if (forceOFFaniso) {
+			if (forceOFFaniso) { 
+				QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+			}
+			
+			else
+			{ 
 				QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
 			}
 			
@@ -341,6 +354,9 @@ namespace scatterer
 			//
 			//			
 			//			}
+
+			hp = new SimplePostProcessCube (2000, m_atmosphereMaterial);
+			atmosphereMesh = hp.GameObject;
 			
 		}
 		
@@ -477,13 +493,29 @@ namespace scatterer
 				} else {
 					initiated = true;
 				}
+
+
+
 			}
-			
-			
-			
-			
-			
-			
+
+//			atmosphereMesh.transform.parent = FlightCamera.fetch.transform;
+			//atmosphereMesh.transform.position = Vector3.zero;
+			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
+
+			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
+			atmosphereMesh.transform.rotation = farCamera.transform.rotation;
+			atmosphereMesh.transform.Rotate (new Vector3 (postRotX, postRotY, postRotZ), Space.Self);
+
+			//parent = farCamera.transform;
+			//atmosphereMesh.transform.localRotation=new Vector3(
+			//atmosphereMesh.transform.localPosition = Vector3.zero;
+			//atmosphereMesh.transform.localScale = Vector3.one;
+//			atmosphereMesh.layer = 10;
+			atmosphereMesh.layer = 15;
+
+			var mr = hp.GameObject.GetComponent<MeshRenderer>();
+			mr.material = m_atmosphereMaterial;
+
 			
 			alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
 			if ((sunglareEnabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
@@ -928,32 +960,38 @@ namespace scatterer
 			
 			//			//copied from m_manager's set uniforms
 			
-			Matrix4x4 p;
-			//			if (debugSettings [2])
-//			if(!MapView.MapIsEnabled)
-//			{
-			float tmpNearclip = m_manager.GetCore ().chosenCamera.nearClipPlane;
-			float tmpFarclip = m_manager.GetCore ().chosenCamera.farClipPlane;
-
-			m_manager.GetCore ().chosenCamera.nearClipPlane=0.01f;
-			m_manager.GetCore ().chosenCamera.farClipPlane=750000f;
-
-				p = m_manager.GetCore().chosenCamera.projectionMatrix;
-
-			m_manager.GetCore ().chosenCamera.nearClipPlane=tmpNearclip;
-			m_manager.GetCore ().chosenCamera.farClipPlane=tmpFarclip;
-
-//			p = scaledSpaceCamera.projectionMatrix;
-//			}
-//			else
-//			{
-//				p = scaledSpaceCamera.projectionMatrix;
-//			}
-			
-			
-			m_cameraToScreenMatrix = new Matrix4x4d (p);
-			mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
-			mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
+//			Matrix4x4 p;
+//			//			if (debugSettings [2])
+////			if(!MapView.MapIsEnabled)
+////			{
+//			float tmpNearclip = m_manager.GetCore ().chosenCamera.nearClipPlane;
+//			float tmpFarclip = m_manager.GetCore ().chosenCamera.farClipPlane;
+//
+//			m_manager.GetCore ().chosenCamera.nearClipPlane = oceanNearPlane;
+//			m_manager.GetCore ().chosenCamera.farClipPlane = oceanFarPlane;
+//
+////			float h = (float)(GetHeight() - m_groundHeight);
+////			m_manager.GetCore ().chosenCamera.nearClipPlane = 0.1f * (alt - m_radius);
+////			m_manager.GetCore ().chosenCamera.farClipPlane = 1e6f * (alt - m_radius);
+//
+//				p = m_manager.GetCore().chosenCamera.projectionMatrix;
+//
+////			p = scaledSpaceCamera.projectionMatrix;
+//
+//			m_manager.GetCore ().chosenCamera.nearClipPlane=tmpNearclip;
+//			m_manager.GetCore ().chosenCamera.farClipPlane=tmpFarclip;
+//
+////			p = scaledSpaceCamera.projectionMatrix;
+////			}
+////			else
+////			{
+////				p = scaledSpaceCamera.projectionMatrix;
+////			}
+//			
+//			
+//			m_cameraToScreenMatrix = new Matrix4x4d (p);
+//			mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
+//			mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
 			
 			//			if (debugSettings [3])
 			{
@@ -1125,6 +1163,27 @@ namespace scatterer
 			mat.SetFloat("mieG", 0.4f);
 			mat.SetVector("SUN_DIR", m_manager.GetSunNodeDirection());
 			mat.SetFloat("SUN_INTENSITY", sunIntensity);
+
+
+			Matrix4x4 ctol1 = farCamera.cameraToWorldMatrix;
+			Vector3d tmp = (farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+
+			Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
+						                         ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
+						                         ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
+						                         ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
+
+
+
+
+//			Matrix4x4 viewMat = farCamera.worldToCameraMatrix;
+			viewMat = viewMat.Inverse ();
+			Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
+			Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4());          
+			mat.SetMatrix ("_ViewProjInv", viewProjMat.inverse);
+
+
+
 		}
 		
 		
@@ -1376,7 +1435,7 @@ namespace scatterer
 		}
 
 		public void toggleAniso(){
-			if (forceOFFaniso) { 
+			if (!forceOFFaniso) { 
 				QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
 			}
 
@@ -1473,6 +1532,41 @@ namespace scatterer
 			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
 			cnTemp.Save(path+"/config/Settings.txt");
 		}
-		
+
+		//custom graphicsBlit for the postprocessing,
+		//originally this was in scatterpostprocess class but I moved it here
+		//because the shader is no longer called in postprocessing
+		static void CustomGraphicsBlit(RenderTexture source, RenderTexture dest, Material fxMaterial, int passNr) 
+		{
+			RenderTexture.active = dest;
+			
+			//fxMaterial.SetTexture ("_MainTex", source);	        
+			
+			GL.PushMatrix ();
+			GL.LoadOrtho ();
+			
+			fxMaterial.SetPass (passNr);	
+			
+			GL.Begin (GL.QUADS);
+			
+			//This custom blit is needed as infomation about what corner verts relate to what frustum corners is needed
+			//A index to the frustum corner is store in the z pos of vert
+			
+			GL.MultiTexCoord2 (0, 0.0f, 0.0f); 
+			GL.Vertex3 (0.0f, 0.0f, 3.0f); // BL
+			
+			GL.MultiTexCoord2 (0, 1.0f, 0.0f); 
+			GL.Vertex3 (1.0f, 0.0f, 2.0f); // BR
+			
+			GL.MultiTexCoord2 (0, 1.0f, 1.0f); 
+			GL.Vertex3 (1.0f, 1.0f, 1.0f); // TR
+			
+			GL.MultiTexCoord2 (0, 0.0f, 1.0f); 
+			GL.Vertex3 (0.0f, 1.0f, 0.0f); // TL
+			
+			GL.End ();
+			GL.PopMatrix ();
+			
+		}	
 	}
 }

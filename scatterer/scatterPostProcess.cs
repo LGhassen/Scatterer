@@ -36,6 +36,7 @@ public class scatterPostprocess : MonoBehaviour
 	}
 	
 	void OnRenderImage(RenderTexture source, RenderTexture destination) 
+//	void OnPreRender() 
 	{	
 		
 		//Graphics.Blit(source, destination);
@@ -93,19 +94,27 @@ public class scatterPostprocess : MonoBehaviour
 		frustumCorners.SetRow (0, topLeft); 
 		frustumCorners.SetRow (1, topRight);		
 		frustumCorners.SetRow (2, bottomRight);
-		frustumCorners.SetRow (3, bottomLeft);	
+		frustumCorners.SetRow (3, bottomLeft);
+
+//			frustumCorners.SetRow (3, topLeft); 
+//			frustumCorners.SetRow (2, topRight);		
+//			frustumCorners.SetRow (1, bottomRight);
+//			frustumCorners.SetRow (0, bottomLeft);
 
 		m_atmosphereImageEffect.SetMatrix ("_FrustumCorners", frustumCorners);
 		
 		//CustomGraphicsBlit(source, destination, m_atmosphereImageEffect, 0);
-		CustomGraphicsBlit(source, destination, m_atmosphereImageEffect, 0);
+//		CustomGraphicsBlit(source, destination, m_atmosphereImageEffect, 0);
+//		CustomGraphicsBlit(destination, destination, m_atmosphereImageEffect, 0);
+
+//			Graphics.Blit (source, destination, m_atmosphereImageEffect);
 	}
 	
 	static void CustomGraphicsBlit(RenderTexture source, RenderTexture dest, Material fxMaterial, int passNr) 
 	{
 		RenderTexture.active = dest;
 		
-		fxMaterial.SetTexture ("_MainTex", source);	        
+		//fxMaterial.SetTexture ("_MainTex", source);	        
 		
 		GL.PushMatrix ();
 		GL.LoadOrtho ();
