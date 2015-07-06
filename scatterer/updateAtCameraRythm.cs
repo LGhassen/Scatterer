@@ -61,6 +61,7 @@ namespace scatterer
 			
 			m_skynode.InitUniforms(skyMat);
 			m_skynode.SetUniforms (skyMat);
+			m_skynode.UpdateStuff ();
 			//			skyMat.SetPass(0);
 			//
 			//			Graphics.DrawMeshNow(m_mesh, position, Quaternion.identity);
