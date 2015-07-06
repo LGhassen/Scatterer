@@ -31,7 +31,7 @@ namespace scatterer
 
 		float alphaCutoff=100f;
 
-		float postRotX=0f,postRotY=0f,postRotZ=180f,postDist=8000f;
+		float postRotX=0f,postRotY=0f,postRotZ=0f,postDist=-100f;
 		float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
 
 		float oceanNearPlane=0.01f;
@@ -488,41 +488,41 @@ namespace scatterer
 				}
 				GUILayout.EndHorizontal ();
 
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Post rot&dist");
-				
-				
-				postRotX = (float)(Convert.ToDouble (GUILayout.TextField (postRotX.ToString ())));
-				postRotY = (float)(Convert.ToDouble (GUILayout.TextField (postRotY.ToString ())));
-				postRotZ = (float)(Convert.ToDouble (GUILayout.TextField (postRotZ.ToString ())));
-				postDist = (float)(Convert.ToDouble (GUILayout.TextField (postDist.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.postRotX = postRotX;
-					m_manager.m_skyNode.postRotY = postRotY;
-					m_manager.m_skyNode.postRotZ = postRotZ;
-					m_manager.m_skyNode.postDist = postDist;
-				}
-				GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Post Scale");
-				
-				
-				postScaleX = (float)(Convert.ToDouble (GUILayout.TextField (postScaleX.ToString ())));
-				postScaleY = (float)(Convert.ToDouble (GUILayout.TextField (postScaleY.ToString ())));
-				postScaleZ = (float)(Convert.ToDouble (GUILayout.TextField (postScaleZ.ToString ())));
-
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.postScaleX = postScaleX;
-					m_manager.m_skyNode.postScaleY = postScaleY;
-					m_manager.m_skyNode.postScaleZ = postScaleZ;
-
-				}
-				GUILayout.EndHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Post rot&dist");
+//				
+//				
+//				postRotX = (float)(Convert.ToDouble (GUILayout.TextField (postRotX.ToString ())));
+//				postRotY = (float)(Convert.ToDouble (GUILayout.TextField (postRotY.ToString ())));
+//				postRotZ = (float)(Convert.ToDouble (GUILayout.TextField (postRotZ.ToString ())));
+//				postDist = (float)(Convert.ToDouble (GUILayout.TextField (postDist.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.postRotX = postRotX;
+//					m_manager.m_skyNode.postRotY = postRotY;
+//					m_manager.m_skyNode.postRotZ = postRotZ;
+//					m_manager.m_skyNode.postDist = postDist;
+//				}
+//				GUILayout.EndHorizontal ();
+//
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Post Scale");
+//				
+//				
+//				postScaleX = (float)(Convert.ToDouble (GUILayout.TextField (postScaleX.ToString ())));
+//				postScaleY = (float)(Convert.ToDouble (GUILayout.TextField (postScaleY.ToString ())));
+//				postScaleZ = (float)(Convert.ToDouble (GUILayout.TextField (postScaleZ.ToString ())));
+//
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.postScaleX = postScaleX;
+//					m_manager.m_skyNode.postScaleY = postScaleY;
+//					m_manager.m_skyNode.postScaleZ = postScaleZ;
+//
+//				}
+//				GUILayout.EndHorizontal ();
 
 
 //				GUILayout.BeginHorizontal ();

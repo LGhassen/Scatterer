@@ -28,8 +28,9 @@ namespace scatterer
 
 		SimplePostProcessCube hp;
 		GameObject atmosphereMesh;
+		MeshRenderer atmosphereMeshrenderer;
 
-		public float postRotX=0f,postRotY=0f,postRotZ=180f,postDist=8000f;
+		public float postRotX=0f,postRotY=0f,postRotZ=0f,postDist=-100f;
 
 		public float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
 
@@ -357,11 +358,60 @@ namespace scatterer
 			//			
 			//			}
 
-			hp = new SimplePostProcessCube (2000, m_atmosphereMaterial);
+			hp = new SimplePostProcessCube (1000, m_atmosphereMaterial);
 			atmosphereMesh = hp.GameObject;
+
+			atmosphereMesh.layer = 15;
+			
+			atmosphereMeshrenderer = hp.GameObject.GetComponent<MeshRenderer>();
+			atmosphereMeshrenderer.material = m_atmosphereMaterial;
 			
 		}
-		
+
+		public void UpdateStuff()  //to be called by update at camera rythm for some graphical stuff
+		{
+
+			//			atmosphereMesh.transform.parent = farCamera.transform;
+			//atmosphereMesh.transform.position = Vector3.zero;
+			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
+			//			atmosphereMesh.transform.parent = farCamera.transform;
+			
+			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
+			atmosphereMesh.transform.rotation = farCamera.transform.rotation;
+			//atmosphereMesh.transform.Rotate (new Vector3 (postRotX, postRotY, postRotZ), Space.Self);
+			//
+			//			atmosphereMesh.transform.localScale.Set (postScaleX, postScaleY, postScaleZ);
+			
+			//parent = farCamera.transform;
+			//atmosphereMesh.transform.localRotation=new Vector3(
+			//atmosphereMesh.transform.localPosition = Vector3.zero;
+			//atmosphereMesh.transform.localScale = Vector3.one;
+			//			atmosphereMesh.layer = 10;
+
+
+			//adding post processing to camera
+			if ((!inScaledSpace) || (MapView.MapIsEnabled)) {
+				if (postprocessingEnabled) {
+					InitPostprocessMaterial (m_atmosphereMaterial);
+					UpdatePostProcessMaterial (m_atmosphereMaterial);
+					
+					if (scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
+						//						print ("ScaledSpaceCamera scatterPostprocess!=null");
+						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> ());
+					}
+					
+					
+					if (farCamera.gameObject.GetComponent<scatterPostprocess> () == null) {
+						//						print ("farCamera scatterPostprocess==null");
+						farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+					}
+					
+					farCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
+				}
+			}
+
+		}
+
 		public void UpdateNode()
 		{
 
@@ -454,8 +504,8 @@ namespace scatterer
 
 
 
-				var cbTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> (true).Where (mod => mod.transform.parent == CurrentPQS.transform).FirstOrDefault (); 
-				cbTransform.deactivateAltitude = 5000000;
+//				var cbTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> (true).Where (mod => mod.transform.parent == CurrentPQS.transform).FirstOrDefault (); 
+//				cbTransform.deactivateAltitude = 5000000;
 
 				scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 				
@@ -500,25 +550,7 @@ namespace scatterer
 
 			}
 
-//			atmosphereMesh.transform.parent = farCamera.transform;
-			//atmosphereMesh.transform.position = Vector3.zero;
-			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
 
-			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
-			atmosphereMesh.transform.rotation = farCamera.transform.rotation;
-			atmosphereMesh.transform.Rotate (new Vector3 (postRotX, postRotY, postRotZ), Space.Self);
-
-			atmosphereMesh.transform.localScale.Set (postScaleX, postScaleY, postScaleZ);
-
-			//parent = farCamera.transform;
-			//atmosphereMesh.transform.localRotation=new Vector3(
-			//atmosphereMesh.transform.localPosition = Vector3.zero;
-			//atmosphereMesh.transform.localScale = Vector3.one;
-//			atmosphereMesh.layer = 10;
-			atmosphereMesh.layer = 15;
-
-			var mr = hp.GameObject.GetComponent<MeshRenderer>();
-			mr.material = m_atmosphereMaterial;
 
 			
 			alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
@@ -577,37 +609,37 @@ namespace scatterer
 			//			print ("POSTPROCESS DEPTH");
 			//			print (postProcessDepth*10000f);
 			
-			if ((alt > 1000000f +m_radius) && (!inScaledSpace)) 
-			{
-				farCamera.farClipPlane = 7000000;
-				
-				//				farCamera.nearClipPlane = alt - m_radius - 350000f;
-				farCamera.nearClipPlane = 100000f;
-				
-				nearCamera.farClipPlane = 099999f;
-			}
-			
-			
-			
-			else{
-				
-				if ((alt > 200000f +m_radius) && (!inScaledSpace)) {
-					farCamera.farClipPlane = 2000000;
-					//				farCamera.nearClipPlane = alt - m_radius - 350000f;
-					farCamera.nearClipPlane = 150000f;
-					nearCamera.farClipPlane = 149999f;
-				}
-				
-				
-				
-				else 			
-				{
-					farCamera.farClipPlane = 750000f;
-					farCamera.nearClipPlane = 300f;
-					nearCamera.farClipPlane = 300f;
-				}
-				
-			}
+//			if ((alt > 1000000f +m_radius) && (!inScaledSpace)) 
+//			{
+//				farCamera.farClipPlane = 7000000;
+//				
+//				//				farCamera.nearClipPlane = alt - m_radius - 350000f;
+//				farCamera.nearClipPlane = 100000f;
+//				
+//				nearCamera.farClipPlane = 099999f;
+//			}
+//			
+//			
+//			
+//			else{
+//				
+//				if ((alt > 200000f +m_radius) && (!inScaledSpace)) {
+//					farCamera.farClipPlane = 2000000;
+//					//				farCamera.nearClipPlane = alt - m_radius - 350000f;
+//					farCamera.nearClipPlane = 150000f;
+//					nearCamera.farClipPlane = 149999f;
+//				}
+//				
+//				
+//				
+//				else 			
+//				{
+//					farCamera.farClipPlane = 750000f;
+//					farCamera.nearClipPlane = 300f;
+//					nearCamera.farClipPlane = 300f;
+//				}
+//				
+//			}
 			
 			
 			//if alt-tabbing/windowing and rendertextures are lost
@@ -623,26 +655,26 @@ namespace scatterer
 				}
 			}
 			
-			//adding post processing to camera
-			if ((!inScaledSpace) || (MapView.MapIsEnabled)) {
-				if (postprocessingEnabled) {
-					InitPostprocessMaterial (m_atmosphereMaterial);
-					UpdatePostProcessMaterial (m_atmosphereMaterial);
-					
-					if (scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
-//						print ("ScaledSpaceCamera scatterPostprocess!=null");
-						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> ());
-					}
-					
-					
-					if (farCamera.gameObject.GetComponent<scatterPostprocess> () == null) {
-//						print ("farCamera scatterPostprocess==null");
-						farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
-					}
-					
-					farCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
-				}
-			}
+//			//adding post processing to camera
+//			if ((!inScaledSpace) || (MapView.MapIsEnabled)) {
+//				if (postprocessingEnabled) {
+//					InitPostprocessMaterial (m_atmosphereMaterial);
+//					UpdatePostProcessMaterial (m_atmosphereMaterial);
+//					
+//					if (scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
+////						print ("ScaledSpaceCamera scatterPostprocess!=null");
+//						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> ());
+//					}
+//					
+//					
+//					if (farCamera.gameObject.GetComponent<scatterPostprocess> () == null) {
+////						print ("farCamera scatterPostprocess==null");
+//						farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+//					}
+//					
+//					farCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
+//				}
+//			}
 			//
 			//			else 
 			//			
@@ -1243,6 +1275,7 @@ namespace scatterer
 			{
 				farCamera.gameObject.AddComponent(typeof(scatterPostprocess));
 			}
+			atmosphereMeshrenderer.enabled = true;
 			postprocessingEnabled = true;
 		}
 		
@@ -1260,6 +1293,7 @@ namespace scatterer
 			
 			
 			//Component.Destroy(cams[cam+1].gameObject.GetComponent<scatterPostprocess>());
+			atmosphereMeshrenderer.enabled = false;
 			postprocessingEnabled = false;
 		}
 		
@@ -1374,6 +1408,9 @@ namespace scatterer
 
 			Component.Destroy (MR);
 			Destroy (tester);
+			Component.Destroy (atmosphereMeshrenderer);
+			Destroy (atmosphereMesh);
+			//Destroy (hp);
 		}
 
 		public void destroyTester()
@@ -1389,14 +1426,14 @@ namespace scatterer
 				m_skyMaterialScaled.SetTexture ("_Sun_Glare", black);
 				sunglareEnabled = false;
 //				alphaCutoff=0.5f;
-				m_skyMaterialScaled.renderQueue = 2001;
+//				m_skyMaterialScaled.renderQueue = 2001;
 			}
 			else
 			{
 				m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
 				sunglareEnabled=true;
 //				alphaCutoff=0.001f;
-				m_skyMaterialScaled.renderQueue = 2003;
+//				m_skyMaterialScaled.renderQueue = 2003;
 				
 				
 			}
