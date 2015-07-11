@@ -57,7 +57,6 @@
     <Compile Include="Plugins\Math\Matrix3x3.cs" />
     <Compile Include="Plugins\Math\Matrix3x3d.cs" />
     <Compile Include="Plugins\Math\Matrix4x4d.cs" />
-    <Compile Include="Plugins\Math\PerlinNoise.cs" />
     <Compile Include="Plugins\Math\Quat.cs" />
     <Compile Include="Plugins\Math\Seg2d.cs" />
     <Compile Include="Plugins\Math\Vector2d.cs" />
@@ -84,6 +83,7 @@
     <Compile Include="drawSky.cs" />
     <Compile Include="updateAtCameraRythm.cs" />
     <Compile Include="SimplePostProcessCube.cs" />
+    <Compile Include="configPoint.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -250,5 +250,6 @@
     <None Include="Ocean\RTUtility.cs" />
     <None Include="Ocean\Node.cs" />
     <None Include="Ocean\OceanUpdateAtCameraRythm.cs" />
+    <None Include="Plugins\Math\PerlinNoise.cs" />
   </ItemGroup>
 </Project>
