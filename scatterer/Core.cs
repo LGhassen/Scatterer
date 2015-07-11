@@ -33,37 +33,41 @@ namespace scatterer
 
 //		float apparentDistance=1f;
 
-		float postRotX=0f,postRotY=0f,postRotZ=0f,postDist=-100f;
-		float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
 
-		float oceanNearPlane=0.01f;
-		float oceanFarPlane=750000f;
+	
+//		float postRotX=0f,postRotY=0f,postRotZ=0f,postDist=-100f;
+//		float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
+//
+//		float oceanNearPlane=0.01f;
+//		float oceanFarPlane=750000f;
+//
+//		float terrainReflectance=100;
+//		float sunIntensity=100;
+//		float irradianceFactor=100;
+//
+//
+//
+//		int fadeStart=55000;
+//		int fadeEnd=60000;
+//
+//		int farplane=60000;
+//		int nearplane=60000;
 
-		float terrainReflectance=100;
-		float sunIntensity=100;
-		float irradianceFactor=100;
+//		float oceanSigma = 0.04156494f;
+//		float oceanThreshold=25f;
+//		
+//		float theta =1.0f;
+//		float phi=1.0f;
+//		
+//		float oceanLevel=0f;
 
-
-
-		int fadeStart=55000;
-		int fadeEnd=60000;
-
-		int farplane=60000;
-		int nearplane=60000;
-
-		float rimBlend=100f;
+		float rimBlend=20f;
 		float rimpower=600f;
 
 		Camera[] cams;
 		int count;
 
-		float oceanSigma = 0.04156494f;
-		float oceanThreshold=25f;
 
-		float theta =1.0f;
-		float phi=1.0f;
-
-		float oceanLevel=0f;
 
 
 
@@ -80,11 +84,11 @@ namespace scatterer
 		float postProcessScale=1000f;
 		float postProcessExposure=18f;
 
-		public int renderQueue=2000;
-		int renderQueue2=2010;
+//		public int renderQueue=2000;
+//		int renderQueue2=2010;
 
 
-		float apparentDistance=1000f;
+//		float apparentDistance=1000f;
 
 		public Camera chosenCamera;
 
@@ -161,7 +165,7 @@ namespace scatterer
 				PlanetId =0;
 				SunId =0;
 
-				Transform transform; // this next bit finds kerbin and the sun, and sets all the plaents to renderqueue 2002
+				//Transform transform; // this next bit finds kerbin and the sun, and sets all the plaents to renderqueue 2002
 									 //so they don't get clipped over by the amospheres (renderqueue 2001)
 
 				for (int k=0; k< celestialBodies.Length ; k++)
