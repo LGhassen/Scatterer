@@ -1,20 +1,21 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="SkyNode.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Core.cs">
     <Files>
-      <File FileName="Core.cs" Line="510" Column="28" />
-      <File FileName="SkyNode.cs" Line="511" Column="52" />
+      <File FileName="Core.cs" Line="365" Column="5" />
+      <File FileName="SkyNode.cs" Line="751" Column="40" />
       <File FileName="Manager.cs" Line="1" Column="1" />
       <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
       <File FileName="SimplePostProcessCube.cs" Line="1" Column="1" />
-      <File FileName="scatterPostProcess.cs" Line="110" Column="54" />
+      <File FileName="scatterPostProcess.cs" Line="1" Column="1" />
+      <File FileName="Ocean\OceanNode.cs" Line="329" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="scatterer" expanded="True">
             <Node name="Ocean" expanded="True" />
-            <Node name="SkyNode.cs" selected="True" />
+            <Node name="Core.cs" selected="True" />
           </Node>
         </State>
       </Pad>

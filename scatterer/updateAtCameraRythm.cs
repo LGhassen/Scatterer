@@ -23,7 +23,7 @@ namespace scatterer
 		SkyNode m_skynode;
 		GameObject tester;
 		
-		CelestialBody parentCelestialBody;
+		Transform parentTransform;
 		
 		bool debug6;
 		
@@ -31,7 +31,7 @@ namespace scatterer
 		
 		
 		
-		public void settings(Material inSkyMat, Manager inManager, SkyNode inSkyNode, GameObject intester, bool indebug6, CelestialBody inparent)
+		public void settings(Material inSkyMat, Manager inManager, SkyNode inSkyNode, GameObject intester, bool indebug6, Transform inparentTransform)
 		{
 			
 			skyMat = inSkyMat;
@@ -39,7 +39,7 @@ namespace scatterer
 			m_skynode = inSkyNode;
 			tester = intester;
 			debug6 = indebug6;
-			parentCelestialBody = inparent;
+			parentTransform = inparentTransform;
 			
 		}
 		
@@ -50,7 +50,7 @@ namespace scatterer
 			skyMat.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
 			
 			//			if (debug6){
-			tester.transform.parent = parentCelestialBody.transform;
+			tester.transform.parent = parentTransform;
 			//			}
 			//			
 			//			else{
