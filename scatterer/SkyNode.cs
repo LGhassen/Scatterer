@@ -179,7 +179,8 @@ namespace scatterer
 //		var cbTransform;
 
 
-		[Persistent] List<configPoint> configPoints= new List<configPoint> {new configPoint(5000f,1f,0.25f,1f,0.4f,0.23f)};
+		[Persistent] public List<configPoint> configPoints= new List<configPoint> {new configPoint(5000f,1f,0.25f,1f,0.4f,0.23f)
+			,new configPoint(15000f,1f,0.15f,1f,8f,0.23f)};
 
 		//Initialization
 		public void Start()
@@ -459,6 +460,8 @@ namespace scatterer
 			if ((!stocksunglareEnabled) ^ (alt < sunglareCutoffAlt-1000)) { //^ is XOR
 				toggleStockSunglare();
 			}
+
+			interpolateVariables ();
 
 			//			if (alt < (80000 + m_radius)) 
 			//			{
@@ -1214,17 +1217,11 @@ namespace scatterer
 			{
 				m_skyMaterialScaled.SetTexture ("_Sun_Glare", black);
 				sunglareEnabled = false;
-//				alphaCutoff=0.5f;
-//				m_skyMaterialScaled.renderQueue = 2001;
 			}
 			else
 			{
 				m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
 				sunglareEnabled=true;
-//				alphaCutoff=0.001f;
-//				m_skyMaterialScaled.renderQueue = 2003;
-				
-				
 			}
 		}
 
@@ -1237,29 +1234,19 @@ namespace scatterer
 				temp = child.gameObject.GetComponent<MeshRenderer>();
 				temp.enabled=coronasDisabled;
 			}
-
 			coronasDisabled=!coronasDisabled;
 		}
 
 		public void toggleStockSunglare()
 		{
-
 			if (stocksunglareEnabled) 
 			{
 				Sun.Instance.sunFlare.enabled = false;
-//				Sun.Instance.enabled=false;
-
-
-
-
 			} 
 
 			else 
 			{
 				Sun.Instance.sunFlare.enabled = true;
-//				Sun.Instance.enabled=false;
-
-
 			}
 			stocksunglareEnabled = !stocksunglareEnabled;
 		}
@@ -1283,27 +1270,6 @@ namespace scatterer
 			return transforms.Single(n => n.name == body);
 		}
 		
-		//		public void findPrefabBodies(PSystemBody body)
-		//		{
-		//			prefabs[((CelestialBody)body.celestialBody).name] = body;
-		//			using (List<PSystemBody>.Enumerator enumerator = ((List<PSystemBody>)body.children).GetEnumerator())
-		//			{
-		//				while (enumerator.MoveNext())
-		//					this.findPrefabBodies(enumerator.Current);
-		//
-		//
-		//			}
-		//		}
-		
-		
-		
-		
-		
-		//		public RenderTexture getInscatter()
-		//		{
-		//			return m_inscatter;
-		//		}
-		
 		public void loadSettings()
 		{
 			cfg.load ();
@@ -1318,47 +1284,28 @@ namespace scatterer
 			HR =float.Parse( cfg.GetValue<string>("HR"));
 			HM =float.Parse( cfg.GetValue<string>("HM"));
 			AVERAGE_GROUND_REFLECTANCE =float.Parse(cfg.GetValue<string>("AVERAGE_GROUND_REFLECTANCE"));
-			atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"));
-			
+			atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"));	
 		}
 		
-		public void saveSettings()
-		{
-			cfg ["Rg"] = Rg.ToString();
-			cfg ["Rt"] = Rt.ToString();
-			cfg ["RL"] = RL.ToString();
-			
-			cfg ["BETA_R"] = m_betaR;
-			cfg ["BETA_MSca"] = BETA_MSca;
-			cfg ["MIE_G"] = m_mieG.ToString();
-			cfg ["HR"] = HR.ToString();
-			cfg ["HM"] = HM.ToString();
-			cfg ["AVERAGE_GROUND_REFLECTANCE"] = AVERAGE_GROUND_REFLECTANCE.ToString();
-			
-			cfg.save ();
-		}
+//		public void saveSettings()
+//		{
+//			cfg ["Rg"] = Rg.ToString();
+//			cfg ["Rt"] = Rt.ToString();
+//			cfg ["RL"] = RL.ToString();
+//			
+//			cfg ["BETA_R"] = m_betaR;
+//			cfg ["BETA_MSca"] = BETA_MSca;
+//			cfg ["MIE_G"] = m_mieG.ToString();
+//			cfg ["HR"] = HR.ToString();
+//			cfg ["HM"] = HM.ToString();
+//			cfg ["AVERAGE_GROUND_REFLECTANCE"] = AVERAGE_GROUND_REFLECTANCE.ToString();
+//			
+//			cfg.save ();
+//		}
 
 		public void loadFromConfigNode() {
 			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/Settings.txt");
-
-//			extinctionCoeff = (float)(Convert.ToDouble(cnToLoad.GetValue ("extinctionCoeff")));
-//
-//			atmosphereGlobalScale = (float)(Convert.ToDouble(cnToLoad.GetValue ("atmosphereGlobalScale")));
-//			postProcessingAlpha = (float)(Convert.ToDouble(cnToLoad.GetValue ("postProcessingAlpha")));
-//			postProcessingScale = (float)(Convert.ToDouble(cnToLoad.GetValue ("postProcessingScale")));
-//			postProcessDepth = (float)(Convert.ToDouble(cnToLoad.GetValue ("postProcessDepth")));
-//
-//
-//			postProcessExposure = (float)(Convert.ToDouble(cnToLoad.GetValue ("postProcessExposure")));
-//			m_HDRExposure = (float)(Convert.ToDouble(cnToLoad.GetValue ("m_HDRExposure")));
-//			mapExposure = (float)(Convert.ToDouble(cnToLoad.GetValue ("mapExposure")));
-////			alphaCutoff = (float)(Convert.ToDouble(cnToLoad.GetValue ("alphaCutoff")));
-//			alphaGlobal = (float)(Convert.ToDouble(cnToLoad.GetValue ("alphaGlobal")));
-//			mapAlphaGlobal = (float)(Convert.ToDouble(cnToLoad.GetValue ("mapAlphaGlobal")));
-//			forceOFFaniso = Convert.ToBoolean(cnToLoad.GetValue ("forceOFFaniso"));
-
 			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
-
 		}
 
 
@@ -1367,40 +1314,47 @@ namespace scatterer
 			cnTemp.Save(path+"/config/Settings.txt");
 		}
 
-		//custom graphicsBlit for the postprocessing,
-		//originally this was in scatterpostprocess class but I moved it here
-		//because the shader is no longer called in postprocessing
-		static void CustomGraphicsBlit(RenderTexture source, RenderTexture dest, Material fxMaterial, int passNr) 
+		public void interpolateVariables()
 		{
-			RenderTexture.active = dest;
-			
-			//fxMaterial.SetTexture ("_MainTex", source);	        
-			
-			GL.PushMatrix ();
-			GL.LoadOrtho ();
-			
-			fxMaterial.SetPass (passNr);	
-			
-			GL.Begin (GL.QUADS);
-			
-			//This custom blit is needed as infomation about what corner verts relate to what frustum corners is needed
-			//A index to the frustum corner is store in the z pos of vert
-			
-			GL.MultiTexCoord2 (0, 0.0f, 0.0f); 
-			GL.Vertex3 (0.0f, 0.0f, 3.0f); // BL
-			
-			GL.MultiTexCoord2 (0, 1.0f, 0.0f); 
-			GL.Vertex3 (1.0f, 0.0f, 2.0f); // BR
-			
-			GL.MultiTexCoord2 (0, 1.0f, 1.0f); 
-			GL.Vertex3 (1.0f, 1.0f, 1.0f); // TR
-			
-			GL.MultiTexCoord2 (0, 0.0f, 1.0f); 
-			GL.Vertex3 (0.0f, 1.0f, 0.0f); // TL
-			
-			GL.End ();
-			GL.PopMatrix ();
-			
-		}	
+			if (trueAlt <= configPoints [0].altitude) {
+				alphaGlobal = configPoints [0].skyAlpha;
+				m_HDRExposure = configPoints [0].skyExposure;
+				postProcessingAlpha = configPoints [0].postProcessAlpha;
+				postProcessDepth = configPoints [0].postProcessDepth;
+				postProcessExposure = configPoints [0].postProcessExposure;
+			} 
+			else if (trueAlt > configPoints [configPoints.Count-1].altitude) {
+				alphaGlobal = configPoints [configPoints.Count-1].skyAlpha;
+				m_HDRExposure = configPoints [configPoints.Count-1].skyExposure;
+				postProcessingAlpha = configPoints [configPoints.Count-1].postProcessAlpha;
+				postProcessDepth = configPoints [configPoints.Count-1].postProcessDepth;
+				postProcessExposure = configPoints [configPoints.Count-1].postProcessExposure;
+			} 
+			else
+			{
+				for (int j=1;j<configPoints.Count;j++)
+				{
+					if ((trueAlt > configPoints [j-1].altitude) && (trueAlt <= configPoints [j].altitude))
+					    {
+						float percentage=(trueAlt-configPoints [j-1].altitude)/(configPoints [j].altitude-configPoints [j-1].altitude);
+
+						alphaGlobal = percentage*configPoints [j].skyAlpha+(1-percentage)*configPoints [j-1].skyAlpha;
+						m_HDRExposure = percentage*configPoints [j].skyExposure+(1-percentage)*configPoints [j-1].skyExposure;
+						postProcessingAlpha = percentage*configPoints [j].postProcessAlpha+(1-percentage)*configPoints [j-1].postProcessAlpha;
+						postProcessDepth = percentage*configPoints [j].postProcessDepth+(1-percentage)*configPoints [j-1].postProcessDepth;
+						postProcessExposure = percentage*configPoints [j].postProcessExposure+(1-percentage)*configPoints [j-1].postProcessExposure;
+					}
+				}
+			}
+
+			print ("aphaGlobal:"+alphaGlobal+"m_HDRExposure:"+m_HDRExposure+
+			       "postProcessingAlpha:"+postProcessingAlpha+"postProcessDepth:"+postProcessDepth+"postProcessExposure"+postProcessExposure);
+//			print (m_HDRExposure);
+//			print (postProcessingAlpha);
+//			print (postProcessDepth);
+//			print (postProcessExposure);
+		
+		}
+
 	}
 }

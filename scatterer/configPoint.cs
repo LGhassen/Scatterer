@@ -10,16 +10,22 @@ namespace scatterer
 		[Persistent] public float postProcessDepth;
 		[Persistent] public float postProcessExposure;
 			
-			public configPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inPostProcessAlpha,float inPostProcessDepth,float inPostProcessExposure)
-			{
-				altitude=inAltitude;
-				skyAlpha=inSkyAlpha;
-				skyExposure=inSkyExposure;
-				postProcessAlpha=inPostProcessAlpha;
-				postProcessDepth=inPostProcessDepth;
-				postProcessExposure=inPostProcessExposure;
-				
-			}
+
+
+		public configPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inPostProcessAlpha,float inPostProcessDepth,float inPostProcessExposure)
+		{
+			altitude=inAltitude;
+			skyAlpha=inSkyAlpha;
+			skyExposure=inSkyExposure;
+			postProcessAlpha=inPostProcessAlpha;
+			postProcessDepth=inPostProcessDepth;
+			postProcessExposure=inPostProcessExposure;
+		}
+
+		public configPoint()
+		{
+
+		}
 	}
 }
 
