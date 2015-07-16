@@ -35,7 +35,7 @@ namespace scatterer
 //		public float postRotX=0f,postRotY=0f,postRotZ=0f,
 //		public float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
 
-		public float postDist=-100f;
+		public float postDist=-4500f;
 
 		bool coronasDisabled=false;
 
@@ -324,7 +324,7 @@ namespace scatterer
 			//			
 			//			}
 
-			hp = new SimplePostProcessCube (1000, m_atmosphereMaterial);
+			hp = new SimplePostProcessCube (10000, m_atmosphereMaterial);
 			atmosphereMesh = hp.GameObject;
 			atmosphereMesh.layer = 15;
 			atmosphereMeshrenderer = hp.GameObject.GetComponent<MeshRenderer>();
@@ -449,7 +449,7 @@ namespace scatterer
 			alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
 			trueAlt = alt - m_radius;
 
-			if ((sunglareEnabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
+			if ((sunglareEnabled) ^ ((alt < sunglareCutoffAlt) && !MapView.MapIsEnabled)) { //^ is XOR
 				toggleSunglare ();
 			}
 
@@ -457,7 +457,7 @@ namespace scatterer
 				toggleCoronas ();
 			}
 
-			if ((!stocksunglareEnabled) ^ (alt < sunglareCutoffAlt-1000)) { //^ is XOR
+			if ((!stocksunglareEnabled) ^ ((alt < sunglareCutoffAlt-1000) && !MapView.MapIsEnabled)) { //^ is XOR
 				toggleStockSunglare();
 			}
 
@@ -577,14 +577,15 @@ namespace scatterer
 
 			for (int k=0; (k< celestialBodies.Length) ; k++)
 			{
-				Transform tmpTransform = GetScaledTransform (celestialBodies[k].name);													
+				Transform tmpTransform = GetScaledTransform (celestialBodies[k].name);												
+//				Transform tmpTransform =celestialBodies[k].transform;
 				{
 					newRenderQueue=2002;
 
 					if (celestialBodies[k].name != parentCelestialBody.name)
 					{
 
-						if ((tmpTransform.position-farCamera.transform.position).magnitude < (parentCelestialBody.transform.position-farCamera.transform.position).magnitude)
+						if ((celestialBodies[k].transform.position-farCamera.transform.position).magnitude < (parentCelestialBody.transform.position-farCamera.transform.position).magnitude)
 						{
 							newRenderQueue=2004;
 						}

@@ -1,21 +1,26 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Core.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="SkyNode.cs">
     <Files>
-      <File FileName="Core.cs" Line="365" Column="5" />
-      <File FileName="SkyNode.cs" Line="751" Column="40" />
+      <File FileName="Core.cs" Line="1" Column="1" />
+      <File FileName="SkyNode.cs" Line="462" Column="5" />
       <File FileName="Manager.cs" Line="1" Column="1" />
       <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
       <File FileName="SimplePostProcessCube.cs" Line="1" Column="1" />
       <File FileName="scatterPostProcess.cs" Line="1" Column="1" />
-      <File FileName="Ocean\OceanNode.cs" Line="329" Column="1" />
+      <File FileName="Ocean\OceanNode.cs" Line="1" Column="1" />
+      <File FileName="configPoint.cs" Line="1" Column="1" />
+      <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Plugins\Math\PerlinNoise.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="scatterer" expanded="True">
             <Node name="Ocean" expanded="True" />
-            <Node name="Core.cs" selected="True" />
+            <Node name="Plugins" expanded="True">
+              <Node name="Math" expanded="True" />
+            </Node>
+            <Node name="SkyNode.cs" selected="True" />
           </Node>
         </State>
       </Pad>
