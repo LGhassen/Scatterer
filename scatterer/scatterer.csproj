@@ -32,10 +32,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\KSP\1.0\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\KSP\Kerbal.Space.Program.v1.0.4.861\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\KSP\1.0\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\KSP\Kerbal.Space.Program.v1.0.4.861\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -74,16 +74,13 @@
     <Compile Include="Framework\SkinsLibrary.cs" />
     <Compile Include="Framework\ExtensionsUnity.cs" />
     <Compile Include="viewDepthBuffer.cs" />
-    <Compile Include="ShaderReplacer.cs" />
     <Compile Include="scatterPostProcess.cs" />
-    <Compile Include="ShaderList.cs">
-      <DependentUpon>scatterPostProcess.cs</DependentUpon>
-    </Compile>
     <Compile Include="isoSphere.cs" />
     <Compile Include="drawSky.cs" />
     <Compile Include="updateAtCameraRythm.cs" />
     <Compile Include="SimplePostProcessCube.cs" />
     <Compile Include="configPoint.cs" />
+    <Compile Include="ShaderReplacer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -251,5 +248,6 @@
     <None Include="Ocean\Node.cs" />
     <None Include="Ocean\OceanUpdateAtCameraRythm.cs" />
     <None Include="Plugins\Math\PerlinNoise.cs" />
+    <None Include="ShaderList.cs" />
   </ItemGroup>
 </Project>
