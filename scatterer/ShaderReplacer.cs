@@ -54,27 +54,27 @@ namespace scatterer
 			Shader replacementShader = null;
 			switch (name)
 			{
-			case "KSP/Diffuse":
-				replacementShader = GetShaderFromName("CompiledDiffuse");
-				break;
-			case "KSP/Unlit":
-				replacementShader = GetShaderFromName("CompiledUnlit");
-				break;
-			case "KSP/Specular":
-				replacementShader = GetShaderFromName("CompiledSpecular");
-				break;
-			case "KSP/Bumped":
-				replacementShader = GetShaderFromName("CompiledBumped");
-				break;
-			case "KSP/Bumped Specular":
-				replacementShader = GetShaderFromName("CompiledBumpedSpecular");
-				break;
-			case "KSP/Emissive/Specular":
-				replacementShader = GetShaderFromName("CompiledEmissiveSpecular");
-				break;
-			case "KSP/Emissive/Bumped Specular":
-				replacementShader = GetShaderFromName("CompiledEmissiveBumpedSpecular");
-				break;
+//			case "KSP/Diffuse":
+//				replacementShader = GetShaderFromName("CompiledDiffuse");
+//				break;
+//			case "KSP/Unlit":
+//				replacementShader = GetShaderFromName("CompiledUnlit");
+//				break;
+//			case "KSP/Specular":
+//				replacementShader = GetShaderFromName("CompiledSpecular");
+//				break;
+//			case "KSP/Bumped":
+//				replacementShader = GetShaderFromName("CompiledBumped");
+//				break;
+//			case "KSP/Bumped Specular":
+//				replacementShader = GetShaderFromName("CompiledBumpedSpecular");
+//				break;
+//			case "KSP/Emissive/Specular":
+//				replacementShader = GetShaderFromName("CompiledEmissiveSpecular");
+//				break;
+//			case "KSP/Emissive/Bumped Specular":
+//				replacementShader = GetShaderFromName("CompiledEmissiveBumpedSpecular");
+//				break;
 			case "Terrain/PQS/PQS Main - Optimised":
 				replacementShader = GetShaderFromName("CompiledPQSMainOptimised");
 				break;
@@ -96,15 +96,15 @@ namespace scatterer
 			case "Terrain/PQS/Sphere Projection SURFACE QUAD":
 				replacementShader = GetShaderFromName("CompiledPQSProjectionSurfaceQuad");
 				break;
-			case "Terrain/Scaled Planet (Simple)": //not this
+			case "Terrain/Scaled Planet (Simple)": 
 				replacementShader = GetShaderFromName("CompiledScaledPlanetSimple");
 				break;
-			case "Terrain/Scaled Planet (RimAerial)": //I think this one is kerbin from orbit
+			case "Terrain/Scaled Planet (RimAerial)": 
 				replacementShader = GetShaderFromName("CompiledScaledPlanetRimAerial");
 				break;
-			case "Unlit/Transparent":	//not this one
-				replacementShader = GetShaderFromName("CompiledUnlitAlpha");
-				break;
+//			case "Unlit/Transparent":	
+//				replacementShader = GetShaderFromName("CompiledUnlitAlpha");
+//				break;
 			default:
 				return;
 				

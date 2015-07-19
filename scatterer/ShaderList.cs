@@ -9,8 +9,6 @@ using UnityEngine;
 
 
 
-
-
 [KSPAddon(KSPAddon.Startup.Flight, true)]
 class DumpShaderList : MonoBehaviour
 {

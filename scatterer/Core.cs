@@ -28,6 +28,9 @@ namespace scatterer
 		MeshRenderer mr = new MeshRenderer ();
 
 		bool initiated=false;
+		bool showInterpolatedValues=false;
+
+		float newCfgPtAlt=0f;
 
 //		float alphaCutoff=100f;
 
@@ -64,8 +67,12 @@ namespace scatterer
 		float rimBlend=20f;
 		float rimpower=600f;
 
+		float pointAltitude=0f;
+
 		Camera[] cams;
 		int count;
+		int configPointsCnt;
+		int selectedConfigPoint=0;
 
 
 
@@ -112,6 +119,8 @@ namespace scatterer
 		Manager m_manager;
 		bool depthbufferEnabled=false;
 		bool isActive;
+
+		Material originalMaterial;
 		
 		
 		public Transform GetScaledTransform(string body)
@@ -124,16 +133,16 @@ namespace scatterer
 		{
 
 
-			WindowCaption = "Scatterer mod: alt+f10/f11 toggle";
+			WindowCaption = "Scatterer v0.017: alt+f10/f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
-			Visible = true;						
+			Visible = false;						
 			isActive = false;
 			
 
-			if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
-			{
-				ReactivateAtmosphere (parentPlanet, rimBlend, rimpower);
-			}
+//			if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+//			{
+//				ReactivateAtmosphere (parentPlanet, 100, 600);
+//			}
 
 //			savePlanetsList ();
 
@@ -193,10 +202,12 @@ namespace scatterer
 				m_manager.SetCore(this);
 				m_manager.Awake();
 				getSettingsFromSkynode();
+				loadConfigPoint(selectedConfigPoint);
 
 
-				
+
 				m_radius = (float)celestialBodies [PlanetId].Radius;
+				backupAtmosphereMaterial(parentPlanet);
 
 //				MeshRenderer sunMR=
 //					(MeshRenderer)celestialBodies[SunId].GetComponent (typeof(MeshRenderer));
@@ -259,6 +270,7 @@ namespace scatterer
 //			Destroy(m_manager.m_skyNode);
 			m_manager.OnDestroy ();
 			Destroy (m_manager);
+			ReactivateAtmosphere (parentPlanet);//, 100, 600);
 
 		}
 		
@@ -274,8 +286,10 @@ namespace scatterer
 			//            DragEnabled = !DragEnabled;
 			//			GUILayout.EndHorizontal();
 			
-			
-			GUILayout.Label (String.Format ("In game:{0}", isActive.ToString ()));
+			if (!isActive)
+//			GUILayout.Label (String.Format ("In game:{0}", isActive.ToString ()));
+			GUILayout.Label (String.Format ("Mod will activate in KSC view or in flight."));
+
 			GUILayout.BeginHorizontal ();
 			if (GUILayout.Button ("Hide"))
 				Visible = !Visible;
@@ -339,98 +353,30 @@ namespace scatterer
 //					cam = cam - 1;
 //				
 //				GUILayout.EndHorizontal ();
-				
-				if (!MapView.MapIsEnabled){
-				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Sky Settings");
-				GUILayout.EndHorizontal ();
 
-				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Alpha Global (/100)");
-				alphaGlobal = (float)(Convert.ToDouble (GUILayout.TextField (alphaGlobal.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.SetAlphaGlobal (alphaGlobal / 100);
-				}
-				GUILayout.EndHorizontal ();
-												
-				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Exposure (/100)");
-				exposure = (float)(Convert.ToDouble (GUILayout.TextField (exposure.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.SetExposure (exposure / 100);
-				}
-				GUILayout.EndHorizontal ();
-				
-				}
-
-				else
-				{
-
-					GUILayout.BeginHorizontal ();
-					GUILayout.Label ("Sky Settings (map view)");
-					GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Alpha Global (/100)");
-				mapAlphaGlobal = (float)(Convert.ToDouble (GUILayout.TextField (mapAlphaGlobal.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.mapAlphaGlobal = (alphaGlobal / 100);
-				}
-				GUILayout.EndHorizontal ();
-												
-				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Exposure (/100)");
-				mapExposure = (float)(Convert.ToDouble (GUILayout.TextField (mapExposure.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.mapExposure = (mapExposure / 100);
-				}
-				GUILayout.EndHorizontal ();
-
-
-				}
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Post Processing Settings");
-				GUILayout.EndHorizontal ();
-				
-				
-				m_manager.m_skyNode.setLayernCam (layer, cam);
-				
 				GUILayout.BeginHorizontal ();
 				
 				if (GUILayout.Button ("Toggle depth buffer"))
 				{
 					if (!depthbufferEnabled)
 					{
-						cams [cam].gameObject.AddComponent (typeof(ViewDepthBuffer));
+						cams [2].gameObject.AddComponent (typeof(ViewDepthBuffer));
 						depthbufferEnabled = true;
 					}
 					else
 					{
-						Component.Destroy (cams [cam].gameObject.GetComponent<ViewDepthBuffer> ());
+						Component.Destroy (cams [2].gameObject.GetComponent<ViewDepthBuffer> ());
 						depthbufferEnabled = false;
 					}
 				}
-				GUILayout.EndHorizontal ();
-				
-				
-				GUILayout.BeginHorizontal ();
+//				GUILayout.EndHorizontal ();
+//				
+//				
+//				GUILayout.BeginHorizontal ();
 				
 				if (GUILayout.Button ("Toggle PostProcessing"))
 				{
-
+					
 					if (!m_manager.m_skyNode.postprocessingEnabled)
 					{
 						m_manager.m_skyNode.enablePostprocess ();
@@ -441,70 +387,211 @@ namespace scatterer
 					}
 				}
 				GUILayout.EndHorizontal ();
-				
+
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Post Processing Alpha (/100)");
-				postProcessingalpha = (float)(Convert.ToDouble (GUILayout.TextField (postProcessingalpha.ToString ())));
+				GUILayout.Label ("New point altitude:");
+				newCfgPtAlt = (float)(Convert.ToDouble (GUILayout.TextField (newCfgPtAlt.ToString ())));
+				if (GUILayout.Button ("Add"))
+				{
+					m_manager.m_skyNode.configPoints.Insert(selectedConfigPoint+1,new configPoint(newCfgPtAlt,alphaGlobal/100,exposure/100,postProcessingalpha/100,postProcessDepth/10000,postProcessExposure/100));
+					selectedConfigPoint+=1;
+					configPointsCnt=m_manager.m_skyNode.configPoints.Count;
+					loadConfigPoint(selectedConfigPoint);
+				}
+				
+				
+				
+				GUILayout.EndHorizontal ();
+
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Config point:");
+
+				if (GUILayout.Button ("<"))
+				{
+					if (selectedConfigPoint>0){
+						selectedConfigPoint-=1;
+						loadConfigPoint(selectedConfigPoint);
+					}
+				}
+
+				GUILayout.TextField ((selectedConfigPoint).ToString ());
+
+				if (GUILayout.Button (">"))
+				{
+					if (selectedConfigPoint<configPointsCnt-1)
+					{
+						selectedConfigPoint+=1;
+						loadConfigPoint(selectedConfigPoint);
+					}
+				}
+
+				//GUILayout.Label (String.Format("Total:{0}", configPointsCnt));
+				if (GUILayout.Button ("Delete"))
+				{
+					if (configPointsCnt<=1)
+						print ("Can't delete config point, one or no points remaining");
+					else
+					{
+						m_manager.m_skyNode.configPoints.RemoveAt(selectedConfigPoint);
+						if (selectedConfigPoint>=configPointsCnt-1)
+						{
+							selectedConfigPoint=configPointsCnt-2;
+						}
+						configPointsCnt=m_manager.m_skyNode.configPoints.Count;
+						loadConfigPoint(selectedConfigPoint);
+					}
+					
+				}
+
+				GUILayout.EndHorizontal ();
+
+
+				
+				if (!MapView.MapIsEnabled){
+				
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Sky Settings");
+//				GUILayout.EndHorizontal ();
+									
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Point altitude");
+				pointAltitude = (float)(Convert.ToDouble (GUILayout.TextField (pointAltitude.ToString ())));
+					
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.configPoints[selectedConfigPoint].altitude=pointAltitude;
+				}
+				GUILayout.EndHorizontal ();
+
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Sky/orbit Alpha (/100)");
+				alphaGlobal = (float)(Convert.ToDouble (GUILayout.TextField (alphaGlobal.ToString ())));
 				
 				if (GUILayout.Button ("Set"))
 				{
-					m_manager.m_skyNode.SetPostProcessAlpha (postProcessingalpha / 100);
+						m_manager.m_skyNode.configPoints[selectedConfigPoint].skyAlpha=alphaGlobal/100f;
 				}
 				GUILayout.EndHorizontal ();
-				
-				
+												
 				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Post Processing Depth (/10000)");
-				postProcessDepth = (float)(Convert.ToDouble (GUILayout.TextField (postProcessDepth.ToString ())));
+				GUILayout.Label ("Sky/orbit Exposure (/100)");
+				exposure = (float)(Convert.ToDouble (GUILayout.TextField (exposure.ToString ())));
 				
 				if (GUILayout.Button ("Set"))
 				{
-					m_manager.m_skyNode.SetPostProcessDepth (postProcessDepth / 10000);
+						m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExposure=exposure / 100f;
 				}
 				GUILayout.EndHorizontal ();
+
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("Post Processing Alpha (/100)");
+					postProcessingalpha = (float)(Convert.ToDouble (GUILayout.TextField (postProcessingalpha.ToString ())));
+					
+					if (GUILayout.Button ("Set"))
+					{
+						m_manager.m_skyNode.configPoints[selectedConfigPoint].postProcessAlpha=postProcessingalpha/100f;
+					}
+					GUILayout.EndHorizontal ();
+					
+					
+					
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("Post Processing Depth (/10000)");
+					postProcessDepth = (float)(Convert.ToDouble (GUILayout.TextField (postProcessDepth.ToString ())));
+					
+					if (GUILayout.Button ("Set"))
+					{
+						m_manager.m_skyNode.configPoints[selectedConfigPoint].postProcessDepth=postProcessDepth /10000f;
+					}
+					GUILayout.EndHorizontal ();
+					
+					
+					
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("Post Processing Exposure (/100)");
+					postProcessExposure = (float)(Convert.ToDouble (GUILayout.TextField (postProcessExposure.ToString ())));
+					
+					if (GUILayout.Button ("Set"))
+					{
+						m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExposure =exposure/100f;
+					}
+					GUILayout.EndHorizontal ();
 				
-				
-				
+				}
+
+				else
+				{
+
+//					GUILayout.BeginHorizontal ();
+//					GUILayout.Label ("Sky Settings (map view)");
+//					GUILayout.EndHorizontal ();
+
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Post Processing Exposure (/100)");
-				postProcessExposure = (float)(Convert.ToDouble (GUILayout.TextField (postProcessExposure.ToString ())));
+				GUILayout.Label ("Map view alpha (/100)");
+				mapAlphaGlobal = (float)(Convert.ToDouble (GUILayout.TextField (mapAlphaGlobal.ToString ())));
 				
 				if (GUILayout.Button ("Set"))
 				{
-					m_manager.m_skyNode.SetPostProcessExposure (postProcessExposure / 100);
+					m_manager.m_skyNode.mapAlphaGlobal = mapAlphaGlobal / 100f;
 				}
 				GUILayout.EndHorizontal ();
-				
+												
 				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Post Processing Scale (/1000)");
-				postProcessScale = (float)(Convert.ToDouble (GUILayout.TextField (postProcessScale.ToString ())));
+				GUILayout.Label ("Map view exposure (/100)");
+				mapExposure = (float)(Convert.ToDouble (GUILayout.TextField (mapExposure.ToString ())));
 				
 				if (GUILayout.Button ("Set"))
 				{
-					m_manager.m_skyNode.SetPostProcessScale (postProcessScale / 1000);
+					m_manager.m_skyNode.mapExposure = mapExposure / 100f;
 				}
 				GUILayout.EndHorizontal ();
-				
-				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Planet radius (display only)");
-				GUILayout.TextField (celestialBodies [PlanetId].Radius.ToString ());
-				GUILayout.EndHorizontal ();
-				
-				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("atmosphereGlobalScale (/1000)");
-				
-				
-				atmosphereGlobalScale = (float)(Convert.ToDouble (GUILayout.TextField (atmosphereGlobalScale.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.SetAtmosphereGlobalScale (atmosphereGlobalScale / 1000);
+
+
 				}
-				GUILayout.EndHorizontal ();
+
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Post Processing Settings");
+//				GUILayout.EndHorizontal ();
+				
+				
+				m_manager.m_skyNode.setLayernCam (layer, cam);
+				
+
+
+				
+				
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Post Processing Scale (/1000)");
+//				postProcessScale = (float)(Convert.ToDouble (GUILayout.TextField (postProcessScale.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.SetPostProcessScale (postProcessScale / 1000);
+//				}
+//				GUILayout.EndHorizontal ();
+				
+				
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Planet radius (display only)");
+//				GUILayout.TextField (celestialBodies [PlanetId].Radius.ToString ());
+//				GUILayout.EndHorizontal ();
+				
+				
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("atmosphereGlobalScale (/1000)");
+//				
+//				
+//				atmosphereGlobalScale = (float)(Convert.ToDouble (GUILayout.TextField (atmosphereGlobalScale.ToString ())));
+//				
+//				if (GUILayout.Button ("Set"))
+//				{
+//					m_manager.m_skyNode.SetAtmosphereGlobalScale (atmosphereGlobalScale / 1000);
+//				}
+//				GUILayout.EndHorizontal ();
 				
 				
 				
@@ -754,19 +841,7 @@ namespace scatterer
 //				}
 //				GUILayout.EndHorizontal ();
 
-				GUILayout.BeginHorizontal ();
-				
-				if (GUILayout.Button ("Save settings"))
-				{
-					m_manager.m_skyNode.saveToConfigNode();
-				}
 
-				if (GUILayout.Button ("Load settings"))
-				{
-					m_manager.m_skyNode.loadFromConfigNode();
-					getSettingsFromSkynode();
-				}
-				GUILayout.EndHorizontal ();
 
 				GUILayout.BeginHorizontal ();
 
@@ -925,34 +1000,102 @@ namespace scatterer
 
 				
 				GUILayout.BeginHorizontal ();
+				
+				GUILayout.Label ("RimBlend");
+				rimBlend = (float)(Convert.ToDouble (GUILayout.TextField (rimBlend.ToString ())));
+				
+				GUILayout.Label ("RimPower");
+				rimpower = (float)(Convert.ToDouble (GUILayout.TextField (rimpower.ToString ())));
+				
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				
+				if (GUILayout.Button ("Save settings"))
+				{
+					m_manager.m_skyNode.rimBlend=rimBlend;
+					m_manager.m_skyNode.rimpower=rimpower;
+
+					//m_manager.m_skyNode.UIvisible=Visible;
+					m_manager.m_skyNode.displayInterpolatedVariables=showInterpolatedValues;
+
+					m_manager.m_skyNode.saveToConfigNode();
+				}
+				
+				if (GUILayout.Button ("Load settings"))
+				{
+					m_manager.m_skyNode.loadFromConfigNode();
+					getSettingsFromSkynode();
+					loadConfigPoint(selectedConfigPoint);
+				}
+				GUILayout.EndHorizontal ();
+
+
+				GUILayout.BeginHorizontal ();
+				if (GUILayout.Button ("Display interpolated values"))
+				{
+					showInterpolatedValues=!showInterpolatedValues;
+				}
+
+				GUILayout.EndHorizontal ();
+
+				if (showInterpolatedValues)
+				{
+					GUILayout.BeginHorizontal ();
+
+					if (m_manager.m_skyNode.currentConfigPoint == 0)
+						GUILayout.Label ("Current state:Ground, cfgPoint 0");
+					else if (m_manager.m_skyNode.currentConfigPoint >= configPointsCnt-1)
+						GUILayout.Label (String.Format ("Current state:Orbit, cfgPoint{0}", m_manager.m_skyNode.currentConfigPoint));
+					else
+						GUILayout.Label (String.Format ("Current state:{0}% cfgPoint{1} + {2}% cfgPoint{3} ", (int)(100*(1-m_manager.m_skyNode.percentage)),m_manager.m_skyNode.currentConfigPoint-1,(int)(100*m_manager.m_skyNode.percentage),m_manager.m_skyNode.currentConfigPoint));
+		
+					GUILayout.EndHorizontal ();
+
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label (String.Format ("SkyAlpha: {0} ", (int) (100*m_manager.m_skyNode.alphaGlobal)));
+					GUILayout.Label (String.Format ("SkyExposure: {0}",(int) (100*m_manager.m_skyNode.m_HDRExposure)));
+					GUILayout.EndHorizontal ();
+
+//					GUILayout.BeginHorizontal ();
+//
+//					GUILayout.EndHorizontal ();
+
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label (String.Format ("PostAlpha: {0}", (int) (100*m_manager.m_skyNode.postProcessingAlpha)));
+					GUILayout.Label (String.Format ("PostDepth: {0}", (int) (10000*m_manager.m_skyNode.postProcessDepth)));
+					GUILayout.Label (String.Format ("PostExposure: {0}", (int) (100*m_manager.m_skyNode.postProcessExposure)));
+					GUILayout.EndHorizontal ();
+					
+//					GUILayout.BeginHorizontal ();
+//					GUILayout.Label (String.Format ("PostDepth: {0}", postProcessDepth));
+//					GUILayout.EndHorizontal ();
+//
+//					GUILayout.BeginHorizontal ();
+//					GUILayout.Label (String.Format ("PostExposure: {0}", postProcessExposure));
+//					GUILayout.EndHorizontal ();
+				}
+
+
+
+				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("ManagerState");
 				GUILayout.TextField (m_manager.getManagerState ());
 				GUILayout.EndHorizontal ();
 
 
 
-				GUILayout.BeginHorizontal ();
-
-				GUILayout.Label ("RimBlend");
-				rimBlend = (float)(Convert.ToDouble (GUILayout.TextField (rimBlend.ToString ())));
-
-				GUILayout.Label ("RimPower");
-				rimpower = (float)(Convert.ToDouble (GUILayout.TextField (rimpower.ToString ())));
-
-				GUILayout.EndHorizontal ();
-
-
-				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button ("Disable stock atmo"))
-				{					
-					DeactivateAtmosphere(parentPlanet);
-				}
-
-				if (GUILayout.Button ("Enable stock atmo"))
-				{					
-					ReactivateAtmosphere(parentPlanet,rimBlend,rimpower);
-				}
-				GUILayout.EndHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				if (GUILayout.Button ("Disable stock atmo"))
+//				{					
+//					DeactivateAtmosphere(parentPlanet);
+//				}
+//
+//				if (GUILayout.Button ("Enable stock atmo"))
+//				{					
+//					ReactivateAtmosphere(parentPlanet,rimBlend,rimpower);
+//				}
+//				GUILayout.EndHorizontal ();
 				
 				
 //								GUILayout.BeginHorizontal ();
@@ -1014,26 +1157,54 @@ namespace scatterer
 
 			public void getSettingsFromSkynode() {
 
-			extinctionCoeff = 10000 * m_manager.m_skyNode.extinctionCoeff;
+//			extinctionCoeff = 10000 * m_manager.m_skyNode.extinctionCoeff;
 
-			atmosphereGlobalScale = 1000 * m_manager.m_skyNode.atmosphereGlobalScale;
-			postProcessingalpha = 100 * m_manager.m_skyNode.postProcessingAlpha;
-			postProcessScale = 1000 * m_manager.m_skyNode.postProcessingScale;
-			postProcessDepth = 10000 * m_manager.m_skyNode.postProcessDepth;
+//			atmosphereGlobalScale = 1000 * m_manager.m_skyNode.atmosphereGlobalScale;
+			postProcessingalpha = 100 * m_manager.m_skyNode.configPoints[selectedConfigPoint].postProcessAlpha;
+//			postProcessScale = 1000 * m_manager.m_skyNode.postProcessingScale;
+			postProcessDepth = 10000 * m_manager.m_skyNode.configPoints[selectedConfigPoint].postProcessDepth;
 
 
-			postProcessExposure = 100* m_manager.m_skyNode.postProcessExposure;
-			exposure = 100* m_manager.m_skyNode.m_HDRExposure;
+			postProcessExposure = 100* m_manager.m_skyNode.configPoints[selectedConfigPoint].postProcessExposure;
+			exposure = 100* m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExposure;
 //			alphaCutoff = 10000 * m_manager.m_skyNode.alphaCutoff;
-			alphaGlobal = 100 * m_manager.m_skyNode.alphaGlobal;
+			alphaGlobal = 100 * m_manager.m_skyNode.configPoints[selectedConfigPoint].skyAlpha;
 
 			mapAlphaGlobal = 100 * m_manager.m_skyNode.mapAlphaGlobal;
 			mapExposure = 100* m_manager.m_skyNode.mapExposure;
+			configPointsCnt = m_manager.m_skyNode.configPoints.Count;
+
+			rimBlend = m_manager.m_skyNode.rimBlend;
+			rimpower = m_manager.m_skyNode.rimpower;
+
+			//Visible=m_manager.m_skyNode.UIvisible
+			showInterpolatedValues = m_manager.m_skyNode.displayInterpolatedVariables;
+
 
 
 		}
 
-		public void ReactivateAtmosphere(string name, float inRimBlend, float inRimPower)
+		public void backupAtmosphereMaterial(string name)
+		{
+			Transform t = ScaledSpace.Instance.transform.FindChild(name);
+			
+			for (int i = 0; i < t.childCount; i++)
+			{
+				if (t.GetChild(i).gameObject.layer == 9)
+				{
+					// Reactivate the Athmosphere-renderer
+					t.GetChild(i).gameObject.GetComponent<MeshRenderer>().gameObject.SetActive(true);
+
+					originalMaterial = (Material) Material.Instantiate(t.renderer.sharedMaterial);
+					
+					// Stop our script
+					i = t.childCount + 10;
+				}
+			}
+		}
+
+
+		public void ReactivateAtmosphere(string name)//, float inRimBlend, float inRimPower)
 		{
 			Transform t = ScaledSpace.Instance.transform.FindChild(name);
 			
@@ -1045,12 +1216,13 @@ namespace scatterer
 					t.GetChild(i).gameObject.GetComponent<MeshRenderer>().gameObject.SetActive(true);
 					
 					// Reset the shader parameters
-					Material sharedMaterial = t.renderer.sharedMaterial;
-					
-										
-					//sharedMaterial.SetTexture(Shader.PropertyToID("_rimColorRamp"), null);
-					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), inRimBlend/100f);
-					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), inRimPower/100f);
+//					Material sharedMaterial = t.renderer.sharedMaterial;
+					t.renderer.sharedMaterial = originalMaterial;
+//					
+//										
+//					//sharedMaterial.SetTexture(Shader.PropertyToID("_rimColorRamp"), null);
+//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), inRimBlend/100f);
+//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), inRimPower/100f);
 					
 					// Stop our script
 					i = t.childCount + 10;
@@ -1113,6 +1285,20 @@ namespace scatterer
 //				print (cnToLoad.GetValues ("scattererPlanets")[i]);
 //				scattererPlanets[i] = cnToLoad.GetValues ("scattererPlanets")[i];
 //			}
+
+		}
+
+		public void loadConfigPoint(int point)
+		{
+			postProcessDepth = m_manager.m_skyNode.configPoints [point].postProcessDepth * 10000f;
+			postProcessExposure = m_manager.m_skyNode.configPoints [point].postProcessExposure*100f;
+			postProcessingalpha = m_manager.m_skyNode.configPoints [point].postProcessAlpha * 100f;
+
+			alphaGlobal = m_manager.m_skyNode.configPoints [point].skyAlpha * 100f;
+			exposure = m_manager.m_skyNode.configPoints [point].skyExposure*100f;
+
+			pointAltitude = m_manager.m_skyNode.configPoints [point].altitude;
+
 
 		}
 

@@ -30,12 +30,18 @@ namespace scatterer
 		GameObject atmosphereMesh;
 		MeshRenderer atmosphereMeshrenderer;
 
+//		[Persistent] public bool UIvisible = false;
+		[Persistent] public bool displayInterpolatedVariables = false;
+
 		public CelestialBody[] celestialBodies;	
 
 //		public float postRotX=0f,postRotY=0f,postRotZ=0f,
 //		public float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
 
 		public float postDist=-4500f;
+
+		public float percentage;
+		public int currentConfigPoint;
 
 		bool coronasDisabled=false;
 
@@ -98,15 +104,15 @@ namespace scatterer
 
 		//atmosphere properties
 
-		[Persistent] public float extinctionCoeff=0.7f;
-		[Persistent] public float atmosphereGlobalScale=1f;
-		[Persistent] public float postProcessingAlpha=0.78f;
-		[Persistent] public float postProcessingScale=1f;
-		[Persistent] public float postProcessDepth=0.02f;
-		[Persistent] public float postProcessExposure=0.18f;
+		/*[Persistent]*/ public float extinctionCoeff=0.7f;
+		/*[Persistent]*/ public float atmosphereGlobalScale=1f;
+		/*[Persistent]*/ public float postProcessingAlpha=0.78f;
+		/*[Persistent]*/ public float postProcessingScale=1f;
+		/*[Persistent]*/ public float postProcessDepth=0.02f;
+		/*[Persistent]*/ public float postProcessExposure=0.18f;
 		//		float inscatteringCoeff=0.8f; //useless, I also removed it from shader
 		
-		[Persistent] public float m_HDRExposure= 0.2f;
+		/*[Persistent]*/ public float m_HDRExposure= 0.2f;
 		[Persistent] public float mapExposure= 0.15f;
 		
 		static PQS CurrentPQS=null;
@@ -123,7 +129,7 @@ namespace scatterer
 		int waitBeforeReloadCnt=0;
 		
 //		[Persistent] public float alphaCutoff=0.001f;
-		[Persistent] public float alphaGlobal=1f;
+		/*[Persistent]*/ public float alphaGlobal=1f;
 		[Persistent] public float mapAlphaGlobal=1f;
 		
 		float m_radius;// = 600000.0f;
@@ -177,6 +183,9 @@ namespace scatterer
 		Manager m_manager;
 
 //		var cbTransform;
+
+		[Persistent] public float rimBlend=20f;
+		[Persistent] public float rimpower=600f;
 
 
 		[Persistent] public List<configPoint> configPoints= new List<configPoint> {new configPoint(5000f,1f,0.25f,1f,0.4f,0.23f)
@@ -253,14 +262,6 @@ namespace scatterer
 			
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 
-			if (forceOFFaniso) { 
-				QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
-			}
-			
-			else
-			{ 
-				QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
-			}
 			
 			CurrentPQS = parentCelestialBody.pqsController;
 			testPQS = parentCelestialBody.pqsController;
@@ -443,6 +444,17 @@ namespace scatterer
 //				} else {
 //					initiated = true;
 //				}
+
+
+				if (forceOFFaniso) { 
+					QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
+				}
+				
+				else
+				{ 
+					QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+				}
+
 			}
 
 			
@@ -584,10 +596,19 @@ namespace scatterer
 
 					if (celestialBodies[k].name != parentCelestialBody.name)
 					{
-
-						if ((celestialBodies[k].transform.position-farCamera.transform.position).magnitude < (parentCelestialBody.transform.position-farCamera.transform.position).magnitude)
+						if(!MapView.MapIsEnabled){
+							if ((celestialBodies[k].transform.position-farCamera.transform.position).magnitude < (parentCelestialBody.transform.position-farCamera.transform.position).magnitude)
+							{
+								newRenderQueue=2004;
+							}
+						}
+						else
 						{
-							newRenderQueue=2004;
+							if ((ScaledSpace.LocalToScaledSpace(celestialBodies[k].transform.position)-scaledSpaceCamera.transform.position).magnitude < (ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position)-scaledSpaceCamera.transform.position).magnitude)
+							{
+								newRenderQueue=2004;
+							}
+
 						}
 					
 					}
@@ -1323,6 +1344,7 @@ namespace scatterer
 				postProcessingAlpha = configPoints [0].postProcessAlpha;
 				postProcessDepth = configPoints [0].postProcessDepth;
 				postProcessExposure = configPoints [0].postProcessExposure;
+				currentConfigPoint=0;
 			} 
 			else if (trueAlt > configPoints [configPoints.Count-1].altitude) {
 				alphaGlobal = configPoints [configPoints.Count-1].skyAlpha;
@@ -1330,6 +1352,7 @@ namespace scatterer
 				postProcessingAlpha = configPoints [configPoints.Count-1].postProcessAlpha;
 				postProcessDepth = configPoints [configPoints.Count-1].postProcessDepth;
 				postProcessExposure = configPoints [configPoints.Count-1].postProcessExposure;
+				currentConfigPoint=configPoints.Count-1;
 			} 
 			else
 			{
@@ -1337,19 +1360,20 @@ namespace scatterer
 				{
 					if ((trueAlt > configPoints [j-1].altitude) && (trueAlt <= configPoints [j].altitude))
 					    {
-						float percentage=(trueAlt-configPoints [j-1].altitude)/(configPoints [j].altitude-configPoints [j-1].altitude);
+						percentage=(trueAlt-configPoints [j-1].altitude)/(configPoints [j].altitude-configPoints [j-1].altitude);
 
 						alphaGlobal = percentage*configPoints [j].skyAlpha+(1-percentage)*configPoints [j-1].skyAlpha;
 						m_HDRExposure = percentage*configPoints [j].skyExposure+(1-percentage)*configPoints [j-1].skyExposure;
 						postProcessingAlpha = percentage*configPoints [j].postProcessAlpha+(1-percentage)*configPoints [j-1].postProcessAlpha;
 						postProcessDepth = percentage*configPoints [j].postProcessDepth+(1-percentage)*configPoints [j-1].postProcessDepth;
 						postProcessExposure = percentage*configPoints [j].postProcessExposure+(1-percentage)*configPoints [j-1].postProcessExposure;
+						currentConfigPoint=j;
 					}
 				}
 			}
 
-			print ("aphaGlobal:"+alphaGlobal+"m_HDRExposure:"+m_HDRExposure+
-			       "postProcessingAlpha:"+postProcessingAlpha+"postProcessDepth:"+postProcessDepth+"postProcessExposure"+postProcessExposure);
+//			print ("aphaGlobal:"+alphaGlobal+"m_HDRExposure:"+m_HDRExposure+
+//			       "postProcessingAlpha:"+postProcessingAlpha+"postProcessDepth:"+postProcessDepth+"postProcessExposure"+postProcessExposure);
 //			print (m_HDRExposure);
 //			print (postProcessingAlpha);
 //			print (postProcessDepth);
