@@ -1,8 +1,8 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="ShaderReplacer.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Core.cs">
     <Files>
-      <File FileName="Core.cs" Line="1198" Column="36" />
+      <File FileName="Core.cs" Line="200" Column="2" />
       <File FileName="SkyNode.cs" Line="607" Column="1" />
       <File FileName="Manager.cs" Line="1" Column="1" />
       <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
@@ -13,13 +13,13 @@
       <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Plugins\Math\PerlinNoise.cs" Line="1" Column="1" />
       <File FileName="ShaderTool.cs" Line="1" Column="1" />
       <File FileName="ShaderReplacer.cs" Line="70" Column="10" />
-      <File FileName="ShaderList.cs" Line="10" Column="1" />
+      <File FileName="ShaderList.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="scatterer" expanded="True">
-            <Node name="ShaderReplacer.cs" selected="True" />
+            <Node name="ShaderList.cs" selected="True" />
           </Node>
         </State>
       </Pad>

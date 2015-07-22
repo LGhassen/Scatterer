@@ -516,7 +516,7 @@ namespace scatterer
 					
 					if (GUILayout.Button ("Set"))
 					{
-						m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExposure =exposure/100f;
+						m_manager.m_skyNode.configPoints[selectedConfigPoint].postProcessExposure = postProcessExposure /100f;
 					}
 					GUILayout.EndHorizontal ();
 				
