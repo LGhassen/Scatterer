@@ -38,76 +38,76 @@ public class scatterPostprocess : MonoBehaviour
 	void OnRenderImage(RenderTexture source, RenderTexture destination) 
 //	void OnPreRender() 
 	{	
-		
-		//Graphics.Blit(source, destination);
-		//return;
-		
-		//This will apply the atmospheric scattering to all objects in the scenne that have written to the depth buffer
-		//The world pos is reconstructed from the depth values. To do the some information about the frustum must be passed
-		//in to the shader. The code below calculates the position of the frustum corners
-		//This method has been adapted from the global fog image effect
-		
-		float CAMERA_NEAR = GetComponent<Camera>().nearClipPlane;
-//			float CAMERA_NEAR = nearPlane;
-//			print ("NEAR CLIP PLANE");
-//			print(CAMERA_NEAR);
-
-		float CAMERA_FAR = GetComponent<Camera>().farClipPlane;
-//			float CAMERA_FAR = farPlane;
-
-//			print ("NEAR CLIP PLANE");
-//			print(CAMERA_FAR);
-
-
-
-		float CAMERA_FOV = GetComponent<Camera>().fieldOfView;
-		float CAMERA_ASPECT_RATIO = GetComponent<Camera>().aspect;
-		
-		Matrix4x4 frustumCorners = Matrix4x4.identity;		
-		
-		float fovWHalf = CAMERA_FOV * 0.5f;
-		
-		Vector3 toRight = GetComponent<Camera>().transform.right * CAMERA_NEAR * Mathf.Tan (fovWHalf * Mathf.Deg2Rad) * CAMERA_ASPECT_RATIO;
-		Vector3 toTop = GetComponent<Camera>().transform.up * CAMERA_NEAR * Mathf.Tan (fovWHalf * Mathf.Deg2Rad);
-		
-		Vector3 topLeft = (GetComponent<Camera>().transform.forward * CAMERA_NEAR - toRight + toTop);
-		float CAMERA_SCALE = topLeft.magnitude * CAMERA_FAR/CAMERA_NEAR;	
-
-//			print ("CAMERA SCALE=");
-//			print (CAMERA_SCALE);
-		
-		topLeft.Normalize();
-		topLeft *= CAMERA_SCALE;
-		
-		Vector3 topRight = (GetComponent<Camera>().transform.forward * CAMERA_NEAR + toRight + toTop);
-		topRight.Normalize();
-		topRight *= CAMERA_SCALE;
-		
-		Vector3 bottomRight = (GetComponent<Camera>().transform.forward * CAMERA_NEAR + toRight - toTop);
-		bottomRight.Normalize();
-		bottomRight *= CAMERA_SCALE;
-		
-		Vector3 bottomLeft = (GetComponent<Camera>().transform.forward * CAMERA_NEAR - toRight - toTop);
-		bottomLeft.Normalize();
-		bottomLeft *= CAMERA_SCALE;
-
-		frustumCorners.SetRow (0, topLeft); 
-		frustumCorners.SetRow (1, topRight);		
-		frustumCorners.SetRow (2, bottomRight);
-		frustumCorners.SetRow (3, bottomLeft);
-
-//			frustumCorners.SetRow (3, topLeft); 
-//			frustumCorners.SetRow (2, topRight);		
-//			frustumCorners.SetRow (1, bottomRight);
-//			frustumCorners.SetRow (0, bottomLeft);
-
-		m_atmosphereImageEffect.SetMatrix ("_FrustumCorners", frustumCorners);
-		
-		//CustomGraphicsBlit(source, destination, m_atmosphereImageEffect, 0);
-//		CustomGraphicsBlit(source, destination, m_atmosphereImageEffect, 0);
-//		CustomGraphicsBlit(destination, destination, m_atmosphereImageEffect, 0);
-
-//			Graphics.Blit (source, destination, m_atmosphereImageEffect);
+//		
+//		//Graphics.Blit(source, destination);
+//		//return;
+//		
+//		//This will apply the atmospheric scattering to all objects in the scenne that have written to the depth buffer
+//		//The world pos is reconstructed from the depth values. To do the some information about the frustum must be passed
+//		//in to the shader. The code below calculates the position of the frustum corners
+//		//This method has been adapted from the global fog image effect
+//		
+//		float CAMERA_NEAR = GetComponent<Camera>().nearClipPlane;
+////			float CAMERA_NEAR = nearPlane;
+////			print ("NEAR CLIP PLANE");
+////			print(CAMERA_NEAR);
+//
+//		float CAMERA_FAR = GetComponent<Camera>().farClipPlane;
+////			float CAMERA_FAR = farPlane;
+//
+////			print ("NEAR CLIP PLANE");
+////			print(CAMERA_FAR);
+//
+//
+//
+//		float CAMERA_FOV = GetComponent<Camera>().fieldOfView;
+//		float CAMERA_ASPECT_RATIO = GetComponent<Camera>().aspect;
+//		
+//		Matrix4x4 frustumCorners = Matrix4x4.identity;		
+//		
+//		float fovWHalf = CAMERA_FOV * 0.5f;
+//		
+//		Vector3 toRight = GetComponent<Camera>().transform.right * CAMERA_NEAR * Mathf.Tan (fovWHalf * Mathf.Deg2Rad) * CAMERA_ASPECT_RATIO;
+//		Vector3 toTop = GetComponent<Camera>().transform.up * CAMERA_NEAR * Mathf.Tan (fovWHalf * Mathf.Deg2Rad);
+//		
+//		Vector3 topLeft = (GetComponent<Camera>().transform.forward * CAMERA_NEAR - toRight + toTop);
+//		float CAMERA_SCALE = topLeft.magnitude * CAMERA_FAR/CAMERA_NEAR;	
+//
+////			print ("CAMERA SCALE=");
+////			print (CAMERA_SCALE);
+//		
+//		topLeft.Normalize();
+//		topLeft *= CAMERA_SCALE;
+//		
+//		Vector3 topRight = (GetComponent<Camera>().transform.forward * CAMERA_NEAR + toRight + toTop);
+//		topRight.Normalize();
+//		topRight *= CAMERA_SCALE;
+//		
+//		Vector3 bottomRight = (GetComponent<Camera>().transform.forward * CAMERA_NEAR + toRight - toTop);
+//		bottomRight.Normalize();
+//		bottomRight *= CAMERA_SCALE;
+//		
+//		Vector3 bottomLeft = (GetComponent<Camera>().transform.forward * CAMERA_NEAR - toRight - toTop);
+//		bottomLeft.Normalize();
+//		bottomLeft *= CAMERA_SCALE;
+//
+//		frustumCorners.SetRow (0, topLeft); 
+//		frustumCorners.SetRow (1, topRight);		
+//		frustumCorners.SetRow (2, bottomRight);
+//		frustumCorners.SetRow (3, bottomLeft);
+//
+////			frustumCorners.SetRow (3, topLeft); 
+////			frustumCorners.SetRow (2, topRight);		
+////			frustumCorners.SetRow (1, bottomRight);
+////			frustumCorners.SetRow (0, bottomLeft);
+//
+//		m_atmosphereImageEffect.SetMatrix ("_FrustumCorners", frustumCorners);
+//		
+//		//CustomGraphicsBlit(source, destination, m_atmosphereImageEffect, 0);
+////		CustomGraphicsBlit(source, destination, m_atmosphereImageEffect, 0);
+////		CustomGraphicsBlit(destination, destination, m_atmosphereImageEffect, 0);
+//
+////			Graphics.Blit (source, destination, m_atmosphereImageEffect);
 	}
 	
 	static void CustomGraphicsBlit(RenderTexture source, RenderTexture dest, Material fxMaterial, int passNr) 

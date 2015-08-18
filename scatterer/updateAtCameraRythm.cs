@@ -19,11 +19,13 @@ namespace scatterer
 	
 	public class updateAtCameraRythm : MonoBehaviour
 	{
+		Mesh m_mesh;
 		Manager m_manager;
 		SkyNode m_skynode;
 		GameObject tester;
 		
 		Transform parentTransform;
+		Transform celestialTransform;
 		
 		bool debug6;
 		
@@ -31,7 +33,7 @@ namespace scatterer
 		
 		
 		
-		public void settings(Material inSkyMat, Manager inManager, SkyNode inSkyNode, GameObject intester, bool indebug6, Transform inparentTransform)
+		public void settings(Mesh inmesh,Material inSkyMat, Manager inManager, SkyNode inSkyNode, GameObject intester, bool indebug6, Transform inparentTransform, Transform inCelestialTransform)
 		{
 			
 			skyMat = inSkyMat;
@@ -40,10 +42,13 @@ namespace scatterer
 			tester = intester;
 			debug6 = indebug6;
 			parentTransform = inparentTransform;
+			celestialTransform = inCelestialTransform;
+			m_mesh = inmesh;
 			
 		}
 		
 		
+//		public void OnRender()
 		public void OnPreRender()
 		{
 			
@@ -66,6 +71,14 @@ namespace scatterer
 			//
 			//			Graphics.DrawMeshNow(m_mesh, position, Quaternion.identity);
 			//			//			Graphics.DrawMesh(m_mesh, position, Quaternion.identity,m_skyMaterial,layer,cam);
+
+			m_mesh.bounds = new Bounds(celestialTransform.position, new Vector3(1e32f,1e32f, 1e32f));
+
+//			skyMat.SetPass(0);
+//			Graphics.DrawMesh (m_mesh, celestialTransform.position, Quaternion.identity, skyMat, 10, m_skynode.scaledSpaceCamera);//, 0, null, false, false);
+//
+//			skyMat.SetPass(0);
+//			Graphics.DrawMeshNow(m_mesh, celestialTransform.position, Quaternion.identity);
 			
 		}		
 	}
