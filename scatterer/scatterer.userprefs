@@ -2,28 +2,12 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Core.cs">
     <Files>
-      <File FileName="Core.cs" Line="200" Column="2" />
-      <File FileName="SkyNode.cs" Line="607" Column="1" />
-      <File FileName="Manager.cs" Line="1" Column="1" />
-      <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
-      <File FileName="SimplePostProcessCube.cs" Line="1" Column="1" />
-      <File FileName="scatterPostProcess.cs" Line="1" Column="1" />
-      <File FileName="Ocean\OceanNode.cs" Line="1" Column="1" />
-      <File FileName="configPoint.cs" Line="1" Column="1" />
-      <File FileName="e:\gh\unityprojs\scattererGithub\Scatterer\scatterer\Plugins\Math\PerlinNoise.cs" Line="1" Column="1" />
-      <File FileName="ShaderTool.cs" Line="1" Column="1" />
-      <File FileName="ShaderReplacer.cs" Line="70" Column="10" />
-      <File FileName="ShaderList.cs" Line="1" Column="1" />
+      <File FileName="drawSky.cs" Line="43" Column="1" />
+      <File FileName="updateAtCameraRythm.cs" Line="11" Column="15" />
+      <File FileName="Core.cs" Line="127" Column="5" />
+      <File FileName="Manager.cs" Line="127" Column="26" />
+      <File FileName="SkyNode.cs" Line="464" Column="1" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="scatterer" expanded="True">
-            <Node name="ShaderList.cs" selected="True" />
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

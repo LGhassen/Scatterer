@@ -31,10 +31,10 @@ namespace scatterer
 		float m_radius= 600000.0f;
 		
 		
-		//OceanWhiteCaps m_oceanNode;
+//		OceanWhiteCaps m_oceanNode;
 		public SkyNode m_skyNode;
 		SunNode m_sunNode;
-		
+
 		public CelestialBody parentCelestialBody;
 		CelestialBody sunCelestialBody;
 		
@@ -42,6 +42,7 @@ namespace scatterer
 		public void Awake() 
 		{
 			managerState = "waking up";
+			m_radius = (float)parentCelestialBody.Radius;
 			
 			m_sunNode = new SunNode();
 			m_sunNode.Start ();
@@ -52,6 +53,8 @@ namespace scatterer
 			m_skyNode.loadSettings ();
 			m_skyNode.Start ();
 			m_skyNode.loadFromConfigNode ();
+
+
 
 //			m_oceanNode = new OceanWhiteCaps();
 //			m_oceanNode.setManager (this);
@@ -65,7 +68,7 @@ namespace scatterer
 				cam[i]=1;
 			}
 			
-			m_radius = (float)parentCelestialBody.Radius;
+
 			
 			managerState = "awake";
 		}
@@ -74,25 +77,21 @@ namespace scatterer
 		public void Update () 
 		{
 			managerState = "updating";
+			m_radius = (float)parentCelestialBody.Radius;
 			
 			//Update the sky and sun
 
 
 			m_sunNode.setDirectionToSun (getDirectionToSun ());
 			m_sunNode.UpdateNode();
-			m_radius = (float)parentCelestialBody.Radius;
+
 			
 			m_skyNode.UpdateNode();
 
 
-////			if (m_oceanNode != null)
-//
+
 //				m_oceanNode.UpdateNode ();
-//
-//
-////			else {
-////				print ("OCEAN NODE NULL");
-////			}
+
 			
 			updateCnt++;
 			managerState = "update done "+updateCnt.ToString();

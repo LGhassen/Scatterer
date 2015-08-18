@@ -32,10 +32,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\KSP\Kerbal.Space.Program.v1.0.4.861\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\KSP\Kerbal.Space.Program.v1.0.4.861 scatterer testing\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\KSP\Kerbal.Space.Program.v1.0.4.861\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\KSP\Kerbal.Space.Program.v1.0.4.861 scatterer testing\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -235,10 +235,8 @@
     <None Include="Plugins\Containers\SetQueue.cs.meta" />
     <None Include="Proland\Scripts\Atmo\PreProcessAtmo.cs" />
     <None Include="DecodedToFloat.shader" />
-    <None Include="Ocean\OceanFFT.cs.meta" />
-    <None Include="Ocean\OceanNode.cs.meta" />
-    <None Include="Ocean\OceanWhiteCaps.cs.meta" />
-    <None Include="Ocean\WriteFloat.cs.meta" />
+    <None Include="Plugins\Math\PerlinNoise.cs" />
+    <None Include="ShaderList.cs" />
     <None Include="Ocean\OceanFFT.cs" />
     <None Include="Ocean\OceanNode.cs" />
     <None Include="Ocean\OceanWhiteCaps.cs" />
@@ -247,7 +245,5 @@
     <None Include="Ocean\RTUtility.cs" />
     <None Include="Ocean\Node.cs" />
     <None Include="Ocean\OceanUpdateAtCameraRythm.cs" />
-    <None Include="Plugins\Math\PerlinNoise.cs" />
-    <None Include="ShaderList.cs" />
   </ItemGroup>
 </Project>

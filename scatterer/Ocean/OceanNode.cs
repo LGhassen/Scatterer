@@ -54,10 +54,10 @@ namespace scatterer
 		public float phi=1.0f;
 		
 		[SerializeField]
-		protected Material m_oceanMaterial;
+		public Material m_oceanMaterial;
 		
 		[SerializeField]
-		protected Color m_oceanUpwellingColor = new Color(0.039f, 0.156f, 0.47f);
+		public Color m_oceanUpwellingColor = new Color(0.039f, 0.156f, 0.47f);
 		
 		//Sea level in meters
 		[SerializeField]
@@ -305,10 +305,10 @@ namespace scatterer
 				
 			}	
 			
-			PQS pqs = m_manager.parentCelestialBody.pqsController;
-			PQS ocean = pqs.ChildSpheres [0];
-						ocean.isDisabled = true;
-						ocean.DisableSphere ();
+//			PQS pqs = m_manager.parentCelestialBody.pqsController;
+//			PQS ocean = pqs.ChildSpheres [0];
+//						ocean.isDisabled = true;
+//						ocean.DisableSphere ();
 		}
 
 		public void getCustomCameraToWorldMatrix()
@@ -326,10 +326,12 @@ namespace scatterer
 //			m_core.chosenCamera.ResetProjectionMatrix();
 //			m_core.chosenCamera.ResetWorldToCameraMatrix();
 
-			Matrix4x4 ctol1 = m_core.chosenCamera.cameraToWorldMatrix;
+//			Matrix4x4 ctol1 = m_core.chosenCamera.cameraToWorldMatrix;
+			Matrix4x4 ctol1 = m_manager.m_skyNode.farCamera.cameraToWorldMatrix;
 						
 			//position relative to kerbin
-			Vector3d tmp = (m_core.chosenCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+//			Vector3d tmp = (m_core.chosenCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+			Vector3d tmp = (m_manager.m_skyNode.farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
 //			print ("TMP");
 //			print (tmp);
 //			print (tmp.magnitude);
@@ -449,7 +451,7 @@ namespace scatterer
 			m_oldlocalToOcean = localToOcean;
 
 
-			Matrix4x4d ctos = ModifiedProjectionMatrix (m_core.chosenCamera);
+			Matrix4x4d ctos = ModifiedProjectionMatrix (m_manager.m_skyNode.farCamera);
 			Matrix4x4d stoc = ctos.Inverse();
 //			Matrix4x4d stoc = new Matrix4x4d (1.23614492203479, 0, 0, 0,
 //				0, 0.577350279552042, 0, 0,
@@ -591,7 +593,8 @@ namespace scatterer
 			Vector3d cz = px * sp*st - py * cp*st + pz * ct;
 			
 //			m_worldPos = po + cz * m_position.distance;
-			Vector3 m_worldPos = m_manager.parentCelestialBody.transform.position -m_core.chosenCamera.transform.position ;
+//			Vector3 m_worldPos = m_manager.parentCelestialBody.transform.position -m_core.chosenCamera.transform.position ;
+			Vector3 m_worldPos = m_manager.parentCelestialBody.transform.position -m_manager.m_skyNode.farCamera.transform.position ;
 			
 			
 //			if (m_worldPos.z < m_groundHeight + 10.0) {
