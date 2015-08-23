@@ -57,6 +57,7 @@ namespace scatterer
 		public float irradianceFactor =1f;
 		public float oceanSigma = 0.04156494f;
 		public float _Ocean_Threshold = 25f;
+		public float extinctionMultiplier=1f;
 		
 		//		string codeBase;
 		//		UriBuilder uri;
@@ -88,9 +89,9 @@ namespace scatterer
 		
 		public float apparentDistance=1f;
 		
-		GameObject tester;
-		MeshRenderer MR;
-		MeshFilter MF;
+		GameObject skyObject, skyExtinctObject;
+		MeshRenderer skyMR, skyExtinctMR;
+		MeshFilter skyMF, skyExtinctMF;
 		
 		CelestialBody parentCelestialBody;
 		//Matrix4x4 m_sun_worldToLocalRotation;
@@ -161,6 +162,7 @@ namespace scatterer
 		
 		public Material m_atmosphereMaterial;
 		Material m_skyMaterialScaled;
+		Material m_skyExtinction;
 		
 		
 		//		Material m_skyMapMaterial;
@@ -241,7 +243,10 @@ namespace scatterer
 			
 			initiateOrRestart ();
 			m_skyMaterialScaled=new Material(ShaderTool.GetMatFromShader2("CompiledSkyScaled.shader"));
-			m_skyMaterialScaled.renderQueue = 2003;
+			m_skyMaterialScaled.renderQueue = 2004;
+
+			m_skyExtinction=new Material(ShaderTool.GetMatFromShader2("CompiledSkyExtinction.shader"));
+			m_skyExtinction.renderQueue = 2002;
 			
 			sunGlare = new Texture2D (512, 512);
 			black = new Texture2D (512, 512);
@@ -258,6 +263,7 @@ namespace scatterer
 			m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
 			
 			InitUniforms(m_skyMaterialScaled);
+			InitUniforms(m_skyExtinction);
 			//			InitUniforms(m_skyMapMaterial);
 			
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
@@ -277,27 +283,43 @@ namespace scatterer
 				additionalScales[j]=1f;
 			}
 			
-			tester = new GameObject ();
-			MF = tester.AddComponent<MeshFilter>();
-			Mesh idmesh = MF.mesh;
+			skyObject = new GameObject ();
+			skyMF = skyObject.AddComponent<MeshFilter>();
+			Mesh idmesh = skyMF.mesh;
 			idmesh.Clear ();
 			idmesh = m_mesh;
 			//
-			tester.layer = layer;
+			skyObject.layer = layer;
 			celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
-			//			tester.transform.parent = parentCelestialBody.transform;
-			tester.transform.parent = celestialTransform;
+			//			skyObject.transform.parent = parentCelestialBody.transform;
+			skyObject.transform.parent = celestialTransform;
 			
-			MR = tester.AddComponent<MeshRenderer>();
-			MR.sharedMaterial = m_skyMaterialScaled;
-			MR.material =m_skyMaterialScaled;
-			MR.castShadows = false;
-			MR.receiveShadows = false;
+			skyMR = skyObject.AddComponent<MeshRenderer>();
+			skyMR.sharedMaterial = m_skyMaterialScaled;
+			skyMR.material =m_skyMaterialScaled;
+			skyMR.castShadows = false;
+			skyMR.receiveShadows = false;
+
+			///same for skyextinct
+			skyExtinctObject = new GameObject ();
+			skyExtinctMF = skyExtinctObject.AddComponent<MeshFilter>();
+			idmesh = skyExtinctMF.mesh;
+			idmesh.Clear ();
+			idmesh = m_mesh;
+			//
+			skyExtinctObject.layer = layer;
+			skyExtinctObject.transform.parent = celestialTransform;
+			
+			skyExtinctMR = skyExtinctObject.AddComponent<MeshRenderer>();
+			skyExtinctMR.sharedMaterial = m_skyExtinction;
+			skyExtinctMR.material =m_skyExtinction;
+			skyExtinctMR.castShadows = false;
+			skyExtinctMR.receiveShadows = false;
 			
 			
-			//			tester.transform.localPosition = Vector3.zero;
-			//			tester.transform.localRotation = Quaternion.identity;
-			//			tester.transform.localScale = Vector3.one;
+			//			skyObject.transform.localPosition = Vector3.zero;
+			//			skyObject.transform.localRotation = Quaternion.identity;
+			//			skyObject.transform.localScale = Vector3.one;
 			
 			
 			//			MR.enabled = true;
@@ -505,15 +527,24 @@ namespace scatterer
 			
 			{
 				
-				tester.layer = 10;
+				skyObject.layer = 10;
+				skyExtinctObject.layer=10;
 				
 				
-				MF.mesh = m_mesh;
-				MR.material =m_skyMaterialScaled;
-				MR.castShadows = false;
-				MR.receiveShadows = false;
-				MR.sharedMaterial = m_skyMaterialScaled;
-				MR.enabled = true;
+				skyMF.mesh = m_mesh;
+				skyMR.material =m_skyMaterialScaled;
+				skyMR.castShadows = false;
+				skyMR.receiveShadows = false;
+				skyMR.sharedMaterial = m_skyMaterialScaled;
+				skyMR.enabled = true;
+
+				skyExtinctMF.mesh = m_mesh;
+				skyExtinctMR.material =m_skyExtinction;
+				skyExtinctMR.castShadows = false;
+				skyExtinctMR.receiveShadows = false;
+				skyExtinctMR.sharedMaterial = m_skyExtinction;
+				skyExtinctMR.enabled = true;
+//				skyExtinctMR.enabled = false;
 				
 				
 				if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () == null)
@@ -522,17 +553,13 @@ namespace scatterer
 					scaledSpaceCamera.gameObject.AddComponent(typeof(updateAtCameraRythm));
 				}
 				
-				if (farCamera.gameObject.GetComponent<drawSky> () != null)
-				{
-					//					print ("FarCamera drawsky!=null");
-					Component.Destroy(farCamera.gameObject.GetComponent<drawSky> ());
-				}
+
 				
 				if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () != null)
 				{
 					//					print ("ScaledSpaceCamera updateAtCameraRythm!=null");
-					scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_mesh,m_skyMaterialScaled, m_manager,this,tester,debugSettings[6],parentCelestialBody.transform,celestialTransform);										
-					//					scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_skyMaterialScaled, m_manager,this,tester,debugSettings[6],farCamera.transform);
+					scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_mesh,m_skyMaterialScaled,m_skyExtinction, m_manager,this,skyObject,skyExtinctObject,debugSettings[6],parentCelestialBody.transform,celestialTransform);										
+					//					scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_skyMaterialScaled, m_manager,this,skyObject,debugSettings[6],farCamera.transform);
 				}
 				
 			}
@@ -543,12 +570,12 @@ namespace scatterer
 			
 			
 			//						if (debugSettings[6]){
-			//						tester.transform.parent = parentCelestialBody.transform;
+			//						skyObject.transform.parent = parentCelestialBody.transform;
 			//						}
 			//			
 			//						else{
 			//							Transform celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
-			//							tester.transform.parent = celestialTransform;
+			//							skyObject.transform.parent = celestialTransform;
 			//						}
 			
 			
@@ -592,21 +619,21 @@ namespace scatterer
 				Transform tmpTransform = GetScaledTransform (celestialBodies[k].name);												
 				//				Transform tmpTransform =celestialBodies[k].transform;
 				{
-					newRenderQueue=2002;
+					newRenderQueue=2001;
 					
 					if (celestialBodies[k].name != parentCelestialBody.name)
 					{
 						if(!MapView.MapIsEnabled){
 							if ((celestialBodies[k].transform.position-farCamera.transform.position).magnitude < (parentCelestialBody.transform.position-farCamera.transform.position).magnitude)
 							{
-								newRenderQueue=2004;
+								newRenderQueue=2005;
 							}
 						}
 						else
 						{
 							if ((ScaledSpace.LocalToScaledSpace(celestialBodies[k].transform.position)-scaledSpaceCamera.transform.position).magnitude < (ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position)-scaledSpaceCamera.transform.position).magnitude)
 							{
-								newRenderQueue=2004;
+								newRenderQueue=2005;
 							}
 							
 						}
@@ -636,7 +663,9 @@ namespace scatterer
 			
 			//			mat.SetFloat ("_Alpha_Cutoff", alphaCutoff);
 			
-			
+
+			mat.SetFloat ("extinctionMultiplier", extinctionMultiplier);
+
 			if (!MapView.MapIsEnabled)
 			{
 				mat.SetFloat ("_Alpha_Global", alphaGlobal);
@@ -948,6 +977,10 @@ namespace scatterer
 			//			mat.SetFloat("Rt", Rt*atmosphereGlobalScale*postProcessingScale);
 			//			mat.SetFloat("Rl", RL*atmosphereGlobalScale*postProcessingScale);
 			
+
+
+
+
 			totalscale  = 1;
 			totalscale2 = 1;
 			for (int j=0; j<5; j++)
@@ -1023,16 +1056,31 @@ namespace scatterer
 			                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
 			                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
 			
-			
+//			print ("viewmat");
+//			print (viewMat.ToMatrix4x4());
 			
 			
 			//			Matrix4x4 viewMat = farCamera.worldToCameraMatrix;
 			viewMat = viewMat.Inverse ();
 			Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
+
+//			projMat.m23 = projMat.m23 * 0.5f;
+
+			//			print ("projmat");
+//			print (projMat);
+
 			Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4());          
 			mat.SetMatrix ("_ViewProjInv", viewProjMat.inverse);
 			
-			
+
+//			mat.SetMatrix("_ViewToWorld", viewMat.ToMatrix4x4());
+//			
+//			var lpoints = RecalculateFrustrumPoints(farCamera);
+//			mat.SetVector("_FrustrumPoints", new Vector4(
+//				lpoints[4].x,lpoints[5].x,lpoints[5].y,lpoints[6].y));
+//			
+//			mat.SetFloat("_CameraFar", farCamera.farClipPlane);
+
 			
 		}
 		
@@ -1220,16 +1268,20 @@ namespace scatterer
 			}
 			
 			
-			Component.Destroy (MR);
-			Destroy (tester);
+			Component.Destroy (skyMR);
+			Destroy (skyObject);
+
+			Component.Destroy (skyExtinctMR);
+			Destroy (skyExtinctObject);
+
 			Component.Destroy (atmosphereMeshrenderer);
 			Destroy (atmosphereMesh);
 			//Destroy (hp);
 		}
 		
-		public void destroyTester()
+		public void destroyskyObject()
 		{
-			Destroy (tester);
+			Destroy (skyObject);
 		}
 		
 		
@@ -1380,6 +1432,59 @@ namespace scatterer
 			//			print (postProcessExposure);
 			
 		}
-		
+
+		// Code to calculate all the corners near and far of a camera
+		private Vector3[] RecalculateFrustrumPoints(Camera cam)
+		{
+			var frustrumPoints = new Vector3[8];
+			var far = cam.farClipPlane;
+			var near = cam.nearClipPlane;
+			var aspectRatio = cam.pixelWidth / cam.pixelHeight;
+			
+			if(cam.isOrthoGraphic)
+			{
+				var orthoSize = cam.orthographicSize;
+				
+				frustrumPoints[0] = new Vector3(orthoSize, orthoSize, near);
+				frustrumPoints[1] = new Vector3(-orthoSize, orthoSize, near);
+				frustrumPoints[2] = new Vector3(-orthoSize, -orthoSize, near);
+				frustrumPoints[3] = new Vector3(orthoSize, -orthoSize, near);
+				frustrumPoints[4] = new Vector3(orthoSize, orthoSize, far);
+				frustrumPoints[5] = new Vector3(-orthoSize, orthoSize, far);
+				frustrumPoints[6] = new Vector3(-orthoSize, -orthoSize, far);
+				frustrumPoints[7] = new Vector3(orthoSize, -orthoSize, far);
+			}
+			else
+			{
+				var hNear = 2 * Mathf.Tan((cam.fieldOfView  * 0.5f) * Mathf.Deg2Rad) * near;
+				var wNear = hNear * aspectRatio;
+				
+				var hFar = 2 * Mathf.Tan((cam.fieldOfView * 0.5f) * Mathf.Deg2Rad) * far;
+				var wFar = hFar * aspectRatio;
+				
+				var fc = Vector3.forward * far;
+				var ftl = fc + (Vector3.up * hFar / 2) - (Vector3.right * wFar / 2);
+				var ftr = fc + (Vector3.up * hFar / 2) + (Vector3.right * wFar / 2);
+				var fbl = fc - (Vector3.up * hFar / 2) - (Vector3.right * wFar / 2);
+				var fbr = fc - (Vector3.up * hFar / 2) + (Vector3.right * wFar / 2);
+				
+				var nc = Vector3.forward * near;
+				var ntl = nc + (Vector3.up * hNear / 2) - (Vector3.right * wNear / 2);
+				var ntr = nc + (Vector3.up * hNear / 2) + (Vector3.right * wNear / 2);
+				var nbl = nc - (Vector3.up * hNear / 2) - (Vector3.right * wNear / 2);
+				var nbr = nc - (Vector3.up * hNear / 2) + (Vector3.right * wNear / 2);
+				
+				frustrumPoints[0] = ntr;
+				frustrumPoints[1] = ntl;
+				frustrumPoints[2] = nbr;
+				frustrumPoints[3] = nbl;
+				frustrumPoints[4] = ftr;
+				frustrumPoints[5] = ftl;
+				frustrumPoints[6] = fbl;
+				frustrumPoints[7] = fbr;    
+			}
+			
+			return frustrumPoints;
+		}	
 	}
 }

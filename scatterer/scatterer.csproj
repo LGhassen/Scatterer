@@ -76,7 +76,6 @@
     <Compile Include="viewDepthBuffer.cs" />
     <Compile Include="scatterPostProcess.cs" />
     <Compile Include="isoSphere.cs" />
-    <Compile Include="drawSky.cs" />
     <Compile Include="updateAtCameraRythm.cs" />
     <Compile Include="SimplePostProcessCube.cs" />
     <Compile Include="configPoint.cs" />

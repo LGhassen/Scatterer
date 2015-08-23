@@ -30,6 +30,8 @@ namespace scatterer
 		float rimBlend=20f;
 		float rimpower=600f;
 
+		float extinctionMultiplier=100f;
+
 		//configPoint variables 		
 		float pointAltitude=0f;
 		float newCfgPtAlt=0f;
@@ -105,7 +107,7 @@ namespace scatterer
 		
 		internal override void Awake()
 		{
-			WindowCaption = "Scatterer v0.017: alt+f10/f11 toggle";
+			WindowCaption = "Scatterer v0.0175: alt+f10/f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
 			Visible = true;						
 			isActive = false;
@@ -222,6 +224,7 @@ namespace scatterer
 					
 					m_radius = (float)celestialBodies [PlanetId].Radius;
 					backupAtmosphereMaterial(parentPlanet);
+					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
 //
 //				if (!initiated){
 					cams = Camera.allCameras;
@@ -662,6 +665,18 @@ namespace scatterer
 					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
 				}
 				GUILayout.EndHorizontal ();
+
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("extinctionMultiplier (/100)");
+				extinctionMultiplier = (float)(Convert.ToDouble (GUILayout.TextField (extinctionMultiplier.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.extinctionMultiplier=extinctionMultiplier /100f;
+				}
+				GUILayout.EndHorizontal ();
+
 
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button ("Save settings"))

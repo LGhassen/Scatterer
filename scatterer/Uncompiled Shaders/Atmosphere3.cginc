@@ -34,6 +34,13 @@
 
 uniform sampler2D _Transmittance;
 uniform sampler2D _Inscatter;
+uniform sampler2D _Irradiance;
+
+uniform float TRANSMITTANCE_W;
+uniform float TRANSMITTANCE_H;
+
+uniform float SKY_W;
+uniform float SKY_H;
 
 uniform float M_PI;
 uniform float3 EARTH_POS;
@@ -45,7 +52,11 @@ uniform float RES_R;
 uniform float RES_MU;
 uniform float RES_MU_S;
 uniform float RES_NU;
+
 uniform float3 SUN_DIR;
+
+//uniform float terrain_reflectance;
+
 uniform float SUN_INTENSITY;
 uniform float3 betaR;
 uniform float mieG;
@@ -95,17 +106,18 @@ uniform float mieG;
 			
 	float u_frac = frac(uR*RES_R);
 				
-#if !defined(SHADER_API_OPENGL)	
+//#if !defined(SHADER_API_OPENGL)	
 	float4 A = tex2Dlod(table, float4((uNu + uMuS) / RES_NU, uMu / RES_R + u_0,0.0,0.0)) * (1.0 - _lerp) + tex2Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_0,0.0,0.0)) * _lerp;
 	float4 B = tex2Dlod(table, float4((uNu + uMuS) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * (1.0 - _lerp) + tex2Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * _lerp;							
 
-#else	
-	float4 A = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_0)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_0)) * _lerp;
-	float4 B = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_1)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1)) * _lerp;
-	
-#endif
+//#else	
+//	float4 A = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_0)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_0)) * _lerp;
+//	float4 B = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_1)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1)) * _lerp;
+//	
+//#endif
 	
 	return (A * (1.0-u_frac) + B * u_frac);
+//	return 0;
 }
  
  
@@ -157,11 +169,11 @@ float3 Transmittance(float r, float mu)
    	float uR, uMu;
     uR = sqrt((r - Rg) / (Rt - Rg));
     uMu = atan((mu + 0.15) / (1.0 + 0.15) * tan(1.5)) / 1.5;
-#if !defined(SHADER_API_OPENGL)	
+//#if !defined(SHADER_API_OPENGL)	
     return tex2Dlod (_Transmittance, float4(uMu, uR,0.0,0.0)).rgb;
-#else
-	return tex2D (_Transmittance, float2(uMu, uR)).rgb;
-#endif	
+//#else
+//	return tex2D (_Transmittance, float2(uMu, uR)).rgb;
+//#endif	
 }
 
 float3 SkyRadiance(float3 camera, float3 viewdir, out float3 extinction)
@@ -210,9 +222,185 @@ float3 SkyRadiance(float3 camera, float3 viewdir, out float3 extinction)
     return result * SUN_INTENSITY;
 }
 
-float3 InScattering(float3 camera, float3 _point, out float3 extinction, float shaftWidth, float scaleCoeff) 
+//float ReflectedSunRadiance(float3 L, float3 V, float3 N, float sigmaSq) 
+//{
+//    float3 H = normalize(L + V);
+//
+//    float hn = dot(H, N);
+//    float p = exp(-2.0 * ((1.0 - hn * hn) / sigmaSq) / (1.0 + hn)) / (4.0 * M_PI * sigmaSq);
+//
+//    float c = 1.0 - dot(V, H);
+//    float c2 = c * c;
+//    float fresnel = 0.02 + 0.98 * c2 * c2 * c;
+//
+//    float zL = dot(L, N);
+//    float zV = dot(V, N);
+//    zL = max(zL,0.01);
+//    zV = max(zV,0.01);
+//
+//    // brdf times cos(thetaL)
+//    return zL <= 0.0 ? 0.0 : max(fresnel * p * sqrt(abs(zL / zV)), 0.0);
+//}
+//
+//float MeanFresnel(float cosThetaV, float sigmaV) {
+//    return pow(1.0 - cosThetaV, 5.0 * exp(-2.69 * sigmaV)) / (1.0 + 22.7 * pow(sigmaV, 1.5));
+//}
+//
+//float MeanFresnel(float3 V, float3 N, float sigmaSq) {
+//    return MeanFresnel(dot(V, N), sqrt(sigmaSq));
+//}
+//
+//float3 OceanRadiance(float3 L, float3 V, float3 N, float sigmaSq, float3 sunL, float3 skyE, float3 seaColor) 
+//{
+//    float F = MeanFresnel(V, N, sigmaSq);
+//    float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
+//    float3 Lsky = skyE * F / M_PI;
+//    float3 Lsea = (1.0 - F) * seaColor * skyE / M_PI;
+//    return Lsun + Lsky + Lsea;
+//}
+
+
+float2 GetIrradianceUV(float r, float muS) 
 {
-#if !defined(SHADER_API_OPENGL)	
+    float uR = (r - Rg) / (Rt - Rg);
+    float uMuS = (muS + 0.2) / (1.0 + 0.2);
+    return float2(uMuS, uR);
+}
+
+void GetIrradianceRMuS(float2 coord, out float r, out float muS) 
+{
+    r = Rg + (coord.y - 0.5) / (SKY_H - 1.0) * (Rt - Rg);
+    muS = -0.2 + (coord.x - 0.5) / (SKY_W - 1.0) * (1.0 + 0.2);
+}
+
+float3 Irradiance(sampler2D samp, float r, float muS) 
+{
+    float2 uv = GetIrradianceUV(r, muS);
+//#if !defined(SHADER_API_OPENGL)
+    return tex2Dlod(samp, float4(uv,0,0)).rgb;
+//#else
+//	return tex2D(samp, uv).rgb;
+//#endif	
+}
+
+// input - surfacePos: reconstructed position of current pixel 
+// input - texC: texture coordinates 
+// input - attenuation: extinction factor along view path 
+// input - irradianceFactor: surface hit within atmosphere 1.0f 
+// otherwise 0.0f 
+// output - return value: total reflected light + direct sunlight 
+//float3 GetReflectedLight( in float3 surfacePos, in float2 texC, in float3 attenuation, in float irradianceFactor)
+
+//float3 GetReflectedLight( float3 surfacePos, float3 surfaceColor , float3 attenuation, float irradianceFactor, float3 normalValues, float4x4 camToWorld)
+//{
+////	float3 surfaceColor = col.rgb;
+//		
+////	float3 normal = 2.0f * normalValues - 1.0f;
+//	float3 normal= mul((float3x3)camToWorld ,normalValues); //try this one if the other gives weird results
+//	
+////	normal.r= normalValues.r;
+////	normal.g= normalValues.g;
+////	normal.b= normalValues.b;
+//	
+//	float lightIntensity = SUN_INTENSITY * terrain_reflectance;
+//	
+//
+//	float lightScale = max(dot(normal, SUN_DIR), 0.0f);
+//	// irradiance at surface position due to sky light
+//	
+//	float surfacePosHeight = length(surfacePos);
+//	float musSurfacePos = dot(surfacePos, SUN_DIR) / surfacePosHeight;
+//
+//	float3 irradianceSurface = Irradiance(_Irradiance, surfacePosHeight, musSurfacePos) * irradianceFactor;
+//	// attenuate direct sun light on its path from top of atmosphere to
+//	// surface position 
+//
+//	float3 attenuationSunLight = Transmittance(surfacePosHeight, musSurfacePos);
+//	//float3 reflectedLight = surfaceColor * (lightScale * attenuationSunLight + irradianceSurface) * lightIntensity;
+//	float3 reflectedLight = float3(0.5,0.5,0.5) * (lightScale * attenuationSunLight + irradianceSurface) * lightIntensity;
+//	// attenuate again on path from surface position to camera
+//	reflectedLight *= attenuation;
+//	return reflectedLight;
+//}
+//
+//float3 TransmittanceWithShadow(float r, float mu) 
+//{
+//    return mu < -sqrt(1.0 - (Rg / r) * (Rg / r)) ? float3(0,0,0) : Transmittance(r, mu);
+//}
+//
+//float3 SunRadiance(float r, float muS) {
+//    return TransmittanceWithShadow(r, muS) * SUN_INTENSITY;
+//}
+//
+//void SunRadianceAndSkyIrradiance(float3 worldP, float3 fn, float3 worldS, out float3 sunL, out float3 skyE, float scale)
+//{
+//	worldP *= scale;
+//    float r = length(worldP);
+//    if (r < 0.9 * Rg) {
+//        worldP.z += Rg;
+//        r = length(worldP);
+//    }
+//    float3 worldV = worldP / r; // vertical vector
+//    float muS = dot(worldV, worldS);
+//
+//    float sunOcclusion = 1.0;// - sunShadow;
+//    sunL = SunRadiance(r, muS) * sunOcclusion;
+////    
+////    float3 worldNormal= mul((float3x3)camToWorld ,normalValues);
+//    
+////    fn.z = sqrt(max(0.0, 1.0 - dot(fn.xy, fn.xy)));
+//	
+//    // ambient occlusion due only to slope, does not take self shadowing into account
+////    float skyOcclusion = (1.0 + dot(worldV, worldN)) * 0.5;
+//	float skyOcclusion = (1.0 + dot(worldV, fn)) * 0.5;
+//    // factor 2.0 : hack to increase sky contribution (numerical simulation of
+//    // "precompued atmospheric scattering" gives less luminance than in reality)
+////    skyE = 2.0 * SkyIrradiance(r, muS) * skyOcclusion;
+//    skyE = 2.0 * Irradiance(_Irradiance,r, muS) * SUN_INTENSITY * skyOcclusion;
+//}
+	
+	
+//float3 GetReflectedLight( in float3 surfacePos, in float2 texC, in float3 attenuation, in float irradianceFactor)
+//
+//{
+//// read contents of GBuffer
+//	float4 normalData = g_normal.SampleLevel(PointSamplerClamp, texC, 0);
+//
+//	// decode normal and determine intensity of refected light at
+//	// surface postiion
+//	
+////	float3 normal = 2.0f * normalData.xyz - 1.0f;
+//	float3 normal = 2.0f * NormalValues.xyz - 1.0f;
+////	float3 normal = NormalValues.xyz; //try this one if the other gives weird results
+//	
+//	
+////	float lightIntensity = SUN_INTENSITY * normalData.w;
+//	float lightIntensity = SUN_INTENSITY * terrain_reflectance;
+//	
+////	float lightScale = max(dot(normal, g_sunVector), 0.0f);
+//	float lightScale = max(dot(normal, SUN_DIR), 0.0f);
+//	// irradiance at surface position due to sky light
+//	
+//	float surfacePosHeight = length(surfacePos);
+////	float musSurfacePos = dot(surfacePos, g_sunVector) / surfacePosHeight;
+//	float musSurfacePos = dot(surfacePos, SUN_DIR) / surfacePosHeight;
+//
+//	float3 irradianceSurface = irradiance(g_texIrradiance, surfacePosHeight, musSurfacePos) * irradianceFactor;
+//	// attenuate direct sun light on its path from top of atmosphere to
+//	// surface position 
+//
+//	float3 attenuationSunLight = transmittance(surfacePosHeight, musSurfacePos);
+//	float3 reflectedLight = surfaceColor * (lightScale * attenuationSunLight + irradianceSurface) * lightIntensity;
+//	// attenuate again on path from surface position to camera
+//	reflectedLight *= attenuation;
+//	return reflectedLight;
+//}
+
+
+
+float3 InScattering(float3 camera, float3 _point, out float3 extinction, float shaftWidth, float scaleCoeff, float irradianceFactor) 
+{
+//#if !defined(SHADER_API_OPENGL)	
 ////directx code
 	// single scattered sunlight between two points
 	// camera=observer
@@ -308,6 +496,9 @@ float3 InScattering(float3 camera, float3 _point, out float3 extinction, float s
 //            float4 inScatterB=(0.0,0.0,0.0,0.0);
 
             inScatter = lerp(inScatterA, inScatterB, a);
+            
+            irradianceFactor=1.0;
+            //Not sure about where irradianceFactor goes
         } 
         else 
         {
@@ -332,126 +523,126 @@ float3 InScattering(float3 camera, float3 _point, out float3 extinction, float s
 
 
 
-#else	
-//opengl code
-    float3 result = float3(0,0,0);
-    extinction = float3(1,1,1);
-        
-    float3 viewdir = _point - camera;
-    float d = length(viewdir)* scaleCoeff;
-    viewdir = viewdir / d;
-    d=d;
-    float r = length(camera)* scaleCoeff;
-        
-    if (r < 0.9 * Rg) 
-    {
-        camera.y += Rg;
-        _point.y += Rg;
-        r = length(camera)* scaleCoeff;
-    }
-    float rMu = dot(camera, viewdir);
-    float mu = rMu / r;
-    float r0 = r;
-    float mu0 = mu;
-    _point -= viewdir * clamp(shaftWidth, 0.0, d);
-
-    float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
-    float din = max(-rMu - deltaSq, 0.0);
-    
-    if (din > 0.0 && din < d) 
-    {
-        camera += din * viewdir;
-        rMu += din;
-        mu = rMu / Rt;
-        r = Rt;
-        d -= din;
-    }
-
-    if (!(r <= Rt)){return result * SUN_INTENSITY;}
-    
-    
-        float nu = dot(viewdir, SUN_DIR);
-        float muS = dot(camera, SUN_DIR) / r;
-
-        float4 inScatter;
-
-        if (r < Rg + 600.0) 
-        {
-            // avoids imprecision problems in aerial perspective near ground
-            float f = (Rg + 600.0) / r;
-            r = r * f;
-            rMu = rMu * f;
-            _point = _point * f;
-        }
-
-        float r1 = length(_point);
-        float rMu1 = dot(_point, viewdir);
-        float mu1 = rMu1 / r1;
-        float muS1 = dot(_point, SUN_DIR) / r1;
-
-        if (mu > 0.0) {
-          extinction = min(Transmittance(r, mu) / Transmittance(r1, mu1), 1.0);
-            }
-        else {
-            extinction = min(Transmittance(r1, -mu1) / Transmittance(r, -mu), 1.0);}
-
-        const float EPS = 0.004;
-        float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
-        
-        float choice;
-        
-        if (abs(mu - lim) < EPS) {choice=1.0;}
-        else{choice=0.0;}
-        
-        
-//choice=1        
-        {
-            float a = ((mu - lim) + EPS) / (2.0 * EPS);
-
-            mu = lim - EPS;
-            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-            mu1 = (r * mu + d) / r1;
-            
-            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
-            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
-            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-//            float4 inScatterA=(0.0,0.0,0.0,0.0);
-//            float4 inScatterA=Texture4D(_Inscatter, r, mu, muS, nu);
-//			float4 inScatterA=Texture4D(_Inscatter, 0, 0, 0, 0);
-
-            mu = lim + EPS;
-            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-            mu1 = (r * mu + d) / r1;
-            
-            inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
-            inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
-            float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-//            float4 inScatterB=(0.0,0.0,0.0,0.0);
-
-//            inscatterChoice1 = lerp(inScatterA, inScatterB, a);
-          	inScatter = choice * lerp(inScatterA, inScatterB, a);
-        }                 
-//        else 
-
-//choice=0        
-		{
-            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
-            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
-//            inscatterChoice2 =  (max(inScatter0 - inScatter1 * extinction.rgbr, 0.0));
-          inScatter = inScatter + (1.0-choice) * (max(inScatter0 - inScatter1 * extinction.rgbr, 0.0));
-        }
-        
-
-        // avoids imprecision problems in Mie scattering when sun is below horizon
-        //inScatter.w *= smoothstep(0.00, 0.02, muS);
-
-        float3 inScatterM = GetMie(inScatter);
-        float phase = PhaseFunctionR(nu);
-        float phaseM = PhaseFunctionM(nu);
-        result = inScatter.rgb * phase + inScatterM * phaseM;
-     
-
-    return result * SUN_INTENSITY;
-
-#endif
+//#else	
+////opengl code
+//    float3 result = float3(0,0,0);
+//    extinction = float3(1,1,1);
+//        
+//    float3 viewdir = _point - camera;
+//    float d = length(viewdir)* scaleCoeff;
+//    viewdir = viewdir / d;
+//    d=d;
+//    float r = length(camera)* scaleCoeff;
+//        
+//    if (r < 0.9 * Rg) 
+//    {
+//        camera.y += Rg;
+//        _point.y += Rg;
+//        r = length(camera)* scaleCoeff;
+//    }
+//    float rMu = dot(camera, viewdir);
+//    float mu = rMu / r;
+//    float r0 = r;
+//    float mu0 = mu;
+//    _point -= viewdir * clamp(shaftWidth, 0.0, d);
+//
+//    float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+//    float din = max(-rMu - deltaSq, 0.0);
+//    
+//    if (din > 0.0 && din < d) 
+//    {
+//        camera += din * viewdir;
+//        rMu += din;
+//        mu = rMu / Rt;
+//        r = Rt;
+//        d -= din;
+//    }
+//
+//    if (!(r <= Rt)){return result * SUN_INTENSITY;}
+//    
+//    
+//        float nu = dot(viewdir, SUN_DIR);
+//        float muS = dot(camera, SUN_DIR) / r;
+//
+//        float4 inScatter;
+//
+//        if (r < Rg + 600.0) 
+//        {
+//            // avoids imprecision problems in aerial perspective near ground
+//            float f = (Rg + 600.0) / r;
+//            r = r * f;
+//            rMu = rMu * f;
+//            _point = _point * f;
+//        }
+//
+//        float r1 = length(_point);
+//        float rMu1 = dot(_point, viewdir);
+//        float mu1 = rMu1 / r1;
+//        float muS1 = dot(_point, SUN_DIR) / r1;
+//
+//        if (mu > 0.0) {
+//          extinction = min(Transmittance(r, mu) / Transmittance(r1, mu1), 1.0);
+//            }
+//        else {
+//            extinction = min(Transmittance(r1, -mu1) / Transmittance(r, -mu), 1.0);}
+//
+//        const float EPS = 0.004;
+//        float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
+//        
+//        float choice;
+//        
+//        if (abs(mu - lim) < EPS) {choice=1.0;}
+//        else{choice=0.0;}
+//        
+//        
+////choice=1        
+//        {
+//            float a = ((mu - lim) + EPS) / (2.0 * EPS);
+//
+//            mu = lim - EPS;
+//            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+//            mu1 = (r * mu + d) / r1;
+//            
+//            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
+//            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+//            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+////            float4 inScatterA=(0.0,0.0,0.0,0.0);
+////            float4 inScatterA=Texture4D(_Inscatter, r, mu, muS, nu);
+////			float4 inScatterA=Texture4D(_Inscatter, 0, 0, 0, 0);
+//
+//            mu = lim + EPS;
+//            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+//            mu1 = (r * mu + d) / r1;
+//            
+//            inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
+//            inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+//            float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+////            float4 inScatterB=(0.0,0.0,0.0,0.0);
+//
+////            inscatterChoice1 = lerp(inScatterA, inScatterB, a);
+//          	inScatter = choice * lerp(inScatterA, inScatterB, a);
+//        }                 
+////        else 
+//
+////choice=0        
+//		{
+//            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
+//            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+////            inscatterChoice2 =  (max(inScatter0 - inScatter1 * extinction.rgbr, 0.0));
+//          inScatter = inScatter + (1.0-choice) * (max(inScatter0 - inScatter1 * extinction.rgbr, 0.0));
+//        }
+//        
+//
+//        // avoids imprecision problems in Mie scattering when sun is below horizon
+//        //inScatter.w *= smoothstep(0.00, 0.02, muS);
+//
+//        float3 inScatterM = GetMie(inScatter);
+//        float phase = PhaseFunctionR(nu);
+//        float phaseM = PhaseFunctionM(nu);
+//        result = inScatter.rgb * phase + inScatterM * phaseM;
+//     
+//
+//    return result * SUN_INTENSITY;
+//
+//#endif
 }

@@ -22,24 +22,26 @@ namespace scatterer
 		Mesh m_mesh;
 		Manager m_manager;
 		SkyNode m_skynode;
-		GameObject tester;
+		GameObject skyObject, skyExtinctObject;
 		
 		Transform parentTransform;
 		Transform celestialTransform;
 		
 		bool debug6;
 		
-		public Material skyMat;
+		public Material skyMat,skyExtinct;
 		
 		
 		
-		public void settings(Mesh inmesh,Material inSkyMat, Manager inManager, SkyNode inSkyNode, GameObject intester, bool indebug6, Transform inparentTransform, Transform inCelestialTransform)
+		public void settings(Mesh inmesh,Material inSkyMat, Material inSkyExtinct, Manager inManager, SkyNode inSkyNode, GameObject inSkyObject,GameObject inSkyExtinctObject, bool indebug6, Transform inparentTransform, Transform inCelestialTransform)
 		{
 			
 			skyMat = inSkyMat;
+			skyExtinct = inSkyExtinct;
 			m_manager = inManager;
 			m_skynode = inSkyNode;
-			tester = intester;
+			skyObject = inSkyObject;
+			skyExtinctObject = inSkyExtinctObject;
 			debug6 = indebug6;
 			parentTransform = inparentTransform;
 			celestialTransform = inCelestialTransform;
@@ -55,7 +57,8 @@ namespace scatterer
 			skyMat.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
 			
 			//			if (debug6){
-			tester.transform.parent = parentTransform;
+			skyObject.transform.parent = parentTransform;
+			skyExtinctObject.transform.parent = parentTransform;
 			//			}
 			//			
 			//			else{
@@ -66,6 +69,10 @@ namespace scatterer
 			
 			m_skynode.InitUniforms(skyMat);
 			m_skynode.SetUniforms (skyMat);
+
+			m_skynode.InitUniforms(skyExtinct);
+			m_skynode.SetUniforms (skyExtinct);
+
 			m_skynode.UpdateStuff ();
 			//			skyMat.SetPass(0);
 			//
