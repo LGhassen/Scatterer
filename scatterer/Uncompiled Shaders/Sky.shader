@@ -1,24 +1,24 @@
-﻿
-
-Shader "Proland/Atmo/Sky" 
+﻿Shader "Proland/Atmo/Sky" 
 {
-
 	SubShader 
 	{
 		//Tags {"Queue" = "Background" "RenderType"="" }
-		 Tags { "Queue" = "Transparent" } // draw after all opaque geometry has been drawn
+		 Tags {"Queue" = "Geometry+1" }
 	
     	Pass 
     	{
-    		//ZWrite Off
-    		//ZTest Always
-    		cull Front
+    	 Tags {"Queue" = "Geometry+1" }
+    		ZWrite Off
+    		ZTest Off
     		
-    		Blend SrcAlpha OneMinusSrcAlpha  // use alpha blending
+    		cull Front
+    
+    		Blend One One  //additive blending
 
 			CGPROGRAM
 			#include "UnityCG.cginc"
 			//#pragma only_renderers d3d9
+			#pragma glsl
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
@@ -27,12 +27,13 @@ Shader "Proland/Atmo/Sky"
 			#include "AtmosphereNew.cginc"
 			
 			
-			uniform float _Alpha_Cutoff;
+			//uniform float _Alpha_Cutoff;
 			uniform float _Alpha_Global;
 			uniform float4x4 _Globals_CameraToWorld;
 			uniform float4x4 _Globals_ScreenToCamera;
 			uniform float3 _Globals_WorldCameraPos;
 			uniform float3 _Globals_Origin;
+			uniform float _Globals_ApparentDistance;
 			
 			uniform sampler2D _Sun_Glare;
 			uniform float3 _Sun_WorldSunDir;
@@ -146,28 +147,27 @@ Shader "Proland/Atmo/Sky"
 			    float3 sunColor = OuterSunRadiance(IN.relativeDir);
 
 			    float3 extinction;
-			    float3 inscatter = SkyRadiance(WCP + _Globals_Origin, d, WSD, extinction);
+			    float3 inscatter = SkyRadiance(WCP - _Globals_Origin*_Globals_ApparentDistance, d, WSD, extinction);
 			    //float3 inscatter = SkyRadiance(WCP + _Globals_Origin, float3(0.0,0.0,0.0), WSD, extinction, 0.0);
 			    //float3 inscatter = float3(0,0,0);
 
 			    //float3 finalColor = sunColor;// * extinction;// + inscatter;
 			    float3 finalColor = sunColor * extinction + inscatter;
 			    
-			    float absValue=abs(finalColor);
-			    bool idek= absValue <= _Alpha_Cutoff;
-			    if (_Alpha_Cutoff==0.0){
-			    _Alpha_Cutoff=0.0001;
-			    }
+//			    float absValue=abs(finalColor);
+//			    bool idek= absValue <= _Alpha_Cutoff;
+//			    if (_Alpha_Cutoff==0.0){
+//			    _Alpha_Cutoff=0.0001;
+//			    }
 			    
 			    
+//			    
+//			    if (idek ){
+//			    
+//			    return float4 (hdr(finalColor),(_Alpha_Global);}
+//			    else
 			    
-			    if (idek ){
-			    
-			    return float4 (hdr(finalColor),(absValue/_Alpha_Cutoff)*_Alpha_Global);}
-			    else
-			    
-				return float4(hdr(finalColor),_Alpha_Global);
-			    
+				return float4(_Alpha_Global*hdr(finalColor),1.0);			    
 			   //return float4(finalColor,1);
 			//return float4(0.0,0.0,0.0,0.0);
 

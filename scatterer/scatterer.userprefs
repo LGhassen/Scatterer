@@ -1,12 +1,11 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Core.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="SkyNode.cs">
     <Files>
-      <File FileName="drawSky.cs" Line="43" Column="1" />
-      <File FileName="updateAtCameraRythm.cs" Line="11" Column="15" />
-      <File FileName="Core.cs" Line="127" Column="5" />
-      <File FileName="Manager.cs" Line="127" Column="26" />
-      <File FileName="SkyNode.cs" Line="464" Column="1" />
+      <File FileName="Core.cs" Line="207" Column="6" />
+      <File FileName="SkyNode.cs" Line="1078" Column="4" />
+      <File FileName="updateAtCameraRythm.cs" Line="1" Column="1" />
+      <File FileName="scatterPostProcess.cs" Line="142" Column="4" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

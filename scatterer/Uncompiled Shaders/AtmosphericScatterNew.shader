@@ -26,6 +26,7 @@ Shader "Sky/AtmosphereGhoss"
 			#pragma fragment frag
 			#include "UnityCG.cginc"
 			#include "AutoLight.cginc"
+			#pragma glsl
 			#pragma target 3.0
 			#include "Atmosphere3.cginc"
 			
@@ -121,17 +122,17 @@ Shader "Sky/AtmosphereGhoss"
 			}
 			
 			
-			float4 GetWorldPositionFromDepth( float2 uv_depth )
-			{    
-        		float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, uv_depth);
-//        		float depth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,uv_depth)));
-        		
-        		float4 H = float4(uv_depth.x*2.0-1.0, (uv_depth.y)*2.0-1.0, depth, 1.0);
-        		
-        		float4 D = mul(_ViewProjInv,H);
-        		//float4 D = mul(_ViewProjInv,depth);
-        		return D/D.w;
-			}
+//			float4 GetWorldPositionFromDepth( float2 uv_depth )
+//			{    
+//        		float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, uv_depth);
+////        		float depth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,uv_depth)));
+//        		
+//        		float4 H = float4(uv_depth.x*2.0-1.0, (uv_depth.y)*2.0-1.0, depth, 1.0);
+//        		
+//        		float4 D = mul(_ViewProjInv,H);
+//        		//float4 D = mul(_ViewProjInv,depth);
+//        		return D/D.w;
+//			}
 			
 			
 			float3 hdr(float3 L) 
@@ -155,7 +156,27 @@ Shader "Sky/AtmosphereGhoss"
 
 				//float dpth=_global_depth2 * (depthValue);			
 				//float3 worldPos = (_inCamPos-_Globals_Origin + dpth *_Scale * i.interpolatedRay);
-				float3 worldPos = float3(GetWorldPositionFromDepth(i.uv_depth));
+				//float3 worldPos = float3(GetWorldPositionFromDepth(i.uv_depth));
+				
+				float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv_depth);
+
+//        		float depth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,uv_depth)));
+        		#if !defined(SHADER_API_OPENGL)
+        		float4 H = float4(i.uv_depth.x*2.0f-1.0f, (i.uv_depth.y)*2.0f-1.0f, depth, 1.0f);
+        		#else	
+        		float4 H = float4(i.uv_depth.x*2.0f-1.0f, i.uv_depth.y*2.0f-1.0f, depth*2.0f-1.0f, 1.0f);
+        		#endif
+        		
+        		
+        		float4 D = mul(_ViewProjInv,H);
+        		//float4 D = mul(_ViewProjInv,depth);
+        		float3 worldPos = D/D.w;
+        		
+        		#if !defined(SHADER_API_D3D9)
+        		if (length(worldPos) < (Rg+250)){
+        		worldPos=(Rg+250)*normalize(worldPos);
+        		}
+				#endif
 				
 //				 = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, float2(i.screenPos));
 				
@@ -164,7 +185,7 @@ Shader "Sky/AtmosphereGhoss"
 //				
 								
 //				
-				if(dpth >= 0.9) return float4(0.0,0.0,0.0,0.0);
+				if(dpth >= 1.0) return float4(0.0,0.0,0.0,0.0);
 				
 
 			    

@@ -138,7 +138,10 @@ public class scatterPostprocess : MonoBehaviour
 		GL.MultiTexCoord2 (0, 0.0f, 1.0f); 
 		GL.Vertex3 (0.0f, 1.0f, 0.0f); // TL
 		
-		GL.End ();
+
+
+
+			GL.End ();
 		GL.PopMatrix ();
 		
 	}	

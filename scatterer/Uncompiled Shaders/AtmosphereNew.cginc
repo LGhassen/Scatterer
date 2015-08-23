@@ -134,11 +134,14 @@ float4 Texture4D(sampler2D table, float r, float mu, float muS, float nu)
     _lerp = _lerp - uNu;
     
     //original 3D lookup    
-    //return tex3Dlod(table, float4((uNu + uMuS) / RES_NU, uMu, uR, 0)) * (1.0 - _lerp) + tex3Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu, uR, 0)) * _lerp;    
+//    return tex3Dlod(table, float4((uNu + uMuS) / RES_NU, uMu, uR, 0)) * (1.0 - _lerp) + tex3Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu, uR, 0)) * _lerp;    
     //new 2D lookup
-    
+//
     float u_0 = floor(uR*RES_R-1)/(RES_R);
 	float u_1 = floor(uR*RES_R)/(RES_R);
+            
+//    float u_0 = floor(uR*RES_R-1)/(RES_R);
+//	float u_1 = floor(uR*RES_R)/(RES_R);
 			
 	float u_frac = frac(uR*RES_R);
 		
@@ -149,17 +152,18 @@ float4 Texture4D(sampler2D table, float r, float mu, float muS, float nu)
 //	float4 B = tex2Dlod(table, float4((uNu + uMuS) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * (1.0 - _lerp) + tex2Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * _lerp;			
 
 	
-#if !defined(SHADER_API_OPENGL)	
+//#if !defined(SHADER_API_OPENGL)	
 	float4 A = tex2Dlod(table, float4((uNu + uMuS) / RES_NU, uMu / RES_R + u_0,0.0,0.0)) * (1.0 - _lerp) + tex2Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_0,0.0,0.0)) * _lerp;
 	float4 B = tex2Dlod(table, float4((uNu + uMuS) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * (1.0 - _lerp) + tex2Dlod(table, float4((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1,0.0,0.0)) * _lerp;							
 
-#else	
-	float4 A = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_0)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_0)) * _lerp;
-	float4 B = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_1)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1)) * _lerp;
-	
-#endif
+//#else	
+//	float4 A = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_0)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_0)) * _lerp;
+//	float4 B = tex2D(table, float2((uNu + uMuS) / RES_NU, uMu / RES_R + u_1)) * (1.0 - _lerp) + tex2D(table, float2((uNu + uMuS + 1.0) / RES_NU, uMu / RES_R + u_1)) * _lerp;
+//	
+//#endif
 	
 	return (A * (1.0-u_frac) + B * u_frac);
+//	return 0;
 }
 // ----------------------------------------------------------------------------
 // UTILITY FUNCTIONS
@@ -201,11 +205,11 @@ float3 Transmittance(float r, float mu)
     float2 uv = GetTransmittanceUV(r, mu);
 // tex2Dlod is faster but doesn't work with opengl, only dx9 and dx11
 //  return tex2Dlod(_Sky_Transmittance, float4(uv,0.0,0.0)).rgb;
-#if !defined(SHADER_API_OPENGL)	
+//#if !defined(SHADER_API_OPENGL)	
 return tex2Dlod(_Sky_Transmittance, float4(uv,0.0,0.0)).rgb;
-#else
-return tex2D(_Sky_Transmittance,uv).rgb;
-#endif
+//#else
+//return tex2D(_Sky_Transmittance,uv).rgb;
+//#endif
 }
 
 // transmittance(=transparency) of atmosphere for ray (r,mu) of length d
@@ -261,11 +265,11 @@ float3 Irradiance(sampler2D samp, float r, float muS)
     float2 uv = GetIrradianceUV(r, muS);  
 // tex2Dlod is faster but doesn't work with opengl, only dx9 and dx11
 //   return tex2Dlod(samp,float4(uv,0.0,0.0)).rgb;    
-#if !defined(SHADER_API_OPENGL)	
+//#if !defined(SHADER_API_OPENGL)	
 return tex2Dlod(samp,float4(uv,0.0,0.0)).rgb;    
-#else
-return tex2D(samp,uv).rgb;           
-#endif
+//#else
+//return tex2D(samp,uv).rgb;           
+//#endif
 }
 
 // Rayleigh phase function
@@ -314,13 +318,13 @@ float3 SunRadiance(float r, float muS) {
 // incident sky light at given position, integrated over the hemisphere (irradiance)
 // r=length(x)
 // muS=dot(x,s) / r
-//float3 SkyIrradiance(float r, float muS) {
-////#if defined(ATMO_SKY_ONLY) || defined(ATMO_FULL)
-//    return Irradiance(_Sky_Irradiance, r, muS) * _Sun_Intensity;
-////#else
-////    return float3(0,0,0);
-////#endif
-//}
+float3 SkyIrradiance(float r, float muS) {
+//#if defined(ATMO_SKY_ONLY) || defined(ATMO_FULL)
+    return Irradiance(_Sky_Irradiance, r, muS) * _Sun_Intensity;
+//#else
+//    return float3(0,0,0);
+//#endif
+}
 
 // single scattered sunlight between two points
 // camera=observer
@@ -452,149 +456,150 @@ float3 SkyRadiance(float3 camera, float3 viewdir, float3 sundir, out float3 exti
 
 
 
-//void SunRadianceAndSkyIrradiance(float3 worldP, float3 worldN, float3 worldS, out float3 sunL, out float3 skyE)
-//{
-//	worldP *= scale;
-//    float r = length(worldP);
-//    if (r < 0.9 * Rg) {
-//        worldP.z += Rg;
-//        r = length(worldP);
-//    }
-//    float3 worldV = worldP / r; // vertical vector
-//    float muS = dot(worldV, worldS);
-//
-//    float sunOcclusion = 1.0;// - sunShadow;
-//    sunL = SunRadiance(r, muS) * sunOcclusion;
-//
-//    // ambient occlusion due only to slope, does not take self shadowing into account
-//    float skyOcclusion = (1.0 + dot(worldV, worldN)) * 0.5;
-//    // factor 2.0 : hack to increase sky contribution (numerical simulation of
-//    // "precompued atmospheric scattering" gives less luminance than in reality)
-//    skyE = 2.0 * SkyIrradiance(r, muS) * skyOcclusion;
-//}
+void SunRadianceAndSkyIrradiance(float3 worldP, float3 worldN, float3 worldS, out float3 sunL, out float3 skyE)
+{
+	worldP *= scale;
+    float r = length(worldP);
+    if (r < 0.9 * Rg) {
+        worldP.z += Rg;
+        r = length(worldP);
+    }
+    float3 worldV = worldP / r; // vertical vector
+    float muS = dot(worldV, worldS);
+
+    float sunOcclusion = 1.0;// - sunShadow;
+    sunL = SunRadiance(r, muS) * sunOcclusion;
+
+    // ambient occlusion due only to slope, does not take self shadowing into account
+    float skyOcclusion = (1.0 + dot(worldV, worldN)) * 0.5;
+    // factor 2.0 : hack to increase sky contribution (numerical simulation of
+    // "precompued atmospheric scattering" gives less luminance than in reality)
+    skyE = 2.0 * SkyIrradiance(r, muS) * skyOcclusion;
+}
 
 // single scattered sunlight between two points
 // camera=observer
 // point=point on the ground
 // sundir=unit vector towards the sun
 // return scattered light and extinction coefficient
-//float3 InScattering(float3 camera, float3 _point, float3 sundir, out float3 extinction, float shaftWidth) 
-//{
-////#if defined(ATMO_INSCATTER_ONLY) || defined(ATMO_FULL)
-//
-//	camera *= scale;
-//	_point *= scale;
-//
-//    float3 result;
-//    float3 viewdir = _point - camera;
-//    float d = length(viewdir);
-//    viewdir = viewdir / d;
-//    
-//    float r = length(camera);
-//    if (r < 0.9 * Rg) {
-//        camera.z += Rg;
-//        _point.z += Rg;
-//        r = length(camera);
-//    }
-//    
-//    float rMu = dot(camera, viewdir);
-//    float mu = rMu / r;
-//    float r0 = r;
-//    float mu0 = mu;
-//    _point -= viewdir * clamp(shaftWidth, 0.0, d);
-//
-//    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt, 1e30);
-//    float din = max(-rMu - deltaSq, 0.0);
-//    if (din > 0.0 && din < d) {
-//        camera += din * viewdir;
-//        rMu += din;
-//        mu = rMu / Rt;
-//        r = Rt;
-//        d -= din;
-//    }
-//
-//    if (r <= Rt) {
-//        float nu = dot(viewdir, sundir);
-//        float muS = dot(camera, sundir) / r;
-//
-//        float4 inScatter;
-//
-//        if (r < Rg + 2000.0) {
-//            // avoids imprecision problems in aerial perspective near ground
-//            float f = (Rg + 2000.0) / r;
-//            r = r * f;
-//            rMu = rMu * f;
-//            _point = _point * f;
-//        }
-//
-//        float r1 = length(_point);
-//        float rMu1 = dot(_point, viewdir);
-//        float mu1 = rMu1 / r1;
-//        float muS1 = dot(_point, sundir) / r1;
-//
-////#ifdef ANALYTIC_TRANSMITTANCE
-////extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
-////#else
-//        if (mu > 0.0) {
-//            extinction = min(Transmittance(r, mu) / Transmittance(r1, mu1), 1.0);
-//        } else {
-//            extinction = min(Transmittance(r1, -mu1) / Transmittance(r, -mu), 1.0);
-//        }
-////#endif
-//
-////#ifdef HORIZON_HACK
-//        const float EPS = 0.004;
-//        float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
-//        if (abs(mu - lim) < EPS) {
-//            float a = ((mu - lim) + EPS) / (2.0 * EPS);
-//
-//            mu = lim - EPS;
-//            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-//            mu1 = (r * mu + d) / r1;
-//            float4 inScatter0 = Texture4D(_Sky_Inscatter, r, mu, muS, nu);
-//            float4 inScatter1 = Texture4D(_Sky_Inscatter, r1, mu1, muS1, nu);
-//            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-//
-//            mu = lim + EPS;
-//            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-//            mu1 = (r * mu + d) / r1;
-//            inScatter0 = Texture4D(_Sky_Inscatter, r, mu, muS, nu);
-//            inScatter1 = Texture4D(_Sky_Inscatter, r1, mu1, muS1, nu);
-//            float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-//
-//            inScatter = lerp(inScatterA, inScatterB, a);
-//        } 
-//        else {
-//            float4 inScatter0 = Texture4D(_Sky_Inscatter, r, mu, muS, nu);
-//            float4 inScatter1 = Texture4D(_Sky_Inscatter, r1, mu1, muS1, nu);
-//            inScatter = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-//        }
-////#else
-////        float4 inScatter0 = Texture4D(_Sky_Inscatter, r, mu, muS, nu);
-////        float4 inScatter1 = Texture4D(_Sky_Inscatter, r1, mu1, muS1, nu);
-////        inScatter = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-////#endif
-//
-//        //cancels inscatter when sun hidden by mountains
-//        //TODO smoothstep values depend on horizon angle in sun direction
-//        //inScatter.w *= smoothstep(0.035, 0.07, muS);
-//
-//        // avoids imprecision problems in Mie scattering when sun is below horizon
-//        inScatter.w *= smoothstep(0.00, 0.02, muS);
-//
-//        float3 inScatterM = GetMie(inScatter);
-//        float phase = PhaseFunctionR(nu);
-//        float phaseM = PhaseFunctionM(nu);
-//        result = inScatter.rgb * phase + inScatterM * phaseM;
-//    } 
-//    else {
-//        result = float3(0,0,0);
-//        extinction = float3(1,1,1);
-//    }
-//
-//    return result * _Sun_Intensity;
-////#else
-////    extinction = float3(1,1,1);
-////    return float3(0,0,0);
-////#endif
-//}
+
+float3 InScattering(float3 camera, float3 _point, float3 sundir, out float3 extinction, float shaftWidth) 
+{
+//#if defined(ATMO_INSCATTER_ONLY) || defined(ATMO_FULL)
+
+	camera *= scale;
+	_point *= scale;
+
+    float3 result;
+    float3 viewdir = _point - camera;
+    float d = length(viewdir);
+    viewdir = viewdir / d;
+    
+    float r = length(camera);
+    if (r < 0.9 * Rg) {
+        camera.z += Rg;
+        _point.z += Rg;
+        r = length(camera);
+    }
+    
+    float rMu = dot(camera, viewdir);
+    float mu = rMu / r;
+    float r0 = r;
+    float mu0 = mu;
+    _point -= viewdir * clamp(shaftWidth, 0.0, d);
+
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt, 1e30);
+    float din = max(-rMu - deltaSq, 0.0);
+    if (din > 0.0 && din < d) {
+        camera += din * viewdir;
+        rMu += din;
+        mu = rMu / Rt;
+        r = Rt;
+        d -= din;
+    }
+
+    if (r <= Rt) {
+        float nu = dot(viewdir, sundir);
+        float muS = dot(camera, sundir) / r;
+
+        float4 inScatter;
+
+        if (r < Rg + 2000.0) {
+            // avoids imprecision problems in aerial perspective near ground
+            float f = (Rg + 2000.0) / r;
+            r = r * f;
+            rMu = rMu * f;
+            _point = _point * f;
+        }
+
+        float r1 = length(_point);
+        float rMu1 = dot(_point, viewdir);
+        float mu1 = rMu1 / r1;
+        float muS1 = dot(_point, sundir) / r1;
+
+//#ifdef ANALYTIC_TRANSMITTANCE
+//extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
+//#else
+        if (mu > 0.0) {
+            extinction = min(Transmittance(r, mu) / Transmittance(r1, mu1), 1.0);
+        } else {
+            extinction = min(Transmittance(r1, -mu1) / Transmittance(r, -mu), 1.0);
+        }
+//#endif
+
+//#ifdef HORIZON_HACK
+        const float EPS = 0.004;
+        float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
+        if (abs(mu - lim) < EPS) {
+            float a = ((mu - lim) + EPS) / (2.0 * EPS);
+
+            mu = lim - EPS;
+            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+            mu1 = (r * mu + d) / r1;
+            float4 inScatter0 = Texture4D(_Sky_Inscatter, r, mu, muS, nu);
+            float4 inScatter1 = Texture4D(_Sky_Inscatter, r1, mu1, muS1, nu);
+            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+
+            mu = lim + EPS;
+            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+            mu1 = (r * mu + d) / r1;
+            inScatter0 = Texture4D(_Sky_Inscatter, r, mu, muS, nu);
+            inScatter1 = Texture4D(_Sky_Inscatter, r1, mu1, muS1, nu);
+            float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+
+            inScatter = lerp(inScatterA, inScatterB, a);
+        } 
+        else {
+            float4 inScatter0 = Texture4D(_Sky_Inscatter, r, mu, muS, nu);
+            float4 inScatter1 = Texture4D(_Sky_Inscatter, r1, mu1, muS1, nu);
+            inScatter = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+        }
+//#else
+//        float4 inScatter0 = Texture4D(_Sky_Inscatter, r, mu, muS, nu);
+//        float4 inScatter1 = Texture4D(_Sky_Inscatter, r1, mu1, muS1, nu);
+//        inScatter = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+//#endif
+
+        //cancels inscatter when sun hidden by mountains
+        //TODO smoothstep values depend on horizon angle in sun direction
+        //inScatter.w *= smoothstep(0.035, 0.07, muS);
+
+        // avoids imprecision problems in Mie scattering when sun is below horizon
+        inScatter.w *= smoothstep(0.00, 0.02, muS);
+
+        float3 inScatterM = GetMie(inScatter);
+        float phase = PhaseFunctionR(nu);
+        float phaseM = PhaseFunctionM(nu);
+        result = inScatter.rgb * phase + inScatterM * phaseM;
+    } 
+    else {
+        result = float3(0,0,0);
+        extinction = float3(1,1,1);
+    }
+
+    return result * _Sun_Intensity;
+//#else
+//    extinction = float3(1,1,1);
+//    return float3(0,0,0);
+//#endif
+}
