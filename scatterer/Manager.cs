@@ -31,7 +31,7 @@ namespace scatterer
 		float m_radius= 600000.0f;
 		
 		
-		//OceanWhiteCaps m_oceanNode;
+		OceanWhiteCaps m_oceanNode;
 		public SkyNode m_skyNode;
 		SunNode m_sunNode;
 
@@ -56,11 +56,11 @@ namespace scatterer
 
 
 
-//			m_oceanNode = new OceanWhiteCaps();
-//			m_oceanNode.setManager (this);
-//			m_oceanNode.setCore (m_core);
-//
-//			m_oceanNode.Start ();
+			m_oceanNode = new OceanWhiteCaps();
+			m_oceanNode.setManager (this);
+			m_oceanNode.setCore (m_core);
+
+			m_oceanNode.Start ();
 
 			
 			for (int i=0;i<7;i++)
@@ -90,7 +90,7 @@ namespace scatterer
 
 
 
-//				m_oceanNode.UpdateNode ();
+				m_oceanNode.UpdateNode ();
 
 			
 			updateCnt++;
@@ -103,8 +103,8 @@ namespace scatterer
 			m_skyNode.OnDestroy ();
 			Destroy (m_skyNode);
 			Destroy (m_sunNode);
-//			m_oceanNode.OnDestroy ();
-//			Destroy (m_oceanNode);
+			m_oceanNode.OnDestroy ();
+			Destroy (m_oceanNode);
 
 		}
 		
@@ -149,9 +149,9 @@ namespace scatterer
 			return m_sunNode.GetWorldToLocalRotation();
 		}
 		
-//		public OceanNode GetOceanNode() {
-//			return m_oceanNode;
-//		}
+		public OceanNode GetOceanNode() {
+			return m_oceanNode;
+		}
 
 		public SkyNode GetSkyNode() {
 			return m_skyNode;
