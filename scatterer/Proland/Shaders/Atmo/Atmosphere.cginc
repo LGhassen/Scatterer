@@ -25,7 +25,7 @@
  * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
-/**
+/*
  * Precomputed Atmospheric Scattering
  * Copyright (c) 2008 INRIA
  * All rights reserved.
@@ -55,10 +55,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
+/*
  * Author: Eric Bruneton
  * Modified and ported to Unity by Justin Hawkins 2014
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015
  */
+ 
 
 #define OPTIMIZE
 #define ATMO_FULL

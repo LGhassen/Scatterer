@@ -27,7 +27,7 @@ using System.Collections.Generic;
 
 namespace scatterer
 {
-	/**
+	/*
 	* This class can set the uniforms necessary to access a given texture tile on GPU, stored
 	* in a GPUTileStorage. This class also manages the creation
 	* of new texture tiles when a terrain quadtree is updated, via a TileProducer.
@@ -157,7 +157,7 @@ namespace scatterer
 			return needTile;
 		}
 
-		/**
+		/*
 		* Updates the internal quadtree to make it identical to the given terrain
 		* quadtree. This method releases the texture tiles corresponding to
 		* deleted quads.
@@ -187,7 +187,7 @@ namespace scatterer
 
 		}
 
-		/**
+		/*
 		* Updates the internal quadtree to make it identical to the given terrain
 		* quadtree. Collects the tasks necessary to create the missing texture
 		* tiles, corresponding to newly created quads.
@@ -248,7 +248,7 @@ namespace scatterer
 			mat.SetVector(m_uniforms.tileSize, size);
 		}
 
-		/**
+		/*
 		* Sets the uniforms necessary to access the texture tile for
 		* the given quad. The samplers producer must be using a GPUTileStorage at the first slot
 		* for this function to work

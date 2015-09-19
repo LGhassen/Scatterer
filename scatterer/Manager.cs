@@ -31,7 +31,7 @@ namespace scatterer
 		float m_radius= 600000.0f;
 		
 		
-//		OceanWhiteCaps m_oceanNode;
+		//OceanWhiteCaps m_oceanNode;
 		public SkyNode m_skyNode;
 		SunNode m_sunNode;
 

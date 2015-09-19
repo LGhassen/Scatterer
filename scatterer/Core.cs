@@ -26,6 +26,9 @@ namespace scatterer
 		bool initiated=false;
 		bool found=false;
 		bool showInterpolatedValues=false;
+		public bool stockOcean=false;
+		public bool stockSunglare=false;
+		public bool extinctionEnabled=true;
 
 		float rimBlend=20f;
 		float rimpower=600f;
@@ -49,18 +52,18 @@ namespace scatterer
 //		float irradianceFactor=100;
 
 		//Ocean variables
-//		float oceanSigma = 0.04156494f;
-//		float oceanThreshold=25f;
-//		float theta =1.0f;
-//		float phi=1.0f;
-//		float oceanLevel=0f;
-//		float oceanNearPlane=0.01f;
-//		float oceanFarPlane=750000f;
+		float oceanSigma = 0.04156494f;
+		float oceanThreshold=25f;
+		float theta =1.0f;
+		float phi=1.0f;
+		float oceanLevel=0f;
+		float oceanNearPlane=0.01f;
+		float oceanFarPlane=750000f;
 
 
 		//Debug variables
 //		public float[] additionalScales=new float[10];
-//		public bool[] debugSettings= new bool[10];
+		public bool[] debugSettings= new bool[10];
 //		public int renderQueue=2000;
 //		int renderQueue2=2010;
 		
@@ -234,8 +237,7 @@ namespace scatterer
 					
 				if(initiated)
 				m_manager.Update ();
-					
-				
+
 			}
 		}
 		}
@@ -556,11 +558,11 @@ namespace scatterer
 //					m_manager.m_skyNode.oceanNearPlane = oceanNearPlane;
 //				}
 //				GUILayout.EndHorizontal ();
-//
+
 //				GUILayout.BeginHorizontal ();
 //				GUILayout.Label ("Ocean far plane");
-//				
-//				
+////				
+////				
 //				oceanFarPlane = float.Parse(GUILayout.TextField(oceanFarPlane.ToString("00000000.0000000")));
 //				
 //				if (GUILayout.Button ("Set"))
@@ -580,7 +582,7 @@ namespace scatterer
 //					m_manager.GetOceanNode().theta = theta;
 //				}
 //				GUILayout.EndHorizontal ();
-//
+
 //				GUILayout.BeginHorizontal ();
 //				GUILayout.Label ("PHI");
 //				
@@ -592,7 +594,7 @@ namespace scatterer
 //					m_manager.GetOceanNode().phi = phi;
 //				}
 //				GUILayout.EndHorizontal ();
-//
+
 //				GUILayout.BeginHorizontal ();
 //				GUILayout.Label ("ocean Level");
 //				
@@ -743,6 +745,26 @@ namespace scatterer
 				{					
 					ReactivateAtmosphere(parentPlanet);
 				}
+				GUILayout.EndHorizontal ();
+
+
+				GUILayout.BeginHorizontal ();
+				
+//				if (GUILayout.Button ("Toggle stock ocean"))
+//				{
+//					stockOcean=!stockOcean;
+//				}
+
+				if (GUILayout.Button ("Toggle stock sunglare"))
+				{
+					stockSunglare =!stockSunglare;
+				}
+
+				if (GUILayout.Button ("Toggle extinction"))
+				{
+					extinctionEnabled =!extinctionEnabled;
+				}
+
 				GUILayout.EndHorizontal ();
 
 				chosenCamera=cams[cam];

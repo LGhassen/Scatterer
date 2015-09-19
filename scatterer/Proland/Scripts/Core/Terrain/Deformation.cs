@@ -29,7 +29,7 @@ using System.Collections;
 
 namespace scatterer
 {	
-	/**
+	/*
 	* A deformation of space. Such a deformation maps a 3D source point to a 3D
 	* destination point. The source space is called the local space, while
 	* the destination space is called the deformed space. Source and
@@ -77,7 +77,7 @@ namespace scatterer
 			m_localToTangent = new Matrix3x3d();
 		}
 		
-		/**
+		/*
 		* Returns the deformed point corresponding to the given source point.
 		*
 		* param localPt a point in the local (i.e., source) space.
@@ -88,7 +88,7 @@ namespace scatterer
 			return localPt;
 		}
 		
-		/**
+		/*
 		* Returns the differential of the deformation function at the given local
 		* point. This differential gives a linear approximation of the deformation
 		* around a given point, represented with a matrix. More precisely, if p
@@ -105,7 +105,7 @@ namespace scatterer
 			return Matrix4x4d.Translate(new Vector3d2(localPt.x, localPt.y, 0.0));
 		}
 		
-		/**
+		/*
 		* Returns the local point corresponding to the given source point.
 		*
 		* param deformedPt a point in the deformed (i.e., destination) space.
@@ -116,7 +116,7 @@ namespace scatterer
 			return deformedPt;
 		}
 		
-		/**
+		/*
 		* Returns the local bounding box corresponding to the given source disk.
 		*
 		* param deformedPt the source disk center in deformed space.
@@ -129,7 +129,7 @@ namespace scatterer
 			                 deformedCenter.y - deformedRadius, deformedCenter.y + deformedRadius);
 		}
 		
-		/**
+		/*
 		* Returns an orthonormal reference frame of the tangent space at the given
 		* deformed point. This reference frame is such that its xy plane is the
 		* tangent plane, at deformedPt, to the deformed surface corresponding to
@@ -147,7 +147,7 @@ namespace scatterer
 			return Matrix4x4d.Translate(new Vector3d2(-deformedPt.x, -deformedPt.y, 0.0));
 		}
 		
-		/**
+		/*
 		* Returns the distance in local (i.e., source) space between a point and a
 		* bounding box.
 		*
@@ -161,7 +161,7 @@ namespace scatterer
 			         Math.Min(Math.Abs(localPt.y - localBox.ymin), Math.Abs(localPt.y - localBox.ymax))));
 		}
 		
-		/**
+		/*
 		 * Returns the visibility of a bounding box in local space, in a view
 		 * frustum defined in deformed space.
 		 *
@@ -178,7 +178,7 @@ namespace scatterer
 			return Frustum.GetVisibility(node.GetDeformedFrustumPlanes(), localBox);
 		}
 		
-		/**
+		/*
 		* Sets the shader uniforms that are necessary to project on screen the
 		* TerrainQuad of the given TerrainNode. This method can set the uniforms
 		* that are common to all the quads of the given terrain.
@@ -211,7 +211,7 @@ namespace scatterer
 			
 		}
 		
-		/**
+		/*
 		* Sets the shader uniforms that are necessary to project on screen the
 		* given TerrainQuad. This method can set the uniforms that are specific to
 		* the given quad.

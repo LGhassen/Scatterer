@@ -20,6 +20,7 @@
  *
  * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  * Modified and ported to Unity by Justin Hawkins 2014
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015
  * 
  * 
  */
@@ -30,7 +31,7 @@ using System.IO;
 
 namespace scatterer 
 {
-	/**
+	/*
 	 * Precomputes the tables for the given atmosphere parameters.
 	 * To run this just create a new scene and add this script to a game object and then attach the compute shaders.
 	 * Once the scene is run the tables will be saved to the file path.

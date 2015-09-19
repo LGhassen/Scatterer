@@ -29,7 +29,7 @@ using System.Collections.Generic;
 namespace scatterer
 {
 	
-	/**
+	/*
 	* An abstract producer of tiles. A TileProducer must be inherited from and overide the DoCreateTile
 	* function to create the tiles data.
 	* Note that several TileProducer can share the same TileCache, and hence the
@@ -128,7 +128,7 @@ namespace scatterer
 			return s - GetBorder()*2;
 		}
 
-		/**
+		/*
 		* Returns the size in pixels of the border of each tile. Tiles made of
 		* raster data may have a border that contains the value of the neighboring
 		* pixels of the tile. For instance if the tile size (returned by
@@ -142,7 +142,7 @@ namespace scatterer
 			return 0;
 		}
 
-		/**
+		/*
 		* Returns true if this producer can produce the given tile.
 		*
 		* param level the tile's quadtree level.
@@ -153,7 +153,7 @@ namespace scatterer
 			return true;
 		}
 
-		/**
+		/*
 		* Returns true if this producer can produce the children of the given tile.
 		*
 		* param level the tile's quadtree level.
@@ -164,7 +164,7 @@ namespace scatterer
 			return HasTile(level + 1, 2 * tx, 2 * ty);
 		}
 
-		/**
+		/*
 		* Decrements the number of users of this tile by one. If this number
 		* becomes 0 the tile is marked as unused, and so can be evicted from the
 		* cache at any moment.
@@ -175,7 +175,7 @@ namespace scatterer
 			m_cache.PutTile(tile);
 		}
 
-		/**
+		/*
 		* Returns the requested tile, creating it if necessary. If the tile is
 		* currently in use it is returned directly. If it is in cache but unused,
 		* it marked as used and returned. Otherwise a new tile is created, marked
@@ -218,7 +218,7 @@ namespace scatterer
 			return tile;
 		}
 
-		/**
+		/*
 		* Creates a Task to produce the data of the given tile.
 		*
 		* param level the tile's quadtree level.
@@ -232,7 +232,7 @@ namespace scatterer
 			return new CreateTileTask(this, level, tx, ty, slot);
 		}
 	
-		/**
+		/*
 		* Creates the given tile. If this task requires tiles produced by other
 		* The default implementation of this method calls DoCreateTile on
 		* each Layer of this producer.

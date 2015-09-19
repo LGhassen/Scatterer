@@ -29,7 +29,7 @@ using System;
 
 namespace scatterer
 {
-	/**
+	/*
 	* A view for flat terrains. The camera position is specified
 	* from a "look at" position (x0,y0) on ground, with a distance d between
 	* camera and this position, and two angles (theta,phi) for the direction
@@ -249,7 +249,7 @@ namespace scatterer
 			m_screenToCameraMatrix = m_cameraToScreenMatrix.Inverse();
 		}
 
-		/**
+		/*
 		* Moves the "look at" point so that "oldp" appears at the position of "p"
 		* on screen.
 		*/
@@ -269,7 +269,7 @@ namespace scatterer
 			m_position.phi += angle;
 		}
 
-		/**
+		/*
 		* Sets the position as the interpolation of the two given positions with
 		* the interpolation parameter t (between 0 and 1). The source position is
 		* sx0,sy0,stheta,sphi,sd, the destination is dx0,dy0,dtheta,dphi,dd.
@@ -292,7 +292,7 @@ namespace scatterer
 			y0 = sy0 * (1.0 - t) + dy0 * t;
 		}
 
-		/**
+		/*
 		* Returns a direction interpolated between the two given direction.
 		*
 		* param slon start longitude.

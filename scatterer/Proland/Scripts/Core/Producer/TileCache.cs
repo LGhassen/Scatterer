@@ -20,6 +20,7 @@
  *
  * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  * Modified and ported to Unity by Justin Hawkins 2014
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015
  * 
  */
 
@@ -28,7 +29,7 @@ using System.Collections.Generic;
 
 namespace scatterer
 {
-	/**
+	/*
 	* A cache of tiles to avoid recomputing recently produced tiles. A tile cache
 	* keeps track of which tiles (identified by their level,tx,ty coordinates) are
 	* currently stored in an associated TileStorage. It also keeps track of which
@@ -64,14 +65,14 @@ namespace scatterer
      	//The storage to store the tiles data.
 		TileStorage[] m_tileStorage;
 
-		/**
+		/*
 		* The tiles currently in use. These tiles cannot be evicted from the cache
 		* and from the TileStorage, until they become unused. Maps tile identifiers
 		* to actual tiles.
 		*/
 		Dictionary<Tile.TId, Tile> m_usedTiles;
 
-		/**
+		/*
 		* The unused tiles. These tiles can be evicted from the cache at any moment.
 		* Uses a custom container (DictionaryQueue) that can store tiles by there Tid for fast look up
 		* and also keeps track of the order the tiles were inserted so it can also act as a queue

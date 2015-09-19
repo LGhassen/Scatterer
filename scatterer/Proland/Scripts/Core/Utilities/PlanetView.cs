@@ -29,7 +29,7 @@ using System;
 namespace scatterer
 {
 	
-	/**
+	/*
 	* A TerrainView for spherical terrains (i.e., planets). This subclass
 	* interprets the x0 and y0 fields as longitudes and latitudes on the planet,
 	* and considers theta and phi as relative to the tangent plane at the (x0,y0) point.

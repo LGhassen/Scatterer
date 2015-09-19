@@ -30,7 +30,7 @@ using System.Collections.Generic;
 namespace scatterer
 {
 	
-	/**
+	/*
 	* A TileSampler to be used with a ElevationProducer.
 	* This class reads back the elevation data of newly created elevation tiles
 	* in order to update the TerrainQuad::zmin and TerrainQuad::zmax fields. It
@@ -82,7 +82,7 @@ namespace scatterer
 		//The relative viewer position in the #cameraQuad quad.
 		Vector2 m_cameraQuadCoords;
 		
-		/**
+		/*
 		* Last camera position used to perform a readback of the camera elevation
 		* above the ground. This is used to avoid reading back this value at each
 		* frame when the camera does not move.
