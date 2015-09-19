@@ -20,14 +20,16 @@
  *
  * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  * Modified and ported to Unity by Justin Hawkins 2014
- * */
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015
+ *
+ */
 
 using UnityEngine;
 using System.Collections.Generic;
 
 namespace scatterer
 {
-	/**
+	/*
 	* A shared storage to store tiles of the same kind. This abstract class defines
 	* the behavior of tile storages but does not provide any storage itself. The
 	* slots managed by a tile storage can be used to store any tile identified by
@@ -42,7 +44,7 @@ namespace scatterer
 	[RequireComponent(typeof(TileCache))]
 	public abstract class TileStorage : MonoBehaviour 
 	{
-		/**
+		/*
      	* A slot managed by a TileStorage. Concrete sub classes of this class must
      	* provide a reference to the actual tile data.
      	*/
@@ -64,7 +66,7 @@ namespace scatterer
 			}
 		};
 
-		/**
+		/*
 		* The size of each tile. For tiles made of raster data, this size is the
 		* tile width in pixels (the tile height is supposed equal to the tile
 		* width).
@@ -72,7 +74,7 @@ namespace scatterer
 		[SerializeField]
 		int m_tileSize;
 
-		/**
+		/*
 		* The total number of slots managed by this TileStorage. This includes both
 		* unused and used tiles.
 		*/
@@ -103,7 +105,7 @@ namespace scatterer
 			m_freeSlots.AddLast(slot);
 		}
 
-		/**
+		/*
 		* Returns a free slot in the pool of slots managed by this TileStorage.
 		*
 		* return a free slot, or NULL if all tiles are currently allocated. The
@@ -123,7 +125,7 @@ namespace scatterer
 			}
 		}
 
-		/**
+		/*
 		* Notifies this storage that the given slot is free. The given slot can
 		* then be allocated to store a new tile, i.e., it can be returned by a
 		* subsequent call to newSlot.
@@ -134,7 +136,7 @@ namespace scatterer
 			m_freeSlots.AddLast(t);
 		}
 
-		/**
+		/*
 		* Returns the size of each tile. For tiles made of raster data, this size
 		* is the tile width in pixels (the tile height is supposed equal to the
 		* tile width).
@@ -143,7 +145,7 @@ namespace scatterer
 			return m_tileSize;
 		}
 
-		/**
+		/*
 		* Returns the total number of slots managed by this TileStorage. This
 		* includes both unused and used tiles.
 		*/
@@ -151,7 +153,7 @@ namespace scatterer
 			return m_capacity;
 		}
 
-		/**
+		/*
 		* Returns the number of slots in this TileStorage that are currently unused.
 		*/
 		public int GetFreeSlots() {

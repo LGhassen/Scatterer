@@ -29,7 +29,7 @@ using System;
 
 namespace scatterer
 {
-	/**
+	/*
 	* A quad in a terrain quadtree. The quadtree is subdivided based only
 	* on the current viewer position. All quads are subdivided if they
 	* meet the subdivision criterion, even if they are outside the view
@@ -58,21 +58,21 @@ namespace scatterer
 		//Should the quad be drawn
 		bool m_drawable;
 		
-		/**
+		/*
 		* The minimum/maximum terrain elevation inside this quad. This field must
 		* be updated manually by users (the TileSamplerZ class can
 		* do this for you).
 		*/
 		float m_zmin, m_zmax;
 		
-		/**
+		/*
 		* The four subquads of this quad. If this quad is not subdivided,
 		* the four values are NULL. The subquads are stored in the
 		* following order: bottomleft, bottomright, topleft, topright.
 		*/
 		TerrainQuad[] m_children = new TerrainQuad[4];
 		
-		/**
+		/*
 		* The visibility of the bounding box of this quad from the current
 		* viewer position. The bounding box is computed using zmin and
 		* zmax, which must therefore be up to date to get a correct culling
@@ -81,13 +81,13 @@ namespace scatterer
 		*/
 		Frustum.VISIBILTY m_visible;
 		
-		/**
+		/*
 		* True if the bounding box of this quad is occluded by the bounding
 		* boxes of the quads in front of it.
 		*/
 		bool m_occluded = false;
 		
-		/**
+		/*
 		* Creates a new TerrainQuad.
 		*
 		* param owner the TerrainNode to which the terrain quadtree belongs.
@@ -230,7 +230,7 @@ namespace scatterer
 			
 		}
 		
-		/**
+		/*
 	     * Subdivides or unsubdivides this quad based on the current
 	     * viewer distance to this quad, relatively to its size. This
 	     * method uses the current viewer position provided by the

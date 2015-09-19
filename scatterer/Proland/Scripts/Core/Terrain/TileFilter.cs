@@ -20,20 +20,22 @@
  *
  * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  * Modified and ported to Unity by Justin Hawkins 2014
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015
  */
+
 
 using UnityEngine;
 using System.Collections;
 
 namespace scatterer
 {
-	/**
+	/*
      * A filter to decide whether a texture tile must be produced or not
      * for a given quad.
      */
 	public abstract class TileFilter : MonoBehaviour 
 	{
-		/**
+		/*
          * Returns true if a texture tile must be produced for the given quad.
          */
 	

@@ -26,7 +26,7 @@
  * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
-/**
+/*
  * Real-time Realistic Ocean Lighting using Seamless Transitions from Geometry to BRDF
  * Copyright (c) 2009 INRIA
  * All rights reserved.
@@ -56,10 +56,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
+/*
  * Author: Eric Bruneton
  * Modified and ported to Unity by Justin Hawkins 2014
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015
  */
+
+ 
 
 Shader "Proland/Ocean/OceanWhiteCaps" 
 {

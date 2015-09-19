@@ -28,7 +28,7 @@ using System.Collections;
 
 namespace scatterer
 {
-	/**
+	/*
 	 * A Deformation of space transforming planes to spheres. This deformation
 	 * transforms the plane z=0 into a sphere of radius R centered at (0,0,-R).
 	 * The plane z=h is transformed into the sphere of radius R+h. The

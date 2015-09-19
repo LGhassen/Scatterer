@@ -20,6 +20,7 @@
  *
  * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  * Modified and ported to Unity by Justin Hawkins 2014
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015
  * 
  */
 
@@ -28,7 +29,7 @@ using System.Collections.Generic;
 
 namespace scatterer
 {
-	/**
+	/*
 	* A tile described by its level,tx,ty coordinates. A Tile
 	* describes where the tile is stored in the TileStorage, how its data can
 	* be produced, and how many users currently use it.
@@ -36,7 +37,7 @@ namespace scatterer
 	*/
 	public class Tile
 	{
-		/**
+		/*
 		* A tile identifier for a given producer. Contains the tile coordinates
 		* level, tx, ty.
 		*/
@@ -68,7 +69,7 @@ namespace scatterer
 			}
 		}
 
-		/**
+		/*
 		* A tile identifier. Contains a producer id and
 		* tile coordinates level,tx,ty.
 		*/
@@ -139,13 +140,13 @@ namespace scatterer
 		//The quadtree level of this tile.
 		int m_level;
 
-		/**
+		/*
 		* The quadtree x coordinate of this tile at level level.
 		* Varies between 0 and 2^level - 1.
 		*/
 		int m_tx;
 
-		/**
+		/*
 		* The quadtree y coordinate of this tile at level level.
 		* Varies between 0 and 2^level - 1.
 		*/
@@ -154,7 +155,7 @@ namespace scatterer
 		//The task that produces or produced the actual tile data.
 		CreateTileTask m_task;
 
-		/**
+		/*
 		* Creates a new tile.
 		*
 		* param producerId the id of the producer of this tile.
@@ -227,7 +228,7 @@ namespace scatterer
 			return GetTId(m_producerId, m_level, m_tx, m_ty);
 		}
 
-		/**
+		/*
 		* Returns the identifier of a tile.
 		*
 		* param level the tile's quadtree level.
@@ -238,7 +239,7 @@ namespace scatterer
 			return new Id(level, tx, ty);
 		}
 
-		/**
+		/*
 		* Returns the identifier of a tile.
 		*
 		* param producerId the id of the tile's producer.

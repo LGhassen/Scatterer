@@ -39,7 +39,7 @@ using KSP.IO;
 namespace scatterer
 {
 	
-	/**
+	/*
  * An AbstractTask to draw a flat or spherical ocean.
  * This class provides the functions and data to draw a flat projected grid but nothing else
  */
@@ -305,10 +305,26 @@ namespace scatterer
 				
 			}	
 			
-//			PQS pqs = m_manager.parentCelestialBody.pqsController;
-//			PQS ocean = pqs.ChildSpheres [0];
-//						ocean.isDisabled = true;
-//						ocean.DisableSphere ();
+			PQS pqs = m_manager.parentCelestialBody.pqsController;
+			PQS ocean = pqs.ChildSpheres [0];
+//			ocean.isDisabled = true;
+//			ocean.DisableSphere ();
+//			ocean.isDisabled = !m_core.stockOcean;
+//
+//			if (!m_core.stockOcean)
+//			{
+//				ocean.DisableSphere ();
+//			}
+//			else
+//			{
+//				ocean.EnableSphere ();
+//			}
+		
+			//projected as the ocean by the shader
+			for(int i = 0; i < numGrids; i++)
+			{
+				waterMeshRenderers[i].enabled=!m_core.stockOcean ;
+			}
 		}
 
 		public void getCustomCameraToWorldMatrix()

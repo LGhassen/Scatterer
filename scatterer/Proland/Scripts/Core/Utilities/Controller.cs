@@ -77,7 +77,7 @@ namespace scatterer
 
 		Vector3d2 m_previousMousePos;
 		
-		/**
+		/*
 		* Animation status. Negative values mean no animation.
 		* 0 corresponds to the start position, 1 to the end position,
 		* and values between 0 and 1 to intermediate positions between

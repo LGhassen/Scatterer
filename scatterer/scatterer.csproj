@@ -80,6 +80,14 @@
     <Compile Include="SimplePostProcessCube.cs" />
     <Compile Include="configPoint.cs" />
     <Compile Include="ShaderReplacer.cs" />
+    <Compile Include="Ocean\OceanFFT.cs" />
+    <Compile Include="Ocean\OceanNode.cs" />
+    <Compile Include="Ocean\OceanWhiteCaps.cs" />
+    <Compile Include="Ocean\WriteFloat.cs" />
+    <Compile Include="Ocean\FourierGPU.cs" />
+    <Compile Include="Ocean\RTUtility.cs" />
+    <Compile Include="Ocean\Node.cs" />
+    <Compile Include="Ocean\OceanUpdateAtCameraRythm.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -236,13 +244,5 @@
     <None Include="DecodedToFloat.shader" />
     <None Include="Plugins\Math\PerlinNoise.cs" />
     <None Include="ShaderList.cs" />
-    <None Include="Ocean\OceanFFT.cs" />
-    <None Include="Ocean\OceanNode.cs" />
-    <None Include="Ocean\OceanWhiteCaps.cs" />
-    <None Include="Ocean\WriteFloat.cs" />
-    <None Include="Ocean\FourierGPU.cs" />
-    <None Include="Ocean\RTUtility.cs" />
-    <None Include="Ocean\Node.cs" />
-    <None Include="Ocean\OceanUpdateAtCameraRythm.cs" />
   </ItemGroup>
 </Project>

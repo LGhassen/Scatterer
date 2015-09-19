@@ -30,7 +30,7 @@ using System.Collections.Generic;
 namespace scatterer
 {
 
-	/**
+	/*
 	 * An abstract layer for a TileProducer. Some tile producers can be
 	 * customized with layers modifying the default tile production algorithm
 	 * (for instance to add roads or rivers to an orthographic tile producer).

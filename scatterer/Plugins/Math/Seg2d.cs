@@ -10,7 +10,7 @@ public class Seg2d
     //The vector joining #a to the other segment extremity.
 	public Vector2d ab;
 	
-	/**
+	/*
      * Creates a new segment with the given extremities.
      *
      * @param a a segment extremity.
@@ -22,7 +22,7 @@ public class Seg2d
 		this.ab = b-a;
 	}
 	
-	/**
+	/*
      * Returns the square distance between the given point and the line
      * defined by this segment.
      *
@@ -36,7 +36,7 @@ public class Seg2d
 		return ap.SqrMagnitude() - projLenSq;
 	}
 	
-	/**
+	/*
      * Returns the square distance between the given point and this segment.
      *
      * @param p a point.
@@ -65,7 +65,7 @@ public class Seg2d
 		return ap.SqrMagnitude() - projlenSq;
 	}
 	
-	/**
+	/*
      * Returns true if this segment intersects the given segment.
      *
      * @param s a segment.
@@ -98,7 +98,7 @@ public class Seg2d
 		return false;
 	}
 	
-	/**
+	/*
      * Returns true if this segment intersects the given segment. If there
      * is an intersection it is returned in the vector.
      *
@@ -120,7 +120,7 @@ public class Seg2d
 		return false;
 	}
 	
-	/**
+	/*
      * Returns true if this segment is inside or intersects the given
      * bounding box.
      *
@@ -155,7 +155,7 @@ public class Seg2d
 		return false;
 	}
 	
-	/**
+	/*
      * Returns true if this segment, with the given width, contains the given
      * point. More precisely this method returns true if the stroked path
      * defined from this segment, with a cap "butt" style, contains the given
