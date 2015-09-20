@@ -37,6 +37,9 @@ namespace scatterer
 		float extinctionMultiplier=100f;
 		float extinctionTint=100f;
 
+		float mapExtinctionMultiplier=100f;
+		float mapExtinctionTint=100f;
+
 		//configPoint variables 		
 		float pointAltitude=0f;
 		float newCfgPtAlt=0f;
@@ -342,7 +345,7 @@ namespace scatterer
 				newCfgPtAlt = (float)(Convert.ToDouble (GUILayout.TextField (newCfgPtAlt.ToString ())));
 				if (GUILayout.Button ("Add"))
 				{
-					m_manager.m_skyNode.configPoints.Insert(selectedConfigPoint+1,new configPoint(newCfgPtAlt,alphaGlobal/100,exposure/100,postProcessingalpha/100,postProcessDepth/10000,postProcessExposure/100));
+					m_manager.m_skyNode.configPoints.Insert(selectedConfigPoint+1,new configPoint(newCfgPtAlt,alphaGlobal/100,exposure/100,postProcessingalpha/100,postProcessDepth/10000,postProcessExposure/100, extinctionMultiplier/100,extinctionTint/100));
 					selectedConfigPoint+=1;
 					configPointsCnt=m_manager.m_skyNode.configPoints.Count;
 					loadConfigPoint(selectedConfigPoint);
@@ -465,6 +468,26 @@ namespace scatterer
 						m_manager.m_skyNode.configPoints[selectedConfigPoint].postProcessExposure = postProcessExposure /100f;
 					}
 					GUILayout.EndHorizontal ();
+
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("extinctionMultiplier (/100)");
+					extinctionMultiplier = (float)(Convert.ToDouble (GUILayout.TextField (extinctionMultiplier.ToString ())));
+					
+					if (GUILayout.Button ("Set"))
+					{
+						m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExtinctionMultiplier=extinctionMultiplier /100f;
+					}
+					GUILayout.EndHorizontal ();
+					
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("extinctionTint (/100)");
+					extinctionTint = (float)(Convert.ToDouble (GUILayout.TextField (extinctionTint.ToString ())));
+					
+					if (GUILayout.Button ("Set"))
+					{
+						m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExtinctionTint=extinctionTint /100f;
+					}
+					GUILayout.EndHorizontal ();
 				
 				}
 
@@ -495,6 +518,37 @@ namespace scatterer
 					m_manager.m_skyNode.mapExposure = mapExposure / 100f;
 				}
 				GUILayout.EndHorizontal ();
+				
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Map view scale (/1000)");
+				MapViewScale = (float)(Convert.ToDouble (GUILayout.TextField (MapViewScale.ToString ())));
+					
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.MapViewScale= MapViewScale/1000f;
+				}
+				GUILayout.EndHorizontal ();
+				
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("MapExtinctionMultiplier (/100)");
+					mapExtinctionMultiplier = (float)(Convert.ToDouble (GUILayout.TextField (mapExtinctionMultiplier.ToString ())));
+					
+					if (GUILayout.Button ("Set"))
+					{
+						m_manager.m_skyNode.mapExtinctionMultiplier=mapExtinctionMultiplier /100f;
+					}
+					GUILayout.EndHorizontal ();
+					
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("MapExtinctionTint (/100)");
+					mapExtinctionTint = (float)(Convert.ToDouble (GUILayout.TextField (mapExtinctionTint.ToString ())));
+					
+					if (GUILayout.Button ("Set"))
+					{
+						m_manager.m_skyNode.mapExtinctionTint=mapExtinctionTint /100f;
+					}
+					GUILayout.EndHorizontal ();
+
 				}
 
 //				GUILayout.BeginHorizontal ();
@@ -567,15 +621,6 @@ namespace scatterer
 //				GUILayout.EndHorizontal ();
 //				}
 
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Map view scale (/10000)");
-				MapViewScale = (float)(Convert.ToDouble (GUILayout.TextField (MapViewScale.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.MapViewScale= MapViewScale/1000f;
-				}
-				GUILayout.EndHorizontal ();
 
 				GUILayout.BeginHorizontal ();
 
@@ -602,28 +647,6 @@ namespace scatterer
 					tweakStockAtmosphere(ParentPlanetTransformName,rimBlend,rimpower);
 				}
 				GUILayout.EndHorizontal ();
-
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("extinctionMultiplier (/100)");
-				extinctionMultiplier = (float)(Convert.ToDouble (GUILayout.TextField (extinctionMultiplier.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.extinctionMultiplier=extinctionMultiplier /100f;
-				}
-				GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("extinctionTint (/100)");
-				extinctionTint = (float)(Convert.ToDouble (GUILayout.TextField (extinctionTint.ToString ())));
-				
-				if (GUILayout.Button ("Set"))
-				{
-					m_manager.m_skyNode.extinctionTint=extinctionTint /100f;
-				}
-				GUILayout.EndHorizontal ();
-
 
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button ("Save settings"))
@@ -698,10 +721,10 @@ namespace scatterer
 				GUILayout.BeginHorizontal ();
 
 
-				if (GUILayout.Button ("Toggle stock sunglare"))
-				{
-					stockSunglare =!stockSunglare;
-				}
+//				if (GUILayout.Button ("Toggle stock sunglare"))
+//				{
+//					stockSunglare =!stockSunglare;
+//				}
 
 				if (GUILayout.Button ("Toggle extinction"))
 				{
@@ -756,12 +779,16 @@ namespace scatterer
 			mapExposure = 100* m_manager.m_skyNode.mapExposure;
 			configPointsCnt = m_manager.m_skyNode.configPoints.Count;
 
+
 			rimBlend = m_manager.m_skyNode.rimBlend;
 			rimpower = m_manager.m_skyNode.rimpower;
 
 			MapViewScale = m_manager.m_skyNode.MapViewScale *1000f;
-			extinctionMultiplier = 100* m_manager.m_skyNode.extinctionMultiplier;
-			extinctionTint = 100* m_manager.m_skyNode.extinctionTint;
+			extinctionMultiplier = 100* m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExtinctionMultiplier;
+			extinctionTint = 100* m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExtinctionTint;
+
+			mapExtinctionMultiplier = 100 * m_manager.m_skyNode.mapExtinctionMultiplier;
+			mapExtinctionTint = 100* m_manager.m_skyNode.mapExtinctionTint;
 
 			showInterpolatedValues = m_manager.m_skyNode.displayInterpolatedVariables;
 		}
@@ -845,6 +872,9 @@ namespace scatterer
 
 			alphaGlobal = m_manager.m_skyNode.configPoints [point].skyAlpha * 100f;
 			exposure = m_manager.m_skyNode.configPoints [point].skyExposure*100f;
+
+			extinctionMultiplier = m_manager.m_skyNode.configPoints [point].skyExtinctionMultiplier*100f;
+			extinctionTint = m_manager.m_skyNode.configPoints [point].skyExtinctionTint*100f;
 
 			pointAltitude = m_manager.m_skyNode.configPoints [point].altitude;
 		}
