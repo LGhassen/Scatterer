@@ -157,16 +157,13 @@ namespace scatterer
 		//This is the height in km that half the particles are found below
 		float HR = 8.0f;
 		float HM = 1.2f;
-		//m_skyMapMaterial//scatter coefficient for mie
+		//scatter coefficient for mie
 		Vector3 BETA_MSca = new Vector3(4e-3f,4e-3f,4e-3f);
 		
 		public Material m_atmosphereMaterial;
 		Material m_skyMaterialScaled;
 		Material m_skyExtinction;
-		
-		
-				Material m_skyMapMaterial;
-		
+						
 		Vector3 m_betaR = new Vector3(5.8e-3f, 1.35e-2f, 3.31e-2f);
 		//Asymmetry factor for the mie phase function
 		//A higher number meands more light is scattered in the forward direction
@@ -180,7 +177,7 @@ namespace scatterer
 		
 		Mesh m_mesh;
 		
-		RenderTexture m_transmit, m_inscatter, m_irradiance, m_skyMap;//, m_inscatterGround, m_transmitGround;
+		RenderTexture m_transmit, m_inscatter, m_irradiance;//, m_inscatterGround, m_transmitGround;
 		
 		Manager m_manager;
 		
@@ -201,24 +198,10 @@ namespace scatterer
 			Rt = (Rt / Rg) * m_radius;
 			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
-			
-			//			old mesh, causes artifacts with aniso in dx9
-			//			m_mesh = MeshFactory.MakePlane(2, 2, MeshFactory.PLANE.XY, false,false);
-			//			m_mesh.bounds = new Bounds(parentCelestialBody.transform.position, new Vector3(1e8f,1e8f, 1e8f));
-			
-			m_mesh = isoSphere.Create ();
+
+			m_mesh = MeshFactory.MakePlane(2, 2, MeshFactory.PLANE.XY, false,false);
 			m_mesh.bounds = new Bounds(parentCelestialBody.transform.position, new Vector3(1e8f,1e8f, 1e8f));
-			
-			//The sky map is used to create a reflection of the sky for objects that need it (like the ocean)
-						m_skyMap = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGBHalf);
-						m_skyMap.filterMode = FilterMode.Trilinear;
-						m_skyMap.wrapMode = TextureWrapMode.Clamp;
-						m_skyMap.anisoLevel = 9;
-						m_skyMap.useMipMap = true;
-						//m_skyMap.mipMapBias = -0.5f;
-						m_skyMap.Create();
-			
-			
+
 			//Inscatter is responsible for the change in the sky color as the sun moves
 			//The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture
@@ -245,7 +228,7 @@ namespace scatterer
 			m_skyMaterialScaled=new Material(ShaderTool.GetMatFromShader2("CompiledSkyScaled.shader"));
 			m_skyMaterialScaled.renderQueue = 2004;
 
-			m_skyMapMaterial=new Material(ShaderTool.GetMatFromShader2("CompiledSkyMap.shader"));
+
 
 			m_skyExtinction=new Material(ShaderTool.GetMatFromShader2("CompiledSkyExtinction.shader"));
 			m_skyExtinction.renderQueue = 2002;
@@ -266,7 +249,7 @@ namespace scatterer
 			
 			InitUniforms(m_skyMaterialScaled);
 			InitUniforms(m_skyExtinction);
-						InitUniforms(m_skyMapMaterial);
+
 			
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 			
@@ -610,9 +593,7 @@ namespace scatterer
 			//
 			//					print ("In normal space");
 			//				}
-			
-						SetUniforms(m_skyMapMaterial);
-						Graphics.Blit(null, m_skyMap, m_skyMapMaterial);
+
 			
 			
 			atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
@@ -719,7 +700,6 @@ namespace scatterer
 			mat.SetTexture("_Sky_Transmittance", m_transmit);
 			mat.SetTexture("_Sky_Inscatter", m_inscatter);
 			mat.SetTexture("_Sky_Irradiance", m_irradiance);
-						mat.SetTexture("_Sky_Map", m_skyMap);
 			mat.SetFloat("_Sun_Intensity", 100f);
 			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun().normalized);
 			//			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun());
@@ -837,7 +817,6 @@ namespace scatterer
 			mat.SetTexture("_Sky_Transmittance", m_transmit);
 			mat.SetTexture("_Sky_Inscatter", m_inscatter);
 			mat.SetTexture("_Sky_Irradiance", m_irradiance);
-						mat.SetTexture("_Sky_Map", m_skyMap);
 			mat.SetFloat("_Sun_Intensity", 100f);
 			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun().normalized);
 			//			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun());
@@ -1230,7 +1209,6 @@ namespace scatterer
 			m_inscatter.Create ();
 			m_transmit.Create ();
 			m_irradiance.Create ();
-						m_skyMap.Create();
 			
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
@@ -1258,7 +1236,6 @@ namespace scatterer
 			m_transmit.Release();
 			m_irradiance.Release();
 			m_inscatter.Release();
-						m_skyMap.Release ();
 			
 			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 			
