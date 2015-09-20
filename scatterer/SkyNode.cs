@@ -42,6 +42,8 @@ namespace scatterer
 		
 		public float percentage;
 		public int currentConfigPoint;
+
+		float ExtinctionCutoff=2.0f;
 		
 		bool coronasDisabled=false;
 		
@@ -59,6 +61,8 @@ namespace scatterer
 		public float _Ocean_Threshold = 25f;
 		[Persistent] public float extinctionMultiplier=1f;
 		[Persistent] public float extinctionTint=100f;
+		[Persistent] public float mapExtinctionMultiplier=1f;
+		[Persistent] public float mapExtinctionTint=1f;
 		
 		//		string codeBase;
 		//		UriBuilder uri;
@@ -190,8 +194,8 @@ namespace scatterer
 		[Persistent] public float rimpower=600f;
 		
 		
-		[Persistent] public List<configPoint> configPoints= new List<configPoint> {new configPoint(5000f,1f,0.25f,1f,0.4f,0.23f)
-			,new configPoint(15000f,1f,0.15f,1f,8f,0.23f)};
+		[Persistent] public List<configPoint> configPoints= new List<configPoint> {new configPoint(5000f,1f,0.25f,1f,0.4f,0.23f,1f,100f)
+			,new configPoint(15000f,1f,0.15f,1f,8f,0.23f,1f,100f)};
 		
 		//Initialization
 		public void Start()
@@ -481,13 +485,13 @@ namespace scatterer
 				toggleCoronas ();
 			}
 			
-//			if ((!stocksunglareEnabled) ^ ((alt < sunglareCutoffAlt-1000) && !MapView.MapIsEnabled)) { //^ is XOR
-//				toggleStockSunglare();
-//			}
-
-			if ((!stocksunglareEnabled) ^ (m_manager.GetCore().stockSunglare)) { //^ is XOR
+			if ((!stocksunglareEnabled) ^ ((alt < sunglareCutoffAlt-1000) && !MapView.MapIsEnabled)) { //^ is XOR
 				toggleStockSunglare();
 			}
+
+//			if ((!stocksunglareEnabled) ^ (m_manager.GetCore().stockSunglare)) { //^ is XOR
+//				toggleStockSunglare();
+//			}
 			
 			interpolateVariables ();
 			
@@ -661,17 +665,20 @@ namespace scatterer
 			
 			//			mat.SetFloat ("_Alpha_Cutoff", alphaCutoff);
 			
-			mat.SetFloat ("_Extinction_Tint", extinctionTint);
-			mat.SetFloat ("extinctionMultiplier", extinctionMultiplier);
 
+			mat.SetFloat ("_Extinction_Cutoff", ExtinctionCutoff);
 			if (!MapView.MapIsEnabled)
 			{
 				mat.SetFloat ("_Alpha_Global", alphaGlobal);
+				mat.SetFloat ("_Extinction_Tint", extinctionTint);
+				mat.SetFloat ("extinctionMultiplier", extinctionMultiplier);
 			}
 			
 			else
 			{
 				mat.SetFloat ("_Alpha_Global", mapAlphaGlobal);
+				mat.SetFloat ("_Extinction_Tint", mapExtinctionTint);
+				mat.SetFloat ("extinctionMultiplier", mapExtinctionMultiplier);
 			}
 			
 			mat.SetFloat("scale",atmosphereGlobalScale);
@@ -1295,11 +1302,13 @@ namespace scatterer
 			{
 				m_skyMaterialScaled.SetTexture ("_Sun_Glare", black);
 				sunglareEnabled = false;
+				ExtinctionCutoff=0.99f;
 			}
 			else
 			{
 				m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
 				sunglareEnabled=true;
+				ExtinctionCutoff=2.0f;
 			}
 		}
 		
@@ -1400,6 +1409,8 @@ namespace scatterer
 				postProcessingAlpha = configPoints [0].postProcessAlpha;
 				postProcessDepth = configPoints [0].postProcessDepth;
 				postProcessExposure = configPoints [0].postProcessExposure;
+				extinctionMultiplier = configPoints [0].skyExtinctionMultiplier;
+				extinctionTint = configPoints [0].skyExtinctionTint;
 				currentConfigPoint=0;
 			} 
 			else if (trueAlt > configPoints [configPoints.Count-1].altitude) {
@@ -1408,6 +1419,8 @@ namespace scatterer
 				postProcessingAlpha = configPoints [configPoints.Count-1].postProcessAlpha;
 				postProcessDepth = configPoints [configPoints.Count-1].postProcessDepth;
 				postProcessExposure = configPoints [configPoints.Count-1].postProcessExposure;
+				extinctionMultiplier = configPoints [configPoints.Count-1].skyExtinctionMultiplier;
+				extinctionTint = configPoints [configPoints.Count-1].skyExtinctionTint;
 				currentConfigPoint=configPoints.Count-1;
 			} 
 			else
@@ -1423,6 +1436,8 @@ namespace scatterer
 						postProcessingAlpha = percentage*configPoints [j].postProcessAlpha+(1-percentage)*configPoints [j-1].postProcessAlpha;
 						postProcessDepth = percentage*configPoints [j].postProcessDepth+(1-percentage)*configPoints [j-1].postProcessDepth;
 						postProcessExposure = percentage*configPoints [j].postProcessExposure+(1-percentage)*configPoints [j-1].postProcessExposure;
+						extinctionMultiplier = percentage*configPoints [j].skyExtinctionMultiplier+(1-percentage)*configPoints [j-1].skyExtinctionMultiplier;
+						extinctionTint = percentage*configPoints [j].skyExtinctionTint+(1-percentage)*configPoints [j-1].skyExtinctionTint;
 						currentConfigPoint=j;
 					}
 				}
