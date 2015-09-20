@@ -57,7 +57,8 @@ namespace scatterer
 		public float irradianceFactor =1f;
 		public float oceanSigma = 0.04156494f;
 		public float _Ocean_Threshold = 25f;
-		public float extinctionMultiplier=1f;
+		[Persistent] public float extinctionMultiplier=1f;
+		[Persistent] public float extinctionTint=100f;
 		
 		//		string codeBase;
 		//		UriBuilder uri;
@@ -87,13 +88,15 @@ namespace scatterer
 		//PSystemBody[] pSystemBodies;
 		//ScaledSpaceFader kerbinPsystemBody;
 		
-		public float apparentDistance=1f;
+		[Persistent] public float MapViewScale=1f;
 		
 		GameObject skyObject, skyExtinctObject;
 		MeshRenderer skyMR, skyExtinctMR;
 		MeshFilter skyMF, skyExtinctMF;
 		
 		CelestialBody parentCelestialBody;
+		Transform ParentPlanetTransform;
+
 		//Matrix4x4 m_sun_worldToLocalRotation;
 		
 		bool sunglareEnabled=true;
@@ -236,10 +239,11 @@ namespace scatterer
 			sunGlare = new Texture2D (512, 512);
 			black = new Texture2D (512, 512);
 			
-			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			UriBuilder uri = new UriBuilder(codeBase);
-			path = Uri.UnescapeDataString(uri.Path);
-			path=Path.GetDirectoryName (path);
+//			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+//			UriBuilder uri = new UriBuilder(codeBase);
+//			path = Uri.UnescapeDataString(uri.Path);
+//			path=Path.GetDirectoryName (path);
+			path = m_manager.GetCore ().path;
 			
 			sunGlare.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + m_filePath, "sunglare.png")));
 			black.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + m_filePath, "black.png")));
@@ -275,7 +279,8 @@ namespace scatterer
 			idmesh = m_mesh;
 			//
 			skyObject.layer = layer;
-			celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+//			celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+			celestialTransform = ParentPlanetTransform;
 			//			skyObject.transform.parent = parentCelestialBody.transform;
 			skyObject.transform.parent = celestialTransform;
 			
@@ -603,13 +608,14 @@ namespace scatterer
 			
 			for (int k=0; (k< celestialBodies.Length) ; k++)
 			{
-				Transform tmpTransform = GetScaledTransform (celestialBodies[k].name);												
+				Transform tmpTransform;
 				//				Transform tmpTransform =celestialBodies[k].transform;
 				{
 					newRenderQueue=2001;
 					
 					if (celestialBodies[k].name != parentCelestialBody.name)
 					{
+						tmpTransform = GetScaledTransform (celestialBodies[k].name);												;
 						if(!MapView.MapIsEnabled){
 							if ((celestialBodies[k].transform.position-farCamera.transform.position).magnitude < (parentCelestialBody.transform.position-farCamera.transform.position).magnitude)
 							{
@@ -618,13 +624,18 @@ namespace scatterer
 						}
 						else
 						{
-							if ((ScaledSpace.LocalToScaledSpace(celestialBodies[k].transform.position)-scaledSpaceCamera.transform.position).magnitude < (ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position)-scaledSpaceCamera.transform.position).magnitude)
+//							if ((ScaledSpace.LocalToScaledSpace(celestialBodies[k].transform.position)-scaledSpaceCamera.transform.position).magnitude < (ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position)-scaledSpaceCamera.transform.position).magnitude)
+							if ((ParentPlanetTransform.position-scaledSpaceCamera.transform.position).magnitude < (ParentPlanetTransform.position-scaledSpaceCamera.transform.position).magnitude)
 							{
 								newRenderQueue=2005;
 							}
 							
 						}
 						
+					}
+					else
+					{
+						tmpTransform=ParentPlanetTransform;
 					}
 					
 					//					print (celestialBodies[k].name);
@@ -650,7 +661,7 @@ namespace scatterer
 			
 			//			mat.SetFloat ("_Alpha_Cutoff", alphaCutoff);
 			
-
+			mat.SetFloat ("_Extinction_Tint", extinctionTint);
 			mat.SetFloat ("extinctionMultiplier", extinctionMultiplier);
 
 			if (!MapView.MapIsEnabled)
@@ -671,11 +682,12 @@ namespace scatterer
 			//						if (debugSettings [5])
 			if(!MapView.MapIsEnabled)
 			{
-				mat.SetFloat ("_Globals_ApparentDistance", apparentDistance);
+				mat.SetFloat ("_Globals_ApparentDistance", 1f);
 			}
 			else
 			{
-				mat.SetFloat("_Globals_ApparentDistance", (float)(parentCelestialBody.Radius/100.2f));
+				mat.SetFloat("_Globals_ApparentDistance", (float)((parentCelestialBody.Radius/100.2f)/ MapViewScale ));
+//				mat.SetFloat ("_Globals_ApparentDistance", MapViewScale);
 			}
 			
 			
@@ -748,7 +760,8 @@ namespace scatterer
 			else
 			{
 				
-				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+//				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+				celestialTransform = ParentPlanetTransform;
 				//				idek =celestialTransform.position;
 				idek =celestialTransform.position-scaledSpaceCamera.transform.position;
 				mat.SetVector ("_Globals_Origin", idek);
@@ -876,7 +889,8 @@ namespace scatterer
 			else
 			{
 				
-				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+//				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+				celestialTransform = ParentPlanetTransform;
 				idek =celestialTransform.position;
 				mat.SetVector ("_Globals_Origin", idek);
 				
@@ -1020,7 +1034,8 @@ namespace scatterer
 				
 			{
 				
-				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+//				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+				celestialTransform = ParentPlanetTransform;
 				idek =celestialTransform.position;
 				mat.SetVector ("_Globals_Origin", /*Vector3.zero-*/ idek);
 			}
@@ -1174,6 +1189,11 @@ namespace scatterer
 		{
 			parentCelestialBody=inPlanet;
 		}
+
+		public void setParentPlanetTransform (Transform parentTransform)
+		{
+			ParentPlanetTransform = parentTransform;
+		}
 		
 		public void SetExposure(float expo)
 		{
@@ -1210,10 +1230,11 @@ namespace scatterer
 			m_transmit.Create ();
 			m_irradiance.Create ();
 			
-			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			UriBuilder uri = new UriBuilder(codeBase);
-			path = Uri.UnescapeDataString(uri.Path);
-			path=Path.GetDirectoryName (path);
+//			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+//			UriBuilder uri = new UriBuilder(codeBase);
+//			path = Uri.UnescapeDataString(uri.Path);
+//			path=Path.GetDirectoryName (path);
+			path = m_manager.GetCore ().path;
 			
 			
 			string path1 = path + m_filePath + "/transmittance.raw";

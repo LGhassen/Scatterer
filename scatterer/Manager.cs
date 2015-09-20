@@ -36,6 +36,8 @@ namespace scatterer
 		SunNode m_sunNode;
 
 		public CelestialBody parentCelestialBody;
+		public Transform ParentPlanetTransform;
+
 		CelestialBody sunCelestialBody;
 		
 		// Initialization
@@ -43,6 +45,7 @@ namespace scatterer
 		{
 			managerState = "waking up";
 			m_radius = (float)parentCelestialBody.Radius;
+//			print (m_radius);
 			
 			m_sunNode = new SunNode();
 			m_sunNode.Start ();
@@ -50,10 +53,12 @@ namespace scatterer
 			m_skyNode = new SkyNode();
 			m_skyNode.setManager (this);
 			m_skyNode.SetParentCelestialBody (parentCelestialBody);
+			m_skyNode.setParentPlanetTransform (ParentPlanetTransform);
+//			print ("skynode parent CB and PP set");
 			m_skyNode.loadSettings ();
 			m_skyNode.Start ();
 			m_skyNode.loadFromConfigNode ();
-
+//			print ("skynode started");
 
 
 //			m_oceanNode = new OceanWhiteCaps();
@@ -89,9 +94,6 @@ namespace scatterer
 			m_skyNode.UpdateNode();
 
 
-
-//				m_oceanNode.UpdateNode ();
-
 			
 			updateCnt++;
 			managerState = "update done "+updateCnt.ToString();
@@ -112,6 +114,11 @@ namespace scatterer
 		public void setParentCelestialBody (CelestialBody parent)
 		{
 			parentCelestialBody = parent;
+		}
+
+		public void setParentPlanetTransform (Transform parentTransform)
+		{
+			ParentPlanetTransform = parentTransform;
 		}
 		
 		public void setSunCelestialBody (CelestialBody sun)

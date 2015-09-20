@@ -21,6 +21,8 @@ namespace scatterer
 
 		MeshRenderer mr = new MeshRenderer ();
 
+		public string path;
+
 		int updateCnt=0;
 
 		bool initiated=false;
@@ -33,6 +35,7 @@ namespace scatterer
 		float rimpower=600f;
 
 		float extinctionMultiplier=100f;
+		float extinctionTint=100f;
 
 		//configPoint variables 		
 		float pointAltitude=0f;
@@ -43,7 +46,7 @@ namespace scatterer
 		Camera[] cams;
 		int count;
 		
-//		float apparentDistance=1f;
+		float MapViewScale=1000f;
 		
 		//ReflectedLight variables
 //		float terrainReflectance=100;
@@ -64,7 +67,7 @@ namespace scatterer
 		float postProcessingalpha=78f;
 		float postProcessDepth=200f;
 		float postProcessExposure=18f;
-//		float apparentDistance=1000f;
+//		float MapViewScale=1000f;
 
 
 		//sky properties
@@ -73,6 +76,7 @@ namespace scatterer
 		float mapExposure = 15f;
 		float mapAlphaGlobal=100f;
 
+		Transform ParentPlanetTransform;
 
 		public Camera chosenCamera;
 		public int layer=15;
@@ -81,7 +85,13 @@ namespace scatterer
 		//other stuff
 		float atmosphereGlobalScale=1000f;
 		float m_radius;// = 600000.0f;
-		String parentPlanet="Kerbin";
+		//String parentPlanet="Kerbin";
+
+		[Persistent] String ParentPlanetCelestialBodyName = "Kerbin";
+		[Persistent] String ParentPlanetTransformName = "Kerbin";
+
+
+
 		int PlanetId;
 		int SunId;				
 		public CelestialBody[] celestialBodies;	
@@ -104,6 +114,11 @@ namespace scatterer
 			WindowRect = new Rect(0, 0, 300, 50);
 			Visible = true;						
 			isActive = false;
+
+			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+			UriBuilder uri = new UriBuilder (codeBase);
+			path = Uri.UnescapeDataString(uri.Path);
+			path=Path.GetDirectoryName (path);
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene==GameScenes.SPACECENTER )
 
@@ -181,7 +196,8 @@ namespace scatterer
 					
 					//read parent planet from config
 					cfg.load ();
-					parentPlanet =cfg.GetValue<string>("Planet");
+//					parentPlanet =cfg.GetValue<string>("Planet");
+					loadParentPlanet();
 					atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"))*1000f;
 					
 					//find sun and parent planet
@@ -190,8 +206,12 @@ namespace scatterer
 					SunId =0;
 					
 					for (int k=0; k< celestialBodies.Length ; k++)
-					{									
-						if (celestialBodies[k].GetName() == parentPlanet)
+					{		
+//							print (celestialBodies[k].GetName());
+//							print ("ParentPlanetCelestialBodyName");
+//							print (ParentPlanetCelestialBodyName);
+//						if (celestialBodies[k].GetName() == parentPlanet)
+						if (celestialBodies[k].GetName() == ParentPlanetCelestialBodyName)
 							PlanetId=k;
 						
 						if (celestialBodies[k].GetName() == "Sun")
@@ -202,6 +222,8 @@ namespace scatterer
 						print("parentPlanet not found");
 					else
 						found=true;
+
+					 ParentPlanetTransform = ScaledSpace.Instance.transform.FindChild(ParentPlanetTransformName);
 				}
 
 					if (!initiated && found) {
@@ -209,24 +231,39 @@ namespace scatterer
 					//create and configure manager
 					m_manager=new Manager();
 					m_manager.setParentCelestialBody(celestialBodies[PlanetId]);
+						m_manager.setParentPlanetTransform(ParentPlanetTransform);
 					m_manager.setSunCelestialBody(celestialBodies[SunId]);
 					m_manager.SetCore(this);
 					m_manager.Awake();
+
+//						print ("parentPlanet transform position");
+//						print (ParentPlanetTransform.position);
+//						
+//						print ("parentcelestialbody transform position");
+//						print (celestialBodies[PlanetId].transform.position);
+
 					getSettingsFromSkynode();
 					loadConfigPoint(selectedConfigPoint);
 					
 					m_radius = (float)celestialBodies [PlanetId].Radius;
-					backupAtmosphereMaterial(parentPlanet);
-					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
+//					backupAtmosphereMaterial(parentPlanet);
+//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
+
+					backupAtmosphereMaterial(ParentPlanetTransformName);
+					tweakStockAtmosphere(ParentPlanetTransformName,rimBlend,rimpower);
+
 //
 //				if (!initiated){
 					cams = Camera.allCameras;
 					count = Camera.allCameras.Length;
 					initiated=true;
 				}
-					
+				
+
 				if(initiated)
-				m_manager.Update ();
+					{
+						m_manager.Update ();
+					}
 
 			}
 		}
@@ -247,7 +284,8 @@ namespace scatterer
 //			Destroy(m_manager.m_skyNode);
 			m_manager.OnDestroy ();
 			Destroy (m_manager);
-			ReactivateAtmosphere (parentPlanet);
+//			ReactivateAtmosphere (parentPlanet);
+			ReactivateAtmosphere (ParentPlanetTransformName);
 
 		}
 		
@@ -529,15 +567,15 @@ namespace scatterer
 //				GUILayout.EndHorizontal ();
 //				}
 
-//				GUILayout.BeginHorizontal ();
-//				GUILayout.Label ("Apparent distance (/10000)");
-//				apparentDistance = (float)(Convert.ToDouble (GUILayout.TextField (apparentDistance.ToString ())));
-//				
-//				if (GUILayout.Button ("Set"))
-//				{
-//					m_manager.m_skyNode.apparentDistance= apparentDistance/1000f;
-//				}
-//				GUILayout.EndHorizontal ();
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Map view scale (/10000)");
+				MapViewScale = (float)(Convert.ToDouble (GUILayout.TextField (MapViewScale.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.MapViewScale= MapViewScale/1000f;
+				}
+				GUILayout.EndHorizontal ();
 
 				GUILayout.BeginHorizontal ();
 
@@ -560,7 +598,8 @@ namespace scatterer
 
 				if (GUILayout.Button ("Set"))
 				{
-					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
+//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
+					tweakStockAtmosphere(ParentPlanetTransformName,rimBlend,rimpower);
 				}
 				GUILayout.EndHorizontal ();
 
@@ -572,6 +611,16 @@ namespace scatterer
 				if (GUILayout.Button ("Set"))
 				{
 					m_manager.m_skyNode.extinctionMultiplier=extinctionMultiplier /100f;
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("extinctionTint (/100)");
+				extinctionTint = (float)(Convert.ToDouble (GUILayout.TextField (extinctionTint.ToString ())));
+				
+				if (GUILayout.Button ("Set"))
+				{
+					m_manager.m_skyNode.extinctionTint=extinctionTint /100f;
 				}
 				GUILayout.EndHorizontal ();
 
@@ -634,12 +683,14 @@ namespace scatterer
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button ("Disable stock atmo"))
 				{					
-					DeactivateAtmosphere(parentPlanet);
+//					DeactivateAtmosphere(parentPlanet);
+					DeactivateAtmosphere(ParentPlanetTransformName);
 				}
 
 				if (GUILayout.Button ("Enable stock atmo"))
 				{					
-					ReactivateAtmosphere(parentPlanet);
+//					ReactivateAtmosphere(parentPlanet);
+					ReactivateAtmosphere(ParentPlanetTransformName);
 				}
 				GUILayout.EndHorizontal ();
 
@@ -707,6 +758,10 @@ namespace scatterer
 
 			rimBlend = m_manager.m_skyNode.rimBlend;
 			rimpower = m_manager.m_skyNode.rimpower;
+
+			MapViewScale = m_manager.m_skyNode.MapViewScale *1000f;
+			extinctionMultiplier = 100* m_manager.m_skyNode.extinctionMultiplier;
+			extinctionTint = 100* m_manager.m_skyNode.extinctionTint;
 
 			showInterpolatedValues = m_manager.m_skyNode.displayInterpolatedVariables;
 		}
@@ -792,6 +847,11 @@ namespace scatterer
 			exposure = m_manager.m_skyNode.configPoints [point].skyExposure*100f;
 
 			pointAltitude = m_manager.m_skyNode.configPoints [point].altitude;
+		}
+
+		public void loadParentPlanet() {
+			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/PlanetName.txt");
+			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
 		}
 	}
 }
