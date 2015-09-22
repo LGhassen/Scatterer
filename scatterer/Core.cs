@@ -115,7 +115,7 @@ namespace scatterer
 		{
 			WindowCaption = "Scatterer v0.0175: alt+f10/f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
-			Visible = true;						
+			Visible = false;						
 			isActive = false;
 
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
