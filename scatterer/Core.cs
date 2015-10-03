@@ -40,6 +40,8 @@ namespace scatterer
 		float mapExtinctionMultiplier=100f;
 		float mapExtinctionTint=100f;
 
+		float specR=0f, specG=0f,specB=0f, shininess=0f,opaq=0f;
+
 		//configPoint variables 		
 		float pointAltitude=0f;
 		float newCfgPtAlt=0f;
@@ -649,6 +651,28 @@ namespace scatterer
 				GUILayout.EndHorizontal ();
 
 				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("specR");
+				specR = (float)(Convert.ToDouble (GUILayout.TextField (specR.ToString ())));
+				
+				GUILayout.Label ("specG");
+				specG = (float)(Convert.ToDouble (GUILayout.TextField (specG.ToString ())));
+
+				GUILayout.Label ("specB");
+				specB = (float)(Convert.ToDouble (GUILayout.TextField (specB.ToString ())));
+
+				GUILayout.Label ("shine");
+				shininess = (float)(Convert.ToDouble (GUILayout.TextField (shininess.ToString ())));
+
+				GUILayout.Label ("opaq");
+				opaq = (float)(Convert.ToDouble (GUILayout.TextField (opaq.ToString ())));
+
+				if (GUILayout.Button ("Set"))
+				{
+					tweakStockAtmosphere(ParentPlanetTransformName,rimBlend,rimpower);
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button ("Save settings"))
 				{
 					m_manager.m_skyNode.rimBlend=rimBlend;
@@ -838,6 +862,10 @@ namespace scatterer
 					Material sharedMaterial = t.renderer.sharedMaterial;
 					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), inRimBlend/100f);
 					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), inRimPower/100f);
+					sharedMaterial.SetColor("_SpecColor", new Color(specR/100f,specG/100f,specB/100f));
+					sharedMaterial.SetFloat("_Shininess",shininess/100);
+					sharedMaterial.SetFloat("_Opacity",opaq/100);
+
 					i = t.childCount + 10;
 				}
 			}
