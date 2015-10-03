@@ -522,6 +522,12 @@ namespace scatterer
 					waitBeforeReloadCnt = 0;
 				}
 			}
+
+			farCamera.hdr = true;
+			nearCamera.hdr = true;
+			scaledSpaceCamera.hdr = true;
+
+
 			
 			{
 				
@@ -1117,21 +1123,8 @@ namespace scatterer
 			//			mat.SetFloat("_Alpha_Cutoff", alphaCutoff);
 			
 		}
-		
-		/*void OnGUI(){
-    GUI.DrawTexture(new Rect(0,0,512, 512), m_skyMap);
-        }*/
-		
-		//		public void SetNearPlane(int NR)
-		//		{
-		//			farCamera.gameObject.GetComponent<scatterPostprocess>().setNearPlane(NR);
-		//		}
-		//		
-		//		public void SetFarPlane(int FR)
-		//		{
-		//			farCamera.gameObject.GetComponent<scatterPostprocess>().setFarPlane(FR);
-		//		}
-		
+
+
 		public void setManager(Manager manager)
 		{
 			m_manager=manager;
@@ -1154,15 +1147,9 @@ namespace scatterer
 			//			if (tmp != null)
 			if ((farCamera.gameObject.GetComponent<scatterPostprocess> ()) != null)
 			{
-				//				Component.Destroy (tmp);
-				
-				Component.Destroy (farCamera.gameObject.GetComponent<scatterPostprocess> ());
-				
+				Component.Destroy (farCamera.gameObject.GetComponent<scatterPostprocess> ());	
 			}
-			
-			
-			//Component.Destroy(cams[cam+1].gameObject.GetComponent<scatterPostprocess>());
-			//			atmosphereMeshrenderer.enabled = false;
+
 			postprocessingEnabled = false;
 		}
 		
@@ -1172,25 +1159,25 @@ namespace scatterer
 			postProcessExposure=postExposure;
 		}
 		
-		public void SetPostProcessDepth(float postDepth)
-		{
-			postProcessDepth=postDepth;
-		}
-		
-		public void SetPostProcessAlpha(float postAlpha)
-		{
-			postProcessingAlpha=postAlpha;
-		}
-		
-		public void SetPostProcessScale(float postScale)
-		{
-			postProcessingScale=postScale;
-		}
-		
-		public void SetAtmosphereGlobalScale(float gScale)
-		{
-			atmosphereGlobalScale=gScale;
-		}
+//		public void SetPostProcessDepth(float postDepth)
+//		{
+//			postProcessDepth=postDepth;
+//		}
+//		
+//		public void SetPostProcessAlpha(float postAlpha)
+//		{
+//			postProcessingAlpha=postAlpha;
+//		}
+//		
+//		public void SetPostProcessScale(float postScale)
+//		{
+//			postProcessingScale=postScale;
+//		}
+//		
+//		public void SetAtmosphereGlobalScale(float gScale)
+//		{
+//			atmosphereGlobalScale=gScale;
+//		}
 		
 		public void SetParentCelestialBody(CelestialBody inPlanet)
 		{
@@ -1201,27 +1188,21 @@ namespace scatterer
 		{
 			ParentPlanetTransform = parentTransform;
 		}
-		
-		public void SetExposure(float expo)
-		{
-			m_HDRExposure=expo;
-		}
-		
-		public void SetExtinctionCoeff(float exCoeff)
-		{
-			extinctionCoeff = exCoeff;
-		}
-		
-		
-		//		public void SetAlphaCutoff(float cutoff)
-		//		{
-		//			alphaCutoff = cutoff;
-		//		}
-		
-		public void SetAlphaGlobal(float glob)
-		{
-			alphaGlobal = glob;
-		}
+
+//		public void SetExposure(float expo)
+//		{
+//			m_HDRExposure=expo;
+//		}
+//		
+//		public void SetExtinctionCoeff(float exCoeff)
+//		{
+//			extinctionCoeff = exCoeff;
+//		}
+//		
+//		public void SetAlphaGlobal(float glob)
+//		{
+//			alphaGlobal = glob;
+//		}
 		
 		public void setLayernCam(int inLayer, int inCam)
 		{
@@ -1236,14 +1217,9 @@ namespace scatterer
 			m_inscatter.Create ();
 			m_transmit.Create ();
 			m_irradiance.Create ();
-			
-//			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-//			UriBuilder uri = new UriBuilder(codeBase);
-//			path = Uri.UnescapeDataString(uri.Path);
-//			path=Path.GetDirectoryName (path);
+
 			path = m_manager.GetCore ().path;
-			
-			
+						
 			string path1 = path + m_filePath + "/transmittance.raw";
 			EncodeFloat.WriteIntoRenderTexture (m_transmit, 3, path1,null);
 			
@@ -1374,22 +1350,7 @@ namespace scatterer
 			atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"));	
 		}
 		
-		//		public void saveSettings()
-		//		{
-		//			cfg ["Rg"] = Rg.ToString();
-		//			cfg ["Rt"] = Rt.ToString();
-		//			cfg ["RL"] = RL.ToString();
-		//			
-		//			cfg ["BETA_R"] = m_betaR;
-		//			cfg ["BETA_MSca"] = BETA_MSca;
-		//			cfg ["MIE_G"] = m_mieG.ToString();
-		//			cfg ["HR"] = HR.ToString();
-		//			cfg ["HM"] = HM.ToString();
-		//			cfg ["AVERAGE_GROUND_REFLECTANCE"] = AVERAGE_GROUND_REFLECTANCE.ToString();
-		//			
-		//			cfg.save ();
-		//		}
-		
+
 		public void loadFromConfigNode() {
 			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/Settings.txt");
 			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
@@ -1400,7 +1361,7 @@ namespace scatterer
 			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
 			cnTemp.Save(path+"/config/Settings.txt");
 		}
-		
+
 		public void interpolateVariables()
 		{
 			if (trueAlt <= configPoints [0].altitude) {
@@ -1442,68 +1403,6 @@ namespace scatterer
 					}
 				}
 			}
-			
-			//			print ("aphaGlobal:"+alphaGlobal+"m_HDRExposure:"+m_HDRExposure+
-			//			       "postProcessingAlpha:"+postProcessingAlpha+"postProcessDepth:"+postProcessDepth+"postProcessExposure"+postProcessExposure);
-			//			print (m_HDRExposure);
-			//			print (postProcessingAlpha);
-			//			print (postProcessDepth);
-			//			print (postProcessExposure);
-			
-		}
-
-		// Code to calculate all the corners near and far of a camera
-		private Vector3[] RecalculateFrustrumPoints(Camera cam)
-		{
-			var frustrumPoints = new Vector3[8];
-			var far = cam.farClipPlane;
-			var near = cam.nearClipPlane;
-			var aspectRatio = cam.pixelWidth / cam.pixelHeight;
-			
-			if(cam.isOrthoGraphic)
-			{
-				var orthoSize = cam.orthographicSize;
-				
-				frustrumPoints[0] = new Vector3(orthoSize, orthoSize, near);
-				frustrumPoints[1] = new Vector3(-orthoSize, orthoSize, near);
-				frustrumPoints[2] = new Vector3(-orthoSize, -orthoSize, near);
-				frustrumPoints[3] = new Vector3(orthoSize, -orthoSize, near);
-				frustrumPoints[4] = new Vector3(orthoSize, orthoSize, far);
-				frustrumPoints[5] = new Vector3(-orthoSize, orthoSize, far);
-				frustrumPoints[6] = new Vector3(-orthoSize, -orthoSize, far);
-				frustrumPoints[7] = new Vector3(orthoSize, -orthoSize, far);
-			}
-			else
-			{
-				var hNear = 2 * Mathf.Tan((cam.fieldOfView  * 0.5f) * Mathf.Deg2Rad) * near;
-				var wNear = hNear * aspectRatio;
-				
-				var hFar = 2 * Mathf.Tan((cam.fieldOfView * 0.5f) * Mathf.Deg2Rad) * far;
-				var wFar = hFar * aspectRatio;
-				
-				var fc = Vector3.forward * far;
-				var ftl = fc + (Vector3.up * hFar / 2) - (Vector3.right * wFar / 2);
-				var ftr = fc + (Vector3.up * hFar / 2) + (Vector3.right * wFar / 2);
-				var fbl = fc - (Vector3.up * hFar / 2) - (Vector3.right * wFar / 2);
-				var fbr = fc - (Vector3.up * hFar / 2) + (Vector3.right * wFar / 2);
-				
-				var nc = Vector3.forward * near;
-				var ntl = nc + (Vector3.up * hNear / 2) - (Vector3.right * wNear / 2);
-				var ntr = nc + (Vector3.up * hNear / 2) + (Vector3.right * wNear / 2);
-				var nbl = nc - (Vector3.up * hNear / 2) - (Vector3.right * wNear / 2);
-				var nbr = nc - (Vector3.up * hNear / 2) + (Vector3.right * wNear / 2);
-				
-				frustrumPoints[0] = ntr;
-				frustrumPoints[1] = ntl;
-				frustrumPoints[2] = nbr;
-				frustrumPoints[3] = nbl;
-				frustrumPoints[4] = ftr;
-				frustrumPoints[5] = ftl;
-				frustrumPoints[6] = fbl;
-				frustrumPoints[7] = fbr;    
-			}
-			
-			return frustrumPoints;
 		}	
 	}
 }
