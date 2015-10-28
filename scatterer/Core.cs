@@ -17,7 +17,8 @@ namespace scatterer
 	{
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType<SkyNode>(null);
 
-		[Persistent] List<String> scattererPlanets= new List<String> {};// { "Kerbin", "Duna", "Eeloo" };
+		[Persistent] List<String> scattererCelestialBodies= new List<String> { "Kerbin", "Duna", "Laythe", "Eve"};
+		[Persistent] List<String> scattererTransformNames= new List<String> { "Kerbin", "Duna", "Laythe", "Eve"};
 
 		MeshRenderer mr = new MeshRenderer ();
 
@@ -204,8 +205,9 @@ namespace scatterer
 					//read parent planet from config
 					cfg.load ();
 //					parentPlanet =cfg.GetValue<string>("Planet");
-					loadParentPlanet();
-					atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"))*1000f;
+					loadPlanets();
+
+					//atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"))*1000f;
 					
 					//find sun and parent planet
 					celestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType(typeof(CelestialBody));
@@ -883,26 +885,26 @@ namespace scatterer
 			}
 		}
 
-		public void savePlanetsList() {
+//		public void savePlanetsList() {
+//
+//			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+//			UriBuilder uri = new UriBuilder(codeBase);
+//			string path = Uri.UnescapeDataString(uri.Path);
+//			path=Path.GetDirectoryName (path);
+//
+//			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
+//			cnTemp.Save(path+"/config/PlanetsList.txt");
+//		}
 
-			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			UriBuilder uri = new UriBuilder(codeBase);
-			string path = Uri.UnescapeDataString(uri.Path);
-			path=Path.GetDirectoryName (path);
-
-			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
-			cnTemp.Save(path+"/config/PlanetsList.txt");
-		}
-
-		public void loadPlanetsList() {
-			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			UriBuilder uri = new UriBuilder(codeBase);
-			string path = Uri.UnescapeDataString(uri.Path);
-			path=Path.GetDirectoryName (path);
-
-			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/PlanetsList.txt");
-			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
-		}
+//		public void loadPlanetsList() {
+//			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+//			UriBuilder uri = new UriBuilder(codeBase);
+//			string path = Uri.UnescapeDataString(uri.Path);
+//			path=Path.GetDirectoryName (path);
+//
+//			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/PlanetsList.txt");
+//			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
+//		}
 
 		public void loadConfigPoint(int point)
 		{
@@ -919,9 +921,11 @@ namespace scatterer
 			pointAltitude = m_manager.m_skyNode.configPoints [point].altitude;
 		}
 
-		public void loadParentPlanet() {
-			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/PlanetName.txt");
+		public void loadPlanets() {
+			//ConfigNode cnToLoad = ConfigNode.Load(path+"/config/PlanetNames.txt");
+			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/PlanetsList.txt");
 			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
+
 		}
 	}
 }
