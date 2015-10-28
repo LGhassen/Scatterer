@@ -37,6 +37,8 @@ namespace scatterer
 		float extinctionMultiplier=100f;
 		float extinctionTint=100f;
 
+		float farCameraHDR=250f;
+
 		float mapExtinctionMultiplier=100f;
 		float mapExtinctionTint=100f;
 
@@ -435,6 +437,16 @@ namespace scatterer
 				{
 						m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExposure=exposure / 100f;
 				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+					GUILayout.Label ("FarCamera exposure (/100)");
+					farCameraHDR = (float)(Convert.ToDouble (GUILayout.TextField (farCameraHDR.ToString ())));
+					
+					if (GUILayout.Button ("Set"))
+					{
+						m_manager.m_skyNode.farCameraHDR = farCameraHDR / 100f;
+					}
 				GUILayout.EndHorizontal ();
 
 					GUILayout.BeginHorizontal ();
