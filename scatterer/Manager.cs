@@ -24,9 +24,6 @@ namespace scatterer
 		//parent core
 		Core m_core;
 		
-		
-		int[] cam=new int[7];
-		
 		[SerializeField]
 		float m_radius= 600000.0f;
 		
@@ -55,9 +52,10 @@ namespace scatterer
 			m_skyNode.SetParentCelestialBody (parentCelestialBody);
 			m_skyNode.setParentPlanetTransform (ParentPlanetTransform);
 //			print ("skynode parent CB and PP set");
-			m_skyNode.loadSettings ();
+			//m_skyNode.loadSettings ();
 			m_skyNode.Start ();
 			m_skyNode.loadFromConfigNode ();
+			//m_skyNode.loadFromConfigNode ();
 //			print ("skynode started");
 
 
@@ -67,14 +65,6 @@ namespace scatterer
 //
 //			m_oceanNode.Start ();
 
-			
-			for (int i=0;i<7;i++)
-			{
-				cam[i]=1;
-			}
-			
-
-			
 			managerState = "awake";
 		}
 		

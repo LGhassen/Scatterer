@@ -113,7 +113,7 @@ namespace scatterer
 		//atmosphere properties
 		
 		/*[Persistent]*/ public float extinctionCoeff=0.7f;
-		/*[Persistent]*/ public float atmosphereGlobalScale=1f;
+
 		/*[Persistent]*/ public float postProcessingAlpha=0.78f;
 		/*[Persistent]*/ public float postProcessingScale=1f;
 		/*[Persistent]*/ public float postProcessDepth=0.02f;
@@ -143,9 +143,10 @@ namespace scatterer
 		
 		float m_radius;// = 600000.0f;
 		//The radius of the planet (Rg), radius of the atmosphere (Rt)
-		float Rg;// = 600000.0f;
-		float Rt;// = (64200f/63600f) * 600000.0f;
-		float RL;// = (64210.0f/63600f) * 600000.0f;
+		[Persistent] float Rg;// = 600000.0f;
+		[Persistent] float Rt;// = (64200f/63600f) * 600000.0f;
+		[Persistent] float RL;// = (64210.0f/63600f) * 600000.0f;
+		[Persistent] public float atmosphereGlobalScale=1f;
 		
 		//Dimensions of the tables
 		const int TRANSMITTANCE_W = 256;
@@ -160,23 +161,23 @@ namespace scatterer
 		int layer=15;
 		int cam=1;
 		
-		float AVERAGE_GROUND_REFLECTANCE = 0.1f;
+		[Persistent] float AVERAGE_GROUND_REFLECTANCE = 0.1f;
 		//Half heights for the atmosphere air density (HR) and particle density (HM)
 		//This is the height in km that half the particles are found below
-		float HR = 8.0f;
-		float HM = 1.2f;
+		[Persistent] float HR = 8.0f;
+		[Persistent] float HM = 1.2f;
 		//scatter coefficient for mie
-		Vector3 BETA_MSca = new Vector3(4e-3f,4e-3f,4e-3f);
+		[Persistent] Vector3 BETA_MSca = new Vector3(4e-3f,4e-3f,4e-3f);
 		
 		public Material m_atmosphereMaterial;
 		Material m_skyMaterialScaled;
 		Material m_skyExtinction;
 						
-		Vector3 m_betaR = new Vector3(5.8e-3f, 1.35e-2f, 3.31e-2f);
+		[Persistent] Vector3 m_betaR = new Vector3(5.8e-3f, 1.35e-2f, 3.31e-2f);
 		//Asymmetry factor for the mie phase function
 		//A higher number meands more light is scattered in the forward direction
 		[SerializeField]
-		float m_mieG = 0.85f;
+		[Persistent] float m_mieG = 0.85f;
 		
 		string m_filePath = "/Proland/Textures/Atmo";
 		
@@ -1360,26 +1361,26 @@ namespace scatterer
 			return transforms.Single(n => n.name == body);
 		}
 		
-		public void loadSettings()
-		{
-			cfg.load ();
-			Rg =float.Parse(cfg.GetValue<string>("Rg"));
-			Rt =float.Parse(cfg.GetValue<string>("Rt"));
-			RL =float.Parse(cfg.GetValue<string>("RL"));
-			
-			m_betaR = cfg.GetValue<Vector3>("BETA_R");
-			BETA_MSca = cfg.GetValue<Vector3>("BETA_MSca");
-			m_mieG =float.Parse(cfg.GetValue<string>("MIE_G"));
-			
-			HR =float.Parse( cfg.GetValue<string>("HR"));
-			HM =float.Parse( cfg.GetValue<string>("HM"));
-			AVERAGE_GROUND_REFLECTANCE =float.Parse(cfg.GetValue<string>("AVERAGE_GROUND_REFLECTANCE"));
-			atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"));	
-		}
+//		public void loadSettings()
+//		{
+//			cfg.load ();
+//			Rg =float.Parse(cfg.GetValue<string>("Rg"));
+//			Rt =float.Parse(cfg.GetValue<string>("Rt"));
+//			RL =float.Parse(cfg.GetValue<string>("RL"));
+//			
+//			m_betaR = cfg.GetValue<Vector3>("BETA_R");
+//			BETA_MSca = cfg.GetValue<Vector3>("BETA_MSca");
+//			m_mieG =float.Parse(cfg.GetValue<string>("MIE_G"));
+//			
+//			HR =float.Parse( cfg.GetValue<string>("HR"));
+//			HM =float.Parse( cfg.GetValue<string>("HM"));
+//			AVERAGE_GROUND_REFLECTANCE =float.Parse(cfg.GetValue<string>("AVERAGE_GROUND_REFLECTANCE"));
+//			atmosphereGlobalScale=float.Parse(cfg.GetValue<string>("atmosphereGlobalScale"));	
+//		}
 		
 
 		public void loadFromConfigNode() {
-			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/Settings.txt");
+			ConfigNode cnToLoad = ConfigNode.Load(path+"/config/"+parentCelestialBody.name+"/Settings.txt");
 			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
 		}
 		
