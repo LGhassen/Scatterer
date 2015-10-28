@@ -121,6 +121,7 @@ namespace scatterer
 		//		float inscatteringCoeff=0.8f; //useless, I also removed it from shader
 		
 		/*[Persistent]*/ public float m_HDRExposure= 0.2f;
+		public float farCameraHDR= 0.25f;
 		[Persistent] public float mapExposure= 0.15f;
 		
 		static PQS CurrentPQS=null;
@@ -375,7 +376,7 @@ namespace scatterer
 					//						farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
 					//					}
 					
-					farCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
+					//farCamera.gameObject.GetComponent<scatterPostprocess> ().setMaterial (m_atmosphereMaterial);
 				}
 			}
 			
@@ -435,15 +436,17 @@ namespace scatterer
 					if (cams [i].name == "Camera 00")
 						nearCamera = cams [i];
 				}
-				
+
+				farCamera.depthTextureMode=DepthTextureMode.Depth;
+
 				//				var cbTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> (true).Where (mod => mod.transform.parent == CurrentPQS.transform).FirstOrDefault (); 
 				//				cbTransform.deactivateAltitude = 5000000;
 				
-				scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
-				
-				if (tmp != null) {
-					Component.Destroy (tmp);
-				}
+//				scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+//				
+//				if (tmp != null) {
+//					Component.Destroy (tmp);
+//				}
 				
 				
 				if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () != null)
@@ -453,7 +456,7 @@ namespace scatterer
 				
 				
 				//				if (postprocessingEnabled) {
-				farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
+//				farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
 				//					if (farCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
 				initiated = true;
 				//					}
@@ -556,15 +559,32 @@ namespace scatterer
 					//					print ("ScaledSpaceCamera updateAtCameraRythm==null");
 					scaledSpaceCamera.gameObject.AddComponent(typeof(updateAtCameraRythm));
 				}
-				
 
-				
 				if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () != null)
 				{
 					//					print ("ScaledSpaceCamera updateAtCameraRythm!=null");
 					scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_mesh,m_skyMaterialScaled,m_skyExtinction, m_manager,this,skyObject,skyExtinctObject,debugSettings[6],parentCelestialBody.transform,celestialTransform);										
 					//					scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_skyMaterialScaled, m_manager,this,skyObject,debugSettings[6],farCamera.transform);
 				}
+
+
+//				if (scaledSpaceCamera.gameObject.GetComponent<cameraHDR> () == null)
+//				{
+//					//					print ("ScaledSpaceCamera updateAtCameraRythm==null");
+//					scaledSpaceCamera.gameObject.AddComponent(typeof(cameraHDR));
+//					scaledSpaceCamera.gameObject.GetComponent<cameraHDR> ().settings (this);
+
+//				if (farCamera.gameObject.GetComponent<cameraHDR> () == null)
+//				{
+//					//					print ("ScaledSpaceCamera updateAtCameraRythm==null");
+//					farCamera.gameObject.AddComponent(typeof(cameraHDR));
+//					farCamera.gameObject.GetComponent<cameraHDR> ().settings (this);
+//				}
+//
+//				if (farCamera.gameObject.GetComponent<cameraHDR> () != null)
+//				{
+//					farCamera.gameObject.GetComponent<cameraHDR> ().settings (this);
+//				}
 				
 			}
 			
@@ -658,7 +678,9 @@ namespace scatterer
 					//					else print ("ey null");
 				}										
 			}
-			
+
+			print ("Far camera hdr");
+			print (farCameraHDR);
 			
 		}
 		
@@ -1133,10 +1155,10 @@ namespace scatterer
 		public void enablePostprocess()
 		{
 			//			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
-			if ((farCamera.gameObject.GetComponent<scatterPostprocess> ()) == null)
-			{
-				farCamera.gameObject.AddComponent(typeof(scatterPostprocess));
-			}
+//			if ((farCamera.gameObject.GetComponent<scatterPostprocess> ()) == null)
+//			{
+//				farCamera.gameObject.AddComponent(typeof(scatterPostprocess));
+//			}
 			//			atmosphereMeshrenderer.enabled = true;
 			postprocessingEnabled = true;
 		}
@@ -1145,10 +1167,10 @@ namespace scatterer
 		{
 			//			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 			//			if (tmp != null)
-			if ((farCamera.gameObject.GetComponent<scatterPostprocess> ()) != null)
-			{
-				Component.Destroy (farCamera.gameObject.GetComponent<scatterPostprocess> ());	
-			}
+//			if ((farCamera.gameObject.GetComponent<scatterPostprocess> ()) != null)
+//			{
+//				Component.Destroy (farCamera.gameObject.GetComponent<scatterPostprocess> ());	
+//			}
 
 			postprocessingEnabled = false;
 		}
@@ -1241,18 +1263,23 @@ namespace scatterer
 			m_irradiance.Release();
 			m_inscatter.Release();
 			
-			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
-			
-			if(tmp != null)
-			{
-				Component.Destroy (tmp);
-			}
+//			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
+//			
+//			if(tmp != null)
+//			{
+//				Component.Destroy (tmp);
+//			}
 
 			
 			if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () != null)
 			{
 				Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ());
 			}
+
+//			if (scaledSpaceCamera.gameObject.GetComponent<cameraHDR> () != null)
+//			{
+//				Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<cameraHDR> ());
+//			}
 			
 			
 			Component.Destroy (skyMR);
