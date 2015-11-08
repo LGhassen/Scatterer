@@ -121,7 +121,6 @@ namespace scatterer
 		//		float inscatteringCoeff=0.8f; //useless, I also removed it from shader
 		
 		/*[Persistent]*/ public float m_HDRExposure= 0.2f;
-		public float farCameraHDR= 0.25f;
 		[Persistent] public float mapExposure= 0.15f;
 		
 		static PQS CurrentPQS=null;
@@ -311,38 +310,7 @@ namespace scatterer
 			skyExtinctMR.material =m_skyExtinction;
 			skyExtinctMR.castShadows = false;
 			skyExtinctMR.receiveShadows = false;
-			
-			
-			//			skyObject.transform.localPosition = Vector3.zero;
-			//			skyObject.transform.localRotation = Quaternion.identity;
-			//			skyObject.transform.localScale = Vector3.one;
-			
-			
-			//			MR.enabled = true;
-			
-			
-			//			pSystemBodies = (PSystemBody[])UnityEngine.Object.FindObjectsOfType(typeof(PSystemBody));
-			//			print ("NUMBER FOUND");
-			//			print (pSystemBodies.Length);
-			//
-			//			kerbinPsystemBody=ScaledSpace.Instance.transform.FindChild("Kerbin").gameObject.GetComponentInChildren<ScaledSpaceFader>();
-			//
-			//			if (kerbinPsystemBody == null) {
-			//				print ("NULL");
-			//			}
-			//				else{
-			//					print ("NOT NULL");
-			//				print("fadeStart");
-			//
-			//				print(kerbinPsystemBody.fadeStart);
-			//
-			//				print("fadeEnd");
-			//
-			//				print(kerbinPsystemBody.fadeEnd);
-			//
-			//			
-			//			}
-			
+
 			hp = new SimplePostProcessCube (10000, m_atmosphereMaterial);
 			atmosphereMesh = hp.GameObject;
 			atmosphereMesh.layer = 15;
@@ -385,36 +353,8 @@ namespace scatterer
 		
 		public void UpdateNode()
 		{
-			
-			//			if (!initiated) {
-			//				cbTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> (true).Where (mod => mod.transform.parent == CurrentPQS.transform).FirstOrDefault (); 
-			//			}
-			//			cbTransform.deactivateAltitude = 5000000;
-			
-			//print ("Deactivate altitude");
-			//print(cbTransform.deactivateAltitude);
-			
-			//			testPQS = parentCelestialBody.pqsController;
-			//			print ("MAX PQS DETAIL DISTANCE");
-			//			print (testPQS.maxDetailDistance);
-			//
-			//			print ("PQS visible radius");
-			//			print (testPQS.visibleRadius);
-			//
-			//
-			//			print ("PQS visible altitude");
-			//			print (testPQS.visibleAltitude);
-			//
-			//			testPQS.isActive = true;
-			//			print ("fade start");
-			//			print (parentCelestialBody.scaledBody.GetComponent<ScaledSpaceFader> ().fadeStart);
-			//
-			//			print ("fade end");
-			//			print (parentCelestialBody.scaledBody.GetComponent<ScaledSpaceFader>().fadeEnd);
-			
-			
 			position = parentCelestialBody.transform.position;
-			
+
 			if (!initiated) {   
 				m_radius = m_manager.GetRadius ();
 				//m_radius = 600000.0f;
@@ -423,9 +363,7 @@ namespace scatterer
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
 				sunglareCutoffAlt = (Rt + Rt-Rg) /*  *0.995f*/;
-				
-				
-				//gets the cameras, this isn't done at start() because the cameras still don't exist then and it crashes the game
+				;
 				cams = Camera.allCameras;
 				
 				for (int i=0; i<cams.Length; i++) {
@@ -438,34 +376,19 @@ namespace scatterer
 						nearCamera = cams [i];
 				}
 
-				farCamera.depthTextureMode=DepthTextureMode.Depth;
 
-				//				var cbTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> (true).Where (mod => mod.transform.parent == CurrentPQS.transform).FirstOrDefault (); 
-				//				cbTransform.deactivateAltitude = 5000000;
+
 				
-//				scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
-//				
-//				if (tmp != null) {
-//					Component.Destroy (tmp);
-//				}
-				
-				
-				if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () != null)
+				if ((scaledSpaceCamera)&&(farCamera))
 				{
-					Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ());
+					farCamera.depthTextureMode=DepthTextureMode.Depth;;
+					if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ())
+					{
+						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ());
+					}
+					initiated = true;
 				}
-				
-				
-				//				if (postprocessingEnabled) {
-//				farCamera.gameObject.AddComponent (typeof(scatterPostprocess));
-				//					if (farCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
-				initiated = true;
-				//					}
-				//				} else {
-				//					initiated = true;
-				//				}
-				
-				
+
 				if (forceOFFaniso) { 
 					QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
 				}
@@ -476,6 +399,9 @@ namespace scatterer
 				}
 				
 			}
+
+			else
+			{
 			
 			
 			alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
@@ -493,26 +419,9 @@ namespace scatterer
 				toggleStockSunglare();
 			}
 
-//			if ((!stocksunglareEnabled) ^ (m_manager.GetCore().stockSunglare)) { //^ is XOR
-//				toggleStockSunglare();
-//			}
 			
 			interpolateVariables ();
-			
-			//			if (alt < (80000 + m_radius)) 
-			//			{
-			//				postProcessDepth=(150f + (alt-m_radius)*(1350f/ 80000f)) /10000f;
-			//				//postProcessDepth=(150 + (alt-m_radius)*(3350/ 80000))/1000f;
-			//			}
-			//
-			//			else
-			//			{
-			//				postProcessDepth=(2500f + (alt-m_radius-80000f)*(4000f/ 3200000f)) /10000f;
-			//			}
-			//
-			//			print ("POSTPROCESS DEPTH");
-			//			print (postProcessDepth*10000f);
-			
+
 			
 			//if alt-tabbing/windowing and rendertextures are lost
 			//this loads them back up
@@ -531,8 +440,6 @@ namespace scatterer
 			nearCamera.hdr = true;
 			scaledSpaceCamera.hdr = true;
 
-
-			
 			{
 				
 				skyObject.layer = 10;
@@ -552,22 +459,19 @@ namespace scatterer
 				skyExtinctMR.receiveShadows = false;
 				skyExtinctMR.sharedMaterial = m_skyExtinction;
 				skyExtinctMR.enabled = m_manager.GetCore().extinctionEnabled;
-//				skyExtinctMR.enabled = false;
-				
-				
-				if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () == null)
-				{
-					//					print ("ScaledSpaceCamera updateAtCameraRythm==null");
-					scaledSpaceCamera.gameObject.AddComponent(typeof(updateAtCameraRythm));
-				}
 
-				if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () != null)
+				if (scaledSpaceCamera)
 				{
-					//					print ("ScaledSpaceCamera updateAtCameraRythm!=null");
-					scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_mesh,m_skyMaterialScaled,m_skyExtinction, m_manager,this,skyObject,skyExtinctObject,debugSettings[6],parentCelestialBody.transform,celestialTransform);										
-					//					scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_skyMaterialScaled, m_manager,this,skyObject,debugSettings[6],farCamera.transform);
-				}
+					if (!scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ())
+					{
+						scaledSpaceCamera.gameObject.AddComponent(typeof(updateAtCameraRythm));
+					}
 
+					if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ())
+					{
+						scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ().settings (m_mesh,m_skyMaterialScaled,m_skyExtinction, m_manager,this,skyObject,skyExtinctObject,debugSettings[6],parentCelestialBody.transform,celestialTransform);								
+					}
+				}
 
 //				if (scaledSpaceCamera.gameObject.GetComponent<cameraHDR> () == null)
 //				{
@@ -588,49 +492,7 @@ namespace scatterer
 //				}
 				
 			}
-			
-			
-			
-			//			Graphics.DrawMesh(m_mesh, position, Quaternion.identity,m_skyMaterial,layer,cams[cam]);
-			
-			
-			//						if (debugSettings[6]){
-			//						skyObject.transform.parent = parentCelestialBody.transform;
-			//						}
-			//			
-			//						else{
-			//							Transform celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
-			//							skyObject.transform.parent = celestialTransform;
-			//						}
-			
-			
-			//			kerbinPsystemBody=ScaledSpace.Instance.transform.FindChild("Kerbin").gameObject.GetComponentInChildren<ScaledSpaceFader>();
-			//			
-			//			if (kerbinPsystemBody == null) {
-			//				print ("NULL");
-			//			}
-			//			else{
-			//				print ("NOT NULL");
-			//				print("fadeStart");
-			//				kerbinPsystemBody.fadeStart=110000;
-			//				print(kerbinPsystemBody.fadeStart);
-			//				
-			//				print("fadeEnd");
-			//				kerbinPsystemBody.fadeEnd=200000;
-			//				print(kerbinPsystemBody.fadeEnd);
-			//				
-			//				
-			//			}
-			
-			//			if (inScaledSpace) {
-			//				print ("In scaled space");
-			//			}
-			//				else{
-			//
-			//					print ("In normal space");
-			//				}
 
-			
 			
 			atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
 			
@@ -668,21 +530,15 @@ namespace scatterer
 					{
 						tmpTransform=ParentPlanetTransform;
 					}
-					
-					//					print (celestialBodies[k].name);
+
 					MeshRenderer mr2 = (MeshRenderer)tmpTransform.GetComponent (typeof(MeshRenderer));
 					if (mr2 != null)
 					{															
 						mr2.material.renderQueue=newRenderQueue;
-						//						print ("mech null");
 					}
-					//					else print ("ey null");
+					}
 				}										
 			}
-
-			print ("Far camera hdr");
-			print (farCameraHDR);
-			
 		}
 		
 		
@@ -690,10 +546,6 @@ namespace scatterer
 		{
 			//Sets uniforms that this or other gameobjects may need
 			if(mat == null) return;
-			//mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
-			
-			//			mat.SetFloat ("_Alpha_Cutoff", alphaCutoff);
-			
 
 			mat.SetFloat ("_Extinction_Cutoff", ExtinctionCutoff);
 			if (!MapView.MapIsEnabled)
@@ -1272,7 +1124,7 @@ namespace scatterer
 //			}
 
 			
-			if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> () != null)
+			if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ())
 			{
 				Component.Destroy(scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ());
 			}
@@ -1387,7 +1239,7 @@ namespace scatterer
 		
 		public void saveToConfigNode() {
 			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
-			cnTemp.Save(path+"/config/Settings.txt");
+			cnTemp.Save(path+"/config/"+parentCelestialBody.name+"/Settings.txt");
 		}
 
 		public void interpolateVariables()
