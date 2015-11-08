@@ -94,7 +94,9 @@ namespace scatterer
 		{
 			m_skyNode.OnDestroy ();
 			Destroy (m_skyNode);
+
 			Destroy (m_sunNode);
+			
 //			m_oceanNode.OnDestroy ();
 //			Destroy (m_oceanNode);
 
