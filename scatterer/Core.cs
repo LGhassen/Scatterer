@@ -15,14 +15,34 @@ namespace scatterer {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class Core: MonoBehaviourWindow {
 		
-		[Persistent] List < String > scattererCelestialBodies = new List < String >
+		[Persistent] List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody >
+		{
+			new scattererCelestialBody("Kerbin","Kerbin",50000,100000),
+			new scattererCelestialBody("Duna","Duna",50000,100000),
+			new scattererCelestialBody("Laythe","Laythe",50000,10000),
+			new scattererCelestialBody("Eve","Eve",50000,10000)
+		};
+		
+		//List < Manager > Managers = new List < Manager >();
+		
+		
+		/*
+		[Persistent] List < String > scattererCelestialBodyNames = new List < String >
 		{
 			"Kerbin", "Duna", "Laythe", "Eve"
 		};
+
 		[Persistent] List < String > scattererTransformNames = new List < String >
 		{
 			"Kerbin", "Duna", "Laythe", "Eve"
 		};
+
+		public List < CelestialBody > scattererCelestialBodies = new List < CelestialBody > ();
+		public List < Transform > scattererCelestialBodyTransforms = new List < Transform > ();
+
+		*/
+		
+		CelestialBody sunCelestialBody;
 		
 		MeshRenderer mr = new MeshRenderer();
 		
@@ -54,6 +74,8 @@ namespace scatterer {
 		int selectedConfigPoint = 0;
 		
 		Camera[] cams;
+		public Camera farCamera, scaledSpaceCamera, nearCamera;
+		
 		int count;
 		
 		float MapViewScale = 1000f;
@@ -101,10 +123,9 @@ namespace scatterer {
 		[Persistent] String ParentPlanetTransformName = "Kerbin";
 		
 		
+		//		int PlanetId;
+		//		int SunId;
 		
-		int PlanetId;
-		int SunId;
-		public CelestialBody[] celestialBodies;
 		Manager m_manager;
 		bool depthbufferEnabled = false;
 		bool isActive;
@@ -122,7 +143,7 @@ namespace scatterer {
 			WindowRect = new Rect(0, 0, 300, 50);
 			Visible = false;
 			isActive = false;
-
+			
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
 			path = Uri.UnescapeDataString(uri.Path);
@@ -135,7 +156,7 @@ namespace scatterer {
 			}
 		}
 		
-
+		
 		internal override void Update() {
 			//toggle whether GUI is visible or not
 			if ((Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && (Input.GetKeyDown(KeyCode.F11) || (Input.GetKeyDown(KeyCode.F10)))) Visible = !Visible;
@@ -145,29 +166,102 @@ namespace scatterer {
 				if (updateCnt > 5) {
 					
 					if (!found) {
-
-						loadPlanets(); //loads the planets list
-
-						//find sun and celestialbodies
-						celestialBodies = (CelestialBody[]) CelestialBody.FindObjectsOfType(typeof(CelestialBody));
-
-						PlanetId = 0;
-						SunId = 0;
 						
-						for (int k = 0; k < celestialBodies.Length; k++) {
-							if (celestialBodies[k].GetName() == ParentPlanetCelestialBodyName) PlanetId = k;
+						loadPlanets(); //loads the planets list
+						
+						//find sun and celestialbodies
+						CelestialBody[] tempCelestialBodies = (CelestialBody[]) CelestialBody.FindObjectsOfType(typeof(CelestialBody));
+						
+						
+						for (int i=0;i<scattererCelestialBodies.Count;i++)
+						{
+							scattererCelestialBody cur = scattererCelestialBodies[i];
+							cur.transform= ScaledSpace.Instance.transform.FindChild(cur.transformName);
 							
-							if (celestialBodies[k].GetName() == "Sun") SunId = k;
+							for (int k = 0; k < tempCelestialBodies.Length; k++)
+							{
+								if (tempCelestialBodies[k].GetName() == cur.celestialBodyName)
+									cur.celestialBody=tempCelestialBodies[k];
+								else if (tempCelestialBodies[k].GetName() == "Sun")
+									sunCelestialBody=tempCelestialBodies[k];
+							}
+							cur.active=false;
 						}
 						
-						if (PlanetId == 0) print("parentPlanet not found");
-						else found = true;
 						
-						ParentPlanetTransform = ScaledSpace.Instance.transform.FindChild(ParentPlanetTransformName);
+						
+						cams = Camera.allCameras;
+						
+						for (int i=0; i<cams.Length; i++) {
+							if (cams [i].name == "Camera ScaledSpace")
+								scaledSpaceCamera = cams [i];
+							
+							if (cams [i].name == "Camera 01")
+								farCamera = cams [i];
+							if (cams [i].name == "Camera 00")
+								nearCamera = cams [i];
+						}
+						
+						found = true;
 					}
 					
-					if (!initiated && found && ScaledSpace.Instance) {
+					
+					if ( found && ScaledSpace.Instance && farCamera) {
 						
+						for (int i=0;i<scattererCelestialBodies.Count;i++)
+						{
+							scattererCelestialBody cur = scattererCelestialBodies[i];
+							float dist = Vector3.Distance (farCamera.transform.position, cur.transform.position);
+							//print ("dist to ="+cur.celestialBodyName+" "+dist);
+							if(!cur.active)
+							{
+								if (dist<cur.loadDistance)
+								{
+									print("loading scatterer effects for "+cur.celestialBodyName);
+									//create and configure manager
+									cur.m_manager = new Manager();
+									cur.m_manager.setParentCelestialBody(cur.celestialBody);
+									cur.m_manager.setParentPlanetTransform(cur.transform);
+									cur.m_manager.setSunCelestialBody(sunCelestialBody);
+									cur.m_manager.SetCore(this);
+									cur.m_manager.Awake();
+									
+									//getSettingsFromSkynode();
+									//loadConfigPoint(selectedConfigPoint);
+									//m_radius = (float) celestialBodies[PlanetId].Radius;
+									//backupAtmosphereMaterial(ParentPlanetTransformName);
+									//tweakStockAtmosphere(ParentPlanetTransformName, rimBlend, rimpower);
+									//cams = Camera.allCameras;
+									//									count = Camera.allCameras.Length;
+									//									initiated = true;
+									
+									cur.active=true;
+									print("scatterer effects loaded for "+cur.celestialBodyName);
+								}
+							}
+							
+							else
+							{
+								if (dist>cur.unloadDistance)
+								{
+									print("unloading scatterer effects for "+cur.celestialBodyName);
+									cur.m_manager.OnDestroy();
+									Destroy (cur.m_manager);
+									cur.m_manager=null;
+									cur.active=false;
+									print("scatterer effects unloaded for "+cur.celestialBodyName);
+								}
+								else
+								{
+									print ("updating manager for "+cur.celestialBodyName);
+									cur.m_manager.Update();
+								}
+							}
+							
+						}
+					}
+					
+					/*
 						//create and configure manager
 						m_manager = new Manager();
 						m_manager.setParentCelestialBody(celestialBodies[PlanetId]);
@@ -189,13 +283,15 @@ namespace scatterer {
 						cams = Camera.allCameras;
 						count = Camera.allCameras.Length;
 						initiated = true;
-
-					}
+						*/
 					
 					
+					
+					/*
 					if (initiated) {
 						m_manager.Update();
 					}
+					*/
 					
 				}
 			}
@@ -210,10 +306,22 @@ namespace scatterer {
 		internal override void OnDestroy() {
 			if (isActive)
 			{
-				m_manager.OnDestroy ();
-				Destroy (m_manager);
-			
-				ReactivateAtmosphere(ParentPlanetTransformName);
+				//m_manager.OnDestroy ();
+				//Destroy (m_manager);
+
+				for (int i=0;i<scattererCelestialBodies.Count;i++)
+				{
+					scattererCelestialBody cur = scattererCelestialBodies[i];
+					if (cur.active)
+					{
+						cur.m_manager.OnDestroy();
+						Destroy(cur.m_manager);
+						cur.m_manager=null;
+						cur.active=false;
+					}
+				}
+				
+				//ReactivateAtmosphere(ParentPlanetTransformName);
 			}
 		}
 		
@@ -674,8 +782,12 @@ namespace scatterer {
 		
 		public void loadPlanets() {
 			ConfigNode cnToLoad = ConfigNode.Load(path + "/config/PlanetsList.txt");
-			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
-			
+			ConfigNode.LoadObjectFromConfig(this, cnToLoad);	
+		}
+		
+		public void savePlanets() {
+			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
+			cnTemp.Save(path + "/config/PlanetsList.txt");
 		}
 	}
 }
