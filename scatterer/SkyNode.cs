@@ -250,8 +250,11 @@ namespace scatterer
 //			path=Path.GetDirectoryName (path);
 			path = m_manager.GetCore ().path;
 			
-			sunGlare.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + m_filePath, "sunglare.png")));
-			black.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + m_filePath, "black.png")));
+			sunGlare.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path+"/config/"+parentCelestialBody.name+ m_filePath, "sunglare.png")));
+
+
+
+			black.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path+"/config/"+parentCelestialBody.name+ m_filePath, "black.png")));
 			
 			sunGlare.wrapMode = TextureWrapMode.Clamp;
 			m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
@@ -465,6 +468,7 @@ namespace scatterer
 					if (!scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ())
 					{
 						scaledSpaceCamera.gameObject.AddComponent(typeof(updateAtCameraRythm));
+
 					}
 
 					if (scaledSpaceCamera.gameObject.GetComponent<updateAtCameraRythm> ())
@@ -1095,13 +1099,13 @@ namespace scatterer
 
 			path = m_manager.GetCore ().path;
 						
-			string path1 = path + m_filePath + "/transmittance.raw";
+			string path1 = path + "/config/"+parentCelestialBody.name + m_filePath + "/transmittance.raw";
 			EncodeFloat.WriteIntoRenderTexture (m_transmit, 3, path1,null);
 			
-			path1 = path + m_filePath + "/irradiance.raw";
+			path1 = path + "/config/"+parentCelestialBody.name + m_filePath + "/irradiance.raw";
 			EncodeFloat.WriteIntoRenderTexture (m_irradiance, 3, path1,null);
 			
-			path1 = path + m_filePath + "/inscatter.raw";
+			path1 = path + "/config/"+parentCelestialBody.name + m_filePath + "/inscatter.raw";
 			EncodeFloat.WriteIntoRenderTexture (m_inscatter, 4, path1,null);
 		}
 		
@@ -1113,8 +1117,11 @@ namespace scatterer
 			saveToConfigNode ();
 			
 			m_transmit.Release();
+			Destroy (m_transmit);
 			m_irradiance.Release();
+			Destroy (m_irradiance);
 			m_inscatter.Release();
+			Destroy (m_inscatter);
 			
 //			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 //			

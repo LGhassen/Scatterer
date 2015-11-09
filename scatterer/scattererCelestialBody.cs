@@ -14,6 +14,7 @@ namespace scatterer
 		public Transform transform;
 		public bool active;
 		public Manager m_manager;
+		public Material originalPlanetMaterialBackup;
 		
 		
 		public scattererCelestialBody (string inCelestialBodyName, string inTransformName, float inloadDistance,
