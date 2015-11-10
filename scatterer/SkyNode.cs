@@ -63,6 +63,8 @@ namespace scatterer
 		[Persistent] public float extinctionTint=100f;
 		[Persistent] public float mapExtinctionMultiplier=1f;
 		[Persistent] public float mapExtinctionTint=1f;
+
+		public bool extinctionEnabled=true;
 		
 		//		string codeBase;
 		//		UriBuilder uri;
@@ -171,6 +173,7 @@ namespace scatterer
 		public Material m_atmosphereMaterial;
 		Material m_skyMaterialScaled;
 		Material m_skyExtinction;
+		Material originalMaterial;
 						
 		[Persistent] Vector3 m_betaR = new Vector3(5.8e-3f, 1.35e-2f, 3.31e-2f);
 		//Asymmetry factor for the mie phase function
@@ -193,6 +196,10 @@ namespace scatterer
 		
 		[Persistent] public float rimBlend=20f;
 		[Persistent] public float rimpower=600f;
+		[Persistent] public float specR = 0f;
+		[Persistent] public float specG = 0f;
+		[Persistent] public float specB = 0f;
+		[Persistent] public float shininess = 0f;
 		
 		
 		[Persistent] public List<configPoint> configPoints= new List<configPoint> {new configPoint(5000f,1f,0.25f,1f,0.4f,0.23f,1f,100f)
@@ -320,7 +327,8 @@ namespace scatterer
 			atmosphereMeshrenderer = hp.GameObject.GetComponent<MeshRenderer>();
 			atmosphereMeshrenderer.material = m_atmosphereMaterial;
 			
-			celestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType(typeof(CelestialBody));	
+			celestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType(typeof(CelestialBody));
+
 		}
 		
 		
@@ -400,7 +408,9 @@ namespace scatterer
 				{ 
 					QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
 				}
-				
+
+				backupAtmosphereMaterial ();
+				tweakStockAtmosphere ();
 			}
 
 			else
@@ -461,7 +471,7 @@ namespace scatterer
 				skyExtinctMR.castShadows = false;
 				skyExtinctMR.receiveShadows = false;
 				skyExtinctMR.sharedMaterial = m_skyExtinction;
-				skyExtinctMR.enabled = m_manager.GetCore().extinctionEnabled;
+				skyExtinctMR.enabled = extinctionEnabled;
 
 				if (scaledSpaceCamera)
 				{
@@ -1151,6 +1161,9 @@ namespace scatterer
 			Component.Destroy (atmosphereMeshrenderer);
 			Destroy (atmosphereMesh);
 			//Destroy (hp);
+
+			RestoreStockAtmosphere ();
+			//Destroy (originalMaterial);
 		}
 		
 		public void destroyskyObject()
@@ -1248,6 +1261,77 @@ namespace scatterer
 			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
 			cnTemp.Save(path+"/config/"+parentCelestialBody.name+"/Settings.txt");
 		}
+
+
+		public void backupAtmosphereMaterial() {
+			//Transform t = ParentPlanetTransform;
+			Transform t = ScaledSpace.Instance.transform.FindChild(ParentPlanetTransform.name);
+			
+			for (int i = 0; i < t.childCount; i++) {
+				if (t.GetChild(i).gameObject.layer == 9) {
+					t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(true);
+					originalMaterial = (Material) Material.Instantiate(t.renderer.sharedMaterial);
+					i = t.childCount + 10;
+				}
+			}
+		}
+		
+		
+		public void RestoreStockAtmosphere() {
+			//Transform t = ParentPlanetTransform;
+			Transform t = ScaledSpace.Instance.transform.FindChild(ParentPlanetTransform.name);
+			for (int i = 0; i < t.childCount; i++) {
+				if (t.GetChild(i).gameObject.layer == 9) {
+					t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(true);
+					t.renderer.sharedMaterial = originalMaterial;
+					i = t.childCount + 10;
+				}
+			}
+		}
+		
+		
+//		public void tweakStockAtmosphere(string name, float inRimBlend, float inRimPower) {
+		public void tweakStockAtmosphere() {
+			Transform t = ScaledSpace.Instance.transform.FindChild(ParentPlanetTransform.name);
+//			Transform t = ParentPlanetTransform;
+
+			for (int i = 0; i < t.childCount; i++) {
+				if (t.GetChild(i).gameObject.layer == 9) {
+					t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(false);
+					Material sharedMaterial = t.renderer.sharedMaterial;
+					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), rimBlend / 100f);
+					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), rimpower / 100f);
+					sharedMaterial.SetColor("_SpecColor", new Color(specR / 100f, specG / 100f, specB / 100f));
+					sharedMaterial.SetFloat("_Shininess", shininess / 100);
+					
+					i = t.childCount + 10;
+				}
+			}
+		}
+
+		//snippet by Thomas P. from KSPforum
+		public void DeactivateAtmosphere() {
+			//Transform t = ParentPlanetTransform;
+			Transform t = ScaledSpace.Instance.transform.FindChild(ParentPlanetTransform.name);
+			
+			for (int i = 0; i < t.childCount; i++) {
+				if (t.GetChild(i).gameObject.layer == 9) {
+					// Deactivate the Athmosphere-renderer
+					t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(false);
+					
+					// Reset the shader parameters
+					Material sharedMaterial = t.renderer.sharedMaterial;
+					
+					//sharedMaterial.SetTexture(Shader.PropertyToID("_rimColorRamp"), null);
+					//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), 0);
+					//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), 0);
+					
+					// Stop our script
+					i = t.childCount + 10;
+				}
+			}
+		}
+
 
 		public void interpolateVariables()
 		{
