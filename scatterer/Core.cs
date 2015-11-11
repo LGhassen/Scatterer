@@ -76,7 +76,7 @@ namespace scatterer {
 		Camera[] cams;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
 		
-		int count;
+		//int count;
 		
 		float MapViewScale = 1000f;
 		
@@ -108,25 +108,25 @@ namespace scatterer {
 		float mapExposure = 15f;
 		float mapAlphaGlobal = 100f;
 		
-		Transform ParentPlanetTransform;
+		//Transform ParentPlanetTransform;
 		
 		public Camera chosenCamera;
 		public int layer = 15;
 		int cam = 1;
 		
 		//other stuff
-		float atmosphereGlobalScale = 1000f;
-		float m_radius; // = 600000.0f;
+		//float atmosphereGlobalScale = 1000f;
+		//float m_radius; // = 600000.0f;
 		//String parentPlanet="Kerbin";
 		
-		[Persistent] String ParentPlanetCelestialBodyName = "Kerbin";
-		[Persistent] String ParentPlanetTransformName = "Kerbin";
+		//[Persistent] String ParentPlanetCelestialBodyName = "Kerbin";
+		//[Persistent] String ParentPlanetTransformName = "Kerbin";
 		
 		
 		//		int PlanetId;
 		//		int SunId;
 		
-		Manager m_manager;
+		//Manager m_manager;
 		bool depthbufferEnabled = false;
 		bool isActive;
 		
@@ -139,7 +139,7 @@ namespace scatterer {
 		}
 		
 		internal override void Awake() {
-			WindowCaption = "Scatterer v0.0175: alt+f10/f11 toggle";
+			WindowCaption = "Scatterer multiplanet preview: alt+f10/f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
 			Visible = false;
 			isActive = false;
@@ -222,6 +222,9 @@ namespace scatterer {
 									cur.m_manager=null;
 									//ReactivateAtmosphere(cur.transformName,cur.originalPlanetMaterialBackup);
 									cur.active=false;
+
+									Resources.UnloadUnusedAssets();
+									System.GC.Collect();
 									
 									print("scatterer effects unloaded for "+cur.celestialBodyName);
 								}
@@ -382,6 +385,7 @@ namespace scatterer {
 				GUILayout.BeginHorizontal();
 				GUILayout.Label("Unload distance:"+scattererCelestialBodies[selectedPlanet].unloadDistance.ToString());
 				GUILayout.EndHorizontal();
+
 
 				if (scattererCelestialBodies[selectedPlanet].active)
 				{
@@ -624,7 +628,7 @@ namespace scatterer {
 					GUILayout.EndHorizontal();
 					
 					GUILayout.BeginHorizontal();
-					GUILayout.Label("Specular: R");
+					GUILayout.Label("Spec: R");
 					specR = (float)(Convert.ToDouble(GUILayout.TextField(specR.ToString())));
 					
 					GUILayout.Label("G");

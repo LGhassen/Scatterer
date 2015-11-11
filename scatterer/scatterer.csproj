@@ -32,10 +32,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\KSP\Kerbal.Space.Program.v1.0.4.861 scatterer testing\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\KSP\1.0.5\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\KSP\Kerbal.Space.Program.v1.0.4.861 scatterer testing\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\KSP\1.0.5\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -235,5 +235,6 @@
     <None Include="ShaderList.cs" />
     <None Include="scatterPostProcess.cs" />
     <None Include="cameraHDR.cs" />
+    <None Include="DetectLeaks.cs" />
   </ItemGroup>
 </Project>

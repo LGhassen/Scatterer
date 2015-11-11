@@ -553,6 +553,9 @@ namespace scatterer
 					}
 				}										
 			}
+
+			//Resources.UnloadUnusedAssets();
+			//System.GC.Collect();
 		}
 		
 		
@@ -1102,7 +1105,6 @@ namespace scatterer
 		
 		public void initiateOrRestart()
 		{
-			
 			m_inscatter.Create ();
 			m_transmit.Create ();
 			m_irradiance.Create ();
@@ -1117,6 +1119,9 @@ namespace scatterer
 			
 			path1 = path + "/config/"+parentCelestialBody.name + m_filePath + "/inscatter.raw";
 			EncodeFloat.WriteIntoRenderTexture (m_inscatter, 4, path1,null);
+
+			Resources.UnloadUnusedAssets();
+			System.GC.Collect();
 		}
 		
 		
@@ -1164,6 +1169,9 @@ namespace scatterer
 
 			RestoreStockAtmosphere ();
 			//Destroy (originalMaterial);
+
+			Resources.UnloadUnusedAssets();
+			System.GC.Collect();
 		}
 		
 		public void destroyskyObject()
