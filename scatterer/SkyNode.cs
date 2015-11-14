@@ -504,8 +504,7 @@ namespace scatterer {
 				
 				
 				//this snippet fixes the problem with the moon rendering over the atmosphere but behind the planet
-				for (int k = 0;
-				     (k < celestialBodies.Length); k++) {
+				 for (int k = 0;k < celestialBodies.Length; k++) {
 					Transform tmpTransform;
 					//				Transform tmpTransform =celestialBodies[k].transform;
 					{
