@@ -14,7 +14,6 @@ using KSPPluginFramework;
 namespace scatterer {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class Core: MonoBehaviourWindow {
-		
 		[Persistent] List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody >
 		{
 			new scattererCelestialBody("Kerbin","Kerbin",5000,10000),
@@ -22,6 +21,8 @@ namespace scatterer {
 			new scattererCelestialBody("Laythe","Laythe",5000,1000),
 			new scattererCelestialBody("Eve","Eve",5000,1000)
 		};
+
+		[Persistent] int delayLoading = 50;
 		
 		//List < Manager > Managers = new List < Manager >();
 		
@@ -163,7 +164,7 @@ namespace scatterer {
 			
 			if (isActive) {
 				updateCnt++;
-				if (updateCnt > 5) {
+				if (updateCnt > delayLoading) {
 					
 					if (!found) {
 						
@@ -210,12 +211,21 @@ namespace scatterer {
 						
 						for (int i=0;i<scattererCelestialBodies.Count;i++)
 						{
+							float dist;
+
 							scattererCelestialBody cur = scattererCelestialBodies[i];
-							float dist = Vector3.Distance (farCamera.transform.position, cur.transform.position);
+							if (FlightGlobals.ActiveVessel)
+							{
+								dist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position, cur.transform.position);
+							}
+							else
+							{
+								dist = Vector3.Distance (farCamera.transform.position, cur.transform.position);
+							}
 							//print ("dist to ="+cur.celestialBodyName+" "+dist);
 							if(cur.active)
 							{
-								if (dist>cur.unloadDistance)
+								if (dist>cur.unloadDistance && !MapView.MapIsEnabled)
 								{
 									cur.m_manager.OnDestroy();
 									Destroy (cur.m_manager);
@@ -236,7 +246,7 @@ namespace scatterer {
 							}
 							else
 							{
-								if (dist<cur.loadDistance)
+								if (dist<cur.loadDistance && !MapView.MapIsEnabled)
 								{
 									//print("loading scatterer effects for "+cur.celestialBodyName);
 									//create and configure manager
@@ -850,13 +860,13 @@ namespace scatterer {
 		}
 		
 		public void loadPlanets() {
-			ConfigNode cnToLoad = ConfigNode.Load(path + "/config/PlanetsList.txt");
+			ConfigNode cnToLoad = ConfigNode.Load(path + "/config/PlanetsList.cfg");
 			ConfigNode.LoadObjectFromConfig(this, cnToLoad);	
 		}
 		
 		public void savePlanets() {
 			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
-			cnTemp.Save(path + "/config/PlanetsList.txt");
+			cnTemp.Save(path + "/config/PlanetsList.cfg");
 		}
 	}
 }
