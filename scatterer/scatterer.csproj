@@ -79,6 +79,7 @@
     <Compile Include="configPoint.cs" />
     <Compile Include="ShaderReplacer.cs" />
     <Compile Include="scattererCelestialBody.cs" />
+    <Compile Include="celestialBodySortableByDistance.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

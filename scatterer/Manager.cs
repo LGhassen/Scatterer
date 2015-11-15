@@ -7,10 +7,8 @@ using KSP.IO;
 namespace scatterer
 {
 	/*
-	 * A manger to organise what order update functions are called, the running of tasks and the drawing of the terrain.
-	 * Provides a location for common settings and allows the nodes to access each other.
-	 * Also sets uniforms that are considered global.
-	 * Must have a scheduler script attached to the same gameobject
+	 * A manger to organise what order update functions are called
+	 * Provides a location for common settings and allows the nodes to access each other
 	 * 
 	 */
 	public class Manager : MonoBehaviour 
