@@ -35,7 +35,10 @@ namespace scatterer {
 		
 		//		public float postRotX=0f,postRotY=0f,postRotZ=0f,
 		//		public float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
-		
+
+		updateAtCameraRythm updater;
+		bool updaterAdded=false;
+
 		public float postDist = -4500f;
 		
 		public float percentage;
@@ -45,8 +48,8 @@ namespace scatterer {
 		
 		bool coronasDisabled = false;
 		
-		public int renderQueue = 2000;
-		public int renderQueue2 = 2010;
+		//public int renderQueue = 2000;
+		//public int renderQueue2 = 2010;
 		Matrix4x4 p;
 		
 		public float oceanNearPlane = 0.01f;
@@ -71,7 +74,7 @@ namespace scatterer {
 		float totalscale;
 		float totalscale2;
 		
-		int newRenderQueue;
+		//int newRenderQueue;
 		
 		
 		Transform celestialTransform;
@@ -178,10 +181,10 @@ namespace scatterer {
 		[Persistent] float HM = 1.2f;
 		//scatter coefficient for mie
 		[Persistent] Vector3 BETA_MSca = new Vector3(4e-3f, 4e-3f, 4e-3f);
-		
+
 		public Material m_atmosphereMaterial;
-		Material m_skyMaterialScaled;
-		Material m_skyExtinction;
+		public Material m_skyMaterialScaled;
+		public Material m_skyExtinction;
 		Material originalMaterial;
 		
 		[Persistent] Vector3 m_betaR = new Vector3(5.8e-3f, 1.35e-2f, 3.31e-2f);
@@ -250,12 +253,12 @@ namespace scatterer {
 			
 			initiateOrRestart();
 			m_skyMaterialScaled = new Material(ShaderTool.GetMatFromShader2("CompiledSkyScaled.shader"));
-			m_skyMaterialScaled.renderQueue = 2004;
+			//m_skyMaterialScaled.renderQueue = 2004;
 			
 			
 			
 			m_skyExtinction = new Material(ShaderTool.GetMatFromShader2("CompiledSkyExtinction.shader"));
-			m_skyExtinction.renderQueue = 2002;
+			//m_skyExtinction.renderQueue = 2002;
 			
 			sunGlare = new Texture2D(512, 512);
 			black = new Texture2D(512, 512);
@@ -394,10 +397,12 @@ namespace scatterer {
 				
 				
 				if ((scaledSpaceCamera) && (farCamera)) {
-					farCamera.depthTextureMode = DepthTextureMode.Depth;;
+					farCamera.depthTextureMode = DepthTextureMode.Depth;
+					/*
 					if (scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ()) {
 						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ());
 					}
+					*/
 					initiated = true;
 				}
 				
@@ -468,15 +473,26 @@ namespace scatterer {
 					skyExtinctMR.sharedMaterial = m_skyExtinction;
 					skyExtinctMR.enabled = extinctionEnabled;
 					
-					if (scaledSpaceCamera) {
+					if (scaledSpaceCamera && !updaterAdded) {
+
+						/*
 						if (!scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ()) {
 							scaledSpaceCamera.gameObject.AddComponent(typeof(updateAtCameraRythm));
 							
 						}
-						
+						*/
+
+						updater=(updateAtCameraRythm) scaledSpaceCamera.gameObject.AddComponent(typeof(updateAtCameraRythm));
+						updaterAdded=true;
+
+						/*
 						if (scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ()) {
 							scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ().settings(m_mesh, m_skyMaterialScaled, m_skyExtinction, m_manager, this, skyObject, skyExtinctObject, debugSettings[6], parentCelestialBody.transform, celestialTransform);
 						}
+						*/
+
+						updater.settings(m_mesh, m_skyMaterialScaled, m_skyExtinction, m_manager, this, skyObject,
+						                 skyExtinctObject, debugSettings[6], parentCelestialBody.transform, celestialTransform);
 					}
 					
 					//				if (scaledSpaceCamera.gameObject.GetComponent<cameraHDR> () == null)
@@ -504,7 +520,7 @@ namespace scatterer {
 				
 				
 				//this snippet fixes the problem with the moon rendering over the atmosphere but behind the planet
-				 for (int k = 0;k < celestialBodies.Length; k++) {
+				/* for (int k = 0;k < celestialBodies.Length; k++) {
 					Transform tmpTransform;
 					//				Transform tmpTransform =celestialBodies[k].transform;
 					{
@@ -542,7 +558,7 @@ namespace scatterer {
 						mr2.material.renderQueue = newRenderQueue;
 					}
 				}
-			}
+			}*/
 		}
 		
 		//Resources.UnloadUnusedAssets();
@@ -1087,10 +1103,14 @@ namespace scatterer {
 		//				Component.Destroy (tmp);
 		//			}
 		
-		
+		/*
 		if (scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ()) {
 			Component.Destroy(scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ());
 		}
+		*/
+		
+			Component.Destroy (updater);
+			Destroy (updater);
 		
 		//			if (scaledSpaceCamera.gameObject.GetComponent<cameraHDR> () != null)
 		//			{

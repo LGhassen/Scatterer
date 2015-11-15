@@ -23,6 +23,10 @@ namespace scatterer {
 		};
 
 		[Persistent] int delayLoading = 50;
+
+		CelestialBody[] CelestialBodies;
+
+		List < celestialBodySortableByDistance > celestialBodiesWithDistance= new List<celestialBodySortableByDistance>();
 		
 		//List < Manager > Managers = new List < Manager >();
 		
@@ -135,6 +139,13 @@ namespace scatterer {
 		
 		
 		public Transform GetScaledTransform(string body) {
+
+			//RSS quick fix
+			if (body == "Earth")
+			{
+				body="Kerbin";
+			}
+
 			List < Transform > transforms = ScaledSpace.Instance.scaledSpaceTransforms;
 			return transforms.Single(n => n.name == body);
 		}
@@ -171,20 +182,57 @@ namespace scatterer {
 						loadPlanets(); //loads the planets list
 						
 						//find sun and celestialbodies
-						CelestialBody[] tempCelestialBodies = (CelestialBody[]) CelestialBody.FindObjectsOfType(typeof(CelestialBody));
+						CelestialBodies = (CelestialBody[]) CelestialBody.FindObjectsOfType(typeof(CelestialBody));
+						/*
+						for (int i=0;i<CelestialBodies.Length;i++)
+						{
+							celestialBodiesWithDistance.Add(new celestialBodySortableByDistance() 
+							                                {CelestialBody = CelestialBodies[i], Distance = 0}); 
+						}
 						
-						
+*/
+
+						for (int k = 0; k < CelestialBodies.Length; k++)
+						{
+							bool inScatterer=false;
+							for (int i=0;i<scattererCelestialBodies.Count;i++)
+							{
+								if (CelestialBodies[k].GetName() == scattererCelestialBodies[i].celestialBodyName)
+								{
+									celestialBodiesWithDistance.Add(new celestialBodySortableByDistance() 
+									                                {CelestialBody = CelestialBodies[k], Distance = 0, usesScatterer=true, scattererIndex=i });
+									inScatterer=true;
+									i+=100;
+								}
+							}
+							if(!inScatterer)
+							{
+								celestialBodiesWithDistance.Add(new celestialBodySortableByDistance() 
+								{CelestialBody = CelestialBodies[k], Distance = 0, usesScatterer=false, scattererIndex=0 });
+							}
+						}
+
+
 						for (int i=0;i<scattererCelestialBodies.Count;i++)
 						{
 							scattererCelestialBody cur = scattererCelestialBodies[i];
 							cur.transform= ScaledSpace.Instance.transform.FindChild(cur.transformName);
 							
-							for (int k = 0; k < tempCelestialBodies.Length; k++)
+							for (int k = 0; k < CelestialBodies.Length; k++)
 							{
-								if (tempCelestialBodies[k].GetName() == cur.celestialBodyName)
-									cur.celestialBody=tempCelestialBodies[k];
-								else if (tempCelestialBodies[k].GetName() == "Sun")
-									sunCelestialBody=tempCelestialBodies[k];
+								if (CelestialBodies[k].GetName() == cur.celestialBodyName)
+								{
+									cur.celestialBody=CelestialBodies[k];
+									//celestialBodiesWithDistance.Add(new celestialBodySortableByDistance() 
+									                               // {CelestialBodyName = CelestialBodies[i].name, Distance = 0, usesScatterer=true, scattererIndex=i });
+								}
+								else
+								{
+									//celestialBodiesWithDistance.Add(new celestialBodySortableByDistance() 
+									                                //{CelestialBodyName = CelestialBodies[i].name, Distance = 0, usesScatterer=false, scattererIndex=i });
+									if (CelestialBodies[k].GetName() == "Sun")
+										sunCelestialBody=CelestialBodies[k];
+								}
 							}
 							cur.active=false;
 						}
@@ -272,6 +320,9 @@ namespace scatterer {
 								}
 							}
 						}
+
+						fixDrawOrders();
+					
 					}
 					
 					/*
@@ -844,7 +895,58 @@ namespace scatterer {
 //				}
 //			}
 //		}
+
 		
+
+		public void fixDrawOrders(){
+
+			for (int k = 0; k < celestialBodiesWithDistance.Count; k++)
+			{
+				celestialBodiesWithDistance[k].Distance = Vector3.Distance (farCamera.transform.position,
+				                               GetScaledTransform(celestialBodiesWithDistance[k].CelestialBody.name).position);
+			}
+
+			celestialBodiesWithDistance.Sort ();
+
+
+			int currentRenderQueue = 2001;
+
+			for (int k = 0; k < celestialBodiesWithDistance.Count; k++)
+			{
+				celestialBodySortableByDistance current=celestialBodiesWithDistance[celestialBodiesWithDistance.Count-1-k];
+
+				Transform tmpTransform = GetScaledTransform(current.CelestialBody.name);
+
+				MeshRenderer mr2 = (MeshRenderer) tmpTransform.GetComponent(typeof(MeshRenderer));
+
+				if (mr2 != null) {
+					mr2.material.renderQueue = currentRenderQueue;
+//					print (current.CelestialBody.name);
+//					print (current.Distance);
+//					print ("base queue:"+currentRenderQueue.ToString());
+					currentRenderQueue+=1;
+				}
+
+				if (current.usesScatterer)
+				{
+					if(scattererCelestialBodies[current.scattererIndex].active)
+					{
+						scattererCelestialBodies[current.scattererIndex].m_manager.m_skyNode.m_skyExtinction.renderQueue
+							=currentRenderQueue;
+//						print ("extinction queue:"+currentRenderQueue.ToString());
+
+						scattererCelestialBodies[current.scattererIndex].m_manager.m_skyNode.m_skyMaterialScaled.renderQueue
+							=currentRenderQueue+1;
+
+						currentRenderQueue+=2;
+					}
+				}
+			}
+		}
+
+
+
+
 		public void loadConfigPoint(int point) {
 			postProcessDepth = scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints[point].postProcessDepth * 10000f;
 			postProcessExposure = scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints[point].postProcessExposure * 100f;
