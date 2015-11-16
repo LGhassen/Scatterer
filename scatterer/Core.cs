@@ -151,7 +151,7 @@ namespace scatterer {
 		}
 		
 		internal override void Awake() {
-			WindowCaption = "Scatterer multiplanet preview: alt+f10/f11 toggle";
+			WindowCaption = "Scatterer v0.0191: alt+f10/f11 toggle";
 			WindowRect = new Rect(0, 0, 300, 50);
 			Visible = false;
 			isActive = false;
@@ -264,11 +264,14 @@ namespace scatterer {
 							scattererCelestialBody cur = scattererCelestialBodies[i];
 							if (FlightGlobals.ActiveVessel)
 							{
-								dist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position, cur.transform.position);
+								dist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position, ScaledSpace.ScaledToLocalSpace(cur.transform.position));
+//								print (cur.celestialBody.name);
+//								print ("dist "+dist.ToString());
+//								print("dist2 "+ Vector3.Distance(farCamera.transform.position, ScaledSpace.ScaledToLocalSpace(cur.transform.position)).ToString());
 							}
 							else
 							{
-								dist = Vector3.Distance (farCamera.transform.position, cur.transform.position);
+								dist = Vector3.Distance(farCamera.transform.position, ScaledSpace.ScaledToLocalSpace(cur.transform.position));
 							}
 							//print ("dist to ="+cur.celestialBodyName+" "+dist);
 							if(cur.active)
@@ -903,7 +906,7 @@ namespace scatterer {
 			for (int k = 0; k < celestialBodiesWithDistance.Count; k++)
 			{
 				celestialBodiesWithDistance[k].Distance = Vector3.Distance (farCamera.transform.position,
-				                               GetScaledTransform(celestialBodiesWithDistance[k].CelestialBody.name).position);
+				                                                            ScaledSpace.ScaledToLocalSpace(GetScaledTransform(celestialBodiesWithDistance[k].CelestialBody.name).position));
 			}
 
 			celestialBodiesWithDistance.Sort ();
@@ -921,9 +924,10 @@ namespace scatterer {
 
 				if (mr2 != null) {
 					mr2.material.renderQueue = currentRenderQueue;
-//					print (current.CelestialBody.name);
-//					print (current.Distance);
+//					print (current.CelestialBody.name+current.Distance.ToString());
 //					print ("base queue:"+currentRenderQueue.ToString());
+//					print (current.Distance);
+//					
 					currentRenderQueue+=1;
 				}
 
