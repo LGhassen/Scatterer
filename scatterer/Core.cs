@@ -161,7 +161,7 @@ namespace scatterer {
 			path = Uri.UnescapeDataString(uri.Path);
 			path = Path.GetDirectoryName(path);
 			
-			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER|| HighLogic.LoadedScene == GameScenes.TRACKSTATION )
 				
 			{
 				isActive = true;
