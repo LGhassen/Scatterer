@@ -31,7 +31,7 @@ namespace scatterer {
 		//		[Persistent] public bool UIvisible = false;
 		[Persistent] public bool displayInterpolatedVariables = false;
 		
-		public CelestialBody[] celestialBodies;
+		//public CelestialBody[] celestialBodies;
 		
 		//		public float postRotX=0f,postRotY=0f,postRotZ=0f,
 		//		public float postScaleX=1f,postScaleY=1f,postScaleZ=1f;
@@ -132,14 +132,14 @@ namespace scatterer {
 		public float m_HDRExposure = 0.2f;
 		[Persistent] public float mapExposure = 0.15f;
 		
-		static PQS CurrentPQS = null;
+		PQS CurrentPQS = null;
 		public bool inScaledSpace {
 			get {
 				return !(CurrentPQS != null && CurrentPQS.isActive);
 			}
 		}
 		
-		PQS testPQS;
+		//PQS testPQS;
 		
 		Vector3 position;
 		
@@ -286,7 +286,7 @@ namespace scatterer {
 			
 			
 			CurrentPQS = parentCelestialBody.pqsController;
-			testPQS = parentCelestialBody.pqsController;
+			//testPQS = parentCelestialBody.pqsController;
 			
 			
 			for (int j = 0; j < 10; j++) {
@@ -337,7 +337,7 @@ namespace scatterer {
 			atmosphereMeshrenderer = hp.GameObject.GetComponent < MeshRenderer > ();
 			atmosphereMeshrenderer.material = m_atmosphereMaterial;
 			
-			celestialBodies = (CelestialBody[]) CelestialBody.FindObjectsOfType(typeof(CelestialBody));
+			//celestialBodies = (CelestialBody[]) CelestialBody.FindObjectsOfType(typeof(CelestialBody));
 			
 		}
 		
@@ -382,8 +382,7 @@ namespace scatterer {
 				Rt = (Rt / Rg) * m_radius;
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
-				sunglareCutoffAlt = (Rt + Rt - Rg) /*  *0.995f*/
-					;;
+				sunglareCutoffAlt = (Rt + Rt - Rg) /*  *0.995f*/ ;
 				cams = Camera.allCameras;
 				
 				for (int i = 0; i < cams.Length; i++) {
@@ -393,9 +392,7 @@ namespace scatterer {
 					if (cams[i].name == "Camera 00") nearCamera = cams[i];
 				}
 				
-				
-				
-				
+
 				if ((scaledSpaceCamera) && (farCamera)) {
 					farCamera.depthTextureMode = DepthTextureMode.Depth;
 					/*
@@ -414,9 +411,9 @@ namespace scatterer {
 				
 				backupAtmosphereMaterial();
 				tweakStockAtmosphere();
+			
 			} else {
-				
-				
+					
 				alt = Vector3.Distance(farCamera.transform.position, parentCelestialBody.transform.position);
 				trueAlt = alt - m_radius;
 				
@@ -431,11 +428,9 @@ namespace scatterer {
 				if ((!stocksunglareEnabled) ^ ((alt < sunglareCutoffAlt - 1000) && !MapView.MapIsEnabled)) { //^ is XOR
 					toggleStockSunglare();
 				}
-				
-				
+
 				interpolateVariables();
-				
-				
+
 				//if alt-tabbing/windowing and rendertextures are lost
 				//this loads them back up
 				//you have to wait for a frame of two because if you do it immediately they don't get loaded
@@ -449,16 +444,14 @@ namespace scatterer {
 					}
 				}
 				
-				farCamera.hdr = true;
-				nearCamera.hdr = true;
-				scaledSpaceCamera.hdr = true;
+				//farCamera.hdr = true;
+				//nearCamera.hdr = true;
+				//scaledSpaceCamera.hdr = true;
 				
-				{
-					
+				{	
 					skyObject.layer = 10;
 					skyExtinctObject.layer = 10;
-					
-					
+						
 					skyMF.mesh = m_mesh;
 					skyMR.material = m_skyMaterialScaled;
 					skyMR.castShadows = false;
@@ -517,6 +510,9 @@ namespace scatterer {
 				
 				
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
+//				print (parentCelestialBody.name.ToString());
+//				print ("inscaled space"+inScaledSpace.ToString());
+//				print ("postprocess enabled"+postprocessingEnabled.ToString());
 				
 				
 				//this snippet fixes the problem with the moon rendering over the atmosphere but behind the planet
@@ -799,9 +795,12 @@ namespace scatterer {
 	void InitPostprocessMaterial(Material mat) {
 		
 		totalscale = 1;
-		for (int j = 0; j < 10; j++) {
+		
+			/*
+			for (int j = 0; j < 10; j++) {
 			totalscale = totalscale * additionalScales[j];
 		}
+		*/
 		
 		mat.SetTexture("_Transmittance", m_transmit);
 		mat.SetTexture("_Inscatter", m_inscatter);
@@ -859,14 +858,17 @@ namespace scatterer {
 		
 		totalscale = 1;
 		totalscale2 = 1;
-		for (int j = 0; j < 5; j++) {
+		/*
+			for (int j = 0; j < 5; j++) {
 			totalscale = totalscale * additionalScales[j];
 		}
+		
 		
 		for (int j = 6; j < 10; j++) {
 			totalscale2 = totalscale2 * additionalScales[j];
 		}
-		
+
+*/
 		mat.SetFloat("Rg", Rg * atmosphereGlobalScale * totalscale);
 		mat.SetFloat("Rt", Rt * atmosphereGlobalScale * totalscale);
 		mat.SetFloat("Rl", RL * atmosphereGlobalScale * totalscale);
