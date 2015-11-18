@@ -39,6 +39,9 @@ namespace scatterer {
 		updateAtCameraRythm updater;
 		bool updaterAdded=false;
 
+		CustomDepthBufferCam customDepthBuffer;
+		RenderTexture customDepthBufferTexture;
+
 		public float postDist = -4500f;
 		
 		public float percentage;
@@ -64,6 +67,8 @@ namespace scatterer {
 		[Persistent] public float extinctionTint = 100f;
 		[Persistent] public float mapExtinctionMultiplier = 1f;
 		[Persistent] public float mapExtinctionTint = 1f;
+
+		[Persistent] public float openglThreshold = 250f;
 		
 		public bool extinctionEnabled = true;
 		
@@ -394,7 +399,15 @@ namespace scatterer {
 				
 
 				if ((scaledSpaceCamera) && (farCamera)) {
-					farCamera.depthTextureMode = DepthTextureMode.Depth;
+					//farCamera.depthTextureMode = DepthTextureMode.Depth;
+					customDepthBuffer = (CustomDepthBufferCam) farCamera.gameObject.AddComponent(typeof(CustomDepthBufferCam));
+					customDepthBuffer.inCamera=farCamera;
+
+					 
+					customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.Depth);
+					customDepthBufferTexture.Create();
+					customDepthBuffer._depthTex=customDepthBufferTexture;
+
 					/*
 					if (scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ()) {
 						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ());
@@ -451,6 +464,9 @@ namespace scatterer {
 				{	
 					skyObject.layer = 10;
 					skyExtinctObject.layer = 10;
+
+//					skyObject.layer = 15;
+//					skyExtinctObject.layer = 15;
 						
 					skyMF.mesh = m_mesh;
 					skyMR.material = m_skyMaterialScaled;
@@ -805,6 +821,8 @@ namespace scatterer {
 		mat.SetTexture("_Transmittance", m_transmit);
 		mat.SetTexture("_Inscatter", m_inscatter);
 		mat.SetTexture("_Irradiance", m_irradiance);
+
+		mat.SetTexture("_customDepthTexture", customDepthBufferTexture);
 		
 		
 		
@@ -880,6 +898,8 @@ namespace scatterer {
 		mat.SetFloat("_global_depth", postProcessDepth);
 		mat.SetFloat("_global_depth2", totalscale2);
 		
+		mat.SetFloat("_openglThreshold", openglThreshold);
+
 		mat.SetFloat("terrain_reflectance", terrainReflectance);
 		mat.SetFloat("_irradianceFactor", irradianceFactor);
 		
@@ -1307,7 +1327,7 @@ namespace scatterer {
 			postProcessExposure = configPoints[configPoints.Count - 1].postProcessExposure;
 			extinctionMultiplier = configPoints[configPoints.Count - 1].skyExtinctionMultiplier;
 			extinctionTint = configPoints[configPoints.Count - 1].skyExtinctionTint;
-			currentConfigPoint = configPoints.Count - 1;
+			currentConfigPoint = configPoints.Count;
 		} else {
 			for (int j = 1; j < configPoints.Count; j++) {
 				if ((trueAlt > configPoints[j - 1].altitude) && (trueAlt <= configPoints[j].altitude)) {

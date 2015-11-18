@@ -62,6 +62,8 @@ namespace scatterer {
 		
 		float rimBlend = 20f;
 		float rimpower = 600f;
+
+		float openglThreshold = 250f;
 		
 		float extinctionMultiplier = 100f;
 		float extinctionTint = 100f;
@@ -250,7 +252,14 @@ namespace scatterer {
 							if (cams [i].name == "Camera 00")
 								nearCamera = cams [i];
 						}
-						
+
+//						nearCamera.farClipPlane=499;
+//						farCamera.nearClipPlane=500;
+
+//						nearCamera.renderingPath=RenderingPath.DeferredLighting;
+//						farCamera.renderingPath=RenderingPath.DeferredLighting;
+//						scaledSpaceCamera.renderingPath=RenderingPath.DeferredLighting;
+
 						found = true;
 					}
 					
@@ -488,7 +497,7 @@ namespace scatterer {
 					}
 					GUILayout.EndHorizontal();
 					
-					
+					if (!MapView.MapIsEnabled) {
 					GUILayout.BeginHorizontal();
 					GUILayout.Label("Config point:");
 					
@@ -526,7 +535,7 @@ namespace scatterer {
 					
 					
 					
-					if (!MapView.MapIsEnabled) {
+
 						
 						//				GUILayout.BeginHorizontal ();
 						//				GUILayout.Label ("Sky Settings");
@@ -673,7 +682,17 @@ namespace scatterer {
 						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.toggleAniso();
 					}
 					GUILayout.EndHorizontal();
-					
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("OpenGL/dx11 Threshold");
+					openglThreshold = (float)(Convert.ToDouble(GUILayout.TextField(openglThreshold.ToString())));
+
+					if (GUILayout.Button("Set")) {
+						//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
+						//tweakStockAtmosphere(ParentPlanetTransformName, rimBlend, rimpower);
+						scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.openglThreshold=openglThreshold;
+					}
+					GUILayout.EndHorizontal();
 					
 					GUILayout.BeginHorizontal();
 					GUILayout.Label("RimBlend");
@@ -740,7 +759,7 @@ namespace scatterer {
 					{
 						GUILayout.BeginHorizontal();
 						if (scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.currentConfigPoint == 0) GUILayout.Label("Current state:Ground, cfgPoint 0");
-						else if (scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.currentConfigPoint >= configPointsCnt - 1) GUILayout.Label(String.Format("Current state:Orbit, cfgPoint{0}", scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.currentConfigPoint));
+						else if (scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.currentConfigPoint >= configPointsCnt) GUILayout.Label(String.Format("Current state:Orbit, cfgPoint{0}", scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.currentConfigPoint-1));
 						else GUILayout.Label(String.Format("Current state:{0}% cfgPoint{1} + {2}% cfgPoint{3} ", (int)(100 * (1 - scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.percentage)), scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1, (int)(100 * scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.percentage), scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.currentConfigPoint));
 						GUILayout.EndHorizontal();
 						
@@ -852,6 +871,8 @@ namespace scatterer {
 			mapExtinctionTint = 100 * scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.mapExtinctionTint;
 			
 			showInterpolatedValues = scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.displayInterpolatedVariables;
+
+			openglThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.openglThreshold;
 		}
 		
 		
