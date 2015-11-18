@@ -52,6 +52,7 @@ Shader "Sky/AtmosphereGhoss"
 			uniform float3 _CameraForwardDirection;
 //			uniform sampler2D _CameraDepthNormalsTexture;
 			uniform sampler2D _CameraDepthTexture;
+			uniform sampler2D _customDepthTexture;
 			uniform float4x4 _FrustumCorners;
 			uniform float4 _MainTex_TexelSize;
 			
@@ -61,6 +62,7 @@ Shader "Sky/AtmosphereGhoss"
 			
 			uniform float _inscatteringCoeff;
 			uniform float _extinctionCoeff;
+			uniform float _openglThreshold;
 			
 //			uniform float3 SUN_DIR;
 			
@@ -152,20 +154,23 @@ Shader "Sky/AtmosphereGhoss"
 //				float4 col2=col;//
 //				float4 skyCol = tex2D(_SkyDome, i.uv_depth);
 				
-				float dpth = _global_depth2 * Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));	
+//				float dpth = _global_depth2 * Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));	
+				float dpth = _global_depth2 * Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_customDepthTexture,i.uv_depth)));	
 
+				
 				//float dpth=_global_depth2 * (depthValue);			
 				//float3 worldPos = (_inCamPos-_Globals_Origin + dpth *_Scale * i.interpolatedRay);
 				//float3 worldPos = float3(GetWorldPositionFromDepth(i.uv_depth));
 				
-				float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv_depth);
+//				float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv_depth);
+				float depth = SAMPLE_DEPTH_TEXTURE(_customDepthTexture, i.uv_depth);
 
-//        		float depth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,uv_depth)));
         		#if !defined(SHADER_API_OPENGL)
         		float4 H = float4(i.uv_depth.x*2.0f-1.0f, (i.uv_depth.y)*2.0f-1.0f, depth, 1.0f);
         		#else	
         		float4 H = float4(i.uv_depth.x*2.0f-1.0f, i.uv_depth.y*2.0f-1.0f, depth*2.0f-1.0f, 1.0f);
         		#endif
+
         		
         		
         		float4 D = mul(_ViewProjInv,H);
@@ -173,6 +178,8 @@ Shader "Sky/AtmosphereGhoss"
         		float3 worldPos = D/D.w;
         		
         		#if !defined(SHADER_API_D3D9)
+//        		if (length(worldPos) < (Rg+_openglThreshold)){
+//        		worldPos=(Rg+_openglThreshold)*normalize(worldPos);
         		if (length(worldPos) < (Rg+250)){
         		worldPos=(Rg+250)*normalize(worldPos);
         		}

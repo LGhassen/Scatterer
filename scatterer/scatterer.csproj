@@ -77,9 +77,9 @@
     <Compile Include="updateAtCameraRythm.cs" />
     <Compile Include="SimplePostProcessCube.cs" />
     <Compile Include="configPoint.cs" />
-    <Compile Include="ShaderReplacer.cs" />
     <Compile Include="scattererCelestialBody.cs" />
     <Compile Include="celestialBodySortableByDistance.cs" />
+    <Compile Include="CustomDepthBufferCam.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
