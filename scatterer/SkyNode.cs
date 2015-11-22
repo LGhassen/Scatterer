@@ -222,11 +222,12 @@ namespace scatterer {
 		[Persistent] public List < configPoint > configPoints = new List < configPoint > {
 			new configPoint(5000f, 1f, 0.25f, 1f, 0.4f, 0.23f, 1f, 100f), new configPoint(15000f, 1f, 0.15f, 1f, 8f, 0.23f, 1f, 100f)
 		};
+
+		string assetDir;
 		
 		//Initialization
 		public void Start() {
 			m_radius = m_manager.GetRadius();
-			
 			Rt = (Rt / Rg) * m_radius;
 			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
@@ -268,17 +269,8 @@ namespace scatterer {
 			sunGlare = new Texture2D(512, 512);
 			black = new Texture2D(512, 512);
 			
-			//			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			//			UriBuilder uri = new UriBuilder(codeBase);
-			//			path = Uri.UnescapeDataString(uri.Path);
-			//			path=Path.GetDirectoryName (path);
-			path = m_manager.GetCore().path;
-			
-			sunGlare.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + "/config/" + parentCelestialBody.name + m_filePath, "sunglare.png")));
-			
-			
-			
-			black.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", path + "/config/" + parentCelestialBody.name + m_filePath, "black.png")));
+			sunGlare.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", assetDir + m_filePath, "sunglare.png")));
+			black.LoadImage(System.IO.File.ReadAllBytes(String.Format("{0}/{1}", assetDir + m_filePath, "black.png")));
 			
 			sunGlare.wrapMode = TextureWrapMode.Clamp;
 			m_skyMaterialScaled.SetTexture("_Sun_Glare", sunGlare);
@@ -1058,6 +1050,22 @@ namespace scatterer {
 	
 	public void SetParentCelestialBody(CelestialBody inPlanet) {
 		parentCelestialBody = inPlanet;
+		var _celBodyName = parentCelestialBody.name;
+		var _celTransformName = parentCelestialBody.name;
+		var _basePath = m_manager.GetCore ().path + "/config";
+		if (parentCelestialBody.GetTransform() != null) {
+			_celTransformName = parentCelestialBody.GetTransform ().name;				
+		}
+		string[] _possiblePaths = { 
+			_basePath + "/" + _celBodyName,
+			_basePath + "/" + _celTransformName
+		};
+
+		foreach(string _dir in _possiblePaths) {
+			if(Directory.Exists(_dir)) {
+				assetDir = _dir;
+			}
+		}
 	}
 	
 	public void setParentPlanetTransform(Transform parentTransform) {
@@ -1086,20 +1094,20 @@ namespace scatterer {
 	
 	
 	public void initiateOrRestart() {
+		string _file;
+
 		m_inscatter.Create();
 		m_transmit.Create();
 		m_irradiance.Create();
 		
-		path = m_manager.GetCore().path;
+		_file = assetDir +  m_filePath + "/transmittance.raw";
+		EncodeFloat.WriteIntoRenderTexture(m_transmit, 3, _file, null);
 		
-		string path1 = path + "/config/" + parentCelestialBody.name + m_filePath + "/transmittance.raw";
-		EncodeFloat.WriteIntoRenderTexture(m_transmit, 3, path1, null);
+		_file = assetDir + m_filePath + "/irradiance.raw";
+		EncodeFloat.WriteIntoRenderTexture(m_irradiance, 3, _file, null);
 		
-		path1 = path + "/config/" + parentCelestialBody.name + m_filePath + "/irradiance.raw";
-		EncodeFloat.WriteIntoRenderTexture(m_irradiance, 3, path1, null);
-		
-		path1 = path + "/config/" + parentCelestialBody.name + m_filePath + "/inscatter.raw";
-		EncodeFloat.WriteIntoRenderTexture(m_inscatter, 4, path1, null);
+		_file = assetDir + m_filePath + "/inscatter.raw";
+		EncodeFloat.WriteIntoRenderTexture(m_inscatter, 4, _file, null);
 		
 		Resources.UnloadUnusedAssets();
 		System.GC.Collect();
@@ -1175,12 +1183,13 @@ namespace scatterer {
 	}
 	
 	public void toggleCoronas() {
-		
 		Transform scaledSunTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == "Sun");
 		foreach(Transform child in scaledSunTransform) {
 			MeshRenderer temp;
 			temp = child.gameObject.GetComponent < MeshRenderer > ();
-			temp.enabled = coronasDisabled;
+			if (temp != null) {
+				temp.enabled = coronasDisabled;
+			}
 		}
 		coronasDisabled = !coronasDisabled;
 	}
@@ -1228,14 +1237,14 @@ namespace scatterer {
 	
 	
 	public void loadFromConfigNode() {
-		ConfigNode cnToLoad = ConfigNode.Load(path + "/config/" + parentCelestialBody.name + "/Settings.cfg");
+		ConfigNode cnToLoad = ConfigNode.Load(assetDir + "/Settings.cfg");
 		ConfigNode.LoadObjectFromConfig(this, cnToLoad);
 	}
 	
 	
 	public void saveToConfigNode() {
 		ConfigNode cnTemp = ConfigNode.CreateConfigFromObject(this);
-		cnTemp.Save(path + "/config/" + parentCelestialBody.name + "/Settings.cfg");
+		cnTemp.Save(assetDir + "/Settings.cfg");
 	}
 	
 	
