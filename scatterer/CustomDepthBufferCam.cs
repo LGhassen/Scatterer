@@ -38,9 +38,9 @@ public class CustomDepthBufferCam : MonoBehaviour
 		_depthCam.camera.targetTexture = _depthTex;
 
 		
-		_depthCam.camera.SetReplacementShader(depthShader,"");
+		_depthCam.camera.SetReplacementShader(depthShader,"RenderType");
 
-		_depthCam.camera.RenderWithShader(depthShader,"");
+		_depthCam.camera.RenderWithShader(depthShader,"RenderType");
 	}
 	
 	//void OnRenderImage (RenderTexture source, RenderTexture destination) {
