@@ -12,6 +12,7 @@ namespace scatterer
 
 		public CelestialBody celestialBody;
 		public Transform transform;
+		public bool hasTransform = false;
 		public bool active;
 		public Manager m_manager;
 		public Material originalPlanetMaterialBackup;
