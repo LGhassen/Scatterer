@@ -21,7 +21,18 @@ namespace scatterer {
 		CelestialBody[] CelestialBodies;
 
 		List < celestialBodySortableByDistance > celestialBodiesWithDistance= new List<celestialBodySortableByDistance>();
-		
+
+		[Persistent] public bool render24bitDepthBuffer = true;
+
+		[Persistent] public bool forceDisableDefaultDepthBuffer = false;
+
+		private Vector2 _scroll;
+
+		public bool pqsEnabled=false;
+
+		CustomDepthBufferCam customDepthBuffer;
+		public RenderTexture customDepthBufferTexture;
+
 		//List < Manager > Managers = new List < Manager >();
 		
 		
@@ -53,7 +64,11 @@ namespace scatterer {
 		float rimBlend = 20f;
 		float rimpower = 600f;
 
+		float mieG=85f;
+
 		float openglThreshold = 250f;
+		float globalThreshold = 250f;
+		float edgeThreshold =100f;
 		
 		float extinctionMultiplier = 100f;
 		float extinctionTint = 100f;
@@ -95,6 +110,7 @@ namespace scatterer {
 		//		float postProcessScale=1000f;
 		float postProcessingalpha = 78f;
 		float postProcessDepth = 200f;
+		float horizonDepth = 200f;
 		float postProcessExposure = 18f;
 		//		float MapViewScale=1000f;
 		
@@ -124,7 +140,8 @@ namespace scatterer {
 		//		int SunId;
 		
 		//Manager m_manager;
-		bool depthbufferEnabled = false;
+		public bool depthbufferEnabled = false;
+		public bool d3d9 =false;
 		bool isActive;
 		
 		//Material originalMaterial;
@@ -135,7 +152,7 @@ namespace scatterer {
 		}
 		
 		internal override void Awake() {
-			WindowCaption = "Scatterer v0.0191: alt+f10/f11 toggle";
+			WindowCaption = "Scatterer v0.0191: alt+f10/f11 toggle ";
 			WindowRect = new Rect(0, 0, 300, 50);
 			Visible = false;
 			isActive = false;
@@ -148,8 +165,18 @@ namespace scatterer {
 			// Only load the planets once
 			loadPlanets();
 			CelestialBodies = (CelestialBody[]) CelestialBody.FindObjectsOfType(typeof(CelestialBody));
-			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER|| HighLogic.LoadedScene == GameScenes.TRACKSTATION )
-				
+
+			if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 9")) {
+				d3d9 = true;
+				Debug.Log ("[Scatterer] Detected directx 9");
+			}
+			else
+			{
+				Debug.Log("[Scatterer] Detected "+SystemInfo.graphicsDeviceVersion);
+			}
+
+
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER )	
 			{
 				isActive = true;
 			}
@@ -192,10 +219,12 @@ namespace scatterer {
 					}
 					sctBody.active = false;
 				}
+
 				sunCelestialBody = CelestialBodies.Single (_cb => _cb.GetName () == "Sun");
 
 				cams = Camera.allCameras;
-				for (int i=0; i<cams.Length; i++) {
+				
+					for (int i=0; i<cams.Length; i++) {
 					if (cams [i].name == "Camera ScaledSpace")
 						scaledSpaceCamera = cams [i];
 
@@ -203,13 +232,54 @@ namespace scatterer {
 						farCamera = cams [i];
 					if (cams [i].name == "Camera 00")
 						nearCamera = cams [i];
-				}
-
-				found = true;
+				}		
+					found = true;
+			}
+			
 			}
 			
 
 				if (ScaledSpace.Instance && farCamera) {
+
+						
+						if (!render24bitDepthBuffer || d3d9)
+						{
+							farCamera.depthTextureMode = DepthTextureMode.Depth;
+						}
+						else
+						{
+							customDepthBuffer = (CustomDepthBufferCam) farCamera.gameObject.GetComponent < CustomDepthBufferCam > ();
+							
+							if(!customDepthBuffer)
+							{
+								customDepthBuffer = (CustomDepthBufferCam) farCamera.gameObject.AddComponent(typeof(CustomDepthBufferCam));
+								customDepthBuffer.inCamera=farCamera;
+								customDepthBuffer.incore=this;
+							
+								customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.Depth);
+								customDepthBufferTexture.Create();
+							
+								customDepthBuffer._depthTex=customDepthBufferTexture;
+
+						Debug.Log("[Scatterer] Running custom depth buffer");
+						if(forceDisableDefaultDepthBuffer){
+						Debug.Log("[Scatterer] Forcing default depth buffer off");
+						}
+
+
+							}
+
+							if (forceDisableDefaultDepthBuffer)
+							{
+								farCamera.depthTextureMode = DepthTextureMode.None;
+							}
+							
+						}
+					
+
+
+
+					pqsEnabled=false;
 					foreach (scattererCelestialBody _cur in scattererCelestialBodies) {
 						float dist;
 						if (_cur.hasTransform) {
@@ -237,6 +307,7 @@ namespace scatterer {
 									Debug.Log ("[Scatterer] Effects unloaded for " + _cur.celestialBodyName);
 								} else {
 									_cur.m_manager.Update ();
+									pqsEnabled= pqsEnabled || !_cur.m_manager.m_skyNode.inScaledSpace;
 								}								
 							} else {
 								if (dist < _cur.loadDistance &&
@@ -250,9 +321,11 @@ namespace scatterer {
 									_cur.m_manager.SetCore (this);
 									_cur.m_manager.Awake ();
 									_cur.active = true;
-									selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
-									getSettingsFromSkynode ();
-									Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
+
+								selectedConfigPoint=0;	
+								selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
+								getSettingsFromSkynode ();
+								Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
 								}
 							}
 						}
@@ -260,7 +333,6 @@ namespace scatterer {
 					fixDrawOrders ();
 				}
 			}
-		}
 		
 		void OnGUI() {
 			//debugging for rendertextures, not needed anymore but might be when I implement oceans
@@ -269,6 +341,7 @@ namespace scatterer {
 		}
 		
 		internal override void OnDestroy() {
+//			Debug.Log ("[Scatterer] Core.OnDestroy() called");
 			if (isActive)
 			{
 				//m_manager.OnDestroy ();
@@ -287,6 +360,9 @@ namespace scatterer {
 					}
 					
 				}
+				Component.Destroy(customDepthBuffer);
+				Destroy(customDepthBuffer);
+				Destroy(customDepthBufferTexture);
 			}
 		}
 		
@@ -303,7 +379,9 @@ namespace scatterer {
 			GUILayout.EndHorizontal();
 			
 			if (isActive) {
-				
+
+//				_scroll = GUILayout.BeginScrollView(_scroll);
+//				{
 
 				GUILayout.BeginHorizontal();
 				GUILayout.Label("Planet:");
@@ -353,14 +431,18 @@ namespace scatterer {
 				{
 					configPointsCnt=scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints.Count;
 
+
+					if (!MapView.MapIsEnabled) {
+
+
 					GUILayout.BeginHorizontal();
 					
 					if (GUILayout.Button("Toggle depth buffer")) {
 						if (!depthbufferEnabled) {
-							cams[2].gameObject.AddComponent(typeof(ViewDepthBuffer));
+//							cams[2].gameObject.AddComponent(typeof(ViewDepthBuffer));
 							depthbufferEnabled = true;
 						} else {
-							Component.Destroy(cams[2].gameObject.GetComponent < ViewDepthBuffer > ());
+//							Component.Destroy(cams[2].gameObject.GetComponent < ViewDepthBuffer > ());
 							depthbufferEnabled = false;
 						}
 					}
@@ -374,19 +456,21 @@ namespace scatterer {
 						}
 					}
 					GUILayout.EndHorizontal();
-					
+
+
+
 					GUILayout.BeginHorizontal();
 					GUILayout.Label("New point altitude:");
 					newCfgPtAlt = (float)(Convert.ToDouble(GUILayout.TextField(newCfgPtAlt.ToString())));
 					if (GUILayout.Button("Add")) {
-						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints.Insert(selectedConfigPoint + 1, new configPoint(newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, extinctionMultiplier / 100, extinctionTint / 100));
+						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints.Insert(selectedConfigPoint + 1, new configPoint(newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, extinctionMultiplier / 100, extinctionTint / 100, openglThreshold,edgeThreshold/100));
 						selectedConfigPoint += 1;
 						configPointsCnt = scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints.Count;
 						loadConfigPoint(selectedConfigPoint);
 					}
 					GUILayout.EndHorizontal();
 					
-					if (!MapView.MapIsEnabled) {
+
 					GUILayout.BeginHorizontal();
 					GUILayout.Label("Config point:");
 					
@@ -507,6 +591,62 @@ namespace scatterer {
 							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints[selectedConfigPoint].skyExtinctionTint = extinctionTint / 100f;
 						}
 						GUILayout.EndHorizontal();
+
+						if (!d3d9)
+						{
+
+							GUILayout.BeginHorizontal();
+							GUILayout.Label("OpenGL/dx11 Threshold");
+							openglThreshold = (float)(Convert.ToDouble(GUILayout.TextField(openglThreshold.ToString())));
+											
+
+							if (GUILayout.Button("Set")) 
+							{
+								scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints[selectedConfigPoint].openglThreshold=openglThreshold;
+							}
+
+							GUILayout.EndHorizontal();
+
+							GUILayout.BeginHorizontal();
+							GUILayout.Label("24bit dbuffer Edge Tshld");
+							edgeThreshold = (float)(Convert.ToDouble(GUILayout.TextField(edgeThreshold.ToString())));
+
+
+							if (GUILayout.Button("Set")) {
+								//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
+								//tweakStockAtmosphere(ParentPlanetTransformName, rimBlend, rimpower);
+								scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints[selectedConfigPoint].edgeThreshold=edgeThreshold/100;
+							}
+							GUILayout.EndHorizontal();
+							
+							
+//							GUILayout.BeginHorizontal();
+//							GUILayout.Label("Global Threshold");
+//							globalThreshold = (float)(Convert.ToDouble(GUILayout.TextField(globalThreshold.ToString())));
+//							
+//							if (GUILayout.Button("Set")) {
+//								//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
+//								//tweakStockAtmosphere(ParentPlanetTransformName, rimBlend, rimpower);
+//								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.globalThreshold=globalThreshold;
+//							}
+//							GUILayout.EndHorizontal();
+							
+							
+
+							
+//							GUILayout.EndHorizontal();
+//							
+//							GUILayout.BeginHorizontal();
+//							GUILayout.Label("Horizon Depth (/10000)");
+//							horizonDepth = (float)(Convert.ToDouble(GUILayout.TextField(horizonDepth.ToString())));
+//							
+//							if (GUILayout.Button("Set")) {
+//								scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.horizonDepth = horizonDepth / 10000f;
+//							}
+//							GUILayout.EndHorizontal();
+							
+						}
+
 						
 					} else {
 						
@@ -562,27 +702,26 @@ namespace scatterer {
 						
 					}
 					
-					GUILayout.BeginHorizontal();
-					
-					GUILayout.Label(String.Format("ForceOFF aniso"));
-					GUILayout.TextField(scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.forceOFFaniso.ToString());
-					
-					if (GUILayout.Button("Toggle")) {
-						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.toggleAniso();
-					}
-					GUILayout.EndHorizontal();
+//					GUILayout.BeginHorizontal();
+//					
+//					GUILayout.Label(String.Format("ForceOFF aniso"));
+//					GUILayout.TextField(scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.forceOFFaniso.ToString());
+//					
+//					if (GUILayout.Button("Toggle")) {
+//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.toggleAniso();
+//					}
+//					GUILayout.EndHorizontal();
 
 					GUILayout.BeginHorizontal();
-					GUILayout.Label("OpenGL/dx11 Threshold");
-					openglThreshold = (float)(Convert.ToDouble(GUILayout.TextField(openglThreshold.ToString())));
-
+					GUILayout.Label("mieG (/100)");
+					mieG = (float)(Convert.ToDouble(GUILayout.TextField(mieG.ToString())));
+					
 					if (GUILayout.Button("Set")) {
-						//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
-						//tweakStockAtmosphere(ParentPlanetTransformName, rimBlend, rimpower);
-						scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.openglThreshold=openglThreshold;
+						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.m_mieG = mieG / 100f;
 					}
 					GUILayout.EndHorizontal();
-					
+
+
 					GUILayout.BeginHorizontal();
 					GUILayout.Label("RimBlend");
 					rimBlend = (float)(Convert.ToDouble(GUILayout.TextField(rimBlend.ToString())));
@@ -620,6 +759,7 @@ namespace scatterer {
 						scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere();
 					}
 					GUILayout.EndHorizontal();
+
 					
 					GUILayout.BeginHorizontal();
 					if (GUILayout.Button("Save settings")) {
@@ -670,19 +810,19 @@ namespace scatterer {
 					GUILayout.TextField(scattererCelestialBodies[selectedPlanet].m_manager.getManagerState());
 					GUILayout.EndHorizontal();
 					
-					GUILayout.BeginHorizontal();
-					if (GUILayout.Button("Disable stock atmo")) {
-						//					DeactivateAtmosphere(parentPlanet);
-						//DeactivateAtmosphere(ParentPlanetTransformName);
-						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.DeactivateAtmosphere();
-					}
-					
-					if (GUILayout.Button("Enable stock atmo")) {
-						//					ReactivateAtmosphere(parentPlanet);
-						//ReactivateAtmosphere(ParentPlanetTransformName);
-						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
-					}
-					GUILayout.EndHorizontal();
+//					GUILayout.BeginHorizontal();
+//					if (GUILayout.Button("Disable stock atmo")) {
+//						//					DeactivateAtmosphere(parentPlanet);
+//						//DeactivateAtmosphere(ParentPlanetTransformName);
+//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.DeactivateAtmosphere();
+//					}
+//					
+//					if (GUILayout.Button("Enable stock atmo")) {
+//						//					ReactivateAtmosphere(parentPlanet);
+//						//ReactivateAtmosphere(ParentPlanetTransformName);
+//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
+//					}
+//					GUILayout.EndHorizontal();
 					
 					
 					GUILayout.BeginHorizontal();
@@ -761,7 +901,14 @@ namespace scatterer {
 			
 			showInterpolatedValues = scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.displayInterpolatedVariables;
 
-			openglThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.openglThreshold;
+			mieG = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_mieG * 100f;
+
+
+
+//			globalThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.globalThreshold;
+//			horizonDepth = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.horizonDepth * 10000f; ;
+
+
 		}
 		
 		
@@ -873,6 +1020,10 @@ namespace scatterer {
 			extinctionTint = scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints[point].skyExtinctionTint * 100f;
 			
 			pointAltitude = scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.configPoints[point].altitude;
+
+			openglThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints[point].openglThreshold;
+			edgeThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints[point].edgeThreshold*100 ;
+
 		}
 
 		public void loadPlanets() {

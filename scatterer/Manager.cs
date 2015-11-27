@@ -118,12 +118,12 @@ namespace scatterer
 		
 		public Vector3 getDirectionToSun()
 		{
-			if (m_skyNode.debugSettings [0]) {
+//			if (m_skyNode.debugSettings [0]) {
 				return((sunCelestialBody.GetTransform ().position - parentCelestialBody.GetTransform ().position));
-			} else {
-				return((ScaledSpace.LocalToScaledSpace(sunCelestialBody.GetTransform ().position)-ScaledSpace.LocalToScaledSpace(parentCelestialBody.GetTransform ().position)));
-			
-			}
+//			} else {
+//				return((ScaledSpace.LocalToScaledSpace(sunCelestialBody.GetTransform ().position)-ScaledSpace.LocalToScaledSpace(parentCelestialBody.GetTransform ().position)));
+//			
+//			}
 
 		}
 		

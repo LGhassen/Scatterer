@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.IO;
 
@@ -39,8 +39,8 @@ namespace scatterer {
 		updateAtCameraRythm updater;
 		bool updaterAdded=false;
 
-		CustomDepthBufferCam customDepthBuffer;
-		RenderTexture customDepthBufferTexture;
+//		CustomDepthBufferCam customDepthBuffer;
+//		RenderTexture customDepthBufferTexture;
 
 		public float postDist = -4500f;
 		
@@ -68,13 +68,16 @@ namespace scatterer {
 		[Persistent] public float mapExtinctionMultiplier = 1f;
 		[Persistent] public float mapExtinctionTint = 1f;
 
-		[Persistent] public float openglThreshold = 250f;
+		public float openglThreshold = 250f;
+//		[Persistent] public float globalThreshold = 250f;
+		public float edgeThreshold = 0.5f;
+//		[Persistent] public float horizonDepth=0.02f;
 		
 		public bool extinctionEnabled = true;
 		
 		//		string codeBase;
 		//		UriBuilder uri;
-		string path;
+//		string path;
 		
 		float totalscale;
 		float totalscale2;
@@ -94,7 +97,7 @@ namespace scatterer {
 		
 		//		public static Dictionary<string, PSystemBody> prefabs = new Dictionary<string, PSystemBody>();
 		
-		public bool[] debugSettings = new bool[10];
+//		public bool[] debugSettings = new bool[10];
 		public float[] additionalScales = new float[10];
 		
 		//PSystemBody[] pSystemBodies;
@@ -191,12 +194,13 @@ namespace scatterer {
 		public Material m_skyMaterialScaled;
 		public Material m_skyExtinction;
 		Material originalMaterial;
+		Material alteredMaterial;
 		
 		[Persistent] Vector3 m_betaR = new Vector3(5.8e-3f, 1.35e-2f, 3.31e-2f);
 		//Asymmetry factor for the mie phase function
 		//A higher number meands more light is scattered in the forward direction
 		[SerializeField]
-		[Persistent] float m_mieG = 0.85f;
+		[Persistent] public float m_mieG = 0.85f;
 		
 		string m_filePath = "/Proland/Textures/Atmo";
 		
@@ -220,7 +224,7 @@ namespace scatterer {
 		
 		
 		[Persistent] public List < configPoint > configPoints = new List < configPoint > {
-			new configPoint(5000f, 1f, 0.25f, 1f, 0.4f, 0.23f, 1f, 100f), new configPoint(15000f, 1f, 0.15f, 1f, 8f, 0.23f, 1f, 100f)
+			new configPoint(5000f, 1f, 0.25f, 1f, 0.4f, 0.23f, 1f, 100f,250f,0.5f), new configPoint(15000f, 1f, 0.15f, 1f, 8f, 0.23f, 1f, 100f, 250f,0.5f)
 		};
 
 		string assetDir;
@@ -278,17 +282,22 @@ namespace scatterer {
 			InitUniforms(m_skyMaterialScaled);
 			InitUniforms(m_skyExtinction);
 			
-			
-			m_atmosphereMaterial = ShaderTool.GetMatFromShader2("CompiledAtmosphericScatter.shader");
-			
+			if (m_manager.GetCore ().render24bitDepthBuffer)
+			{
+				m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter24bitdepth.shader");
+			}
+			else 
+			{
+				m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
+			}
 			
 			CurrentPQS = parentCelestialBody.pqsController;
 			//testPQS = parentCelestialBody.pqsController;
 			
 			
-			for (int j = 0; j < 10; j++) {
-				debugSettings[j] = true;
-			}
+//			for (int j = 0; j < 10; j++) {
+//				debugSettings[j] = true;
+//			}
 			
 			for (int j = 0; j < 10; j++) {
 				additionalScales[j] = 1f;
@@ -390,29 +399,41 @@ namespace scatterer {
 				}
 				
 
-				if ((scaledSpaceCamera) && (farCamera)) {
-					//farCamera.depthTextureMode = DepthTextureMode.Depth;
-					customDepthBuffer = (CustomDepthBufferCam) farCamera.gameObject.AddComponent(typeof(CustomDepthBufferCam));
-					customDepthBuffer.inCamera=farCamera;
+//				if ((scaledSpaceCamera) && (farCamera)) {
+//
+//					if (!m_manager.GetCore().render24bitDepthBuffer || m_manager.GetCore().d3d9)
+//					{
+//						farCamera.depthTextureMode = DepthTextureMode.Depth;
+//					}
+//					else
+//					{
+//						customDepthBuffer = (CustomDepthBufferCam) farCamera.gameObject.AddComponent(typeof(CustomDepthBufferCam));
+//						customDepthBuffer.inCamera=farCamera;
+//						customDepthBuffer.incore=m_manager.GetCore();
+//
+//						customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.Depth);
+//						customDepthBufferTexture.Create();
+//
+//						customDepthBuffer._depthTex=customDepthBufferTexture;
+//
+//
+//						if (m_manager.GetCore().forceDisableDefaultDepthBuffer)
+//						{
+//							farCamera.depthTextureMode = DepthTextureMode.None;
+//						}
+//
+//					}
+//
+//					initiated = true;
+//				}
 
-					 
-					customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.Depth);
-					customDepthBufferTexture.Create();
-					customDepthBuffer._depthTex=customDepthBufferTexture;
+				initiated = true;
 
-					/*
-					if (scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ()) {
-						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent < updateAtCameraRythm > ());
-					}
-					*/
-					initiated = true;
-				}
-				
-				if (forceOFFaniso) {
-					QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
-				} else {
-					QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
-				}
+//				if (forceOFFaniso) {
+//					QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
+//				} else {
+//					QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+//				}
 				
 				backupAtmosphereMaterial();
 				tweakStockAtmosphere();
@@ -493,7 +514,7 @@ namespace scatterer {
 						*/
 
 						updater.settings(m_mesh, m_skyMaterialScaled, m_skyExtinction, m_manager, this, skyObject,
-						                 skyExtinctObject, debugSettings[6], parentCelestialBody.transform, celestialTransform);
+						                 skyExtinctObject, true, parentCelestialBody.transform, celestialTransform);
 					}
 					
 					//				if (scaledSpaceCamera.gameObject.GetComponent<cameraHDR> () == null)
@@ -814,10 +835,10 @@ namespace scatterer {
 		mat.SetTexture("_Inscatter", m_inscatter);
 		mat.SetTexture("_Irradiance", m_irradiance);
 
-		mat.SetTexture("_customDepthTexture", customDepthBufferTexture);
+			if (m_manager.GetCore().render24bitDepthBuffer && !m_manager.GetCore().d3d9)
+		mat.SetTexture("_customDepthTexture", m_manager.GetCore().customDepthBufferTexture);
 		
-		
-		
+
 		//Consts, best leave these alone
 		mat.SetFloat("M_PI", Mathf.PI);
 		mat.SetFloat("Rg", Rg * atmosphereGlobalScale * postProcessingScale * totalscale);
@@ -830,27 +851,30 @@ namespace scatterer {
 		
 		mat.SetFloat("SKY_W", SKY_W);
 		mat.SetFloat("SKY_H", SKY_H);
+
+		mat.SetVector("betaR", m_betaR / 1000.0f);
+		mat.SetFloat("mieG", Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 		
-		mat.SetFloat("_Ocean_Sigma", oceanSigma); //
+//		mat.SetFloat("_Ocean_Sigma", oceanSigma); //
 		
-		mat.SetFloat("SUN_INTENSITY", sunIntensity); //
+//		mat.SetFloat("SUN_INTENSITY", sunIntensity); //
 		//			mat.SetVector("_inCamPos", cams[cam].transform.position);
 		
-		if (debugSettings[0]) {
+//		if (debugSettings[0]) {
 			mat.SetVector("_inCamPos", farCamera.transform.position);
-		} else {
-			if (!debugSettings[4])
-				
-			{
-				Vector3 pos = ScaledSpace.LocalToScaledSpace(scaledSpaceCamera.transform.position);
-				mat.SetVector("_inCamPos", pos);
-			} else //if (!debugSettings [0])
-			{
-				mat.SetVector("_inCamPos", scaledSpaceCamera.transform.position);
-			}
-			
-			
-		}
+//		} else {
+//			if (!debugSettings[4])
+//				
+//			{
+//				Vector3 pos = ScaledSpace.LocalToScaledSpace(scaledSpaceCamera.transform.position);
+//				mat.SetVector("_inCamPos", pos);
+//			} else //if (!debugSettings [0])
+//			{
+//				mat.SetVector("_inCamPos", scaledSpaceCamera.transform.position);
+//			}
+//			
+//			
+//		}
 		
 		mat.SetVector("SUN_DIR", m_manager.GetSunNodeDirection());
 	}
@@ -866,8 +890,8 @@ namespace scatterer {
 		
 		
 		
-		totalscale = 1;
-		totalscale2 = 1;
+//		totalscale = 1;
+//		totalscale2 = 1;
 		/*
 			for (int j = 0; j < 5; j++) {
 			totalscale = totalscale * additionalScales[j];
@@ -879,21 +903,24 @@ namespace scatterer {
 		}
 
 */
-		mat.SetFloat("Rg", Rg * atmosphereGlobalScale * totalscale);
-		mat.SetFloat("Rt", Rt * atmosphereGlobalScale * totalscale);
-		mat.SetFloat("Rl", RL * atmosphereGlobalScale * totalscale);
+		mat.SetFloat("Rg", Rg * atmosphereGlobalScale);
+		mat.SetFloat("Rt", Rt * atmosphereGlobalScale);
+		mat.SetFloat("Rl", RL * atmosphereGlobalScale);
 		
 		//mat.SetFloat("_inscatteringCoeff", inscatteringCoeff);
 		mat.SetFloat("_extinctionCoeff", extinctionCoeff);
 		mat.SetFloat("_global_alpha", postProcessingAlpha);
 		mat.SetFloat("_Exposure", postProcessExposure);
 		mat.SetFloat("_global_depth", postProcessDepth);
-		mat.SetFloat("_global_depth2", totalscale2);
+//		mat.SetFloat("_global_depth2", totalscale2);
 		
 		mat.SetFloat("_openglThreshold", openglThreshold);
+//		mat.SetFloat("_horizonDepth", horizonDepth);
+//		mat.SetFloat("_globalThreshold", globalThreshold);
+		mat.SetFloat("_edgeThreshold", edgeThreshold);
 
-		mat.SetFloat("terrain_reflectance", terrainReflectance);
-		mat.SetFloat("_irradianceFactor", irradianceFactor);
+//		mat.SetFloat("terrain_reflectance", terrainReflectance);
+//		mat.SetFloat("_irradianceFactor", irradianceFactor);
 		
 		mat.SetFloat("_Scale", postProcessingScale);
 		//			mat.SetFloat("_Scale", 1);
@@ -903,34 +930,34 @@ namespace scatterer {
 		
 		
 		//			mat.SetMatrix ("_Globals_CameraToWorld", cams [0].worldToCameraMatrix.inverse);
-		if (debugSettings[1]) {
+//		if (debugSettings[1]) {
 			mat.SetMatrix("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
-		} else {
-			mat.SetMatrix("_Globals_CameraToWorld", scaledSpaceCamera.worldToCameraMatrix.inverse);
-		}
+//		} else {
+//			mat.SetMatrix("_Globals_CameraToWorld", scaledSpaceCamera.worldToCameraMatrix.inverse);
+//		}
 		
-		if (debugSettings[2]) {
-			mat.SetVector("_CameraForwardDirection", farCamera.transform.forward);
-		} else {
-			mat.SetVector("_CameraForwardDirection", scaledSpaceCamera.transform.forward);
-		}
+//		if (debugSettings[2]) {
+//			mat.SetVector("_CameraForwardDirection", farCamera.transform.forward);
+//		} else {
+//			mat.SetVector("_CameraForwardDirection", scaledSpaceCamera.transform.forward);
+//		}
 		
-		if (debugSettings[3]) {
+//		if (debugSettings[3]) {
 			mat.SetVector("_Globals_Origin", /*Vector3.zero-*/ parentCelestialBody.transform.position);
-		} else
-			
-		{
-			
-			//				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
-			celestialTransform = ParentPlanetTransform;
-			idek = celestialTransform.position;
-			mat.SetVector("_Globals_Origin", /*Vector3.zero-*/ idek);
-		}
+//		} else
+//			
+//		{
+//			
+//			//				celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
+//			celestialTransform = ParentPlanetTransform;
+//			idek = celestialTransform.position;
+//			mat.SetVector("_Globals_Origin", /*Vector3.zero-*/ idek);
+//		}
 		
 		//mat.SetVector("betaR", m_betaR / (Rg / m_radius));
 		//			mat.SetVector("betaR", m_betaR / (postProcessDepth));
-		mat.SetVector("betaR", new Vector4(2.9e-3f, 0.675e-2f, 1.655e-2f, 0.0f));
-		mat.SetFloat("mieG", 0.4f);
+//		mat.SetVector("betaR", new Vector4(2.9e-3f, 0.675e-2f, 1.655e-2f, 0.0f));
+//		mat.SetFloat("mieG", 0.4f);
 		mat.SetVector("SUN_DIR", m_manager.GetSunNodeDirection());
 		mat.SetFloat("SUN_INTENSITY", sunIntensity);
 		
@@ -958,7 +985,8 @@ namespace scatterer {
 		
 		Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4());
 		mat.SetMatrix("_ViewProjInv", viewProjMat.inverse);
-		
+
+		mat.SetFloat("mieG", Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 		
 		//			mat.SetMatrix("_ViewToWorld", viewMat.ToMatrix4x4());
 		//			
@@ -1118,13 +1146,19 @@ namespace scatterer {
 	public void OnDestroy() {
 		//base.OnDestroy();
 		saveToConfigNode();
-		
-		m_transmit.Release();
-		Destroy(m_transmit);
-		m_irradiance.Release();
-		Destroy(m_irradiance);
-		m_inscatter.Release();
-		Destroy(m_inscatter);
+			if (m_transmit)
+			{
+				m_transmit.Release ();
+				Destroy (m_transmit);
+			}
+			if (m_irradiance) {
+				m_irradiance.Release ();
+				Destroy (m_irradiance);
+			}
+			if (m_inscatter) {
+				m_inscatter.Release ();
+				Destroy (m_inscatter);
+			}
 		
 		//			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 		//			
@@ -1159,6 +1193,9 @@ namespace scatterer {
 		//Destroy (hp);
 		
 		RestoreStockAtmosphere();
+		Destroy (alteredMaterial);
+		Destroy (originalMaterial);
+
 		//Destroy (originalMaterial);
 		
 		Resources.UnloadUnusedAssets();
@@ -1256,6 +1293,8 @@ namespace scatterer {
 			if (t.GetChild(i).gameObject.layer == 9) {
 				t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(true);
 				originalMaterial = (Material) Material.Instantiate(t.renderer.sharedMaterial);
+				alteredMaterial = (Material) Material.Instantiate(t.renderer.sharedMaterial);
+				t.renderer.sharedMaterial=alteredMaterial;
 				i = t.childCount + 10;
 			}
 		}
@@ -1268,7 +1307,8 @@ namespace scatterer {
 		for (int i = 0; i < t.childCount; i++) {
 			if (t.GetChild(i).gameObject.layer == 9) {
 				t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(true);
-				t.renderer.sharedMaterial = originalMaterial;
+				if(originalMaterial)
+					t.renderer.sharedMaterial = (Material) Material.Instantiate(originalMaterial);
 				i = t.childCount + 10;
 			}
 		}
@@ -1284,10 +1324,16 @@ namespace scatterer {
 			if (t.GetChild(i).gameObject.layer == 9) {
 				t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(false);
 				Material sharedMaterial = t.renderer.sharedMaterial;
-				sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), rimBlend / 100f);
+				
+					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), rimBlend / 100f);
 				sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), rimpower / 100f);
 				sharedMaterial.SetColor("_SpecColor", new Color(specR / 100f, specG / 100f, specB / 100f));
 				sharedMaterial.SetFloat("_Shininess", shininess / 100);
+
+//			alteredMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), rimBlend / 100f);
+//			alteredMaterial.SetFloat(Shader.PropertyToID("_rimPower"), rimpower / 100f);
+//			alteredMaterial.SetColor("_SpecColor", new Color(specR / 100f, specG / 100f, specB / 100f));
+//			alteredMaterial.SetFloat("_Shininess", shininess / 100);
 				
 				i = t.childCount + 10;
 			}
@@ -1305,7 +1351,7 @@ namespace scatterer {
 				t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(false);
 				
 				// Reset the shader parameters
-				Material sharedMaterial = t.renderer.sharedMaterial;
+//				Material sharedMaterial = t.renderer.sharedMaterial;
 				
 				//sharedMaterial.SetTexture(Shader.PropertyToID("_rimColorRamp"), null);
 				//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), 0);
@@ -1327,7 +1373,10 @@ namespace scatterer {
 			postProcessExposure = configPoints[0].postProcessExposure;
 			extinctionMultiplier = configPoints[0].skyExtinctionMultiplier;
 			extinctionTint = configPoints[0].skyExtinctionTint;
+			edgeThreshold = configPoints[0].edgeThreshold;
+			openglThreshold = configPoints[0].openglThreshold;
 			currentConfigPoint = 0;
+
 		} else if (trueAlt > configPoints[configPoints.Count - 1].altitude) {
 			alphaGlobal = configPoints[configPoints.Count - 1].skyAlpha;
 			m_HDRExposure = configPoints[configPoints.Count - 1].skyExposure;
@@ -1336,6 +1385,8 @@ namespace scatterer {
 			postProcessExposure = configPoints[configPoints.Count - 1].postProcessExposure;
 			extinctionMultiplier = configPoints[configPoints.Count - 1].skyExtinctionMultiplier;
 			extinctionTint = configPoints[configPoints.Count - 1].skyExtinctionTint;
+			edgeThreshold = configPoints[configPoints.Count - 1].edgeThreshold;
+			openglThreshold = configPoints[configPoints.Count - 1].openglThreshold;
 			currentConfigPoint = configPoints.Count;
 		} else {
 			for (int j = 1; j < configPoints.Count; j++) {
@@ -1349,6 +1400,8 @@ namespace scatterer {
 					postProcessExposure = percentage * configPoints[j].postProcessExposure + (1 - percentage) * configPoints[j - 1].postProcessExposure;
 					extinctionMultiplier = percentage * configPoints[j].skyExtinctionMultiplier + (1 - percentage) * configPoints[j - 1].skyExtinctionMultiplier;
 					extinctionTint = percentage * configPoints[j].skyExtinctionTint + (1 - percentage) * configPoints[j - 1].skyExtinctionTint;
+					edgeThreshold = percentage * configPoints[j].edgeThreshold + (1 - percentage) * configPoints[j - 1].edgeThreshold;
+					openglThreshold = percentage * configPoints[j].openglThreshold + (1 - percentage) * configPoints[j - 1].openglThreshold;
 					currentConfigPoint = j;
 				}
 			}
