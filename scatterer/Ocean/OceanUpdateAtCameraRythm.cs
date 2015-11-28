@@ -20,6 +20,10 @@ namespace scatterer
 	public class OceanUpdateAtCameraRythm : MonoBehaviour
 	{
 		public OceanNode m_oceanNode;
+		public Material oceanMaterialNear;
+		public Material oceanMaterialFar;
+		public Camera farCamera;
+		public Camera nearCamera;
 			
 
 
@@ -42,7 +46,8 @@ namespace scatterer
 //			if (m_oceanNode != null) {
 //				m_oceanNode.updateStuff ();
 //			if(m_oceanNode)   //for some reason this null check returns false no matter what
-			m_oceanNode.updateStuff();
+			m_oceanNode.updateStuff(oceanMaterialFar,farCamera);
+			m_oceanNode.updateStuff(oceanMaterialNear,nearCamera);
 //				print("UPDATED OCEAN NODE STUFF");
 //			}
 //

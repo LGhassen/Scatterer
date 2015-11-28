@@ -112,9 +112,13 @@ namespace scatterer
 //			RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat);
 			RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat,0);
 
-			m_oceanMaterial.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
-			m_oceanMaterial.SetTexture("_Ocean_Foam0", m_foam0);
-			m_oceanMaterial.SetTexture("_Ocean_Foam1", m_foam1);
+			m_oceanMaterialFar.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
+			m_oceanMaterialFar.SetTexture("_Ocean_Foam0", m_foam0);
+			m_oceanMaterialFar.SetTexture("_Ocean_Foam1", m_foam1);
+
+			m_oceanMaterialNear.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
+			m_oceanMaterialNear.SetTexture("_Ocean_Foam0", m_foam0);
+			m_oceanMaterialNear.SetTexture("_Ocean_Foam1", m_foam1);
 		}
 	}
 

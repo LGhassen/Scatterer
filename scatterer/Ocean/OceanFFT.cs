@@ -243,18 +243,31 @@ namespace scatterer
 			Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
 			Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
 
-			m_oceanMaterial.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
-			m_oceanMaterial.SetVector("_Ocean_Choppyness", m_choppyness);
-			m_oceanMaterial.SetVector("_Ocean_GridSizes", m_gridSizes);
-			m_oceanMaterial.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
-			m_oceanMaterial.SetTexture("_Ocean_Variance", m_variance);
-			m_oceanMaterial.SetTexture("_Ocean_Map0", m_map0);
-			m_oceanMaterial.SetTexture("_Ocean_Map1", m_map1);
-			m_oceanMaterial.SetTexture("_Ocean_Map2", m_map2);
-			m_oceanMaterial.SetTexture("_Ocean_Map3", m_map3);
-			m_oceanMaterial.SetTexture("_Ocean_Map4", m_map4);
 
-			m_oceanMaterial.SetVector("_VarianceMax", m_varianceMax);
+
+			m_oceanMaterialNear.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
+			m_oceanMaterialNear.SetVector("_Ocean_Choppyness", m_choppyness);
+			m_oceanMaterialNear.SetVector("_Ocean_GridSizes", m_gridSizes);
+			m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
+			m_oceanMaterialNear.SetTexture("_Ocean_Variance", m_variance);
+			m_oceanMaterialNear.SetTexture("_Ocean_Map0", m_map0);
+			m_oceanMaterialNear.SetTexture("_Ocean_Map1", m_map1);
+			m_oceanMaterialNear.SetTexture("_Ocean_Map2", m_map2);
+			m_oceanMaterialNear.SetTexture("_Ocean_Map3", m_map3);
+			m_oceanMaterialNear.SetTexture("_Ocean_Map4", m_map4);
+			m_oceanMaterialNear.SetVector("_VarianceMax", m_varianceMax);
+
+			m_oceanMaterialFar.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
+			m_oceanMaterialFar.SetVector("_Ocean_Choppyness", m_choppyness);
+			m_oceanMaterialFar.SetVector("_Ocean_GridSizes", m_gridSizes);
+			m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
+			m_oceanMaterialFar.SetTexture("_Ocean_Variance", m_variance);
+			m_oceanMaterialFar.SetTexture("_Ocean_Map0", m_map0);
+			m_oceanMaterialFar.SetTexture("_Ocean_Map1", m_map1);
+			m_oceanMaterialFar.SetTexture("_Ocean_Map2", m_map2);
+			m_oceanMaterialFar.SetTexture("_Ocean_Map3", m_map3);
+			m_oceanMaterialFar.SetTexture("_Ocean_Map4", m_map4);
+			m_oceanMaterialFar.SetVector("_VarianceMax", m_varianceMax);
 
 			//Make sure base class get updated as well
 			base.UpdateNode();

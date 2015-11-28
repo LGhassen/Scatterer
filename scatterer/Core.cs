@@ -647,39 +647,57 @@ namespace scatterer {
 						GUILayout.EndHorizontal ();
 						
 						
-						GUILayout.BeginHorizontal ();
-						GUILayout.Label ("Ocean renderqueue");
-						oceanRenderQueue = (Int32)(Convert.ToInt32 (GUILayout.TextField (oceanRenderQueue.ToString ())));
-							
-						if (GUILayout.Button ("Set")) {
-							scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode().m_oceanMaterial.renderQueue = oceanRenderQueue;
-						}
-						GUILayout.EndHorizontal ();
+//						GUILayout.BeginHorizontal ();
+//						GUILayout.Label ("Ocean renderqueue");
+//						oceanRenderQueue = (Int32)(Convert.ToInt32 (GUILayout.TextField (oceanRenderQueue.ToString ())));
+//							
+//						if (GUILayout.Button ("Set")) {
+//							scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode().m_oceanMaterial.renderQueue = oceanRenderQueue;
+//						}
+//						GUILayout.EndHorizontal ();
 
 
-						GUILayout.BeginHorizontal ();
-						GUILayout.Label ("Ocean Near plane");
-						
-						
-						oceanNearPlane = float.Parse(GUILayout.TextField(oceanNearPlane.ToString("00000000.0000000")));
-						
-						if (GUILayout.Button ("Set"))
-						{
-							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.oceanNearPlane = oceanNearPlane;
-						}
-						GUILayout.EndHorizontal ();
-						
-						GUILayout.BeginHorizontal ();
-						GUILayout.Label ("Ocean far plane");
-						
-						
-						oceanFarPlane = float.Parse(GUILayout.TextField(oceanFarPlane.ToString("00000000.0000000")));
-						
-						if (GUILayout.Button ("Set"))
-						{
-							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.oceanFarPlane = oceanFarPlane;
-						}
-						GUILayout.EndHorizontal ();
+//						GUILayout.BeginHorizontal ();
+//						GUILayout.Label ("Ocean Near plane");
+//						
+//						
+//						oceanNearPlane = float.Parse(GUILayout.TextField(oceanNearPlane.ToString("00000000.0000000")));
+//						
+//						if (GUILayout.Button ("Set"))
+//						{
+//							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.oceanNearPlane = oceanNearPlane;
+//						}
+//						GUILayout.EndHorizontal ();
+//						
+//						GUILayout.BeginHorizontal ();
+//						GUILayout.Label ("Ocean far plane");
+//						
+//						
+//						oceanFarPlane = float.Parse(GUILayout.TextField(oceanFarPlane.ToString("00000000.0000000")));
+//						
+//						if (GUILayout.Button ("Set"))
+//						{
+//							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.oceanFarPlane = oceanFarPlane;
+//						}
+//						GUILayout.EndHorizontal ();
+
+
+//							GUILayout.BeginHorizontal ();
+//							GUILayout.Label ("farcam fplane");
+//							
+//							
+//							farCamera.nearClipPlane = float.Parse(GUILayout.TextField(farCamera.nearClipPlane.ToString("00000000.0000000")));
+//
+//							GUILayout.Label ("farcam Nplane");
+//							
+//							
+//							farCamera.farClipPlane = float.Parse(GUILayout.TextField(farCamera.farClipPlane.ToString("00000000.0000000")));
+//							
+////							if (GUILayout.Button ("Set"))
+////							{
+////								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.oceanNearPlane = oceanNearPlane;
+////							}
+//							GUILayout.EndHorizontal ();
 						
 						GUILayout.BeginHorizontal ();
 						GUILayout.Label ("THETA");
