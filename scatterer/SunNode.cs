@@ -12,28 +12,20 @@ namespace scatterer
 	
 	public class SunNode : MonoBehaviour 
 	{
-		
 		Vector3 directionTosun;
 		//Dont change this
 		static readonly Vector3 Z_AXIS = new Vector3(0,0,1);
-		
-		[SerializeField]
+
 		Vector3 m_startSunDirection = Z_AXIS;
-		
-		[SerializeField]
+
 		float m_sunIntensity = 100.0f;
 		
 		Matrix4x4 m_worldToLocalRotation;
 		
-		bool m_hasMoved = false;
-		
 		public Vector3 GetDirection() {
 			return directionTosun.normalized;
 		}
-		
-		public bool GetHasMoved() {
-			return m_hasMoved;
-		}
+
 		
 		//The rotation needed to move the sun direction back to the z axis.
 		//The sky shader requires that the sun direction is always at the z axis
@@ -69,43 +61,12 @@ namespace scatterer
 			mat.SetFloat("_Sun_Intensity", m_sunIntensity);
 			mat.SetVector("_Sun_WorldSunDir", GetDirection());
 		}
-		
-		
-		
-		/*	public void Update() 
-		{
-			//HACKY AS FUCK, see updatenode() lower
-			
-			m_hasMoved = false;
-			
-			if (VariablesInst.getActiveState ())
-			{
-				Vector3 tmp=VariablesInst.getSunTransform().position-VariablesInst.getKerbinTransform().position;
-				tmp=tmp.normalized;
-				
-				transform.forward = tmp;
-				m_hasMoved = true;
-			}
-			
-			Quaternion q = Quaternion.FromToRotation(GetDirection(), Z_AXIS);
-			m_worldToLocalRotation = Matrix4x4.TRS(Vector3.zero, q, Vector3.one);
-			
-		}*/
-		
-		
+
 		// Update is called once per frame
 		public void UpdateNode() 
 		{
-			//Rotate the sun when the right mouse is held down and dragged.
-			
-			m_hasMoved = false;
-			
-			
 			directionTosun=directionTosun.normalized;
-			
-			m_hasMoved = true;
-			
-			
+
 			Quaternion q = Quaternion.FromToRotation(GetDirection(), Z_AXIS);
 			m_worldToLocalRotation = Matrix4x4.TRS(Vector3.zero, q, Vector3.one);
 			

@@ -3,11 +3,11 @@
 	SubShader 
 	{
 		//Tags {"Queue" = "Background" "RenderType"="" }
-		 Tags {"Queue" = "Geometry+1" }
+		 Tags {"Queue" = "Geometry+1" "IgnoreProjector"="True"}
 	
     	Pass 
     	{
-    	 Tags {"Queue" = "Geometry+1" }
+    	 Tags {"Queue" = "Geometry+1" "IgnoreProjector"="True"}
     		ZWrite Off
     		ZTest Off
     		

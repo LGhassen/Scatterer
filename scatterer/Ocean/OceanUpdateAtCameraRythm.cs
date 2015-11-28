@@ -41,6 +41,7 @@ namespace scatterer
 		{
 //			if (m_oceanNode != null) {
 //				m_oceanNode.updateStuff ();
+//			if(m_oceanNode)   //for some reason this null check returns false no matter what
 			m_oceanNode.updateStuff();
 //				print("UPDATED OCEAN NODE STUFF");
 //			}

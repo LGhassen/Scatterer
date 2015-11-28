@@ -7,10 +7,8 @@ using KSP.IO;
 namespace scatterer
 {
 	/*
-	 * A manger to organise what order update functions are called, the running of tasks and the drawing of the terrain.
-	 * Provides a location for common settings and allows the nodes to access each other.
-	 * Also sets uniforms that are considered global.
-	 * Must have a scheduler script attached to the same gameobject
+	 * A manger to organise what order update functions are called
+	 * Provides a location for common settings and allows the nodes to access each other
 	 * 
 	 */
 	public class Manager : MonoBehaviour 
@@ -24,9 +22,6 @@ namespace scatterer
 		//parent core
 		Core m_core;
 		
-		
-		int[] cam=new int[7];
-		
 		[SerializeField]
 		float m_radius= 600000.0f;
 		
@@ -36,6 +31,8 @@ namespace scatterer
 		SunNode m_sunNode;
 
 		public CelestialBody parentCelestialBody;
+		public Transform ParentPlanetTransform;
+
 		CelestialBody sunCelestialBody;
 		
 		// Initialization
@@ -43,6 +40,7 @@ namespace scatterer
 		{
 			managerState = "waking up";
 			m_radius = (float)parentCelestialBody.Radius;
+//			print (m_radius);
 			
 			m_sunNode = new SunNode();
 			m_sunNode.Start ();
@@ -50,10 +48,13 @@ namespace scatterer
 			m_skyNode = new SkyNode();
 			m_skyNode.setManager (this);
 			m_skyNode.SetParentCelestialBody (parentCelestialBody);
-			m_skyNode.loadSettings ();
+			m_skyNode.setParentPlanetTransform (ParentPlanetTransform);
+//			print ("skynode parent CB and PP set");
+			//m_skyNode.loadSettings ();
 			m_skyNode.Start ();
 			m_skyNode.loadFromConfigNode ();
-
+			//m_skyNode.loadFromConfigNode ();
+//			print ("skynode started");
 
 
 			m_oceanNode = new OceanWhiteCaps();
@@ -62,14 +63,6 @@ namespace scatterer
 
 			m_oceanNode.Start ();
 
-			
-			for (int i=0;i<7;i++)
-			{
-				cam[i]=1;
-			}
-			
-
-			
 			managerState = "awake";
 		}
 		
@@ -87,10 +80,8 @@ namespace scatterer
 
 			
 			m_skyNode.UpdateNode();
+			m_oceanNode.UpdateNode ();
 
-
-
-				m_oceanNode.UpdateNode ();
 
 			
 			updateCnt++;
@@ -102,16 +93,22 @@ namespace scatterer
 		{
 			m_skyNode.OnDestroy ();
 			Destroy (m_skyNode);
+
 			Destroy (m_sunNode);
+
 			m_oceanNode.OnDestroy ();
 			Destroy (m_oceanNode);
-
 		}
 		
 		
 		public void setParentCelestialBody (CelestialBody parent)
 		{
 			parentCelestialBody = parent;
+		}
+
+		public void setParentPlanetTransform (Transform parentTransform)
+		{
+			ParentPlanetTransform = parentTransform;
 		}
 		
 		public void setSunCelestialBody (CelestialBody sun)
@@ -121,12 +118,12 @@ namespace scatterer
 		
 		public Vector3 getDirectionToSun()
 		{
-			if (m_skyNode.debugSettings [0]) {
+//			if (m_skyNode.debugSettings [0]) {
 				return((sunCelestialBody.GetTransform ().position - parentCelestialBody.GetTransform ().position));
-			} else {
-				return((ScaledSpace.LocalToScaledSpace(sunCelestialBody.GetTransform ().position)-ScaledSpace.LocalToScaledSpace(parentCelestialBody.GetTransform ().position)));
-			
-			}
+//			} else {
+//				return((ScaledSpace.LocalToScaledSpace(sunCelestialBody.GetTransform ().position)-ScaledSpace.LocalToScaledSpace(parentCelestialBody.GetTransform ().position)));
+//			
+//			}
 
 		}
 		

@@ -3,11 +3,11 @@
 	SubShader 
 	{
 		//Tags {"Queue" = "Background" "RenderType"="" }
-		 Tags {"Queue" = "Geometry+1" }
+		 Tags {"Queue" = "Geometry+1" "IgnoreProjector"="True"}
 	
     	Pass 
     	{
-    	 Tags {"Queue" = "Geometry+1" }
+    	 Tags {"Queue" = "Geometry+1" "IgnoreProjector"="True"}
     		ZWrite Off
     		ZTest Off
     		
@@ -34,6 +34,7 @@
 			uniform float3 _Globals_WorldCameraPos;
 			uniform float3 _Globals_Origin;
 			uniform float _Globals_ApparentDistance;
+			uniform float _sunglareScale;
 			
 			uniform sampler2D _Sun_Glare;
 			uniform float3 _Sun_WorldSunDir;
@@ -67,7 +68,7 @@
 			// assumes sundir=vec3(0.0, 0.0, 1.0)
 			float3 OuterSunRadiance(float3 viewdir)
 			{
-			    float3 data = viewdir.z > 0.0 ? tex2D(_Sun_Glare, float2(0.5,0.5) + viewdir.xy * 4.0).rgb : float3(0,0,0);
+			    float3 data = viewdir.z > 0.0 ? tex2D(_Sun_Glare, float2(0.5,0.5) + viewdir.xy * 4.0 / _sunglareScale).rgb : float3(0,0,0);
 			    
 			    
 			    return pow(max(float3(0.0,0.0,0.0),data), 2.2) * _Sun_Intensity;
