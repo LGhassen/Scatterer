@@ -63,6 +63,7 @@ namespace scatterer {
 		public float irradianceFactor = 1f;
 		public float oceanSigma = 0.04156494f;
 		public float _Ocean_Threshold = 25f;
+		[Persistent] public float sunglareScale = 1f;
 		[Persistent] public float extinctionMultiplier = 1f;
 		[Persistent] public float extinctionTint = 100f;
 		[Persistent] public float mapExtinctionMultiplier = 1f;
@@ -80,7 +81,7 @@ namespace scatterer {
 //		string path;
 		
 		float totalscale;
-		float totalscale2;
+//		float totalscale2;
 		
 		//int newRenderQueue;
 		
@@ -282,7 +283,7 @@ namespace scatterer {
 			InitUniforms(m_skyMaterialScaled);
 			InitUniforms(m_skyExtinction);
 			
-			if (m_manager.GetCore ().render24bitDepthBuffer)
+			if (m_manager.GetCore().render24bitDepthBuffer && !m_manager.GetCore().d3d9)
 			{
 				m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter24bitdepth.shader");
 			}
@@ -632,12 +633,12 @@ namespace scatterer {
 		
 		
 		
-		mat.SetVector("betaR", m_betaR / 1000.0f);
+
 		mat.SetFloat("mieG", Mathf.Clamp(m_mieG, 0.0f, 0.99f));
-		mat.SetTexture("_Sky_Transmittance", m_transmit);
-		mat.SetTexture("_Sky_Inscatter", m_inscatter);
-		mat.SetTexture("_Sky_Irradiance", m_irradiance);
 		mat.SetFloat("_Sun_Intensity", 100f);
+
+		mat.SetFloat("_sunglareScale", sunglareScale);
+
 		mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun().normalized);
 		//			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun());
 		
@@ -854,6 +855,9 @@ namespace scatterer {
 
 		mat.SetVector("betaR", m_betaR / 1000.0f);
 		mat.SetFloat("mieG", Mathf.Clamp(m_mieG, 0.0f, 0.99f));
+
+		mat.SetVector("betaMSca", BETA_MSca / 1000.0f);
+		mat.SetVector("betaMEx", (BETA_MSca / 1000.0f) / 0.9f);
 		
 //		mat.SetFloat("_Ocean_Sigma", oceanSigma); //
 		
@@ -1004,10 +1008,15 @@ namespace scatterer {
 		//Init uniforms that this or other gameobjects may need
 		if (mat == null) return;
 		
+		mat.SetVector("betaR", m_betaR / 1000.0f);
+		mat.SetTexture("_Sky_Transmittance", m_transmit);
+		mat.SetTexture("_Sky_Inscatter", m_inscatter);
+		mat.SetTexture("_Sky_Irradiance", m_irradiance);
 		mat.SetFloat("scale", Rg * atmosphereGlobalScale / m_radius);
 		mat.SetFloat("Rg", Rg * atmosphereGlobalScale);
 		mat.SetFloat("Rt", Rt * atmosphereGlobalScale);
 		mat.SetFloat("RL", RL * atmosphereGlobalScale);
+
 		mat.SetFloat("TRANSMITTANCE_W", TRANSMITTANCE_W);
 		mat.SetFloat("TRANSMITTANCE_H", TRANSMITTANCE_H);
 		mat.SetFloat("SKY_W", SKY_W);
@@ -1021,6 +1030,7 @@ namespace scatterer {
 		mat.SetFloat("HM", HM * 1000.0f);
 		mat.SetVector("betaMSca", BETA_MSca / 1000.0f);
 		mat.SetVector("betaMEx", (BETA_MSca / 1000.0f) / 0.9f);
+		mat.SetFloat("_sunglareScale", sunglareScale);
 		//			mat.SetFloat("_Alpha_Cutoff", alphaCutoff);
 		
 	}
