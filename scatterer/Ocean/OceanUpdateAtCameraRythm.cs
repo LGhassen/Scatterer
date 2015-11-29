@@ -14,40 +14,51 @@ using System.Text;
 
 using KSP.IO;
 
-namespace scatterer
-{
+namespace scatterer {
 	
-	public class OceanUpdateAtCameraRythm : MonoBehaviour
-	{
+	public class OceanUpdateAtCameraRythm: MonoBehaviour {
 		public OceanNode m_oceanNode;
-			
-
-
-//		public void settings(Material inSkyMat, Manager inManager, SkyNode inSkyNode, GameObject intester, bool indebug6, CelestialBody inparent)
-//		{
-//
-//			skyMat = inSkyMat;
-//			m_manager = inManager;
-//			m_skynode = inSkyNode;
-//			tester = intester;
-//			debug6 = indebug6;
-//			parentCelestialBody = inparent;
-//
-//		}
-
-	
+		public Material oceanMaterialNear;
+		public Material oceanMaterialFar;
+		public Camera farCamera;
+		public Camera nearCamera;
+		public Manager m_manager=null;
 		
-	public void OnPreRender()
-		{
-//			if (m_oceanNode != null) {
-//				m_oceanNode.updateStuff ();
-			m_oceanNode.updateStuff();
-//				print("UPDATED OCEAN NODE STUFF");
-//			}
-//
-//			else print("OCEAN NODE NULL");
+		
+		
+		//		public void settings(Material inSkyMat, Manager inManager, SkyNode inSkyNode, GameObject intester, bool indebug6, CelestialBody inparent)
+		//		{
+		//
+		//			skyMat = inSkyMat;
+		//			m_manager = inManager;
+		//			m_skynode = inSkyNode;
+		//			tester = intester;
+		//			debug6 = indebug6;
+		//			parentCelestialBody = inparent;
+		//
+		//		}
+		
+		
+		
+		public void OnPreRender() {
+			//			if (m_oceanNode != null) {
+			//				m_oceanNode.updateStuff ();
+			//if(m_oceanNode)   //for some reason this null check returns false no matter what
+			if (!m_manager)
+				Destroy (this);
 
 
-		}		
+			if (!MapView.MapIsEnabled && farCamera && nearCamera) {
+				m_oceanNode.updateStuff(oceanMaterialFar, farCamera);
+				m_oceanNode.updateStuff(oceanMaterialNear, nearCamera);
+				
+			}
+			//				print("UPDATED OCEAN NODE STUFF");
+			//			}
+			//
+			//			else print("OCEAN NODE NULL");
+			
+			
+		}
 	}
 }

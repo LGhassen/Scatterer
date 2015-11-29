@@ -1,4 +1,4 @@
-//The only way to get my atmosphere to draw behind the planet was to sue a regular meshrenderer because using PostRender in drawSky 
+//The only way to get my atmosphere to draw behind the planet was to use a regular meshrenderer because using PostRender in drawSky 
 //causes it to be drawn after the whole scene is done
 //
 

@@ -9,10 +9,16 @@ namespace scatterer
 		[Persistent] public float postProcessAlpha;
 		[Persistent] public float postProcessDepth;
 		[Persistent] public float postProcessExposure;
+		[Persistent] public float skyExtinctionMultiplier;
+		[Persistent] public float skyExtinctionTint;
+		[Persistent] public float openglThreshold;
+		[Persistent] public float edgeThreshold;
 			
 
 
-		public configPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inPostProcessAlpha,float inPostProcessDepth,float inPostProcessExposure)
+		public configPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inPostProcessAlpha,
+		                   float inPostProcessDepth,float inPostProcessExposure, float inSkyExtinctionMultiplier,
+		                   float inSkyExtinctionTint, float inOpenglThreshold, float inEdgeThreshold)
 		{
 			altitude=inAltitude;
 			skyAlpha=inSkyAlpha;
@@ -20,6 +26,10 @@ namespace scatterer
 			postProcessAlpha=inPostProcessAlpha;
 			postProcessDepth=inPostProcessDepth;
 			postProcessExposure=inPostProcessExposure;
+			skyExtinctionMultiplier=inSkyExtinctionMultiplier;
+			skyExtinctionTint=inSkyExtinctionTint;
+			openglThreshold = inOpenglThreshold;
+			edgeThreshold = inEdgeThreshold;
 		}
 
 		public configPoint()

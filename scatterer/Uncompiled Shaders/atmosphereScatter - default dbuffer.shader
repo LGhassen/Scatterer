@@ -1,4 +1,4 @@
-Shader "Sky/AtmosphereGhoss"
+﻿Shader "Sky/AtmosphereGhoss"
 {
 	Properties 
 	{
@@ -41,28 +41,31 @@ Shader "Sky/AtmosphereGhoss"
 			
 			uniform float4x4 _ViewProjInv;
 			
-			uniform float _OceanRadius;
+//			uniform float _OceanRadius;
 			uniform float _Scale;
 			uniform float _global_alpha;
 			uniform float _Exposure;
 			uniform float _global_depth;
-			uniform float _global_depth2;
+//			uniform float _global_depth2;
 			uniform float3 _inCamPos;
 			uniform float3 _Globals_Origin;
-			uniform float3 _CameraForwardDirection;
+//			uniform float3 _CameraForwardDirection;
 //			uniform sampler2D _CameraDepthNormalsTexture;
 			uniform sampler2D _CameraDepthTexture;
-			uniform sampler2D _customDepthTexture;
-			uniform float4x4 _FrustumCorners;
+//			uniform sampler2D _customDepthTexture;
+//			uniform float4x4 _FrustumCorners;
 			uniform float4 _MainTex_TexelSize;
 			
-			uniform float _irradianceFactor;
-			uniform float _Ocean_Sigma;
-			uniform float _Ocean_Threshold;
+//			uniform float _irradianceFactor;
+//			uniform float _Ocean_Sigma;
+//			uniform float _Ocean_Threshold;
 			
-			uniform float _inscatteringCoeff;
-			uniform float _extinctionCoeff;
+//			uniform float _inscatteringCoeff;
+//			uniform float _extinctionCoeff;
 			uniform float _openglThreshold;
+			uniform float _globalThreshold;
+			uniform float _edgeThreshold;
+			uniform float _horizonDepth;
 			
 //			uniform float3 SUN_DIR;
 			
@@ -148,57 +151,53 @@ Shader "Sky/AtmosphereGhoss"
 			
 			half4 frag(v2f i) : COLOR 
 			{
-			//DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, i.uv_depth.xy), depthValue, normalValues);
+//				DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, i.uv_depth.xy), depthValue, normalValues);
 			
 //				float4 col = tex2D(_MainTex, i.uv);
-//				float4 col2=col;//
-//				float4 skyCol = tex2D(_SkyDome, i.uv_depth);
 				
-//				float dpth = _global_depth2 * Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));	
-				float dpth = _global_depth2 * Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_customDepthTexture,i.uv_depth)));	
+				float dpth =  Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));	
+//				float dpth =  Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_customDepthTexture,i.uv_depth)));	
 
+				if(dpth >= 1.0) return float4(0.0,0.0,0.0,0.0);
+				
+				
+				float visib=1;
+
+				if (dpth<=_global_depth)
+				{
+					visib=1-exp(-1* (4*dpth/_global_depth));
+				}
+				
+				
+				
 				
 				//float dpth=_global_depth2 * (depthValue);			
 				//float3 worldPos = (_inCamPos-_Globals_Origin + dpth *_Scale * i.interpolatedRay);
 				//float3 worldPos = float3(GetWorldPositionFromDepth(i.uv_depth));
 				
-//				float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv_depth);
-				float depth = SAMPLE_DEPTH_TEXTURE(_customDepthTexture, i.uv_depth);
+				float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv_depth);
+//				float depth = SAMPLE_DEPTH_TEXTURE(_customDepthTexture, i.uv_depth);
 
         		#if !defined(SHADER_API_OPENGL)
         		float4 H = float4(i.uv_depth.x*2.0f-1.0f, (i.uv_depth.y)*2.0f-1.0f, depth, 1.0f);
         		#else	
         		float4 H = float4(i.uv_depth.x*2.0f-1.0f, i.uv_depth.y*2.0f-1.0f, depth*2.0f-1.0f, 1.0f);
         		#endif
-
-        		
         		
         		float4 D = mul(_ViewProjInv,H);
-        		//float4 D = mul(_ViewProjInv,depth);
+
         		float3 worldPos = D/D.w;
         		
         		#if !defined(SHADER_API_D3D9)
-//        		if (length(worldPos) < (Rg+_openglThreshold)){
-//        		worldPos=(Rg+_openglThreshold)*normalize(worldPos);
-        		if (length(worldPos) < (Rg+250)){
-        		worldPos=(Rg+250)*normalize(worldPos);
+
+        		if (length(worldPos) < (Rg+_openglThreshold))
+        		{
+        			worldPos=(Rg+_openglThreshold)*normalize(worldPos);
         		}
 				#endif
-				
-//				 = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, float2(i.screenPos));
-				
-//			 float depthOutput = UNITY_SAMPLE_DEPTH(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD((i.screenPos))));
-//			 depthOutput = LinearEyeDepth(depthOutput);
-//				
-								
-//				
-				if(dpth >= 1.0) return float4(0.0,0.0,0.0,0.0);
-				
-
 			    
 				float3 extinction = float3(0,0,0);
-//				float3 inscatter = InScattering(_inCamPos*_Scale, worldPos*_Scale, extinction, 1.0);
-				//float3 inscatter = InScattering(_inCamPos+_Globals_Origin, absDir, absWorldPos, extinction, 1.0, dist);
+				
 				float irradianceFactor=0.0;
 				float3 inscatter =  InScattering((_inCamPos-_Globals_Origin) *_Scale , worldPos *_Scale , extinction, 1.0, 1.0, 1.0);
 				
@@ -206,8 +205,7 @@ Shader "Sky/AtmosphereGhoss"
 				
 //				float3 sunL;
 //			    float3 skyE;
-			    
-			        
+			            
 //    			float3 fn= mul((float3x3)_Globals_CameraToWorld ,normalValues); //WorldNormal
 //			    SunRadianceAndSkyIrradiance(worldPos, fn, SUN_DIR, sunL, skyE, _Scale);
 			    
@@ -254,11 +252,7 @@ Shader "Sky/AtmosphereGhoss"
 				//col2.rgb =   col.rgb * extinction + inscatter;
 																
 				
-				float visib=1;
-				if (dpth<=_global_depth){
-//				visib=dpth/_global_depth;
-				visib=1-exp(-1* (4*dpth/_global_depth));
-				}
+
 				
 				
 //				if (length(inscatter)<_extinctionCoeff)
@@ -275,7 +269,7 @@ Shader "Sky/AtmosphereGhoss"
 //				return float4(hdr(reflectedLight +  inscatter),_global_alpha*visib);
 //				return float4(hdr(groundColor * extinction +  inscatter),_global_alpha*visib);
 				
-				return float4(hdr(inscatter),_global_alpha*visib);
+				return float4(hdr(inscatter),_global_alpha * visib);
 //				return float4(depthOutput,depthOutput,depthOutput,_global_alpha*visib);
 //				return float4(float3(i.interpolatedRay),1.0);
 
