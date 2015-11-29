@@ -9,6 +9,7 @@ namespace scatterer
 		[Persistent] public string transformName;
 		[Persistent] public float loadDistance;
 		[Persistent] public float unloadDistance;
+		[Persistent] public bool hasOcean;
 
 		public CelestialBody celestialBody;
 		public Transform transform;
@@ -19,12 +20,13 @@ namespace scatterer
 		
 		
 		public scattererCelestialBody (string inCelestialBodyName, string inTransformName, float inloadDistance,
-		                               float inUnloadDistance)
+		                               float inUnloadDistance, bool inHasOcean)
 		{
 			celestialBodyName = inCelestialBodyName;
 			transformName=inTransformName;
 			loadDistance = inloadDistance;
 			unloadDistance=inUnloadDistance;
+			hasOcean = inHasOcean;
 		}
 
 		public scattererCelestialBody (CelestialBody inCelestialBody, Transform inTransform)
