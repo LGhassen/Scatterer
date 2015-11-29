@@ -200,6 +200,16 @@ namespace scatterer {
 //				waterMeshRenderersFar[i].enabled=true;
 				
 			}
+
+//			PQS pqs = m_manager.parentCelestialBody.pqsController;
+//
+//			if (pqs.ChildSpheres[0])
+//				UnityEngine.Object.Destroy (pqs.ChildSpheres [0]);
+
+//			if (ocean)
+//			{
+//				UnityEngine.Object.Destroy (ocean);
+//			}
 		}
 		
 		public virtual void OnDestroy() {
@@ -213,13 +223,13 @@ namespace scatterer {
 //				Destroy(waterMeshFiltersFar[i]);
 //				Destroy(waterMeshRenderersFar[i]);
 
-				Destroy(m_screenGrids[i]);
+				UnityEngine.Object.Destroy(m_screenGrids[i]);
 			}
-			Destroy(m_oceanMaterialNear);
-			Destroy(m_oceanMaterialFar);
+			UnityEngine.Object.Destroy(m_oceanMaterialNear);
+			UnityEngine.Object.Destroy(m_oceanMaterialFar);
 
 			Component.Destroy (oceanupdater);
-			Destroy(oceanupdater);
+			UnityEngine.Object.Destroy(oceanupdater);
 		}
 		
 		Mesh MakePlane(int w, int h, float offset, float scale) {
@@ -289,29 +299,37 @@ namespace scatterer {
 			if (!MapView.MapIsEnabled && !m_core.stockOcean )
 			{
 				foreach(Mesh mesh in m_screenGrids ) {
-					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15, m_manager.m_skyNode.farCamera);
-					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15, m_manager.m_skyNode.nearCamera);
+//					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15, m_manager.m_skyNode.farCamera);
+//					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15, m_manager.m_skyNode.nearCamera);
+
+
+					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15,
+					                  m_manager.m_skyNode.farCamera,0,null, false,false);
+					
+					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15,
+					                  m_manager.m_skyNode.nearCamera,0,null, false,false);
+
 				}
 			}
 			
-						if (!ocean)  //the stock ocean PQS
-						{ 
-							PQS pqs = m_manager.parentCelestialBody.pqsController;
-							ocean = pqs.ChildSpheres [0];
-						}
+//						if (!ocean)  //the stock ocean PQS
+//						{ 
+//							PQS pqs = m_manager.parentCelestialBody.pqsController;
+//							ocean = pqs.ChildSpheres [0];
+//						}
 			
 //						ocean.isDisabled = true;
-						ocean.DisableSphere ();
-						ocean.isDisabled = !m_core.stockOcean;
-			
-						if (!m_core.stockOcean)
-						{
-							ocean.DisableSphere ();
-						}
-						else
-						{
-							ocean.EnableSphere ();
-						}
+//						ocean.DisableSphere ();
+//						ocean.isDisabled = !m_core.stockOcean;
+//			
+//						if (!m_core.stockOcean)
+//						{
+//							ocean.DisableSphere ();
+//						}
+//						else
+//						{
+//							ocean.EnableSphere ();
+//						}
 			
 			
 //						for(int i = 0; i < numGrids; i++)

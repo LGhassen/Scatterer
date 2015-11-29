@@ -1158,15 +1158,15 @@ namespace scatterer {
 			saveToConfigNode();
 			if (m_transmit) {
 				m_transmit.Release();
-				Destroy(m_transmit);
+				UnityEngine.Object.Destroy(m_transmit);
 			}
 			if (m_irradiance) {
 				m_irradiance.Release();
-				Destroy(m_irradiance);
+				UnityEngine.Object.Destroy(m_irradiance);
 			}
 			if (m_inscatter) {
 				m_inscatter.Release();
-				Destroy(m_inscatter);
+				UnityEngine.Object.Destroy(m_inscatter);
 			}
 			
 			//			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
@@ -1183,7 +1183,7 @@ namespace scatterer {
 		*/
 			
 			Component.Destroy(updater);
-			Destroy(updater);
+			UnityEngine.Object.Destroy(updater);
 			
 			//			if (scaledSpaceCamera.gameObject.GetComponent<cameraHDR> () != null)
 			//			{
@@ -1192,18 +1192,18 @@ namespace scatterer {
 			
 			
 			Component.Destroy(skyMR);
-			Destroy(skyObject);
+			UnityEngine.Object.Destroy(skyObject);
 			
 			Component.Destroy(skyExtinctMR);
-			Destroy(skyExtinctObject);
+			UnityEngine.Object.Destroy(skyExtinctObject);
 			
 			Component.Destroy(atmosphereMeshrenderer);
-			Destroy(atmosphereMesh);
+			UnityEngine.Object.Destroy(atmosphereMesh);
 			//Destroy (hp);
 			
 			RestoreStockAtmosphere();
-			Destroy(alteredMaterial);
-			Destroy(originalMaterial);
+			UnityEngine.Object.Destroy(alteredMaterial);
+			UnityEngine.Object.Destroy(originalMaterial);
 			
 			//Destroy (originalMaterial);
 			
@@ -1212,7 +1212,7 @@ namespace scatterer {
 		}
 		
 		public void destroyskyObject() {
-			Destroy(skyObject);
+			UnityEngine.Object.Destroy(skyObject);
 		}
 		
 		

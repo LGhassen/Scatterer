@@ -91,13 +91,13 @@ namespace scatterer {
 		
 		public void OnDestroy() {
 			m_skyNode.OnDestroy();
-			Destroy(m_skyNode);
+			UnityEngine.Object.Destroy(m_skyNode);
 			
-			Destroy(m_sunNode);
+			UnityEngine.Object.Destroy(m_sunNode);
 			
 			if (hasOcean) {
 				m_oceanNode.OnDestroy();
-				Destroy(m_oceanNode);
+				UnityEngine.Object.Destroy(m_oceanNode);
 			}
 		}
 		
@@ -105,7 +105,7 @@ namespace scatterer {
 		//this fixes the alt-enter bug the really stupid way but it'll do for now
 		public void reBuildOcean() {
 			if (hasOcean) {
-				Destroy(m_oceanNode);
+				UnityEngine.Object.Destroy(m_oceanNode);
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
 				m_oceanNode.setCore(m_core);

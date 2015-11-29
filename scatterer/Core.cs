@@ -26,7 +26,7 @@ namespace scatterer {
 		
 		[Persistent] public bool forceDisableDefaultDepthBuffer = false;
 		
-		//		private Vector2 _scroll;
+				private Vector2 _scroll;
 		
 		public bool pqsEnabled = false;
 		
@@ -258,11 +258,10 @@ namespace scatterer {
 				if (farCamera) {
 				
 				if (!depthBufferSet) {
-
 					if (!render24bitDepthBuffer || d3d9) {
 
 						farCamera.depthTextureMode = DepthTextureMode.Depth;
-						Debug.Log("[Scatterer] Running in dx9, using default depth buffer");
+						Debug.Log("[Scatterer] Running in Direct3D 9, using default depth buffer");
 					} else {
 
 						customDepthBuffer = (CustomDepthBufferCam) farCamera.gameObject.GetComponent < CustomDepthBufferCam > ();
@@ -321,7 +320,7 @@ namespace scatterer {
 						if (_cur.active) {
 							if (dist > _cur.unloadDistance && !MapView.MapIsEnabled) {
 								_cur.m_manager.OnDestroy();
-								Destroy(_cur.m_manager);
+								UnityEngine.Object.Destroy(_cur.m_manager);
 								_cur.m_manager = null;
 								//ReactivateAtmosphere(cur.transformName,cur.originalPlanetMaterialBackup);
 								_cur.active = false;
@@ -374,7 +373,7 @@ namespace scatterer {
 					scattererCelestialBody cur = scattererCelestialBodies[i];
 					if (cur.active) {
 						cur.m_manager.OnDestroy();
-						Destroy(cur.m_manager);
+						UnityEngine.Object.Destroy(cur.m_manager);
 						cur.m_manager = null;
 						//ReactivateAtmosphere(cur.transformName,cur.originalPlanetMaterialBackup);
 						cur.active = false;
@@ -382,8 +381,8 @@ namespace scatterer {
 					
 				}
 				Component.Destroy(customDepthBuffer);
-				Destroy(customDepthBuffer);
-				Destroy(customDepthBufferTexture);
+				UnityEngine.Object.Destroy(customDepthBuffer);
+				UnityEngine.Object.Destroy(customDepthBufferTexture);
 			}
 		}
 		
@@ -401,7 +400,7 @@ namespace scatterer {
 			
 			if (isActive) {
 				
-				//				_scroll = GUILayout.BeginScrollView (_scroll);
+//								_scroll = GUILayout.BeginScrollView (_scroll);
 				
 				
 				GUILayout.BeginHorizontal();
@@ -469,8 +468,8 @@ namespace scatterer {
 					
 					if (!displayOceanSettings) {
 						
-						//					_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width(400), GUILayout.Height(800));
-						//					{
+											_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width(400), GUILayout.Height(500));
+											{
 						
 						if (!MapView.MapIsEnabled) {
 							
@@ -478,27 +477,7 @@ namespace scatterer {
 							
 							
 							
-							GUILayout.BeginHorizontal();
-							
-							//							if (GUILayout.Button ("Toggle depth buffer")) {
-							//								if (!depthbufferEnabled) {
-							////							cams[2].gameObject.AddComponent(typeof(ViewDepthBuffer));
-							//									depthbufferEnabled = true;
-							//								} else {
-							////							Component.Destroy(cams[2].gameObject.GetComponent < ViewDepthBuffer > ());
-							//									depthbufferEnabled = false;
-							//								}
-							//							}
-							
-							if (GUILayout.Button("Toggle PostProcessing")) {
-								
-								if (!scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.postprocessingEnabled) {
-									scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.enablePostprocess();
-								} else {
-									scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.disablePostprocess();
-								}
-							}
-							GUILayout.EndHorizontal();
+
 							
 							
 							
@@ -817,26 +796,7 @@ namespace scatterer {
 							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere();
 						}
 						GUILayout.EndHorizontal();
-						
-						
-						GUILayout.BeginHorizontal();
-						if (GUILayout.Button("Save atmo")) {
-							//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.rimBlend = rimBlend;
-							//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.rimpower = rimpower;
-							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.displayInterpolatedVariables = showInterpolatedValues;
-							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.saveToConfigNode();
-						}
-						
-						if (GUILayout.Button("Load atmo")) {
-							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.loadFromConfigNode();
-							getSettingsFromSkynode();
-							loadConfigPoint(selectedConfigPoint);
-						}
-						
-						if (GUILayout.Button("Load backup")) {
-							
-						}
-						GUILayout.EndHorizontal();
+
 						
 						
 						GUILayout.BeginHorizontal();
@@ -893,13 +853,55 @@ namespace scatterer {
 						//				{
 						//					stockSunglare =!stockSunglare;
 						//				}
+
 						
+						//							if (GUILayout.Button ("Toggle depth buffer")) {
+						//								if (!depthbufferEnabled) {
+						////							cams[2].gameObject.AddComponent(typeof(ViewDepthBuffer));
+						//									depthbufferEnabled = true;
+						//								} else {
+						////							Component.Destroy(cams[2].gameObject.GetComponent < ViewDepthBuffer > ());
+						//									depthbufferEnabled = false;
+						//								}
+						//							}
+						
+						if (GUILayout.Button("Toggle PostProcessing")) {
+							
+							if (!scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.postprocessingEnabled) {
+								scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.enablePostprocess();
+							} else {
+								scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.disablePostprocess();
+							}
+						}
+
+
 						if (GUILayout.Button("Toggle extinction")) {
 							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.extinctionEnabled = !scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.extinctionEnabled;
 						}
 						
 						GUILayout.EndHorizontal();
+
+
+						GUILayout.BeginHorizontal();
+						if (GUILayout.Button("Save atmo")) {
+							//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.rimBlend = rimBlend;
+							//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.rimpower = rimpower;
+							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.displayInterpolatedVariables = showInterpolatedValues;
+							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.saveToConfigNode();
+						}
 						
+						if (GUILayout.Button("Load atmo")) {
+							scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.loadFromConfigNode();
+							getSettingsFromSkynode();
+							loadConfigPoint(selectedConfigPoint);
+						}
+						
+						if (GUILayout.Button("Load backup")) {
+							
+						}
+						GUILayout.EndHorizontal();
+
+
 						//									for (int j=0;j<10;j++){
 						//									GUILayout.BeginHorizontal ();
 						//									GUILayout.Label (String.Format("Debug setting:{0}", j.ToString()));	
@@ -909,9 +911,9 @@ namespace scatterer {
 						
 						//						chosenCamera = cams [cam];
 						
-						//					}	
-						//				
-						//				GUILayout.EndScrollView();
+											}	
+										
+										GUILayout.EndScrollView();
 					} else {
 						
 						GUILayout.BeginHorizontal();
