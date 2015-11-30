@@ -299,7 +299,7 @@ namespace scatterer {
 				}
 			}
 			
-			if (!MapView.MapIsEnabled && !m_core.stockOcean )
+			if (!MapView.MapIsEnabled && !m_core.stockOcean && m_manager.m_skyNode.inScaledSpace )
 			{
 				foreach(Mesh mesh in m_screenGrids ) {
 //					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15, m_manager.m_skyNode.farCamera);

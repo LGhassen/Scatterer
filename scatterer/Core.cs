@@ -204,7 +204,10 @@ namespace scatterer {
 			if ((Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && (Input.GetKeyDown(KeyCode.F11) || (Input.GetKeyDown(KeyCode.F10)))) Visible = !Visible;
 			if (isActive && ScaledSpace.Instance) {
 				if (!found) {
+
 					CelestialBodies = (CelestialBody[]) CelestialBody.FindObjectsOfType(typeof(CelestialBody));
+
+
 					foreach(scattererCelestialBody sctBody in scattererCelestialBodies) {
 						var _sct = false;
 						var _idx = 0;
@@ -212,12 +215,14 @@ namespace scatterer {
 						if (celBody == null) {
 							celBody = CelestialBodies.Single(_cb => _cb.bodyName == sctBody.transformName);
 						}
+
 						Debug.Log("[Scatterer] Celestial Body: " + celBody);
 						if (celBody != null) {
 							_sct = true;
 							_idx = scattererCelestialBodies.IndexOf(sctBody);
 							Debug.Log("[Scatterer] Found: " + sctBody.celestialBodyName + " / " + celBody.GetName());
 						};
+
 						sctBody.celestialBody = celBody;
 						celestialBodiesWithDistance.Add(new celestialBodySortableByDistance() {
 							CelestialBody = sctBody.celestialBody,
@@ -236,8 +241,33 @@ namespace scatterer {
 						}
 						sctBody.active = false;
 					}
+
 					
 					sunCelestialBody = CelestialBodies.Single(_cb => _cb.GetName() == "Sun");
+
+					//we need to load all of the celestial bodies in celestialBodiesWithDistance regardless
+					//of whether they are loaded ins catterer or not
+					//this is because we need to sort everything by distance to fix their draw orders
+					//and avoid kerbin's atmo being visible from behind the mun for example
+					for (int k = 0; k < CelestialBodies.Length; k++)
+					{
+						bool inScatterer=false;
+						for (int i=0;i<scattererCelestialBodies.Count;i++)
+						{
+							if (CelestialBodies[k].GetName() == scattererCelestialBodies[i].celestialBodyName)
+							{
+								inScatterer=true;
+								i+=100;
+							}
+						}
+
+						if(!inScatterer)
+						{
+							celestialBodiesWithDistance.Add(new celestialBodySortableByDistance() 
+							                                {CelestialBody = CelestialBodies[k], Distance = 0, usesScatterer=false, scattererIndex=0 });
+						}
+					}
+
 
 					cams = Camera.allCameras;
 
@@ -1189,7 +1219,7 @@ namespace scatterer {
 		public void fixDrawOrders() {
 			
 			for (int k = 0; k < celestialBodiesWithDistance.Count; k++) {
-				if (celestialBodiesWithDistance[k].CelestialBody != null) {
+				if (celestialBodiesWithDistance[k].CelestialBody) {
 					celestialBodiesWithDistance[k].Distance = Vector3.Distance(
 						farCamera.transform.position,
 						ScaledSpace.ScaledToLocalSpace(
@@ -1209,10 +1239,10 @@ namespace scatterer {
 					
 					if (mr2 != null) {
 						mr2.material.renderQueue = currentRenderQueue;
-						//					print (current.CelestialBody.name+current.Distance.ToString());
-						//					print ("base queue:"+currentRenderQueue.ToString());
-						//					print (current.Distance);
-						//					
+											print (current.CelestialBody.name+current.Distance.ToString());
+											print ("base queue:"+currentRenderQueue.ToString());
+											print (current.Distance);
+											
 						currentRenderQueue += 1;
 					}
 					

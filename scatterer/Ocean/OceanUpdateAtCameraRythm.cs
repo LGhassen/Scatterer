@@ -48,7 +48,7 @@ namespace scatterer {
 				Destroy (this);
 
 
-			if (!MapView.MapIsEnabled && farCamera && nearCamera) {
+			if (!MapView.MapIsEnabled && farCamera && nearCamera && m_manager.m_skyNode.inScaledSpace ) {
 				m_oceanNode.updateStuff(oceanMaterialFar, farCamera);
 				m_oceanNode.updateStuff(oceanMaterialNear, nearCamera);
 				
