@@ -321,7 +321,7 @@ namespace scatterer {
 				if(pqs.ChildSpheres [0])
 				{
 					ocean = pqs.ChildSpheres [0];
-					ocean.quadAllowBuild = false;
+					ocean.surfaceMaterial=new Material(ShaderTool.GetMatFromShader2("EmptyShader.shader"));
 				}
 				else
 				{
@@ -332,24 +332,26 @@ namespace scatterer {
 
 			if (stockOceanExists)
 			{
-				//this seems like the cleanest way to disable the stock ocean from generating and rendering
-				int deletedQuads=ocean.quads.Length;
 
-				if (deletedQuads>0){
-
-					for (int i=0;i<ocean.quads.Length;i++)
-					{
-						if (ocean.quads[i])
-							UnityEngine.Object.Destroy(ocean.quads[i]);
-					}
-
-					ocean.quads = Array.FindAll(ocean.quads, PQisNotNull);
-//					deletedQuads-=ocean.quads.Length;
-
-						Debug.Log("[Scatterer] Destroyed "+deletedQuads.ToString()+" stock ocean quads on "
-					    	      +m_manager.parentCelestialBody.name);
-
-				}
+				//This causes problems later on
+//				ocean.quadAllowBuild = false;
+//				int deletedQuads=ocean.quads.Length;
+//
+//				if (deletedQuads>0){
+//
+//					for (int i=0;i<ocean.quads.Length;i++)
+//					{
+//						if (ocean.quads[i])
+//							UnityEngine.Object.Destroy(ocean.quads[i]);
+//					}
+//
+//					ocean.quads = Array.FindAll(ocean.quads, PQisNotNull);
+////					deletedQuads-=ocean.quads.Length;
+//
+//						Debug.Log("[Scatterer] Destroyed "+deletedQuads.ToString()+" stock ocean quads on "
+//					    	      +m_manager.parentCelestialBody.name);
+//
+//				}
 
 
 //				ocean.quads= new PQ[10];
