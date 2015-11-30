@@ -618,6 +618,8 @@ namespace scatterer {
 				//				}
 				
 				// Scale and bias depth range
+				//if OpenGL isn't detected
+				if (!m_core.opengl)
 				for (int i = 0; i < 4; i++) {
 					p[2, i] = p[2, i] * 0.5f + p[3, i] * 0.5f;
 				}

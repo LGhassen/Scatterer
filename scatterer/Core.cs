@@ -157,6 +157,7 @@ namespace scatterer {
 		//Manager m_manager;
 		public bool depthbufferEnabled = false;
 		public bool d3d9 = false;
+		public bool opengl = false;
 		bool isActive;
 		
 		//Material originalMaterial;
@@ -182,6 +183,12 @@ namespace scatterer {
 			
 			if (SystemInfo.graphicsDeviceVersion.StartsWith("Direct3D 9")) {
 				d3d9 = true;
+			}
+
+			else
+			
+			if (SystemInfo.graphicsDeviceVersion.StartsWith("OpenGL")) {
+				opengl = true;
 			}
 			
 			
@@ -1239,9 +1246,9 @@ namespace scatterer {
 					
 					if (mr2 != null) {
 						mr2.material.renderQueue = currentRenderQueue;
-											print (current.CelestialBody.name+current.Distance.ToString());
-											print ("base queue:"+currentRenderQueue.ToString());
-											print (current.Distance);
+//											print (current.CelestialBody.name+current.Distance.ToString());
+//											print ("base queue:"+currentRenderQueue.ToString());
+//											print (current.Distance);
 											
 						currentRenderQueue += 1;
 					}
