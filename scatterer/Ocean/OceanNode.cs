@@ -28,6 +28,7 @@ using UnityEngine;
 using System.Collections;
 using System.IO;
 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -314,29 +315,52 @@ namespace scatterer {
 				}
 			}
 
+
 			if (!ocean && stockOceanExists){  
 				PQS pqs = m_manager.parentCelestialBody.pqsController;
 				if(pqs.ChildSpheres [0])
 				{
 					ocean = pqs.ChildSpheres [0];
-					ocean.surfaceMaterial=new Material(ShaderTool.GetMatFromShader2("InvisibleOcean.shader"));
-//					Debug.Log("[Scatterer] Disabling stock ocean quad generation for "+m_manager.parentCelestialBody.name);
+					ocean.quadAllowBuild = false;
 				}
 				else
 				{
 					stockOceanExists=false;
-//					Debug.Log("[Scatterer] Stock ocean doesn't exist for "+m_manager.parentCelestialBody.name);
+					Debug.Log("[Scatterer] Stock ocean doesn't exist for "+m_manager.parentCelestialBody.name);
 				}
 			}
 
 			if (stockOceanExists)
 			{
-//				ocean.quadAllowBuild = false;     //clean way to disable the stock ocean
+				//this seems like the cleanest way to disable the stock ocean from generating and rendering
+				int deletedQuads=ocean.quads.Length;
+
+				if (deletedQuads>0){
+
+					for (int i=0;i<ocean.quads.Length;i++)
+					{
+						if (ocean.quads[i])
+							UnityEngine.Object.Destroy(ocean.quads[i]);
+					}
+
+					ocean.quads = Array.FindAll(ocean.quads, PQisNotNull);
+//					deletedQuads-=ocean.quads.Length;
+
+						Debug.Log("[Scatterer] Destroyed "+deletedQuads.ToString()+" stock ocean quads on "
+					    	      +m_manager.parentCelestialBody.name);
+
+				}
+
+
+//				ocean.quads= new PQ[10];
+
 //				ocean.DeactivateSphere();
 //				ocean.DisableSphere();
 //				ocean.surfaceMaterial=new Material(ShaderTool.GetMatFromShader2("EmptyShader.shader"));
 //				Debug.Log("ocean.subdivisionThreshold"+ ocean.subdivisionThreshold.ToString());
 //				Debug.Log("ocean.maxDetailDistance"+ ocean.maxDetailDistance.ToString());
+
+
 
 			}
 
@@ -625,8 +649,17 @@ namespace scatterer {
 			ConfigNode cnToLoad = ConfigNode.Load(m_manager.m_skyNode.assetDir + "/OceanSettings.cfg");
 			ConfigNode.LoadObjectFromConfig(this, cnToLoad);
 		}
+
+
 		
-		
-		
+		static bool PQisNotNull(PQ pq)
+		{
+			return pq;
+		}
+
+		static bool PQSisNotNull(PQS pqs)
+		{
+			return pqs;
+		}
 	}
 }
