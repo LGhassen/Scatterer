@@ -918,7 +918,7 @@ namespace scatterer {
 						
 						GUILayout.BeginHorizontal();
 						
-						if (GUILayout.Button("Toggle stock ocean")) {
+						if (GUILayout.Button("Toggle ocean")) {
 							stockOcean = !stockOcean;
 						}
 						GUILayout.EndHorizontal();

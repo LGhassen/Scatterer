@@ -62,6 +62,7 @@ namespace scatterer {
 		
 		[Persistent] public float m_oceanLevel = 0.0f;
 
+		bool stockOceanExists=true;
 		PQS ocean;
 		double h = 0;
 		
@@ -210,6 +211,7 @@ namespace scatterer {
 //			{
 //				UnityEngine.Object.Destroy (ocean);
 //			}
+				
 		}
 		
 		public virtual void OnDestroy() {
@@ -311,13 +313,51 @@ namespace scatterer {
 
 				}
 			}
-			
-//						if (!ocean)  //the stock ocean PQS
-//						{ 
-//							PQS pqs = m_manager.parentCelestialBody.pqsController;
-//							ocean = pqs.ChildSpheres [0];
-//						}
-			
+
+			if (!ocean && stockOceanExists){  
+				PQS pqs = m_manager.parentCelestialBody.pqsController;
+				if(pqs.ChildSpheres [0])
+				{
+					ocean = pqs.ChildSpheres [0];
+					ocean.surfaceMaterial=new Material(ShaderTool.GetMatFromShader2("InvisibleOcean.shader"));
+//					Debug.Log("[Scatterer] Disabling stock ocean quad generation for "+m_manager.parentCelestialBody.name);
+				}
+				else
+				{
+					stockOceanExists=false;
+//					Debug.Log("[Scatterer] Stock ocean doesn't exist for "+m_manager.parentCelestialBody.name);
+				}
+			}
+
+			if (stockOceanExists)
+			{
+//				ocean.quadAllowBuild = false;     //clean way to disable the stock ocean
+//				ocean.DeactivateSphere();
+//				ocean.DisableSphere();
+//				ocean.surfaceMaterial=new Material(ShaderTool.GetMatFromShader2("EmptyShader.shader"));
+//				Debug.Log("ocean.subdivisionThreshold"+ ocean.subdivisionThreshold.ToString());
+//				Debug.Log("ocean.maxDetailDistance"+ ocean.maxDetailDistance.ToString());
+
+			}
+
+//
+////				ocean.quadAllowBuild=false;
+//				Debug.Log("ocean.visRad"+ ocean.visRad);
+//				Debug.Log("ocean.visibleRadius"+ ocean.visibleRadius.ToString());
+//				Debug.Log("ocean.visibleAltitude"+ ocean.visibleAltitude.ToString());
+////				Debug.Log("ocean.useSharedMaterial"+ ocean.useSharedMaterial.ToString());
+////				Debug.Log("ocean.surfaceMaterial"+ ocean.surfaceMaterial.ToString());
+//				Debug.Log("ocean.subdivisionThresholds"+ ocean.subdivisionThresholds.ToString());
+//				Debug.Log("ocean.subdivisionThreshold"+ ocean.subdivisionThreshold.ToString());
+////				Debug.Log("ocean.radiusMi"+ ocean.radiusMin.ToString());
+////				Debug.Log("ocean.radiusMax"+ ocean.radiusMax.ToString());
+////				Debug.Log("ocean.quadAllowBuild"+ ocean.quadAllowBuild.ToString());
+//				Debug.Log("ocean.maxDetailDistance"+ ocean.maxDetailDistance.ToString());
+//				Debug.Log("ocean.detailAltitudeMax"+ ocean.detailAltitudeMax.ToString());
+////						}
+						
+						
+
 //						ocean.isDisabled = true;
 //						ocean.DisableSphere ();
 //						ocean.isDisabled = !m_core.stockOcean;
