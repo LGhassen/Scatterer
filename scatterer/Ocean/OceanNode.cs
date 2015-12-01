@@ -54,8 +54,8 @@ namespace scatterer
 		public Material m_oceanMaterialNear;
 		public Material m_oceanMaterialFar;
 		OceanUpdateAtCameraRythm oceanupdater;
-		[Persistent]
-		public Vector3 m_oceanUpwellingColor = new Vector3 (0.039f, 0.156f, 0.47f);
+
+		[Persistent] public Vector3 m_oceanUpwellingColor = new Vector3 (0.0039f, 0.0156f, 0.047f);
 		
 		//Sea level in meters
 		[Persistent]
@@ -71,10 +71,10 @@ namespace scatterer
 		
 		//Size of each grid in the projected grid. (number of pixels on screen)
 		
+		[Persistent]
+		public int m_resolution = 4;
 //		[Persistent]
-		protected int m_resolution = 4;
-//		[Persistent]
-		int MAX_VERTS = 65000;
+		public int MAX_VERTS = 65000;
 //		[Persistent]
 		public float oceanScale = 1f;
 		[Persistent]
@@ -422,7 +422,6 @@ namespace scatterer
 			
 			
 			//Looking back, I have no idea how I figured this crap out
-			//I've never been good at matrix math but I guess I must be smarter than I think I am
 			Vector4 translation = m_manager.parentCelestialBody.transform.worldToLocalMatrix.inverse.GetColumn (3);
 			
 			Matrix4x4d worldToLocal = new Matrix4x4d (1, 0, 0, -translation.x,
@@ -449,7 +448,7 @@ namespace scatterer
 			} else {
 				ux = Vector3d2.UnitZ ().Cross (uz).Normalized ();
 			}
-			
+
 			uy = uz.Cross (ux); // unit y vector
 			
 			oo = uz * (radius); // origin of ocean frame, in local space
@@ -462,9 +461,10 @@ namespace scatterer
 				uy.x, uy.y, uy.z, -uy.Dot (oo),
 				uz.x, uz.y, uz.z, -uz.Dot (oo),
 				0.0, 0.0, 0.0, 1.0);
-			
-			
+
+
 			Matrix4x4d cameraToOcean = localToOcean * camToLocal;
+
 			
 			Vector3d2 delta = new Vector3d2 (0, 0, 0);
 			
@@ -524,7 +524,7 @@ namespace scatterer
 			
 			oceanMaterial.SetVector ("_Ocean_CameraPos", offset.ToVector3 ());
 			
-			oceanMaterial.SetVector ("_Ocean_Color", m_oceanUpwellingColor * 0.1f);
+			oceanMaterial.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) /*  *0.1f   */);
 			oceanMaterial.SetVector ("_Ocean_ScreenGridSize", new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
 			oceanMaterial.SetFloat ("_Ocean_Radius", (float)radius);
 			
@@ -544,7 +544,7 @@ namespace scatterer
 				return;
 			
 			mat.SetFloat ("_Ocean_Sigma", GetMaxSlopeVariance ());
-			mat.SetVector ("_Ocean_Color", m_oceanUpwellingColor * 0.1f);
+			mat.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) * 0.1f);
 			mat.SetFloat ("_Ocean_DrawBRDF", (m_drawOcean) ? 0.0f : 1.0f);
 			
 			

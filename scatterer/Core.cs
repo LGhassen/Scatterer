@@ -29,6 +29,7 @@ namespace scatterer
 		public bool
 			forceDisableDefaultDepthBuffer = false;
 		private Vector2 _scroll;
+		private Vector2 _scroll2;
 		public bool pqsEnabled = false;
 		bool displayOceanSettings = false;
 		CustomDepthBufferCam customDepthBuffer;
@@ -129,23 +130,32 @@ namespace scatterer
 		//		float phi=1.0f;
 		float oceanLevel = 0f;
 		float oceanAlpha = 1f;
-		Vector3 m_oceanUpwellingColor = new Vector3 (0.039f, 0.156f, 0.47f);
 		float oceanScale = 1f;
 		float WAVE_CM = 0.23f;
 		float WAVE_KM = 370.0f;
 		float AMP = 1.0f;
 		float m_windSpeed = 5.0f; //A higher wind speed gives greater swell to the waves
 		float m_omega = 0.84f; //A lower number means the waves last longer and will build up larger waves
-		
-		Vector4 m_gridSizes = new Vector4 (5488, 392, 28, 2); //Size in meters (i.e. in spatial domain) of each grid
-		Vector4 m_choppyness = new Vector4 (2.3f, 2.1f, 1.3f, 0.9f); //strenght of sideways displacement for each grid
-		int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
-		
+
 		int m_ansio = 2;
 		int m_varianceSize = 4;
 		int m_foamAnsio = 9;
 		float m_foamMipMapBias = -2.0f;
 		float m_whiteCapStr = 0.1f;
+
+//		Vector3 m_oceanUpwellingColor = new Vector3 (0.039f, 0.156f, 0.47f);
+
+		float oceanUpwellingColorR = 0.0039f;
+		float oceanUpwellingColorG = 0.0156f;
+		float oceanUpwellingColorB = 0.047f;
+
+		int m_resolution = 4;
+//		int MAX_VERTS = 65000;
+
+		Vector4 m_gridSizes = new Vector4 (5488, 392, 28, 2); //Size in meters (i.e. in spatial domain) of each grid
+		Vector4 m_choppyness = new Vector4 (2.3f, 2.1f, 1.3f, 0.9f); //strenght of sideways displacement for each grid
+
+		int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
 		
 		
@@ -177,7 +187,7 @@ namespace scatterer
 		
 		internal override void Awake ()
 		{
-			WindowCaption = "Scatterer v0.0195: alt+f10/f11 toggle ";
+			WindowCaption = "Scatterer v0.021: alt+f10/f11 toggle ";
 			WindowRect = new Rect (0, 0, 400, 50);
 			Visible = false;
 			isActive = false;
@@ -465,7 +475,7 @@ namespace scatterer
 							loadConfigPoint (selectedConfigPoint);
 							getSettingsFromSkynode ();
 							if (scattererCelestialBodies [selectedPlanet].hasOcean)
-								getSettingsFromOceanNode();
+								getSettingsFromOceanNode ();
 						}
 					}
 				}
@@ -480,7 +490,7 @@ namespace scatterer
 							loadConfigPoint (selectedConfigPoint);
 							getSettingsFromSkynode ();
 							if (scattererCelestialBodies [selectedPlanet].hasOcean)
-								getSettingsFromOceanNode();
+								getSettingsFromOceanNode ();
 						}
 					}
 				}
@@ -488,20 +498,23 @@ namespace scatterer
 				
 				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Planet loaded:" + scattererCelestialBodies [selectedPlanet].active.ToString ());
+				GUILayout.Label ("Planet loaded:" + scattererCelestialBodies [selectedPlanet].active.ToString ()+
+				                 "                                Has ocean:" + scattererCelestialBodies [selectedPlanet].hasOcean.ToString ());
 				GUILayout.EndHorizontal ();
 				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Load distance:" + scattererCelestialBodies [selectedPlanet].loadDistance.ToString ());
+				GUILayout.Label ("Load distance:" + scattererCelestialBodies [selectedPlanet].loadDistance.ToString ()+
+				                 "                             Unload distance:" + scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
+
 				GUILayout.EndHorizontal ();
 				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Unload distance:" + scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
-				GUILayout.EndHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Unload distance:" + scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
+//				GUILayout.EndHorizontal ();
 				
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Has ocean:" + scattererCelestialBodies [selectedPlanet].hasOcean.ToString ());
-				GUILayout.EndHorizontal ();
+//				GUILayout.BeginHorizontal ();
+//				GUILayout.Label ("Has ocean:" + scattererCelestialBodies [selectedPlanet].hasOcean.ToString ());
+//				GUILayout.EndHorizontal ();
 				
 				
 				if (scattererCelestialBodies [selectedPlanet].active) {
@@ -848,131 +861,138 @@ namespace scatterer
 							GUILayout.EndHorizontal ();
 
 						
+
+
+						GUILayout.BeginHorizontal ();
+						if (GUILayout.Button ("Display interpolated values")) {
+							showInterpolatedValues = !showInterpolatedValues;
+						}
+						GUILayout.EndHorizontal ();
+
+
 						
+
+
+						
+						
+						if (showInterpolatedValues) {
 							GUILayout.BeginHorizontal ();
-							if (GUILayout.Button ("Display interpolated values")) {
-								showInterpolatedValues = !showInterpolatedValues;
-							}
+							if (scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint == 0)
+								GUILayout.Label ("Current state:Ground, cfgPoint 0");
+							else if (scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint >= configPointsCnt)
+								GUILayout.Label (String.Format ("Current state:Orbit, cfgPoint{0}", scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1));
+							else
+								GUILayout.Label (String.Format ("Current state:{0}% cfgPoint{1} + {2}% cfgPoint{3} ", (int)(100 * (1 - scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.percentage)), scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1, (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.percentage), scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint));
 							GUILayout.EndHorizontal ();
-						
-						
-							if (showInterpolatedValues) {
-								GUILayout.BeginHorizontal ();
-								if (scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint == 0)
-									GUILayout.Label ("Current state:Ground, cfgPoint 0");
-								else if (scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint >= configPointsCnt)
-									GUILayout.Label (String.Format ("Current state:Orbit, cfgPoint{0}", scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1));
-								else
-									GUILayout.Label (String.Format ("Current state:{0}% cfgPoint{1} + {2}% cfgPoint{3} ", (int)(100 * (1 - scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.percentage)), scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1, (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.percentage), scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint));
-								GUILayout.EndHorizontal ();
 							
-								GUILayout.BeginHorizontal ();
-								GUILayout.Label (String.Format ("SkyAlpha: {0} ", (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.alphaGlobal)));
-								GUILayout.Label (String.Format ("SkyExposure: {0}", (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_HDRExposure)));
-								GUILayout.EndHorizontal ();
-							
-								GUILayout.BeginHorizontal ();
-								GUILayout.Label (String.Format ("PostAlpha: {0}", (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.postProcessingAlpha)));
-								GUILayout.Label (String.Format ("PostDepth: {0}", (int)(10000 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.postProcessDepth)));
-								GUILayout.Label (String.Format ("PostExposure: {0}", (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.postProcessExposure)));
-								GUILayout.EndHorizontal ();
-							}
-						
-						
-							//						GUILayout.BeginHorizontal ();
-							//						GUILayout.Label ("ManagerState");
-							//						GUILayout.TextField (scattererCelestialBodies [selectedPlanet].m_manager.getManagerState ());
-							//						GUILayout.EndHorizontal ();
-						
-							//					GUILayout.BeginHorizontal();
-							//					if (GUILayout.Button("Disable stock atmo")) {
-							//						//					DeactivateAtmosphere(parentPlanet);
-							//						//DeactivateAtmosphere(ParentPlanetTransformName);
-							//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.DeactivateAtmosphere();
-							//					}
-							//					
-							//					if (GUILayout.Button("Enable stock atmo")) {
-							//						//					ReactivateAtmosphere(parentPlanet);
-							//						//ReactivateAtmosphere(ParentPlanetTransformName);
-							//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
-							//					}
-							//					GUILayout.EndHorizontal();
-						
-						
 							GUILayout.BeginHorizontal ();
-						
-						
-							//				if (GUILayout.Button ("Toggle stock sunglare"))
-							//				{
-							//					stockSunglare =!stockSunglare;
-							//				}
-
-						
-							//							if (GUILayout.Button ("Toggle depth buffer")) {
-							//								if (!depthbufferEnabled) {
-							////							cams[2].gameObject.AddComponent(typeof(ViewDepthBuffer));
-							//									depthbufferEnabled = true;
-							//								} else {
-							////							Component.Destroy(cams[2].gameObject.GetComponent < ViewDepthBuffer > ());
-							//									depthbufferEnabled = false;
-							//								}
-							//							}
-						
-							if (GUILayout.Button ("Toggle PostProcessing")) {
-							
-								if (!scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.postprocessingEnabled) {
-									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.enablePostprocess ();
-								} else {
-									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.disablePostprocess ();
-								}
-							}
-
-
-							if (GUILayout.Button ("Toggle extinction")) {
-								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.extinctionEnabled = !scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.extinctionEnabled;
-							}
-						
+							GUILayout.Label (String.Format ("SkyAlpha: {0} ", (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.alphaGlobal)));
+							GUILayout.Label (String.Format ("SkyExposure: {0}", (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_HDRExposure)));
 							GUILayout.EndHorizontal ();
-
-
+							
 							GUILayout.BeginHorizontal ();
-							if (GUILayout.Button ("Save atmo")) {
-								//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.rimBlend = rimBlend;
-								//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.rimpower = rimpower;
-								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.displayInterpolatedVariables = showInterpolatedValues;
-								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.saveToConfigNode ();
-							}
-						
-							if (GUILayout.Button ("Load atmo")) {
-								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode (false);
-								getSettingsFromSkynode ();
-								loadConfigPoint (selectedConfigPoint);
-							}
-						
-							if (GUILayout.Button ("Load backup")) {
-								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode (true);
-								getSettingsFromSkynode ();
-								loadConfigPoint (selectedConfigPoint);
-							
-							}
+							GUILayout.Label (String.Format ("PostAlpha: {0}", (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.postProcessingAlpha)));
+							GUILayout.Label (String.Format ("PostDepth: {0}", (int)(10000 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.postProcessDepth)));
+							GUILayout.Label (String.Format ("PostExposure: {0}", (int)(100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.postProcessExposure)));
 							GUILayout.EndHorizontal ();
+						}
 
-
-							//									for (int j=0;j<10;j++){
-							//									GUILayout.BeginHorizontal ();
-							//									GUILayout.Label (String.Format("Debug setting:{0}", j.ToString()));	
-							//									GUILayout.TextField(debugSettings[j].ToString());
-							//									GUILayout.EndHorizontal ();
-							//					}
-						
-							//						chosenCamera = cams [cam];
-						
-						}	
-										
+						}
 						GUILayout.EndScrollView ();
+						
+						
+						//						GUILayout.BeginHorizontal ();
+						//						GUILayout.Label ("ManagerState");
+						//						GUILayout.TextField (scattererCelestialBodies [selectedPlanet].m_manager.getManagerState ());
+						//						GUILayout.EndHorizontal ();
+						
+						//					GUILayout.BeginHorizontal();
+						//					if (GUILayout.Button("Disable stock atmo")) {
+						//						//					DeactivateAtmosphere(parentPlanet);
+						//						//DeactivateAtmosphere(ParentPlanetTransformName);
+						//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.DeactivateAtmosphere();
+						//					}
+						//					
+						//					if (GUILayout.Button("Enable stock atmo")) {
+						//						//					ReactivateAtmosphere(parentPlanet);
+						//						//ReactivateAtmosphere(ParentPlanetTransformName);
+						//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
+						//					}
+						//					GUILayout.EndHorizontal();
+						
+						
+						GUILayout.BeginHorizontal ();
+						
+						
+						//				if (GUILayout.Button ("Toggle stock sunglare"))
+						//				{
+						//					stockSunglare =!stockSunglare;
+						//				}
+
+						
+						//							if (GUILayout.Button ("Toggle depth buffer")) {
+						//								if (!depthbufferEnabled) {
+						////							cams[2].gameObject.AddComponent(typeof(ViewDepthBuffer));
+						//									depthbufferEnabled = true;
+						//								} else {
+						////							Component.Destroy(cams[2].gameObject.GetComponent < ViewDepthBuffer > ());
+						//									depthbufferEnabled = false;
+						//								}
+						//							}
+						
+						if (GUILayout.Button ("Toggle PostProcessing")) {
+							
+							if (!scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.postprocessingEnabled) {
+								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.enablePostprocess ();
+							} else {
+								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.disablePostprocess ();
+							}
+						}
+
+
+						if (GUILayout.Button ("Toggle extinction")) {
+							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.extinctionEnabled = !scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.extinctionEnabled;
+						}
+						
+						GUILayout.EndHorizontal ();
+
+
+						GUILayout.BeginHorizontal ();
+						if (GUILayout.Button ("Save atmo")) {
+							//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.rimBlend = rimBlend;
+							//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.rimpower = rimpower;
+							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.displayInterpolatedVariables = showInterpolatedValues;
+							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.saveToConfigNode ();
+						}
+						
+						if (GUILayout.Button ("Load atmo")) {
+							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode (false);
+							getSettingsFromSkynode ();
+							loadConfigPoint (selectedConfigPoint);
+						}
+						
+						if (GUILayout.Button ("Load backup")) {
+							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode (true);
+							getSettingsFromSkynode ();
+							loadConfigPoint (selectedConfigPoint);
+							
+						}
+						GUILayout.EndHorizontal ();
+
+
+						//									for (int j=0;j<10;j++){
+						//									GUILayout.BeginHorizontal ();
+						//									GUILayout.Label (String.Format("Debug setting:{0}", j.ToString()));	
+						//									GUILayout.TextField(debugSettings[j].ToString());
+						//									GUILayout.EndHorizontal ();
+						//					}
+						
+						//						chosenCamera = cams [cam];
+						
+
 					} else {
 
-						OceanWhiteCaps oceanNode = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode();
+						OceanWhiteCaps oceanNode = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
 
 
 
@@ -984,46 +1004,66 @@ namespace scatterer
 						}
 						GUILayout.EndHorizontal ();
 
+						_scroll2 = GUILayout.BeginScrollView (_scroll2, false, true, GUILayout.Width (400), GUILayout.Height (500));
+						{
 
 
 
-						GUIfloat("ocean Level", ref oceanLevel, ref oceanNode.m_oceanLevel);
-						GUIfloat("ocean Alpha", ref oceanAlpha, ref oceanNode.oceanAlpha);
-						GUIfloat("whiteCapStr (foam)", ref m_whiteCapStr, ref oceanNode.m_whiteCapStr);
+							GUIfloat ("ocean Level", ref oceanLevel, ref oceanNode.m_oceanLevel);
+							GUIfloat ("ocean Alpha", ref oceanAlpha, ref oceanNode.oceanAlpha);
+							GUIfloat ("whiteCapStr (foam)", ref m_whiteCapStr, ref oceanNode.m_whiteCapStr);
+							GUIvector3 ("Ocean Upwelling Color", ref oceanUpwellingColorR, ref oceanUpwellingColorG, ref oceanUpwellingColorB, ref oceanNode.m_oceanUpwellingColor);
 
 
-						GUILayout.BeginHorizontal ();
-						GUILayout.Label("To apply the next setting press \"rebuild ocean\" and wait");
-						GUILayout.EndHorizontal ();
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("To apply the next setting press \"rebuild ocean\" and wait");
+							GUILayout.EndHorizontal ();
 						
-						GUILayout.BeginHorizontal ();
-						GUILayout.Label("Keep in mind this saves your current settings");
-						GUILayout.EndHorizontal ();
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("Keep in mind this saves your current settings");
+							GUILayout.EndHorizontal ();
 
 
-						//place ocean upwelling color here
 
-						GUIfloat("ocean Scale", ref oceanScale, ref oceanNode.oceanScale);
-						GUIfloat("WAVE_CM (default 0.23)", ref WAVE_CM, ref oceanNode.WAVE_CM);
-						GUIfloat("WAVE_KM (default 370)", ref WAVE_KM, ref oceanNode.WAVE_KM);
-						GUIfloat("AMP (default 1)", ref AMP, ref oceanNode.AMP);
+//						    GUIfloat("ocean Scale", ref oceanScale, ref oceanNode.oceanScale);
+							GUIfloat ("WAVE_CM (default 0.23)", ref WAVE_CM, ref oceanNode.WAVE_CM);
+							GUIfloat ("WAVE_KM (default 370)", ref WAVE_KM, ref oceanNode.WAVE_KM);
+							GUIfloat ("AMP (default 1)", ref AMP, ref oceanNode.AMP);
 
-						GUIfloat("wind Speed", ref m_windSpeed, ref oceanNode.m_windSpeed);
-						GUIfloat("omega", ref m_omega, ref oceanNode.m_omega);
+							GUIfloat ("wind Speed", ref m_windSpeed, ref oceanNode.m_windSpeed);
+							GUIfloat ("omega: inverse wave age", ref m_omega, ref oceanNode.m_omega);
 
-						GUIfloat("foamMipMapBias", ref m_foamMipMapBias, ref oceanNode.m_foamMipMapBias);
-
-
-						GUIint("m_ansio", ref m_ansio,ref oceanNode.m_ansio,1);
-						GUIint("m_varianceSize", ref m_varianceSize,ref oceanNode.m_varianceSize,1);
-						GUIint("m_foamAnsio", ref m_foamAnsio,ref oceanNode.m_foamAnsio,1);
+							GUIfloat ("foamMipMapBias", ref m_foamMipMapBias, ref oceanNode.m_foamMipMapBias);
 
 
+							GUIint ("m_ansio", ref m_ansio, ref oceanNode.m_ansio, 1);
+							GUIint ("m_foamAnsio", ref m_foamAnsio, ref oceanNode.m_foamAnsio, 1);
+
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("Performance settings");
+							GUILayout.EndHorizontal ();
+
+							GUIint ("m_varianceSize (sun reflection, power of 2)", ref m_varianceSize, ref oceanNode.m_varianceSize, 1);
+
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("m_varianceSize increases rebuild time exponentially");
+							GUILayout.EndHorizontal ();
+
+							GUIint ("m_resolution (sea detail, lower is better)", ref m_resolution, ref oceanNode.m_resolution, 1);
+//							GUIint ("MAX_VERTS", ref MAX_VERTS, ref oceanNode.MAX_VERTS, 1);
+
+							GUIint ("m_fourierGridSize(power of 2, 256 max)", ref m_fourierGridSize, ref oceanNode.m_fourierGridSize, 1);
+
+
+
+
+						}	
+						GUILayout.EndScrollView ();
 
 						GUILayout.BeginHorizontal ();
 						if (GUILayout.Button ("Rebuild ocean")) {
 							scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().saveToConfigNode ();
-							scattererCelestialBodies [selectedPlanet].m_manager.reBuildOcean();
+							scattererCelestialBodies [selectedPlanet].m_manager.reBuildOcean ();
 						}
 						GUILayout.EndHorizontal ();
 
@@ -1039,12 +1079,12 @@ namespace scatterer
 						
 						if (GUILayout.Button ("Load ocean")) {
 							scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().loadFromConfigNode (false);
-							getSettingsFromOceanNode();
+							getSettingsFromOceanNode ();
 						}
 						
 						if (GUILayout.Button ("Load backup")) {
 							scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().loadFromConfigNode (true);
-							getSettingsFromOceanNode();
+							getSettingsFromOceanNode ();
 						}
 						GUILayout.EndHorizontal ();
 					}
@@ -1080,42 +1120,44 @@ namespace scatterer
 		
 		public void getSettingsFromSkynode ()
 		{
+			SkyNode skyNode = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode;
+			configPoint selected = skyNode.configPoints [selectedConfigPoint];
+
+			postProcessingalpha = 100 * selected.postProcessAlpha;
+			postProcessDepth = 10000 * selected.postProcessDepth;
+			postProcessExposure = 100 * selected.postProcessExposure;
+			exposure = 100 * selected.skyExposure;
+			alphaGlobal = 100 * selected.skyAlpha;
 			
-			postProcessingalpha = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].postProcessAlpha;
-			postProcessDepth = 10000 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].postProcessDepth;
-			postProcessExposure = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].postProcessExposure;
-			exposure = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyExposure;
-			alphaGlobal = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyAlpha;
-			
-			openglThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].openglThreshold;
-			edgeThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].edgeThreshold * 100;
-			
-			
-			mapAlphaGlobal = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapAlphaGlobal;
-			mapExposure = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapExposure;
-			configPointsCnt = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
-			
-			specR = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specR;
-			specG = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specG;
-			specB = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specB;
-			shininess = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.shininess;
+			openglThreshold = selected.openglThreshold;
+			edgeThreshold = selected.edgeThreshold * 100;
 			
 			
-			rimBlend = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimBlend;
-			rimpower = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimpower;
+			mapAlphaGlobal = 100 * skyNode.mapAlphaGlobal;
+			mapExposure = 100 * skyNode.mapExposure;
+			configPointsCnt = skyNode.configPoints.Count;
 			
-			MapViewScale = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.MapViewScale * 1000f;
-			extinctionMultiplier = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyExtinctionMultiplier;
-			extinctionTint = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyExtinctionTint;
+			specR = skyNode.specR;
+			specG = skyNode.specG;
+			specB = skyNode.specB;
+			shininess = skyNode.shininess;
 			
-			mapExtinctionMultiplier = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapExtinctionMultiplier;
-			mapExtinctionTint = 100 * scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapExtinctionTint;
 			
-			showInterpolatedValues = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.displayInterpolatedVariables;
+			rimBlend = skyNode.rimBlend;
+			rimpower = skyNode.rimpower;
 			
-			mieG = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_mieG * 100f;
+			MapViewScale = skyNode.MapViewScale * 1000f;
+			extinctionMultiplier = 100 * selected.skyExtinctionMultiplier;
+			extinctionTint = 100 * selected.skyExtinctionTint;
 			
-			sunglareScale = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.sunglareScale * 100f;
+			mapExtinctionMultiplier = 100 * skyNode.mapExtinctionMultiplier;
+			mapExtinctionTint = 100 * skyNode.mapExtinctionTint;
+			
+			showInterpolatedValues = skyNode.displayInterpolatedVariables;
+			
+			mieG = skyNode.m_mieG * 100f;
+			
+			sunglareScale = skyNode.sunglareScale * 100f;
 			
 			
 			
@@ -1127,29 +1169,39 @@ namespace scatterer
 
 		public void getSettingsFromOceanNode ()
 		{
-			Debug.Log ("getSettingsFromOceanNode ()");
-			oceanLevel = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_oceanLevel;
-			oceanAlpha = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().oceanAlpha;
-			m_oceanUpwellingColor = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_oceanUpwellingColor;
-			oceanScale = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().oceanScale;
+//			Debug.Log ("getSettingsFromOceanNode ()");
+			OceanWhiteCaps oceanNode = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
+
+			oceanLevel = oceanNode.m_oceanLevel;
+			oceanAlpha = oceanNode.oceanAlpha;
+
+			oceanUpwellingColorR = oceanNode.m_oceanUpwellingColor.x;
+			oceanUpwellingColorG = oceanNode.m_oceanUpwellingColor.y;
+			oceanUpwellingColorB = oceanNode.m_oceanUpwellingColor.z;
+
+			oceanScale = oceanNode.oceanScale;
 			
-			WAVE_CM = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().WAVE_CM;
-			WAVE_KM = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().WAVE_KM;
-			AMP = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().AMP;
+			WAVE_CM = oceanNode.WAVE_CM;
+			WAVE_KM = oceanNode.WAVE_KM;
+			AMP = oceanNode.AMP;
 			
-			m_windSpeed = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_windSpeed;
-			m_omega = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_omega;
+			m_windSpeed = oceanNode.m_windSpeed;
+			m_omega = oceanNode.m_omega;
 			
-			m_gridSizes = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_gridSizes;
-			m_choppyness = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_choppyness;
-			m_fourierGridSize = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_fourierGridSize;
+			m_gridSizes = oceanNode.m_gridSizes;
+			m_choppyness = oceanNode.m_choppyness;
+			m_fourierGridSize = oceanNode.m_fourierGridSize;
 			
-			m_ansio = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_ansio;
+			m_ansio = oceanNode.m_ansio;
 			
-			m_varianceSize = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_varianceSize;
-			m_foamAnsio = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_foamAnsio;
-			m_foamMipMapBias = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_foamMipMapBias;
-			m_whiteCapStr = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().m_whiteCapStr;
+			m_varianceSize = oceanNode.m_varianceSize;
+			m_foamAnsio = oceanNode.m_foamAnsio;
+			m_foamMipMapBias = oceanNode.m_foamMipMapBias;
+			m_whiteCapStr = oceanNode.m_whiteCapStr;
+
+			m_resolution = oceanNode.m_resolution;
+//			MAX_VERTS = oceanNode.MAX_VERTS;
+			m_fourierGridSize = oceanNode.m_fourierGridSize;
 
 		}
 		
@@ -1276,8 +1328,7 @@ namespace scatterer
 			cnTemp.Save (path + "/config/PlanetsList.cfg");
 		}
 
-
-		public void GUIfloat (string label,ref float local,ref float target)
+		public void GUIfloat (string label, ref float local, ref float target)
 		{
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (label);
@@ -1288,9 +1339,8 @@ namespace scatterer
 			}
 			GUILayout.EndHorizontal ();
 		}
-
 		
-		public void GUIint (string label,ref int local,ref int target, int divisionFactor)
+		public void GUIint (string label, ref int local, ref int target, int divisionFactor)
 		{
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (label);
@@ -1302,6 +1352,23 @@ namespace scatterer
 			}
 			GUILayout.EndHorizontal ();
 		}
+
+		public void GUIvector3 (string label, ref float localR, ref float localG, ref float localB, ref Vector3 target)
+		{
+			GUILayout.BeginHorizontal ();
+			GUILayout.Label (label);
+			
+			localR = float.Parse (GUILayout.TextField (localR.ToString ("0000.00000")));
+			localG = float.Parse (GUILayout.TextField (localG.ToString ("0000.00000")));
+			localB = float.Parse (GUILayout.TextField (localB.ToString ("0000.00000")));
+
+			if (GUILayout.Button ("Set")) {
+				target = new Vector3 (localR, localG, localB);
+			}
+			GUILayout.EndHorizontal ();
+		}
+
+
 		
 		
 	}

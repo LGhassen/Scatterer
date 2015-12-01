@@ -64,10 +64,12 @@ namespace scatterer {
 		[Persistent] public float m_omega = 0.84f;
 		
 		//Size in meters (i.e. in spatial domain) of each grid
-		[Persistent] public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);
+//		[Persistent] 
+		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);
 		
 		//strenght of sideways displacement for each grid
-		[Persistent] public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);
+//		[Persistent]
+		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);
 		
 		//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 		//		[SerializeField]
