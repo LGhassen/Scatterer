@@ -53,9 +53,7 @@ namespace scatterer {
 		Material m_initSpectrumMat;
 		
 		Material m_initDisplacementMat;
-		
-		//		[SerializeField]
-		//		ComputeShader m_varianceShader;
+
 		
 		[Persistent] public int m_ansio = 2;
 		

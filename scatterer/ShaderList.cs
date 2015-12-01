@@ -9,21 +9,19 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-
-
 [KSPAddon(KSPAddon.Startup.Flight, true)]
 class DumpShaderList : MonoBehaviour
 {
 
 //	PQS kerbinOcean;
 
-	void Start()
+	void Start ()
 	{
 
 	}
 
-
-	void Update() {
+	void Update ()
+	{
 
 //					 PQSMod[] pqsmods = Resources.FindObjectsOfTypeAll<PQSMod> ();
 //		
@@ -130,5 +128,5 @@ class DumpShaderList : MonoBehaviour
 				
 
 	
-		}
+	}
 }

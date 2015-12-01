@@ -48,8 +48,9 @@ namespace scatterer {
 			m_skyNode.setParentPlanetTransform(ParentPlanetTransform);
 			//			print ("skynode parent CB and PP set");
 			//m_skyNode.loadSettings ();
+			m_skyNode.loadFromConfigNode(false);
 			m_skyNode.Start();
-			m_skyNode.loadFromConfigNode();
+			//m_skyNode.loadFromConfigNode(false);
 			//m_skyNode.loadFromConfigNode ();
 			//			print ("skynode started");
 			
@@ -57,8 +58,10 @@ namespace scatterer {
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
 				m_oceanNode.setCore(m_core);
-				
+
+				m_oceanNode.loadFromConfigNode(false);
 				m_oceanNode.Start();
+
 			}
 			
 			managerState = "awake";
@@ -109,7 +112,7 @@ namespace scatterer {
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
 				m_oceanNode.setCore(m_core);
-				
+				m_oceanNode.loadFromConfigNode(false);
 				m_oceanNode.Start();
 				Debug.Log("[Scatterer] Rebuilt Ocean");
 			}
@@ -158,7 +161,7 @@ namespace scatterer {
 			return m_sunNode.GetWorldToLocalRotation();
 		}
 		
-		public OceanNode GetOceanNode() {
+		public OceanWhiteCaps GetOceanNode() {
 			return m_oceanNode;
 		}
 		

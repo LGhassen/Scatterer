@@ -24,7 +24,6 @@ namespace scatterer {
 		
 		//		protected override void Start() 
 		public override void Start() {
-			loadFromConfigNode();
 			base.Start();
 			
 			m_initJacobiansMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitJacobians.shader"));
