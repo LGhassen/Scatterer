@@ -875,7 +875,7 @@ namespace scatterer
 			//			mat.SetVector("_inCamPos", cams[cam].transform.position);
 			
 			//		if (debugSettings[0]) {
-			mat.SetVector ("_inCamPos", farCamera.transform.position);
+			mat.SetVector ("_camPos", farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here than have it redone 1000 times per frame in the shader
 			//		} else {
 			//			if (!debugSettings[4])
 			//				
@@ -957,7 +957,7 @@ namespace scatterer
 			//		}
 			
 			//		if (debugSettings[3]) {
-			mat.SetVector ("_Globals_Origin", /*Vector3.zero-*/parentCelestialBody.transform.position);
+//			mat.SetVector ("_Globals_Origin", /*Vector3.zero-*/parentCelestialBody.transform.position);
 			//		} else
 			//			
 			//		{

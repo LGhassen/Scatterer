@@ -64,7 +64,6 @@ namespace scatterer
 		bool stockOceanExists = true;
 		PQS ocean;
 		double h = 0;
-		
 		//The maximum altitude at which the ocean must be displayed.
 //		[Persistent]
 		protected float m_zmin = 20000.0f;
@@ -328,6 +327,12 @@ namespace scatterer
 				}
 			}
 
+
+			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
+			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;
+
+
+
 			if (stockOceanExists) {
 
 				//This causes problems later on
@@ -428,10 +433,10 @@ namespace scatterer
 			                                         0, 1, 0, -translation.y,
 			                                         0, 0, 1, -translation.z,
 			                                         0, 0, 0, 1);
-			
-			
+
 			Matrix4x4d camToLocal = worldToLocal * cameraToWorld;
-			
+
+
 			// camera in local space relative to planet's origin
 			Vector3d2 cl = new Vector3d2 ();
 			cl = camToLocal * Vector3d2.Zero ();
@@ -464,6 +469,15 @@ namespace scatterer
 
 
 			Matrix4x4d cameraToOcean = localToOcean * camToLocal;
+
+
+			//Couldn't figure out how to change the wind's direction in all that math so I tried to do the easy thing
+			//And Rotated the ocean and the sun
+			//This didn't work
+
+			//deleted rotation code here
+
+
 
 			
 			Vector3d2 delta = new Vector3d2 (0, 0, 0);

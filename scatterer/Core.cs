@@ -16,7 +16,8 @@ namespace scatterer
 	
 	public class Core: MonoBehaviourWindow
 	{
-		
+
+
 		[Persistent]
 		List < scattererCelestialBody >
 			scattererCelestialBodies = new List < scattererCelestialBody > {};
@@ -35,6 +36,10 @@ namespace scatterer
 		CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
 		bool depthBufferSet = false;
+		public float windAngle=90;
+		public float anglex=1;
+		public float angley=1;
+		public float anglez=1;
 		
 		//List < Manager > Managers = new List < Manager >();
 		
@@ -97,7 +102,7 @@ namespace scatterer
 		//		public float[] additionalScales=new float[10];
 		//		public bool[] debugSettings = new bool[10];
 		//		public int renderQueue=2000;
-		//		int oceanRenderQueue=2000;
+				public int oceanRenderQueue=2001;
 		
 		//postprocessing properties
 		//		float inscatteringCoeff=85f; //useless, removed from shader
@@ -189,7 +194,6 @@ namespace scatterer
 		{
 			WindowCaption = "Scatterer v0.021: alt+f10/f11 toggle ";
 			WindowRect = new Rect (0, 0, 400, 50);
-			Visible = false;
 			isActive = false;
 			
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
@@ -309,7 +313,7 @@ namespace scatterer
 			
 //			if (ScaledSpace.Instance && farCamera) {
 				if (farCamera) {
-				
+
 					if (!depthBufferSet) {
 						if (!render24bitDepthBuffer || d3d9) {
 
@@ -350,9 +354,6 @@ namespace scatterer
 						farCamera.depthTextureMode = DepthTextureMode.None;
 
 					}
-				
-				
-				
 				
 
 				
@@ -454,10 +455,11 @@ namespace scatterer
 			if (!isActive)
 				GUILayout.Label (String.Format ("Mod will activate in KSC view or in flight."));
 			
-			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button ("Hide"))
-				Visible = !Visible;
-			GUILayout.EndHorizontal ();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Hide")) Visible = !Visible;
+			GUILayout.EndHorizontal();
+
 			
 			if (isActive) {
 				
@@ -505,17 +507,10 @@ namespace scatterer
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Load distance:" + scattererCelestialBodies [selectedPlanet].loadDistance.ToString ()+
 				                 "                             Unload distance:" + scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
-
 				GUILayout.EndHorizontal ();
-				
-//				GUILayout.BeginHorizontal ();
-//				GUILayout.Label ("Unload distance:" + scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
-//				GUILayout.EndHorizontal ();
-				
-//				GUILayout.BeginHorizontal ();
-//				GUILayout.Label ("Has ocean:" + scattererCelestialBodies [selectedPlanet].hasOcean.ToString ());
-//				GUILayout.EndHorizontal ();
-				
+
+
+
 				
 				if (scattererCelestialBodies [selectedPlanet].active) {
 					configPointsCnt = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
@@ -536,6 +531,7 @@ namespace scatterer
 					
 					
 					if (!displayOceanSettings) {
+						configPoint _selectedCfgPt = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint];
 						
 						_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width (400), GUILayout.Height (500));
 						{
@@ -608,6 +604,8 @@ namespace scatterer
 									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].altitude = pointAltitude;
 								}
 								GUILayout.EndHorizontal ();
+
+//								GUIfloat("Point altitude",ref pointAltitude, ref _selectedCfgPt.altitude);
 							
 							
 								GUILayout.BeginHorizontal ();
@@ -1053,6 +1051,11 @@ namespace scatterer
 //							GUIint ("MAX_VERTS", ref MAX_VERTS, ref oceanNode.MAX_VERTS, 1);
 
 							GUIint ("m_fourierGridSize(power of 2, 256 max)", ref m_fourierGridSize, ref oceanNode.m_fourierGridSize, 1);
+//							GUIfloat("windDir",ref windAngle,ref windAngle);
+//							GUIfloat("x",ref anglex,ref anglex);
+//							GUIfloat("y",ref angley,ref angley);
+//							GUIfloat("z",ref anglez,ref anglez);
+//							GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
 
 
 
@@ -1367,6 +1370,18 @@ namespace scatterer
 			}
 			GUILayout.EndHorizontal ();
 		}
+
+
+		public void GUItoggle (string label, ref bool toToggle)
+		{
+			GUILayout.BeginHorizontal ();
+			if (GUILayout.Button (label))
+				toToggle = !toToggle;
+			GUILayout.EndHorizontal ();
+		}
+
+
+
 
 
 		
