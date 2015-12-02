@@ -925,7 +925,7 @@ namespace scatterer
 			mat.SetFloat ("_extinctionCoeff", extinctionCoeff);
 			mat.SetFloat ("_global_alpha", postProcessingAlpha);
 			mat.SetFloat ("_Exposure", postProcessExposure);
-			mat.SetFloat ("_global_depth", postProcessDepth);
+			mat.SetFloat ("_global_depth", postProcessDepth*1000000);
 			//		mat.SetFloat("_global_depth2", totalscale2);
 			
 			mat.SetFloat ("_openglThreshold", openglThreshold);
