@@ -90,7 +90,8 @@ namespace scatterer
 		
 		Transform celestialTransform;
 		Vector3 idek;
-		float alt, trueAlt;
+		float alt;
+		public float trueAlt;
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType < SkyNode > (null);
 		
 		//bool inScaledSpace=false;

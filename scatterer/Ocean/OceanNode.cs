@@ -81,6 +81,8 @@ namespace scatterer
 		int numGrids;
 		Mesh[] m_screenGrids;
 
+		[Persistent] public float oceanDisableAltitude = 70000;
+
 //		GameObject[] waterGameObjectsNear;
 //		MeshRenderer[] waterMeshRenderersNear;
 //		MeshFilter[] waterMeshFiltersNear;
@@ -300,7 +302,7 @@ namespace scatterer
 				}
 			}
 			
-			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace) {
+			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && (m_manager.m_skyNode.trueAlt < oceanDisableAltitude)) {
 				foreach (Mesh mesh in m_screenGrids) {
 //					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15, m_manager.m_skyNode.farCamera);
 //					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15, m_manager.m_skyNode.nearCamera);
@@ -318,6 +320,9 @@ namespace scatterer
 
 			if (!ocean && stockOceanExists) {  
 				PQS pqs = m_manager.parentCelestialBody.pqsController;
+
+//				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
+
 				if (pqs.ChildSpheres [0]) {
 					ocean = pqs.ChildSpheres [0];
 					ocean.surfaceMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));

@@ -3,11 +3,11 @@
 	SubShader 
 	{
 		//Tags {"Queue" = "Background" "RenderType"="" }
-		 Tags {"Queue" = "Geometry+1" "IgnoreProjector"="True"}
+		 Tags {"QUEUE"="Geometry+1" "IgnoreProjector"="True" }
 	
     	Pass 
     	{
-    	 Tags {"Queue" = "Geometry+1" "IgnoreProjector"="True"}
+    	 Tags {"QUEUE"="Geometry+1" "IgnoreProjector"="True" }
     		ZWrite Off
     		ZTest Off
     		
@@ -28,13 +28,13 @@
 			
 			
 			//uniform float _Alpha_Cutoff;
+			uniform float _sunglareScale;
 			uniform float _Alpha_Global;
 			uniform float4x4 _Globals_CameraToWorld;
 			uniform float4x4 _Globals_ScreenToCamera;
 			uniform float3 _Globals_WorldCameraPos;
 			uniform float3 _Globals_Origin;
 			uniform float _Globals_ApparentDistance;
-			uniform float _sunglareScale;
 			
 			uniform sampler2D _Sun_Glare;
 			uniform float3 _Sun_WorldSunDir;
@@ -68,7 +68,7 @@
 			// assumes sundir=vec3(0.0, 0.0, 1.0)
 			float3 OuterSunRadiance(float3 viewdir)
 			{
-			    float3 data = viewdir.z > 0.0 ? tex2D(_Sun_Glare, float2(0.5,0.5) + viewdir.xy * 4.0 / _sunglareScale).rgb : float3(0,0,0);
+			    float3 data = viewdir.z > 0.0 ? tex2D(_Sun_Glare, float2(0.5,0.5) + viewdir.xy * 4.0/_sunglareScale).rgb : float3(0,0,0);
 			    
 			    
 			    return pow(max(float3(0.0,0.0,0.0),data), 2.2) * _Sun_Intensity;
@@ -168,6 +168,7 @@
 //			    return float4 (hdr(finalColor),(_Alpha_Global);}
 //			    else
 			    
+//				return float4(_Alpha_Global*hdr(finalColor),1.0);			    
 				return float4(_Alpha_Global*hdr(finalColor),1.0);			    
 			   //return float4(finalColor,1);
 			//return float4(0.0,0.0,0.0,0.0);
