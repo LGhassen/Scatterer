@@ -28,6 +28,9 @@
 			
 			
 			//uniform float _Alpha_Cutoff;
+			uniform float _viewdirOffset;
+			uniform float _experimentalAtmoScale;
+			
 			uniform float _sunglareScale;
 			uniform float _Alpha_Global;
 			uniform float4x4 _Globals_CameraToWorld;
@@ -78,11 +81,16 @@
 			
 			float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 extinction)//, float shaftWidth)
 {
-//#if defined(ATMO_INSCATTER_ONLY) || defined(ATMO_FULL)
-	
-	//extinction = float3(1,1,1);
-	
+	extinction = float3(1,1,1);
 	float3 result = float3(0,0,0);
+	
+	float Rt2=Rt;
+	Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+	
+	
+	viewdir.x+=_viewdirOffset;
+	viewdir=normalize(viewdir);
+
 	//camera *= scale;
 	//camera += viewdir * max(shaftWidth, 0.0);
 	float r = length(camera);
@@ -108,7 +116,8 @@
     extinction = Transmittance(r, mu);
     
     if (r <= Rt) 
-    {        
+    {
+            
 //        if (shaftWidth > 0.0) 
 //        {
 //            if (mu > 0.0) {
@@ -148,7 +157,8 @@
 			    float3 sunColor = OuterSunRadiance(IN.relativeDir);
 
 			    float3 extinction;
-			    float3 inscatter = SkyRadiance(WCP - _Globals_Origin*_Globals_ApparentDistance, d, WSD, extinction);
+//			    float3 inscatter = SkyRadiance(WCP - _Globals_Origin*_Globals_ApparentDistance, d, WSD, extinction);
+			    float3 inscatter = SkyRadiance2(WCP - _Globals_Origin*_Globals_ApparentDistance, d, WSD,extinction);
 			    //float3 inscatter = SkyRadiance(WCP + _Globals_Origin, float3(0.0,0.0,0.0), WSD, extinction, 0.0);
 			    //float3 inscatter = float3(0,0,0);
 

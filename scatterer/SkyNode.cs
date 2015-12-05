@@ -50,15 +50,19 @@ namespace scatterer
 		public int currentConfigPoint;
 		float ExtinctionCutoff = 2.0f;
 		bool coronasDisabled = false;
-		
+
+
+		[Persistent] public float experimentalAtmoScale=1f;
+		float viewdirOffset=0f;
+
 		//public int renderQueue = 2000;
 		//public int renderQueue2 = 2010;
 		Matrix4x4 p;
-		public float oceanNearPlane = 0.01f;
-		public float oceanFarPlane = 750000f;
-		public float terrainReflectance = 1f;
+//		public float oceanNearPlane = 0.01f;
+//		public float oceanFarPlane = 750000f;
+//		public float terrainReflectance = 1f;
 		public float sunIntensity = 100f;
-		public float irradianceFactor = 1f;
+//		public float irradianceFactor = 1f;
 		public float oceanSigma = 0.04156494f;
 		public float _Ocean_Threshold = 25f;
 		[Persistent]
@@ -230,7 +234,7 @@ namespace scatterer
 		public float shininess = 0f;
 		[Persistent]
 		public List < configPoint > configPoints = new List < configPoint > {
-			new configPoint(5000f, 1f, 0.25f, 1f, 0.4f, 0.23f, 1f, 100f, 250f, 0.5f), new configPoint(15000f, 1f, 0.15f, 1f, 8f, 0.23f, 1f, 100f, 250f, 0.5f)
+			new configPoint(5000f, 1f, 0.25f, 1f, 0.4f, 0.23f, 1f, 100f, 250f, 0.5f,0f), new configPoint(15000f, 1f, 0.15f, 1f, 8f, 0.23f, 1f, 100f, 250f, 0.5f,0f)
 		};
 		public string assetDir;
 		
@@ -250,6 +254,7 @@ namespace scatterer
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture
 			//and the shader manually performs the sample for the 4th dimension
 			m_inscatter = new RenderTexture (RES_MU_S * RES_NU, RES_MU * RES_R, 0, RenderTextureFormat.ARGBHalf);
+
 			m_inscatter.wrapMode = TextureWrapMode.Clamp;
 			m_inscatter.filterMode = FilterMode.Bilinear;
 			
@@ -391,7 +396,7 @@ namespace scatterer
 				Rt = (Rt / Rg) * m_radius;
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
-				sunglareCutoffAlt = (Rt + Rt - Rg) /*  *0.995f*/;
+				sunglareCutoffAlt = (Rt + Rt - Rg)*experimentalAtmoScale /*  *0.995f*/;
 				cams = Camera.allCameras;
 				
 				for (int i = 0; i < cams.Length; i++) {
@@ -604,7 +609,17 @@ namespace scatterer
 			//Sets uniforms that this or other gameobjects may need
 			if (mat == null)
 				return;
-			
+
+			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
+			if (!MapView.MapIsEnabled)
+			{
+				mat.SetFloat ("_viewdirOffset", viewdirOffset);
+			}
+			else
+			{
+				mat.SetFloat ("_viewdirOffset", 0f);
+			}
+
 			mat.SetFloat ("_Extinction_Cutoff", ExtinctionCutoff);
 			if (!MapView.MapIsEnabled) {
 				mat.SetFloat ("_Alpha_Global", alphaGlobal);
@@ -918,12 +933,16 @@ namespace scatterer
 		}
 
 */
-			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
-			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
-			mat.SetFloat ("Rl", RL * atmosphereGlobalScale);
+
+			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
+//			mat.SetFloat ("_viewdirOffset", viewdirOffset);
+
+//			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
+//			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
+//			mat.SetFloat ("Rl", RL * atmosphereGlobalScale);
 			
 			//mat.SetFloat("_inscatteringCoeff", inscatteringCoeff);
-			mat.SetFloat ("_extinctionCoeff", extinctionCoeff);
+//			mat.SetFloat ("_extinctionCoeff", extinctionCoeff);
 			mat.SetFloat ("_global_alpha", postProcessingAlpha);
 			mat.SetFloat ("_Exposure", postProcessExposure);
 			mat.SetFloat ("_global_depth", postProcessDepth*1000000);
@@ -1419,6 +1438,7 @@ namespace scatterer
 				extinctionTint = configPoints [0].skyExtinctionTint;
 				edgeThreshold = configPoints [0].edgeThreshold;
 				openglThreshold = configPoints [0].openglThreshold;
+				viewdirOffset = configPoints [0].viewdirOffset;
 				currentConfigPoint = 0;
 				
 			} else if (trueAlt > configPoints [configPoints.Count - 1].altitude) {
@@ -1431,6 +1451,7 @@ namespace scatterer
 				extinctionTint = configPoints [configPoints.Count - 1].skyExtinctionTint;
 				edgeThreshold = configPoints [configPoints.Count - 1].edgeThreshold;
 				openglThreshold = configPoints [configPoints.Count - 1].openglThreshold;
+				viewdirOffset = configPoints [configPoints.Count - 1].viewdirOffset;
 				currentConfigPoint = configPoints.Count;
 			} else {
 				for (int j = 1; j < configPoints.Count; j++) {
@@ -1446,6 +1467,7 @@ namespace scatterer
 						extinctionTint = percentage * configPoints [j].skyExtinctionTint + (1 - percentage) * configPoints [j - 1].skyExtinctionTint;
 						edgeThreshold = percentage * configPoints [j].edgeThreshold + (1 - percentage) * configPoints [j - 1].edgeThreshold;
 						openglThreshold = percentage * configPoints [j].openglThreshold + (1 - percentage) * configPoints [j - 1].openglThreshold;
+						viewdirOffset = percentage * configPoints [j].viewdirOffset + (1 - percentage) * configPoints [j - 1].viewdirOffset;
 						currentConfigPoint = j;
 					}
 				}

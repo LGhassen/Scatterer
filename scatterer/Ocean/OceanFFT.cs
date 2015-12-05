@@ -116,7 +116,7 @@ namespace scatterer {
 			
 			
 			m_initSpectrumMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitSpectrum.shader"));;
-			m_initDisplacementMat = new Material(ShaderTool.GetMatFromShader2("CompiledinitDisplacement.shader"));;
+			m_initDisplacementMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitDisplacement.shader"));;
 			
 			
 			if (m_fourierGridSize > 256) {

@@ -36,10 +36,13 @@ namespace scatterer
 		CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
 		bool depthBufferSet = false;
-		public float windAngle=90;
-		public float anglex=1;
-		public float angley=1;
-		public float anglez=1;
+//		public float windAngle=90;
+//		public float anglex=1;
+//		public float angley=1;
+//		public float anglez=1;
+
+		float experimentalAtmoScale=1f;
+		float viewdirOffset=0f;
 		
 		//List < Manager > Managers = new List < Manager >();
 		
@@ -102,7 +105,7 @@ namespace scatterer
 		//		public float[] additionalScales=new float[10];
 		//		public bool[] debugSettings = new bool[10];
 		//		public int renderQueue=2000;
-				public int oceanRenderQueue=2001;
+		[Persistent]	public int oceanRenderQueue=2001;
 		
 		//postprocessing properties
 		//		float inscatteringCoeff=85f; //useless, removed from shader
@@ -543,7 +546,7 @@ namespace scatterer
 								GUILayout.Label ("New point altitude:");
 								newCfgPtAlt = (float)(Convert.ToDouble (GUILayout.TextField (newCfgPtAlt.ToString ())));
 								if (GUILayout.Button ("Add")) {
-									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1, new configPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, extinctionMultiplier / 100, extinctionTint / 100, openglThreshold, edgeThreshold / 100));
+									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1, new configPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, extinctionMultiplier / 100, extinctionTint / 100, openglThreshold, edgeThreshold / 100,viewdirOffset));
 									selectedConfigPoint += 1;
 									configPointsCnt = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
 									loadConfigPoint (selectedConfigPoint);
@@ -607,6 +610,11 @@ namespace scatterer
 
 //								GUIfloat("Point altitude",ref pointAltitude, ref _selectedCfgPt.altitude);
 							
+								GUIfloat("experimentalAtmoScale", ref experimentalAtmoScale,
+								         ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.experimentalAtmoScale);
+
+								GUIfloat("experimentalViewDirOffset", ref viewdirOffset,
+								         ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].viewdirOffset);
 							
 								GUILayout.BeginHorizontal ();
 								GUILayout.Label ("Sky/orbit Alpha (/100)");
@@ -743,6 +751,11 @@ namespace scatterer
 								//					GUILayout.Label ("Sky Settings (map view)");
 								//					GUILayout.EndHorizontal ();
 							
+
+								GUIfloat("experimentalAtmoScale", ref experimentalAtmoScale,
+								         ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.experimentalAtmoScale);
+
+
 								GUILayout.BeginHorizontal ();
 								GUILayout.Label ("Map view alpha (/100)");
 								mapAlphaGlobal = (float)(Convert.ToDouble (GUILayout.TextField (mapAlphaGlobal.ToString ())));
@@ -1055,7 +1068,7 @@ namespace scatterer
 //							GUIfloat("x",ref anglex,ref anglex);
 //							GUIfloat("y",ref angley,ref angley);
 //							GUIfloat("z",ref anglez,ref anglez);
-//							GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
+							GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
 
 
 
@@ -1161,6 +1174,9 @@ namespace scatterer
 			mieG = skyNode.m_mieG * 100f;
 			
 			sunglareScale = skyNode.sunglareScale * 100f;
+
+			experimentalAtmoScale = skyNode.experimentalAtmoScale;
+
 			
 			
 			
@@ -1316,6 +1332,7 @@ namespace scatterer
 			
 			openglThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].openglThreshold;
 			edgeThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].edgeThreshold * 100;
+			viewdirOffset = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].viewdirOffset;
 			
 		}
 		

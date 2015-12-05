@@ -13,12 +13,13 @@ namespace scatterer
 		[Persistent] public float skyExtinctionTint;
 		[Persistent] public float openglThreshold;
 		[Persistent] public float edgeThreshold;
+		[Persistent] public float viewdirOffset;
 			
 
 
 		public configPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inPostProcessAlpha,
 		                   float inPostProcessDepth,float inPostProcessExposure, float inSkyExtinctionMultiplier,
-		                   float inSkyExtinctionTint, float inOpenglThreshold, float inEdgeThreshold)
+		                   float inSkyExtinctionTint, float inOpenglThreshold, float inEdgeThreshold, float inViewdirOffset)
 		{
 			altitude=inAltitude;
 			skyAlpha=inSkyAlpha;
@@ -30,6 +31,7 @@ namespace scatterer
 			skyExtinctionTint=inSkyExtinctionTint;
 			openglThreshold = inOpenglThreshold;
 			edgeThreshold = inEdgeThreshold;
+			viewdirOffset = inViewdirOffset;
 		}
 
 		public configPoint()

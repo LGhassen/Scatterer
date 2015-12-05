@@ -36,7 +36,10 @@
 			sampler2D _MainTex, _SkyDome;
 			
 			uniform float4x4 _ViewProjInv;
-
+			
+			uniform float _viewdirOffset;
+			uniform float _experimentalAtmoScale;
+			
 			uniform float _Scale;
 			uniform float _global_alpha;
 			uniform float _Exposure;
@@ -125,6 +128,133 @@
 					return u;
 			}
 			
+						float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float shaftWidth, float scaleCoeff, float irradianceFactor) 
+{
+	// single scattered sunlight between two points
+	// camera=observer
+	// point=point on the ground
+	// sundir=unit vector towards the sun
+	// return scattered light and extinction coefficient
+
+    float3 result = float3(0,0,0);
+    extinction = float3(1,1,1);
+        
+    float3 viewdir = _point - camera;
+    float d = length(viewdir)* scaleCoeff;
+    viewdir = viewdir / d;
+    
+    /////////////////////experimental block begin
+    Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+	viewdir.x+=_viewdirOffset;
+	viewdir=normalize(viewdir);
+	/////////////////////experimental block end
+	
+	
+    
+    float r = length(camera)* scaleCoeff;
+        
+    if (r < 0.9 * Rg) 
+    {
+        camera.y += Rg;
+        _point.y += Rg;
+        r = length(camera)* scaleCoeff;
+    }
+    float rMu = dot(camera, viewdir);
+    float mu = rMu / r;
+    float r0 = r;
+    float mu0 = mu;
+    _point -= viewdir * clamp(shaftWidth, 0.0, d);
+
+    float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+    float din = max(-rMu - deltaSq, 0.0);
+    
+    if (din > 0.0 && din < d) 
+    {
+        camera += din * viewdir;
+        rMu += din;
+        mu = rMu / Rt;
+        r = Rt;
+        d -= din;
+    }
+
+    if (r <= Rt) 
+    {
+        float nu = dot(viewdir, SUN_DIR);
+        float muS = dot(camera, SUN_DIR) / r;
+
+        float4 inScatter;
+
+        if (r < Rg + 600.0) 
+        {
+            // avoids imprecision problems in aerial perspective near ground
+            float f = (Rg + 600.0) / r;
+            r = r * f;
+            rMu = rMu * f;
+            _point = _point * f;
+        }
+
+        float r1 = length(_point);
+        float rMu1 = dot(_point, viewdir);
+        float mu1 = rMu1 / r1;
+        float muS1 = dot(_point, SUN_DIR) / r1;
+
+        if (mu > 0.0) {
+          extinction = min(Transmittance(r, mu) / Transmittance(r1, mu1), 1.0);
+            }
+        else {
+            extinction = min(Transmittance(r1, -mu1) / Transmittance(r, -mu), 1.0);}
+
+        const float EPS = 0.004;
+        float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
+        
+        if (abs(mu - lim) < EPS) 
+        {
+            float a = ((mu - lim) + EPS) / (2.0 * EPS);
+
+            mu = lim - EPS;
+            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+            mu1 = (r * mu + d) / r1;
+            
+            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
+            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+//            float4 inScatterA=(0.0,0.0,0.0,0.0);
+//            float4 inScatterA=Texture4D(_Inscatter, r, mu, muS, nu);
+//			float4 inScatterA=Texture4D(_Inscatter, 0, 0, 0, 0);
+
+            mu = lim + EPS;
+            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+            mu1 = (r * mu + d) / r1;
+            
+            inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
+            inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+            float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+//            float4 inScatterB=(0.0,0.0,0.0,0.0);
+
+            inScatter = lerp(inScatterA, inScatterB, a);
+            
+            irradianceFactor=1.0;
+            //Not sure about where irradianceFactor goes
+        } 
+        else 
+        {
+            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
+            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+            inScatter = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+        }
+
+        // avoids imprecision problems in Mie scattering when sun is below horizon
+        inScatter.w *= smoothstep(0.00, 0.02, muS);
+
+        float3 inScatterM = GetMie(inScatter);
+        float phase = PhaseFunctionR(nu);
+        float phaseM = PhaseFunctionM(nu);
+        result = inScatter.rgb * phase + inScatterM * phaseM;
+    } 
+
+    return result * SUN_INTENSITY;
+}
+			
 			
 			float3 hdr(float3 L) 
 			{
@@ -209,7 +339,7 @@
 				
 				float irradianceFactor=0.0;
 
-				float3 inscatter =  InScattering(_camPos, worldPos , extinction, 1.0, 1.0, 1.0);
+				float3 inscatter =  InScattering2(_camPos, worldPos , extinction, 1.0, 1.0, 1.0);
 								
 				float visib=1;
 
