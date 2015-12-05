@@ -206,6 +206,7 @@ namespace scatterer
 			
 			// Only load the planets once
 			loadPlanetsList ();
+			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
 			
 			if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 9")) {
 				d3d9 = true;
@@ -235,7 +236,7 @@ namespace scatterer
 			if (isActive && ScaledSpace.Instance) {
 				if (!found) {
 
-					CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
+//					CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
 
 
 					foreach (scattererCelestialBody sctBody in scattererCelestialBodies) {
@@ -314,8 +315,8 @@ namespace scatterer
 
 			
 			
-//			if (ScaledSpace.Instance && farCamera) {
-				if (farCamera) {
+			if (ScaledSpace.Instance && farCamera) {
+//				if (farCamera) {
 
 					if (!depthBufferSet) {
 						if (!render24bitDepthBuffer || d3d9) {
@@ -324,9 +325,9 @@ namespace scatterer
 							Debug.Log ("[Scatterer] Running in Direct3D 9, using default depth buffer");
 						} else {
 
-							customDepthBuffer = (CustomDepthBufferCam)farCamera.gameObject.GetComponent < CustomDepthBufferCam > ();
+
 						
-							if (!customDepthBuffer) {
+
 								customDepthBuffer = (CustomDepthBufferCam)farCamera.gameObject.AddComponent (typeof(CustomDepthBufferCam));
 								customDepthBuffer.inCamera = farCamera;
 								customDepthBuffer.incore = this;
@@ -337,10 +338,11 @@ namespace scatterer
 								customDepthBuffer._depthTex = customDepthBufferTexture;
 							
 								Debug.Log ("[Scatterer] Running custom depth buffer");
-								if (forceDisableDefaultDepthBuffer) {
+								
+								if (forceDisableDefaultDepthBuffer)
+								{
 									Debug.Log ("[Scatterer] Forcing default depth buffer off");
 								}
-							}
 						}
 						depthBufferSet = true;
 

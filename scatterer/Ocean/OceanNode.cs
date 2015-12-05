@@ -323,6 +323,7 @@ namespace scatterer
 
 //				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
 
+
 				if (pqs.ChildSpheres [0]) {
 					ocean = pqs.ChildSpheres [0];
 					ocean.surfaceMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
