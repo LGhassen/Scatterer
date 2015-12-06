@@ -103,6 +103,16 @@
 				return o;
 			}
 			
+			
+			//fixes artifacts in d3d9
+			float SQRT(float f, float err) {
+			#if !defined(SHADER_API_D3D9)
+			    return sqrt(f);
+			#else
+    		return f >= 0.0 ? sqrt(f) : err;
+			#endif
+			}
+			
 			//stole this from basic GLSL raytracing shader somewhere on the net
 			//a quick google search and you'll find it
 			float intersectSphere2(float3 p1, float3 p2, float3 p3, float r)
@@ -165,7 +175,7 @@
     float mu0 = mu;
     _point -= viewdir * clamp(shaftWidth, 0.0, d);
 
-    float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
     float din = max(-rMu - deltaSq, 0.0);
     
     if (din > 0.0 && din < d) 

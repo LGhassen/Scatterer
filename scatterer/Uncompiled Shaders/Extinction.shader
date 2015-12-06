@@ -93,7 +93,12 @@
 				float r0 = r;
 				float mu0 = mu;
 
-    			float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+#if !defined(SHADER_API_D3D9)
+	float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+#else
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
+#endif
+
     			float din = max(-rMu - deltaSq, 0.0);
     			
     			if (din > 0.0)

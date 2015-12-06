@@ -50,6 +50,7 @@
     			float3 dir : TEXCOORD1;
     			float3 relativeDir : TEXCOORD2;
 			};
+			
 
 			v2f vert(appdata_base v)
 			{
@@ -67,6 +68,7 @@
     			OUT.uv = v.texcoord.xy;
     			return OUT;
 			}
+			
 			
 			// assumes sundir=vec3(0.0, 0.0, 1.0)
 			float3 OuterSunRadiance(float3 viewdir)
@@ -98,8 +100,14 @@
 	float mu = rMu / r;
 	float r0 = r;
 	float mu0 = mu;
+	
+#if !defined(SHADER_API_D3D9)
+	float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+#else
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
+#endif
 
-    float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+        
     float din = max(-rMu - deltaSq, 0.0);
     if (din > 0.0) {
         camera += din * viewdir;
