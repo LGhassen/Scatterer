@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.IO;
+using System;
 
 // This class is designed to take 32 bit floating point data and get it into or out of a 2D render texture.
 // As there is no way in Unity to load floating point data straight into a render texture (with out dx11) the data for each
@@ -56,7 +57,7 @@ static public class EncodeFloat
 		float min = 0.0f;
 		LoadData(data, map, size, ref min, ref max);
 		
-		DecodeFloat(w, h, channels, min, max, tex, map);			
+		DecodeFloat(w, h, channels, min, max, tex, map);
 	}
 	
 	//Load 32 bit float data from raw file and write into render texture with option of returning raw loaded data
@@ -91,6 +92,7 @@ static public class EncodeFloat
 		}
 		
 		DecodeFloat(w, h, channels, min, max, tex, map);
+		
 	}
 	
 	//Load 16 bit float data from raw file and write into render texture with option of returning raw loaded data
@@ -189,6 +191,9 @@ static public class EncodeFloat
 				}
 			}
 		}
+			encodeTex.Release ();
+			UnityEngine.Object.Destroy (encodeTex);
+			UnityEngine.Object.Destroy (readTex);
 	}
 	
 	static void DecodeFloat(int w, int h, int c, float min, float max, RenderTexture tex, Color[] map)
@@ -261,6 +266,11 @@ static public class EncodeFloat
 		m_decodeToFloat.SetTexture("_TexB", mapB);
 		m_decodeToFloat.SetTexture("_TexA", mapA);
 		Graphics.Blit(null, tex, m_decodeToFloat);
+		
+		UnityEngine.Object.Destroy (mapR);
+		UnityEngine.Object.Destroy (mapG);
+		UnityEngine.Object.Destroy (mapB);
+		UnityEngine.Object.Destroy (mapA);
 	}
 	
 	static float[] EncodeFloatRGBA(float val)

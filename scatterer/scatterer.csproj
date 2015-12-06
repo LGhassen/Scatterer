@@ -80,7 +80,6 @@
     <Compile Include="scattererCelestialBody.cs" />
     <Compile Include="celestialBodySortableByDistance.cs" />
     <Compile Include="CustomDepthBufferCam.cs" />
-    <Compile Include="Ocean\FourierGPU.cs" />
     <Compile Include="Ocean\Node.cs" />
     <Compile Include="Ocean\OceanFFT.cs" />
     <Compile Include="Ocean\OceanNode.cs" />
@@ -88,6 +87,8 @@
     <Compile Include="Ocean\OceanWhiteCaps.cs" />
     <Compile Include="Ocean\RTUtility.cs" />
     <Compile Include="Ocean\WriteFloat.cs" />
+    <Compile Include="Ocean\FourierGPU.cs" />
+    <Compile Include="Ocean\FakeOceanPQS.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

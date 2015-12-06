@@ -27,7 +27,6 @@ using UnityEngine;
 using System.Collections;
 using System.IO;
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -212,7 +211,38 @@ namespace scatterer
 //			{
 //				UnityEngine.Object.Destroy (ocean);
 //			}
-				
+
+
+
+			
+			//				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
+			
+//			PQS pqs = m_manager.parentCelestialBody.pqsController;
+//			if (pqs.ChildSpheres [0]) {
+//				ocean = pqs.ChildSpheres [0];
+//				//					ocean.surfaceMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
+//				
+//				///Thanks to rbray89 for this snippet that disables the stock ocean in a clean way
+//				GameObject container = ocean.gameObject;
+//				
+//				FakeOceanPQS fakeOcean1 = new GameObject ().AddComponent<FakeOceanPQS> ();
+//				
+//				fakeOcean1.CloneFrom (ocean);
+//				Destroy (ocean);
+//				
+//				FakeOceanPQS fakeOcean = container.AddComponent<FakeOceanPQS> ();
+//				fakeOcean.CloneFrom (fakeOcean1);
+//				
+//				Destroy (fakeOcean1);
+//				
+//				FieldInfo field = typeof(PQS).GetFields (BindingFlags.Instance | BindingFlags.NonPublic).First (
+//					f => f.FieldType == typeof(PQS[]));
+//				field.SetValue (pqs, new PQS[] {fakeOcean });
+//				
+//				PQSMod_CelestialBodyTransform cbt = pqs.GetComponentsInChildren<PQSMod_CelestialBodyTransform> () [0];
+//				cbt.secondaryFades = new PQSMod_CelestialBodyTransform.AltitudeFade[] { };
+//			}
+
 		}
 		
 		public virtual void OnDestroy ()
@@ -320,13 +350,37 @@ namespace scatterer
 
 			if (!ocean && stockOceanExists) {  
 				PQS pqs = m_manager.parentCelestialBody.pqsController;
-
-//				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
-
-
+//
+////				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
+//
+//
 				if (pqs.ChildSpheres [0]) {
 					ocean = pqs.ChildSpheres [0];
 					ocean.surfaceMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
+//
+//					///Thanks to rbray89 for this snippet that disables the stock ocean in a clean way
+//					GameObject container = ocean.gameObject;
+//					
+//					FakeOceanPQS fakeOcean1 = new GameObject().AddComponent<FakeOceanPQS>();
+//
+//					fakeOcean1.CloneFrom(ocean);
+//					Destroy(ocean);
+//
+//					FakeOceanPQS fakeOcean = container.AddComponent<FakeOceanPQS>();
+//					fakeOcean.CloneFrom(fakeOcean1);
+//
+//					Destroy(fakeOcean1);
+//
+//					FieldInfo field = typeof(PQS).GetFields(BindingFlags.Instance | BindingFlags.NonPublic).First(
+//						f => f.FieldType == typeof(PQS[]));
+//					field.SetValue(pqs, new PQS[] {fakeOcean });
+//					
+//					PQSMod_CelestialBodyTransform cbt = pqs.GetComponentsInChildren<PQSMod_CelestialBodyTransform>()[0];
+//					cbt.secondaryFades = new PQSMod_CelestialBodyTransform.AltitudeFade[] { };
+
+					stockOceanExists = false;
+
+
 				} else {
 					stockOceanExists = false;
 					Debug.Log ("[Scatterer] Stock ocean doesn't exist for " + m_manager.parentCelestialBody.name);
@@ -336,6 +390,15 @@ namespace scatterer
 
 			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
 			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;
+
+			PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
+			foreach (PartBuoyancy _part in parts)
+			{
+//				_part.transform
+				_part.waterLevel=m_oceanLevel;
+			}
+//			Debug.Log (parts.Length + " parts adjusted buyoancy");
+
 
 
 

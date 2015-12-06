@@ -396,7 +396,7 @@ namespace scatterer
 				Rt = (Rt / Rg) * m_radius;
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
-				sunglareCutoffAlt = (Rt + Rt - Rg)*experimentalAtmoScale /*  *0.995f*/;
+				sunglareCutoffAlt = (experimentalAtmoScale*(Rt + Rt) - Rg) /*  *0.995f*/;
 				cams = Camera.allCameras;
 				
 				for (int i = 0; i < cams.Length; i++) {
@@ -1169,7 +1169,7 @@ namespace scatterer
 		public void initiateOrRestart ()
 		{
 			string _file;
-			
+
 			m_inscatter.Create ();
 			m_transmit.Create ();
 			m_irradiance.Create ();
