@@ -304,26 +304,42 @@ namespace scatterer {
 				//Make sure base class get updated as well
 				base.UpdateNode();
 
-//				if( m_manager.GetCore().useOceanPhysics)
-//				{
-//					ReadFromRenderTextureToTex2D (m_map0, HEIGHTS_CHANNELS, map0To2Dr, map0To2Dg);
-//
-//
+				if( m_manager.GetCore().useOceanPhysics)
+				{
+					ReadFromRenderTextureToTex2D (m_map0, HEIGHTS_CHANNELS, map0To2Dr, map0To2Dg);
+
+
 //					PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
 //					foreach (PartBuoyancy _part in parts)
 //					{
 //						//				_part.transform
 ////						Vector3 relativePartPos = _part.transform.position-m_manager.GetCore ().farCamera.transform.position;
-//						Vector3 relativePartPos = new Vector3(0f,0f,0f);
+//						Vector3 relativePartPos = new Vector3(m_manager.GetCore().posOffsetX ,m_manager.GetCore().posOffsetY,0f);
 ////						
 //						Debug.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
 //
-////						_part.waterLevel=m_oceanLevel+ SampleHeight(relativePartPos);
-//						_part.waterLevel=m_oceanLevel;
+//						_part.waterLevel=m_oceanLevel+ SampleHeight(relativePartPos);
+////						_part.waterLevel=m_oceanLevel;
 //					}
+
+
+//					float posXreltoCam = (float) (Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),ux.ToVector3()));
+//					float posYreltoCam = (float) (Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),uy.ToVector3()));
+//					float posZreltoCam = (float) (Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),uz.ToVector3()));
+//					float posZ = m_oceanLevel+ SampleHeight(new Vector3((float)(posXreltoCam + offset.x +  m_manager.GetCore().posOffsetX),(float)( posYreltoCam + offset.y +  m_manager.GetCore().posOffsetY)));
+////
+////					Debug.Log ("pos x" + Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),ux.ToVector3()) );
+////					Debug.Log ("pos y" + Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),uy.ToVector3() ));
+////					Debug.Log ("pos z" + Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),uz.ToVector3() ));
 //
-//
-//				}
+//					Debug.Log("camoffset"+offset.ToString());
+//					Debug.Log("posXreltoCam"+posXreltoCam);
+//					Debug.Log("posYreltoCam"+posYreltoCam);
+//					Debug.Log("new posZ"+posZ);
+//					
+//					FlightGlobals.ActiveVessel.transform.position=(posXreltoCam * ux).ToVector3() + (posYreltoCam *uy).ToVector3() + ((posZ - offset.z)  *uz ).ToVector3()
+//						+ m_manager.GetCore().farCamera.transform.position;
+				}
 			}
 		}
 		
