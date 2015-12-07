@@ -90,6 +90,10 @@ namespace scatterer {
 		RenderTexture[] m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2;
 		RenderTexture[] m_fourierBuffer3, m_fourierBuffer4;
 		RenderTexture m_map0, m_map1, m_map2, m_map3, m_map4;
+
+		public Texture2D map0To2Dr, map0To2Dg;
+		Material m_encodeToFloat;
+		const int HEIGHTS_CHANNELS = 2;
 		
 		
 		//		RenderTexture m_variance;
@@ -267,8 +271,7 @@ namespace scatterer {
 				Graphics.Blit(m_fourierBuffer2[m_idx], m_map2);
 				Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
 				Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
-				
-				
+
 				
 				m_oceanMaterialNear.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
 				m_oceanMaterialNear.SetVector("_Ocean_Choppyness", m_choppyness);
@@ -293,9 +296,34 @@ namespace scatterer {
 				m_oceanMaterialFar.SetTexture("_Ocean_Map3", m_map3);
 				m_oceanMaterialFar.SetTexture("_Ocean_Map4", m_map4);
 				m_oceanMaterialFar.SetVector("_VarianceMax", m_varianceMax);
-				
+
+
+
+
+
 				//Make sure base class get updated as well
 				base.UpdateNode();
+
+//				if( m_manager.GetCore().useOceanPhysics)
+//				{
+//					ReadFromRenderTextureToTex2D (m_map0, HEIGHTS_CHANNELS, map0To2Dr, map0To2Dg);
+//
+//
+//					PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
+//					foreach (PartBuoyancy _part in parts)
+//					{
+//						//				_part.transform
+////						Vector3 relativePartPos = _part.transform.position-m_manager.GetCore ().farCamera.transform.position;
+//						Vector3 relativePartPos = new Vector3(0f,0f,0f);
+////						
+//						Debug.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
+//
+////						_part.waterLevel=m_oceanLevel+ SampleHeight(relativePartPos);
+//						_part.waterLevel=m_oceanLevel;
+//					}
+//
+//
+//				}
 			}
 		}
 		
@@ -330,7 +358,14 @@ namespace scatterer {
 			
 			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBFloat;
 			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
-			
+
+			//textures for transferring the map0 to texture2D
+			if (m_manager.GetCore ().useOceanPhysics)
+			{
+				map0To2Dr = new Texture2D(m_fourierGridSize, m_fourierGridSize, TextureFormat.ARGB32, false, true);
+				map0To2Dg = new Texture2D(m_fourierGridSize, m_fourierGridSize, TextureFormat.ARGB32, false, true);
+			}
+
 			//These texture hold the actual data use in the ocean renderer
 			CreateMap(ref m_map0, mapFormat, m_ansio);
 			CreateMap(ref m_map1, mapFormat, m_ansio);
@@ -677,6 +712,144 @@ namespace scatterer {
 			//			buffer.Release();
 			
 		}
+
+		public void ReadFromRenderTextureToTex2D(RenderTexture tex, int channels, Texture2D tex2Dr, Texture2D tex2Dg)
+		{
+			if (!m_encodeToFloat)
+			{
+				m_encodeToFloat = new Material (ShaderTool.GetMatFromShader2 ("CompiledEncodeToFloat.shader"));
+			}
+			
+			int w = tex.width;
+			int h = tex.height;
+			
+			RenderTexture encodeTex = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+			encodeTex.filterMode = FilterMode.Point;
+			
+			
+			//enocde data in tex into encodeTex
+			Graphics.Blit(tex, encodeTex, m_encodeToFloat, 0);
+			//Read encoded values into a normal texture where we can retrive them
+			RenderTexture.active = encodeTex;
+			tex2Dr.ReadPixels(new Rect(0,0,w,h),0,0);
+			tex2Dr.Apply();
+			
+			Graphics.Blit(tex, encodeTex, m_encodeToFloat, 1);
+			//Read encoded values into a normal texture where we can retrive them
+			RenderTexture.active = encodeTex;
+			tex2Dg.ReadPixels(new Rect(0,0,w,h),0,0);
+			tex2Dg.Apply();
+			
+			RenderTexture.active = null;
+			
+			encodeTex.Release();
+			UnityEngine.Object.Destroy(encodeTex);
+		}
+		
+		
+		public void GetHeightFromDecoder (float x, float y, float[] v)
+		{
+			
+			//un-normalize cords
+			x *= (float)m_fourierGridSize;
+			y *= (float)m_fourierGridSize;
+			
+			x -= 0.5f;
+			y -= 0.5f;
+			
+			int x0, x1;
+//			float fx = Math.Abs (x - (int)x);
+			float fx = Mathf.Abs (x - (int)x);
+			IndexBilinearMap0data (x, m_fourierGridSize, out x0, out x1, true);
+			
+			int y0, y1;
+			float fy = Mathf.Abs (y - (int)y);
+			//			IndexBilinearMap0data (y, m_size, out y0, out y1);
+			IndexBilinearMap0data (y, m_fourierGridSize, out y0, out y1, true);
+			
+			for (int c = 0; c < HEIGHTS_CHANNELS ; c++) {
+				
+				//				float v0 = map0data [(x0 + y0 * m_size) * HEIGHTS_CHANNELS + c] * (1.0f - fx) + map0data [(x1 + y0 * m_size) * HEIGHTS_CHANNELS + c] * fx;
+				float v0 = DecodeFloatFromTex2D(x0, y0, c) * (1.0f - fx) + DecodeFloatFromTex2D(x1, y0, c) * fx;
+				
+				//				float v1 = map0data [(x0 + y1 * m_size) * HEIGHTS_CHANNELS + c] * (1.0f - fx) + map0data [(x1 + y1 * m_size) * HEIGHTS_CHANNELS + c] * fx;
+				float v1 = DecodeFloatFromTex2D(x0, y1, c) * (1.0f - fx) + DecodeFloatFromTex2D(x1, y1, c) * fx;
+				
+				v [c] = v0 * (1.0f - fy) + v1 * fy;
+			}
+		}
+		
+		
+		/// <summary>
+		/// Get the two indices that need to be sampled for bilinear filtering.
+		/// </summary>
+		public void IndexBilinearMap0data(double x, int sx, out int ix0, out int ix1, bool m_wrap)
+		{
+			
+			ix0 = (int)x;
+			ix1 = (int)x + (int)Mathf.Sign((float) x);
+			
+			if(m_wrap)
+			{
+				if(ix0 >= sx || ix0 <= -sx) ix0 = ix0 % sx;
+				if(ix0 < 0) ix0 = sx - -ix0;
+				
+				if(ix1 >= sx || ix1 <= -sx) ix1 = ix1 % sx;
+				if(ix1 < 0) ix1 = sx - -ix1;
+			}
+			else
+			{
+				if(ix0 < 0) ix0 = 0;
+				else if(ix0 >= sx) ix0 = sx-1;
+				
+				if(ix1 < 0) ix1 = 0;
+				else if(ix1 >= sx) ix1 = sx-1;
+			}
+		}
+		
+		public float DecodeFloatFromTex2D(int x, int y, int channel)
+		{
+			Vector4 factor = new Vector4(1.0f, 1.0f/255.0f, 1.0f/65025.0f, 1.0f/160581375.0f);			
+			float _read;
+			
+			if (channel==0)
+			{
+				_read=Vector4.Dot(map0To2Dr.GetPixel(x,y), factor);
+			}
+			
+			else
+			{
+				_read=Vector4.Dot(map0To2Dg.GetPixel(x,y), factor);
+			}
+			
+			_read-=0.5f;
+			
+			return(_read*255f);
+		}
+
+
+		/// <summary>
+		/// This will return the ocean height at any world pos.
+		/// </summary>
+		public float SampleHeight (Vector3 worldPos)
+		{
+			float ht = 0.0f;
+			float[] result = new float[HEIGHTS_CHANNELS];
+			
+			Vector2 pos = new Vector2 (worldPos.x, worldPos.z) / m_gridSizes.x;
+			
+			GetHeightFromDecoder(pos.x, pos.y, result);
+			ht += result [0];
+			
+			pos = new Vector2 (worldPos.x, worldPos.z) / m_gridSizes.y;
+			
+			
+			GetHeightFromDecoder(pos.x, pos.y, result);
+			ht += result [1];
+			
+			return ht;
+		}
+
 	}
 	
 }

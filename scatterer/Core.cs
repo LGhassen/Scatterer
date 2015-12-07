@@ -29,6 +29,11 @@ namespace scatterer
 		[Persistent]
 		public bool
 			forceDisableDefaultDepthBuffer = false;
+
+		[Persistent]
+		public bool
+			useOceanPhysics = true;
+
 		private Vector2 _scroll;
 		private Vector2 _scroll2;
 		public bool pqsEnabled = false;
