@@ -78,8 +78,10 @@ namespace scatterer
 		float sunglareScale = 100f;
 		float extinctionMultiplier = 100f;
 		float extinctionTint = 100f;
+		float skyExtinctionRimFade=0f;
 		float mapExtinctionMultiplier = 100f;
 		float mapExtinctionTint = 100f;
+		float mapSkyExtinctionRimFade=1f;
 		float specR = 0f, specG = 0f, specB = 0f, shininess = 0f;
 		
 		//configPoint variables 		
@@ -120,8 +122,10 @@ namespace scatterer
 		
 		//sky properties
 		float exposure = 25f;
+		float skyRimExposure = 25f;
 		float alphaGlobal = 100f;
 		float mapExposure = 15f;
+		float mapSkyRimeExposure = 15f;
 		float mapAlphaGlobal = 100f;
 		
 		//Transform ParentPlanetTransform;
@@ -548,7 +552,7 @@ namespace scatterer
 								GUILayout.Label ("New point altitude:");
 								newCfgPtAlt = (float)(Convert.ToDouble (GUILayout.TextField (newCfgPtAlt.ToString ())));
 								if (GUILayout.Button ("Add")) {
-									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1, new configPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, extinctionMultiplier / 100, extinctionTint / 100, openglThreshold, edgeThreshold / 100,viewdirOffset));
+									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1, new configPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, skyRimExposure/100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, extinctionMultiplier / 100, extinctionTint / 100, skyExtinctionRimFade/100, openglThreshold, edgeThreshold / 100,viewdirOffset));
 									selectedConfigPoint += 1;
 									configPointsCnt = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
 									loadConfigPoint (selectedConfigPoint);
@@ -636,6 +640,15 @@ namespace scatterer
 									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyExposure = exposure / 100f;
 								}
 								GUILayout.EndHorizontal ();
+
+								GUILayout.BeginHorizontal ();
+								GUILayout.Label ("Sky/orbit Rim Exposure (/100)");
+								skyRimExposure = (float)(Convert.ToDouble (GUILayout.TextField (skyRimExposure.ToString ())));
+								
+								if (GUILayout.Button ("Set")) {
+									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyRimExposure = skyRimExposure / 100f;
+								}
+								GUILayout.EndHorizontal ();
 							
 								GUILayout.BeginHorizontal ();
 								GUILayout.Label ("Post Processing Alpha (/100)");
@@ -683,6 +696,15 @@ namespace scatterer
 							
 								if (GUILayout.Button ("Set")) {
 									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyExtinctionTint = extinctionTint / 100f;
+								}
+								GUILayout.EndHorizontal ();
+
+								GUILayout.BeginHorizontal ();
+								GUILayout.Label ("extinctionRimFade (/100)");
+								skyExtinctionRimFade = (float)(Convert.ToDouble (GUILayout.TextField (skyExtinctionRimFade.ToString ())));
+								
+								if (GUILayout.Button ("Set")) {
+									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyextinctionRimFade = skyExtinctionRimFade / 100f;
 								}
 								GUILayout.EndHorizontal ();
 							
@@ -776,6 +798,15 @@ namespace scatterer
 									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapExposure = mapExposure / 100f;
 								}
 								GUILayout.EndHorizontal ();
+
+								GUILayout.BeginHorizontal ();
+								GUILayout.Label ("Map view rim exposure (/100)");
+								mapSkyRimeExposure = (float)(Convert.ToDouble (GUILayout.TextField (mapSkyRimeExposure.ToString ())));
+								
+								if (GUILayout.Button ("Set")) {
+									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapSkyRimExposure = mapSkyRimeExposure / 100f;
+								}
+								GUILayout.EndHorizontal ();
 							
 								GUILayout.BeginHorizontal ();
 								GUILayout.Label ("Map view scale (/1000)");
@@ -801,6 +832,15 @@ namespace scatterer
 							
 								if (GUILayout.Button ("Set")) {
 									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapExtinctionTint = mapExtinctionTint / 100f;
+								}
+								GUILayout.EndHorizontal ();
+
+								GUILayout.BeginHorizontal ();
+								GUILayout.Label ("MapExtinctionRimFade (/100)");
+								mapSkyExtinctionRimFade = (float)(Convert.ToDouble (GUILayout.TextField (mapSkyExtinctionRimFade.ToString ())));
+								
+								if (GUILayout.Button ("Set")) {
+									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapSkyExtinctionRimFade = mapSkyExtinctionRimFade / 100f;
 								}
 								GUILayout.EndHorizontal ();
 							
@@ -1145,6 +1185,7 @@ namespace scatterer
 			postProcessDepth = 10000 * selected.postProcessDepth;
 			postProcessExposure = 100 * selected.postProcessExposure;
 			exposure = 100 * selected.skyExposure;
+			skyRimExposure = 100 * selected.skyRimExposure;
 			alphaGlobal = 100 * selected.skyAlpha;
 			
 			openglThreshold = selected.openglThreshold;
@@ -1153,6 +1194,7 @@ namespace scatterer
 			
 			mapAlphaGlobal = 100 * skyNode.mapAlphaGlobal;
 			mapExposure = 100 * skyNode.mapExposure;
+			mapSkyRimeExposure = 100 * skyNode.mapSkyRimExposure;
 			configPointsCnt = skyNode.configPoints.Count;
 			
 			specR = skyNode.specR;
@@ -1167,9 +1209,11 @@ namespace scatterer
 			MapViewScale = skyNode.MapViewScale * 1000f;
 			extinctionMultiplier = 100 * selected.skyExtinctionMultiplier;
 			extinctionTint = 100 * selected.skyExtinctionTint;
+			skyExtinctionRimFade = 100 * selected.skyextinctionRimFade;
 			
 			mapExtinctionMultiplier = 100 * skyNode.mapExtinctionMultiplier;
 			mapExtinctionTint = 100 * skyNode.mapExtinctionTint;
+			mapSkyExtinctionRimFade= 100 * skyNode.mapSkyExtinctionRimFade;
 			
 			showInterpolatedValues = skyNode.displayInterpolatedVariables;
 			
@@ -1326,9 +1370,11 @@ namespace scatterer
 			
 			alphaGlobal = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyAlpha * 100f;
 			exposure = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyExposure * 100f;
+			skyRimExposure = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyRimExposure * 100f;
 			
 			extinctionMultiplier = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyExtinctionMultiplier * 100f;
 			extinctionTint = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyExtinctionTint * 100f;
+			skyExtinctionRimFade = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyextinctionRimFade * 100f;
 			
 			pointAltitude = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].altitude;
 			

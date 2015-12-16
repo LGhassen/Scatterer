@@ -79,6 +79,7 @@ namespace scatterer
 		public float oceanAlpha = 1f;
 		int numGrids;
 		Mesh[] m_screenGrids;
+		Material emptyMaterial;
 
 		[Persistent] public float oceanDisableAltitude = 70000;
 
@@ -353,10 +354,16 @@ namespace scatterer
 //
 ////				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
 //
-//
+//				
+				Debug.Log ("childspheres length"+pqs.ChildSpheres.Length.ToString());
+
 				if (pqs.ChildSpheres [0]) {
+					Debug.Log("pqs.ChildSpheres [0] found");
 					ocean = pqs.ChildSpheres [0];
-					ocean.surfaceMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
+					emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
+					ocean.surfaceMaterial = emptyMaterial;
+					ocean.fallbackMaterial = emptyMaterial;
+					ocean.useSharedMaterial=false;
 //
 //					///Thanks to rbray89 for this snippet that disables the stock ocean in a clean way
 //					GameObject container = ocean.gameObject;
@@ -387,6 +394,12 @@ namespace scatterer
 				}
 			}
 
+			if (ocean)
+			{
+				ocean.surfaceMaterial = emptyMaterial;
+				ocean.fallbackMaterial = emptyMaterial;
+				ocean.useSharedMaterial = false;
+			}
 
 			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
 			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;

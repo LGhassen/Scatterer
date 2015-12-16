@@ -428,6 +428,17 @@ namespace scatterer
 				map[x] = new Color(farray[0], farray[1], farray[2], farray[3]);
 			};
 		}
+
+
+		public void OnDestroy ()
+		{
+			UnityEngine.Object.Destroy(m_mapA);
+			UnityEngine.Object.Destroy(m_mapR);
+			UnityEngine.Object.Destroy(m_mapG);
+			UnityEngine.Object.Destroy(m_mapB);
+			UnityEngine.Object.Destroy (m_writeToFloat);
+
+		}
 		
 	}
 	
