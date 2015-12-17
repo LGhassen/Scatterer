@@ -168,24 +168,27 @@ namespace scatterer {
 
 
 //#if CPUmode
-			m_CPUfourier=new FourierCPU(m_fourierGridSize);
-			
-			m_passes = (int)(Mathf.Log(m_fsize) / Mathf.Log(2.0f));
-			ComputeButterflyLookupTable();
-			
-			m_CPUfourier.m_butterflyLookupTable = m_butterflyLookupTable;
-			
-			m_fourierBuffer0vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
-			m_fourierBuffer0vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
-			
-			
-			m_fourierBuffer1vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
-			m_fourierBuffer2vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
-			
-			m_fourierBuffer3vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
-			m_fourierBuffer4vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
-			m_fourierBuffer3vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
-			m_fourierBuffer4vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			if (m_manager.GetCore ().craft_WaveInteractions)
+			{
+				m_CPUfourier = new FourierCPU (m_fourierGridSize);
+				
+				m_passes = (int)(Mathf.Log (m_fsize) / Mathf.Log (2.0f));
+				ComputeButterflyLookupTable ();
+				
+				m_CPUfourier.m_butterflyLookupTable = m_butterflyLookupTable;
+				
+				m_fourierBuffer0vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+				m_fourierBuffer0vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+				
+				
+				m_fourierBuffer1vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+				m_fourierBuffer2vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+				
+				m_fourierBuffer3vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+				m_fourierBuffer4vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+				m_fourierBuffer3vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+				m_fourierBuffer4vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			}
 //#endif			
 
 
@@ -203,8 +206,10 @@ namespace scatterer {
 			m_initDisplacementMat.SetVector("_InverseGridSizes", m_inverseGridSizes);
 
 //#if CPUmode
-			
-			CreateWTableForCPU();
+			if (m_manager.GetCore ().craft_WaveInteractions)
+			{
+				CreateWTableForCPU ();
+			}
 			
 //#endif
 			
@@ -451,48 +456,54 @@ namespace scatterer {
 				//Make sure base class get updated as well
 //				base.UpdateNode();
 //#else
-
-				if(!(done1&&done2&&done3&&done4&&done5))
+				if (m_manager.GetCore ().craft_WaveInteractions)
 				{
-					base.UpdateNode();
-					return;
+					if(!(done1&&done2&&done3&&done4&&done5))
+					{
+						base.UpdateNode();
+						return;
+					}
+					
+					done1 = false;
+					done2 = false;
+					done3 = false;
+					done4 = false;
+					done5 = false;
+					
+					Debug.Log ("[Scatterer] FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
+					FFTtimer = Time.realtimeSinceStartup;
+					
+					//				Nullable<float> time = Time.realtimeSinceStartup;
+					
+					Nullable<float> time = t;
+					
+					ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded1), time);
+					CommitResults (ref m_fourierBuffer0vector, ref m_fourierBuffer0vectorResults);
+					CommitResults (ref m_fourierBuffer3vector, ref m_fourierBuffer3vectorResults);
+					CommitResults (ref m_fourierBuffer4vector, ref m_fourierBuffer4vectorResults);
 				}
 
-				done1 = false;
-				done2 = false;
-				done3 = false;
-				done4 = false;
-				done5 = false;
 
-				Debug.Log ("[Scatterer] FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
-				FFTtimer = Time.realtimeSinceStartup;
-
-//				Nullable<float> time = Time.realtimeSinceStartup;
-
-				Nullable<float> time = t;
-				
-				ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded1), time);
-				CommitResults (ref m_fourierBuffer0vector, ref m_fourierBuffer0vectorResults);
-				CommitResults (ref m_fourierBuffer3vector, ref m_fourierBuffer3vectorResults);
-				CommitResults (ref m_fourierBuffer4vector, ref m_fourierBuffer4vectorResults);
 
 				base.UpdateNode();
 
-				PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
-				foreach (PartBuoyancy _part in parts)
+
+				if (m_manager.GetCore ().craft_WaveInteractions)
 				{
-					//				_part.transform
-					Vector3 relativePartPos = _part.transform.position-m_manager.GetCore ().farCamera.transform.position;
+					PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
+					foreach (PartBuoyancy _part in parts)
+					{
+						//				_part.transform
+						Vector3 relativePartPos = _part.transform.position-m_manager.GetCore ().farCamera.transform.position;
 						
-//					Debug.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
-					
-					_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
-					//						_part.waterLevel=m_oceanLevel;
+						//					Debug.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
+						
+						_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
+						//						_part.waterLevel=m_oceanLevel;
+					}
+				
 				}
-
-
 //#endif
-
 
 			}
 		}
@@ -556,9 +567,7 @@ namespace scatterer {
 			m_spectrum23.enableRandomWrite = true;
 			m_spectrum23.Create();
 			
-			
-			
-			
+
 			m_WTable = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 			m_WTable.filterMode = FilterMode.Point;
 			m_WTable.wrapMode = TextureWrapMode.Clamp;
@@ -707,8 +716,11 @@ namespace scatterer {
 			float[] spectrum23 = new float[m_fourierGridSize * m_fourierGridSize * 4];
 
 //#if CPUmode
-			m_spectrum01vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
-			m_spectrum23vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
+			if (m_manager.GetCore ().craft_WaveInteractions)
+			{
+				m_spectrum01vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
+				m_spectrum23vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
+			}
 //#endif
 
 
@@ -736,15 +748,18 @@ namespace scatterer {
 					
 
 //#if CPUmode
-					m_spectrum01vector[idx].x = sample12XY.x;
-					m_spectrum01vector[idx].y = sample12XY.y;
-					m_spectrum01vector[idx].z = sample12ZW.x;
-					m_spectrum01vector[idx].w = sample12ZW.y;
-					
-					m_spectrum23vector[idx].x = sample34XY.x;
-					m_spectrum23vector[idx].y = sample34XY.y;
-					m_spectrum23vector[idx].z = sample34ZW.x;
-					m_spectrum23vector[idx].w = sample34ZW.y;
+					if (m_manager.GetCore ().craft_WaveInteractions)
+					{
+						m_spectrum01vector[idx].x = sample12XY.x;
+						m_spectrum01vector[idx].y = sample12XY.y;
+						m_spectrum01vector[idx].z = sample12ZW.x;
+						m_spectrum01vector[idx].w = sample12ZW.y;
+						
+						m_spectrum23vector[idx].x = sample34XY.x;
+						m_spectrum23vector[idx].y = sample34XY.y;
+						m_spectrum23vector[idx].z = sample34ZW.x;
+						m_spectrum23vector[idx].w = sample34ZW.y;
+					}
 //#endif
 
 

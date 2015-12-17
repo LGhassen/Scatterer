@@ -29,6 +29,10 @@ namespace scatterer
 		[Persistent]
 		public bool
 			forceDisableDefaultDepthBuffer = false;
+		[Persistent]
+		public bool craft_WaveInteractions = false;
+
+
 		private Vector2 _scroll;
 		private Vector2 _scroll2;
 		public bool pqsEnabled = false;
