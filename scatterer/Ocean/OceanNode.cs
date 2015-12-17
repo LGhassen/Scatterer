@@ -100,7 +100,7 @@ namespace scatterer
 		//Concrete classes must provide a function that returns the
 		//variance of the waves need for the BRDF rendering of waves
 		public abstract float GetMaxSlopeVariance ();
-
+		
 		public bool GetDrawOcean ()
 		{
 			return m_drawOcean;
@@ -391,30 +391,12 @@ namespace scatterer
 			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
 			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;
 
-//			PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
-//			foreach (PartBuoyancy _part in parts)
-//			{
-////				_part.transform
-//				_part.waterLevel=m_oceanLevel;
-////				_part.splashed=false;
-//
-//				//thse only affect the water splashing effects
-////				_part.wasSplashed=true;
-////				_part.splashed=true;
-////				_part.allSplashed=true;
-////				Debug.Log("splashed "+_part.splashed.ToString());
-////				Debug.Log("all splashed "+_part.allSplashed);
-////				Debug.Log("was splashed "+_part.wasSplashed);
-//
-//
-//				Debug.Log("depth "+_part.depth);
-//				Debug.Log("max depth "+_part.maxDepth);
-//				Debug.Log("min depth "+_part.minDepth);
-//				Debug.Log("submerged portion "+_part.submergedPortion);
-//
-//
-//
-//			}
+			PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
+			foreach (PartBuoyancy _part in parts)
+			{
+//				_part.transform
+				_part.waterLevel=m_oceanLevel;
+			}
 //			Debug.Log (parts.Length + " parts adjusted buyoancy");
 
 
@@ -776,6 +758,5 @@ namespace scatterer
 		{
 			return pqs;
 		}
-
 	}
 }
