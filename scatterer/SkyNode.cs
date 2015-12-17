@@ -67,14 +67,18 @@ namespace scatterer
 		public float _Ocean_Threshold = 25f;
 		[Persistent]
 		public float sunglareScale = 1f;
-		[Persistent]
+//		[Persistent]
 		public float extinctionMultiplier = 1f;
-		[Persistent]
+//		[Persistent]
 		public float extinctionTint = 100f;
+		public float skyExtinctionRimFade = 0f;
 		[Persistent]
 		public float mapExtinctionMultiplier = 1f;
 		[Persistent]
 		public float mapExtinctionTint = 1f;
+		[Persistent]
+		public float mapSkyExtinctionRimFade = 1f;
+
 		public float openglThreshold = 250f;
 		//		[Persistent] public float globalThreshold = 250f;
 		public float edgeThreshold = 0.5f;
@@ -110,6 +114,9 @@ namespace scatterer
 		
 		[Persistent]
 		public float MapViewScale = 1f;
+		[Persistent]
+		float postProcessMaxAltitude=160000;
+
 		GameObject skyObject, skyExtinctObject;
 		MeshRenderer skyMR, skyExtinctMR;
 		MeshFilter skyMF, skyExtinctMF;
@@ -141,8 +148,12 @@ namespace scatterer
 		
 		/*[Persistent]*/
 		public float m_HDRExposure = 0.2f;
+		public float m_rimHDRExposure = 0.2f;
 		[Persistent]
 		public float mapExposure = 0.15f;
+		[Persistent]
+		public float mapSkyRimExposure = 0.15f;
+
 		PQS CurrentPQS = null;
 
 		public bool inScaledSpace {
@@ -234,7 +245,7 @@ namespace scatterer
 		public float shininess = 0f;
 		[Persistent]
 		public List < configPoint > configPoints = new List < configPoint > {
-			new configPoint(5000f, 1f, 0.25f, 1f, 0.4f, 0.23f, 1f, 100f, 250f, 0.5f,0f), new configPoint(15000f, 1f, 0.15f, 1f, 8f, 0.23f, 1f, 100f, 250f, 0.5f,0f)
+			new configPoint(5000f, 1f, 0.25f,0.25f, 1f, 0.4f, 0.23f, 1f, 100f,0f, 250f, 0.5f,0f), new configPoint(15000f, 1f, 0.15f,0.15f, 1f, 8f, 0.23f, 1f, 100f,0f, 250f, 0.5f,0f)
 		};
 		public string assetDir;
 		
@@ -474,7 +485,12 @@ namespace scatterer
 				if (!m_inscatter.IsCreated ()) {
 					waitBeforeReloadCnt++;
 					if (waitBeforeReloadCnt >= 2) {
-						
+
+
+						m_inscatter.Release ();
+						m_transmit.Release ();
+						m_irradiance.Release ();
+
 						initiateOrRestart ();
 						Debug.Log ("[Scatterer] Reloaded scattering tables");
 						m_manager.reBuildOcean ();
@@ -552,7 +568,7 @@ namespace scatterer
 				}
 				
 				
-				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
+				atmosphereMeshrenderer.enabled = (!inScaledSpace) &&(postprocessingEnabled)&&(trueAlt<postProcessMaxAltitude);
 				//				print (parentCelestialBody.name.ToString());
 				//				print ("inscaled space"+inScaledSpace.ToString());
 				//				print ("postprocess enabled"+postprocessingEnabled.ToString());
@@ -599,9 +615,7 @@ namespace scatterer
 				}
 			}*/
 			}
-			
-			//Resources.UnloadUnusedAssets();
-			//System.GC.Collect();
+
 		}
 		
 		public void SetUniforms (Material mat)
@@ -625,10 +639,12 @@ namespace scatterer
 				mat.SetFloat ("_Alpha_Global", alphaGlobal);
 				mat.SetFloat ("_Extinction_Tint", extinctionTint);
 				mat.SetFloat ("extinctionMultiplier", extinctionMultiplier);
+				mat.SetFloat ("extinctionRimFade", skyExtinctionRimFade);
 			} else {
 				mat.SetFloat ("_Alpha_Global", mapAlphaGlobal);
 				mat.SetFloat ("_Extinction_Tint", mapExtinctionTint);
 				mat.SetFloat ("extinctionMultiplier", mapExtinctionMultiplier);
+				mat.SetFloat ("extinctionRimFade", mapSkyExtinctionRimFade);
 			}
 			
 			mat.SetFloat ("scale", atmosphereGlobalScale);
@@ -639,9 +655,11 @@ namespace scatterer
 			//						if (debugSettings [5])
 			if (!MapView.MapIsEnabled) {
 				mat.SetFloat ("_Globals_ApparentDistance", 1f);
+				mat.SetFloat ("_rimQuickFixMultiplier", 2f);
 			} else {
 				mat.SetFloat ("_Globals_ApparentDistance", (float)((parentCelestialBody.Radius / 100.2f) / MapViewScale));
 				//				mat.SetFloat ("_Globals_ApparentDistance", MapViewScale);
+				mat.SetFloat ("_rimQuickFixMultiplier", 1f);
 			}
 			
 			
@@ -711,8 +729,10 @@ namespace scatterer
 			
 			if (!MapView.MapIsEnabled) {
 				mat.SetFloat ("_Exposure", m_HDRExposure);
+				mat.SetFloat ("_RimExposure", m_rimHDRExposure);
 			} else {
 				mat.SetFloat ("_Exposure", mapExposure);
+				mat.SetFloat ("_RimExposure", mapSkyRimExposure);
 			}
 			
 			
@@ -831,7 +851,8 @@ namespace scatterer
 				
 			}
 			
-			mat.SetFloat ("_Exposure", m_HDRExposure);
+//			mat.SetFloat ("_Exposure", m_HDRExposure);
+			mat.SetFloat ("_Exposure", m_rimHDRExposure);
 			
 			//			int childCnt = 0;
 			//			Transform scaledSunTransform=ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == "Sun");
@@ -1170,6 +1191,7 @@ namespace scatterer
 		{
 			string _file;
 
+
 			m_inscatter.Create ();
 			m_transmit.Create ();
 			m_irradiance.Create ();
@@ -1182,6 +1204,8 @@ namespace scatterer
 			
 			_file = assetDir + m_filePath + "/inscatter.raw";
 			EncodeFloat.WriteIntoRenderTexture (m_inscatter, 4, _file, null);
+
+
 			
 			Resources.UnloadUnusedAssets ();
 			System.GC.Collect ();
@@ -1203,6 +1227,9 @@ namespace scatterer
 				m_inscatter.Release ();
 				UnityEngine.Object.Destroy (m_inscatter);
 			}
+
+			UnityEngine.Object.Destroy (black);
+			UnityEngine.Object.Destroy (sunGlare);
 			
 			//			scatterPostprocess tmp = farCamera.gameObject.GetComponent<scatterPostprocess> ();
 			//			
@@ -1431,11 +1458,13 @@ namespace scatterer
 			if (trueAlt <= configPoints [0].altitude) {
 				alphaGlobal = configPoints [0].skyAlpha;
 				m_HDRExposure = configPoints [0].skyExposure;
+				m_rimHDRExposure = configPoints [0].skyRimExposure;
 				postProcessingAlpha = configPoints [0].postProcessAlpha;
 				postProcessDepth = configPoints [0].postProcessDepth;
 				postProcessExposure = configPoints [0].postProcessExposure;
 				extinctionMultiplier = configPoints [0].skyExtinctionMultiplier;
 				extinctionTint = configPoints [0].skyExtinctionTint;
+				skyExtinctionRimFade = configPoints [0].skyextinctionRimFade;
 				edgeThreshold = configPoints [0].edgeThreshold;
 				openglThreshold = configPoints [0].openglThreshold;
 				viewdirOffset = configPoints [0].viewdirOffset;
@@ -1444,11 +1473,13 @@ namespace scatterer
 			} else if (trueAlt > configPoints [configPoints.Count - 1].altitude) {
 				alphaGlobal = configPoints [configPoints.Count - 1].skyAlpha;
 				m_HDRExposure = configPoints [configPoints.Count - 1].skyExposure;
+				m_rimHDRExposure = configPoints [configPoints.Count - 1].skyRimExposure;
 				postProcessingAlpha = configPoints [configPoints.Count - 1].postProcessAlpha;
 				postProcessDepth = configPoints [configPoints.Count - 1].postProcessDepth;
 				postProcessExposure = configPoints [configPoints.Count - 1].postProcessExposure;
 				extinctionMultiplier = configPoints [configPoints.Count - 1].skyExtinctionMultiplier;
 				extinctionTint = configPoints [configPoints.Count - 1].skyExtinctionTint;
+				skyExtinctionRimFade = configPoints [configPoints.Count - 1].skyextinctionRimFade;
 				edgeThreshold = configPoints [configPoints.Count - 1].edgeThreshold;
 				openglThreshold = configPoints [configPoints.Count - 1].openglThreshold;
 				viewdirOffset = configPoints [configPoints.Count - 1].viewdirOffset;
@@ -1460,11 +1491,13 @@ namespace scatterer
 						
 						alphaGlobal = percentage * configPoints [j].skyAlpha + (1 - percentage) * configPoints [j - 1].skyAlpha;
 						m_HDRExposure = percentage * configPoints [j].skyExposure + (1 - percentage) * configPoints [j - 1].skyExposure;
+						m_rimHDRExposure = percentage * configPoints [j].skyRimExposure + (1 - percentage) * configPoints [j - 1].skyRimExposure;
 						postProcessingAlpha = percentage * configPoints [j].postProcessAlpha + (1 - percentage) * configPoints [j - 1].postProcessAlpha;
 						postProcessDepth = percentage * configPoints [j].postProcessDepth + (1 - percentage) * configPoints [j - 1].postProcessDepth;
 						postProcessExposure = percentage * configPoints [j].postProcessExposure + (1 - percentage) * configPoints [j - 1].postProcessExposure;
 						extinctionMultiplier = percentage * configPoints [j].skyExtinctionMultiplier + (1 - percentage) * configPoints [j - 1].skyExtinctionMultiplier;
 						extinctionTint = percentage * configPoints [j].skyExtinctionTint + (1 - percentage) * configPoints [j - 1].skyExtinctionTint;
+						skyExtinctionRimFade = percentage * configPoints [j].skyextinctionRimFade + (1 - percentage) * configPoints [j - 1].skyextinctionRimFade;
 						edgeThreshold = percentage * configPoints [j].edgeThreshold + (1 - percentage) * configPoints [j - 1].edgeThreshold;
 						openglThreshold = percentage * configPoints [j].openglThreshold + (1 - percentage) * configPoints [j - 1].openglThreshold;
 						viewdirOffset = percentage * configPoints [j].viewdirOffset + (1 - percentage) * configPoints [j - 1].viewdirOffset;

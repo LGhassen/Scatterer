@@ -38,6 +38,9 @@
 			uniform float3 _Globals_WorldCameraPos;
 			uniform float3 _Globals_Origin;
 			uniform float _Globals_ApparentDistance;
+			uniform float _RimExposure;
+			
+			uniform float _rimQuickFixMultiplier;
 			
 			uniform sampler2D _Sun_Glare;
 			uniform float3 _Sun_WorldSunDir;
@@ -80,51 +83,77 @@
 			 			
 			}
 			
+			//stole this from basic GLSL raytracing shader somewhere on the net
+			//a quick google search and you'll find it
+			float intersectSphere2(float3 p1, float3 p2, float3 p3, float r)
+			{
+			// The line passes through p1 and p2:
+			// p3 is the sphere center
+				float3 d = p2 - p1;
+
+				float a = dot(d, d);
+				float b = 2.0 * dot(d, p1 - p3);
+				float c = dot(p3, p3) + dot(p1, p1) - 2.0 * dot(p3, p1) - r*r;
+
+				float test = b*b - 4.0*a*c;
+
+				if (test<0)
+				{
+					return -1.0;
+				}
+	
+  					float u = (-b - sqrt(test)) / (2.0 * a);
+//  					float3 hitp = p1 + u * (p2 - p1);			//we'll just do this later instead if needed
+//  					return(hitp);
+					return u;
+			}
+			
 			
 			float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 extinction)//, float shaftWidth)
-{
-	extinction = float3(1,1,1);
-	float3 result = float3(0,0,0);
+			{
+			extinction = float3(1,1,1);
+			float3 result = float3(0,0,0);
 	
-	float Rt2=Rt;
-	Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+			float Rt2=Rt;
+			Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
 	
 	
-	viewdir.x+=_viewdirOffset;
-	viewdir=normalize(viewdir);
+			viewdir.x+=_viewdirOffset;
+			viewdir=normalize(viewdir);
 
-	//camera *= scale;
-	//camera += viewdir * max(shaftWidth, 0.0);
-	float r = length(camera);
-	float rMu = dot(camera, viewdir);
-	float mu = rMu / r;
-	float r0 = r;
-	float mu0 = mu;
+			//camera *= scale;
+			//camera += viewdir * max(shaftWidth, 0.0);
+			float r = length(camera);
+			float rMu = dot(camera, viewdir);
+			float mu = rMu / r;
+			float r0 = r;
+			float mu0 = mu;
 	
 #if !defined(SHADER_API_D3D9)
-	float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+			float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
 #else
-    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
+    		float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
 #endif
 
         
-    float din = max(-rMu - deltaSq, 0.0);
-    if (din > 0.0) {
-        camera += din * viewdir;
-        rMu += din;
-        mu = rMu / Rt;
-        r = Rt;
-    }
+    		float din = max(-rMu - deltaSq, 0.0);
+    		if (din > 0.0)
+    		{
+        		camera += din * viewdir;
+        		rMu += din;
+        		mu = rMu / Rt;
+        		r = Rt;
+    		}
 	
-	float nu = dot(viewdir, sundir);
-    float muS = dot(camera, sundir) / r;
+			float nu = dot(viewdir, sundir);
+    		float muS = dot(camera, sundir) / r;
     
-    float4 inScatter = Texture4D(_Sky_Inscatter, r, rMu / r, muS, nu);
+    		float4 inScatter = Texture4D(_Sky_Inscatter, r, rMu / r, muS, nu);
     
-    extinction = Transmittance(r, mu);
+    		extinction = Transmittance(r, mu);
     
-    if (r <= Rt) 
-    {
+    		if (r <= Rt) 
+    		{
             
 //        if (shaftWidth > 0.0) 
 //        {
@@ -136,20 +165,20 @@
 //        }
         
 
-        float3 inScatterM = GetMie(inScatter);
-        float phase = PhaseFunctionR(nu);
-        float phaseM = PhaseFunctionM(nu);
-        result = inScatter.rgb * phase + inScatterM * phaseM;
-    }
+        			float3 inScatterM = GetMie(inScatter);
+        			float phase = PhaseFunctionR(nu);
+        			float phaseM = PhaseFunctionM(nu);
+        			result = inScatter.rgb * phase + inScatterM * phaseM;
+    			}
     
-         else
-    {
-    	result = float3(0,0,0);
-    	extinction = float3(1,1,1);
-    } 
+         		else
+    			{
+    				result = float3(0,0,0);
+    				extinction = float3(1,1,1);
+    			} 
 
-    return result * _Sun_Intensity;
-    }
+    			return result * _Sun_Intensity;
+    		}
     
 			
 								
@@ -161,12 +190,20 @@
 			    float3 WCP = _Globals_WorldCameraPos;
 
 			    float3 d = normalize(IN.dir);
+			    
+			    float interSectPt= intersectSphere2(WCP - _Globals_Origin*_Globals_ApparentDistance,WCP - _Globals_Origin*_Globals_ApparentDistance+d,_Globals_Origin,Rg*_rimQuickFixMultiplier);
+				bool rightDir = (interSectPt > 0) ;
+				if (!rightDir)
+				{
+					_Exposure=_RimExposure;
+				}
 
 			    float3 sunColor = OuterSunRadiance(IN.relativeDir);
 
 			    float3 extinction;
 //			    float3 inscatter = SkyRadiance(WCP - _Globals_Origin*_Globals_ApparentDistance, d, WSD, extinction);
 			    float3 inscatter = SkyRadiance2(WCP - _Globals_Origin*_Globals_ApparentDistance, d, WSD,extinction);
+//			    float3 inscatter = SkyRadiance2(WCP - _Globals_Origin, d, WSD,extinction);
 			    //float3 inscatter = SkyRadiance(WCP + _Globals_Origin, float3(0.0,0.0,0.0), WSD, extinction, 0.0);
 			    //float3 inscatter = float3(0,0,0);
 
@@ -185,8 +222,12 @@
 //			    
 //			    return float4 (hdr(finalColor),(_Alpha_Global);}
 //			    else
+
+				//checking for sphere intersection to apply different HDR values to the planet and the atmosphere edge
+//			    float interSectPt= intersectSphere2(WCP - _Globals_Origin*_Globals_ApparentDistance,WCP - _Globals_Origin*_Globals_ApparentDistance+d,_Globals_Origin,Rg);
+
+
 			    
-//				return float4(_Alpha_Global*hdr(finalColor),1.0);			    
 				return float4(_Alpha_Global*hdr(finalColor),1.0);			    
 			   //return float4(finalColor,1);
 			//return float4(0.0,0.0,0.0,0.0);

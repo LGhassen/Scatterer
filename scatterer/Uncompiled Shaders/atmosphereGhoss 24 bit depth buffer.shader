@@ -28,6 +28,7 @@
 			#pragma glsl
 			#pragma target 3.0
 			#include "Atmosphere3.cginc"
+			#define customDepthBuffer
 			
 			//the next line allows going over opengl 512 arithmetic ops limit
 			#pragma profileoption NumMathInstructionSlots=65535
@@ -51,8 +52,13 @@
 //			uniform float3 _Globals_Origin;
 
 //			uniform sampler2D _CameraDepthNormalsTexture;
-//			uniform sampler2D _CameraDepthTexture;
+
+#if defined (customDepthBuffer)
 			uniform sampler2D _customDepthTexture;
+#else
+			uniform sampler2D _CameraDepthTexture;
+#endif
+			
 
 			uniform float4 _MainTex_TexelSize;
 
@@ -279,9 +285,14 @@
 			
 			half4 frag(v2f i) : COLOR 
 			{
+
 				
-//				float dpth =  Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));	
-				float dpth =  Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_customDepthTexture,i.uv_depth)));	
+#if defined (customDepthBuffer)				
+				float dpth =  Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_customDepthTexture,i.uv_depth)));				
+#else
+				float dpth =  Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture,i.uv_depth)));	
+#endif
+				
 				//this dpth value is only used for edge threshold checks and depth distance
 				//I realize this isn't very efficient but I'll change it later
 
@@ -292,9 +303,13 @@
 //					visib=1-exp(-1* (4*dpth/_global_depth));
 //				}
 				
-				
-//				float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv_depth);
+#if defined (customDepthBuffer)
 				float depth = SAMPLE_DEPTH_TEXTURE(_customDepthTexture, i.uv_depth);
+				
+#else
+				float depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv_depth);
+#endif
+				
 
         		#if !defined(SHADER_API_OPENGL)
         		float4 H = float4(i.uv_depth.x*2.0f-1.0f, (i.uv_depth.y)*2.0f-1.0f, depth, 1.0f);
@@ -308,26 +323,47 @@
 	
         		float interSectPt= intersectSphere2(_camPos,worldPos,float3(0.0,0.0,0.0),Rg);
         		
-        		float3 worldPos2= _camPos + interSectPt * (worldPos - (_camPos));
-        		bool intersectExists = (interSectPt !=  -1.0); // this ensures an intersection point exists
-        		
-        		bool rightDir = dot (worldPos2 - (_camPos), worldPos - (_camPos)) > 0 ;  //this ensures that we're looking in the right direction
-        																				  //That is, the ocean surface intersection point is in front of us
-        																				  //If we look up the intersection point is behind us and we don't want to use that
+//        		float3 worldPos2= _camPos + interSectPt * (worldPos - (_camPos));
+//        		bool intersectExists = (interSectPt !=  -1.0); // this ensures an intersection point exists
+//        		
+//        		bool rightDir = dot (worldPos2 - (_camPos), worldPos - (_camPos)) > 0 ;  //this ensures that we're looking in the right direction
+//        																				  //That is, the ocean surface intersection point is in front of us
+//        																				  //If we look up the intersection point is behind us and we don't want to use that
+
+				bool rightDir = (interSectPt > 0) ;
         		
 
         		
-        		
-        		if ((dpth >= _edgeThreshold)  &&  !(intersectExists && rightDir))
+#if defined (customDepthBuffer)      		
+//        		if ((dpth >= _edgeThreshold)  &&  !(intersectExists && rightDir))
+        		if ((dpth >= _edgeThreshold)  &&  !(rightDir))
         		{
         			return float4(0.0,0.0,0.0,0.0);
         		}
-        		
+#else
+	#if !defined(SHADER_API_D3D9)
+//        		if ((dpth >= _edgeThreshold)  &&  !(intersectExists && rightDir))
+        		if ((dpth >= _edgeThreshold)  &&  !(rightDir))
+        		{
+        			return float4(0.0,0.0,0.0,0.0);
+        		}
+    #else
+//        		if ((dpth >= 0.99)  &&  !(intersectExists && rightDir))
+        		if ((dpth >= 0.99)  &&  !(rightDir))
+        		{
+        			return float4(0.0,0.0,0.0,0.0);
+        		}
+    #endif
+#endif
+				
+				
+				float3 worldPos2= _camPos + interSectPt * (worldPos - (_camPos));
         		bool oceanCloserThanTerrain = ( length (worldPos2 -_camPos) < length (worldPos - _camPos)); //this condition ensures the ocean is in front of the terrain
         																								   //if the terrain is in front of the ocean we don't want to cover it up
         																								   //with the wrong postprocessing depth
         		
-        		if ((intersectExists) && (rightDir) && oceanCloserThanTerrain)
+//        		if ((intersectExists) && (rightDir) && oceanCloserThanTerrain)
+        		if ((rightDir) && oceanCloserThanTerrain)
         		{
         				worldPos=worldPos2;
         		}
