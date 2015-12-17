@@ -25,7 +25,9 @@
  */
 
 using UnityEngine;
+using System;
 using System.Collections;
+using System.Threading;
 
 
 
@@ -107,6 +109,29 @@ namespace scatterer {
 		public override float GetMaxSlopeVariance() {
 			return m_maxSlopeVariance;
 		}
+
+
+		//CPU wave stuff
+		float FFTtimer=0;
+
+		volatile int m_bufferIdx = 0;
+		public volatile bool done1=true,done2=true,done3=true,done4=true,done5=true;
+		public volatile bool done=true;
+
+		int m_passes;
+		float[] m_butterflyLookupTable = null;
+
+		
+		Vector4[,] m_fourierBuffer0vector;
+		Vector4[,] m_fourierBuffer1vector, m_fourierBuffer2vector,m_fourierBuffer3vector,m_fourierBuffer4vector;
+
+		Vector4[] m_spectrum01vector, m_spectrum23vector, m_WTablevector;
+
+//		volatile Vector4[,] m_fourierBuffer0vectorResults, m_fourierBuffer3vectorResults,m_fourierBuffer4vectorResults;
+		Vector4[,] m_fourierBuffer0vectorResults, m_fourierBuffer3vectorResults,m_fourierBuffer4vectorResults;
+
+		protected FourierCPU m_CPUfourier;
+
 		
 		// Use this for initialization
 		public override void Start()
@@ -140,7 +165,30 @@ namespace scatterer {
 			m_fourier = new FourierGPU(m_fourierGridSize);
 			
 			m_writeFloat = new WriteFloat(m_fourierGridSize, m_fourierGridSize);
+
+
+//#if CPUmode
+			m_CPUfourier=new FourierCPU(m_fourierGridSize);
 			
+			m_passes = (int)(Mathf.Log(m_fsize) / Mathf.Log(2.0f));
+			ComputeButterflyLookupTable();
+			
+			m_CPUfourier.m_butterflyLookupTable = m_butterflyLookupTable;
+			
+			m_fourierBuffer0vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			m_fourierBuffer0vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			
+			
+			m_fourierBuffer1vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			m_fourierBuffer2vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			
+			m_fourierBuffer3vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			m_fourierBuffer4vector = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			m_fourierBuffer3vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+			m_fourierBuffer4vectorResults = new Vector4[2, m_fourierGridSize * m_fourierGridSize];
+//#endif			
+
+
 			//Create the data needed to make the waves each frame
 			CreateRenderTextures();
 			GenerateWavesSpectrum();
@@ -153,7 +201,12 @@ namespace scatterer {
 			m_initSpectrumMat.SetVector("_InverseGridSizes", m_inverseGridSizes);
 			
 			m_initDisplacementMat.SetVector("_InverseGridSizes", m_inverseGridSizes);
+
+//#if CPUmode
 			
+			CreateWTableForCPU();
+			
+//#endif
 			
 		}
 		
@@ -219,6 +272,104 @@ namespace scatterer {
 			m_initDisplacementMat.SetTexture("_Buffer2", m_fourierBuffer2[1]);
 			//			RTUtility.MultiTargetBlit(buffers34, m_initDisplacementMat);
 			RTUtility.MultiTargetBlit(buffers34, m_initDisplacementMat, 0);
+		}
+
+
+		void InitWaveSpectrumCPU(float time)
+		{
+			Vector2 uv, st, k1, k2, k3, k4, h1, h2, h3, h4, h12, h34, n1, n2, n3, n4;
+			Vector4 s12, s34, s12c, s34c;
+			int rx, ry;
+			
+			// init heights (0) and slopes (1,2)
+			for (int x = 0; x < m_fourierGridSize; x++)
+			{
+				for (int y = 0; y < m_fourierGridSize; y++)
+				{
+					uv.x = x / m_fsize;
+					uv.y = y / m_fsize;
+					
+					st.x = uv.x > 0.5f ? uv.x - 1.0f : uv.x;
+					st.y = uv.y > 0.5f ? uv.y - 1.0f : uv.y;
+					
+					rx = x;
+					ry = y;
+					
+					s12 = m_spectrum01vector[rx + ry * m_fourierGridSize];
+					s34 = m_spectrum23vector[rx + ry * m_fourierGridSize];
+					
+					rx = (m_fourierGridSize - x) % m_fourierGridSize;
+					ry = (m_fourierGridSize - y) % m_fourierGridSize;
+					
+					s12c = m_spectrum01vector[rx + ry * m_fourierGridSize];
+					s34c = m_spectrum23vector[rx + ry * m_fourierGridSize];
+					
+					k1 = st * m_inverseGridSizes.x;
+					k2 = st * m_inverseGridSizes.y;
+					k3 = st * m_inverseGridSizes.z;
+					k4 = st * m_inverseGridSizes.w;
+					
+					
+					h1 = GetSpectrum(time, m_WTablevector[x + y * m_fourierGridSize].x, s12.x, s12.y, s12c.x, s12c.y);
+					h2 = GetSpectrum(time, m_WTablevector[x + y * m_fourierGridSize].y, s12.z, s12.w, s12c.z, s12c.w);
+					h3 = GetSpectrum(time, m_WTablevector[x + y * m_fourierGridSize].z, s34.x, s34.y, s34c.x, s34c.y);
+					h4 = GetSpectrum(time, m_WTablevector[x + y * m_fourierGridSize].w, s34.z, s34.w, s34c.z, s34c.w);
+					
+					//heights
+					h12 = h1 + COMPLEX(h2);
+					h34 = h3 + COMPLEX(h4);
+					
+					//slopes (normals)
+					n1 = COMPLEX(k1.x * h1) - k1.y * h1;
+					n2 = COMPLEX(k2.x * h2) - k2.y * h2;
+					n3 = COMPLEX(k3.x * h3) - k3.y * h3;
+					n4 = COMPLEX(k4.x * h4) - k4.y * h4;
+					
+					//Heights in last two channels (h34) have been removed as I found they arent really need for the shader
+					//h3 and h4 still needs to be calculated for the slope but they are no longer save and transformed by the fourier step
+					//m_fourierBuffer0vector[1, x+y*m_fourierGridSize] = new Vector4(h12.x, h12.y, h34.x, h34.y); //I put this back
+					
+					int i = x + y * m_fourierGridSize;
+					
+					//                    m_fourierBuffer0vector[1, i] = h12;
+					m_fourierBuffer0vector[1, i] = new Vector4(h12.x, h12.y, h34.x, h34.y);
+					m_fourierBuffer1vector[1, i] = new Vector4(n1.x, n1.y, n2.x, n2.y);
+					m_fourierBuffer2vector[1, i] = new Vector4(n3.x, n3.y, n4.x, n4.y);
+					
+					
+					// Init displacement (3,4)
+					
+					
+					float K1 = (k1).magnitude;
+					float K2 = (k2).magnitude;
+					float K3 = (k3).magnitude;
+					float K4 = (k4).magnitude;
+					
+					float IK1 = K1 == 0.0f ? 0.0f : 1.0f / K1;
+					float IK2 = K2 == 0.0f ? 0.0f : 1.0f / K2;
+					float IK3 = K3 == 0.0f ? 0.0f : 1.0f / K3;
+					float IK4 = K4 == 0.0f ? 0.0f : 1.0f / K4;
+					
+					
+					Vector4 result = new Vector4(0f,0f,0f,0f);
+					
+					
+					result.x=m_fourierBuffer1vector[1,i].x * IK1;
+					result.y=m_fourierBuffer1vector[1,i].y * IK1;
+					result.z=m_fourierBuffer1vector[1,i].z * IK2;
+					result.w=m_fourierBuffer1vector[1,i].w * IK2;
+					
+					m_fourierBuffer3vector[1, i] = result;
+					
+					Vector4 result2 = new Vector4(0f,0f,0f,0f);
+					result.x=m_fourierBuffer2vector[1,i].x * IK3;
+					result.y=m_fourierBuffer2vector[1,i].y * IK3;
+					result.z=m_fourierBuffer2vector[1,i].z * IK4;
+					result.w=m_fourierBuffer2vector[1,i].w * IK4;
+					
+					m_fourierBuffer4vector[1, i] = result2;
+				}
+			}
 		}
 		
 		public override void UpdateNode() {
@@ -293,9 +444,36 @@ namespace scatterer {
 				m_oceanMaterialFar.SetTexture("_Ocean_Map3", m_map3);
 				m_oceanMaterialFar.SetTexture("_Ocean_Map4", m_map4);
 				m_oceanMaterialFar.SetVector("_VarianceMax", m_varianceMax);
-				
+
+//#if !CPUmode
 				//Make sure base class get updated as well
 				base.UpdateNode();
+//#else
+
+				if(!(done1&&done2&&done3&&done4&&done5))
+				{
+					base.UpdateNode();
+					return;
+				}
+
+				done1 = false;
+				done2 = false;
+				done3 = false;
+				done4 = false;
+				done5 = false;
+
+				Debug.Log ("[Scatterer] FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
+				FFTtimer = Time.realtimeSinceStartup;
+
+				Nullable<float> time = Time.realtimeSinceStartup;;
+				
+				ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded1), time);
+				CommitResults (ref m_fourierBuffer0vector, ref m_fourierBuffer0vectorResults);
+				CommitResults (ref m_fourierBuffer3vector, ref m_fourierBuffer3vectorResults);
+				CommitResults (ref m_fourierBuffer4vector, ref m_fourierBuffer4vectorResults);
+//#endif
+
+
 			}
 		}
 		
@@ -471,7 +649,7 @@ namespace scatterer {
 			float ky = j * dk;
 			Vector2 result = new Vector2(0.0f, 0.0f);
 			
-			float rnd = Random.value;
+			float rnd = UnityEngine.Random.value;
 			
 			if (Mathf.Abs(kx) >= kMin || Mathf.Abs(ky) >= kMin) {
 				float S = Spectrum(kx, ky, false);
@@ -507,7 +685,13 @@ namespace scatterer {
 			
 			float[] spectrum01 = new float[m_fourierGridSize * m_fourierGridSize * 4];
 			float[] spectrum23 = new float[m_fourierGridSize * m_fourierGridSize * 4];
-			
+
+//#if CPUmode
+			m_spectrum01vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
+			m_spectrum23vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
+//#endif
+
+
 			int idx;
 			float i;
 			float j;
@@ -517,7 +701,7 @@ namespace scatterer {
 			Vector2 sample34XY;
 			Vector2 sample34ZW;
 			
-			Random.seed = 0;
+			UnityEngine.Random.seed = 0;
 			
 			for (int x = 0; x < m_fourierGridSize; x++) {
 				for (int y = 0; y < m_fourierGridSize; y++) {
@@ -530,6 +714,21 @@ namespace scatterer {
 					sample34XY = GetSpectrumSample(i, j, m_gridSizes.z, Mathf.PI * m_fsize / m_gridSizes.y);
 					sample34ZW = GetSpectrumSample(i, j, m_gridSizes.w, Mathf.PI * m_fsize / m_gridSizes.z);
 					
+
+//#if CPUmode
+					m_spectrum01vector[idx].x = sample12XY.x;
+					m_spectrum01vector[idx].y = sample12XY.y;
+					m_spectrum01vector[idx].z = sample12ZW.x;
+					m_spectrum01vector[idx].w = sample12ZW.y;
+					
+					m_spectrum23vector[idx].x = sample34XY.x;
+					m_spectrum23vector[idx].y = sample34XY.y;
+					m_spectrum23vector[idx].z = sample34ZW.x;
+					m_spectrum23vector[idx].w = sample34ZW.y;
+//#endif
+
+
+
 					spectrum01[idx * 4 + 0] = sample12XY.x;
 					spectrum01[idx * 4 + 1] = sample12XY.y;
 					spectrum01[idx * 4 + 2] = sample12ZW.x;
@@ -551,7 +750,7 @@ namespace scatterer {
 			}
 			
 			//Write floating point data into render texture
-			ComputeBuffer buffer = new ComputeBuffer(m_fourierGridSize * m_fourierGridSize, sizeof(float) * 4);
+//			ComputeBuffer buffer = new ComputeBuffer(m_fourierGridSize * m_fourierGridSize, sizeof(float) * 4);
 			
 			//			buffer.SetData(spectrum01);
 			//			CBUtility.WriteIntoRenderTexture(m_spectrum01, 4, buffer, m_manager.GetWriteData());
@@ -677,6 +876,605 @@ namespace scatterer {
 			//			buffer.Release();
 			
 		}
+
+		/// <summary>
+		/// Some of the values needed in the InitWaveSpectrum function can be precomputed.
+		/// If the grid sizes change this function must called again.
+		/// </summary>
+		void CreateWTableForCPU()
+		{
+			
+			Vector2 uv, st;
+			float k1, k2, k3, k4, w1, w2, w3, w4;
+			
+			m_WTablevector = new Vector4[m_fourierGridSize * m_fourierGridSize];
+			
+			for (int x = 0; x < m_fourierGridSize; x++)
+			{
+				for (int y = 0; y < m_fourierGridSize; y++)
+				{
+					uv = new Vector2(x, y) / m_fsize;
+					
+					st.x = uv.x > 0.5f ? uv.x - 1.0f : uv.x;
+					st.y = uv.y > 0.5f ? uv.y - 1.0f : uv.y;
+					
+					k1 = (st * m_inverseGridSizes.x).magnitude;
+					k2 = (st * m_inverseGridSizes.y).magnitude;
+					k3 = (st * m_inverseGridSizes.z).magnitude;
+					k4 = (st * m_inverseGridSizes.w).magnitude;
+					
+					w1 = Mathf.Sqrt(9.81f * k1 * (1.0f + k1 * k1 / (WAVE_KM * WAVE_KM)));
+					w2 = Mathf.Sqrt(9.81f * k2 * (1.0f + k2 * k2 / (WAVE_KM * WAVE_KM)));
+					w3 = Mathf.Sqrt(9.81f * k3 * (1.0f + k3 * k3 / (WAVE_KM * WAVE_KM)));
+					w4 = Mathf.Sqrt(9.81f * k4 * (1.0f + k4 * k4 / (WAVE_KM * WAVE_KM)));
+					
+					m_WTablevector[x + y * m_fourierGridSize] = new Vector4(w1, w2, w3, w4);
+				}
+			}
+			
+			//			m_writeFloat.WriteIntoRenderTexture( m_WTabletex, 4, m_WTable);
+			//			packVector4arrayinTexture (m_WTable, m_WTabletex);
+			
+		}
+		
+		Vector2 GetSpectrum(float t, float w, float s0x, float s0y, float s0cx, float s0cy)
+		{
+			float c = Mathf.Cos(w * t);
+			float s = Mathf.Sin(w * t);
+			return new Vector2((s0x + s0cx) * c - (s0y + s0cy) * s, (s0x - s0cx) * s + (s0y - s0cy) * c);
+		}
+		
+		Vector2 COMPLEX(Vector2 z)
+		{
+			return new Vector2(-z.y, z.x); // returns i times z (complex number)
+		}
+		
+		public virtual void onThreadsDone()
+		{
+			return;
+		}
+		
+//		public void WriteResultsCPU()
+//		{
+//			
+//			//			if(!done) return;
+//			//			if(!(done1 && done2 && done3 && done4 && done5)) return;
+//			
+//			m_map0tex2D.SetPixels(m_result0);
+//			m_map1tex2D.SetPixels(m_result1);
+//			//			m_map1tex2DR.SetPixels (result1R);
+//			//			m_map1tex2DG.SetPixels (result1G);
+//			//			m_map1tex2DB.SetPixels (result1B);
+//			//			m_map1tex2DA.SetPixels (result1A);
+//			//
+//			m_map2tex2D.SetPixels(m_result2);
+//			//			m_map2tex2DR.SetPixels (result2R);
+//			//			m_map2tex2DG.SetPixels (result2G);
+//			//			m_map2tex2DB.SetPixels (result2B);
+//			//			m_map2tex2DA.SetPixels (result2A);
+//			
+//			
+//			m_map3tex2D.SetPixels(m_result3);
+//			m_map4tex2D.SetPixels(m_result4);
+//			
+//			m_map0tex2D.Apply();
+//			m_map1tex2D.Apply();
+//			m_map2tex2D.Apply();
+//			
+//			//			m_map1tex2DR.Apply();
+//			//			m_map1tex2DG.Apply();
+//			//			m_map1tex2DB.Apply();
+//			//			m_map1tex2DA.Apply();
+//			//
+//			//			m_map2tex2DR.Apply();
+//			//			m_map2tex2DG.Apply();
+//			//			m_map2tex2DB.Apply();
+//			//			m_map2tex2DA.Apply();
+//			
+//			
+//			m_map3tex2D.Apply();
+//			m_map4tex2D.Apply();
+//			
+//			//			m_writeFloat.WriteIntoRenderTexture(m_map0,4,m_fourierBuffer0vector, m_bufferIdx, m_fourierGridSize);
+//			//			m_writeFloat.WriteIntoRenderTexture(m_map1,4,m_fourierBuffer1vector, m_idx, m_fourierGridSize);
+//			//			m_writeFloat.WriteIntoRenderTexture(m_map2,4,m_fourierBuffer2vector, m_idx, m_fourierGridSize);
+//		}
+		
+		
+		void CommitResults(ref Vector4[,] data, ref Vector4[,] output)
+		{
+			
+			for (int x = 0; x < m_fourierGridSize; x++)
+			{
+				for (int y = 0; y < m_fourierGridSize; y++)
+				{
+					int i = x + y * m_fourierGridSize;
+					
+					output[m_bufferIdx,i] = data[m_bufferIdx, i];
+					
+				}
+			}
+		}
+		
+		
+//		void PackResults(ref Vector4[,] data, ref Color[] results, float packingFactor)
+//		{
+//			Vector4 map;
+//			float packFactorHalf = packingFactor / 2f;
+//			
+//			for (int x = 0; x < m_fourierGridSize; x++)
+//			{
+//				for (int y = 0; y < m_fourierGridSize; y++)
+//				{
+//					int i = x + y * m_fourierGridSize;
+//					
+//					map = data[m_bufferIdx, i];
+//					
+//					results[i].r = (map.x + packFactorHalf) / packingFactor;
+//					results[i].g = (map.y + packFactorHalf) / packingFactor;
+//					results[i].b = (map.z + packFactorHalf) / packingFactor;
+//					results[i].a = (map.w + packFactorHalf) / packingFactor;
+//					
+//				}
+//			}
+//		}
+		
+		
+		
+		
+		
+		
+//		void PackResultsAsTheyAre(ref Vector4[,] data, ref Color[] results)
+//		{
+//			Vector4 map;
+//			for (int x = 0; x < m_fourierGridSize; x++)
+//			{
+//				for (int y = 0; y < m_fourierGridSize; y++)
+//				{
+//					int i = x + y * m_fourierGridSize;
+//					
+//					map = data[m_bufferIdx, i];
+//					
+//					results[i].r = map.x;
+//					results[i].g = map.y;
+//					results[i].b = map.z;
+//					results[i].a = map.w;
+//					
+//				}
+//			}
+//		}
+		
+		
+//		//I use this to encode a single 32bit per channel texture into 4 separate 8bit per channel texture
+//		//This is because unity 4 doesn't support floating point textures outside of rendertextures
+//		//Later on these are decoded in the shader as if coming from a single texture
+//		void PackResultsRGBA(ref Vector4[,] data, ref Color[] resultsR, ref Color[] resultsG,
+//		                     ref Color[] resultsB, ref Color[] resultsA, float packingFactor)
+//			
+//		{
+//			Vector4 map,encode;
+//			for (int x = 0; x < m_fourierGridSize; x++)
+//			{
+//				for (int y = 0; y < m_fourierGridSize; y++)
+//				{
+//					int i = x + y * m_fourierGridSize;
+//					
+//					
+//					map = data[m_bufferIdx, i]/packingFactor;
+//					map+=new Vector4(0.5f,0.5f,0.5f,0.5f);
+//					
+//					
+//					encode=encodeFloatRGBA(map.x);
+//					resultsR[i].r = encode.x;
+//					resultsR[i].g = encode.y;
+//					resultsR[i].b = encode.z;
+//					resultsR[i].a = encode.w;
+//					
+//					encode=encodeFloatRGBA(map.y);
+//					resultsG[i].r = encode.x;
+//					resultsG[i].g = encode.y;
+//					resultsG[i].b = encode.z;
+//					resultsG[i].a = encode.w;
+//					
+//					encode=encodeFloatRGBA(map.z);
+//					resultsB[i].r = encode.x;
+//					resultsB[i].g = encode.y;
+//					resultsB[i].b = encode.z;
+//					resultsB[i].a = encode.w;
+//					
+//					encode=encodeFloatRGBA(map.w);
+//					resultsA[i].r = encode.x;
+//					resultsA[i].g = encode.y;
+//					resultsA[i].b = encode.z;
+//					resultsA[i].a = encode.w;
+//					
+//				}
+//			}
+//		}
+		
+		
+//		Vector4 encodeFloatRGBA(float v) 
+//		{
+//			Vector4 enc = new Vector4(1.0f, 255.0f, 65025.0f, 160581375.0f) * v;
+//			
+//			//			enc = frac(enc);
+//			enc.x = enc.x - (float) Math.Floor(enc.x);   //get the fractional
+//			enc.y = enc.y - (float) Math.Floor(enc.y);
+//			enc.z = enc.z - (float) Math.Floor(enc.z);
+//			enc.w = enc.w - (float) Math.Floor(enc.w);
+//			
+//			//			enc -= enc.yzww * float4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);
+//			
+//			Vector4 temp = new Vector4 (enc.y, enc.z, enc.w, enc.w);
+//			temp.Scale (new Vector4 (1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f, 0.0f));
+//			enc -= temp;
+//			
+//			return enc;
+//		}
+		
+
+		
+		void RunThreaded1(object o)
+		{
+			
+			Nullable<float> time  = o as Nullable<float>;
+			
+			InitWaveSpectrumCPU(time.Value);
+			
+			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreadedInit), time);
+			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer1vector, m_result1, 2, 2 )), time);
+			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer2vector, m_result2, 2, 3 )), time);
+			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer3vector, m_result3, 2, 4 )), time);
+			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer4vector, m_result4, 2, 5 )), time);
+			
+			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded2), time);
+			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded3), time);
+			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded4), time);
+			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded5), time);
+			
+			
+			//			m_bufferIdx = m_fourier.PeformFFT(0, m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
+			m_bufferIdx = m_CPUfourier.PeformFFT(0, m_fourierBuffer0vector);
+			//			CommitResults (ref m_fourierBuffer0vector, ref m_fourierBuffer0vectorResults);
+			
+			
+			//			PackResults(ref m_fourierBuffer0vector, ref m_result0,2f);
+			
+			
+			done1 = true;
+			
+		}
+		
+		//		void RunThreaded(object o,Vector4[,] data, Color[]  results, float packingFactor, ref bool inDone)
+		//		{
+		//			
+		////			Nullable<float> time  = o as Nullable<float>;
+		//
+		//			m_fourier.PeformFFT(0, data);
+		//			
+		//			PackResults(data, results, packingFactor);
+		//
+		//			inDone = true;
+		//		}
+		
+		void RunThreaded2(object o)
+		{
+			
+			Nullable<float> time  = o as Nullable<float>;
+			
+			m_CPUfourier.PeformFFT(0, m_fourierBuffer1vector);
+			
+			//			PackResults (ref m_fourierBuffer1vector, ref m_result1, 2f);
+			//			PackResultsAsTheyAre (ref m_fourierBuffer1vector, ref m_result1);
+			//			PackResultsRGBA (ref m_fourierBuffer2vector, ref result1R, ref result1G,
+			//			                 ref result1B, ref result1A,4f);
+			
+			
+			done2 = true;
+			
+		}
+		
+		void RunThreaded3(object o)
+		{
+			
+			Nullable<float> time  = o as Nullable<float>;
+			
+			m_CPUfourier.PeformFFT(0, m_fourierBuffer2vector);
+			
+			//			PackResults (ref m_fourierBuffer2vector, ref m_result2, 2f);
+			//			PackResultsAsTheyAre (ref m_fourierBuffer2vector, ref m_result2);
+			//			PackResultsRGBA (ref m_fourierBuffer2vector, ref result2R, ref result2G,
+			//			                 ref result2B, ref result2A,4f);
+			
+			
+			done3 = true;
+			
+		}
+		
+		void RunThreaded4(object o)
+		{
+			
+			Nullable<float> time  = o as Nullable<float>;
+			
+			m_CPUfourier.PeformFFT(0, m_fourierBuffer3vector);
+			//			CommitResults (ref m_fourierBuffer3vector, ref m_fourierBuffer3vectorResults);
+			
+			//			PackResults (ref m_fourierBuffer3vector, ref m_result3, 2f);
+			
+			done4 = true;
+			
+		}
+		
+		
+		void RunThreaded5(object o)
+		{
+			
+			Nullable<float> time  = o as Nullable<float>;
+			
+			m_CPUfourier.PeformFFT(0, m_fourierBuffer4vector);
+			//			CommitResults (ref m_fourierBuffer4vector, ref m_fourierBuffer4vectorResults);
+			
+			//			PackResults (ref m_fourierBuffer4vector, ref m_result4, 2f);
+			
+			done5 = true;
+			
+		}
+		
+		
+		void ComputeButterflyLookupTable()
+		{
+			m_butterflyLookupTable = new float[m_fourierGridSize * m_passes * 4];
+			
+			for (int i = 0; i < m_passes; i++)
+			{
+				int nBlocks = (int)Mathf.Pow(2, m_passes - 1 - i);
+				int nHInputs = (int)Mathf.Pow(2, i);
+				
+				for (int j = 0; j < nBlocks; j++)
+				{
+					for (int k = 0; k < nHInputs; k++)
+					{
+						int i1, i2, j1, j2;
+						if (i == 0)
+						{
+							i1 = j * nHInputs * 2 + k;
+							i2 = j * nHInputs * 2 + nHInputs + k;
+							j1 = BitReverse(i1);
+							j2 = BitReverse(i2);
+						}
+						else
+						{
+							i1 = j * nHInputs * 2 + k;
+							i2 = j * nHInputs * 2 + nHInputs + k;
+							j1 = i1;
+							j2 = i2;
+						}
+						
+						float wr = Mathf.Cos(2.0f * Mathf.PI * (float)(k * nBlocks) / m_fsize);
+						float wi = Mathf.Sin(2.0f * Mathf.PI * (float)(k * nBlocks) / m_fsize);
+						
+						int offset1 = 4 * (i1 + i * m_fourierGridSize);
+						m_butterflyLookupTable[offset1 + 0] = j1;
+						m_butterflyLookupTable[offset1 + 1] = j2;
+						m_butterflyLookupTable[offset1 + 2] = wr;
+						m_butterflyLookupTable[offset1 + 3] = wi;
+						
+						int offset2 = 4 * (i2 + i * m_fourierGridSize);
+						m_butterflyLookupTable[offset2 + 0] = j1;
+						m_butterflyLookupTable[offset2 + 1] = j2;
+						m_butterflyLookupTable[offset2 + 2] = -wr;
+						m_butterflyLookupTable[offset2 + 3] = -wi;
+						
+					}
+				}
+			}
+		}
+		
+		int BitReverse(int i)
+		{
+			int j = i;
+			int Sum = 0;
+			int W = 1;
+			int M = m_fourierGridSize / 2;
+			while (M != 0)
+			{
+				j = ((i & M) > M - 1) ? 1 : 0;
+				Sum += j * W;
+				W *= 2;
+				M /= 2;
+			}
+			return Sum;
+		}
+		
+		void OnGUI(){
+			//			GUI.DrawTexture(new Rect(0,0,512, 512), m_map0tex2DScaleMode.ScaleToFit, false);
+			//			GUI.DrawTexture(new Rect(0,0,512, 512), m_map0, ScaleMode.ScaleToFit, false);
+			
+			//			GUI.DrawTexture(new Rect(512,0,512, 512), m_map0);
+		}
+
+		/// <summary>
+		/// Get the two indices that need to be sampled for bilinear filtering.
+		/// </summary>
+		public void Index(double x, int sx, out int ix0, out int ix1)
+		{
+			
+			ix0 = (int)x;
+			ix1 = (int)x + (int)Math.Sign(x);
+			
+			//			if(m_wrap)
+			//			{
+			if(ix0 >= sx || ix0 <= -sx) ix0 = ix0 % sx;
+			if(ix0 < 0) ix0 = sx - -ix0;
+			
+			if(ix1 >= sx || ix1 <= -sx) ix1 = ix1 % sx;
+			if(ix1 < 0) ix1 = sx - -ix1;
+			//			}
+			//			else
+			//			{
+			//				if(ix0 < 0) ix0 = 0;
+			//				else if(ix0 >= sx) ix0 = sx-1;
+			//				
+			//				if(ix1 < 0) ix1 = 0;
+			//				else if(ix1 >= sx) ix1 = sx-1;
+			//			}
+			//			
+		}
+		
+		
+		public void GetUsingBilinearFiltering(float x, float y, float[] v, Vector4[,] m_data, int m_c)
+		{
+			
+			//un-normalize cords
+			x *= (float)m_fourierGridSize;
+			y *= (float)m_fourierGridSize;
+			
+			x -= 0.5f;
+			y -= 0.5f;
+			
+			int x0, x1;
+			float fx = Math.Abs(x - (int)x);
+			Index(x, m_fourierGridSize, out x0, out x1);
+			
+			int y0, y1;
+			float fy = Math.Abs(y - (int)y);
+			Index(y, m_fourierGridSize, out y0, out y1);
+			
+			//			for(int c = 0; c < m_c; c++)  //change this loop to work with Vector4 format
+			//			{
+			//				float v0 = m_data[(x0 + y0 * m_size) * m_c + c] * (1.0f-fx) + m_data[(x1 + y0 * m_size) * m_c + c] * fx;
+			//				float v1 = m_data[(x0 + y1 * m_size) * m_c + c] * (1.0f-fx) + m_data[(x1 + y1 * m_size) * m_c + c] * fx;
+			//				
+			//				v[c] = v0 * (1.0f-fy) + v1 * fy;
+			//			}
+			
+			
+			
+			float v0 = m_data[m_bufferIdx,(x0 + y0 * m_fourierGridSize)].x * (1.0f-fx) + m_data[m_bufferIdx,(x1 + y0 * m_fourierGridSize)].x * fx;
+			float v1 = m_data[m_bufferIdx,(x0 + y1 * m_fourierGridSize)].x * (1.0f-fx) + m_data[m_bufferIdx,(x1 + y1 * m_fourierGridSize)].x * fx;
+			v[0] = v0 * (1.0f-fy) + v1 * fy;
+			
+			v0 = m_data[m_bufferIdx,(x0 + y0 * m_fourierGridSize)].y * (1.0f-fx) + m_data[m_bufferIdx,(x1 + y0 * m_fourierGridSize)].y * fx;
+			v1 = m_data[m_bufferIdx,(x0 + y1 * m_fourierGridSize)].y * (1.0f-fx) + m_data[m_bufferIdx,(x1 + y1 * m_fourierGridSize)].y * fx;
+			v[1] = v0 * (1.0f-fy) + v1 * fy;
+			
+			v0 = m_data[m_bufferIdx,(x0 + y0 * m_fourierGridSize)].z * (1.0f-fx) + m_data[m_bufferIdx,(x1 + y0 * m_fourierGridSize)].z * fx;
+			v1 = m_data[m_bufferIdx,(x0 + y1 * m_fourierGridSize)].z * (1.0f-fx) + m_data[m_bufferIdx,(x1 + y1 * m_fourierGridSize)].z * fx;
+			v[2] = v0 * (1.0f-fy) + v1 * fy;
+			
+			v0 = m_data[m_bufferIdx,(x0 + y0 * m_fourierGridSize)].w * (1.0f-fx) + m_data[m_bufferIdx,(x1 + y0 * m_fourierGridSize)].w * fx;
+			v1 = m_data[m_bufferIdx,(x0 + y1 * m_fourierGridSize)].w * (1.0f-fx) + m_data[m_bufferIdx,(x1 + y1 * m_fourierGridSize)].w * fx;
+			v[3] = v0 * (1.0f-fy) + v1 * fy;
+			
+			
+		}
+		
+		/// <summary>
+		/// This will return the ocean height at any world pos.
+		/// </summary>
+		public float SampleHeight(Vector3 worldPos)
+		{
+			float ht = 0.0f;
+			
+			int HEIGHTS_CHANNELS = 4;
+			float[] result = new float[HEIGHTS_CHANNELS];
+			
+			Vector2 pos = new Vector2(worldPos.x, worldPos.y) / m_gridSizes.x;
+			
+			GetUsingBilinearFiltering(pos.x, pos.y, result, m_fourierBuffer0vectorResults, 4);
+			ht += result[0];
+			
+			pos = new Vector2(worldPos.x, worldPos.y) / m_gridSizes.y;
+			
+			GetUsingBilinearFiltering(pos.x, pos.y, result, m_fourierBuffer0vectorResults, 4);
+			ht += result[1];
+			
+			pos = new Vector2(worldPos.x, worldPos.y) / m_gridSizes.z;
+			
+			GetUsingBilinearFiltering(pos.x, pos.y, result, m_fourierBuffer0vectorResults, 4);
+			ht += result[2];
+			
+			pos = new Vector2(worldPos.x, worldPos.y) / m_gridSizes.w;
+			
+			GetUsingBilinearFiltering(pos.x, pos.y, result, m_fourierBuffer0vectorResults, 4);
+			ht += result[3];
+			
+			return ht;
+		}
+		
+		
+		
+		/// <summary>
+		/// This will return the ocean height at any world pos.
+		/// </summary>
+		public Vector2 SampleDisplacement(Vector3 worldPos)
+		{
+			Vector2 disp = Vector2.zero;
+			
+			int HEIGHTS_CHANNELS = 4;
+			float[] result = new float[HEIGHTS_CHANNELS];
+			
+			Vector2 pos = new Vector2(worldPos.x, worldPos.y) / m_gridSizes.x;
+			
+			GetUsingBilinearFiltering(pos.x, pos.y, result, m_fourierBuffer3vectorResults, 4);
+			disp.x += result[0]* m_choppyness.x ;
+			disp.y += result[1]* m_choppyness.x;
+			
+			pos = new Vector2(worldPos.x, worldPos.y) / m_gridSizes.y;
+			
+			GetUsingBilinearFiltering(pos.x, pos.y, result, m_fourierBuffer3vectorResults, 4);
+			disp.x += result[2]* m_choppyness.y;
+			disp.y += result[3]* m_choppyness.y;
+			
+			pos = new Vector2(worldPos.x, worldPos.y) / m_gridSizes.z;
+			
+			GetUsingBilinearFiltering(pos.x, pos.y, result, m_fourierBuffer4vectorResults, 4);
+			disp.x += result[0]* m_choppyness.z;
+			disp.y += result[1]* m_choppyness.z;
+			
+			pos = new Vector2(worldPos.x, worldPos.y) / m_gridSizes.w;
+			
+			GetUsingBilinearFiltering(pos.x, pos.y, result, m_fourierBuffer4vectorResults, 4);
+			disp.x += result[2]* m_choppyness.w;
+			disp.y += result[3]* m_choppyness.w;
+			
+			
+			return disp;
+		}
+		
+		public float findHeight(Vector3 worldPos, float precision)
+		{
+			
+			int it = 0;
+			Vector3 newPos = worldPos;
+			
+			Vector3 oldPos = worldPos;
+			
+			
+			Vector2 disp = SampleDisplacement (worldPos);
+			Vector3 newPosR = newPos + new Vector3 (disp.x, disp.y, 0f);
+			
+			while (((newPosR - worldPos).magnitude > precision) && (it<30)) {
+				
+				newPos = newPos - (newPosR - worldPos);
+				
+				disp = SampleDisplacement (newPos);
+				newPosR = newPos + new Vector3 (disp.x, disp.y, 0f);
+				it++;
+			}
+			
+			if (it >= 30)
+			{
+				Debug.Log("Findheight exceeded 30 iterations and quit");
+				
+			}
+			
+			//			Debug.Log ("findheight iterations " + it.ToString ());
+			
+			
+			return (SampleHeight (newPos));
+		}
+		
 	}
 	
 }
