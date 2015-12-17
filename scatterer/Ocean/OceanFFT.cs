@@ -424,7 +424,8 @@ namespace scatterer {
 				m_oceanMaterialNear.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
 				m_oceanMaterialNear.SetVector("_Ocean_Choppyness", m_choppyness);
 				m_oceanMaterialNear.SetVector("_Ocean_GridSizes", m_gridSizes);
-				m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
+//				m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
+				m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", 0f);
 				m_oceanMaterialNear.SetTexture("_Ocean_Variance", m_variance);
 				m_oceanMaterialNear.SetTexture("_Ocean_Map0", m_map0);
 				m_oceanMaterialNear.SetTexture("_Ocean_Map1", m_map1);
@@ -436,7 +437,8 @@ namespace scatterer {
 				m_oceanMaterialFar.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
 				m_oceanMaterialFar.SetVector("_Ocean_Choppyness", m_choppyness);
 				m_oceanMaterialFar.SetVector("_Ocean_GridSizes", m_gridSizes);
-				m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
+//				m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
+				m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", 0f);
 				m_oceanMaterialFar.SetTexture("_Ocean_Variance", m_variance);
 				m_oceanMaterialFar.SetTexture("_Ocean_Map0", m_map0);
 				m_oceanMaterialFar.SetTexture("_Ocean_Map1", m_map1);
@@ -447,7 +449,7 @@ namespace scatterer {
 
 //#if !CPUmode
 				//Make sure base class get updated as well
-				base.UpdateNode();
+//				base.UpdateNode();
 //#else
 
 				if(!(done1&&done2&&done3&&done4&&done5))
@@ -465,12 +467,30 @@ namespace scatterer {
 				Debug.Log ("[Scatterer] FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
 				FFTtimer = Time.realtimeSinceStartup;
 
-				Nullable<float> time = Time.realtimeSinceStartup;;
+//				Nullable<float> time = Time.realtimeSinceStartup;
+
+				Nullable<float> time = t;
 				
 				ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded1), time);
 				CommitResults (ref m_fourierBuffer0vector, ref m_fourierBuffer0vectorResults);
 				CommitResults (ref m_fourierBuffer3vector, ref m_fourierBuffer3vectorResults);
 				CommitResults (ref m_fourierBuffer4vector, ref m_fourierBuffer4vectorResults);
+
+				base.UpdateNode();
+
+				PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
+				foreach (PartBuoyancy _part in parts)
+				{
+					//				_part.transform
+					Vector3 relativePartPos = _part.transform.position-m_manager.GetCore ().farCamera.transform.position;
+						
+//					Debug.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
+					
+					_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
+					//						_part.waterLevel=m_oceanLevel;
+				}
+
+
 //#endif
 
 
@@ -1465,7 +1485,7 @@ namespace scatterer {
 			
 			if (it >= 30)
 			{
-				Debug.Log("Findheight exceeded 30 iterations and quit");
+				Debug.Log("[Scatterer] findHeight exceeded 30 iterations and quit");
 				
 			}
 			

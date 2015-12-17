@@ -94,6 +94,8 @@ namespace scatterer
 		Matrix4x4d m_oldlocalToOcean;
 		Matrix4x4d m_oldworldToOcean;
 		Vector3d2 m_offset;
+
+		public Vector3d2 ux, uy, uz, oo;
 		
 		//If the ocean should be drawn. To minimize depth fighting
 		bool m_drawOcean;
@@ -404,14 +406,6 @@ namespace scatterer
 			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
 			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;
 
-			PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
-			foreach (PartBuoyancy _part in parts)
-			{
-//				_part.transform
-				_part.waterLevel=m_oceanLevel;
-			}
-//			Debug.Log (parts.Length + " parts adjusted buyoancy");
-
 
 
 
@@ -523,10 +517,11 @@ namespace scatterer
 			Vector3d2 cl = new Vector3d2 ();
 			cl = camToLocal * Vector3d2.Zero ();
 			
-			double radius = m_manager.GetRadius ();
+//			double radius = m_manager.GetRadius ();
+			double radius = m_manager.GetRadius ()+m_oceanLevel;
 			
 			m_drawOcean = true;
-			Vector3d2 ux, uy, uz, oo;
+//			Vector3d2 ux, uy, uz, oo;
 			
 			uz = cl.Normalized (); // unit z vector of ocean frame, in local space
 			
@@ -588,7 +583,8 @@ namespace scatterer
 			
 			Vector3d2 horizon1, horizon2;
 			
-			Vector3d2 offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
+//			Vector3d2 offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
+			Vector3d2 offset = new Vector3d2 (0f, 0f, h);
 			
 			double h1 = h * (h + 2.0 * radius);
 			double h2 = (h + radius) * (h + radius);
