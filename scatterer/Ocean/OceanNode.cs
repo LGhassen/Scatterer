@@ -93,9 +93,6 @@ namespace scatterer
 		Matrix4x4d m_oldlocalToOcean;
 		Matrix4x4d m_oldworldToOcean;
 		Vector3d2 m_offset;
-
-		public Vector3d2 ux, uy, uz, oo;
-		public Vector3d2 offset;
 		
 		//If the ocean should be drawn. To minimize depth fighting
 		bool m_drawOcean;
@@ -534,7 +531,7 @@ namespace scatterer
 			double radius = m_manager.GetRadius ();
 			
 			m_drawOcean = true;
-//			Vector3d2 ux, uy, uz, oo;
+			Vector3d2 ux, uy, uz, oo;
 			
 			uz = cl.Normalized (); // unit z vector of ocean frame, in local space
 			
@@ -596,10 +593,7 @@ namespace scatterer
 			
 			Vector3d2 horizon1, horizon2;
 			
-			offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
-
-//			Debug.Log ("offset " + offset);
-//			Debug.Log ("m_offset " + m_offset);
+			Vector3d2 offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
 			
 			double h1 = h * (h + 2.0 * radius);
 			double h2 = (h + radius) * (h + radius);
@@ -630,7 +624,6 @@ namespace scatterer
 			oceanMaterial.SetMatrix ("_Globals_ScreenToCamera", stoc.ToMatrix4x4 ());
 			
 			oceanMaterial.SetVector ("_Ocean_CameraPos", offset.ToVector3 ());
-
 			
 			oceanMaterial.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) /*  *0.1f   */);
 			oceanMaterial.SetVector ("_Ocean_ScreenGridSize", new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
@@ -642,12 +635,7 @@ namespace scatterer
 			oceanMaterial.SetFloat ("_OceanAlpha", oceanAlpha);
 			
 			m_manager.GetSkyNode ().SetOceanUniforms (oceanMaterial);
-
-
-//			Debug.Log ("pos " + FlightGlobals.ActiveVessel.transform.position);
-//			Debug.Log ("pos x" + Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),ux.ToVector3()) );
-//			Debug.Log ("pos y" + Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),uy.ToVector3() ));
-//			Debug.Log ("pos z" + Vector3.Dot((FlightGlobals.ActiveVessel.transform.position-m_manager.GetCore().farCamera.transform.position),uz.ToVector3() ));
+			
 		}
 		
 		public void SetUniforms (Material mat)

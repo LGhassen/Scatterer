@@ -86,8 +86,6 @@ namespace scatterer
 		float mapExtinctionMultiplier = 100f;
 		float mapExtinctionTint = 100f;
 		float specR = 0f, specG = 0f, specB = 0f, shininess = 0f;
-
-		public float posOffsetX=0,posOffsetY=0;
 		
 		//configPoint variables 		
 		float pointAltitude = 0f;
@@ -1078,9 +1076,6 @@ namespace scatterer
 //							GUIfloat("y",ref angley,ref angley);
 //							GUIfloat("z",ref anglez,ref anglez);
 							GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
-
-							GUIfloat("posoffsetX", ref posOffsetX, ref posOffsetX);
-							GUIfloat("posoffsetY", ref posOffsetY, ref posOffsetY);
 
 
 
