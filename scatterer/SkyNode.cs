@@ -378,6 +378,11 @@ namespace scatterer
 				if (postprocessingEnabled) {
 					InitPostprocessMaterial (m_atmosphereMaterial);
 					UpdatePostProcessMaterial (m_atmosphereMaterial);
+
+					if (m_manager.hasOcean)
+					{
+						m_manager.GetOceanNode().SetUniforms(m_atmosphereMaterial);
+					}
 					
 					//					if (scaledSpaceCamera.gameObject.GetComponent<scatterPostprocess> () != null) {
 					//						//						print ("ScaledSpaceCamera scatterPostprocess!=null");
@@ -470,9 +475,9 @@ namespace scatterer
 					toggleSunglare ();
 				}
 				
-//				if ((coronasDisabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
-//					toggleCoronas ();
-//				}
+				if ((coronasDisabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
+					toggleCoronas ();
+				}
 				
 				if ((!stocksunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt - 1000) && !MapView.MapIsEnabled)) { //^ is XOR
 					toggleStockSunglare ();

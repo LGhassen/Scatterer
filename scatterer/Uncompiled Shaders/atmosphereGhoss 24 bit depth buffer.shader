@@ -47,6 +47,11 @@
 			uniform float _global_alpha;
 			uniform float _Exposure;
 			uniform float _global_depth;
+	
+			uniform float _Ocean_Sigma;
+			uniform float fakeOcean;
+			
+			uniform float3 _Ocean_Color;
 
 			uniform float3 _camPos; 		// camera position relative to planet's origin
 //			uniform float3 _Globals_Origin;
@@ -282,6 +287,47 @@
     			L.b = L.b < 1.413 ? pow(L.b * 0.38317, 1.0 / 2.2) : 1.0 - exp(-L.b);
     		return L;
     		}
+    		
+    		
+    		// L, V, N in world space
+float ReflectedSunRadiance(float3 L, float3 V, float3 N, float sigmaSq) 
+{
+    float3 H = normalize(L + V);
+
+    float hn = dot(H, N);
+    float p = exp(-2.0 * ((1.0 - hn * hn) / sigmaSq) / (1.0 + hn)) / (4.0 * M_PI * sigmaSq);
+
+    float c = 1.0 - dot(V, H);
+    float c2 = c * c;
+    float fresnel = 0.02 + 0.98 * c2 * c2 * c;
+
+    float zL = dot(L, N);
+    float zV = dot(V, N);
+    zL = max(zL,0.01);
+    zV = max(zV,0.01);
+
+    // brdf times cos(thetaL)
+    return zL <= 0.0 ? 0.0 : max(fresnel * p * sqrt(abs(zL / zV)), 0.0);
+}
+
+float MeanFresnel(float cosThetaV, float sigmaV) {
+    return pow(1.0 - cosThetaV, 5.0 * exp(-2.69 * sigmaV)) / (1.0 + 22.7 * pow(sigmaV, 1.5));
+}
+
+float MeanFresnel(float3 V, float3 N, float sigmaSq) {
+    return MeanFresnel(dot(V, N), sqrt(sigmaSq));
+}
+
+float3 OceanRadiance(float3 L, float3 V, float3 N, float sigmaSq, float3 sunL, float3 skyE, float3 seaColor) 
+{
+    float F = MeanFresnel(V, N, sigmaSq);
+    float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
+    float3 Lsky = skyE * F / M_PI;
+    float3 Lsea = (1.0 - F) * seaColor * skyE / M_PI;
+    return Lsun + Lsky + Lsea;
+}
+
+    		
 			
 			half4 frag(v2f i) : COLOR 
 			{
@@ -360,12 +406,33 @@
 				float3 worldPos2= _camPos + interSectPt * (worldPos - (_camPos));
         		bool oceanCloserThanTerrain = ( length (worldPos2 -_camPos) < length (worldPos - _camPos)); //this condition ensures the ocean is in front of the terrain
         																								   //if the terrain is in front of the ocean we don't want to cover it up
-        																								   //with the wrong postprocessing depth
+        		float3 oceanColor = float3(1.0,1.0,1.0);																			   //with the wrong postprocessing depth
         		
 //        		if ((intersectExists) && (rightDir) && oceanCloserThanTerrain)
         		if ((rightDir) && oceanCloserThanTerrain)
         		{
         				worldPos=worldPos2;
+						
+						if (fakeOcean==1.0)
+						{
+							float3 V = normalize(worldPos);
+    						float3 P = V * max(length(worldPos), Rg + 10.0);
+    						float3 v = normalize(P - _camPos);
+    						
+							float3 fn = float3(0,0,1); //ocean normal
+    			
+							float cTheta = dot(fn, SUN_DIR);
+							float vSun = dot(V, SUN_DIR);
+				
+			    			float3 sunL;
+						    float3 skyE;
+			    			
+			    			
+			    			SunRadianceAndSkyIrradiance(P, fn, SUN_DIR, sunL, skyE);
+							
+
+        					oceanColor = OceanRadiance(SUN_DIR, -v, V, _Ocean_Sigma, sunL, skyE, _Ocean_Color*10);
+						}
         		}
         		
         		
@@ -391,7 +458,13 @@
 					visib=1-exp(-1* (4*dpth/_global_depth));
 				}			
 				
-				return float4(hdr(inscatter),_global_alpha * visib);			    
+				
+				if((rightDir) && oceanCloserThanTerrain &&(fakeOcean==1.0))
+				{
+					return float4(lerp(hdr(oceanColor*extinction), hdr(inscatter),_global_alpha * visib),1);	
+				}
+				
+				return float4(hdr(inscatter),_global_alpha * visib);		    
 			}
 			ENDCG
 	    }

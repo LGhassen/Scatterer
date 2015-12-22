@@ -146,6 +146,7 @@ namespace scatterer
 		//		float phi=1.0f;
 		float oceanLevel = 0f;
 		float oceanAlpha = 1f;
+		float oceanAlphaRadius = 3000f;
 		float oceanScale = 1f;
 		float WAVE_CM = 0.23f;
 		float WAVE_KM = 370.0f;
@@ -158,6 +159,8 @@ namespace scatterer
 		int m_foamAnsio = 9;
 		float m_foamMipMapBias = -2.0f;
 		float m_whiteCapStr = 0.1f;
+		float farWhiteCapStr = 0.1f;
+		float choppynessMultiplier = 1f;
 
 //		Vector3 m_oceanUpwellingColor = new Vector3 (0.039f, 0.156f, 0.47f);
 
@@ -172,6 +175,11 @@ namespace scatterer
 		Vector4 m_choppyness = new Vector4 (2.3f, 2.1f, 1.3f, 0.9f); //strenght of sideways displacement for each grid
 
 		int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
+
+
+		float sunReflectionMultiplier = 1f;
+		float skyReflectionMultiplier = 1f;
+		float seaRefractionMultiplier = 1f;
 
 		
 		
@@ -1064,12 +1072,23 @@ namespace scatterer
 						_scroll2 = GUILayout.BeginScrollView (_scroll2, false, true, GUILayout.Width (400), GUILayout.Height (500));
 						{
 
-
-
 							GUIfloat ("ocean Level", ref oceanLevel, ref oceanNode.m_oceanLevel);
+							GUIfloat ("Alpha/WhiteCap Radius", ref oceanAlphaRadius, ref oceanNode.alphaRadius);
 							GUIfloat ("ocean Alpha", ref oceanAlpha, ref oceanNode.oceanAlpha);
 							GUIfloat ("whiteCapStr (foam)", ref m_whiteCapStr, ref oceanNode.m_whiteCapStr);
+							GUIfloat ("far whiteCapStr", ref farWhiteCapStr, ref oceanNode.m_farWhiteCapStr);
+							GUIfloat ("choppyness multiplier", ref choppynessMultiplier, ref oceanNode.choppynessMultiplier);
+
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("Color settings");
+							GUILayout.EndHorizontal ();
+
 							GUIvector3 ("Ocean Upwelling Color", ref oceanUpwellingColorR, ref oceanUpwellingColorG, ref oceanUpwellingColorB, ref oceanNode.m_oceanUpwellingColor);
+
+//							GUIfloat ("sunReflectionMultiplier", ref sunReflectionMultiplier, ref oceanNode.sunReflectionMultiplier);
+//							GUIfloat ("skyReflectionMultiplier", ref skyReflectionMultiplier, ref oceanNode.skyReflectionMultiplier);
+//							GUIfloat ("seaRefractionMultiplier", ref seaRefractionMultiplier, ref oceanNode.seaRefractionMultiplier);
+
 
 
 							GUILayout.BeginHorizontal ();
@@ -1243,12 +1262,15 @@ namespace scatterer
 
 			oceanLevel = oceanNode.m_oceanLevel;
 			oceanAlpha = oceanNode.oceanAlpha;
+			oceanAlphaRadius = oceanNode.alphaRadius;
 
 			oceanUpwellingColorR = oceanNode.m_oceanUpwellingColor.x;
 			oceanUpwellingColorG = oceanNode.m_oceanUpwellingColor.y;
 			oceanUpwellingColorB = oceanNode.m_oceanUpwellingColor.z;
 
 			oceanScale = oceanNode.oceanScale;
+
+			choppynessMultiplier = oceanNode.choppynessMultiplier;
 			
 			WAVE_CM = oceanNode.WAVE_CM;
 			WAVE_KM = oceanNode.WAVE_KM;
@@ -1267,6 +1289,7 @@ namespace scatterer
 			m_foamAnsio = oceanNode.m_foamAnsio;
 			m_foamMipMapBias = oceanNode.m_foamMipMapBias;
 			m_whiteCapStr = oceanNode.m_whiteCapStr;
+			farWhiteCapStr = oceanNode.m_farWhiteCapStr;
 
 			m_resolution = oceanNode.m_resolution;
 //			MAX_VERTS = oceanNode.MAX_VERTS;

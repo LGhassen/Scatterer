@@ -77,11 +77,29 @@ namespace scatterer
 		public float oceanScale = 1f;
 		[Persistent]
 		public float oceanAlpha = 1f;
+
+		[Persistent]
+		public float alphaRadius = 3000f;
+
+
+//		[Persistent]
+		public float sunReflectionMultiplier = 1f;
+
+//		[Persistent]
+		public float skyReflectionMultiplier = 1f;
+		
+//		[Persistent]
+		public float seaRefractionMultiplier = 1f;
+
+
+
+
+
 		int numGrids;
 		Mesh[] m_screenGrids;
 		Material emptyMaterial;
 
-		[Persistent] public float oceanDisableAltitude = 70000;
+		[Persistent] public float fakeOceanAltitude = 2000;
 
 //		GameObject[] waterGameObjectsNear;
 //		MeshRenderer[] waterMeshRenderersNear;
@@ -343,8 +361,12 @@ namespace scatterer
 					oceanupdater.m_manager = m_manager;
 				}
 			}
-			
-			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && (m_manager.m_skyNode.trueAlt < oceanDisableAltitude)) {
+
+
+			m_drawOcean = m_manager.m_skyNode.trueAlt < fakeOceanAltitude;
+
+//			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && (m_manager.m_skyNode.trueAlt < fakeOceanAltitude)) {
+			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean) {
 				foreach (Mesh mesh in m_screenGrids) {
 //					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15, m_manager.m_skyNode.farCamera);
 //					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15, m_manager.m_skyNode.nearCamera);
@@ -366,10 +388,10 @@ namespace scatterer
 ////				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
 //
 //				
-				Debug.Log ("childspheres length"+pqs.ChildSpheres.Length.ToString());
+//				Debug.Log ("childspheres length"+pqs.ChildSpheres.Length.ToString());
 
 				if (pqs.ChildSpheres [0]) {
-					Debug.Log("pqs.ChildSpheres [0] found");
+//					Debug.Log("pqs.ChildSpheres [0] found");
 					ocean = pqs.ChildSpheres [0];
 					emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
 					ocean.surfaceMaterial = emptyMaterial;
@@ -528,8 +550,7 @@ namespace scatterer
 			
 //			double radius = m_manager.GetRadius ();
 			double radius = m_manager.GetRadius ()+m_oceanLevel;
-			
-			m_drawOcean = true;
+
 //			Vector3d2 ux, uy, uz, oo;
 			
 			uz = cl.Normalized (); // unit z vector of ocean frame, in local space
@@ -634,7 +655,14 @@ namespace scatterer
 			oceanMaterial.SetFloat ("scale", oceanScale);
 
 			oceanMaterial.SetFloat ("_OceanAlpha", oceanAlpha);
-			
+			oceanMaterial.SetFloat ("alphaRadius", alphaRadius);
+
+
+			oceanMaterial.SetFloat ("sunReflectionMultiplier", sunReflectionMultiplier);
+			oceanMaterial.SetFloat ("skyReflectionMultiplier", skyReflectionMultiplier);
+			oceanMaterial.SetFloat ("seaRefractionMultiplier", seaRefractionMultiplier);
+
+
 			m_manager.GetSkyNode ().SetOceanUniforms (oceanMaterial);
 			
 		}
@@ -647,7 +675,7 @@ namespace scatterer
 			
 			mat.SetFloat ("_Ocean_Sigma", GetMaxSlopeVariance ());
 			mat.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) * 0.1f);
-			mat.SetFloat ("_Ocean_DrawBRDF", (m_drawOcean) ? 0.0f : 1.0f);
+			mat.SetFloat ("fakeOcean", (m_drawOcean) ? 0.0f : 1.0f);
 			
 			
 			mat.SetFloat ("_Ocean_Level", m_oceanLevel);
