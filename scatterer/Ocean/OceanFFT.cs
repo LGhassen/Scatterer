@@ -870,19 +870,20 @@ namespace scatterer {
 			
 			m_variance.SetPixels(variance8bit);
 			m_variance.Apply();
+
 			
-			
-			float[] varianceData = new float[m_varianceSize * m_varianceSize * m_varianceSize];
-			//			buffer.GetData(varianceData);
-			
-			//			EncodeFloat.ReadFromRenderTexture (m_variance, 1, varianceData);
-			
+//			m_maxSlopeVariance = 0.0f;
+//			for (int v = 0; v < m_varianceSize * m_varianceSize * m_varianceSize; v++) {
+//				m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, varianceData[v]);
+//			}
+
 			m_maxSlopeVariance = 0.0f;
-			for (int v = 0; v < m_varianceSize * m_varianceSize * m_varianceSize; v++) {
-				m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, varianceData[v]);
+			for(int v = 0; v < m_varianceSize*m_varianceSize*m_varianceSize; v++)
+			{
+				m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, variance8bit[v].r*m_varianceMax.x);
+				m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, variance8bit[v].g*m_varianceMax.y);
 			}
-			
-			//			buffer.Release();
+
 			
 		}
 		
