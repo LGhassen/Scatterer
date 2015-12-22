@@ -407,7 +407,8 @@ namespace scatterer
 				Rt = (Rt / Rg) * m_radius;
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
-				sunglareCutoffAlt = (experimentalAtmoScale*(Rt + Rt) - Rg) /*  *0.995f*/;
+//				sunglareCutoffAlt = (experimentalAtmoScale*(Rt + Rt) - Rg) /*  *0.995f*/;$
+				sunglareCutoffAlt = experimentalAtmoScale*(Rt - Rg);
 				cams = Camera.allCameras;
 				
 				for (int i = 0; i < cams.Length; i++) {
@@ -465,15 +466,15 @@ namespace scatterer
 				alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
 				trueAlt = alt - m_radius;
 				
-				if ((sunglareEnabled) ^ ((alt < sunglareCutoffAlt) && !MapView.MapIsEnabled)) { //^ is XOR
+				if ((sunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt) && !MapView.MapIsEnabled)) { //^ is XOR
 					toggleSunglare ();
 				}
 				
-				if ((coronasDisabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
-					toggleCoronas ();
-				}
+//				if ((coronasDisabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
+//					toggleCoronas ();
+//				}
 				
-				if ((!stocksunglareEnabled) ^ ((alt < sunglareCutoffAlt - 1000) && !MapView.MapIsEnabled)) { //^ is XOR
+				if ((!stocksunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt - 1000) && !MapView.MapIsEnabled)) { //^ is XOR
 					toggleStockSunglare ();
 				}
 				
