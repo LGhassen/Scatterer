@@ -470,7 +470,7 @@ namespace scatterer {
 					done4 = false;
 					done5 = false;
 					
-					Debug.Log ("[Scatterer] FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
+//					Debug.Log ("[Scatterer] FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
 					FFTtimer = Time.realtimeSinceStartup;
 					
 					//				Nullable<float> time = Time.realtimeSinceStartup;
@@ -498,8 +498,26 @@ namespace scatterer {
 						
 						//					Debug.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
 						
-						_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
+//						_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
+						float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+offsetVector3.x,
+						                                        Vector3.Dot(relativePartPos,uy.ToVector3())+offsetVector3.y,
+						                                        0f),0.25f);
+						if (newheight!= (-255f))
+						{
+							_part.waterLevel=m_oceanLevel+newheight;
+						}
 						//						_part.waterLevel=m_oceanLevel;
+
+//										_part.wasSplashed=true;
+//										_part.splashed=true;
+//										_part.allSplashed=true;
+
+						_part.wasSplashed=_part.splashed;
+						_part.slow=true;
+
+//										_part.wasSplashed=false;
+//										_part.splashed=false;
+//										_part.allSplashed=false;
 					}
 				
 				}
@@ -1501,7 +1519,7 @@ namespace scatterer {
 			if (it >= 30)
 			{
 				Debug.Log("[Scatterer] findHeight exceeded 30 iterations and quit");
-				
+				return (-255f);
 			}
 			
 			//			Debug.Log ("findheight iterations " + it.ToString ());

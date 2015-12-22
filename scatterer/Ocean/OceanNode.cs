@@ -93,7 +93,16 @@ namespace scatterer
 
 		Matrix4x4d m_oldlocalToOcean;
 		Matrix4x4d m_oldworldToOcean;
+
+		public Vector3 offsetVector3{
+			get {
+				return offset.ToVector3();
+			}
+		}
+
+
 		Vector3d2 m_offset;
+		public Vector3d2 offset;
 
 		public Vector3d2 ux, uy, uz, oo;
 		
@@ -584,7 +593,8 @@ namespace scatterer
 			Vector3d2 horizon1, horizon2;
 			
 //			Vector3d2 offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
-			Vector3d2 offset = new Vector3d2 (0f, 0f, h);
+			offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
+//			Vector3d2 offset = new Vector3d2 (0f, 0f, h);
 			
 			double h1 = h * (h + 2.0 * radius);
 			double h2 = (h + radius) * (h + radius);
