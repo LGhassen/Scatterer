@@ -45,7 +45,7 @@ namespace scatterer
 		//		CustomDepthBufferCam customDepthBuffer;
 		//		RenderTexture customDepthBufferTexture;
 		
-		public float postDist = -4500f;
+		public float postDist = -3500f;
 		public float percentage;
 		public int currentConfigPoint;
 		float ExtinctionCutoff = 2.0f;
@@ -155,6 +155,11 @@ namespace scatterer
 		public float mapSkyRimExposure = 0.15f;
 
 		PQS CurrentPQS = null;
+
+//		ScaledSpaceFader currentScaledSpaceFader=null;
+
+		PQSMod_CelestialBodyTransform currentPQSMod_CelestialBodyTransform=null;
+
 
 		public bool inScaledSpace {
 			get {
@@ -311,6 +316,16 @@ namespace scatterer
 			}
 			
 			CurrentPQS = parentCelestialBody.pqsController;
+
+			currentPQSMod_CelestialBodyTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> ()[0];
+			
+
+			if (!currentPQSMod_CelestialBodyTransform)
+			{
+				Debug.Log ("[Scatterer] PQSMod_CelestialBodyTransform not found for " + parentCelestialBody.name);
+			}
+
+
 			//testPQS = parentCelestialBody.pqsController;
 			
 			
@@ -425,35 +440,7 @@ namespace scatterer
 					if (cams [i].name == "Camera 00")
 						nearCamera = cams [i];
 				}
-				
-				
-				//				if ((scaledSpaceCamera) && (farCamera)) {
-				//
-				//					if (!m_manager.GetCore().render24bitDepthBuffer || m_manager.GetCore().d3d9)
-				//					{
-				//						farCamera.depthTextureMode = DepthTextureMode.Depth;
-				//					}
-				//					else
-				//					{
-				//						customDepthBuffer = (CustomDepthBufferCam) farCamera.gameObject.AddComponent(typeof(CustomDepthBufferCam));
-				//						customDepthBuffer.inCamera=farCamera;
-				//						customDepthBuffer.incore=m_manager.GetCore();
-				//
-				//						customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.Depth);
-				//						customDepthBufferTexture.Create();
-				//
-				//						customDepthBuffer._depthTex=customDepthBufferTexture;
-				//
-				//
-				//						if (m_manager.GetCore().forceDisableDefaultDepthBuffer)
-				//						{
-				//							farCamera.depthTextureMode = DepthTextureMode.None;
-				//						}
-				//
-				//					}
-				//
-				//					initiated = true;
-				//				}
+
 				
 				initiated = true;
 				
@@ -621,6 +608,18 @@ namespace scatterer
 				}
 			}*/
 			}
+
+
+
+//			Debug.Log ("scaledspace start:" + currentScaledSpaceFader.fadeStart.ToString ());
+//			Debug.Log ("scaledspace end:" + currentScaledSpaceFader.fadeEnd.ToString ());
+
+
+//			Debug.Log ("fade start:" + currentPQSMod_CelestialBodyTransform.planetFade.fadeStart.ToString ());
+//			Debug.Log ("fade end:" + currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd.ToString ());
+
+
+
 
 		}
 		
@@ -874,7 +873,7 @@ namespace scatterer
 			//			}
 		}
 		
-		void InitPostprocessMaterial (Material mat)
+		public void InitPostprocessMaterial (Material mat)
 		{
 			
 			totalscale = 1;
@@ -936,7 +935,7 @@ namespace scatterer
 			mat.SetVector ("SUN_DIR", m_manager.GetSunNodeDirection ());
 		}
 		
-		void UpdatePostProcessMaterial (Material mat)
+		public void UpdatePostProcessMaterial (Material mat)
 		{
 			//mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
 			//			mat.SetFloat ("Rg", Rg*atmosphereGlobalScale*postProcessingScale);
@@ -986,8 +985,8 @@ namespace scatterer
 			mat.SetFloat ("_Scale", postProcessingScale);
 			//			mat.SetFloat("_Scale", 1);
 			
-			mat.SetFloat ("_Ocean_Sigma", oceanSigma);
-			mat.SetFloat ("_Ocean_Threshold", _Ocean_Threshold);
+//			mat.SetFloat ("_Ocean_Sigma", oceanSigma);
+//			mat.SetFloat ("_Ocean_Threshold", _Ocean_Threshold);
 			
 			
 			//			mat.SetMatrix ("_Globals_CameraToWorld", cams [0].worldToCameraMatrix.inverse);
@@ -1056,8 +1055,12 @@ namespace scatterer
 			//				lpoints[4].x,lpoints[5].x,lpoints[5].y,lpoints[6].y));
 			//			
 			//			mat.SetFloat("_CameraFar", farCamera.farClipPlane);
-			
-			
+
+
+			float fadeStart = currentPQSMod_CelestialBodyTransform.planetFade.fadeStart;
+			float fadeEnd = currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd;
+			mat.SetFloat ("_fade", Mathf.Lerp (1f, 0f, (trueAlt - fadeStart) / (fadeEnd - fadeStart)));
+
 		}
 		
 		public void InitUniforms (Material mat)

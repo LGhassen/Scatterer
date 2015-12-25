@@ -98,8 +98,16 @@ namespace scatterer
 		int numGrids;
 		Mesh[] m_screenGrids;
 		Material emptyMaterial;
+		Material fakeOceanMaterial;
+		SimplePostProcessCube oceanPC;
+		GameObject fakeOceanObject;
 
-		[Persistent] public float fakeOceanAltitude = 2000;
+		Mesh fakeOceanMesh;
+		MeshFilter fakeOceanMF;
+		MeshRenderer fakeOceanMR;
+//		Material newMat;
+
+		[Persistent] public float fakeOceanAltitude = 15000;
 
 //		GameObject[] waterGameObjectsNear;
 //		MeshRenderer[] waterMeshRenderersNear;
@@ -117,6 +125,8 @@ namespace scatterer
 				return offset.ToVector3();
 			}
 		}
+
+		
 
 
 		Vector3d2 m_offset;
@@ -273,6 +283,27 @@ namespace scatterer
 //				cbt.secondaryFades = new PQSMod_CelestialBodyTransform.AltitudeFade[] { };
 //			}
 
+
+//			fakeOceanMesh = isosphere.Create (m_manager.GetRadius());
+//
+//
+//			fakeOcean = new GameObject ();
+//			fakeOceanMF = fakeOcean.AddComponent<MeshFilter>();
+//			fakeOceanMF.mesh = fakeOceanMesh;
+//			fakeOcean.layer = 15;
+//
+//
+//			fakeOcean.transform.parent = m_manager.parentCelestialBody.transform;
+//			
+//			fakeOceanMR = fakeOcean.AddComponent<MeshRenderer>();
+//
+//			newMat = new Material (ShaderTool.GetMatFromShader2 ("BlackShader.shader"));
+//			fakeOceanMR.sharedMaterial = newMat;
+//			fakeOceanMR.material =newMat;
+//
+//			fakeOceanMR.castShadows = false;
+//			fakeOceanMR.receiveShadows = false;
+
 		}
 		
 		public virtual void OnDestroy ()
@@ -379,6 +410,10 @@ namespace scatterer
 					                  m_manager.m_skyNode.nearCamera, 0, null, false, false);
 
 				}
+
+//				Graphics.DrawMesh (fakeOceanMesh, Vector3.zero, Quaternion.identity, newMat, 15,
+//				                   m_manager.m_skyNode.farCamera, 0, null, false, false);
+
 			}
 
 
@@ -394,9 +429,30 @@ namespace scatterer
 //					Debug.Log("pqs.ChildSpheres [0] found");
 					ocean = pqs.ChildSpheres [0];
 					emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
+
+//					fakeOceanMaterial = new Material (ShaderTool.GetMatFromShader2 ("CompiledFakeOcean.shader"));
+
+
+//					m_manager.m_skyNode.InitUniforms(fakeOceanMaterial);
+//					m_manager.m_skyNode.InitPostprocessMaterial(fakeOceanMaterial);
+
+//					Debug.Log ("fake ocean mat set");
 					ocean.surfaceMaterial = emptyMaterial;
 					ocean.fallbackMaterial = emptyMaterial;
+
+//					ocean.surfaceMaterial = fakeOceanMaterial;
+//					ocean.fallbackMaterial = fakeOceanMaterial;
+
 					ocean.useSharedMaterial=false;
+
+
+//					oceanPC = new SimplePostProcessCube (20000, fakeOceanMaterial);
+//					fakeOceanObject = oceanPC.GameObject;
+//					fakeOceanObject.layer = 15;
+//					fakeOceanMR = oceanPC.GameObject.GetComponent < MeshRenderer > ();
+//					fakeOceanMR.material = fakeOceanMaterial;
+//					oceanPC.GameObject.GetComponent < MeshFilter > ().mesh.Clear();
+//					oceanPC.GameObject.GetComponent < MeshFilter > ().mesh = isosphere.Create(10000);
 //
 //					///Thanks to rbray89 for this snippet that disables the stock ocean in a clean way
 //					GameObject container = ocean.gameObject;
@@ -432,7 +488,37 @@ namespace scatterer
 				ocean.surfaceMaterial = emptyMaterial;
 				ocean.fallbackMaterial = emptyMaterial;
 				ocean.useSharedMaterial = false;
+
+//				ocean.surfaceMaterial = fakeOceanMaterial;
+//				ocean.fallbackMaterial = fakeOceanMaterial;
+//				ocean.useSharedMaterial = false;
+				
+//				fakeOceanMaterial.SetVector ("_planetPos", m_manager.parentCelestialBody.transform.position);
+//				fakeOceanMaterial.SetVector ("_cameraPos", m_manager.GetCore().farCamera.transform.position - m_manager.parentCelestialBody.transform.position);
+//				fakeOceanMaterial.SetVector ("_Ocean_Color", new Color (m_oceanUpwellingColor.x, m_oceanUpwellingColor.y, m_oceanUpwellingColor.z) * 0.1f);
+//				fakeOceanMaterial.SetFloat ("_Ocean_Sigma", GetMaxSlopeVariance ());
+////				fakeOceanMaterial.SetMatrix ("_PlanetToWorld", m_manager.parentCelestialBody.transform.localToWorldMatrix);
+//
+//
+//
+//
+//
+////				fakeOceanMaterial.SetMatrix ("_PlanetToWorld", camToLocal.ToMatrix4x4());
+//				fakeOceanMaterial.SetMatrix ("_WorldToPlanet", m_manager.parentCelestialBody.transform.worldToLocalMatrix);
+//
+//
+////				fakeOceanMaterial.SetVector ("SUN_DIR", m_manager.GetSunNodeDirection ());
+//				m_manager.m_skyNode.SetUniforms(fakeOceanMaterial);
+//				m_manager.m_skyNode.InitPostprocessMaterial(fakeOceanMaterial);
+//				m_manager.m_skyNode.UpdatePostProcessMaterial(fakeOceanMaterial);
+//
+//
+//				fakeOceanObject.transform.position= FlightGlobals.ActiveVessel.transform.position;
 			}
+
+
+
+
 
 			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
 			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;
@@ -512,6 +598,11 @@ namespace scatterer
 //							waterMeshRenderersNear[i].enabled=!m_core.stockOcean && !MapView.MapIsEnabled;
 //							waterMeshRenderersFar[i].enabled=!m_core.stockOcean && !MapView.MapIsEnabled ;
 //						}
+
+
+
+
+
 		}
 		
 		public void updateStuff (Material oceanMaterial, Camera inCamera)
@@ -524,7 +615,7 @@ namespace scatterer
 			Matrix4x4 ctol1 = inCamera.cameraToWorldMatrix;
 			
 			//position relative to kerbin
-			Vector3d tmp = (inCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+//			Vector3d tmp = (inCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
 			
 			
 			Matrix4x4d cameraToWorld = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, ctol1.m03,

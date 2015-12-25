@@ -90,6 +90,7 @@
     <Compile Include="Ocean\FourierGPU.cs" />
     <Compile Include="Ocean\FakeOceanPQS.cs" />
     <Compile Include="Ocean\FourierCPU.cs" />
+    <Compile Include="isosphere.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

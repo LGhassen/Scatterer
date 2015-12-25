@@ -76,10 +76,10 @@ public class CustomDepthBufferCam : MonoBehaviour
 //			
 //			_depthCam.camera.RenderWithShader(depthShader,"RenderType");
 
-//			if (incore.depthbufferEnabled)
-//			{
-//				Graphics.Blit (_depthTex, destination, viewCustomBufferShader, 0);
-//			}
+			if (incore.depthbufferEnabled)
+			{
+				Graphics.Blit (_depthTex, destination, viewCustomBufferShader, 0);
+			}
 
 	}		
 	

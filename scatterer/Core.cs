@@ -211,7 +211,7 @@ namespace scatterer
 		
 		internal override void Awake ()
 		{
-			WindowCaption = "Scatterer v0.021: alt+f10/f11 toggle ";
+			WindowCaption = "Scatterer v0.02182: alt+f10/f11 toggle ";
 			WindowRect = new Rect (0, 0, 400, 50);
 			isActive = false;
 			
@@ -320,9 +320,20 @@ namespace scatterer
 							scaledSpaceCamera = cams [i];
 						
 						if (cams [i].name == "Camera 01")
+						{
 							farCamera = cams [i];
+							Debug.Log("orig farCamera.nearClipPlane"+farCamera.nearClipPlane.ToString());
+							farCamera.nearClipPlane=1000f;
+						}
+
 						if (cams [i].name == "Camera 00")
+						{
 							nearCamera = cams [i];
+//							Debug.Log("orig nearCamera.nearClipPlane"+nearCamera.nearClipPlane.ToString());
+//							Debug.Log("orig nearCamera.farClipPlane"+nearCamera.farClipPlane.ToString());
+							nearCamera.nearClipPlane=0.15f;
+							nearCamera.farClipPlane=1002f;
+						}
 					}
 
 					found = true;
@@ -349,6 +360,7 @@ namespace scatterer
 								customDepthBuffer.incore = this;
 							
 								customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.Depth);
+//								customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RFloat);
 								customDepthBufferTexture.Create ();
 							
 								customDepthBuffer._depthTex = customDepthBufferTexture;
@@ -995,15 +1007,15 @@ namespace scatterer
 						//				}
 
 						
-						//							if (GUILayout.Button ("Toggle depth buffer")) {
-						//								if (!depthbufferEnabled) {
-						////							cams[2].gameObject.AddComponent(typeof(ViewDepthBuffer));
-						//									depthbufferEnabled = true;
-						//								} else {
-						////							Component.Destroy(cams[2].gameObject.GetComponent < ViewDepthBuffer > ());
-						//									depthbufferEnabled = false;
-						//								}
-						//							}
+													if (GUILayout.Button ("Toggle depth buffer")) {
+														if (!depthbufferEnabled) {
+						//							cams[2].gameObject.AddComponent(typeof(ViewDepthBuffer));
+															depthbufferEnabled = true;
+														} else {
+						//							Component.Destroy(cams[2].gameObject.GetComponent < ViewDepthBuffer > ());
+															depthbufferEnabled = false;
+														}
+													}
 						
 						if (GUILayout.Button ("Toggle PostProcessing")) {
 							
