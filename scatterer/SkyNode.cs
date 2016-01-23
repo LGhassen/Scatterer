@@ -95,7 +95,8 @@ namespace scatterer
 		
 		//int newRenderQueue;
 		
-		
+		bool eclipse=false;
+
 		Transform celestialTransform;
 		Vector3 idek;
 		float alt;
@@ -382,6 +383,26 @@ namespace scatterer
 		
 		public void UpdateStuff () //to be called by update at camera rythm for some graphical stuff
 		{
+			RaycastHit hit;
+			if (Physics.Raycast (scaledSpaceCamera.transform.position,
+			                     ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position)
+								 -scaledSpaceCamera.transform.position, out hit, Mathf.Infinity, (int)(1 << 10))) 
+			{
+//				print ("hit");
+//				if(hit.collider)
+//					print ("hit.collider"+hit.collider.name);
+//				if (hit.rigidbody)
+//					print ("hit.rigidbody"+hit.rigidbody.name );
+//				if (hit.transform)
+//					print ("layer"+hit.transform.gameObject.layer);
+				eclipse=true;
+
+			}
+			else
+			{
+//				print ("no hit");
+				eclipse=false;
+			}
 			
 			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
 			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
@@ -457,7 +478,7 @@ namespace scatterer
 				alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
 				trueAlt = alt - m_radius;
 				
-				if ((sunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt) && !MapView.MapIsEnabled)) { //^ is XOR
+				if ((sunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt) && !MapView.MapIsEnabled && !eclipse)) { //^ is XOR
 					toggleSunglare ();
 				}
 				
