@@ -72,13 +72,13 @@
     			return OUT;
 			}
 			
-						//stole this from basic GLSL raytracing shader somewhere on the net
+			//stole this from basic GLSL raytracing shader somewhere on the net
 			//a quick google search and you'll find it
-			float intersectSphere2(float3 p1, float3 p2, float3 p3, float r)
+			float intersectSphere3(float3 p1, float3 d, float3 p3, float r)
 			{
-			// The line passes through p1 and p2:
-			// p3 is the sphere center
-				float3 d = p2 - p1;
+			// p1 starting point
+			// d look direction
+			// p3 is the sphere center1;
 
 				float a = dot(d, d);
 				float b = 2.0 * dot(d, p1 - p3);
@@ -149,7 +149,7 @@
     								_Extinction_Tint*extinction.g + (1-_Extinction_Tint)*average,
     								_Extinction_Tint*extinction.b + (1-_Extinction_Tint)*average);
     			
-    			float interSectPt= intersectSphere2(WCP - _Globals_Origin*_Globals_ApparentDistance,WCP - _Globals_Origin*_Globals_ApparentDistance+viewdir,_Globals_Origin,Rg*_rimQuickFixMultiplier);
+    			float interSectPt= intersectSphere3(WCP - _Globals_Origin*_Globals_ApparentDistance,IN.dir,_Globals_Origin,Rg*_rimQuickFixMultiplier);
 				bool rightDir = (interSectPt > 0) ;
 				if (!rightDir)
 				{

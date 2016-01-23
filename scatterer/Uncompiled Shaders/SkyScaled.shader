@@ -85,11 +85,11 @@
 			
 			//stole this from basic GLSL raytracing shader somewhere on the net
 			//a quick google search and you'll find it
-			float intersectSphere2(float3 p1, float3 p2, float3 p3, float r)
+			float intersectSphere3(float3 p1, float3 d, float3 p3, float r)
 			{
-			// The line passes through p1 and p2:
+			// p1 starting point
+			// d look direction
 			// p3 is the sphere center
-				float3 d = p2 - p1;
 
 				float a = dot(d, d);
 				float b = 2.0 * dot(d, p1 - p3);
@@ -101,8 +101,12 @@
 				{
 					return -1.0;
 				}
-	
+
+//#if !defined(SHADER_API_D3D9)	
   					float u = (-b - sqrt(test)) / (2.0 * a);
+//#else 
+//					float u = (-b - SQRT(test,1e30)) / (2.0 * a);
+//#endif 					
 //  					float3 hitp = p1 + u * (p2 - p1);			//we'll just do this later instead if needed
 //  					return(hitp);
 					return u;
@@ -191,12 +195,14 @@
 
 			    float3 d = normalize(IN.dir);
 			    
-			    float interSectPt= intersectSphere2(WCP - _Globals_Origin*_Globals_ApparentDistance,WCP - _Globals_Origin*_Globals_ApparentDistance+d,_Globals_Origin,Rg*_rimQuickFixMultiplier);
+				float interSectPt= intersectSphere3(WCP - _Globals_Origin*_Globals_ApparentDistance,IN.dir,_Globals_Origin,Rg*_rimQuickFixMultiplier);
+
 				bool rightDir = (interSectPt > 0) ;
 				if (!rightDir)
 				{
 					_Exposure=_RimExposure;
 				}
+
 
 			    float3 sunColor = OuterSunRadiance(IN.relativeDir);
 
