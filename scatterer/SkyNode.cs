@@ -314,16 +314,15 @@ namespace scatterer
 			} else {
 				m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 			}
-			
+
 			CurrentPQS = parentCelestialBody.pqsController;
 
-			currentPQSMod_CelestialBodyTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> ()[0];
-			
 
-			if (!currentPQSMod_CelestialBodyTransform)
+			if (CurrentPQS)
 			{
-				Debug.Log ("[Scatterer] PQSMod_CelestialBodyTransform not found for " + parentCelestialBody.name);
+				currentPQSMod_CelestialBodyTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> () [0];
 			}
+
 
 
 			//testPQS = parentCelestialBody.pqsController;
@@ -462,7 +461,7 @@ namespace scatterer
 					toggleSunglare ();
 				}
 				
-				if ((coronasDisabled) ^ (alt < sunglareCutoffAlt)) { //^ is XOR
+				if ((coronasDisabled) ^ (trueAlt < sunglareCutoffAlt)) { //^ is XOR
 					toggleCoronas ();
 				}
 				
@@ -1056,10 +1055,12 @@ namespace scatterer
 			//			
 			//			mat.SetFloat("_CameraFar", farCamera.farClipPlane);
 
-
-			float fadeStart = currentPQSMod_CelestialBodyTransform.planetFade.fadeStart;
-			float fadeEnd = currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd;
-			mat.SetFloat ("_fade", Mathf.Lerp (1f, 0f, (trueAlt - fadeStart) / (fadeEnd - fadeStart)));
+			if (currentPQSMod_CelestialBodyTransform)
+			{
+				float fadeStart = currentPQSMod_CelestialBodyTransform.planetFade.fadeStart;
+				float fadeEnd = currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd;
+				mat.SetFloat ("_fade", Mathf.Lerp (1f, 0f, (trueAlt - fadeStart) / (fadeEnd - fadeStart)));
+			}
 
 		}
 		
