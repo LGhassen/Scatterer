@@ -32,6 +32,7 @@ namespace scatterer {
 		public Transform ParentPlanetTransform;
 		
 		public CelestialBody sunCelestialBody;
+//		public CelestialBody munCelestialBody;
 		
 		// Initialization
 		public void Awake() {

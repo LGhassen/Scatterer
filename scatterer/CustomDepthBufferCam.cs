@@ -15,7 +15,7 @@ public class CustomDepthBufferCam : MonoBehaviour
 	public RenderTexture _depthTex;
 	private GameObject _depthCam;
 
-		private Material viewCustomBufferShader;
+		//private Material viewCustomBufferShader;
 
 		private Shader depthShader;
 		
@@ -27,14 +27,21 @@ public class CustomDepthBufferCam : MonoBehaviour
 		if (!_depthCam) {
 			_depthCam = new GameObject("CustomDepthCamera");
 			_depthCam.AddComponent<Camera>();
+//			_depthCam.camera.clearFlags=CameraClearFlags.Color;		//these don't seem to work, instead I clear the texture manually in a first shader pass
+//			_depthCam.camera.backgroundColor=Color.white;
+
+			_depthCam.camera.farClipPlane=incore.farCamera.farClipPlane;
+			_depthCam.camera.nearClipPlane=incore.farCamera.nearClipPlane;
+				_depthCam.camera.depthTextureMode=DepthTextureMode.None;
+
 			_depthCam.camera.enabled = true;
 			//_depthCam.hideFlags = HideFlags.HideAndDontSave;
 //			_depthCam.camera.depthTextureMode = DepthTextureMode.None;
 
 			depthShader = ShaderTool.GetShader2("CompiledDepthTexture.shader");
 
-			viewCustomBufferShader = ShaderTool.GetMatFromShader2 ("CompiledviewCustomDepthTexture.shader");
-			viewCustomBufferShader.SetTexture ("_DepthTex", _depthTex);
+//			viewCustomBufferShader = ShaderTool.GetMatFromShader2 ("CompiledviewCustomDepthTexture.shader");
+//			viewCustomBufferShader.SetTexture ("_DepthTex", _depthTex);
 		}
 
 		_depthCam.camera.CopyFrom(inCamera);
@@ -52,8 +59,19 @@ public class CustomDepthBufferCam : MonoBehaviour
 			//disable rendering of the custom depth buffer when away from PQS
 			if (incore.pqsEnabled)
 			{
+//				//for some reason in KSP this camera wouldn't clear the texture before rendering to it, resulting in a trail effect
+//				//this snippet fixes that. We need the texture cleared to full white to mask the sky
+//				RenderTexture rt=RenderTexture.active;
+//				RenderTexture.active= _depthTex;			
+//				GL.Clear(false,true,Color.white);
+//				RenderTexture.active=rt;
+//				//needed only with Rfloat rendertexture (for godray)
+//				//not needed for built-in depth
+
+
+
 				_depthCam.camera.targetTexture = _depthTex;
-			
+
 				_depthCam.camera.SetReplacementShader (depthShader, "RenderType");
 
 				_depthCam.camera.RenderWithShader (depthShader, "RenderType");
@@ -78,7 +96,8 @@ public class CustomDepthBufferCam : MonoBehaviour
 
 			if (incore.depthbufferEnabled)
 			{
-				Graphics.Blit (_depthTex, destination, viewCustomBufferShader, 0);
+//				Graphics.Blit (_depthTex, destination, viewCustomBufferShader, 0);
+				Graphics.Blit (_depthTex, destination);
 			}
 
 	}		

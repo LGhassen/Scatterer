@@ -707,7 +707,24 @@ namespace scatterer
 			mat.SetFloat ("_sunglareScale", sunglareScale);
 			
 			mat.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToSun ().normalized);
-			//			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun());
+
+			Shader.SetGlobalVector ("_Godray_WorldSunDir", m_manager.getDirectionToSun ().normalized);
+
+//			Shader.SetGlobalFloat ("_Godray_WorldSunDirX", -1f);
+//			Shader.SetGlobalFloat ("_Godray_WorldSunDirY", 5f);
+//			Shader.SetGlobalFloat ("_Godray_WorldSunDirZ", 0f);
+
+//			Shader.SetGlobalFloat ("_Godray_WorldSunDirX", m_manager.getDirectionToSun ().normalized.x);
+//			Shader.SetGlobalFloat ("_Godray_WorldSunDirY", m_manager.getDirectionToSun ().normalized.y);
+//			Shader.SetGlobalFloat ("_Godray_WorldSunDirZ", m_manager.getDirectionToSun ().normalized.z);
+
+			Shader.SetGlobalFloat ("_Godray_WorldSunDirX", m_manager.sunCelestialBody.transform.position.x
+			                       -parentCelestialBody.transform.position.x);
+			Shader.SetGlobalFloat ("_Godray_WorldSunDirY", m_manager.sunCelestialBody.transform.position.y
+			                       -parentCelestialBody.transform.position.y);
+			Shader.SetGlobalFloat ("_Godray_WorldSunDirZ", m_manager.sunCelestialBody.transform.position.z
+			                       -parentCelestialBody.transform.position.z);
+
 			
 			
 			//			//copied from m_manager's set uniforms
@@ -760,7 +777,17 @@ namespace scatterer
 				mat.SetFloat ("_RimExposure", mapSkyRimExposure);
 			}
 			
-			
+
+//			//Eclipse stuff
+//			mat.SetFloat ("LightRadius",(float) m_manager.sunCelestialBody.Radius*0.7f);
+//			mat.SetVector ("Light0Pos", m_manager.sunCelestialBody.transform.position-parentCelestialBody.transform.position);
+//			//sun position relative to planet
+//			mat.SetVector ("LightCasterPosXYZ",m_manager.munCelestialBody.transform.position-parentCelestialBody.transform.position);
+//			//occluder position relative to planet
+//			mat.SetFloat ("LightCasterW", (float)m_manager.munCelestialBody.Radius);
+//			//occluder radius
+
+
 			//			int childCnt = 0;
 			//			Transform scaledSunTransform=ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == "Sun");
 			//			foreach (Transform child in scaledSunTransform)
@@ -815,6 +842,10 @@ namespace scatterer
 			mat.SetTexture ("_Sky_Irradiance", m_irradiance);
 			mat.SetFloat ("_Sun_Intensity", 100f);
 			mat.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToSun ().normalized);
+
+			//couldn't add parameters to a replacement shader so did it via a global shader propriety
+
+
 			//			mat.SetVector("_Sun_WorldSunDir", m_manager.getDirectionToSun());
 			
 			
