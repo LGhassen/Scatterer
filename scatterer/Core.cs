@@ -17,6 +17,7 @@ namespace scatterer
 	public class Core: MonoBehaviourWindow
 	{
 
+		bool wireFrame=false;
 
 		[Persistent]
 		List < scattererCelestialBody >
@@ -68,6 +69,7 @@ namespace scatterer
 		*/
 		
 		CelestialBody sunCelestialBody;
+//		CelestialBody munCelestialBody;
 		public string path;
 		bool found = false;
 		bool showInterpolatedValues = false;
@@ -292,6 +294,7 @@ namespace scatterer
 
 					
 					sunCelestialBody = CelestialBodies.Single (_cb => _cb.GetName () == "Sun");
+//					munCelestialBody = CelestialBodies.Single (_cb => _cb.GetName () == "Mun");
 
 					//we need to load all of the celestial bodies in celestialBodiesWithDistance regardless
 					//of whether they are loaded ins catterer or not
@@ -360,7 +363,14 @@ namespace scatterer
 								customDepthBuffer.incore = this;
 							
 								customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.Depth);
-//								customDepthBufferTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RFloat);
+//								customDepthBufferTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.RFloat);//seems useless in the end  as oceans move around and the edges around the geometry can be taken care of elegantly in the fragment shader
+								//might only be useful for godrays
+								customDepthBufferTexture.filterMode=FilterMode.Trilinear;
+
+								//introduce supersampling or built-in AA?
+
+//								customDepthBufferTexture = new RenderTexture (Screen.width/2, Screen.height/2, 24, RenderTextureFormat.Depth);
+								
 								customDepthBufferTexture.Create ();
 							
 								customDepthBuffer._depthTex = customDepthBufferTexture;
@@ -424,6 +434,7 @@ namespace scatterer
 									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
 									_cur.m_manager.setParentPlanetTransform (_cur.transform);
 									_cur.m_manager.setSunCelestialBody (sunCelestialBody);
+//									_cur.m_manager.munCelestialBody=munCelestialBody;
 									_cur.m_manager.SetCore (this);
 									_cur.m_manager.hasOcean = _cur.hasOcean;
 									_cur.m_manager.Awake ();
@@ -475,6 +486,15 @@ namespace scatterer
 				Component.Destroy (customDepthBuffer);
 				UnityEngine.Object.Destroy (customDepthBuffer);
 				UnityEngine.Object.Destroy (customDepthBufferTexture);
+
+				if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
+					Component.Destroy(nearCamera.gameObject.GetComponent (typeof(Wireframe)));
+				
+				if (farCamera.gameObject.GetComponent (typeof(Wireframe)))
+					Component.Destroy(farCamera.gameObject.GetComponent (typeof(Wireframe)));
+				
+				if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
+					Component.Destroy(scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
 			}
 		}
 		
@@ -1027,6 +1047,7 @@ namespace scatterer
 						}
 
 
+
 						if (GUILayout.Button ("Toggle extinction")) {
 							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.extinctionEnabled = !scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.extinctionEnabled;
 						}
@@ -1054,6 +1075,36 @@ namespace scatterer
 							loadConfigPoint (selectedConfigPoint);
 							
 						}
+						GUILayout.EndHorizontal ();
+
+						GUILayout.BeginHorizontal ();
+
+						if (GUILayout.Button ("Toggle WireFrame"))
+						{
+							if (wireFrame)
+							{
+								if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
+									Component.Destroy(nearCamera.gameObject.GetComponent (typeof(Wireframe)));
+								
+								if (farCamera.gameObject.GetComponent (typeof(Wireframe)))
+									Component.Destroy(farCamera.gameObject.GetComponent (typeof(Wireframe)));
+								
+								if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
+									Component.Destroy(scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
+								
+								wireFrame=false;
+							}
+							
+							else
+							{
+								nearCamera.gameObject.AddComponent (typeof(Wireframe));
+								farCamera.gameObject.AddComponent (typeof(Wireframe));
+								scaledSpaceCamera.gameObject.AddComponent (typeof(Wireframe));
+								
+								wireFrame=true;
+							}
+						}
+
 						GUILayout.EndHorizontal ();
 
 
@@ -1361,10 +1412,25 @@ namespace scatterer
 			
 			for (int k = 0; k < celestialBodiesWithDistance.Count; k++) {
 				if (celestialBodiesWithDistance [k].CelestialBody) {
-					celestialBodiesWithDistance [k].Distance = Vector3.Distance (
-						farCamera.transform.position,
-						ScaledSpace.ScaledToLocalSpace (
-						GetScaledTransform (celestialBodiesWithDistance [k].CelestialBody.name).position));
+					float dist;
+
+//					if (!MapView.MapIsEnabled)
+//					{
+//						dist=  Vector3.Distance (
+//							farCamera.transform.position,
+//							ScaledSpace.ScaledToLocalSpace (
+//							GetScaledTransform (celestialBodiesWithDistance [k].CelestialBody.name).position));
+//					}
+//					else
+					{
+						dist= Vector3.Distance (
+							ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position),
+							ScaledSpace.ScaledToLocalSpace (
+							GetScaledTransform (celestialBodiesWithDistance [k].CelestialBody.name).position));
+
+					}
+
+					celestialBodiesWithDistance [k].Distance = dist;
 				}
 			}
 			celestialBodiesWithDistance.Sort ();
