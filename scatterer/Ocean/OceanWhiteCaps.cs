@@ -31,7 +31,8 @@ namespace scatterer {
 			base.Start();
 			
 			m_initJacobiansMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitJacobians.shader"));
-			m_whiteCapsPrecomputeMat = new Material(ShaderTool.GetMatFromShader2("CompiledWhiteCapsPrecompute.shader"));
+//			m_whiteCapsPrecomputeMat = new Material(ShaderTool.GetMatFromShader2("CompiledWhiteCapsPrecompute.shader")); //original shader
+			m_whiteCapsPrecomputeMat = new Material(ShaderTool.GetMatFromShader2("CompiledWhiteCapsPrecompute0.shader"));//shader with two passes, to fix black ocean bug
 			
 			
 			m_initJacobiansMat.SetTexture("_Spectrum01", m_spectrum01);
@@ -47,11 +48,13 @@ namespace scatterer {
 			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
 			
 			//These texture hold the actual data use in the ocean renderer
-			CreateMap(ref m_map5, mapFormat, m_ansio);
-			CreateMap(ref m_map6, mapFormat, m_ansio);
+			CreateMap(ref m_map5, mapFormat, m_ansio, true);
+			CreateMap(ref m_map6, mapFormat, m_ansio, true);
 			
-			CreateMap(ref m_foam0, format, m_foamAnsio);
-			CreateMap(ref m_foam1, format, m_foamAnsio);
+			CreateMap(ref m_foam0, format, m_foamAnsio, true);
+			CreateMap(ref m_foam1, format, m_foamAnsio, true);
+
+//			CreateMap(ref m_foam1, format, m_foamAnsio, m_manager.GetCore().foamMipMapping);
 			
 			m_foam1.mipMapBias = m_foamMipMapBias;
 			
@@ -95,17 +98,22 @@ namespace scatterer {
 				
 				m_fourier.PeformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
 				
+				//original block, two textures in one pass
+//				m_whiteCapsPrecomputeMat.SetTexture("_Map5", m_fourierBuffer5[m_idx]);
+//				m_whiteCapsPrecomputeMat.SetTexture("_Map6", m_fourierBuffer6[m_idx]);
+//				m_whiteCapsPrecomputeMat.SetTexture("_Map7", m_fourierBuffer7[m_idx]);
+//				m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness * choppynessMultiplier);
+//				RenderTexture[] buffers = new RenderTexture[] {m_foam0, m_foam1};
+//				RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat, 0);
+
+				//fixed block, two passes, fixes mipmapping issue resulting in black ocean
 				m_whiteCapsPrecomputeMat.SetTexture("_Map5", m_fourierBuffer5[m_idx]);
 				m_whiteCapsPrecomputeMat.SetTexture("_Map6", m_fourierBuffer6[m_idx]);
 				m_whiteCapsPrecomputeMat.SetTexture("_Map7", m_fourierBuffer7[m_idx]);
-				m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness * choppynessMultiplier);
-				
-				RenderTexture[] buffers = new RenderTexture[] {
-					m_foam0, m_foam1
-				};
-				
-				//			RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat);
-				RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat, 0);
+				m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness);
+				Graphics.Blit (null, m_foam0, m_whiteCapsPrecomputeMat, 0);
+				Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
+
 				
 				m_oceanMaterialFar.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
 				m_oceanMaterialFar.SetFloat("farWhiteCapStr", m_farWhiteCapStr);

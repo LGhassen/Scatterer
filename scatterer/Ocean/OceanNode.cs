@@ -428,7 +428,14 @@ namespace scatterer
 				if (pqs.ChildSpheres [0]) {
 //					Debug.Log("pqs.ChildSpheres [0] found");
 					ocean = pqs.ChildSpheres [0];
-					emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
+					if (m_core.oceanCloudShadows)
+					{
+						emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
+					}
+					else
+					{
+						emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShaderIgnoreProj.shader"));	
+					}
 
 //					fakeOceanMaterial = new Material (ShaderTool.GetMatFromShader2 ("CompiledFakeOcean.shader"));
 

@@ -559,11 +559,11 @@ namespace scatterer {
 			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
 			
 			//These texture hold the actual data use in the ocean renderer
-			CreateMap(ref m_map0, mapFormat, m_ansio);
-			CreateMap(ref m_map1, mapFormat, m_ansio);
-			CreateMap(ref m_map2, mapFormat, m_ansio);
-			CreateMap(ref m_map3, mapFormat, m_ansio);
-			CreateMap(ref m_map4, mapFormat, m_ansio);
+			CreateMap(ref m_map0, mapFormat, m_ansio, true);
+			CreateMap(ref m_map1, mapFormat, m_ansio, true);
+			CreateMap(ref m_map2, mapFormat, m_ansio, true);
+			CreateMap(ref m_map3, mapFormat, m_ansio, true);
+			CreateMap(ref m_map4, mapFormat, m_ansio, true);
 			
 			//These textures are used to perform the fourier transform
 			CreateBuffer(ref m_fourierBuffer0, format); //heights
@@ -620,12 +620,13 @@ namespace scatterer {
 			}
 		}
 		
-		protected void CreateMap(ref RenderTexture map, RenderTextureFormat format, int ansio) {
+		protected void CreateMap(ref RenderTexture map, RenderTextureFormat format, int ansio, bool useMipMaps) {
 			map = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 			map.filterMode = FilterMode.Trilinear;
 			map.wrapMode = TextureWrapMode.Repeat;
 			map.anisoLevel = ansio;
-			map.useMipMap = true;
+//			map.useMipMap = true;
+			map.useMipMap = useMipMaps;
 			map.Create();
 		}
 		
