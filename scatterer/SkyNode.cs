@@ -13,13 +13,7 @@ using KSP.IO;
 namespace scatterer
 {
 	/*
-	 * Loads the tables required for the atmospheric scattering and sets any uniforms for shaders
-	 * that need them. If you create new tables using the PreprocessAtmo.cs script and changed some of
-	 * the settings (like the tables dimensions) you need to make sure the settings match here.
-	 * You can adjust some of these settings (mieG, betaR) to change the look of the scattering but
-	 * as precomputed tables are used there is a limit to how much the scattering will change.
-	 * For large changes you will need to create new table with the settings you want.
-	 * NOTE - all scenes must contain a skyNode
+	 *This whole class is overdue one big-ass cleanup
 	 */
 	public class SkyNode: MonoBehaviour
 	{
@@ -29,6 +23,8 @@ namespace scatterer
 		SimplePostProcessCube hp;
 		GameObject atmosphereMesh;
 		MeshRenderer atmosphereMeshrenderer;
+
+
 		
 		//		[Persistent] public bool UIvisible = false;
 		[Persistent]
@@ -414,7 +410,7 @@ namespace scatterer
 					InitPostprocessMaterial (m_atmosphereMaterial);
 					UpdatePostProcessMaterial (m_atmosphereMaterial);
 
-					if (m_manager.hasOcean)
+					if (m_manager.hasOcean && m_manager.GetCore ().useOceanShaders)
 					{
 						m_manager.GetOceanNode().SetUniforms(m_atmosphereMaterial);
 					}
@@ -778,7 +774,25 @@ namespace scatterer
 			}
 			
 
-//			//Eclipse stuff
+			//Eclipse stuff
+			Vector3 sunPosRelPlanet = m_manager.sunCelestialBody.transform.position - m_manager.parentCelestialBody.transform.position;
+			mat.SetVector("sunPosAndRadius", new Vector4(sunPosRelPlanet.x,sunPosRelPlanet.y,
+			                                             sunPosRelPlanet.z,(float)m_manager.sunCelestialBody.Radius));
+
+			//build and set casters matrix
+			Matrix4x4 castersMatrix= Matrix4x4.zero;
+
+//			Debug.Log ("m_manager.eclipseCasters.Count"+ m_manager.eclipseCasters.Count.ToString());
+			for (int i=0;i< Mathf.Min(4, m_manager.eclipseCasters.Count);i++)
+			{
+//				Debug.Log("i"+i);
+				Vector3 casterPosRelPlanet = m_manager.eclipseCasters[i].transform.position - m_manager.parentCelestialBody.transform.position;
+				castersMatrix.SetRow(i,new Vector4(casterPosRelPlanet.x, casterPosRelPlanet.y,
+				                                    casterPosRelPlanet.z,(float)m_manager.eclipseCasters[i].Radius));
+
+			}
+			mat.SetMatrix ("lightOccluders", castersMatrix);
+
 //			mat.SetFloat ("LightRadius",(float) m_manager.sunCelestialBody.Radius*0.7f);
 //			mat.SetVector ("Light0Pos", m_manager.sunCelestialBody.transform.position-parentCelestialBody.transform.position);
 //			//sun position relative to planet
@@ -1028,7 +1042,7 @@ namespace scatterer
 			mat.SetFloat ("_openglThreshold", openglThreshold);
 			//		mat.SetFloat("_horizonDepth", horizonDepth);
 			//		mat.SetFloat("_globalThreshold", globalThreshold);
-			mat.SetFloat ("_edgeThreshold", edgeThreshold);
+//			mat.SetFloat ("_edgeThreshold", edgeThreshold);
 			
 			//		mat.SetFloat("terrain_reflectance", terrainReflectance);
 			//		mat.SetFloat("_irradianceFactor", irradianceFactor);
@@ -1527,7 +1541,7 @@ namespace scatterer
 				extinctionMultiplier = configPoints [0].skyExtinctionMultiplier;
 				extinctionTint = configPoints [0].skyExtinctionTint;
 				skyExtinctionRimFade = configPoints [0].skyextinctionRimFade;
-				edgeThreshold = configPoints [0].edgeThreshold;
+//				edgeThreshold = configPoints [0].edgeThreshold;
 				openglThreshold = configPoints [0].openglThreshold;
 				viewdirOffset = configPoints [0].viewdirOffset;
 				currentConfigPoint = 0;
@@ -1542,7 +1556,7 @@ namespace scatterer
 				extinctionMultiplier = configPoints [configPoints.Count - 1].skyExtinctionMultiplier;
 				extinctionTint = configPoints [configPoints.Count - 1].skyExtinctionTint;
 				skyExtinctionRimFade = configPoints [configPoints.Count - 1].skyextinctionRimFade;
-				edgeThreshold = configPoints [configPoints.Count - 1].edgeThreshold;
+//				edgeThreshold = configPoints [configPoints.Count - 1].edgeThreshold;
 				openglThreshold = configPoints [configPoints.Count - 1].openglThreshold;
 				viewdirOffset = configPoints [configPoints.Count - 1].viewdirOffset;
 				currentConfigPoint = configPoints.Count;
@@ -1560,7 +1574,7 @@ namespace scatterer
 						extinctionMultiplier = percentage * configPoints [j].skyExtinctionMultiplier + (1 - percentage) * configPoints [j - 1].skyExtinctionMultiplier;
 						extinctionTint = percentage * configPoints [j].skyExtinctionTint + (1 - percentage) * configPoints [j - 1].skyExtinctionTint;
 						skyExtinctionRimFade = percentage * configPoints [j].skyextinctionRimFade + (1 - percentage) * configPoints [j - 1].skyextinctionRimFade;
-						edgeThreshold = percentage * configPoints [j].edgeThreshold + (1 - percentage) * configPoints [j - 1].edgeThreshold;
+//						edgeThreshold = percentage * configPoints [j].edgeThreshold + (1 - percentage) * configPoints [j - 1].edgeThreshold;
 						openglThreshold = percentage * configPoints [j].openglThreshold + (1 - percentage) * configPoints [j - 1].openglThreshold;
 						viewdirOffset = percentage * configPoints [j].viewdirOffset + (1 - percentage) * configPoints [j - 1].viewdirOffset;
 						currentConfigPoint = j;

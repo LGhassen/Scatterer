@@ -8,14 +8,9 @@ namespace scatterer {
 	/*
 	 * A manger to organise what order update functions are called
 	 * Provides a location for common settings and allows the nodes to access each other
-	 * 
 	 */
 	public class Manager: MonoBehaviour {
-		
-		
-		//update counter and manager state, used to know if the manager is working
-		int updateCnt = 0;
-		string managerState = "not initialized";
+
 		
 		//parent core
 		Core m_core;
@@ -32,11 +27,10 @@ namespace scatterer {
 		public Transform ParentPlanetTransform;
 		
 		public CelestialBody sunCelestialBody;
-//		public CelestialBody munCelestialBody;
+		public List<CelestialBody> eclipseCasters;
 		
 		// Initialization
 		public void Awake() {
-			managerState = "waking up";
 			m_radius = (float) parentCelestialBody.Radius;
 			//			print (m_radius);
 			
@@ -55,7 +49,7 @@ namespace scatterer {
 			//m_skyNode.loadFromConfigNode ();
 			//			print ("skynode started");
 			
-			if (hasOcean) {
+			if (hasOcean && m_core.useOceanShaders) {
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
 				m_oceanNode.setCore(m_core);
@@ -64,13 +58,10 @@ namespace scatterer {
 				m_oceanNode.Start();
 
 			}
-			
-			managerState = "awake";
 		}
 		
 		
 		public void Update() {
-			managerState = "updating";
 			m_radius = (float) parentCelestialBody.Radius;
 			
 			//Update the sky and sun
@@ -82,15 +73,9 @@ namespace scatterer {
 			
 			m_skyNode.UpdateNode();
 			
-			if (hasOcean) {
+			if (hasOcean && m_core.useOceanShaders) {
 				m_oceanNode.UpdateNode();
 			}
-			
-			
-			
-			updateCnt++;
-			managerState = "update done " + updateCnt.ToString();
-			//print (managerState);
 		}
 		
 		public void OnDestroy() {
@@ -99,7 +84,7 @@ namespace scatterer {
 			
 			UnityEngine.Object.Destroy(m_sunNode);
 			
-			if (hasOcean) {
+			if (hasOcean && m_core.useOceanShaders) {
 				m_oceanNode.OnDestroy();
 				UnityEngine.Object.Destroy(m_oceanNode);
 			}
@@ -108,7 +93,7 @@ namespace scatterer {
 		
 		//this fixes the alt-enter bug the really stupid way but it'll do for now
 		public void reBuildOcean() {
-			if (hasOcean) {
+			if (hasOcean && m_core.useOceanShaders) {
 				UnityEngine.Object.Destroy(m_oceanNode);
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
@@ -142,13 +127,7 @@ namespace scatterer {
 			//			}
 			
 		}
-		
-		
-		public string getManagerState() {
-			return managerState;
-		}
-		
-		
+
 		public float GetRadius() {
 			return m_radius;
 		}

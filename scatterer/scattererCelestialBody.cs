@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace scatterer
 {
@@ -10,6 +11,7 @@ namespace scatterer
 		[Persistent] public float loadDistance;
 		[Persistent] public float unloadDistance;
 		[Persistent] public bool hasOcean;
+		[Persistent] public List<string> eclipseCasters=new List<string> {};
 
 		public CelestialBody celestialBody;
 		public Transform transform;
@@ -20,13 +22,14 @@ namespace scatterer
 		
 		
 		public scattererCelestialBody (string inCelestialBodyName, string inTransformName, float inloadDistance,
-		                               float inUnloadDistance, bool inHasOcean)
+		                               float inUnloadDistance, bool inHasOcean, List<string> inEclipseCasters)
 		{
 			celestialBodyName = inCelestialBodyName;
 			transformName=inTransformName;
 			loadDistance = inloadDistance;
 			unloadDistance=inUnloadDistance;
 			hasOcean = inHasOcean;
+			eclipseCasters = inEclipseCasters;
 		}
 
 		public scattererCelestialBody (CelestialBody inCelestialBody, Transform inTransform)
