@@ -557,6 +557,8 @@ namespace scatterer
 					}
 					
 				}
+
+				customDepthBuffer.OnDestroy();
 				Component.Destroy (customDepthBuffer);
 				UnityEngine.Object.Destroy (customDepthBuffer);
 				UnityEngine.Object.Destroy (customDepthBufferTexture);
@@ -569,6 +571,8 @@ namespace scatterer
 				
 				if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
 					Component.Destroy (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
+			
+			
 			}
 
 			else if (mainMenu)

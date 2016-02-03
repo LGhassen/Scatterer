@@ -66,14 +66,15 @@ namespace scatterer
 			//				tester.transform.parent = celestialTransform;
 			//			}
 			
-			
+			m_skynode.UpdateStuff ();
+
 			m_skynode.InitUniforms(skyMat);
 			m_skynode.SetUniforms (skyMat);
 
 			m_skynode.InitUniforms(skyExtinct);
 			m_skynode.SetUniforms (skyExtinct);
 
-			m_skynode.UpdateStuff ();
+
 			//			skyMat.SetPass(0);
 			//
 			//			Graphics.DrawMeshNow(m_mesh, position, Quaternion.identity);

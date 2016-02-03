@@ -100,7 +100,12 @@ public class CustomDepthBufferCam : MonoBehaviour
 				Graphics.Blit (_depthTex, destination);
 			}
 
-	}		
+	}
+
+		public void OnDestroy ()
+		{
+			UnityEngine.Object.Destroy (_depthCam);
+		}
 	
 
 }
