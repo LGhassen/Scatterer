@@ -27,32 +27,18 @@ public class CustomDepthBufferCam : MonoBehaviour
 		if (!_depthCam) {
 			_depthCam = new GameObject("CustomDepthCamera");
 			_depthCam.AddComponent<Camera>();
-//			_depthCam.camera.clearFlags=CameraClearFlags.Color;		//these don't seem to work, instead I clear the texture manually in a first shader pass
-//			_depthCam.camera.backgroundColor=Color.white;
 
 			_depthCam.camera.farClipPlane=incore.farCamera.farClipPlane;
 			_depthCam.camera.nearClipPlane=incore.farCamera.nearClipPlane;
-				_depthCam.camera.depthTextureMode=DepthTextureMode.None;
+			_depthCam.camera.depthTextureMode=DepthTextureMode.None;
 
 			_depthCam.camera.enabled = true;
-			//_depthCam.hideFlags = HideFlags.HideAndDontSave;
-//			_depthCam.camera.depthTextureMode = DepthTextureMode.None;
-
 			depthShader = ShaderTool.GetShader2("CompiledDepthTexture.shader");
-
-//			viewCustomBufferShader = ShaderTool.GetMatFromShader2 ("CompiledviewCustomDepthTexture.shader");
-//			viewCustomBufferShader.SetTexture ("_DepthTex", _depthTex);
 		}
 
 		_depthCam.camera.CopyFrom(inCamera);
 		//_depthCam.camera.backgroundColor = new Color(0,0,0,0);
 		//_depthCam.camera.clearFlags = CameraClearFlags.SolidColor;
-		//_depthCam.camera.cullingMask = 1 << LayerMask.NameToLayer("Character1") | 
-		//	1 << LayerMask.NameToLayer("Character2");
-
-
-		
-
 
 			//inCamera.camera.SetReplacementShader(depthShader,"RenderType");
 
@@ -69,14 +55,10 @@ public class CustomDepthBufferCam : MonoBehaviour
 //				//not needed for built-in depth
 
 
-
 				_depthCam.camera.targetTexture = _depthTex;
-
 				_depthCam.camera.SetReplacementShader (depthShader, "RenderType");
-
 				_depthCam.camera.RenderWithShader (depthShader, "RenderType");
 			}
-
 		}
 
 	

@@ -22,72 +22,58 @@ namespace scatterer
 		Mesh m_mesh;
 		Manager m_manager;
 		SkyNode m_skynode;
-		GameObject skyObject, skyExtinctObject;
+		GameObject skyObject;
 		
 		Transform parentTransform;
 		Transform celestialTransform;
-		
-		bool debug6;
-		
-		public Material skyMat,skyExtinct;
+
+		public Material skyMat;
 		
 		
 		
-		public void settings(Mesh inmesh,Material inSkyMat, Material inSkyExtinct, Manager inManager, SkyNode inSkyNode, GameObject inSkyObject,GameObject inSkyExtinctObject, bool indebug6, Transform inparentTransform, Transform inCelestialTransform)
+		public void settings(Mesh inmesh,Material inSkyMat, Manager inManager, SkyNode inSkyNode,
+		                     GameObject inSkyObject,Transform inparentTransform, Transform inCelestialTransform)
 		{
-			
+
 			skyMat = inSkyMat;
-			skyExtinct = inSkyExtinct;
 			m_manager = inManager;
 			m_skynode = inSkyNode;
 			skyObject = inSkyObject;
-			skyExtinctObject = inSkyExtinctObject;
-			debug6 = indebug6;
 			parentTransform = inparentTransform;
 			celestialTransform = inCelestialTransform;
 			m_mesh = inmesh;
+
+			skyObject.transform.parent = parentTransform;
 			
 		}
 		
-		
-//		public void OnRender()
+
 		public void OnPreRender()
 		{
+
+			var munCelestialTransform =(Transform) ScaledSpace.Instance.transform.FindChild ("Mun");
+			if (munCelestialTransform)
+			{
+				m_manager.GetCore().copiedScaledSunLight.transform.position=munCelestialTransform.position;
+			}
+			else
+			{
+				Debug.Log("muncelestial not found");
+			}
+			
+			m_manager.GetCore().copiedScaledSunLight.light.type=LightType.Point;
+			m_manager.GetCore().copiedScaledSunLight.light.range=1E9f;
+
+			ScaledSpace.LocalToScaledSpace (munCelestialTransform);
 			
 			skyMat.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
-			
-			//			if (debug6){
-			skyObject.transform.parent = parentTransform;
-			skyExtinctObject.transform.parent = parentTransform;
-			//			}
-			//			
-			//			else{
-			//				Transform celestialTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single(t => t.name == parentCelestialBody.name);
-			//				tester.transform.parent = celestialTransform;
-			//			}
-			
+
 			m_skynode.UpdateStuff ();
 
-			m_skynode.InitUniforms(skyMat);
+			m_skynode.InitUniforms(skyMat); //desn't need to be done every frame, take a look at it and clean it up later
 			m_skynode.SetUniforms (skyMat);
 
-			m_skynode.InitUniforms(skyExtinct);
-			m_skynode.SetUniforms (skyExtinct);
 
-
-			//			skyMat.SetPass(0);
-			//
-			//			Graphics.DrawMeshNow(m_mesh, position, Quaternion.identity);
-			//			//			Graphics.DrawMesh(m_mesh, position, Quaternion.identity,m_skyMaterial,layer,cam);
-
-			m_mesh.bounds = new Bounds(celestialTransform.position, new Vector3(1e32f,1e32f, 1e32f));
-
-//			skyMat.SetPass(0);
-//			Graphics.DrawMesh (m_mesh, celestialTransform.position, Quaternion.identity, skyMat, 10, m_skynode.scaledSpaceCamera);//, 0, null, false, false);
-//
-//			skyMat.SetPass(0);
-//			Graphics.DrawMeshNow(m_mesh, celestialTransform.position, Quaternion.identity);
-			
 		}		
 	}
 }

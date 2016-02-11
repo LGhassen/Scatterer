@@ -75,7 +75,6 @@
     <Compile Include="Framework\ExtensionsUnity.cs" />
     <Compile Include="viewDepthBuffer.cs" />
     <Compile Include="updateAtCameraRythm.cs" />
-    <Compile Include="SimplePostProcessCube.cs" />
     <Compile Include="configPoint.cs" />
     <Compile Include="scattererCelestialBody.cs" />
     <Compile Include="celestialBodySortableByDistance.cs" />
@@ -92,6 +91,7 @@
     <Compile Include="Ocean\FourierCPU.cs" />
     <Compile Include="isosphere.cs" />
     <Compile Include="wireFrame.cs" />
+    <Compile Include="SimplePostProcessCube.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -246,7 +246,6 @@
     <None Include="Plugins\Containers\SetQueue.cs.meta" />
     <None Include="Proland\Scripts\Atmo\PreProcessAtmo.cs" />
     <None Include="Plugins\Math\PerlinNoise.cs" />
-    <None Include="scatterPostProcess.cs" />
     <None Include="cameraHDR.cs" />
     <None Include="DetectLeaks.cs" />
     <None Include="Ocean\OceanFFT.cs.meta" />

@@ -10,10 +10,10 @@ namespace scatterer
 {
 	public class SimplePostProcessCube
 	{
-
+		
 		GameObject meshContainer;
 		public GameObject GameObject { get { return meshContainer; } }
-
+		
 		public SimplePostProcessCube(float size, Material material)
 		{
 			

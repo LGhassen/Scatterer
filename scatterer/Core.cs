@@ -23,6 +23,9 @@ namespace scatterer
 		List < scattererCelestialBody >
 			scattererCelestialBodies = new List < scattererCelestialBody > {};
 		CelestialBody[] CelestialBodies;
+
+		Light[] lights;
+
 		List < celestialBodySortableByDistance > celestialBodiesWithDistance = new List < celestialBodySortableByDistance > ();
 		[Persistent]
 		public bool
@@ -35,13 +38,13 @@ namespace scatterer
 		public bool
 			useOceanShaders = true;
 
-//		[Persistent]
-//		public bool
-//			foamMipMapping = false;
-
 		[Persistent]
 		public bool
 			oceanCloudShadows = false;
+
+		[Persistent]
+		public bool
+			fullLensFlareReplacement = true;
 
 		[Persistent]
 		public bool
@@ -50,7 +53,11 @@ namespace scatterer
 		[Persistent]
 		int scrollSectionHeight = 500;
 
+		bool callCollector=false;
 
+		GameObject sunLight,scaledspaceSunLight;
+		public GameObject copiedScaledSunLight;
+		public GameObject copiedSunLight;
 		
 
 //		[Persistent]
@@ -86,7 +93,7 @@ namespace scatterer
 
 
 		CelestialBody sunCelestialBody;
-//		CelestialBody munCelestialBody;
+		CelestialBody munCelestialBody;
 		public string path;
 		bool found = false;
 		bool showInterpolatedValues = false;
@@ -115,33 +122,15 @@ namespace scatterer
 		int selectedPlanet = 0;
 		Camera[] cams;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
-		
-		//int count;
+
 		
 		float MapViewScale = 1000f;
-		
-		//ReflectedLight variables
-		//		float terrainReflectance=100;
-		//		float sunIntensity=100;
-		//		float irradianceFactor=100;
-		
-		
-		//Debug variables
-		//		public float[] additionalScales=new float[10];
-		//		public bool[] debugSettings = new bool[10];
-		//		public int renderQueue=2000;
+
 		[Persistent]	public int oceanRenderQueue=2001;
-		
-		//postprocessing properties
-		//		float inscatteringCoeff=85f; //useless, removed from shader
-		//		float extinctionCoeff=70f;   //obsolete
-		//		float postProcessScale=1000f;
+
 		float postProcessingalpha = 78f;
 		float postProcessDepth = 200f;
-		//		float horizonDepth = 200f;
 		float postProcessExposure = 18f;
-		//		float MapViewScale=1000f;
-		
 		
 		//sky properties
 		float exposure = 25f;
@@ -151,7 +140,7 @@ namespace scatterer
 		float mapSkyRimeExposure = 15f;
 		float mapAlphaGlobal = 100f;
 		
-		//Transform ParentPlanetTransform;
+
 		
 		public Camera chosenCamera;
 		public int layer = 15;
@@ -159,10 +148,7 @@ namespace scatterer
 		
 		//ocean variables
 		public bool stockOcean = false;
-//		float oceanSigma = 0.04156494f;
-//		float oceanThreshold = 25f;
-		//		float theta =1.0f;
-		//		float phi=1.0f;
+
 		float oceanLevel = 0f;
 		float oceanAlpha = 1f;
 		float oceanAlphaRadius = 3000f;
@@ -196,23 +182,14 @@ namespace scatterer
 		int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
 
-		float sunReflectionMultiplier = 1f;
-		float skyReflectionMultiplier = 1f;
-		float seaRefractionMultiplier = 1f;
+//		float sunReflectionMultiplier = 1f;
+//		float skyReflectionMultiplier = 1f;
+//		float seaRefractionMultiplier = 1f;
 
 		
 		
 		//other stuff
 		//float atmosphereGlobalScale = 1000f;
-		//float m_radius; // = 600000.0f;
-		//String parentPlanet="Kerbin";
-		
-		//[Persistent] String ParentPlanetCelestialBodyName = "Kerbin";
-		//[Persistent] String ParentPlanetTransformName = "Kerbin";
-		
-		
-		//		int PlanetId;
-		//		int SunId;
 		
 		//Manager m_manager;
 		public bool depthbufferEnabled = false;
@@ -244,22 +221,12 @@ namespace scatterer
 			// Only load the planets once
 			loadPlanetsList ();
 
-//			for (int g=0; g < scattererCelestialBodies.Count; g++)
-//			{
-//				Debug.Log("Eclipse casters for "+scattererCelestialBodies[g].celestialBodyName);
-//				for (int k=0; k < scattererCelestialBodies[g].eclipseCasters.Count; k++)
-//				{
-//					Debug.Log(scattererCelestialBodies[g].eclipseCasters[k]);
-//				}
-//			}
-
-
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
 
 			Visible = false;
 			
 			if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 9")) {
-				d3d9 = true;
+//				d3d9 = true;
 			} else if (SystemInfo.graphicsDeviceVersion.StartsWith ("OpenGL")) {
 				opengl = true;
 			}
@@ -277,17 +244,11 @@ namespace scatterer
 				mainMenu=true;
 				Visible=showMenuOnStart;
 			}
-			
-			//			for (int j=0;j<10;j++)
-			//			{
-			//				debugSettings[j]=false;
-			//			}
 		}
 		
 		internal override void Update ()
 		{
 			//toggle whether GUI is visible or not
-
 			if ((Input.GetKey (KeyCode.LeftAlt) || Input.GetKey (KeyCode.RightAlt)) && (Input.GetKeyDown (KeyCode.F11) || (Input.GetKeyDown (KeyCode.F10))))
 				Visible = !Visible;
 			if (isActive && ScaledSpace.Instance) {
@@ -340,6 +301,7 @@ namespace scatterer
 					
 //					sunCelestialBody = CelestialBodies.Single (_cb => _cb.GetName () == "Sun");
 					sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == "Sun");
+					munCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == "Mun");
 
 
 					//we need to load all of the celestial bodies in celestialBodiesWithDistance regardless
@@ -383,6 +345,42 @@ namespace scatterer
 						}
 					}
 
+
+					//find sunlight
+					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+					Debug.Log ("number of lights" + lights.Length);
+					foreach (Light _light in lights)
+					{
+						Debug.Log("name:"+_light.gameObject.name);
+						Debug.Log("intensity:"+_light.intensity.ToString());
+						Debug.Log ("mask:"+_light.cullingMask.ToString());
+						Debug.Log ("type:"+_light.type.ToString());
+						Debug.Log ("Parent:"+_light.transform.parent.gameObject.name);
+						Debug.Log ("range:"+_light.range.ToString());
+
+						if (_light.gameObject.name == "Scaledspace SunLight")
+						{
+							scaledspaceSunLight=_light.gameObject;
+							Debug.Log("Found scaled sunlight");
+//							scaledspaceSunLight.light.intensity=3;
+						}
+
+						if (_light.gameObject.name == "SunLight")
+						{
+							sunLight=_light.gameObject;
+							_light.intensity=3;
+							Debug.Log("Found sunlight");
+							//							scaledspaceSunLight.light.intensity=3;
+						}
+
+					}
+					//
+
+					copiedScaledSunLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
+//					copiedScaledSunLight.name="copiedScaledSunLight";
+
+//					copiedSunLight=(UnityEngine.GameObject) Instantiate(sunLight);
+////					copiedSunLight.name="copiedSunLight";
 					found = true;
 				}
 				
@@ -390,13 +388,20 @@ namespace scatterer
 			
 			
 				if (ScaledSpace.Instance && farCamera) {
-//				if (farCamera) {
+					if (callCollector)
+						{
+//							if (collectorCnt==3)
+							{
+								GC.Collect();
+								callCollector=false;
+							}
+						}
 
 					if (!depthBufferSet) {
 						if (!render24bitDepthBuffer || d3d9) {
 
 							farCamera.depthTextureMode = DepthTextureMode.Depth;
-							Debug.Log ("[Scatterer] Running in Direct3D 9, using default depth buffer");
+							Debug.Log ("[Scatterer] Using default depth buffer");
 						} else {
 
 
@@ -438,7 +443,8 @@ namespace scatterer
 					}
 
 
-					if (render24bitDepthBuffer && !d3d9 && !customDepthBufferTexture.IsCreated ()) {
+					if (render24bitDepthBuffer && !d3d9 && !customDepthBufferTexture.IsCreated ())
+					{
 						customDepthBufferTexture.Create ();
 					}
 
@@ -472,8 +478,8 @@ namespace scatterer
 									//ReactivateAtmosphere(cur.transformName,cur.originalPlanetMaterialBackup);
 									_cur.active = false;
 								
-									Resources.UnloadUnusedAssets ();
-									System.GC.Collect ();
+									callCollector=true;
+
 									Debug.Log ("[Scatterer] Effects unloaded for " + _cur.celestialBodyName);
 								} else {
 									_cur.m_manager.Update ();
@@ -486,7 +492,7 @@ namespace scatterer
 									_cur.m_manager.setParentPlanetTransform (_cur.transform);
 									_cur.m_manager.setSunCelestialBody (sunCelestialBody);
 
-									//Find eclipse casters here
+									//Find eclipse casters
 									List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
 
 									for (int k=0; k < _cur.eclipseCasters.Count; k++)
@@ -497,10 +503,15 @@ namespace scatterer
 										else
 										{
 											eclipseCasters.Add(cc);
-//											Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
+											Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
+//											copiedScaledSunLight.light.type=LightType.Point;
+//											copiedScaledSunLight.light.range=1E9f;
+//											copiedScaledSunLight.light.cullingMask=sunLight.light.cullingMask;
+//											copiedSunLight.transform.parent=cc.transform;
 										}
-
 									}
+
+
 
 									_cur.m_manager.eclipseCasters=eclipseCasters;
 										
@@ -513,21 +524,22 @@ namespace scatterer
 									displayOceanSettings = false;
 									selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
 									getSettingsFromSkynode ();
-									if (_cur.hasOcean) {
+									if (_cur.hasOcean && useOceanShaders) {
 										getSettingsFromOceanNode ();
 									}
 
+									callCollector=true;
 									Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
 								}
 							}
 						}
 					}
+
+//					copiedScaledSunLight.transform.position=ScaledSpace.LocalToScaledSpace(munCelestialBody.transform.position);
+
 					fixDrawOrders ();
 				}
 			} 
-
-		
-
 		}
 		
 		void OnGUI ()
@@ -602,9 +614,8 @@ namespace scatterer
 				GUILayout.Label (String.Format ("Scatterer: features selector"));
 				useOceanShaders = GUILayout.Toggle(useOceanShaders, "Ocean shaders");
 				oceanCloudShadows = GUILayout.Toggle(oceanCloudShadows, "EVE cloud shadows on ocean, may cause artifacts");
-//				foamMipMapping = GUILayout.Toggle(foamMipMapping, "Foam mipmapping, can cause black ocean bug");
-//				Debug.Log("useOceanShaders"+useOceanShaders.ToString());
 				render24bitDepthBuffer=GUILayout.Toggle(render24bitDepthBuffer, "Use 24 bit depth buffer (dx11/Ogl, removes artifacts)");
+				fullLensFlareReplacement=GUILayout.Toggle(render24bitDepthBuffer, "Full lens flare replacement (forces 24bit dbuffer, even in dx9)");
 
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Menu scroll section height");
@@ -879,57 +890,13 @@ namespace scatterer
 //									GUILayout.BeginHorizontal ();
 //									GUILayout.Label ("24bit dbuffer Edge Tshld");
 //									edgeThreshold = (float)(Convert.ToDouble (GUILayout.TextField (edgeThreshold.ToString ())));
-//								
-//								
-//									if (GUILayout.Button ("Set")) {
-//										//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
-//										//tweakStockAtmosphere(ParentPlanetTransformName, rimBlend, rimpower);
-//										scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].edgeThreshold = edgeThreshold / 100;
-//									}
-//									GUILayout.EndHorizontal ();
-								
-								
-								
-									//							GUILayout.BeginHorizontal();
-									//							GUILayout.Label("Global Threshold");
-									//							globalThreshold = (float)(Convert.ToDouble(GUILayout.TextField(globalThreshold.ToString())));
-									//							
-									//							if (GUILayout.Button("Set")) {
-									//								//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
-									//								//tweakStockAtmosphere(ParentPlanetTransformName, rimBlend, rimpower);
-									//								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.globalThreshold=globalThreshold;
-									//							}
-									//							GUILayout.EndHorizontal();
-								
-								
-								
-								
-									//							GUILayout.EndHorizontal();
-									//							
-									//							GUILayout.BeginHorizontal();
-									//							GUILayout.Label("Horizon Depth (/10000)");
-									//							horizonDepth = (float)(Convert.ToDouble(GUILayout.TextField(horizonDepth.ToString())));
-									//							
-									//							if (GUILayout.Button("Set")) {
-									//								scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.horizonDepth = horizonDepth / 10000f;
-									//							}
-									//							GUILayout.EndHorizontal();
-								
+
 								}
 							
-							
-							
-							
-							
-							
-							
-							
-							} else {
-							
-								//					GUILayout.BeginHorizontal ();
-								//					GUILayout.Label ("Sky Settings (map view)");
-								//					GUILayout.EndHorizontal ();
-							
+
+							} 
+							else
+							{
 
 								GUIfloat("experimentalAtmoScale", ref experimentalAtmoScale,
 								         ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.experimentalAtmoScale);
@@ -998,7 +965,6 @@ namespace scatterer
 									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.mapSkyExtinctionRimFade = mapSkyExtinctionRimFade / 100f;
 								}
 								GUILayout.EndHorizontal ();
-							
 							}
 						
 							//					GUILayout.BeginHorizontal();
@@ -1038,8 +1004,6 @@ namespace scatterer
 							rimpower = (float)(Convert.ToDouble (GUILayout.TextField (rimpower.ToString ())));
 						
 							if (GUILayout.Button ("Set")) {
-								//					tweakStockAtmosphere(parentPlanet,rimBlend,rimpower);
-								//tweakStockAtmosphere(ParentPlanetTransformName, rimBlend, rimpower);
 								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimBlend = rimBlend;
 								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimpower = rimpower;
 								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
@@ -1107,26 +1071,7 @@ namespace scatterer
 
 						}
 						GUILayout.EndScrollView ();
-						
-						
-						//						GUILayout.BeginHorizontal ();
-						//						GUILayout.Label ("ManagerState");
-						//						GUILayout.TextField (scattererCelestialBodies [selectedPlanet].m_manager.getManagerState ());
-						//						GUILayout.EndHorizontal ();
-						
-						//					GUILayout.BeginHorizontal();
-						//					if (GUILayout.Button("Disable stock atmo")) {
-						//						//					DeactivateAtmosphere(parentPlanet);
-						//						//DeactivateAtmosphere(ParentPlanetTransformName);
-						//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.DeactivateAtmosphere();
-						//					}
-						//					
-						//					if (GUILayout.Button("Enable stock atmo")) {
-						//						//					ReactivateAtmosphere(parentPlanet);
-						//						//ReactivateAtmosphere(ParentPlanetTransformName);
-						//						scattererCelestialBodies[selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
-						//					}
-						//					GUILayout.EndHorizontal();
+
 						
 						
 						GUILayout.BeginHorizontal ();
@@ -1157,11 +1102,6 @@ namespace scatterer
 							}
 						}
 
-
-
-						if (GUILayout.Button ("Toggle extinction")) {
-							scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.extinctionEnabled = !scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.extinctionEnabled;
-						}
 						
 						GUILayout.EndHorizontal ();
 
@@ -1481,52 +1421,7 @@ namespace scatterer
 
 		}
 		
-		
-		//		public Material backupAtmosphereMaterial(string name) {
-		//			Transform t = ScaledSpace.Instance.transform.FindChild(name);
-		//			Material originalMaterial=null;
-		//			
-		//			for (int i = 0; i < t.childCount; i++) {
-		//				if (t.GetChild(i).gameObject.layer == 9) {
-		//					t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(true);
-		//					originalMaterial = (Material) Material.Instantiate(t.renderer.sharedMaterial);
-		//					i = t.childCount + 10;
-		//				}
-		//			}
-		//			return(originalMaterial);
-		//		}
-		//		
-		//		
-		//		public void ReactivateAtmosphere(string name, Material originalMaterial) {
-		//			Transform t = ScaledSpace.Instance.transform.FindChild(name);
-		//			for (int i = 0; i < t.childCount; i++) {
-		//				if (t.GetChild(i).gameObject.layer == 9) {
-		//					t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(true);
-		//					t.renderer.sharedMaterial = originalMaterial;
-		//					i = t.childCount + 10;
-		//				}
-		//			}
-		//		}
-		//		
-		//		
-		//		public void tweakStockAtmosphere(string name, float inRimBlend, float inRimPower) {
-		//			Transform t = ScaledSpace.Instance.transform.FindChild(name);
-		//			
-		//			for (int i = 0; i < t.childCount; i++) {
-		//				if (t.GetChild(i).gameObject.layer == 9) {
-		//					t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(false);
-		//					Material sharedMaterial = t.renderer.sharedMaterial;
-		//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), inRimBlend / 100f);
-		//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), inRimPower / 100f);
-		//					sharedMaterial.SetColor("_SpecColor", new Color(specR / 100f, specG / 100f, specB / 100f));
-		//					sharedMaterial.SetFloat("_Shininess", shininess / 100);
-		//					
-		//					i = t.childCount + 10;
-		//				}
-		//			}
-		//		}
-		
-		
+
 		
 		public void fixDrawOrders ()
 		{
@@ -1576,12 +1471,10 @@ namespace scatterer
 					
 					if (current.usesScatterer) {
 						if (scattererCelestialBodies [current.scattererIndex].active) {
-							scattererCelestialBodies [current.scattererIndex].m_manager.m_skyNode.m_skyExtinction.renderQueue = currentRenderQueue;
-							//						print ("extinction queue:"+currentRenderQueue.ToString());
 							
-							scattererCelestialBodies [current.scattererIndex].m_manager.m_skyNode.m_skyMaterialScaled.renderQueue = currentRenderQueue + 1;
+							scattererCelestialBodies [current.scattererIndex].m_manager.m_skyNode.m_skyMaterialScaled.renderQueue = currentRenderQueue;
 							
-							currentRenderQueue += 2;
+							currentRenderQueue += 1;
 						}
 					}
 				}
