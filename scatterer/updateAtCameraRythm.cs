@@ -63,8 +63,6 @@ namespace scatterer
 			
 			m_manager.GetCore().copiedScaledSunLight.light.type=LightType.Point;
 			m_manager.GetCore().copiedScaledSunLight.light.range=1E9f;
-
-			ScaledSpace.LocalToScaledSpace (munCelestialTransform);
 			
 			skyMat.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
 
