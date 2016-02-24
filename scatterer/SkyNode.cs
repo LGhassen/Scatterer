@@ -30,7 +30,8 @@ namespace scatterer
 		updateAtCameraRythm updater;
 		bool updaterAdded = false;
 		
-		public float postDist = -3500f;
+		public float postDist = -4500f;
+//		public float postDist = -4000f;
 		public float percentage;
 		public int currentConfigPoint;
 		bool coronasDisabled = false;
@@ -58,13 +59,26 @@ namespace scatterer
 		[Persistent]
 		public float mapSkyExtinctionRimFade = 1f;
 
+		[Persistent]
+		public float
+			_extinctionScatterIntensity = 1f;
+
+		[Persistent]
+		public float
+			_mapExtinctionScatterIntensity = 1f;
+
 		public float openglThreshold = 250f;
 		public float edgeThreshold = 0.5f;
+
+		public float _GlobalOceanAlpha = 1f;
+
+		public float _Post_Extinction_Tint;
+		public float postExtinctionMultiplier;
 
 
 		Vector3 sunViewPortPos=Vector3.zero;
 
-		bool eclipse=false;
+//		bool eclipse=false;
 
 		Transform celestialTransform;
 		float alt;
@@ -84,17 +98,17 @@ namespace scatterer
 		Transform ParentPlanetTransform;
 
 		
-		bool sunglareEnabled = true;
+//		bool sunglareEnabled = true;
 		bool stocksunglareEnabled = true;
 		float sunglareCutoffAlt;
-		Texture2D sunGlare;
-		Texture2D black;
+//		Texture2D sunGlare;
+//		Texture2D black;
 
-
-		Texture2D sunSpikes;
-		Texture2D sunFlare;
-		Texture2D sunGhost1;
-		Texture2D sunGhost2;
+//
+//		Texture2D sunSpikes;
+//		Texture2D sunFlare;
+//		Texture2D sunGhost1;
+//		Texture2D sunGhost2;
 
 		
 		//atmosphere properties
@@ -148,9 +162,9 @@ namespace scatterer
 		float m_radius; // = 600000.0f;
 		//The radius of the planet (Rg), radius of the atmosphere (Rt)
 		[Persistent]
-		float Rg; // = 600000.0f;
+		public float Rg; // = 600000.0f;
 		[Persistent]
-		float Rt; // = (64200f/63600f) * 600000.0f;
+		public float Rt; // = (64200f/63600f) * 600000.0f;
 		[Persistent]
 		float RL; // = (64210.0f/63600f) * 600000.0f;
 		[Persistent]
@@ -180,7 +194,7 @@ namespace scatterer
 		public Material m_atmosphereMaterial;
 		public Material m_skyMaterialScaled;
 
-		public Material sunglareMaterial;
+//		public Material sunglareMaterial;
 
 		
 		Material originalMaterial;
@@ -195,7 +209,8 @@ namespace scatterer
 		string m_filePath = "/Proland/Textures/Atmo";
 		public Matrix4x4d m_cameraToScreenMatrix;
 		Mesh m_mesh;
-		RenderTexture m_transmit, m_inscatter, m_irradiance;
+		RenderTexture m_inscatter, m_irradiance;
+		public RenderTexture m_transmit;
 		
 		Manager m_manager;
 		
@@ -213,14 +228,15 @@ namespace scatterer
 		public float shininess = 0f;
 		[Persistent]
 		public List < configPoint > configPoints = new List < configPoint > {
-			new configPoint(5000f, 1f, 0.25f,0.25f, 1f, 0.4f, 0.23f, 1f, 100f,0f, 250f, 0.5f,0f), new configPoint(15000f, 1f, 0.15f,0.15f, 1f, 8f, 0.23f, 1f, 100f,0f, 250f, 0.5f,0f)
+			new configPoint(5000f, 1f, 0.25f,0.25f, 1f, 0.4f, 0.23f, 1f, 100f,0f, 250f, 0.5f,0f,100f,100f,1f,1f)
+			, new configPoint(15000f, 1f, 0.15f,0.15f, 1f, 8f, 0.23f, 1f, 100f,0f, 250f, 0.5f,0f,100f,100f,1f,1f)
 		};
 		public string assetDir;
 
 
 		public void Start ()
 		{
-			m_radius = m_manager.GetRadius ();
+			m_radius = (float) m_manager.GetRadius ();
 			Rt = (Rt / Rg) * m_radius;
 			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
@@ -250,42 +266,36 @@ namespace scatterer
 			
 			
 			initiateOrRestart ();
-			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
 
-			sunglareMaterial = new Material (ShaderTool.GetMatFromShader2 ("CompiledSunGlare.shader"));
+			if(m_manager.GetCore().useEclipses)
+				m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaledEclipses.shader"));
+			else
+				m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
+
+//			sunglareMaterial = new Material (ShaderTool.GetMatFromShader2 ("CompiledSunGlare.shader"));
 			
-			sunGlare = new Texture2D (512, 512);
-			black = new Texture2D (512, 512);
-			
-			sunGlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares" , "sunglare.png")));
-			black.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares", "black.png")));
+//			sunGlare = new Texture2D (512, 512);
+//			black = new Texture2D (512, 512);
+//			
+//			sunGlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares" , "sunglare.png")));
+//			black.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares", "black.png")));
 
-			sunGlare.wrapMode = TextureWrapMode.Clamp;
-			m_skyMaterialScaled.SetTexture ("_Sun_Glare", sunGlare);
-
-
-			sunSpikes = new Texture2D (2048, 2048);
-			sunFlare = new Texture2D (1024, 1024);
-			sunGhost1 = new Texture2D (128, 128);
-			sunGhost2 = new Texture2D (128, 128);
-
-
-			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares", "star_glow.png")));
-			sunSpikes.wrapMode = TextureWrapMode.Clamp;
-			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares", "AstroNiki_flare.png")));
-			sunFlare.wrapMode = TextureWrapMode.Clamp;
-			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares", "EdenGhost1.png")));
-			sunGhost1.wrapMode = TextureWrapMode.Clamp;
-			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares", "EdenGhost2.png")));
-			sunGhost2.wrapMode = TextureWrapMode.Clamp;
+//			sunGlare.wrapMode = TextureWrapMode.Clamp;
+//			m_skyMaterialScaled.SetTexture ("_Sun_Glare", sunGlare);
+//
+//
+//			sunSpikes = new Texture2D (2048, 2048);
+//			sunFlare = new Texture2D (1024, 1024);
+//			sunGhost1 = new Texture2D (128, 128);
+//			sunGhost2 = new Texture2D (128, 128);
 
 
-			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
-			sunglareMaterial.SetTexture ("sunSpikes", sunSpikes);
-			sunglareMaterial.SetTexture ("sunFlare", sunFlare);
-			sunglareMaterial.SetTexture ("sunGhost1", sunGhost1);
-			sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
-			sunglareMaterial.SetTexture ("_customDepthTexture", m_manager.GetCore ().customDepthBufferTexture);
+//			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
+//			sunglareMaterial.SetTexture ("sunSpikes", sunSpikes);
+//			sunglareMaterial.SetTexture ("sunFlare", sunFlare);
+//			sunglareMaterial.SetTexture ("sunGhost1", sunGhost1);
+//			sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
+//			sunglareMaterial.SetTexture ("_customDepthTexture", m_manager.GetCore ().customDepthBufferTexture);
 
 
 			
@@ -293,7 +303,10 @@ namespace scatterer
 			
 			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
 			{
-				m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter24bitdepth.shader");
+				if (m_manager.GetCore().useGodrays)
+					m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatterGodrays.shader");
+				else
+					m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 			} 
 
 			else
@@ -338,44 +351,51 @@ namespace scatterer
 		
 		public void UpdateStuff () //to be called by update at camera rythm for some graphical stuff
 		{
-			RaycastHit hit;
-			bool hitStatus=false;
-
-			if (!MapView.MapIsEnabled)
-			{
+////			//move these to the sunflare class
+//			RaycastHit hit;
+//			bool hitStatus=false;
+//
+//			if (!MapView.MapIsEnabled)
+//			{
 //				hitStatus = Physics.Raycast (farCamera.transform.position, (m_manager.sunCelestialBody.position - farCamera.transform.position).normalized,
-//				                             out hit, Mathf.Infinity, (int)((1 << 10) + (1 << 15) + (1 << 0))); //doing both like this causes the scaledSpace detection to be off
-																												//raycasting in scaledspace has to be done in scaled coordinates
-																												//so a separate raycast is required
+//				                             out hit, Mathf.Infinity, (int)((1 << 10) + (1 << 15) + (1 << 0))); //doing both like this causes the scaledSpace detection to be off raycasting in scaledspace has to be done in scaled coordinates so a separate raycast is required
+//
+//				hitStatus = Physics.Raycast (farCamera.transform.position, (m_manager.sunCelestialBody.transform.position - farCamera.transform.position).normalized,
+//				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
+//
+//				if(!hitStatus)
+//					hitStatus = Physics.Raycast (scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position)
+//					                                                                    - scaledSpaceCamera.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
+//
+//
+//			}
+//
+//			else
+//			{
+//				hitStatus = Physics.Raycast (scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position)
+//				                                                                    - scaledSpaceCamera.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
+//			}
+//
+//
+//			if (hitStatus)
+//			{
+//				eclipse=true;
+//				Debug.Log (hit.collider.gameObject.name);
+//				Debug.Log (hit.collider.gameObject.layer);
+//				if (hit.collider.gameObject.transform.parent)
+//					Debug.Log(hit.collider.gameObject.transform.parent.gameObject.name);
+//			}
+//
+//			else
+//			{
+//				eclipse=false;
+//			}
 
-				hitStatus = Physics.Raycast (farCamera.transform.position, (m_manager.sunCelestialBody.transform.position - farCamera.transform.position).normalized,
-				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
-
-				if(!hitStatus)
-					hitStatus = Physics.Raycast (scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position)
-					                                                                    - scaledSpaceCamera.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 
 
-			}
-
-			else
-			{
-				hitStatus = Physics.Raycast (scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position)
-				                                                                    - scaledSpaceCamera.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
-			}
 
 
-			if (hitStatus)
-			{
-				eclipse=true;
-				Debug.Log (hit.collider.gameObject.name);
-				Debug.Log (hit.collider.gameObject.layer);
-			}
 
-			else
-			{
-				eclipse=false;
-			}
 
 			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
 			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
@@ -397,32 +417,49 @@ namespace scatterer
 			}
 
 
-			sunViewPortPos = scaledSpaceCamera.WorldToViewportPoint (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position));
-			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
-			sunglareMaterial.SetFloat ("aspectRatio", nearCamera.aspect);
-
-			sunglareMaterial.renderQueue = 3000;
-
-			sunglareMaterial.SetFloat ("Rg", Rg);
-			sunglareMaterial.SetFloat ("Rt", Rt);
-			sunglareMaterial.SetTexture ("_Sky_Transmittance", m_transmit);
-
-			if (!MapView.MapIsEnabled)
-				sunglareMaterial.SetVector ("_Globals_WorldCameraPos", farCamera.transform.position - parentCelestialBody.transform.position);
-			else
-				sunglareMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position) - parentCelestialBody.transform.position);
-
-			sunglareMaterial.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToSun ().normalized);
+//			sunViewPortPos = scaledSpaceCamera.WorldToViewportPoint (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position));
+//			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
+//			sunglareMaterial.SetFloat ("aspectRatio", nearCamera.aspect);
+//
+//			sunglareMaterial.renderQueue = 3000;
+//
+//			sunglareMaterial.SetFloat ("Rg", Rg);
+//			sunglareMaterial.SetFloat ("Rt", Rt);
+//			sunglareMaterial.SetTexture ("_Sky_Transmittance", m_transmit);
+//
+//			if (!MapView.MapIsEnabled)
+//				sunglareMaterial.SetVector ("_Globals_WorldCameraPos", farCamera.transform.position - parentCelestialBody.transform.position);
+//			else
+//				sunglareMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position) - parentCelestialBody.transform.position);
+//
 		}
 
 		
 		public void UpdateNode ()
 		{
+//			MeshRenderer[] renderers = (MeshRenderer[])MeshRenderer.FindObjectsOfType (typeof(MeshRenderer));
+//
+//
+//			QualitySettings.shadowDistance = 100000;
+//
+////			Debug.Log ("shadow distance"+ QualitySettings.shadowDistance.ToString ());
+////			Debug.Log ("meshrenderes: " + renderers.Length.ToString ());
+//
+//			foreach (MeshRenderer _mr in renderers)
+//			{
+//				_mr.castShadows=true;
+//				_mr.receiveShadows=true;
+//			}
+
+//			CurrentPQS.meshCastShadows = true;
+//			CurrentPQS.meshRecieveShadows = true;
+//			QualitySettings.shadowDistance = 100000;
+
 			position = parentCelestialBody.transform.position;
 			
 			if (!initiated)
 			{
-				m_radius = m_manager.GetRadius ();
+				m_radius = (float) m_manager.GetRadius ();
 				
 				Rt = (Rt / Rg) * m_radius;
 				RL = (RL / Rg) * m_radius;
@@ -449,9 +486,9 @@ namespace scatterer
 //					toggleSunglare ();
 //				}
 
-				if ((sunglareEnabled)) { //^ is XOR
-					toggleSunglare ();
-				}
+//				if ((sunglareEnabled)) { //^ is XOR
+//					toggleSunglare ();
+//				}
 				
 
 //				if ((coronasDisabled) ^ ((trueAlt < sunglareCutoffAlt) && !MapView.MapIsEnabled && !eclipse)) { //^ is XOR
@@ -459,7 +496,7 @@ namespace scatterer
 //					toggleCoronas ();
 //				}
 
-				if ((coronasDisabled)) { 
+				if ((!coronasDisabled)) { 
 					toggleCoronas ();
 				}
 				
@@ -467,9 +504,9 @@ namespace scatterer
 //					toggleStockSunglare ();
 //				}
 
-				if (stocksunglareEnabled) { //^ is XOR
-					toggleStockSunglare ();
-				}
+//				if (stocksunglareEnabled) { //^ is XOR
+//					toggleStockSunglare ();
+//				}
 				
 				interpolateVariables ();
 
@@ -507,19 +544,19 @@ namespace scatterer
 				
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) &&(postprocessingEnabled)&&(trueAlt<postProcessMaxAltitude);
 
-				if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
-				{
-					Graphics.DrawMesh (m_mesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 15,
-					                   nearCamera, 0, null, false, false);
-
-				}
-
-				else if (!eclipse && (sunViewPortPos.z > 0))
-				{
-					Graphics.DrawMesh (m_mesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 10,
-					                   scaledSpaceCamera, 0, null, false, false);
-						
-				}
+//				if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
+//				{
+//					Graphics.DrawMesh (m_mesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 15,
+//					                   nearCamera, 0, null, false, false);
+//
+//				}
+//
+//				else if (!eclipse && (sunViewPortPos.z > 0))
+//				{
+//					Graphics.DrawMesh (m_mesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 10,
+//					                   scaledSpaceCamera, 0, null, false, false);
+//						
+//				}
 			}
 
 //			Transform scaledSunTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single (t => t.name == "Sun");
@@ -536,8 +573,8 @@ namespace scatterer
 //				}
 //			}
 
-			Debug.Log ("length "+(ScaledSpace.LocalToScaledSpace (m_manager.sunCelestialBody.transform.position
-				- scaledSpaceCamera.transform.position)).magnitude.ToString());
+//			Debug.Log ("length "+(ScaledSpace.LocalToScaledSpace (m_manager.sunCelestialBody.transform.position
+//				- scaledSpaceCamera.transform.position)).magnitude.ToString());
 
 		}
 
@@ -566,14 +603,17 @@ namespace scatterer
 				mat.SetFloat ("_Extinction_Tint", extinctionTint);
 				mat.SetFloat ("extinctionMultiplier", extinctionMultiplier);
 				mat.SetFloat ("extinctionRimFade", skyExtinctionRimFade);
+				mat.SetFloat ("_extinctionScatterIntensity", _extinctionScatterIntensity);
+
 			} else {
 				mat.SetFloat ("_Alpha_Global", mapAlphaGlobal);
 				mat.SetFloat ("_Extinction_Tint", mapExtinctionTint);
 				mat.SetFloat ("extinctionMultiplier", mapExtinctionMultiplier);
 				mat.SetFloat ("extinctionRimFade", mapSkyExtinctionRimFade);
+				mat.SetFloat ("_extinctionScatterIntensity", _mapExtinctionScatterIntensity);
 			}
 			
-			mat.SetFloat ("scale", atmosphereGlobalScale);
+			mat.SetFloat ("scale", 1);
 			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
 			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
 			mat.SetFloat ("RL", RL * atmosphereGlobalScale);
@@ -598,14 +638,15 @@ namespace scatterer
 			
 			mat.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToSun ().normalized);
 
-//			Shader.SetGlobalVector ("_Godray_WorldSunDir", m_manager.getDirectionToSun ().normalized);
-//
 //			Shader.SetGlobalFloat ("_Godray_WorldSunDirX", m_manager.sunCelestialBody.transform.position.x
 //			                       -parentCelestialBody.transform.position.x);
 //			Shader.SetGlobalFloat ("_Godray_WorldSunDirY", m_manager.sunCelestialBody.transform.position.y
 //			                       -parentCelestialBody.transform.position.y);
 //			Shader.SetGlobalFloat ("_Godray_WorldSunDirZ", m_manager.sunCelestialBody.transform.position.z
 //			                       -parentCelestialBody.transform.position.z);
+
+			Shader.SetGlobalVector ("_Godray_WorldSunDir", m_manager.sunCelestialBody.transform.position
+			                       -parentCelestialBody.transform.position);
 
 
 			if (!MapView.MapIsEnabled) {
@@ -640,16 +681,24 @@ namespace scatterer
 			                                             sunPosRelPlanet.z,(float)m_manager.sunCelestialBody.Radius));
 
 			//build and set casters matrix
-			Matrix4x4 castersMatrix= Matrix4x4.zero;
+			Matrix4x4 castersMatrix1= Matrix4x4.zero;
+			Matrix4x4 castersMatrix2= Matrix4x4.zero;
 
 			for (int i=0;i< Mathf.Min(4, m_manager.eclipseCasters.Count);i++)
 			{
 				Vector3 casterPosRelPlanet = m_manager.eclipseCasters[i].transform.position;
-				castersMatrix.SetRow(i,new Vector4(casterPosRelPlanet.x, casterPosRelPlanet.y,
+				castersMatrix1.SetRow(i,new Vector4(casterPosRelPlanet.x, casterPosRelPlanet.y,
 				                                    casterPosRelPlanet.z,(float)m_manager.eclipseCasters[i].Radius));
-
 			}
-			mat.SetMatrix ("lightOccluders", castersMatrix);
+
+			for (int i=4;i< Mathf.Min(8, m_manager.eclipseCasters.Count);i++)
+			{
+				Vector3 casterPosRelPlanet = m_manager.eclipseCasters[i].transform.position;
+				castersMatrix2.SetRow(i-4,new Vector4(casterPosRelPlanet.x, casterPosRelPlanet.y,
+				                                    casterPosRelPlanet.z,(float)m_manager.eclipseCasters[i].Radius));
+			}
+			mat.SetMatrix ("lightOccluders1", castersMatrix1);
+			mat.SetMatrix ("lightOccluders2", castersMatrix2);
 		}
 
 
@@ -660,7 +709,7 @@ namespace scatterer
 				return;
 
 //			mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
-			mat.SetFloat ("scale", atmosphereGlobalScale);
+//			mat.SetFloat ("scale", atmosphereGlobalScale);
 			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
 			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
 			mat.SetFloat ("RL", RL * atmosphereGlobalScale);
@@ -688,6 +737,9 @@ namespace scatterer
 			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
 				mat.SetTexture ("_customDepthTexture", m_manager.GetCore ().customDepthBufferTexture);
 
+			if (m_manager.GetCore ().useGodrays)
+				mat.SetTexture ("_godrayDepthTexture", m_manager.GetCore ().godrayDepthTexture);
+
 			//Consts, best leave these alone
 			mat.SetFloat ("M_PI", Mathf.PI);
 			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
@@ -706,6 +758,9 @@ namespace scatterer
 			mat.SetVector ("betaMSca", BETA_MSca / 1000.0f);
 			mat.SetVector ("betaMEx", (BETA_MSca / 1000.0f) / 0.9f);
 
+			mat.SetFloat ("HR", HR * 1000.0f);
+			mat.SetFloat ("HM", HM * 1000.0f);
+
 			mat.SetVector ("_camPos", farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
 			mat.SetVector ("SUN_DIR", m_manager.GetSunNodeDirection ());
 		}
@@ -714,6 +769,11 @@ namespace scatterer
 
 		public void UpdatePostProcessMaterial (Material mat)
 		{
+
+			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
+			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
+			mat.SetFloat ("Rl", RL * atmosphereGlobalScale);
+
 			//mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
 
 			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
@@ -722,6 +782,11 @@ namespace scatterer
 			mat.SetFloat ("_global_alpha", postProcessingAlpha);
 			mat.SetFloat ("_Exposure", postProcessExposure);
 			mat.SetFloat ("_global_depth", postProcessDepth*1000000);
+
+			mat.SetFloat ("_Post_Extinction_Tint", _Post_Extinction_Tint);
+			mat.SetFloat ("postExtinctionMultiplier", postExtinctionMultiplier);
+
+
 			mat.SetFloat ("_openglThreshold", openglThreshold);
 //			mat.SetFloat ("_edgeThreshold", edgeThreshold);
 			
@@ -768,7 +833,7 @@ namespace scatterer
 			mat.SetTexture ("_Sky_Transmittance", m_transmit);
 			mat.SetTexture ("_Sky_Inscatter", m_inscatter);
 			mat.SetTexture ("_Sky_Irradiance", m_irradiance);
-			mat.SetFloat ("scale", Rg * atmosphereGlobalScale / m_radius);
+			mat.SetFloat ("scale", Rg * 1 / m_radius);
 			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
 			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
 			mat.SetFloat ("RL", RL * atmosphereGlobalScale);
@@ -873,8 +938,8 @@ namespace scatterer
 				UnityEngine.Object.Destroy (m_inscatter);
 			}
 
-			UnityEngine.Object.Destroy (black);
-			UnityEngine.Object.Destroy (sunGlare);
+//			UnityEngine.Object.Destroy (black);
+//			UnityEngine.Object.Destroy (sunGlare);
 
 			Component.Destroy (updater);
 			UnityEngine.Object.Destroy (updater);
@@ -895,16 +960,16 @@ namespace scatterer
 			UnityEngine.Object.Destroy (skyObject);
 		}
 		
-		public void toggleSunglare ()
-		{
-			if (sunglareEnabled) {
-				m_skyMaterialScaled.SetTexture ("_Sun_Glare", black);
-				sunglareEnabled = false;
-			} else {
-				m_skyMaterialScaled.SetTexture ("_Sun_Glare", sunGlare);
-				sunglareEnabled = true;
-			}
-		}
+//		public void toggleSunglare ()
+//		{
+//			if (sunglareEnabled) {
+//				m_skyMaterialScaled.SetTexture ("_Sun_Glare", black);
+//				sunglareEnabled = false;
+//			} else {
+//				m_skyMaterialScaled.SetTexture ("_Sun_Glare", sunGlare);
+//				sunglareEnabled = true;
+//			}
+//		}
 		
 		public void toggleCoronas ()
 		{
@@ -1051,12 +1116,24 @@ namespace scatterer
 				m_rimHDRExposure = configPoints [0].skyRimExposure;
 				postProcessingAlpha = configPoints [0].postProcessAlpha;
 				postProcessDepth = configPoints [0].postProcessDepth;
+
+				_Post_Extinction_Tint = configPoints [0]._Post_Extinction_Tint;
+				postExtinctionMultiplier = configPoints [0].postExtinctionMultiplier;
+
 				postProcessExposure = configPoints [0].postProcessExposure;
 				extinctionMultiplier = configPoints [0].skyExtinctionMultiplier;
 				extinctionTint = configPoints [0].skyExtinctionTint;
 				skyExtinctionRimFade = configPoints [0].skyextinctionRimFade;
+
+				_extinctionScatterIntensity = configPoints [0]._extinctionScatterIntensity;
+
+
+
 //				edgeThreshold = configPoints [0].edgeThreshold;
 				openglThreshold = configPoints [0].openglThreshold;
+
+				_GlobalOceanAlpha = configPoints [0]._GlobalOceanAlpha;
+
 				viewdirOffset = configPoints [0].viewdirOffset;
 				currentConfigPoint = 0;
 				
@@ -1066,12 +1143,21 @@ namespace scatterer
 				m_rimHDRExposure = configPoints [configPoints.Count - 1].skyRimExposure;
 				postProcessingAlpha = configPoints [configPoints.Count - 1].postProcessAlpha;
 				postProcessDepth = configPoints [configPoints.Count - 1].postProcessDepth;
+
+				_Post_Extinction_Tint = configPoints [configPoints.Count - 1]._Post_Extinction_Tint;
+				postExtinctionMultiplier = configPoints [configPoints.Count - 1].postExtinctionMultiplier;
+
 				postProcessExposure = configPoints [configPoints.Count - 1].postProcessExposure;
 				extinctionMultiplier = configPoints [configPoints.Count - 1].skyExtinctionMultiplier;
 				extinctionTint = configPoints [configPoints.Count - 1].skyExtinctionTint;
 				skyExtinctionRimFade = configPoints [configPoints.Count - 1].skyextinctionRimFade;
+				_extinctionScatterIntensity = configPoints [configPoints.Count - 1]._extinctionScatterIntensity;
 //				edgeThreshold = configPoints [configPoints.Count - 1].edgeThreshold;
 				openglThreshold = configPoints [configPoints.Count - 1].openglThreshold;
+
+				_GlobalOceanAlpha = configPoints [configPoints.Count - 1]._GlobalOceanAlpha;
+
+
 				viewdirOffset = configPoints [configPoints.Count - 1].viewdirOffset;
 				currentConfigPoint = configPoints.Count;
 			} else {
@@ -1084,12 +1170,25 @@ namespace scatterer
 						m_rimHDRExposure = percentage * configPoints [j].skyRimExposure + (1 - percentage) * configPoints [j - 1].skyRimExposure;
 						postProcessingAlpha = percentage * configPoints [j].postProcessAlpha + (1 - percentage) * configPoints [j - 1].postProcessAlpha;
 						postProcessDepth = percentage * configPoints [j].postProcessDepth + (1 - percentage) * configPoints [j - 1].postProcessDepth;
+
+						_Post_Extinction_Tint = percentage * configPoints [j]._Post_Extinction_Tint + (1 - percentage) * configPoints [j - 1]._Post_Extinction_Tint;
+						postExtinctionMultiplier = percentage * configPoints [j].postExtinctionMultiplier + (1 - percentage) * configPoints [j - 1].postExtinctionMultiplier;
+
+
 						postProcessExposure = percentage * configPoints [j].postProcessExposure + (1 - percentage) * configPoints [j - 1].postProcessExposure;
 						extinctionMultiplier = percentage * configPoints [j].skyExtinctionMultiplier + (1 - percentage) * configPoints [j - 1].skyExtinctionMultiplier;
 						extinctionTint = percentage * configPoints [j].skyExtinctionTint + (1 - percentage) * configPoints [j - 1].skyExtinctionTint;
 						skyExtinctionRimFade = percentage * configPoints [j].skyextinctionRimFade + (1 - percentage) * configPoints [j - 1].skyextinctionRimFade;
+
+						_extinctionScatterIntensity = percentage * configPoints [j]._extinctionScatterIntensity + (1 - percentage) * configPoints [j - 1]._extinctionScatterIntensity;
+
+
 //						edgeThreshold = percentage * configPoints [j].edgeThreshold + (1 - percentage) * configPoints [j - 1].edgeThreshold;
 						openglThreshold = percentage * configPoints [j].openglThreshold + (1 - percentage) * configPoints [j - 1].openglThreshold;
+
+						_GlobalOceanAlpha = percentage * configPoints [j]._GlobalOceanAlpha + (1 - percentage) * configPoints [j - 1]._GlobalOceanAlpha;
+
+
 						viewdirOffset = percentage * configPoints [j].viewdirOffset + (1 - percentage) * configPoints [j - 1].viewdirOffset;
 						currentConfigPoint = j;
 					}

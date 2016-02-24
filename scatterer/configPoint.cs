@@ -16,13 +16,18 @@ namespace scatterer
 		[Persistent] public float openglThreshold;
 		[Persistent] public float edgeThreshold;
 		[Persistent] public float viewdirOffset;
+		[Persistent] public float _Post_Extinction_Tint;
+		[Persistent] public float postExtinctionMultiplier;
+		[Persistent] public float _GlobalOceanAlpha;
+		[Persistent] public float _extinctionScatterIntensity;
 
 			
 
 
 		public configPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inSkyRimExposure,float inPostProcessAlpha,
 		                   float inPostProcessDepth,float inPostProcessExposure, float inSkyExtinctionMultiplier,
-		                   float inSkyExtinctionTint, float inSkyextinctionRimFade, float inOpenglThreshold, float inEdgeThreshold, float inViewdirOffset)
+		                   float inSkyExtinctionTint, float inSkyextinctionRimFade, float inOpenglThreshold, float inEdgeThreshold, float inViewdirOffset, float in_Post_Extinction_Tint,
+		                   float inpostExtinctionMultiplier, float in_GlobalOceanAlpha, float in_extinctionScatterIntensity)
 		{
 			altitude=inAltitude;
 			skyAlpha=inSkyAlpha;
@@ -37,6 +42,10 @@ namespace scatterer
 			viewdirOffset = inViewdirOffset;
 			skyRimExposure = inSkyRimExposure;
 			skyextinctionRimFade = inSkyextinctionRimFade;
+			postExtinctionMultiplier = inpostExtinctionMultiplier;
+			_Post_Extinction_Tint = in_Post_Extinction_Tint;
+			_GlobalOceanAlpha = in_GlobalOceanAlpha;
+			_extinctionScatterIntensity = in_extinctionScatterIntensity;
 		}
 
 		public configPoint()

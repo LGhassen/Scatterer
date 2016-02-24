@@ -406,52 +406,55 @@ namespace scatterer {
 
 //				t =	Time.realtimeSinceStartup;
 
-				InitWaveSpectrum(t);
+				if (!MapView.MapIsEnabled)
+				{
+					InitWaveSpectrum(t);
 				
-				//Perform fourier transform and record what is the current index
-				m_idx = m_fourier.PeformFFT(m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
-				m_fourier.PeformFFT(m_fourierBuffer3, m_fourierBuffer4);
-				
-				//Copy the contents of the completed fourier transform to the map textures.
-				//You could just use the buffer textures (m_fourierBuffer0,1,2,etc) to read from for the ocean shader 
-				//but they need to have mipmaps and unity updates the mipmaps
-				//every time the texture is renderer into. This impacts performance during fourier transform stage as mipmaps would be updated every pass
-				//and there is no way to disable and then enable mipmaps on render textures in Unity at time of writting.
-				
-				Graphics.Blit(m_fourierBuffer0[m_idx], m_map0);
-				Graphics.Blit(m_fourierBuffer1[m_idx], m_map1);
-				Graphics.Blit(m_fourierBuffer2[m_idx], m_map2);
-				Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
-				Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
-				
-				
-				
-				m_oceanMaterialNear.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
-				m_oceanMaterialNear.SetVector("_Ocean_Choppyness", m_choppyness);
-				m_oceanMaterialNear.SetVector("_Ocean_GridSizes", m_gridSizes);
-//				m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
-				m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", 0f);
-				m_oceanMaterialNear.SetTexture("_Ocean_Variance", m_variance);
-				m_oceanMaterialNear.SetTexture("_Ocean_Map0", m_map0);
-				m_oceanMaterialNear.SetTexture("_Ocean_Map1", m_map1);
-				m_oceanMaterialNear.SetTexture("_Ocean_Map2", m_map2);
-				m_oceanMaterialNear.SetTexture("_Ocean_Map3", m_map3);
-				m_oceanMaterialNear.SetTexture("_Ocean_Map4", m_map4);
-				m_oceanMaterialNear.SetVector("_VarianceMax", m_varianceMax);
-				
-				m_oceanMaterialFar.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
-				m_oceanMaterialFar.SetVector("_Ocean_Choppyness", m_choppyness);
-				m_oceanMaterialFar.SetVector("_Ocean_GridSizes", m_gridSizes);
-//				m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
-				m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", 0f);
-				m_oceanMaterialFar.SetTexture("_Ocean_Variance", m_variance);
-				m_oceanMaterialFar.SetTexture("_Ocean_Map0", m_map0);
-				m_oceanMaterialFar.SetTexture("_Ocean_Map1", m_map1);
-				m_oceanMaterialFar.SetTexture("_Ocean_Map2", m_map2);
-				m_oceanMaterialFar.SetTexture("_Ocean_Map3", m_map3);
-				m_oceanMaterialFar.SetTexture("_Ocean_Map4", m_map4);
-				m_oceanMaterialFar.SetVector("_VarianceMax", m_varianceMax);
+					//Perform fourier transform and record what is the current index
+					m_idx = m_fourier.PeformFFT(m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
+					m_fourier.PeformFFT(m_fourierBuffer3, m_fourierBuffer4);
+					
+					//Copy the contents of the completed fourier transform to the map textures.
+					//You could just use the buffer textures (m_fourierBuffer0,1,2,etc) to read from for the ocean shader 
+					//but they need to have mipmaps and unity updates the mipmaps
+					//every time the texture is renderer into. This impacts performance during fourier transform stage as mipmaps would be updated every pass
+					//and there is no way to disable and then enable mipmaps on render textures in Unity at time of writting.
 
+
+					Graphics.Blit(m_fourierBuffer0[m_idx], m_map0);
+					Graphics.Blit(m_fourierBuffer1[m_idx], m_map1);
+					Graphics.Blit(m_fourierBuffer2[m_idx], m_map2);
+					Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
+					Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
+
+				
+				
+					m_oceanMaterialNear.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
+					m_oceanMaterialNear.SetVector("_Ocean_Choppyness", m_choppyness);
+					m_oceanMaterialNear.SetVector("_Ocean_GridSizes", m_gridSizes);
+					//				m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
+					m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", 0f);
+					m_oceanMaterialNear.SetTexture("_Ocean_Variance", m_variance);
+					m_oceanMaterialNear.SetTexture("_Ocean_Map0", m_map0);
+					m_oceanMaterialNear.SetTexture("_Ocean_Map1", m_map1);
+					m_oceanMaterialNear.SetTexture("_Ocean_Map2", m_map2);
+					m_oceanMaterialNear.SetTexture("_Ocean_Map3", m_map3);
+					m_oceanMaterialNear.SetTexture("_Ocean_Map4", m_map4);
+					m_oceanMaterialNear.SetVector("_VarianceMax", m_varianceMax);
+					
+					m_oceanMaterialFar.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
+					m_oceanMaterialFar.SetVector("_Ocean_Choppyness", m_choppyness);
+					m_oceanMaterialFar.SetVector("_Ocean_GridSizes", m_gridSizes);
+					//				m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
+					m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", 0f);
+					m_oceanMaterialFar.SetTexture("_Ocean_Variance", m_variance);
+					m_oceanMaterialFar.SetTexture("_Ocean_Map0", m_map0);
+					m_oceanMaterialFar.SetTexture("_Ocean_Map1", m_map1);
+					m_oceanMaterialFar.SetTexture("_Ocean_Map2", m_map2);
+					m_oceanMaterialFar.SetTexture("_Ocean_Map3", m_map3);
+					m_oceanMaterialFar.SetTexture("_Ocean_Map4", m_map4);
+					m_oceanMaterialFar.SetVector("_VarianceMax", m_varianceMax);
+				}
 //#if !CPUmode
 				//Make sure base class get updated as well
 //				base.UpdateNode();

@@ -28,6 +28,9 @@ uniform float3 betaMSca;
 uniform float3 betaMEx;
 uniform float mieG;
 
+uniform float _experimentalAtmoScale;
+uniform float _extinctionScatterIntensity;
+
 // ----------------------------------------------------------------------------
 // PARAMETERIZATION OPTIONS
 // ----------------------------------------------------------------------------
@@ -187,16 +190,16 @@ float4 Texture4D(sampler2D table, float r, float mu, float muS, float nu)
 // optical depth for ray (r,mu) of length d, using analytic formula
 // (mu=cos(view zenith angle)), intersections with ground ignored
 // H=height scale of exponential density function
-//float OpticalDepth(float H, float r, float mu, float d) 
-//{
-//    float a = sqrt((0.5/H)*r);
-//    float2 a01 = a*float2(mu, mu + d / r);
-//    float2 a01s = sign(a01);
-//    float2 a01sq = a01*a01;
-//    float x = a01s.y > a01s.x ? exp(a01sq.x) : 0.0;
-//    float2 y = a01s / (2.3193*abs(a01) + sqrt(1.52*a01sq + 4.0)) * float2(1.0, exp(-d/H*(d/(2.0*r)+mu)));
-//    return sqrt((6.2831*H)*r) * exp((Rg-r)/H) * (x + dot(y, float2(1.0, -1.0)));
-//}
+float OpticalDepth(float H, float r, float mu, float d) 
+{
+    float a = sqrt((0.5/H)*r);
+    float2 a01 = a*float2(mu, mu + d / r);
+    float2 a01s = sign(a01);
+    float2 a01sq = a01*a01;
+    float x = a01s.y > a01s.x ? exp(a01sq.x) : 0.0;
+    float2 y = a01s / (2.3193*abs(a01) + sqrt(1.52*a01sq + 4.0)) * float2(1.0, exp(-d/H*(d/(2.0*r)+mu)));
+    return sqrt((6.2831*H)*r) * exp((Rg-r)/H) * (x + dot(y, float2(1.0, -1.0)));
+}
 
 // transmittance(=transparency) of atmosphere for infinite ray (r,mu)
 // (mu=cos(view zenith angle)), intersections with ground ignored
@@ -215,10 +218,10 @@ return tex2Dlod(_Sky_Transmittance, float4(uv,0.0,0.0)).rgb;
 // transmittance(=transparency) of atmosphere for ray (r,mu) of length d
 // (mu=cos(view zenith angle)), intersections with ground ignored
 // uses analytic formula instead of transmittance texture
-//float3 AnalyticTransmittance(float r, float mu, float d) 
-//{
-//    return exp(- betaR * OpticalDepth(HR, r, mu, d) - betaMEx * OpticalDepth(HM, r, mu, d));
-//}
+float3 AnalyticTransmittance(float r, float mu, float d) 
+{
+    return exp(- betaR *_extinctionScatterIntensity * OpticalDepth(HR, r, mu, d) - betaMEx * _extinctionScatterIntensity * OpticalDepth(HM, r, mu, d));
+}
 
 // transmittance(=transparency) of atmosphere for infinite ray (r,mu)
 // (mu=cos(view zenith angle)), or zero if ray intersects ground
@@ -537,15 +540,15 @@ float3 InScattering(float3 camera, float3 _point, float3 sundir, out float3 exti
         float mu1 = rMu1 / r1;
         float muS1 = dot(_point, sundir) / r1;
 
-//#ifdef ANALYTIC_TRANSMITTANCE
-//extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
-//#else
+#ifdef ANALYTIC_TRANSMITTANCE
+	extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
+#else
         if (mu > 0.0) {
             extinction = min(Transmittance(r, mu) / Transmittance(r1, mu1), 1.0);
         } else {
             extinction = min(Transmittance(r1, -mu1) / Transmittance(r, -mu), 1.0);
         }
-//#endif
+#endif
 
 //#ifdef HORIZON_HACK
         const float EPS = 0.004;

@@ -16,7 +16,7 @@ namespace scatterer {
 		Core m_core;
 		public bool hasOcean = false;
 		
-		public float m_radius = 600000.0f;
+		public double m_radius = 600000.0f;
 		
 		
 		OceanWhiteCaps m_oceanNode;
@@ -31,7 +31,7 @@ namespace scatterer {
 		
 		// Initialization
 		public void Awake() {
-			m_radius = (float) parentCelestialBody.Radius;
+			m_radius = parentCelestialBody.Radius;
 			//			print (m_radius);
 			
 			m_sunNode = new SunNode();
@@ -62,7 +62,6 @@ namespace scatterer {
 		
 		
 		public void Update() {
-			m_radius = (float) parentCelestialBody.Radius;
 			
 			//Update the sky and sun
 			
@@ -128,7 +127,7 @@ namespace scatterer {
 			
 		}
 
-		public float GetRadius() {
+		public double GetRadius() {
 			return m_radius;
 		}
 		

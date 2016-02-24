@@ -51,18 +51,18 @@ namespace scatterer
 		public void OnPreRender()
 		{
 
-			var munCelestialTransform =(Transform) ScaledSpace.Instance.transform.FindChild ("Mun");
-			if (munCelestialTransform)
-			{
-				m_manager.GetCore().copiedScaledSunLight.transform.position=munCelestialTransform.position;
-			}
-			else
-			{
-				Debug.Log("muncelestial not found");
-			}
-			
-			m_manager.GetCore().copiedScaledSunLight.light.type=LightType.Point;
-			m_manager.GetCore().copiedScaledSunLight.light.range=1E9f;
+//			var munCelestialTransform =(Transform) ScaledSpace.Instance.transform.FindChild ("Mun");
+//			if (munCelestialTransform)
+//			{
+//				m_manager.GetCore().copiedScaledSunLight.transform.position=munCelestialTransform.position;
+//			}
+//			else
+//			{
+//				Debug.Log("muncelestial not found");
+//			}
+//			
+//			m_manager.GetCore().copiedScaledSunLight.light.type=LightType.Point;
+//			m_manager.GetCore().copiedScaledSunLight.light.range=1E9f;
 			
 			skyMat.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
 

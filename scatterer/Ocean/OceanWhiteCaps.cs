@@ -95,35 +95,38 @@ namespace scatterer {
 		public override void UpdateNode() {
 			if (!MapView.MapIsEnabled) {
 				base.UpdateNode();
-				
-				m_fourier.PeformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
-				
-				//original block, two textures in one pass
-//				m_whiteCapsPrecomputeMat.SetTexture("_Map5", m_fourierBuffer5[m_idx]);
-//				m_whiteCapsPrecomputeMat.SetTexture("_Map6", m_fourierBuffer6[m_idx]);
-//				m_whiteCapsPrecomputeMat.SetTexture("_Map7", m_fourierBuffer7[m_idx]);
-//				m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness * choppynessMultiplier);
-//				RenderTexture[] buffers = new RenderTexture[] {m_foam0, m_foam1};
-//				RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat, 0);
 
-				//fixed block, two passes, fixes mipmapping issue resulting in black ocean
-				m_whiteCapsPrecomputeMat.SetTexture("_Map5", m_fourierBuffer5[m_idx]);
-				m_whiteCapsPrecomputeMat.SetTexture("_Map6", m_fourierBuffer6[m_idx]);
-				m_whiteCapsPrecomputeMat.SetTexture("_Map7", m_fourierBuffer7[m_idx]);
-				m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness);
-				Graphics.Blit (null, m_foam0, m_whiteCapsPrecomputeMat, 0);
-				Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
-
-				
-				m_oceanMaterialFar.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
-				m_oceanMaterialFar.SetFloat("farWhiteCapStr", m_farWhiteCapStr);
-				m_oceanMaterialFar.SetTexture("_Ocean_Foam0", m_foam0);
-				m_oceanMaterialFar.SetTexture("_Ocean_Foam1", m_foam1);
-				
-				m_oceanMaterialNear.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
-				m_oceanMaterialNear.SetFloat("farWhiteCapStr", m_farWhiteCapStr);
-				m_oceanMaterialNear.SetTexture("_Ocean_Foam0", m_foam0);
-				m_oceanMaterialNear.SetTexture("_Ocean_Foam1", m_foam1);
+				if (!MapView.MapIsEnabled)
+				{
+					m_fourier.PeformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
+					
+					//original block, two textures in one pass
+					//				m_whiteCapsPrecomputeMat.SetTexture("_Map5", m_fourierBuffer5[m_idx]);
+					//				m_whiteCapsPrecomputeMat.SetTexture("_Map6", m_fourierBuffer6[m_idx]);
+					//				m_whiteCapsPrecomputeMat.SetTexture("_Map7", m_fourierBuffer7[m_idx]);
+					//				m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness * choppynessMultiplier);
+					//				RenderTexture[] buffers = new RenderTexture[] {m_foam0, m_foam1};
+					//				RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat, 0);
+					
+					//fixed block, two passes, fixes mipmapping issue resulting in black ocean
+					m_whiteCapsPrecomputeMat.SetTexture("_Map5", m_fourierBuffer5[m_idx]);
+					m_whiteCapsPrecomputeMat.SetTexture("_Map6", m_fourierBuffer6[m_idx]);
+					m_whiteCapsPrecomputeMat.SetTexture("_Map7", m_fourierBuffer7[m_idx]);
+					m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness);
+					Graphics.Blit (null, m_foam0, m_whiteCapsPrecomputeMat, 0);
+					Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
+					
+					
+					m_oceanMaterialFar.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
+					m_oceanMaterialFar.SetFloat("farWhiteCapStr", m_farWhiteCapStr);
+					m_oceanMaterialFar.SetTexture("_Ocean_Foam0", m_foam0);
+					m_oceanMaterialFar.SetTexture("_Ocean_Foam1", m_foam1);
+					
+					m_oceanMaterialNear.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
+					m_oceanMaterialNear.SetFloat("farWhiteCapStr", m_farWhiteCapStr);
+					m_oceanMaterialNear.SetTexture("_Ocean_Foam0", m_foam0);
+					m_oceanMaterialNear.SetTexture("_Ocean_Foam1", m_foam1);
+				}
 				
 
 			}

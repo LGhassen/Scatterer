@@ -60,8 +60,9 @@ namespace scatterer
 		[Persistent]
 		public float m_oceanLevel = 0.0f;
 
-		bool stockOceanExists = true;
-		PQS ocean;
+//		bool stockOceanExists = true;
+//		PQS ocean;
+
 		double h = 0;
 		//The maximum altitude at which the ocean must be displayed.
 //		[Persistent]
@@ -97,14 +98,14 @@ namespace scatterer
 
 		int numGrids;
 		Mesh[] m_screenGrids;
-		Material emptyMaterial;
-		Material fakeOceanMaterial;
-		SimplePostProcessCube oceanPC;
-		GameObject fakeOceanObject;
+//		Material emptyMaterial;
+//		Material fakeOceanMaterial;
+//		SimplePostProcessCube oceanPC;
+//		GameObject fakeOceanObject;
 
-		Mesh fakeOceanMesh;
-		MeshFilter fakeOceanMF;
-		MeshRenderer fakeOceanMR;
+//		Mesh fakeOceanMesh;
+//		MeshFilter fakeOceanMF;
+//		MeshRenderer fakeOceanMR;
 //		Material newMat;
 
 		[Persistent] public float fakeOceanAltitude = 15000;
@@ -183,126 +184,21 @@ namespace scatterer
 			
 			m_screenGrids = new Mesh[numGrids];
 
-//			waterGameObjectsNear = new GameObject[numGrids];
-//			waterMeshRenderersNear = new MeshRenderer[numGrids];
-//			waterMeshFiltersNear = new MeshFilter[numGrids];
-//
-//			waterGameObjectsFar = new GameObject[numGrids];
-//			waterMeshRenderersFar = new MeshRenderer[numGrids];
-//			waterMeshFiltersFar = new MeshFilter[numGrids];
 
 			//Make the meshes. The end product will be a grid of verts that cover
 			//the screen on the x and y axis with the z depth at 0. This grid is then
 			//projected as the ocean by the shader
-			for (int i = 0; i < numGrids; i++) {
+			for (int i = 0; i < numGrids; i++)
+			{
 				NY = Screen.height / numGrids / m_resolution;
 				
 				m_screenGrids [i] = MakePlane (NX, NY, (float)i / (float)numGrids, 1.0f / (float)numGrids);
-				m_screenGrids [i].bounds = new Bounds (Vector3.zero, new Vector3 (1e8f, 1e8f, 1e8f));
-				
-
-				//bad idea, the meshes still render arbitrarily to the near and far camera and end up drawing over everything
-				//to get around this I use drawmesh further down
-				//seems to have better performance also
-
-//								waterGameObjectsNear[i] = new GameObject();
-//								waterGameObjectsNear[i].transform.parent=m_manager.parentCelestialBody.transform;
-//								waterMeshFiltersNear[i] = waterGameObjectsNear[i].AddComponent<MeshFilter>();
-//								waterMeshFiltersNear[i].mesh.Clear ();
-//								waterMeshFiltersNear[i].mesh = m_screenGrids[i];
-//								waterGameObjectsNear[i].layer = 15;
-//
-//								waterMeshRenderersNear[i] = waterGameObjectsNear[i].AddComponent<MeshRenderer>();
-//
-//								waterMeshRenderersNear[i].sharedMaterial = m_oceanMaterialNear;
-//								waterMeshRenderersNear[i].material =m_oceanMaterialNear;
-//								
-//								waterMeshRenderersNear[i].castShadows = false;
-//								waterMeshRenderersNear[i].receiveShadows = false;
-//				
-//								waterMeshRenderersNear[i].enabled=true;
-//
-//
-//				waterGameObjectsFar[i] = new GameObject();
-//				waterGameObjectsFar[i].transform.parent=m_manager.parentCelestialBody.transform;
-//				waterMeshFiltersFar[i] = waterGameObjectsFar[i].AddComponent<MeshFilter>();
-//				waterMeshFiltersFar[i].mesh.Clear ();
-//				waterMeshFiltersFar[i].mesh = m_screenGrids[i];
-//				waterGameObjectsFar[i].layer = 15;
-//				
-//				waterMeshRenderersFar[i] = waterGameObjectsFar[i].AddComponent<MeshRenderer>();
-//				
-//				waterMeshRenderersFar[i].sharedMaterial = m_oceanMaterialFar;
-//				waterMeshRenderersFar[i].material =m_oceanMaterialFar;
-//				
-//				waterMeshRenderersFar[i].castShadows = false;
-//				waterMeshRenderersFar[i].receiveShadows = false;
-//				
-//				waterMeshRenderersFar[i].enabled=true;
-				
+				m_screenGrids [i].bounds = new Bounds (Vector3.zero, new Vector3 (1e8f, 1e8f, 1e8f));	
 			}
 
-//			PQS pqs = m_manager.parentCelestialBody.pqsController;
-//
-//			if (pqs.ChildSpheres[0])
-//				UnityEngine.Object.Destroy (pqs.ChildSpheres [0]);
-
-//			if (ocean)
-//			{
-//				UnityEngine.Object.Destroy (ocean);
-//			}
 
 
 
-			
-			//				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
-			
-//			PQS pqs = m_manager.parentCelestialBody.pqsController;
-//			if (pqs.ChildSpheres [0]) {
-//				ocean = pqs.ChildSpheres [0];
-//				//					ocean.surfaceMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
-//				
-//				///Thanks to rbray89 for this snippet that disables the stock ocean in a clean way
-//				GameObject container = ocean.gameObject;
-//				
-//				FakeOceanPQS fakeOcean1 = new GameObject ().AddComponent<FakeOceanPQS> ();
-//				
-//				fakeOcean1.CloneFrom (ocean);
-//				Destroy (ocean);
-//				
-//				FakeOceanPQS fakeOcean = container.AddComponent<FakeOceanPQS> ();
-//				fakeOcean.CloneFrom (fakeOcean1);
-//				
-//				Destroy (fakeOcean1);
-//				
-//				FieldInfo field = typeof(PQS).GetFields (BindingFlags.Instance | BindingFlags.NonPublic).First (
-//					f => f.FieldType == typeof(PQS[]));
-//				field.SetValue (pqs, new PQS[] {fakeOcean });
-//				
-//				PQSMod_CelestialBodyTransform cbt = pqs.GetComponentsInChildren<PQSMod_CelestialBodyTransform> () [0];
-//				cbt.secondaryFades = new PQSMod_CelestialBodyTransform.AltitudeFade[] { };
-//			}
-
-
-//			fakeOceanMesh = isosphere.Create (m_manager.GetRadius());
-//
-//
-//			fakeOcean = new GameObject ();
-//			fakeOceanMF = fakeOcean.AddComponent<MeshFilter>();
-//			fakeOceanMF.mesh = fakeOceanMesh;
-//			fakeOcean.layer = 15;
-//
-//
-//			fakeOcean.transform.parent = m_manager.parentCelestialBody.transform;
-//			
-//			fakeOceanMR = fakeOcean.AddComponent<MeshRenderer>();
-//
-//			newMat = new Material (ShaderTool.GetMatFromShader2 ("BlackShader.shader"));
-//			fakeOceanMR.sharedMaterial = newMat;
-//			fakeOceanMR.material =newMat;
-//
-//			fakeOceanMR.castShadows = false;
-//			fakeOceanMR.receiveShadows = false;
 
 		}
 		
@@ -396,12 +292,9 @@ namespace scatterer
 
 			m_drawOcean = m_manager.m_skyNode.trueAlt < fakeOceanAltitude;
 
-//			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && (m_manager.m_skyNode.trueAlt < fakeOceanAltitude)) {
 			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean) {
-				foreach (Mesh mesh in m_screenGrids) {
-//					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15, m_manager.m_skyNode.farCamera);
-//					Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15, m_manager.m_skyNode.nearCamera);
-
+				foreach (Mesh mesh in m_screenGrids)
+				{
 
 					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15,
 					                  m_manager.m_skyNode.farCamera, 0, null, false, false);
@@ -410,118 +303,39 @@ namespace scatterer
 					                  m_manager.m_skyNode.nearCamera, 0, null, false, false);
 
 				}
-
-//				Graphics.DrawMesh (fakeOceanMesh, Vector3.zero, Quaternion.identity, newMat, 15,
-//				                   m_manager.m_skyNode.farCamera, 0, null, false, false);
-
 			}
 
 
-			if (!ocean && stockOceanExists) {  
-				PQS pqs = m_manager.parentCelestialBody.pqsController;
+//			if (!ocean && stockOceanExists)
+//			{  
+//				PQS pqs = m_manager.parentCelestialBody.pqsController;
 //
-////				Debug.Log("PQS.childspheres count"+pqs.ChildSpheres.Length);
+//				if (pqs.ChildSpheres [0])
+//				{
+////					Debug.Log("pqs.ChildSpheres [0] found");
+//					ocean = pqs.ChildSpheres [0];
+//					if (m_core.oceanCloudShadows)
+//					{
+//						emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
+//					}
+//					else
+//					{
+//						emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShaderIgnoreProj.shader"));	
+//					}
 //
-//				
-//				Debug.Log ("childspheres length"+pqs.ChildSpheres.Length.ToString());
-
-				if (pqs.ChildSpheres [0]) {
-//					Debug.Log("pqs.ChildSpheres [0] found");
-					ocean = pqs.ChildSpheres [0];
-					if (m_core.oceanCloudShadows)
-					{
-						emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
-					}
-					else
-					{
-						emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShaderIgnoreProj.shader"));	
-					}
-
-//					fakeOceanMaterial = new Material (ShaderTool.GetMatFromShader2 ("CompiledFakeOcean.shader"));
-
-
-//					m_manager.m_skyNode.InitUniforms(fakeOceanMaterial);
-//					m_manager.m_skyNode.InitPostprocessMaterial(fakeOceanMaterial);
-
-//					Debug.Log ("fake ocean mat set");
-					ocean.surfaceMaterial = emptyMaterial;
-					ocean.fallbackMaterial = emptyMaterial;
-
-//					ocean.surfaceMaterial = fakeOceanMaterial;
-//					ocean.fallbackMaterial = fakeOceanMaterial;
-
-					ocean.useSharedMaterial=false;
+//					ocean.useSharedMaterial=false;
+//
+//
+//					stockOceanExists = false;
+//
+//
+//				} else {
+//					stockOceanExists = false;
+//					Debug.Log ("[Scatterer] Stock ocean doesn't exist for " + m_manager.parentCelestialBody.name);
+//				}
+//			}
 
 
-//					oceanPC = new SimplePostProcessCube (20000, fakeOceanMaterial);
-//					fakeOceanObject = oceanPC.GameObject;
-//					fakeOceanObject.layer = 15;
-//					fakeOceanMR = oceanPC.GameObject.GetComponent < MeshRenderer > ();
-//					fakeOceanMR.material = fakeOceanMaterial;
-//					oceanPC.GameObject.GetComponent < MeshFilter > ().mesh.Clear();
-//					oceanPC.GameObject.GetComponent < MeshFilter > ().mesh = isosphere.Create(10000);
-//
-//					///Thanks to rbray89 for this snippet that disables the stock ocean in a clean way
-//					GameObject container = ocean.gameObject;
-//					
-//					FakeOceanPQS fakeOcean1 = new GameObject().AddComponent<FakeOceanPQS>();
-//
-//					fakeOcean1.CloneFrom(ocean);
-//					Destroy(ocean);
-//
-//					FakeOceanPQS fakeOcean = container.AddComponent<FakeOceanPQS>();
-//					fakeOcean.CloneFrom(fakeOcean1);
-//
-//					Destroy(fakeOcean1);
-//
-//					FieldInfo field = typeof(PQS).GetFields(BindingFlags.Instance | BindingFlags.NonPublic).First(
-//						f => f.FieldType == typeof(PQS[]));
-//					field.SetValue(pqs, new PQS[] {fakeOcean });
-//					
-//					PQSMod_CelestialBodyTransform cbt = pqs.GetComponentsInChildren<PQSMod_CelestialBodyTransform>()[0];
-//					cbt.secondaryFades = new PQSMod_CelestialBodyTransform.AltitudeFade[] { };
-
-					stockOceanExists = false;
-
-
-				} else {
-					stockOceanExists = false;
-					Debug.Log ("[Scatterer] Stock ocean doesn't exist for " + m_manager.parentCelestialBody.name);
-				}
-			}
-
-			if (ocean)
-			{
-				ocean.surfaceMaterial = emptyMaterial;
-				ocean.fallbackMaterial = emptyMaterial;
-				ocean.useSharedMaterial = false;
-
-//				ocean.surfaceMaterial = fakeOceanMaterial;
-//				ocean.fallbackMaterial = fakeOceanMaterial;
-//				ocean.useSharedMaterial = false;
-				
-//				fakeOceanMaterial.SetVector ("_planetPos", m_manager.parentCelestialBody.transform.position);
-//				fakeOceanMaterial.SetVector ("_cameraPos", m_manager.GetCore().farCamera.transform.position - m_manager.parentCelestialBody.transform.position);
-//				fakeOceanMaterial.SetVector ("_Ocean_Color", new Color (m_oceanUpwellingColor.x, m_oceanUpwellingColor.y, m_oceanUpwellingColor.z) * 0.1f);
-//				fakeOceanMaterial.SetFloat ("_Ocean_Sigma", GetMaxSlopeVariance ());
-////				fakeOceanMaterial.SetMatrix ("_PlanetToWorld", m_manager.parentCelestialBody.transform.localToWorldMatrix);
-//
-//
-//
-//
-//
-////				fakeOceanMaterial.SetMatrix ("_PlanetToWorld", camToLocal.ToMatrix4x4());
-//				fakeOceanMaterial.SetMatrix ("_WorldToPlanet", m_manager.parentCelestialBody.transform.worldToLocalMatrix);
-//
-//
-////				fakeOceanMaterial.SetVector ("SUN_DIR", m_manager.GetSunNodeDirection ());
-//				m_manager.m_skyNode.SetUniforms(fakeOceanMaterial);
-//				m_manager.m_skyNode.InitPostprocessMaterial(fakeOceanMaterial);
-//				m_manager.m_skyNode.UpdatePostProcessMaterial(fakeOceanMaterial);
-//
-//
-//				fakeOceanObject.transform.position= FlightGlobals.ActiveVessel.transform.position;
-			}
 
 
 
@@ -530,88 +344,11 @@ namespace scatterer
 			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
 			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;
 
-
-
-
-			if (stockOceanExists) {
-
-				//This causes problems later on
-//				ocean.quadAllowBuild = false;
-//				int deletedQuads=ocean.quads.Length;
-//
-//				if (deletedQuads>0){
-//
-//					for (int i=0;i<ocean.quads.Length;i++)
-//					{
-//						if (ocean.quads[i])
-//							UnityEngine.Object.Destroy(ocean.quads[i]);
-//					}
-//
-//					ocean.quads = Array.FindAll(ocean.quads, PQisNotNull);
-////					deletedQuads-=ocean.quads.Length;
-//
-//						Debug.Log("[Scatterer] Destroyed "+deletedQuads.ToString()+" stock ocean quads on "
-//					    	      +m_manager.parentCelestialBody.name);
-//
-//				}
-
-
-//				ocean.quads= new PQ[10];
-
-//				ocean.DeactivateSphere();
-//				ocean.DisableSphere();
-//				ocean.surfaceMaterial=new Material(ShaderTool.GetMatFromShader2("EmptyShader.shader"));
-//				Debug.Log("ocean.subdivisionThreshold"+ ocean.subdivisionThreshold.ToString());
-//				Debug.Log("ocean.maxDetailDistance"+ ocean.maxDetailDistance.ToString());
-
-
-
-			}
-
-//
-////				ocean.quadAllowBuild=false;
-//				Debug.Log("ocean.visRad"+ ocean.visRad);
-//				Debug.Log("ocean.visibleRadius"+ ocean.visibleRadius.ToString());
-//				Debug.Log("ocean.visibleAltitude"+ ocean.visibleAltitude.ToString());
-////				Debug.Log("ocean.useSharedMaterial"+ ocean.useSharedMaterial.ToString());
-////				Debug.Log("ocean.surfaceMaterial"+ ocean.surfaceMaterial.ToString());
-//				Debug.Log("ocean.subdivisionThresholds"+ ocean.subdivisionThresholds.ToString());
-//				Debug.Log("ocean.subdivisionThreshold"+ ocean.subdivisionThreshold.ToString());
-////				Debug.Log("ocean.radiusMi"+ ocean.radiusMin.ToString());
-////				Debug.Log("ocean.radiusMax"+ ocean.radiusMax.ToString());
-////				Debug.Log("ocean.quadAllowBuild"+ ocean.quadAllowBuild.ToString());
-//				Debug.Log("ocean.maxDetailDistance"+ ocean.maxDetailDistance.ToString());
-//				Debug.Log("ocean.detailAltitudeMax"+ ocean.detailAltitudeMax.ToString());
-////						}
-						
-						
-
-//						ocean.isDisabled = true;
-//						ocean.DisableSphere ();
-//						ocean.isDisabled = !m_core.stockOcean;
-//			
-//						if (!m_core.stockOcean)
-//						{
-//							ocean.DisableSphere ();
-//						}
-//						else
-//						{
-//							ocean.EnableSphere ();
-//						}
-			
-			
-//						for(int i = 0; i < numGrids; i++)
-//						{
-//							waterMeshRenderersNear[i].enabled=!m_core.stockOcean && !MapView.MapIsEnabled;
-//							waterMeshRenderersFar[i].enabled=!m_core.stockOcean && !MapView.MapIsEnabled ;
-//						}
-
-
-
-
-
+	
 		}
-		
+
+
+
 		public void updateStuff (Material oceanMaterial, Camera inCamera)
 		{
 			//Calculates the required data for the projected grid
@@ -632,24 +369,26 @@ namespace scatterer
 			
 			
 			//Looking back, I have no idea how I figured this crap out
-			Vector4 translation = m_manager.parentCelestialBody.transform.worldToLocalMatrix.inverse.GetColumn (3);
+			//I probably did the math wrong anyway and it worked by sheer luck and incessant tries
+			Vector4 translation = m_manager.parentCelestialBody.transform.localToWorldMatrix.GetColumn (3);
+
 			
-			Matrix4x4d worldToLocal = new Matrix4x4d (1, 0, 0, -translation.x,
+			Matrix4x4d worldToLocal = new Matrix4x4d(1, 0, 0, -translation.x,
 			                                         0, 1, 0, -translation.y,
 			                                         0, 0, 1, -translation.z,
 			                                         0, 0, 0, 1);
 
 			Matrix4x4d camToLocal = worldToLocal * cameraToWorld;
-
+			Matrix4x4d localToCam = camToLocal.Inverse ();
 
 			// camera in local space relative to planet's origin
 			Vector3d2 cl = new Vector3d2 ();
 			cl = camToLocal * Vector3d2.Zero ();
-			
-//			double radius = m_manager.GetRadius ();
-			double radius = m_manager.GetRadius ()+m_oceanLevel;
 
-//			Vector3d2 ux, uy, uz, oo;
+			
+			double radius = m_manager.GetRadius ();
+//			double radius = m_manager.GetRadius ()+m_oceanLevel;
+
 			
 			uz = cl.Normalized (); // unit z vector of ocean frame, in local space
 			
@@ -676,15 +415,6 @@ namespace scatterer
 			Matrix4x4d cameraToOcean = localToOcean * camToLocal;
 
 
-			//Couldn't figure out how to change the wind's direction in all that math so I tried to do the easy thing
-			//And Rotated the ocean and the sun
-			//This didn't work
-
-			//deleted rotation code here
-
-
-
-			
 			Vector3d2 delta = new Vector3d2 (0, 0, 0);
 			
 			if (m_oldlocalToOcean != Matrix4x4d.Identity ()) {
@@ -701,41 +431,39 @@ namespace scatterer
 			
 			h = oc.z;
 			
-			Vector4d stoc_w = (stoc * Vector4d.UnitW ()).XYZ0 ();
-			Vector4d stoc_x = (stoc * Vector4d.UnitX ()).XYZ0 ();
-			Vector4d stoc_y = (stoc * Vector4d.UnitY ()).XYZ0 ();
-			
-			Vector3d2 A0 = (cameraToOcean * stoc_w).XYZ ();
-			Vector3d2 dA = (cameraToOcean * stoc_x).XYZ ();
-			Vector3d2 B = (cameraToOcean * stoc_y).XYZ ();
-			
-			Vector3d2 horizon1, horizon2;
-			
-//			Vector3d2 offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
+//			Vector4d stoc_w = (stoc * Vector4d.UnitW ()).XYZ0 ();
+//			Vector4d stoc_x = (stoc * Vector4d.UnitX ()).XYZ0 ();
+//			Vector4d stoc_y = (stoc * Vector4d.UnitY ()).XYZ0 ();
+//			
+//			Vector3d2 A0 = (cameraToOcean * stoc_w).XYZ ();  
+//			Vector3d2 dA = (cameraToOcean * stoc_x).XYZ ();
+//			Vector3d2 B = (cameraToOcean * stoc_y).XYZ ();
+
 			offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
-//			Vector3d2 offset = new Vector3d2 (0f, 0f, h);
-			
-			double h1 = h * (h + 2.0 * radius);
-			double h2 = (h + radius) * (h + radius);
-			double alpha = B.Dot (B) * h1 - B.z * B.z * h2;
-			
-			double beta0 = (A0.Dot (B) * h1 - B.z * A0.z * h2) / alpha;
-			double beta1 = (dA.Dot (B) * h1 - B.z * dA.z * h2) / alpha;
-			
-			double gamma0 = (A0.Dot (A0) * h1 - A0.z * A0.z * h2) / alpha;
-			double gamma1 = (A0.Dot (dA) * h1 - A0.z * dA.z * h2) / alpha;
-			double gamma2 = (dA.Dot (dA) * h1 - dA.z * dA.z * h2) / alpha;
-			
-			horizon1 = new Vector3d2 (-beta0, -beta1, 0.0);
-			horizon2 = new Vector3d2 (beta0 * beta0 - gamma0, 2.0 * (beta0 * beta1 - gamma1), beta1 * beta1 - gamma2);
+
+			//old horizon code
+			//This breaks down when you tilt the camera by 90 degrees in any direction
+			//I made some new horizon code down, scroll down
+//			Vector3d2 horizon1, horizon2;
+//
+//			double h1 = h * (h + 2.0 * radius);
+//			double h2 = (h + radius) * (h + radius);
+//			double alpha = B.Dot (B) * h1 - B.z * B.z * h2;
+//
+//			double beta0 = (A0.Dot (B) * h1 - B.z * A0.z * h2) / alpha;
+//			double beta1 = (dA.Dot (B) * h1 - B.z * dA.z * h2) / alpha;
+//			
+//			double gamma0 = (A0.Dot (A0) * h1 - A0.z * A0.z * h2) / alpha;
+//			double gamma1 = (A0.Dot (dA) * h1 - A0.z * dA.z * h2) / alpha;
+//			double gamma2 = (dA.Dot (dA) * h1 - dA.z * dA.z * h2) / alpha;
+//			
+//			horizon1 = new Vector3d2 (-beta0, -beta1, 0.0);
+//			horizon2 = new Vector3d2 (beta0 * beta0 - gamma0, 2.0 * (beta0 * beta1 - gamma1), beta1 * beta1 - gamma2);
 			
 			Vector3d2 sunDir = new Vector3d2 (m_manager.getDirectionToSun ().normalized);
 			Vector3d2 oceanSunDir = localToOcean.ToMatrix3x3d () * sunDir;
 			
 			oceanMaterial.SetVector ("_Ocean_SunDir", oceanSunDir.ToVector3 ());
-			
-			oceanMaterial.SetVector ("_Ocean_Horizon1", horizon1.ToVector3 ());
-			oceanMaterial.SetVector ("_Ocean_Horizon2", horizon2.ToVector3 ());
 			
 			oceanMaterial.SetMatrix ("_Ocean_CameraToOcean", cameraToOcean.ToMatrix4x4 ());
 			oceanMaterial.SetMatrix ("_Ocean_OceanToCamera", cameraToOcean.Inverse ().ToMatrix4x4 ());
@@ -747,7 +475,7 @@ namespace scatterer
 			
 			oceanMaterial.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) /*  *0.1f   */);
 			oceanMaterial.SetVector ("_Ocean_ScreenGridSize", new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
-			oceanMaterial.SetFloat ("_Ocean_Radius", (float)radius);
+			oceanMaterial.SetFloat ("_Ocean_Radius", (float)(radius+m_oceanLevel));
 			
 			//			oceanMaterial.SetFloat("scale", 1);
 			oceanMaterial.SetFloat ("scale", oceanScale);
@@ -755,14 +483,45 @@ namespace scatterer
 			oceanMaterial.SetFloat ("_OceanAlpha", oceanAlpha);
 			oceanMaterial.SetFloat ("alphaRadius", alphaRadius);
 
+			oceanMaterial.SetFloat ("_GlobalOceanAlpha", m_manager.m_skyNode._GlobalOceanAlpha);
+			
 
-			oceanMaterial.SetFloat ("sunReflectionMultiplier", sunReflectionMultiplier);
-			oceanMaterial.SetFloat ("skyReflectionMultiplier", skyReflectionMultiplier);
-			oceanMaterial.SetFloat ("seaRefractionMultiplier", seaRefractionMultiplier);
+
+//			oceanMaterial.SetFloat ("sunReflectionMultiplier", sunReflectionMultiplier);
+//			oceanMaterial.SetFloat ("skyReflectionMultiplier", skyReflectionMultiplier);
+//			oceanMaterial.SetFloat ("seaRefractionMultiplier", seaRefractionMultiplier);
 
 
 			m_manager.GetSkyNode ().SetOceanUniforms (oceanMaterial);
-			
+
+
+			//horizon calculations
+			//these are used to find where the horizon line is on screen
+			//and "clamp" vertexes that are above it back to it
+			//as the grid is projected on the whole screen, vertexes over the horizon need to be dealt with
+			//simply passing a flag to drop fragments or moving these vertexes offscreen will cause issues
+			//as the horizon line can be between two vertexes and the horizon line will appear "pixelated"
+			//as whole chunks go missing
+
+			//these need to be done here
+			//1)for double precision
+			//2)for speed
+
+			Vector3d2 sphereDir=(localToCam * Vector3d2.Zero ()).Normalized();  //direction to center of planet			
+			double OHL = (localToCam * Vector3d2.Zero ()).Magnitude ();         //distance to center of planet
+
+			double rHorizon = Math.Sqrt( (OHL)*(OHL) - (radius * radius));  //distance to the horizon, i.e distance to ocean sphere tangent
+																			//basic geometry yo
+
+			//Theta=angle to horizon, now all that is left to do is check the viewdir against this angle in the shader
+			double cosTheta= rHorizon / (OHL); 
+			double sinTheta=Math.Sqrt (1- cosTheta*cosTheta);
+
+			oceanMaterial.SetVector ("sphereDir", sphereDir.ToVector3 ());
+			oceanMaterial.SetFloat ("cosTheta", (float) cosTheta);
+			oceanMaterial.SetFloat ("sinTheta", (float) sinTheta);
+
+
 		}
 		
 		public void SetUniforms (Material mat)

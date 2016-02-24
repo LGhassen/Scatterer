@@ -92,6 +92,7 @@
     <Compile Include="isosphere.cs" />
     <Compile Include="wireFrame.cs" />
     <Compile Include="SimplePostProcessCube.cs" />
+    <Compile Include="SunFlare.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
