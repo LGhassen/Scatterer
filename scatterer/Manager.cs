@@ -44,7 +44,9 @@ namespace scatterer {
 			//			print ("skynode parent CB and PP set");
 			//m_skyNode.loadSettings ();
 			m_skyNode.loadFromConfigNode(false);
+
 			m_skyNode.Start();
+
 			//m_skyNode.loadFromConfigNode(false);
 			//m_skyNode.loadFromConfigNode ();
 			//			print ("skynode started");
@@ -72,7 +74,8 @@ namespace scatterer {
 			
 			m_skyNode.UpdateNode();
 			
-			if (hasOcean && m_core.useOceanShaders) {
+			if (hasOcean && m_core.useOceanShaders)
+			{
 				m_oceanNode.UpdateNode();
 			}
 		}

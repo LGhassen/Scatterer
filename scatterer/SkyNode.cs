@@ -88,8 +88,9 @@ namespace scatterer
 		
 		[Persistent]
 		public float MapViewScale = 1f;
-		[Persistent]
-		float postProcessMaxAltitude=160000;
+
+//		[Persistent]
+//		float postProcessMaxAltitude=160000;
 
 		GameObject skyObject;
 		MeshRenderer skyMR;
@@ -408,10 +409,10 @@ namespace scatterer
 					InitPostprocessMaterial (m_atmosphereMaterial);
 					UpdatePostProcessMaterial (m_atmosphereMaterial);
 
-					if (m_manager.hasOcean && m_manager.GetCore ().useOceanShaders)
-					{
-						m_manager.GetOceanNode().SetUniforms(m_atmosphereMaterial);
-					}
+//					if (m_manager.hasOcean && m_manager.GetCore ().useOceanShaders)
+//					{
+//						m_manager.GetOceanNode().SetUniforms(m_atmosphereMaterial);   //for fake ocean, not needed anymore now
+//					}
 
 				}
 			}
@@ -471,9 +472,11 @@ namespace scatterer
 				farCamera=m_manager.GetCore().farCamera;
 				nearCamera=m_manager.GetCore().nearCamera;
 				
-				initiated = true;
+
 				backupAtmosphereMaterial ();
 				tweakStockAtmosphere ();
+
+				initiated = true;
 				
 			}
 			else
@@ -536,13 +539,15 @@ namespace scatterer
 					{
 
 						updater = (updateAtCameraRythm)scaledSpaceCamera.gameObject.AddComponent (typeof(updateAtCameraRythm));
-						updaterAdded = true;
-						
+											
 						updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this, skyObject,
 						                  parentCelestialBody.transform, celestialTransform);
+
+						updaterAdded = true;
 					}
 				
-				atmosphereMeshrenderer.enabled = (!inScaledSpace) &&(postprocessingEnabled)&&(trueAlt<postProcessMaxAltitude);
+//				atmosphereMeshrenderer.enabled = (!inScaledSpace) &&(postprocessingEnabled)&&(trueAlt<postProcessMaxAltitude);
+				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
 
 //				if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
 //				{
@@ -587,13 +592,11 @@ namespace scatterer
 			if (mat == null)
 				return;
 
+
 			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
-			if (!MapView.MapIsEnabled)
-			{
+			if (!MapView.MapIsEnabled) {
 				mat.SetFloat ("_viewdirOffset", viewdirOffset);
-			}
-			else
-			{
+			} else {
 				mat.SetFloat ("_viewdirOffset", 0f);
 			}
 
@@ -612,12 +615,13 @@ namespace scatterer
 				mat.SetFloat ("extinctionRimFade", mapSkyExtinctionRimFade);
 				mat.SetFloat ("_extinctionScatterIntensity", _mapExtinctionScatterIntensity);
 			}
-			
+
+
 			mat.SetFloat ("scale", 1);
 			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
 			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
 			mat.SetFloat ("RL", RL * atmosphereGlobalScale);
-			
+
 
 			if (!MapView.MapIsEnabled) {			
 				
@@ -627,8 +631,7 @@ namespace scatterer
 				mat.SetMatrix ("_Globals_WorldToCamera", scaledSpaceCamera.worldToCameraMatrix);
 				mat.SetMatrix ("_Globals_CameraToWorld", scaledSpaceCamera.worldToCameraMatrix.inverse);
 			}
-			
-			
+
 			
 			
 			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
@@ -646,7 +649,7 @@ namespace scatterer
 //			                       -parentCelestialBody.transform.position.z);
 
 			Shader.SetGlobalVector ("_Godray_WorldSunDir", m_manager.sunCelestialBody.transform.position
-			                       -parentCelestialBody.transform.position);
+				- parentCelestialBody.transform.position);
 
 
 			if (!MapView.MapIsEnabled) {
@@ -654,17 +657,16 @@ namespace scatterer
 			} else {
 				p = scaledSpaceCamera.projectionMatrix;
 			}
-			
+
 			
 			m_cameraToScreenMatrix = new Matrix4x4d (p);
 			mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
 			mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
 
-			Vector3 temp = ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position);
+			Vector3 temp = ScaledSpace.ScaledToLocalSpace (scaledSpaceCamera.transform.position);
 			mat.SetVector ("_Globals_WorldCameraPos", temp);
 			mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
 				
-
 			
 			if (!MapView.MapIsEnabled) {
 				mat.SetFloat ("_Exposure", m_HDRExposure);
@@ -673,32 +675,39 @@ namespace scatterer
 				mat.SetFloat ("_Exposure", mapExposure);
 				mat.SetFloat ("_RimExposure", mapSkyRimExposure);
 			}
-			
 
-			//Eclipse stuff
-			Vector3 sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
-			mat.SetVector("sunPosAndRadius", new Vector4(sunPosRelPlanet.x,sunPosRelPlanet.y,
-			                                             sunPosRelPlanet.z,(float)m_manager.sunCelestialBody.Radius));
 
-			//build and set casters matrix
-			Matrix4x4 castersMatrix1= Matrix4x4.zero;
-			Matrix4x4 castersMatrix2= Matrix4x4.zero;
 
-			for (int i=0;i< Mathf.Min(4, m_manager.eclipseCasters.Count);i++)
+			if (m_manager.GetCore ().useEclipses)
 			{
-				Vector3 casterPosRelPlanet = m_manager.eclipseCasters[i].transform.position;
-				castersMatrix1.SetRow(i,new Vector4(casterPosRelPlanet.x, casterPosRelPlanet.y,
-				                                    casterPosRelPlanet.z,(float)m_manager.eclipseCasters[i].Radius));
-			}
+				Vector3 sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
+				mat.SetVector ("sunPosAndRadius", new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
+			                                             sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
 
-			for (int i=4;i< Mathf.Min(8, m_manager.eclipseCasters.Count);i++)
-			{
-				Vector3 casterPosRelPlanet = m_manager.eclipseCasters[i].transform.position;
-				castersMatrix2.SetRow(i-4,new Vector4(casterPosRelPlanet.x, casterPosRelPlanet.y,
-				                                    casterPosRelPlanet.z,(float)m_manager.eclipseCasters[i].Radius));
+
+
+				//build and set casters matrix
+				Matrix4x4 castersMatrix1 = Matrix4x4.zero;
+				Matrix4x4 castersMatrix2 = Matrix4x4.zero;
+
+				for (int i=0; i< Mathf.Min(4, m_manager.eclipseCasters.Count); i++)
+				{
+					Vector3 casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+					castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
+				                                    casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+				}
+
+
+
+				for (int i=4; i< Mathf.Min(8, m_manager.eclipseCasters.Count); i++)
+				{
+					Vector3 casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+					castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
+				                                    casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+				}
+				mat.SetMatrix ("lightOccluders1", castersMatrix1);
+				mat.SetMatrix ("lightOccluders2", castersMatrix2);
 			}
-			mat.SetMatrix ("lightOccluders1", castersMatrix1);
-			mat.SetMatrix ("lightOccluders2", castersMatrix2);
 		}
 
 

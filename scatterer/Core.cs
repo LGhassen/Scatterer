@@ -238,7 +238,7 @@ namespace scatterer
 		internal override void Awake ()
 		{
 
-			WindowCaption = "Scatterer v0.023: alt+f10/f11 toggle ";
+			WindowCaption = "Scatterer v0.0231: alt+f10/f11 toggle ";
 			WindowRect = new Rect (0, 0, 400, 50);
 			
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
@@ -482,7 +482,8 @@ namespace scatterer
 
 			
 			
-				if (ScaledSpace.Instance && farCamera) {
+				if (ScaledSpace.Instance && farCamera)
+				{
 					if (callCollector)
 						{
 							GC.Collect();
@@ -553,10 +554,10 @@ namespace scatterer
 
 
 				
-//					if (forceDisableDefaultDepthBuffer) { //want this to be forced off every frame, in case some other mod is reenabling it
-//						farCamera.depthTextureMode = DepthTextureMode.None;
-//
-//					}
+////					if (forceDisableDefaultDepthBuffer) { //want this to be forced off every frame, in case some other mod is reenabling it
+////						farCamera.depthTextureMode = DepthTextureMode.None;
+////
+////					}
 				
 
 				
@@ -668,14 +669,16 @@ namespace scatterer
 		
 		internal override void OnDestroy ()
 		{
-						Debug.Log ("[Scatterer] Core.OnDestroy() called");
+
+
+		Debug.Log ("[Scatterer] Core.OnDestroy() called");
 
 
 			if (isActive) {
-				//m_manager.OnDestroy ();
-				//Destroy (m_manager);
-				
+
+
 				for (int i = 0; i < scattererCelestialBodies.Count; i++) {
+
 					scattererCelestialBody cur = scattererCelestialBodies [i];
 					if (cur.active) {
 						cur.m_manager.OnDestroy ();
@@ -687,11 +690,16 @@ namespace scatterer
 					
 				}
 
-				customDepthBuffer.OnDestroy();
-				Component.Destroy (customDepthBuffer);
-				UnityEngine.Object.Destroy (customDepthBuffer);
-				customDepthBufferTexture.Release();
-				UnityEngine.Object.Destroy (customDepthBufferTexture);
+				if(customDepthBuffer)
+				{
+					customDepthBuffer.OnDestroy();
+					Component.Destroy (customDepthBuffer);
+					UnityEngine.Object.Destroy (customDepthBuffer);
+					customDepthBufferTexture.Release();
+					UnityEngine.Object.Destroy (customDepthBufferTexture);
+				}
+
+			
 
 				if(useGodrays)
 				{
@@ -699,26 +707,34 @@ namespace scatterer
 					UnityEngine.Object.Destroy (godrayDepthTexture);
 				}
 
-				if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
-					Component.Destroy (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
-				
-				if (farCamera.gameObject.GetComponent (typeof(Wireframe)))
-					Component.Destroy (farCamera.gameObject.GetComponent (typeof(Wireframe)));
-				
-				if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
-					Component.Destroy (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
-			
-				if (fullLensFlareReplacement)
+
+				if (farCamera)
+				{
+					if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
+						Component.Destroy (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
+					
+					
+					if (farCamera.gameObject.GetComponent (typeof(Wireframe)))
+						Component.Destroy (farCamera.gameObject.GetComponent (typeof(Wireframe)));
+					
+					
+					if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
+						Component.Destroy (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
+				}
+
+				if (fullLensFlareReplacement && customSunFlare)
 				{
 					Component.Destroy (customSunFlare);
 				}
+
+
 			
 			}
 
 			else if (mainMenu)
 			
 			{
-				Debug.Log("[Scatterer] saving user settings");
+//				Debug.Log("[Scatterer] saving user settings");
 				savePlanetsList(); //save user preferences //originally this was created only for the planets list, I'll change it later
 			}
 
@@ -1622,7 +1638,6 @@ namespace scatterer
 		
 		public void fixDrawOrders ()
 		{
-//			Debug.Log ("Here1");
 			for (int k = 0; k < celestialBodiesWithDistance.Count; k++)
 			{
 				if (celestialBodiesWithDistance [k].CelestialBody)

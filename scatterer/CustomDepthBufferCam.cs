@@ -32,12 +32,20 @@ namespace scatterer
 			if (!_depthCam) {
 				_depthCam = new GameObject("CustomDepthCamera");
 				_depthCam.AddComponent<Camera>();
+
+				_depthCam.camera.CopyFrom(inCamera);
 				
 				_depthCam.camera.farClipPlane=incore.farCamera.farClipPlane;
 				_depthCam.camera.nearClipPlane=incore.farCamera.nearClipPlane;
 				_depthCam.camera.depthTextureMode=DepthTextureMode.None;
-				
-				_depthCam.camera.enabled = true;
+
+				_depthCam.camera.transform.parent=incore.farCamera.transform;
+
+//				_depthCam.camera.enabled = true;
+				_depthCam.camera.enabled = false;
+
+
+
 				depthShader = ShaderTool.GetShader2("CompiledDepthTexture.shader");
 
 
@@ -45,7 +53,9 @@ namespace scatterer
 					GodrayDepthShader=ShaderTool.GetShader2("CompiledGodrayDepthTexture.shader");
 
 			}
-			
+
+			_depthCam.camera.CopyFrom(inCamera);
+			_depthCam.camera.enabled = false;
 
 			//_depthCam.camera.backgroundColor = new Color(0,0,0,0);
 			//_depthCam.camera.clearFlags = CameraClearFlags.SolidColor;
@@ -55,7 +65,7 @@ namespace scatterer
 			//disable rendering of the custom depth buffer when away from PQS
 			if (incore.pqsEnabled)   //change this to render at any PQS
 			{
-				_depthCam.camera.CopyFrom(inCamera);
+
 
 				//for some reason in KSP this camera wouldn't clear the texture before rendering to it, resulting in a trail effect
 				//this snippet fixes that. We need the texture cleared to full white to mask the sky
@@ -67,7 +77,7 @@ namespace scatterer
 				
 				
 				_depthCam.camera.targetTexture = _depthTex;
-				_depthCam.camera.SetReplacementShader (depthShader, "RenderType");
+//				_depthCam.camera.SetReplacementShader (depthShader, "RenderType");
 				_depthCam.camera.RenderWithShader (depthShader, "RenderType");
 				depthTextureCleared = false;
 				
@@ -78,7 +88,7 @@ namespace scatterer
 
 					
 					_depthCam.camera.targetTexture =  _godrayDepthTex;
-					_depthCam.camera.SetReplacementShader (GodrayDepthShader, "RenderType");
+//					_depthCam.camera.SetReplacementShader (GodrayDepthShader, "RenderType");
 					_depthCam.camera.RenderWithShader (GodrayDepthShader, "RenderType");
 				}
 				
