@@ -1,3 +1,14 @@
 *.userprefs
 scatterer/obj
 scatterer/bin
+scatterer/bin/Release/Assembly-CSharp-firstpass.dll
+scatterer/bin/Release/Assembly-CSharp.dll
+scatterer/bin/Release/Mono.Cecil.dll
+scatterer/bin/Release/Mono.Security.dll
+scatterer/bin/Release/mscorlib.dll
+scatterer/bin/Release/System.Core.dll
+scatterer/bin/Release/System.dll
+scatterer/bin/Release/System.Xml.dll
+scatterer/bin/Release/TDx.TDxInput.dll
+scatterer/bin/Release/TrackIRUnity.dll
+scatterer/bin/Release/UnityEngine.dll
