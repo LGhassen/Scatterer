@@ -9,7 +9,7 @@ Shader "Proland/Atmo/Sky"
     	 Tags {"QUEUE"="Geometry+1" "IgnoreProjector"="True" }
     		ZWrite Off
     		ZTest Off
-    		
+    		//			#define eclipses
     		cull Front
     
     		Blend DstColor Zero  //multiplicative blending
@@ -244,11 +244,14 @@ Shader "Proland/Atmo/Sky"
     			
     			float average=(extinction.r+extinction.g+extinction.b)/3;
     			
-//    			extinction = float3(_Extinction_Tint*extinction.r + (1-_Extinction_Tint)*average,
-//    								_Extinction_Tint*extinction.g + (1-_Extinction_Tint)*average,
-//    								_Extinction_Tint*extinction.b + (1-_Extinction_Tint)*average);
+    			
+    			extinction = float3(_Extinction_Tint*extinction.r + (1-_Extinction_Tint)*average,
+    								_Extinction_Tint*extinction.g + (1-_Extinction_Tint)*average,
+    								_Extinction_Tint*extinction.b + (1-_Extinction_Tint)*average);
     								
-    			extinction = lerp(average, extinction, _Extinction_Tint);
+    								
+    								
+//    			extinction = lerp(average, extinction, _Extinction_Tint);
     			
     			
     			

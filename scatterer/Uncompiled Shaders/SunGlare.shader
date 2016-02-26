@@ -19,7 +19,7 @@
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma glsl
+//			#pragma glsl
 
 
 			uniform float3 _Globals_WorldCameraPos;
@@ -85,7 +85,8 @@
 			float3 Transmittance(float r, float mu) 
 			{
     			float2 uv = GetTransmittanceUV(r, mu);
-    			return tex2Dlod(_Sky_Transmittance, float4(uv,0,0)).rgb;
+//    			return tex2Dlod(_Sky_Transmittance, float4(uv,0,0)).rgb; //shouldn't need tex2Dlod
+    			return tex2D(_Sky_Transmittance, uv).rgb; //shouldn't need tex2Dlod
 			}
 			
 			float SQRT(float f, float err)

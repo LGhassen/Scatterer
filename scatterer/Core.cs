@@ -238,7 +238,7 @@ namespace scatterer
 		internal override void Awake ()
 		{
 
-			WindowCaption = "Scatterer v0.0231: alt+f10/f11 toggle ";
+			WindowCaption = "Scatterer v0.0232: alt+f10/f11 toggle ";
 			WindowRect = new Rect (0, 0, 400, 50);
 			
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;

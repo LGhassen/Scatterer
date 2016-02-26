@@ -456,12 +456,12 @@
                 
                 float average=(extinction.r+extinction.g+extinction.b)/3;
 
-//    			extinction = float3(_Post_Extinction_Tint*extinction.r + (1-_Post_Extinction_Tint)*average,
-//    								_Post_Extinction_Tint*extinction.g + (1-_Post_Extinction_Tint)*average,
-//    								_Post_Extinction_Tint*extinction.b + (1-_Post_Extinction_Tint)*average);
+    			extinction = float3(_Post_Extinction_Tint*extinction.r + (1-_Post_Extinction_Tint)*average,
+    								_Post_Extinction_Tint*extinction.g + (1-_Post_Extinction_Tint)*average,
+    								_Post_Extinction_Tint*extinction.b + (1-_Post_Extinction_Tint)*average);
 
-    			extinction = lerp(average, extinction, _Post_Extinction_Tint);
-    			extinction = lerp (1, extinction, postExtinctionMultiplier);					
+//    			extinction = lerp(average, extinction, _Post_Extinction_Tint);
+    			extinction = lerp (float3(1,1,1), extinction, postExtinctionMultiplier);					
 
                 return float4(extinction, 1.0);
 
@@ -499,7 +499,7 @@
             #define customDepthBuffer
             #define useAnalyticTransmittance
 //            #define useHorizonHack
-			#define godrays
+//			#define godrays
             
             uniform float4x4 _ViewProjInv;
             uniform float _viewdirOffset;
