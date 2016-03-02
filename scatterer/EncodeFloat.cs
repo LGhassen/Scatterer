@@ -50,7 +50,8 @@ public class EncodeFloat
 //		DecodeFloat(w, h, channels, min, max, tex, map);
 		DecodeFloat(w, h, channels, min, max, tex, colorMapMemoryPointer);
 
-		Marshal.FreeHGlobal(colorMapMemoryPointer);
+//		Marshal.FreeHGlobal(colorMapMemoryPointer);
+		//freed in decodefloat instead to save a little on spikes
 
 	}
 	
@@ -60,48 +61,56 @@ public class EncodeFloat
 	{
 			encoded = new Color[w*h];
 
-//			loadEncodedTo2Dtex (0, w, h, c, encoded, map);
-			loadEncodedTo2Dtex (0, w, h, c, encoded, colorMap);
+//			loadEncodedChannel (0, w, h, c, encoded, map);
+			loadEncodedChannel (0, w, h, c, encoded, colorMap);
 			
 			Texture2D mapR = new Texture2D(w, h,TextureFormat.ARGB32, false, true);
 			mapR.filterMode = FilterMode.Point;
 			mapR.wrapMode = TextureWrapMode.Clamp;
 			mapR.SetPixels(encoded);
-			mapR.Apply();
+//			mapR.Apply();
+
 			
 			
-//			loadEncodedTo2Dtex (1, w, h, c, encoded, map);
-			loadEncodedTo2Dtex (1, w, h, c, encoded, colorMap);
+//			loadEncodedChannel (1, w, h, c, encoded, map);
+			loadEncodedChannel (1, w, h, c, encoded, colorMap);
 
 			
 			Texture2D mapG = new Texture2D(w, h,TextureFormat.ARGB32, false, true);
 			mapG.filterMode = FilterMode.Point;
 			mapG.wrapMode = TextureWrapMode.Clamp;
 			mapG.SetPixels(encoded);
-			mapG.Apply();
+//			mapG.Apply();
 			
 			
-//			loadEncodedTo2Dtex (2, w, h, c, encoded, map);
-			loadEncodedTo2Dtex (2, w, h, c, encoded, colorMap);
+//			loadEncodedChannel (2, w, h, c, encoded, map);
+			loadEncodedChannel (2, w, h, c, encoded, colorMap);
 
 			
 			Texture2D mapB = new Texture2D(w, h,TextureFormat.ARGB32, false, true);
 			mapB.filterMode = FilterMode.Point;
 			mapB.wrapMode = TextureWrapMode.Clamp;
 			mapB.SetPixels(encoded);
-			mapB.Apply();
+//			mapB.Apply();
 			
 			
-//			loadEncodedTo2Dtex (3, w, h, c, encoded, map);
-			loadEncodedTo2Dtex (3, w, h, c, encoded, colorMap);
+//			loadEncodedChannel (3, w, h, c, encoded, map);
+			loadEncodedChannel (3, w, h, c, encoded, colorMap);
 
 			//free colorMap here to limit memory spike even if slightly?
+			Marshal.FreeHGlobal(colorMap);
 
 			
 			Texture2D mapA = new Texture2D(w, h,TextureFormat.ARGB32, false, true);
 			mapA.filterMode = FilterMode.Point;
 			mapA.wrapMode = TextureWrapMode.Clamp;
 			mapA.SetPixels(encoded);
+//			mapA.Apply();
+
+			//apply all at once
+			mapR.Apply();
+			mapG.Apply();
+			mapB.Apply();
 			mapA.Apply();
 
 
@@ -135,8 +144,8 @@ public class EncodeFloat
 	}
 	
 	
-//	void loadEncodedTo2Dtex(int channel, int w, int h, int c, Color[] encoded, Color[] map)
-	void loadEncodedTo2Dtex(int channel, int w, int h, int c, Color[] encoded, IntPtr colorMap)
+//	void loadEncodedChannel(int channel, int w, int h, int c, Color[] encoded, Color[] map)
+	void loadEncodedChannel(int channel, int w, int h, int c, Color[] encoded, IntPtr colorMap)
 	{
 		int index = 0;
 		for(int x = 0; x < w; x++)
