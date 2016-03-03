@@ -36,6 +36,8 @@ namespace scatterer
 		public int currentConfigPoint;
 		bool coronasDisabled = false;
 
+		EncodeFloat encode;
+
 		[Persistent] public float experimentalAtmoScale=1f;
 		float viewdirOffset=0f;
 
@@ -919,8 +921,11 @@ namespace scatterer
 			m_transmit.Create ();
 			m_irradiance.Create ();
 
-			EncodeFloat encode = new EncodeFloat ();
+			if(encode==null)
+				encode = new EncodeFloat ();
 
+
+//			the EncodeFloat class still leaks a 100mb or so on first scene change, not good
 			_file = assetDir + m_filePath + "/inscatter.raw";
 			encode.WriteIntoRenderTexture (m_inscatter, 4, _file);
 
@@ -929,23 +934,33 @@ namespace scatterer
 
 			_file = assetDir + m_filePath + "/irradiance.raw";
 			encode.WriteIntoRenderTexture (m_irradiance, 3, _file);
+
+			encode = null;
+
 		}
 		
 		public void OnDestroy ()
 		{
 			saveToConfigNode ();
-			if (m_transmit) {
+			if (m_transmit)
+			{
 				m_transmit.Release ();
 				UnityEngine.Object.Destroy (m_transmit);
 			}
-			if (m_irradiance) {
+
+			if (m_irradiance)
+			{
 				m_irradiance.Release ();
 				UnityEngine.Object.Destroy (m_irradiance);
 			}
-			if (m_inscatter) {
+
+			if (m_inscatter)
+			{
 				m_inscatter.Release ();
 				UnityEngine.Object.Destroy (m_inscatter);
 			}
+
+
 
 //			UnityEngine.Object.Destroy (black);
 //			UnityEngine.Object.Destroy (sunGlare);
