@@ -238,7 +238,7 @@ namespace scatterer
 		internal override void Awake ()
 		{
 
-			WindowCaption = "Scatterer v0.0232: alt+f10/f11 toggle ";
+			WindowCaption = "Scatterer v0.0233: alt+f10/f11 toggle ";
 			WindowRect = new Rect (0, 0, 400, 50);
 			
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
@@ -1637,41 +1637,36 @@ namespace scatterer
 		
 		public void fixDrawOrders ()
 		{
-			for (int k = 0; k < celestialBodiesWithDistance.Count; k++)
-			{
-				if (celestialBodiesWithDistance [k].CelestialBody)
-				{
+			for (int k = 0; k < celestialBodiesWithDistance.Count; k++) {
+				if (celestialBodiesWithDistance [k].CelestialBody) {
 					float dist;
 
-
-//					if (!MapView.MapIsEnabled)
-//					{
-//						dist=  Vector3.Distance (
-//							farCamera.transform.position,
-//							ScaledSpace.ScaledToLocalSpace (
-//							GetScaledTransform (celestialBodiesWithDistance [k].CelestialBody.name).position));
-//					}
-
-					if (celestialBodiesWithDistance [k].usesScatterer && scattererCelestialBodies[celestialBodiesWithDistance [k].scattererIndex].hasTransform)
-					{
-						dist= Vector3.Distance (
-							ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position),
+					//					if (!MapView.MapIsEnabled)
+					//					{
+					//						dist=  Vector3.Distance (
+					//							farCamera.transform.position,
+					//							ScaledSpace.ScaledToLocalSpace (
+					//							GetScaledTransform (celestialBodiesWithDistance [k].CelestialBody.name).position));
+					//					}
+					
+					if (celestialBodiesWithDistance [k].usesScatterer && scattererCelestialBodies [celestialBodiesWithDistance [k].scattererIndex].hasTransform) {
+						dist = Vector3.Distance (
+							ScaledSpace.ScaledToLocalSpace (scaledSpaceCamera.transform.position),
 							ScaledSpace.ScaledToLocalSpace (
-							GetScaledTransform (scattererCelestialBodies[celestialBodiesWithDistance [k].scattererIndex].transformName).position));
-					}
-
-					else
-					{
-						dist= Vector3.Distance (
-							ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position),
+							GetScaledTransform (scattererCelestialBodies [celestialBodiesWithDistance [k].scattererIndex].transformName).position));
+					} else {
+						dist = Vector3.Distance (
+							ScaledSpace.ScaledToLocalSpace (scaledSpaceCamera.transform.position),
 							ScaledSpace.ScaledToLocalSpace (
 							GetScaledTransform (celestialBodiesWithDistance [k].CelestialBody.name).position));
 					}
 					celestialBodiesWithDistance [k].Distance = dist;
+
 				}
 			}
 
 			celestialBodiesWithDistance.Sort ();
+
 			int currentRenderQueue = 2001;
 		
 
@@ -1682,7 +1677,8 @@ namespace scatterer
 
 
 
-				if (current.CelestialBody != null) {
+				if (current.CelestialBody != null)
+				{
 					Transform tmpTransform;
 
 					if(current.usesScatterer && scattererCelestialBodies[current.scattererIndex].hasTransform)
@@ -1690,7 +1686,7 @@ namespace scatterer
 					else
 						tmpTransform = GetScaledTransform (current.CelestialBody.name);
 
-
+//					tmpTransform=scattererCelestialBodies[current.scattererIndex].transform;
 
 					MeshRenderer mr2 = (MeshRenderer)tmpTransform.GetComponent (typeof(MeshRenderer));
 					
