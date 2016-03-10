@@ -19,7 +19,7 @@
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
-//			#pragma glsl
+			#pragma glsl
 
 
 			uniform float3 _Globals_WorldCameraPos;
