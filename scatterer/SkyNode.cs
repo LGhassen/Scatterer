@@ -38,7 +38,7 @@ namespace scatterer
 		MeshRenderer skyLocalMeshrenderer;
 
 
-
+		float localSkyAltitude;
 		
 		[Persistent]
 		public bool displayInterpolatedVariables = false;
@@ -95,7 +95,7 @@ namespace scatterer
 
 
 		[Persistent]
-		public bool drawSkyScaledOverClouds = true;
+		public bool drawSkyOverClouds = true;
 
 		[Persistent]
 		public float drawOverCloudsAltitude = 100000f;
@@ -381,8 +381,10 @@ namespace scatterer
 
 
 #if skyScaledBox
-			float skycubeSize = 2.5f * m_radius / ScaledSpace.ScaleFactor;
-			skyScaledCube = new SimplePostProcessCube (skycubeSize, m_skyMaterialScaled,true);
+//			float skycubeSize = 2.5f * m_radius / ScaledSpace.ScaleFactor;
+			float skySphereSize = 2*(4 * (Rt-Rg) + Rg) / ScaledSpace.ScaleFactor;
+			localSkyAltitude = 6 * (Rt-Rg) + Rg;
+			skyScaledCube = new SimplePostProcessCube (skySphereSize, m_skyMaterialScaled,true);
 			skyScaledMesh = skyScaledCube.GameObject;
 			skyScaledMesh.layer = 10;
 			skyScaledMeshrenderer = skyScaledCube.GameObject.GetComponent < MeshRenderer > ();
@@ -392,7 +394,7 @@ namespace scatterer
 
 			skyScaledMeshrenderer.enabled = false;
 
-			if (m_manager.GetCore().drawAtmoOnTopOfClouds)
+			if (m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
 				m_skyMaterialScaled.renderQueue=3001;
 			else
 				m_skyMaterialScaled.renderQueue=2001;
@@ -551,12 +553,28 @@ namespace scatterer
 //				atmosphereMeshrenderer.enabled = (!inScaledSpace) &&(postprocessingEnabled)&&(trueAlt<postProcessMaxAltitude);
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
 
-				if ((inScaledSpace || MapView.MapIsEnabled ) ^ scaledMode)
+
+				bool localSkyCondition;
+				if(CurrentPQS!=null)
+				{
+					localSkyCondition=!CurrentPQS.isActive;   //inScaledSpace
+				}
+				else
+				{
+					localSkyCondition=alt > localSkyAltitude;    
+				}
+
+				if ((localSkyCondition || MapView.MapIsEnabled ) ^ scaledMode)
 				{
 					toggleScaledMode();
 				}
 
-				if (!inScaledSpace && m_manager.GetCore().drawAtmoOnTopOfClouds)
+//				if ((inScaledSpace || MapView.MapIsEnabled ) ^ scaledMode)
+//				{
+//					toggleScaledMode();
+//				}
+
+				if (!scaledMode && m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
 				{
 					if (trueAlt<drawOverCloudsAltitude)
 					{
@@ -569,6 +587,11 @@ namespace scatterer
 						m_skyMaterialLocal.renderQueue=3001;
 					}
 				}
+
+				if (m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
+					m_skyMaterialScaled.renderQueue=3001;
+				else
+					m_skyMaterialScaled.renderQueue=2001;
 
 
 //				m_skyMaterialLocal.renderQueue=m_manager.GetCore().oceanRenderQueue;

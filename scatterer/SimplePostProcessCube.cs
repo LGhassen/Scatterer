@@ -12,7 +12,6 @@ namespace scatterer
 	{
 		
 		GameObject meshContainer;
-		Vector3[] verts;
 
 		public GameObject GameObject { get { return meshContainer; } }
 		
