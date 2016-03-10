@@ -63,7 +63,18 @@ namespace scatterer
 			//inCamera.camera.SetReplacementShader(depthShader,"RenderType");
 			
 			//disable rendering of the custom depth buffer when away from PQS
-			if (incore.pqsEnabled)   //change this to render at any PQS
+
+			bool renderDepthBuffer = false;
+			if (FlightGlobals.ActiveVessel)
+			{
+				if (FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController)
+					renderDepthBuffer = FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController.isActive;
+			}
+
+			renderDepthBuffer = renderDepthBuffer || incore.pqsEnabled;
+
+//			if (incore.pqsEnabled)   //change this to render at any PQS
+			if (renderDepthBuffer)
 			{
 
 

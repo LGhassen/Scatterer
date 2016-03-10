@@ -479,6 +479,20 @@ namespace scatterer
 //					scaledspaceSunLight.light.intensity=3;
 
 
+
+					//find and fix renderQueues of kopernicus rings
+//					Debug.Log("[Scatterer] Fixing renderqueues for Kopernicus rings");
+					foreach (CelestialBody _cb in CelestialBodies)
+					{
+						GameObject ringObject;
+						ringObject=GameObject.Find(_cb.name+"Ring");
+						if (ringObject)
+						{
+							ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3002;
+							Debug.Log("[Scatterer] Found rings for "+_cb.name);
+						}
+					}
+
 					found = true;
 				}
 				
