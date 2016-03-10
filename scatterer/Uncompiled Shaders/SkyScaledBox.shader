@@ -3,15 +3,19 @@ Shader "Proland/Atmo/Sky"
 	SubShader 
 	{
 		 Tags {"QUEUE"="Geometry+1" "IgnoreProjector"="True" }
-	
+		 
 		Pass   											//extinction pass, I should really just put the shared components in an include file to clean this up
     	{		
     	 Tags {"QUEUE"="Geometry+1" "IgnoreProjector"="True" }
+    	 
+ 	 			
     		ZWrite Off
-    		ZTest Off
-    		//			#define eclipses
-    		cull Front
-    
+
+//if localSpaceMode //i.e box mode
+//    		ZTest Off
+//    		cull Front
+//endif
+
     		Blend DstColor Zero  //multiplicative blending
 
 			CGPROGRAM
@@ -26,7 +30,12 @@ Shader "Proland/Atmo/Sky"
 			#include "AtmosphereNew.cginc"
 			
 //			#define eclipses
+			
 			#define useAnalyticTransmittance
+			
+			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
+//			#define localSpaceMode
+
 			
 			
 			//uniform float _Alpha_Cutoff;
@@ -42,11 +51,12 @@ Shader "Proland/Atmo/Sky"
 			uniform float _Extinction_Tint;
 			uniform float extinctionMultiplier;
 			uniform float extinctionRimFade;
+			uniform float extinctionGroundFade;
 
-			uniform float4x4 _Sun_WorldToLocal;
+//			uniform float4x4 _Sun_WorldToLocal;
 			
 //eclipse uniforms
-#if defined (eclipses)			
+#if defined (ECLIPSES_ON)			
 			uniform float4 sunPosAndRadius; //xyz sun pos w radius
 			uniform float4x4 lightOccluders1; //array of light occluders
 											 //for each float4 xyz pos w radius
@@ -58,21 +68,27 @@ Shader "Proland/Atmo/Sky"
 			{
     			float4 pos : SV_POSITION;
     			float2 uv : TEXCOORD0;
-    			float3 dir : TEXCOORD1;
-    			float3 relativeDir : TEXCOORD2;
+//    			float3 dir : TEXCOORD1;
+//    			float3 relativeDir : TEXCOORD2;
+    			float3 worldPos : TEXCOORD1;
+
 			};
 
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
-			    OUT.dir = (mul(_Globals_CameraToWorld, float4((mul(_Globals_ScreenToCamera, v.vertex)).xyz, 0.0))).xyz;
-			    float3x3 wtl = _Sun_WorldToLocal;
-			    
-			    // apply this rotation to view dir to get relative viewdir
-			    OUT.relativeDir = mul(wtl, OUT.dir);
-    
-    			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
-    			OUT.uv = v.texcoord.xy;
+//			    OUT.dir = (mul(_Globals_CameraToWorld, float4((mul(_Globals_ScreenToCamera, v.vertex)).xyz, 0.0))).xyz;
+////			    float3x3 wtl = _Sun_WorldToLocal;
+//			    
+////			    // apply this rotation to view dir to get relative viewdir
+////			    OUT.relativeDir = mul(wtl, OUT.dir);
+//    
+//    			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
+//    			OUT.uv = v.texcoord.xy;
+
+    			OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				OUT.worldPos = mul(_Object2World, v.vertex);
+				
     			return OUT;
 			}
 			
@@ -164,12 +180,21 @@ Shader "Proland/Atmo/Sky"
 			{
 			    float3 extinction = float3(1,1,1);
 				
-			    float3 WCP = _Globals_WorldCameraPos;
+//			    float3 WCP = _Globals_WorldCameraPos;
+
+#if defined (localSpaceMode)
+				float3 WCP = _WorldSpaceCameraPos; //unity supplied, in local Space
+#else
+			    float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
+#endif
+			    
+			    
+			    float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);  //viewdir computed in scaledSpace or localSpace, depending
 				
 //				Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
 	
-				float3 viewdir=normalize(IN.dir);
-				float3 d=viewdir;
+//				float3 viewdir=normalize(dir);
+				float3 viewdir=d;
 				viewdir.x+=_viewdirOffset;
 				viewdir=normalize(viewdir);
 				
@@ -268,7 +293,7 @@ Shader "Proland/Atmo/Sky"
 
     									
 
-#if defined (eclipses)
+#if defined (ECLIPSES_ON)
 				else  	//eclipses shouldn't hide celestial objects visible in the sky		
 				{
  					float eclipseShadow = 1;
@@ -299,7 +324,7 @@ Shader "Proland/Atmo/Sky"
 								   lightOccluders1[i].w, sunPosAndRadius.w);
 						}
 						
-						            		    for (int i=0; i<4; ++i)
+						for (int i=0; i<4; ++i)
     					{
         					if (lightOccluders2[i].w <= 0)	break;
 							eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[i].xyz,
@@ -308,6 +333,7 @@ Shader "Proland/Atmo/Sky"
 					}
 
 			    	extinction*= eclipseShadow;
+			    	extinction= float3(1.0,1.0,1.0)*extinctionGroundFade +(1-extinctionGroundFade)*extinction;
 			    }
 #endif
 				
@@ -324,10 +350,14 @@ Shader "Proland/Atmo/Sky"
     	{
     	 Tags {"QUEUE"="Geometry+1" "IgnoreProjector"="True" }
     		ZWrite Off
-    		ZTest Off
-    		
-    		cull Front
-    
+
+//if localSpaceMode
+//    		ZTest Off
+//    		cull Front
+//endif
+
+
+ 
     		Blend One One  //additive blending
 //            Blend OneMinusDstColor One //soft additive
 
@@ -343,6 +373,8 @@ Shader "Proland/Atmo/Sky"
 			#include "AtmosphereNew.cginc"
 			
 //			#define eclipses
+			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
+//			#define localSpaceMode
 			
 			
 			//uniform float _Alpha_Cutoff;
@@ -360,10 +392,10 @@ Shader "Proland/Atmo/Sky"
 
 //			uniform sampler2D _Sun_Glare;
 			uniform float3 _Sun_WorldSunDir;
-			uniform float4x4 _Sun_WorldToLocal;
+//							uniform float4x4 _Sun_WorldToLocal;
 			
 //eclipse uniforms
-#if defined (eclipses)			
+#if defined (ECLIPSES_ON)			
 			uniform float4 sunPosAndRadius; //xyz sun pos w radius
 			uniform float4x4 lightOccluders1; //array of light occluders
 											 //for each float4 xyz pos w radius
@@ -377,22 +409,31 @@ Shader "Proland/Atmo/Sky"
 			{
     			float4 pos : SV_POSITION;
     			float2 uv : TEXCOORD0;
-    			float3 dir : TEXCOORD1;
-    			float3 relativeDir : TEXCOORD2;
+//    			float3 dir : TEXCOORD1;
+//    			float3 relativeDir : TEXCOORD2;
+    			float3 worldPos : TEXCOORD1;
+    			
 			};
 			
 
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
-			    OUT.dir = (mul(_Globals_CameraToWorld, float4((mul(_Globals_ScreenToCamera, v.vertex)).xyz, 0.0))).xyz;
-			    float3x3 wtl = _Sun_WorldToLocal;
-			    
-			    // apply this rotation to view dir to get relative viewdir
-			    OUT.relativeDir = mul(wtl, OUT.dir);
-    
-    			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
-    			OUT.uv = v.texcoord.xy;
+//			    OUT.dir = (mul(_Globals_CameraToWorld, float4((mul(_Globals_ScreenToCamera, v.vertex)).xyz, 0.0))).xyz;
+//			    
+//			    
+//
+////			    float3x3 wtl = _Sun_WorldToLocal;
+////			    
+////			    // apply this rotation to view dir to get relative viewdir
+////			    OUT.relativeDir = mul(wtl, OUT.dir);
+//    
+//    			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
+//    			OUT.uv = v.texcoord.xy;
+
+			    OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				OUT.worldPos = mul(_Object2World, v.vertex);
+				
     			return OUT;
 			}
 			
@@ -560,9 +601,17 @@ Shader "Proland/Atmo/Sky"
 			
 			    
 			    float3 WSD = _Sun_WorldSunDir;
-			    float3 WCP = _Globals_WorldCameraPos;
 
-			    float3 d = normalize(IN.dir);
+#if defined (localSpaceMode)
+				float3 WCP = _WorldSpaceCameraPos; //unity supplied, in local Space
+#else
+			    float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
+#endif
+			    
+
+//			    float3 d = normalize(IN.dir);
+			    
+			    float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);  //viewdir computed in scaledSpace
 			    
 				float interSectPt= intersectSphere3(WCP,d,_Globals_Origin,Rg);
 
@@ -572,13 +621,10 @@ Shader "Proland/Atmo/Sky"
 					_Exposure=_RimExposure;
 				}
 
-
-//			    float3 sunColor = OuterSunRadiance(IN.relativeDir);
-
 			    float3 extinction;
 			    float3 inscatter = SkyRadiance2(WCP - _Globals_Origin, d, WSD,extinction);
 				
-#if defined (eclipses)				
+#if defined (ECLIPSES_ON)				
  				float eclipseShadow = 1;
  						
  				//trick to make the eclipse shadow less obvious inside the atmosphere									
@@ -619,7 +665,7 @@ Shader "Proland/Atmo/Sky"
 				
 				
 
-#if defined (eclipses)
+#if defined (ECLIPSES_ON)
 //			    float3 finalColor = sunColor * extinction + inscatter * eclipseShadow;
 			    float3 finalColor = inscatter * eclipseShadow;
 #else
