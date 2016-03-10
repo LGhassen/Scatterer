@@ -40,6 +40,10 @@ namespace scatterer
 		public bool
 			useOceanShaders = true;
 
+		[Persistent]
+		public bool
+			drawAtmoOnTopOfClouds = true;
+
 //		[Persistent]
 		public bool
 			oceanCloudShadows = false;
@@ -121,6 +125,7 @@ namespace scatterer
 		float extinctionMultiplier = 100f;
 		float extinctionTint = 100f;
 		float skyExtinctionRimFade=0f;
+		float skyExtinctionGroundFade=0f;
 
 		float _extinctionScatterIntensity=1f;
 		float _mapExtinctionScatterIntensity=1f;
@@ -398,7 +403,6 @@ namespace scatterer
 
 
 					sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == "Sun");
-//					munCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == "Mun");
 
 
 					//we need to load all of the celestial bodies in celestialBodiesWithDistance regardless
@@ -479,7 +483,7 @@ namespace scatterer
 				}
 				
 
-			
+
 			
 				if (ScaledSpace.Instance && farCamera)
 				{
@@ -645,7 +649,7 @@ namespace scatterer
 					}
 
 
-					fixDrawOrders ();
+//					fixDrawOrders ();
 
 					//if in mapView check that depth texture is clear for the sunflare shader
 					if (!customDepthBuffer.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabled) )
@@ -654,6 +658,9 @@ namespace scatterer
 					//update sun flare
 					if (fullLensFlareReplacement)
 						customSunFlare.updateNode();
+
+
+
 
 				}
 			} 
@@ -756,6 +763,8 @@ namespace scatterer
 
 				GUILayout.Label (String.Format ("Scatterer: features selector"));
 				useOceanShaders = GUILayout.Toggle(useOceanShaders, "Ocean shaders (may require game restart on change)");
+				drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds");
+				GUILayout.Label(String.Format ("(improves terminators, causes issues in the transition)"));
 
 //				oceanCloudShadows = GUILayout.Toggle(oceanCloudShadows, "EVE cloud shadows on ocean, may cause artifacts");
 //				render24bitDepthBuffer=GUILayout.Toggle(render24bitDepthBuffer, "Use 24 bit depth buffer (dx11/Ogl, removes artifacts)");
@@ -867,7 +876,7 @@ namespace scatterer
 									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1,
 									                                                                                   new configPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, skyRimExposure/100,
 									                                                                                   postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100,
-									                                                                                   extinctionMultiplier / 100, extinctionTint / 100, skyExtinctionRimFade/100,
+									                                                                                   extinctionMultiplier / 100, extinctionTint / 100, skyExtinctionRimFade/100, skyExtinctionGroundFade/100,
 									                 																   openglThreshold, edgeThreshold / 100,viewdirOffset,_Post_Extinction_Tint/100,
 									                 																	postExtinctionMultiplier/100, _GlobalOceanAlpha/100, _extinctionScatterIntensity/100));
 									selectedConfigPoint += 1;
@@ -1047,6 +1056,15 @@ namespace scatterer
 								GUILayout.EndHorizontal ();
 
 								GUILayout.BeginHorizontal ();
+								GUILayout.Label ("extinctionGroundFade (/100)");
+								skyExtinctionGroundFade = (float)(Convert.ToDouble (GUILayout.TextField (skyExtinctionGroundFade.ToString ())));
+								
+								if (GUILayout.Button ("Set")) {
+									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint].skyextinctionGroundFade = skyExtinctionGroundFade / 100f;
+								}
+								GUILayout.EndHorizontal ();
+
+								GUILayout.BeginHorizontal ();
 								GUILayout.Label ("extinctionScatterIntensity (/100)");
 								_extinctionScatterIntensity = (float)(Convert.ToDouble (GUILayout.TextField (_extinctionScatterIntensity.ToString ())));
 								
@@ -1190,14 +1208,14 @@ namespace scatterer
 							}
 							GUILayout.EndHorizontal ();
 						
-							GUILayout.BeginHorizontal ();
-							GUILayout.Label ("Sunglare scale (/100)");
-							sunglareScale = (float)(Convert.ToDouble (GUILayout.TextField (sunglareScale.ToString ())));
-						
-							if (GUILayout.Button ("Set")) {
-								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.sunglareScale = sunglareScale / 100f;
-							}
-							GUILayout.EndHorizontal ();
+//							GUILayout.BeginHorizontal ();
+//							GUILayout.Label ("Sunglare scale (/100)");
+//							sunglareScale = (float)(Convert.ToDouble (GUILayout.TextField (sunglareScale.ToString ())));
+//						
+//							if (GUILayout.Button ("Set")) {
+//								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.sunglareScale = sunglareScale / 100f;
+//							}
+//							GUILayout.EndHorizontal ();
 						
 						
 							GUILayout.BeginHorizontal ();
@@ -1567,6 +1585,7 @@ namespace scatterer
 			extinctionMultiplier = 100 * selected.skyExtinctionMultiplier;
 			extinctionTint = 100 * selected.skyExtinctionTint;
 			skyExtinctionRimFade = 100 * selected.skyextinctionRimFade;
+			skyExtinctionGroundFade = 100 * selected.skyextinctionGroundFade;
 			_extinctionScatterIntensity = 100 * 00 * selected._extinctionScatterIntensity;
 			
 			mapExtinctionMultiplier = 100 * skyNode.mapExtinctionMultiplier;
@@ -1578,7 +1597,7 @@ namespace scatterer
 			
 			mieG = skyNode.m_mieG * 100f;
 			
-			sunglareScale = skyNode.sunglareScale * 100f;
+//			sunglareScale = skyNode.sunglareScale * 100f;
 
 			experimentalAtmoScale = skyNode.experimentalAtmoScale;
 
@@ -1728,6 +1747,7 @@ namespace scatterer
 			extinctionMultiplier = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyExtinctionMultiplier * 100f;
 			extinctionTint = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyExtinctionTint * 100f;
 			skyExtinctionRimFade = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyextinctionRimFade * 100f;
+			skyExtinctionGroundFade = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point].skyextinctionGroundFade * 100f;
 
 			_extinctionScatterIntensity = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point]._extinctionScatterIntensity * 100f;
 

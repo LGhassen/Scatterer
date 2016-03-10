@@ -12,12 +12,19 @@ namespace scatterer
 	{
 		
 		GameObject meshContainer;
+		Vector3[] verts;
+
 		public GameObject GameObject { get { return meshContainer; } }
 		
-		public SimplePostProcessCube(float size, Material material)
+		public SimplePostProcessCube(float size, Material material, bool sphere)
 		{
-			
-			GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+			GameObject cube;
+			if (!sphere)
+				cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			else
+				cube = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+
 			GameObject.Destroy(cube.collider);
 			cube.transform.localScale = Vector3.one;
 			meshContainer = cube;
@@ -38,6 +45,11 @@ namespace scatterer
 			mr.castShadows = false;
 			mr.receiveShadows = false;
 			mr.enabled = true;
+		}
+
+		public void resize(float size)
+		{
+			meshContainer.transform.localScale = new Vector3 (size, size, size);
 		}
 	}
 }

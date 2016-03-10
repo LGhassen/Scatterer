@@ -13,6 +13,7 @@ namespace scatterer
 		[Persistent] public float skyExtinctionMultiplier;
 		[Persistent] public float skyExtinctionTint;
 		[Persistent] public float skyextinctionRimFade;
+		[Persistent] public float skyextinctionGroundFade;
 		[Persistent] public float openglThreshold;
 		[Persistent] public float edgeThreshold;
 		[Persistent] public float viewdirOffset;
@@ -26,7 +27,7 @@ namespace scatterer
 
 		public configPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inSkyRimExposure,float inPostProcessAlpha,
 		                   float inPostProcessDepth,float inPostProcessExposure, float inSkyExtinctionMultiplier,
-		                   float inSkyExtinctionTint, float inSkyextinctionRimFade, float inOpenglThreshold, float inEdgeThreshold, float inViewdirOffset, float in_Post_Extinction_Tint,
+		                   float inSkyExtinctionTint, float inSkyextinctionRimFade,float inSkyextinctionGroundFade, float inOpenglThreshold, float inEdgeThreshold, float inViewdirOffset, float in_Post_Extinction_Tint,
 		                   float inpostExtinctionMultiplier, float in_GlobalOceanAlpha, float in_extinctionScatterIntensity)
 		{
 			altitude=inAltitude;
@@ -42,6 +43,7 @@ namespace scatterer
 			viewdirOffset = inViewdirOffset;
 			skyRimExposure = inSkyRimExposure;
 			skyextinctionRimFade = inSkyextinctionRimFade;
+			skyextinctionGroundFade = inSkyextinctionGroundFade;
 			postExtinctionMultiplier = inpostExtinctionMultiplier;
 			_Post_Extinction_Tint = in_Post_Extinction_Tint;
 			_GlobalOceanAlpha = in_GlobalOceanAlpha;

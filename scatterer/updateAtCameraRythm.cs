@@ -33,17 +33,22 @@ namespace scatterer
 		
 		public void settings(Mesh inmesh,Material inSkyMat, Manager inManager, SkyNode inSkyNode,
 		                     GameObject inSkyObject,Transform inparentTransform, Transform inCelestialTransform)
+
+//		public void settings(Mesh inmesh,Material inSkyMat, Manager inManager, SkyNode inSkyNode,
+//		                     Transform inparentTransform, Transform inCelestialTransform)
 		{
 
 			skyMat = inSkyMat;
 			m_manager = inManager;
 			m_skynode = inSkyNode;
-			skyObject = inSkyObject;
+			if (inSkyObject)
+				skyObject = inSkyObject;
 			parentTransform = inparentTransform;
 			celestialTransform = inCelestialTransform;
 			m_mesh = inmesh;
 
-			skyObject.transform.parent = parentTransform;
+			if (skyObject)
+				skyObject.transform.parent = parentTransform;
 			
 		}
 		

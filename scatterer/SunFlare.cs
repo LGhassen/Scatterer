@@ -41,14 +41,14 @@ namespace scatterer
 		
 		//input settings
 		[Persistent]
-		Vector3 flareSettings;
+		Vector3 flareSettings = Vector3.zero;
 		[Persistent]
-		Vector3 spikesSettings;
+		Vector3 spikesSettings = Vector3.zero;
 	
 		[Persistent]
-		List<Vector4> ghost1SettingsList;
+		List<Vector4> ghost1SettingsList=new List<Vector4>{};
 		[Persistent]
-		List<Vector4> ghost2SettingsList;
+		List<Vector4> ghost2SettingsList=new List<Vector4>{};
 
 
 		public void start()

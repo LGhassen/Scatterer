@@ -1,3 +1,5 @@
+#define skyScaledBox
+
 using UnityEngine;
 using System.Collections;
 using System.IO;
@@ -10,6 +12,8 @@ using System.Text;
 
 using KSP.IO;
 
+
+
 namespace scatterer
 {
 	/*
@@ -20,16 +24,32 @@ namespace scatterer
 		
 		[Persistent]
 		public bool forceOFFaniso;
-		SimplePostProcessCube hp;
+		SimplePostProcessCube postProcessCube;
 		GameObject atmosphereMesh;
 		MeshRenderer atmosphereMeshrenderer;
+
+		SimplePostProcessCube skyScaledCube;
+		GameObject skyScaledMesh;
+		MeshRenderer skyScaledMeshrenderer;
+
+		SimplePostProcessCube skyLocalCube;
+		GameObject skyLocalMesh;
+		MeshRenderer skyLocalMeshrenderer;
+
+
+
 		
 		[Persistent]
 		public bool displayInterpolatedVariables = false;
 
 		updateAtCameraRythm updater;
 		bool updaterAdded = false;
-		
+
+		Matrix4x4 castersMatrix1;
+		Matrix4x4 castersMatrix2;
+
+		public bool scaledMode = false;
+
 		public float postDist = -4500f;
 //		public float postDist = -4000f;
 		public float percentage;
@@ -47,13 +67,16 @@ namespace scatterer
 
 		public float oceanSigma = 0.04156494f;
 		public float _Ocean_Threshold = 25f;
-		[Persistent]
-		public float sunglareScale = 1f;
+
+//		[Persistent]
+//		public float sunglareScale = 1f;
 
 		public float extinctionMultiplier = 1f;
 
 		public float extinctionTint = 100f;
 		public float skyExtinctionRimFade = 0f;
+		public float skyExtinctionGroundFade = 0f;
+
 		[Persistent]
 		public float mapExtinctionMultiplier = 1f;
 		[Persistent]
@@ -68,6 +91,13 @@ namespace scatterer
 		[Persistent]
 		public float
 			_mapExtinctionScatterIntensity = 1f;
+
+
+		[Persistent]
+		public bool drawSkyScaledOverClouds = true;
+
+		[Persistent]
+		public float drawOverCloudsAltitude = 100000f;
 
 		public float openglThreshold = 250f;
 		public float edgeThreshold = 0.5f;
@@ -100,18 +130,9 @@ namespace scatterer
 		CelestialBody parentCelestialBody;
 		Transform ParentPlanetTransform;
 
-		
-//		bool sunglareEnabled = true;
+
 		bool stocksunglareEnabled = true;
 		float sunglareCutoffAlt;
-//		Texture2D sunGlare;
-//		Texture2D black;
-
-//
-//		Texture2D sunSpikes;
-//		Texture2D sunFlare;
-//		Texture2D sunGhost1;
-//		Texture2D sunGhost2;
 
 		
 		//atmosphere properties
@@ -195,7 +216,7 @@ namespace scatterer
 		[Persistent]
 		Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f);
 		public Material m_atmosphereMaterial;
-		public Material m_skyMaterialScaled;
+		public Material m_skyMaterialScaled, m_skyMaterialLocal;
 
 //		public Material sunglareMaterial;
 
@@ -231,8 +252,8 @@ namespace scatterer
 		public float shininess = 0f;
 		[Persistent]
 		public List < configPoint > configPoints = new List < configPoint > {
-			new configPoint(5000f, 1f, 0.25f,0.25f, 1f, 0.4f, 0.23f, 1f, 100f,0f, 250f, 0.5f,0f,100f,100f,1f,1f)
-			, new configPoint(15000f, 1f, 0.15f,0.15f, 1f, 8f, 0.23f, 1f, 100f,0f, 250f, 0.5f,0f,100f,100f,1f,1f)
+			new configPoint(5000f, 1f, 0.25f,0.25f, 1f, 0.4f, 0.23f, 1f, 100f,0f, 0f, 250f, 0.5f,0f,100f,100f,1f,1f)
+			, new configPoint(15000f, 1f, 0.15f,0.15f, 1f, 8f, 0.23f, 1f, 100f,0f,0f, 250f, 0.5f,0f,100f,100f,1f,1f)
 		};
 		public string assetDir;
 
@@ -270,53 +291,58 @@ namespace scatterer
 			
 			initiateOrRestart ();
 
-			if(m_manager.GetCore().useEclipses)
-				m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaledEclipses.shader"));
+#if !skyScaledBox
+			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
+#else
+			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
+			m_skyMaterialLocal = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyLocal.shader"));
+#endif
+
+			if (m_manager.GetCore ().useEclipses)
+			{
+				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_ON");
+				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_OFF");
+				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_ON");
+				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_OFF");
+			}
 			else
-				m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
-
-//			sunglareMaterial = new Material (ShaderTool.GetMatFromShader2 ("CompiledSunGlare.shader"));
-			
-//			sunGlare = new Texture2D (512, 512);
-//			black = new Texture2D (512, 512);
-//			
-//			sunGlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares" , "sunglare.png")));
-//			black.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", m_manager.GetCore().path+"/flares", "black.png")));
-
-//			sunGlare.wrapMode = TextureWrapMode.Clamp;
-//			m_skyMaterialScaled.SetTexture ("_Sun_Glare", sunGlare);
-//
-//
-//			sunSpikes = new Texture2D (2048, 2048);
-//			sunFlare = new Texture2D (1024, 1024);
-//			sunGhost1 = new Texture2D (128, 128);
-//			sunGhost2 = new Texture2D (128, 128);
-
-
-//			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
-//			sunglareMaterial.SetTexture ("sunSpikes", sunSpikes);
-//			sunglareMaterial.SetTexture ("sunFlare", sunFlare);
-//			sunglareMaterial.SetTexture ("sunGhost1", sunGhost1);
-//			sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
-//			sunglareMaterial.SetTexture ("_customDepthTexture", m_manager.GetCore ().customDepthBufferTexture);
+			{
+				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_ON");
+				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_OFF");
+				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_ON");
+				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_OFF");
+			}
 
 
 			
 			InitUniforms (m_skyMaterialScaled);
+			InitUniforms (m_skyMaterialLocal);
 			
-			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
-			{
-				if (m_manager.GetCore().useGodrays)
-					m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatterGodrays.shader");
-				else
-					m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
-			} 
+//			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
+//			{
 
-			else
 
+			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
+			
+			if (m_manager.GetCore().useGodrays)
 			{
-				m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
+				m_atmosphereMaterial.EnableKeyword("GODRAYS_ON");
+				m_atmosphereMaterial.DisableKeyword("GODRAYS_OFF");
 			}
+			else
+			{
+				m_atmosphereMaterial.DisableKeyword("GODRAYS_ON");
+				m_atmosphereMaterial.EnableKeyword("GODRAYS_OFF");
+			}
+
+
+//			} 
+
+//			else
+//
+//			{
+//				m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
+//			}
 
 			CurrentPQS = parentCelestialBody.pqsController;
 
@@ -325,11 +351,13 @@ namespace scatterer
 				currentPQSMod_CelestialBodyTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> () [0];
 			}
 
+#if !skyScaledBox
+
 			skyObject = new GameObject ();
 			skyMF = skyObject.AddComponent < MeshFilter > ();
 			skyMF.mesh.Clear ();
 			skyMF.mesh = m_mesh;
-
+			
 			skyObject.layer = 10;
 			celestialTransform = ParentPlanetTransform;
 			skyObject.transform.parent = celestialTransform;
@@ -337,126 +365,90 @@ namespace scatterer
 			skyMR = skyObject.AddComponent < MeshRenderer > ();
 			skyMR.sharedMaterial = m_skyMaterialScaled;
 			skyMR.material = m_skyMaterialScaled;
-
-
+			
+			
 			skyMR.castShadows = false;
 			skyMR.receiveShadows = false;
-
-			skyMR.enabled = true;
 			
-			hp = new SimplePostProcessCube (10000, m_atmosphereMaterial);
-			atmosphereMesh = hp.GameObject;
+			skyMR.enabled = true;
+#endif
+			postProcessCube = new SimplePostProcessCube (10000, m_atmosphereMaterial,false);
+			atmosphereMesh = postProcessCube.GameObject;
 			atmosphereMesh.layer = 15;
-			atmosphereMeshrenderer = hp.GameObject.GetComponent < MeshRenderer > ();
+			atmosphereMeshrenderer = postProcessCube.GameObject.GetComponent < MeshRenderer > ();
 			atmosphereMeshrenderer.material = m_atmosphereMaterial;
+
+
+#if skyScaledBox
+			float skycubeSize = 2.5f * m_radius / ScaledSpace.ScaleFactor;
+			skyScaledCube = new SimplePostProcessCube (skycubeSize, m_skyMaterialScaled,true);
+			skyScaledMesh = skyScaledCube.GameObject;
+			skyScaledMesh.layer = 10;
+			skyScaledMeshrenderer = skyScaledCube.GameObject.GetComponent < MeshRenderer > ();
+			skyScaledMeshrenderer.material = m_skyMaterialScaled;
+			skyScaledMesh.transform.position = ParentPlanetTransform.position;
+			skyScaledMesh.transform.parent = ParentPlanetTransform;
+
+			skyScaledMeshrenderer.enabled = false;
+
+			if (m_manager.GetCore().drawAtmoOnTopOfClouds)
+				m_skyMaterialScaled.renderQueue=3001;
+			else
+				m_skyMaterialScaled.renderQueue=2001;
+
+			skyLocalCube = new SimplePostProcessCube (40000, m_skyMaterialLocal,false);
+			skyLocalMesh = skyLocalCube.GameObject;
+			skyLocalMesh.layer = 15;
+			skyLocalMeshrenderer = skyLocalCube.GameObject.GetComponent < MeshRenderer > ();
+			skyLocalMeshrenderer.material = m_skyMaterialLocal;
+//			skyLocalMesh.transform.position = farCamera.transform.position;
+//			skyLocalMesh.transform.parent = farCamera.transform;
+
+			m_skyMaterialLocal.renderQueue=1000; //render to background unless over clouds
+			skyLocalMeshrenderer.enabled = true;
+
+#endif
+
 
 		}
 		
 		public void UpdateStuff () //to be called by update at camera rythm for some graphical stuff
 		{
-////			//move these to the sunflare class
-//			RaycastHit hit;
-//			bool hitStatus=false;
-//
-//			if (!MapView.MapIsEnabled)
-//			{
-//				hitStatus = Physics.Raycast (farCamera.transform.position, (m_manager.sunCelestialBody.position - farCamera.transform.position).normalized,
-//				                             out hit, Mathf.Infinity, (int)((1 << 10) + (1 << 15) + (1 << 0))); //doing both like this causes the scaledSpace detection to be off raycasting in scaledspace has to be done in scaled coordinates so a separate raycast is required
-//
-//				hitStatus = Physics.Raycast (farCamera.transform.position, (m_manager.sunCelestialBody.transform.position - farCamera.transform.position).normalized,
-//				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
-//
-//				if(!hitStatus)
-//					hitStatus = Physics.Raycast (scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position)
-//					                                                                    - scaledSpaceCamera.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
-//
-//
-//			}
-//
-//			else
-//			{
-//				hitStatus = Physics.Raycast (scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position)
-//				                                                                    - scaledSpaceCamera.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
-//			}
-//
-//
-//			if (hitStatus)
-//			{
-//				eclipse=true;
-//				Debug.Log (hit.collider.gameObject.name);
-//				Debug.Log (hit.collider.gameObject.layer);
-//				if (hit.collider.gameObject.transform.parent)
-//					Debug.Log(hit.collider.gameObject.transform.parent.gameObject.name);
-//			}
-//
-//			else
-//			{
-//				eclipse=false;
-//			}
-
-
-
-
-
-
-
 			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
 			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
 			atmosphereMesh.transform.rotation = farCamera.transform.rotation;
-			//adding post processing to camera
-			//??????????????
+
+			skyLocalMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
+			skyLocalMesh.transform.localRotation = farCamera.transform.localRotation;
+			skyLocalMesh.transform.rotation = farCamera.transform.rotation;
+
+#if skyScaledBox
+//			skyScaledMesh.transform.parent = scaledSpaceCamera.transform;
+//			skyScaledMesh.transform.position = ParentPlanetTransform.position;
+//			skyScaledMesh.transform.parent = ParentPlanetTransform;
+
+//			if (MapView.MapIsEnabled)
+//				skyScaledMesh.transform.position = ScaledSpace.LocalToScaledSpace (parentCelestialBody.transform.position)-scaledSpaceCamera.transform.position;
+//			else
+//				skyScaledMesh.transform.position = ScaledSpace.LocalToScaledSpace (parentCelestialBody.transform.position);
+#endif
+
+//			Debug.Log ("planet " + ScaledSpace.LocalToScaledSpace (parentCelestialBody.transform.position).ToString ());
+//			Debug.Log ("scaledCam " + scaledSpaceCamera.transform.position.ToString ());
+
 			if ((!inScaledSpace) && (!MapView.MapIsEnabled))
 			{
 				if (postprocessingEnabled) {
 					InitPostprocessMaterial (m_atmosphereMaterial);
 					UpdatePostProcessMaterial (m_atmosphereMaterial);
-
-//					if (m_manager.hasOcean && m_manager.GetCore ().useOceanShaders)
-//					{
-//						m_manager.GetOceanNode().SetUniforms(m_atmosphereMaterial);   //for fake ocean, not needed anymore now
-//					}
-
 				}
 			}
-
-
-//			sunViewPortPos = scaledSpaceCamera.WorldToViewportPoint (ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position));
-//			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
-//			sunglareMaterial.SetFloat ("aspectRatio", nearCamera.aspect);
-//
-//			sunglareMaterial.renderQueue = 3000;
-//
-//			sunglareMaterial.SetFloat ("Rg", Rg);
-//			sunglareMaterial.SetFloat ("Rt", Rt);
-//			sunglareMaterial.SetTexture ("_Sky_Transmittance", m_transmit);
-//
-//			if (!MapView.MapIsEnabled)
-//				sunglareMaterial.SetVector ("_Globals_WorldCameraPos", farCamera.transform.position - parentCelestialBody.transform.position);
-//			else
-//				sunglareMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position) - parentCelestialBody.transform.position);
-//
 		}
 
 		
 		public void UpdateNode ()
 		{
-//			MeshRenderer[] renderers = (MeshRenderer[])MeshRenderer.FindObjectsOfType (typeof(MeshRenderer));
-//
-//
-//			QualitySettings.shadowDistance = 100000;
-//
-////			Debug.Log ("shadow distance"+ QualitySettings.shadowDistance.ToString ());
-////			Debug.Log ("meshrenderes: " + renderers.Length.ToString ());
-//
-//			foreach (MeshRenderer _mr in renderers)
-//			{
-//				_mr.castShadows=true;
-//				_mr.receiveShadows=true;
-//			}
 
-//			CurrentPQS.meshCastShadows = true;
-//			CurrentPQS.meshRecieveShadows = true;
-//			QualitySettings.shadowDistance = 100000;
 
 			position = parentCelestialBody.transform.position;
 			
@@ -512,7 +504,10 @@ namespace scatterer
 //				if (stocksunglareEnabled) { //^ is XOR
 //					toggleStockSunglare ();
 //				}
-				
+
+
+
+
 				interpolateVariables ();
 
 
@@ -542,8 +537,12 @@ namespace scatterer
 
 						updater = (updateAtCameraRythm)scaledSpaceCamera.gameObject.AddComponent (typeof(updateAtCameraRythm));
 											
-						updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this, skyObject,
-						                  parentCelestialBody.transform, celestialTransform);
+//						updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this, skyObject,
+//						                  parentCelestialBody.transform, celestialTransform);
+
+					//start in localmode
+					updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this, skyObject,
+					                  parentCelestialBody.transform, celestialTransform);
 
 						updaterAdded = true;
 					}
@@ -551,38 +550,29 @@ namespace scatterer
 //				atmosphereMeshrenderer.enabled = (!inScaledSpace) &&(postprocessingEnabled)&&(trueAlt<postProcessMaxAltitude);
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
 
-//				if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
-//				{
-//					Graphics.DrawMesh (m_mesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 15,
-//					                   nearCamera, 0, null, false, false);
-//
-//				}
-//
-//				else if (!eclipse && (sunViewPortPos.z > 0))
-//				{
-//					Graphics.DrawMesh (m_mesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 10,
-//					                   scaledSpaceCamera, 0, null, false, false);
-//						
-//				}
+				if ((inScaledSpace || MapView.MapIsEnabled ) ^ scaledMode)
+				{
+					toggleScaledMode();
+				}
+
+				if (!inScaledSpace && m_manager.GetCore().drawAtmoOnTopOfClouds)
+				{
+					if (trueAlt<drawOverCloudsAltitude)
+					{
+//						Debug.Log("under clouds");
+						m_skyMaterialLocal.renderQueue=1000;
+					}
+					else
+					{
+//						Debug.Log("over clouds");
+						m_skyMaterialLocal.renderQueue=3001;
+					}
+				}
+
+
+//				m_skyMaterialLocal.renderQueue=m_manager.GetCore().oceanRenderQueue;
+//				m_skyMaterialScaled.renderQueue=m_manager.GetCore().oceanRenderQueue;
 			}
-
-//			Transform scaledSunTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single (t => t.name == "Sun");
-//			foreach (Transform child in scaledSunTransform) {
-//				MeshRenderer temp;
-//				temp = child.gameObject.GetComponent < MeshRenderer > ();
-//				Debug.Log("temp.material.renderQueue"+child.name+" "+temp.material.renderQueue);
-//				Debug.Log(child.gameObject.layer);
-//				temp.material.renderQueue=2000;
-//
-//				temp = child.gameObject.GetComponent < MeshRenderer > ();
-//				if (temp != null) {
-//					temp.enabled = coronasDisabled;
-//				}
-//			}
-
-//			Debug.Log ("length "+(ScaledSpace.LocalToScaledSpace (m_manager.sunCelestialBody.transform.position
-//				- scaledSpaceCamera.transform.position)).magnitude.ToString());
-
 		}
 
 
@@ -596,21 +586,27 @@ namespace scatterer
 
 
 			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
-			if (!MapView.MapIsEnabled) {
+			if (!MapView.MapIsEnabled)
+			{
 				mat.SetFloat ("_viewdirOffset", viewdirOffset);
-			} else {
+			}
+			else
+			{
 				mat.SetFloat ("_viewdirOffset", 0f);
 			}
 
+			mat.SetFloat ("extinctionGroundFade", skyExtinctionGroundFade);
 
-			if (!MapView.MapIsEnabled) {
+			if (!MapView.MapIsEnabled)
+			{
 				mat.SetFloat ("_Alpha_Global", alphaGlobal);
 				mat.SetFloat ("_Extinction_Tint", extinctionTint);
 				mat.SetFloat ("extinctionMultiplier", extinctionMultiplier);
 				mat.SetFloat ("extinctionRimFade", skyExtinctionRimFade);
 				mat.SetFloat ("_extinctionScatterIntensity", _extinctionScatterIntensity);
-
-			} else {
+			}
+			else
+			{
 				mat.SetFloat ("_Alpha_Global", mapAlphaGlobal);
 				mat.SetFloat ("_Extinction_Tint", mapExtinctionTint);
 				mat.SetFloat ("extinctionMultiplier", mapExtinctionMultiplier);
@@ -625,11 +621,14 @@ namespace scatterer
 			mat.SetFloat ("RL", RL * atmosphereGlobalScale);
 
 
-			if (!MapView.MapIsEnabled) {			
-				
+			//used to determine the view ray direction in the sky shader
+			if (!MapView.MapIsEnabled)
+			{				
 				mat.SetMatrix ("_Globals_WorldToCamera", farCamera.worldToCameraMatrix);
 				mat.SetMatrix ("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
-			} else {
+			}
+			else
+			{
 				mat.SetMatrix ("_Globals_WorldToCamera", scaledSpaceCamera.worldToCameraMatrix);
 				mat.SetMatrix ("_Globals_CameraToWorld", scaledSpaceCamera.worldToCameraMatrix.inverse);
 			}
@@ -639,16 +638,9 @@ namespace scatterer
 			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 			mat.SetFloat ("_Sun_Intensity", 100f);
 			
-			mat.SetFloat ("_sunglareScale", sunglareScale);
+//			mat.SetFloat ("_sunglareScale", sunglareScale);
 			
 			mat.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToSun ().normalized);
-
-//			Shader.SetGlobalFloat ("_Godray_WorldSunDirX", m_manager.sunCelestialBody.transform.position.x
-//			                       -parentCelestialBody.transform.position.x);
-//			Shader.SetGlobalFloat ("_Godray_WorldSunDirY", m_manager.sunCelestialBody.transform.position.y
-//			                       -parentCelestialBody.transform.position.y);
-//			Shader.SetGlobalFloat ("_Godray_WorldSunDirZ", m_manager.sunCelestialBody.transform.position.z
-//			                       -parentCelestialBody.transform.position.z);
 
 			Shader.SetGlobalVector ("_Godray_WorldSunDir", m_manager.sunCelestialBody.transform.position
 				- parentCelestialBody.transform.position);
@@ -667,7 +659,15 @@ namespace scatterer
 
 			Vector3 temp = ScaledSpace.ScaledToLocalSpace (scaledSpaceCamera.transform.position);
 			mat.SetVector ("_Globals_WorldCameraPos", temp);
+
+#if skyScaledBox
+			if (scaledMode)
+				mat.SetVector ("_Globals_Origin", Vector3.Scale(ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position),new Vector3(6000f,6000f,6000f)));
+			else
+				mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
+#else
 			mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
+#endif
 				
 			
 			if (!MapView.MapIsEnabled) {
@@ -689,12 +689,17 @@ namespace scatterer
 
 
 				//build and set casters matrix
-				Matrix4x4 castersMatrix1 = Matrix4x4.zero;
-				Matrix4x4 castersMatrix2 = Matrix4x4.zero;
-
+				castersMatrix1 = Matrix4x4.zero;
+				castersMatrix2 = Matrix4x4.zero;
+				float scaleFactor=ScaledSpace.ScaleFactor;
+				Vector3 casterPosRelPlanet;
 				for (int i=0; i< Mathf.Min(4, m_manager.eclipseCasters.Count); i++)
 				{
-					Vector3 casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+					if (scaledMode)
+						casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+					else
+						casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+
 					castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
 				                                    casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
 				}
@@ -703,10 +708,14 @@ namespace scatterer
 
 				for (int i=4; i< Mathf.Min(8, m_manager.eclipseCasters.Count); i++)
 				{
-					Vector3 casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+					if (scaledMode)
+						casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+					else
+						casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
 					castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
 				                                    casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
 				}
+
 				mat.SetMatrix ("lightOccluders1", castersMatrix1);
 				mat.SetMatrix ("lightOccluders2", castersMatrix2);
 			}
@@ -862,7 +871,7 @@ namespace scatterer
 			mat.SetFloat ("HM", HM * 1000.0f);
 			mat.SetVector ("betaMSca", BETA_MSca / 1000.0f);
 			mat.SetVector ("betaMEx", (BETA_MSca / 1000.0f) / 0.9f);
-			mat.SetFloat ("_sunglareScale", sunglareScale);
+//			mat.SetFloat ("_sunglareScale", sunglareScale);
 			
 		}
 		
@@ -973,27 +982,52 @@ namespace scatterer
 			
 			Component.Destroy (atmosphereMeshrenderer);
 			UnityEngine.Object.Destroy (atmosphereMesh);
+
+			Component.Destroy (skyScaledMeshrenderer);
+			UnityEngine.Object.Destroy (skyScaledMesh);
+
+			Component.Destroy (skyLocalMeshrenderer);
+			UnityEngine.Object.Destroy (skyLocalMesh);
 			
 			RestoreStockAtmosphere ();
 			UnityEngine.Object.Destroy (alteredMaterial);
 			UnityEngine.Object.Destroy (originalMaterial);
 		}
-		
+
+		public void toggleScaledMode()
+		{
+			if (scaledMode) //switch to localMode
+			{
+				skyScaledMeshrenderer.enabled = false;
+				skyLocalMeshrenderer.enabled=true;
+
+				updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this, skyObject,
+				                  parentCelestialBody.transform, celestialTransform);
+
+				scaledMode=false;
+				Debug.Log("[Scatterer] Sky switched to local mode");
+			}
+			else   //switch to scaledMode
+			{
+				skyScaledMeshrenderer.enabled = true;
+				skyLocalMeshrenderer.enabled=false;
+
+				updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this, skyObject,
+				                  parentCelestialBody.transform, celestialTransform);
+
+				scaledMode=true;
+				Debug.Log("[Scatterer] Sky switched to scaled mode");
+			}
+
+		}
+
+
+
 		public void destroyskyObject ()
 		{
 			UnityEngine.Object.Destroy (skyObject);
 		}
-		
-//		public void toggleSunglare ()
-//		{
-//			if (sunglareEnabled) {
-//				m_skyMaterialScaled.SetTexture ("_Sun_Glare", black);
-//				sunglareEnabled = false;
-//			} else {
-//				m_skyMaterialScaled.SetTexture ("_Sun_Glare", sunGlare);
-//				sunglareEnabled = true;
-//			}
-//		}
+
 		
 		public void toggleCoronas ()
 		{
@@ -1148,6 +1182,7 @@ namespace scatterer
 				extinctionMultiplier = configPoints [0].skyExtinctionMultiplier;
 				extinctionTint = configPoints [0].skyExtinctionTint;
 				skyExtinctionRimFade = configPoints [0].skyextinctionRimFade;
+				skyExtinctionGroundFade = configPoints [0].skyextinctionGroundFade;
 
 				_extinctionScatterIntensity = configPoints [0]._extinctionScatterIntensity;
 
@@ -1175,6 +1210,7 @@ namespace scatterer
 				extinctionMultiplier = configPoints [configPoints.Count - 1].skyExtinctionMultiplier;
 				extinctionTint = configPoints [configPoints.Count - 1].skyExtinctionTint;
 				skyExtinctionRimFade = configPoints [configPoints.Count - 1].skyextinctionRimFade;
+				skyExtinctionGroundFade = configPoints [configPoints.Count - 1].skyextinctionGroundFade;
 				_extinctionScatterIntensity = configPoints [configPoints.Count - 1]._extinctionScatterIntensity;
 //				edgeThreshold = configPoints [configPoints.Count - 1].edgeThreshold;
 				openglThreshold = configPoints [configPoints.Count - 1].openglThreshold;
@@ -1203,6 +1239,7 @@ namespace scatterer
 						extinctionMultiplier = percentage * configPoints [j].skyExtinctionMultiplier + (1 - percentage) * configPoints [j - 1].skyExtinctionMultiplier;
 						extinctionTint = percentage * configPoints [j].skyExtinctionTint + (1 - percentage) * configPoints [j - 1].skyExtinctionTint;
 						skyExtinctionRimFade = percentage * configPoints [j].skyextinctionRimFade + (1 - percentage) * configPoints [j - 1].skyextinctionRimFade;
+						skyExtinctionGroundFade = percentage * configPoints [j].skyextinctionGroundFade + (1 - percentage) * configPoints [j - 1].skyextinctionGroundFade;
 
 						_extinctionScatterIntensity = percentage * configPoints [j]._extinctionScatterIntensity + (1 - percentage) * configPoints [j - 1]._extinctionScatterIntensity;
 
