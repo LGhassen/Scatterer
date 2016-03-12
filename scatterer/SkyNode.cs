@@ -555,11 +555,11 @@ namespace scatterer
 
 
 				bool localSkyCondition;
-				if(CurrentPQS!=null)
-				{
-					localSkyCondition=!CurrentPQS.isActive;   //inScaledSpace
-				}
-				else
+//				if(CurrentPQS!=null)
+//				{
+//					localSkyCondition=!CurrentPQS.isActive;   //inScaledSpace
+//				}
+//				else
 				{
 					localSkyCondition=alt > localSkyAltitude;    
 				}
@@ -716,6 +716,9 @@ namespace scatterer
 				castersMatrix1 = Matrix4x4.zero;
 				castersMatrix2 = Matrix4x4.zero;
 				float scaleFactor=ScaledSpace.ScaleFactor;
+
+//				Debug.Log("scalefactor "+scaleFactor.ToString());
+
 				Vector3 casterPosRelPlanet;
 				for (int i=0; i< Mathf.Min(4, m_manager.eclipseCasters.Count); i++)
 				{
