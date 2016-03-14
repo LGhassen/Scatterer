@@ -555,13 +555,21 @@ namespace scatterer
 
 
 				bool localSkyCondition;
+
+
 //				if(CurrentPQS!=null)
 //				{
 //					localSkyCondition=!CurrentPQS.isActive;   //inScaledSpace
 //				}
 //				else
+//				{
+//					localSkyCondition=alt > localSkyAltitude;    
+//				}
+
+				localSkyCondition=alt > localSkyAltitude;
+				if(CurrentPQS!=null)
 				{
-					localSkyCondition=alt > localSkyAltitude;    
+					localSkyCondition=localSkyCondition && !CurrentPQS.isActive;   //inScaledSpace
 				}
 
 				if ((localSkyCondition || MapView.MapIsEnabled ) ^ scaledMode)

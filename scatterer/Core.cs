@@ -9,6 +9,7 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 using KSPPluginFramework;
+//using Utils;
 
 namespace scatterer
 {
@@ -247,7 +248,7 @@ namespace scatterer
 		internal override void Awake ()
 		{
 
-			WindowCaption = "Scatterer v0.0234: alt+f10/f11 toggle ";
+			WindowCaption = "Scatterer v0.0235: alt+f10/f11 toggle ";
 			WindowRect = new Rect (0, 0, 400, 50);
 			
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
@@ -677,8 +678,70 @@ namespace scatterer
 						customSunFlare.updateNode();
 
 
+//					GameObject[] list = (GameObject[]) GameObject.FindObjectsOfType(typeof(GameObject));
+//					int d=0;
+//					foreach (GameObject _go in list)
+//					{
+//						Debug.Log("object i "+d.ToString()+" "+_go.name);
+//						if (_go.transform.parent)
+//							Debug.Log("object i parent"+d.ToString()+" "+_go.transform.parent.gameObject.name);
+//						MeshRenderer[] list2 = (MeshRenderer[]) _go.GetComponentsInChildren<MeshRenderer>();
+//						foreach (MeshRenderer _mrr in list2)
+//						{
+//							Debug.Log("meshrenderer"+ _mrr.name);
+//							Debug.Log("meshrenderer mat"+ _mrr.material.name);
+//						}
+//						d++;
+//					}
 
 
+
+//					Material[] list = (Material[]) Material.FindObjectsOfType(typeof(Material));
+//					int d=0;
+//					foreach (Material _mtl in list)
+//					{
+//						Debug.Log("material i "+d.ToString()+" "+ _mtl.name);
+//						d++;
+//					}
+//					
+//					MeshRenderer[] list2 = (MeshRenderer[]) MeshRenderer.FindObjectsOfType(typeof(MeshRenderer));
+//					d=0;
+//					foreach (MeshRenderer _mrr in list2)
+//					{
+//						Debug.Log("meshrenderer i "+d.ToString()+" "+ _mrr.name);
+//						d++;
+//					}
+
+//					GameObject kerbinClouds = GameObject.Find("Kerbin-clouds1");
+//					if (kerbinClouds)
+//					{
+//						Debug.Log("Kerbin clouds found");
+//						MeshRenderer[] list = kerbinClouds.GetComponentsInChildren<MeshRenderer>();
+//						int d=0;
+//						foreach (MeshRenderer _mrr in list)
+//						{
+//							Debug.Log("Meshrenderer "+d.ToString()+" "+ _mrr.name);
+////							Debug.Log("Meshrenderer "+d.ToString()+" "+ .GetType().ToString ());
+//							d++;
+//						}
+//					}
+////					Resources.FindObjectsOfTypeAll(typeof(HalfSphere));
+//					HalfSphere[] halfs =  Resources.FindObjectsOfTypeAll(typeof(HalfSphere));  ;
+////					UnityEngine.Object[] halfs =  FindObjectsOfType(typeof(HalfSphere));
+//					int d=0;
+////					foreach (HalfSphere _hlf in halfs)
+//					foreach (UnityEngine.Object _hlf in halfs)
+//					{
+//						HalfSphere _hlff = (HalfSphere) _hlf;
+//						Debug.Log("_hlf "+d.ToString()+" GameObject.name "+_hlf.GameObject.name);
+//						if (_hlf.GameObject.GetComponentInChildren<MeshRenderer>())
+//						{
+//							MeshRenderer idekk =_hlf.GameObject.GetComponentInChildren<MeshRenderer>();
+//							Debug.Log("_hlf "+d.ToString()+" mat.name "+idekk.material.name);
+//						}
+//						d++;
+//
+//					}
 				}
 			} 
 		}
