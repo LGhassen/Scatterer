@@ -3,24 +3,25 @@ namespace scatterer
 {
 	public class configPoint
 	{
-		[Persistent] public float altitude;
-		[Persistent] public float skyAlpha;
-		[Persistent] public float skyExposure;
-		[Persistent] public float skyRimExposure;
-		[Persistent] public float postProcessAlpha;
-		[Persistent] public float postProcessDepth;
-		[Persistent] public float postProcessExposure;
-		[Persistent] public float skyExtinctionMultiplier;
-		[Persistent] public float skyExtinctionTint;
-		[Persistent] public float skyextinctionRimFade;
-		[Persistent] public float skyextinctionGroundFade;
-		[Persistent] public float openglThreshold;
-		[Persistent] public float edgeThreshold;
-		[Persistent] public float viewdirOffset;
-		[Persistent] public float _Post_Extinction_Tint;
-		[Persistent] public float postExtinctionMultiplier;
-		[Persistent] public float _GlobalOceanAlpha;
-		[Persistent] public float _extinctionScatterIntensity;
+				[Persistent] public float altitude;
+				[Persistent] public float skyAlpha;
+				[Persistent] public float skyExposure;
+				[Persistent] public float skyRimExposure;
+				[Persistent] public float postProcessAlpha;
+				[Persistent] public float postProcessDepth;
+				[Persistent] public float postProcessExposure;
+				[Persistent] public float skyExtinctionMultiplier;
+				[Persistent] public float skyExtinctionTint;
+				[Persistent] public float skyextinctionRimFade;
+				[Persistent] public float skyextinctionGroundFade;
+				[Persistent] public float openglThreshold;
+				[Persistent] public float edgeThreshold;
+				[Persistent] public float viewdirOffset;
+				[Persistent] public float _Post_Extinction_Tint;
+				[Persistent] public float postExtinctionMultiplier;
+				[Persistent] public float _GlobalOceanAlpha;
+				[Persistent] public float _extinctionScatterIntensity;
+		
 
 			
 

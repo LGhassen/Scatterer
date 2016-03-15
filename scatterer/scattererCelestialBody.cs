@@ -12,6 +12,7 @@ namespace scatterer
 		[Persistent] public float unloadDistance;
 		[Persistent] public bool hasOcean;
 		[Persistent] public List<string> eclipseCasters=new List<string> {};
+		
 
 		public CelestialBody celestialBody;
 		public Transform transform;

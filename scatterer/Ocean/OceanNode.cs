@@ -65,16 +65,16 @@ namespace scatterer
 
 		double h = 0;
 		//The maximum altitude at which the ocean must be displayed.
-//		[Persistent]
+		[Persistent]
 		protected float m_zmin = 20000.0f;
 		
 		//Size of each grid in the projected grid. (number of pixels on screen)
 		
 		[Persistent]
 		public int m_resolution = 4;
-//		[Persistent]
+		[Persistent]
 		public int MAX_VERTS = 65000;
-//		[Persistent]
+		[Persistent]
 		public float oceanScale = 1f;
 		[Persistent]
 		public float oceanAlpha = 1f;
@@ -83,13 +83,13 @@ namespace scatterer
 		public float alphaRadius = 3000f;
 
 
-//		[Persistent]
+		[Persistent]
 		public float sunReflectionMultiplier = 1f;
 
-//		[Persistent]
+		[Persistent]
 		public float skyReflectionMultiplier = 1f;
 		
-//		[Persistent]
+		[Persistent]
 		public float seaRefractionMultiplier = 1f;
 
 
@@ -292,7 +292,8 @@ namespace scatterer
 
 			m_drawOcean = m_manager.m_skyNode.trueAlt < fakeOceanAltitude;
 
-			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean) {
+			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
+			{
 				foreach (Mesh mesh in m_screenGrids)
 				{
 
@@ -304,41 +305,6 @@ namespace scatterer
 
 				}
 			}
-
-
-//			if (!ocean && stockOceanExists)
-//			{  
-//				PQS pqs = m_manager.parentCelestialBody.pqsController;
-//
-//				if (pqs.ChildSpheres [0])
-//				{
-////					Debug.Log("pqs.ChildSpheres [0] found");
-//					ocean = pqs.ChildSpheres [0];
-//					if (m_core.oceanCloudShadows)
-//					{
-//						emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShader.shader"));
-//					}
-//					else
-//					{
-//						emptyMaterial = new Material (ShaderTool.GetMatFromShader2 ("EmptyShaderIgnoreProj.shader"));	
-//					}
-//
-//					ocean.useSharedMaterial=false;
-//
-//
-//					stockOceanExists = false;
-//
-//
-//				} else {
-//					stockOceanExists = false;
-//					Debug.Log ("[Scatterer] Stock ocean doesn't exist for " + m_manager.parentCelestialBody.name);
-//				}
-//			}
-
-
-
-
-
 
 
 			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;

@@ -22,7 +22,8 @@ namespace scatterer
 	 */
 	public class SkyNode: MonoBehaviour
 	{
-		
+
+
 		[Persistent]
 		public bool forceOFFaniso;
 		SimplePostProcessCube postProcessCube;
@@ -58,8 +59,10 @@ namespace scatterer
 		bool coronasDisabled = false;
 
 		EncodeFloat encode;
+//		EncodeFloat2D encode;
 
-		[Persistent] public float experimentalAtmoScale=1f;
+		[Persistent]
+		public float experimentalAtmoScale=1f;
 		float viewdirOffset=0f;
 
 		Matrix4x4 p;
@@ -159,6 +162,11 @@ namespace scatterer
 
 		PQS CurrentPQS = null;
 
+//		PQSMeshPlanet CurrentPQS = null;
+
+
+
+
 
 		PQSMod_CelestialBodyTransform currentPQSMod_CelestialBodyTransform=null;
 
@@ -234,8 +242,13 @@ namespace scatterer
 		string m_filePath = "/Proland/Textures/Atmo";
 		public Matrix4x4d m_cameraToScreenMatrix;
 		Mesh m_mesh;
-		RenderTexture m_inscatter, m_irradiance;
-		public RenderTexture m_transmit;
+
+//		RenderTexture m_inscatter, m_irradiance;
+//		public RenderTexture m_transmit;
+		
+
+		Texture2D m_inscatter, m_irradiance;
+		public Texture2D m_transmit;
 		
 		Manager m_manager;
 		
@@ -273,23 +286,31 @@ namespace scatterer
 			//The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture
 			//and the shader manually performs the sample for the 4th dimension
-			m_inscatter = new RenderTexture (RES_MU_S * RES_NU, RES_MU * RES_R, 0, RenderTextureFormat.ARGBHalf);
+			m_inscatter = new Texture2D (RES_MU_S * RES_NU, RES_MU * RES_R, TextureFormat.RGBAHalf,false);
+
+//			m_inscatter = new RenderTexture (RES_MU_S * RES_NU, RES_MU * RES_R, 0, RenderTextureFormat.ARGBFloat);
 			m_inscatter.wrapMode = TextureWrapMode.Clamp;
 			m_inscatter.filterMode = FilterMode.Bilinear;
 
 			//Transmittance is responsible for the change in the sun color as it moves
 			//The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-			m_transmit = new RenderTexture (TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBHalf);
+//			m_transmit = new Texture2D (TRANSMITTANCE_W, TRANSMITTANCE_H, TextureFormat.ARGB32,false);
+			m_transmit = new Texture2D (TRANSMITTANCE_W, TRANSMITTANCE_H, TextureFormat.RGBAHalf,false);
+
+//			m_transmit = new RenderTexture (TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
 			m_transmit.wrapMode = TextureWrapMode.Clamp;
 			m_transmit.filterMode = FilterMode.Bilinear;
 			
 			//Irradiance is responsible for the change in the sky color as the sun moves
 			//The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-			m_irradiance = new RenderTexture (SKY_W, SKY_H, 0, RenderTextureFormat.ARGBHalf);
+//			m_irradiance = new Texture2D (SKY_W, SKY_H, TextureFormat.ARGB32,false);
+			m_irradiance = new Texture2D (SKY_W, SKY_H, TextureFormat.RGBAHalf,false);
+
+//			m_irradiance = new RenderTexture (SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
 			m_irradiance.wrapMode = TextureWrapMode.Clamp;
 			m_irradiance.filterMode = FilterMode.Bilinear;
-			
-			
+
+
 			initiateOrRestart ();
 
 #if !skyScaledBox
@@ -452,7 +473,6 @@ namespace scatterer
 		public void UpdateNode ()
 		{
 
-
 			position = parentCelestialBody.transform.position;
 			
 			if (!initiated)
@@ -463,11 +483,14 @@ namespace scatterer
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
 				sunglareCutoffAlt = experimentalAtmoScale*(Rt - Rg);
-				cams = Camera.allCameras;
+//				cams = Camera.allCameras;
 
 				scaledSpaceCamera=m_manager.GetCore().scaledSpaceCamera;
-				farCamera=m_manager.GetCore().farCamera;
-				nearCamera=m_manager.GetCore().nearCamera;
+//				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+				{
+					farCamera=m_manager.GetCore().farCamera;
+					nearCamera=m_manager.GetCore().nearCamera;
+				}
 				
 
 				backupAtmosphereMaterial ();
@@ -478,8 +501,11 @@ namespace scatterer
 			}
 			else
 			{
-				
-				alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
+//				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+					alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
+//				else
+//					alt = Vector3.Distance (ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position), parentCelestialBody.transform.position);
+
 				trueAlt = alt - m_radius;
 				
 //				if ((sunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt) && !MapView.MapIsEnabled && !eclipse)) { //^ is XOR
@@ -517,21 +543,21 @@ namespace scatterer
 				//if alt-tabbing/windowing and rendertextures are lost
 				//this loads them back up
 				//you have to wait for a frame of two because if you do it immediately they don't get loaded
-				if (!m_inscatter.IsCreated ())
-				{
-					waitBeforeReloadCnt++;
-					if (waitBeforeReloadCnt >= 2)
-					{
-						m_inscatter.Release ();
-						m_transmit.Release ();
-						m_irradiance.Release ();
-
-						initiateOrRestart ();
-						Debug.Log ("[Scatterer] Reloaded scattering tables for"+parentCelestialBody.name);
-						m_manager.reBuildOcean ();
-						waitBeforeReloadCnt = 0;
-					}
-				}
+//				if (!m_inscatter.IsCreated ())
+//				{
+//					waitBeforeReloadCnt++;
+//					if (waitBeforeReloadCnt >= 2)
+//					{
+//						m_inscatter.Release ();
+//						m_transmit.Release ();
+//						m_irradiance.Release ();
+//
+//						initiateOrRestart ();
+//						Debug.Log ("[Scatterer] Reloaded scattering tables for"+parentCelestialBody.name);
+//						m_manager.reBuildOcean ();
+//						waitBeforeReloadCnt = 0;
+//					}
+//				}
 
 
 					
@@ -959,27 +985,125 @@ namespace scatterer
 		
 		public void initiateOrRestart ()
 		{
-			string _file;
+//			string _file;
+//
+//			m_inscatter.Create ();
+//			m_transmit.Create ();
+//			m_irradiance.Create ();
+//
+//			if(encode==null)
+//				encode = new EncodeFloat ();
+//
+//
+//			_file = assetDir + m_filePath + "/inscatter.raw";
+//			encode.WriteIntoRenderTexture (m_inscatter, 4, _file);
+//
+//
+//			Texture2D m_inscatter2d = new Texture2D (RES_MU_S * RES_NU, RES_MU * RES_R, TextureFormat.RGBAHalf,false);
+//			m_inscatter2d.wrapMode = TextureWrapMode.Clamp;
+//			m_inscatter2d.filterMode = FilterMode.Bilinear;
+//
+//			RenderTexture.active = m_inscatter;
+//			m_inscatter2d.ReadPixels(new Rect(0, 0, m_inscatter.width, m_inscatter.height), 0, 0);
+//			m_inscatter2d.Apply();
+//
+//			_file = assetDir + m_filePath + "/inscatter.half";
+//			byte[] bytes = m_inscatter2d.GetRawTextureData ();
+//			System.IO.File.WriteAllBytes(_file ,bytes);
+//
+//			_file = assetDir + m_filePath + "/transmittance.raw";
+//			encode.WriteIntoRenderTexture (m_transmit, 3, _file);
+//
+//			Texture2D m_transmittance2d = new Texture2D (m_transmit.width, m_transmit.height, TextureFormat.RGBAHalf,false);
+//			m_transmittance2d.wrapMode = TextureWrapMode.Clamp;
+//			m_transmittance2d.filterMode = FilterMode.Bilinear;
+//			
+//			RenderTexture.active = m_transmit;
+//			m_transmittance2d.ReadPixels(new Rect(0, 0, m_transmit.width, m_transmit.height), 0, 0);
+//			m_transmittance2d.Apply();
+//			
+//			_file = assetDir + m_filePath + "/transmittance.half";
+//			bytes = m_transmittance2d.GetRawTextureData();
+//			System.IO.File.WriteAllBytes(_file ,bytes);
+//
+//			_file = assetDir + m_filePath + "/irradiance.raw";
+//			encode.WriteIntoRenderTexture (m_irradiance, 3, _file);
+//
+//			Texture2D m_irradiance2D = new Texture2D (m_irradiance.width, m_irradiance.height, TextureFormat.RGBAHalf,false);
+//			m_irradiance2D.wrapMode = TextureWrapMode.Clamp;
+//			m_irradiance2D.filterMode = FilterMode.Bilinear;
+//			
+//			RenderTexture.active = m_irradiance;
+//			m_irradiance2D.ReadPixels(new Rect(0, 0, m_irradiance.width, m_irradiance.height), 0, 0);
+//			m_irradiance2D.Apply();
+//			
+//			_file = assetDir + m_filePath + "/irradiance.half";
+//			bytes = m_irradiance2D.GetRawTextureData ();
+//			System.IO.File.WriteAllBytes(_file ,bytes);
+//
+//
+//
+//			encode = null;
+//
 
-			m_inscatter.Create ();
-			m_transmit.Create ();
-			m_irradiance.Create ();
-
-			if(encode==null)
-				encode = new EncodeFloat ();
 
 
-//			the EncodeFloat class still leaks a 100mb or so on first scene change, not good
-			_file = assetDir + m_filePath + "/inscatter.raw";
-			encode.WriteIntoRenderTexture (m_inscatter, 4, _file);
+//			string _file;
+//			
+//			EncodeFloat2D encode2d = new EncodeFloat2D();
+//			
+//			_file = assetDir + m_filePath + "/inscatter.raw";
+//			encode2d.WriteIntoTexture2D (m_inscatter, 4, _file);
+//
+//			_file = assetDir + m_filePath + "/inscatter2d.png";
+//			byte[] bytes = m_inscatter.EncodeToPNG ();
+//			System.IO.File.WriteAllBytes(_file ,bytes);
+//
+//			_file = assetDir + m_filePath + "/transmittance.raw";
+//			encode2d.WriteIntoTexture2D (m_transmit, 3, _file);
+//
+//			_file = assetDir + m_filePath + "/transmittance2d.png";
+//			bytes = m_transmit.EncodeToPNG ();
+//			System.IO.File.WriteAllBytes(_file ,bytes);
+////			
+////			_file = assetDir + m_filePath + "/irradiance.raw";
+////			encode2d.WriteIntoTexture2D (m_irradiance, 3, _file);
+//			
+//			encode2d = null;
 
-			_file = assetDir + m_filePath + "/transmittance.raw";
-			encode.WriteIntoRenderTexture (m_transmit, 3, _file);
 
-			_file = assetDir + m_filePath + "/irradiance.raw";
-			encode.WriteIntoRenderTexture (m_irradiance, 3, _file);
+						
+			//load from .half, probably an 8 mb leak every scene change
+			//Maybe just serialize a color array and then load it into unamanaged array?
+			string _file = assetDir + m_filePath + "/inscatter.half";
+			m_inscatter.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 
-			encode = null;
+			_file = assetDir + m_filePath + "/transmittance.half";
+			m_transmit.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
+
+			_file = assetDir + m_filePath + "/irradiance.half";
+			m_irradiance.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
+
+
+			m_inscatter.Apply ();
+			m_transmit.Apply ();
+			m_irradiance.Apply ();
+
+			//load from PNG, disabled as PNG seems to causes some banding
+			//probably PNG is limited to 4-bit per channel ie ARGB32
+//			_file = assetDir + m_filePath + "/inscatter.png";
+//			m_inscatter.LoadImage (System.IO.File.ReadAllBytes (_file));
+//
+//			_file = assetDir + m_filePath + "/transmittance.png";
+//			m_transmit.LoadImage (System.IO.File.ReadAllBytes (_file));
+//
+//			_file = assetDir + m_filePath + "/irradiance.png";
+//			m_irradiance.LoadImage (System.IO.File.ReadAllBytes (_file));
+
+
+
+
+
 
 		}
 		
@@ -988,19 +1112,19 @@ namespace scatterer
 			saveToConfigNode ();
 			if (m_transmit)
 			{
-				m_transmit.Release ();
+//				m_transmit.Release ();
 				UnityEngine.Object.Destroy (m_transmit);
 			}
 
 			if (m_irradiance)
 			{
-				m_irradiance.Release ();
+//				m_irradiance.Release ();
 				UnityEngine.Object.Destroy (m_irradiance);
 			}
 
 			if (m_inscatter)
 			{
-				m_inscatter.Release ();
+//				m_inscatter.Release ();
 				UnityEngine.Object.Destroy (m_inscatter);
 			}
 
@@ -1024,7 +1148,7 @@ namespace scatterer
 			Component.Destroy (skyLocalMeshrenderer);
 			UnityEngine.Object.Destroy (skyLocalMesh);
 			
-			RestoreStockAtmosphere ();
+//			RestoreStockAtmosphere ();
 			UnityEngine.Object.Destroy (alteredMaterial);
 			UnityEngine.Object.Destroy (originalMaterial);
 		}
@@ -1066,15 +1190,15 @@ namespace scatterer
 		
 		public void toggleCoronas ()
 		{
-			Transform scaledSunTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single (t => t.name == "Sun");
-			foreach (Transform child in scaledSunTransform) {
-				MeshRenderer temp;
-				temp = child.gameObject.GetComponent < MeshRenderer > ();
-				if (temp != null) {
-					temp.enabled = coronasDisabled;
-				}
-			}
-			coronasDisabled = !coronasDisabled;
+//			Transform scaledSunTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single (t => t.name == "Sun");
+//			foreach (Transform child in scaledSunTransform) {
+//				MeshRenderer temp;
+//				temp = child.gameObject.GetComponent < MeshRenderer > ();
+//				if (temp != null) {
+//					temp.enabled = coronasDisabled;
+//				}
+//			}
+//			coronasDisabled = !coronasDisabled;
 		}
 		
 		public void toggleStockSunglare ()
@@ -1098,11 +1222,11 @@ namespace scatterer
 			forceOFFaniso = !forceOFFaniso;
 		}
 		
-		public Transform GetScaledTransform (string body)
-		{
-			List < Transform > transforms = ScaledSpace.Instance.scaledSpaceTransforms;
-			return transforms.Single (n => n.name == body);
-		}
+//		public Transform GetScaledTransform (string body)
+//		{
+//			List < Transform > transforms = ScaledSpace.Instance.scaledSpaceTransforms;
+//			return transforms.Single (n => n.name == body);
+//		}
 		
 		public void loadFromConfigNode (bool loadbackup)
 		{
@@ -1134,9 +1258,14 @@ namespace scatterer
 			for (int i = 0; i < t.childCount; i++) {
 				if (t.GetChild (i).gameObject.layer == 9) {
 					t.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (true);
-					originalMaterial = (Material)Material.Instantiate (t.renderer.sharedMaterial);
-					alteredMaterial = (Material)Material.Instantiate (t.renderer.sharedMaterial);
-					t.renderer.sharedMaterial = alteredMaterial;
+//					originalMaterial = (Material)Material.Instantiate (t.renderer.sharedMaterial);
+					Renderer tRenderer=(Renderer) t.GetComponent(typeof(Renderer));
+					originalMaterial = (Material)Material.Instantiate (tRenderer.sharedMaterial);
+
+//					alteredMaterial = (Material)Material.Instantiate (t.renderer.sharedMaterial);
+					alteredMaterial = (Material)Material.Instantiate (tRenderer.sharedMaterial);
+//					t.renderer.sharedMaterial = alteredMaterial;
+					tRenderer.sharedMaterial = alteredMaterial;
 					i = t.childCount + 10;
 				}
 			}
@@ -1149,7 +1278,11 @@ namespace scatterer
 				if (t.GetChild (i).gameObject.layer == 9) {
 					t.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (true);
 					if (originalMaterial)
-						t.renderer.sharedMaterial = (Material)Material.Instantiate (originalMaterial);
+					{
+						Renderer tRenderer=(Renderer) t.GetComponent(typeof(Renderer));
+//						t.renderer.sharedMaterial = (Material)Material.Instantiate (originalMaterial);
+						tRenderer.sharedMaterial = (Material)Material.Instantiate (originalMaterial);
+					}
 					i = t.childCount + 10;
 				}
 			}
@@ -1163,7 +1296,9 @@ namespace scatterer
 			for (int i = 0; i < t.childCount; i++) {
 				if (t.GetChild (i).gameObject.layer == 9) {
 					t.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (false);
-					Material sharedMaterial = t.renderer.sharedMaterial;
+					Renderer tRenderer=(Renderer) t.GetComponent(typeof(Renderer));
+//					Material sharedMaterial = t.renderer.sharedMaterial;
+					Material sharedMaterial = tRenderer.sharedMaterial;
 					
 					sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
 					sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);

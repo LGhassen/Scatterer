@@ -23,7 +23,6 @@ public class EncodeFloat
 
 
 	public void WriteIntoRenderTexture(RenderTexture tex, int channels, string path)
-
 	{
 		if(tex == null)
 		{
@@ -55,8 +54,6 @@ public class EncodeFloat
 		}
 		
 		DecodeFloat(w, h, channels, min, max, tex, colorMapMemoryPointer);  //colorMapMemoryPointer is also freed inside DecodeFloat
-
-
 	}
 
 		

@@ -11,10 +11,11 @@ namespace scatterer
 		public Camera inCamera;
 		
 		public Core incore;
-		
+
 		public RenderTexture _depthTex;
 		public RenderTexture _godrayDepthTex;
 		private GameObject _depthCam;
+		private Camera _depthCamCamera;
 		
 		public bool depthTextureCleared = false; //clear depth texture when away from PQS, for the sunflare shader
 		//Later I'll make the shader stop checking the depth buffer instead
@@ -31,18 +32,18 @@ namespace scatterer
 			
 			if (!_depthCam) {
 				_depthCam = new GameObject("CustomDepthCamera");
-				_depthCam.AddComponent<Camera>();
+				_depthCamCamera = _depthCam.AddComponent<Camera>();
 
-				_depthCam.camera.CopyFrom(inCamera);
+				_depthCamCamera.CopyFrom(inCamera);
 				
-				_depthCam.camera.farClipPlane=incore.farCamera.farClipPlane;
-				_depthCam.camera.nearClipPlane=incore.farCamera.nearClipPlane;
-				_depthCam.camera.depthTextureMode=DepthTextureMode.None;
+				_depthCamCamera.farClipPlane=incore.farCamera.farClipPlane;
+				_depthCamCamera.nearClipPlane=incore.farCamera.nearClipPlane;
+				_depthCamCamera.depthTextureMode=DepthTextureMode.None;
 
-				_depthCam.camera.transform.parent=incore.farCamera.transform;
+				_depthCamCamera.transform.parent=incore.farCamera.transform;
 
 //				_depthCam.camera.enabled = true;
-				_depthCam.camera.enabled = false;
+				_depthCamCamera.enabled = false;
 
 
 
@@ -54,8 +55,8 @@ namespace scatterer
 
 			}
 
-			_depthCam.camera.CopyFrom(inCamera);
-			_depthCam.camera.enabled = false;
+			_depthCamCamera.CopyFrom(inCamera);
+			_depthCamCamera.enabled = false;
 
 			//_depthCam.camera.backgroundColor = new Color(0,0,0,0);
 			//_depthCam.camera.clearFlags = CameraClearFlags.SolidColor;
@@ -87,9 +88,10 @@ namespace scatterer
 				//not needed for built-in depth
 				
 				
-				_depthCam.camera.targetTexture = _depthTex;
+				_depthCamCamera.targetTexture = _depthTex;
 //				_depthCam.camera.SetReplacementShader (depthShader, "RenderType");
-				_depthCam.camera.RenderWithShader (depthShader, "RenderType");
+//				_depthCamCamera.RenderWithShader (depthShader, "RenderType");
+				_depthCamCamera.RenderWithShader (depthShader, "");
 				depthTextureCleared = false;
 				
 				if (incore.useGodrays)
@@ -98,9 +100,10 @@ namespace scatterer
 					GL.Clear(false,true,Color.white);
 
 					
-					_depthCam.camera.targetTexture =  _godrayDepthTex;
+					_depthCamCamera.targetTexture =  _godrayDepthTex;
 //					_depthCam.camera.SetReplacementShader (GodrayDepthShader, "RenderType");
-					_depthCam.camera.RenderWithShader (GodrayDepthShader, "RenderType");
+//					_depthCamCamera.RenderWithShader (GodrayDepthShader, "RenderType");
+					_depthCamCamera.RenderWithShader (GodrayDepthShader, "");
 				}
 				
 				RenderTexture.active=rt;
@@ -126,7 +129,7 @@ namespace scatterer
 			{
 				//				Graphics.Blit (_depthTex, destination, viewCustomBufferShader, 0);
 				Graphics.Blit (_depthTex, destination);
-				//				Graphics.Blit (_godrayDepthTex, destination);
+//				Graphics.Blit (_godrayDepthTex, destination);
 				
 			}
 			

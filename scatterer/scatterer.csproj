@@ -32,12 +32,80 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
+    <Reference Include="System">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\System.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\KSP\1.0.5.1028\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\KSP\1.0.5.1028\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="KSPCore">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\KSPCore.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-UnityScript">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Assembly-UnityScript.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-UnityScript-firstpass">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Assembly-UnityScript-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="KSPAssets">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\KSPAssets.dll</HintPath>
+    </Reference>
+    <Reference Include="KSPUtil">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\KSPUtil.dll</HintPath>
+    </Reference>
+    <Reference Include="Boo.Lang">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Boo.Lang.dll</HintPath>
+    </Reference>
+    <Reference Include="MiscUtil">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\MiscUtil-r285.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="SaveUpgradePipeline.Core">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\SaveUpgradePipeline.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\System.Xml.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\System.Xml.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="TDx.TDxInput">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\TDx.TDxInput.dll</HintPath>
+    </Reference>
+    <Reference Include="TrackIRUnity">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\TrackIRUnity.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Networking">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\UnityEngine.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityScript.Lang">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\UnityScript.Lang.dll</HintPath>
+    </Reference>
+    <Reference Include="Vectrosity">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Vectrosity.dll</HintPath>
+    </Reference>
+    <Reference Include="XmlDiffPatch">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\xmldiffpatch.dll</HintPath>
+    </Reference>
+    <Reference Include="XmlDiffPatch.View">
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\XmlDiffPatch.View.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +147,9 @@
     <Compile Include="configPoint.cs" />
     <Compile Include="scattererCelestialBody.cs" />
     <Compile Include="CustomDepthBufferCam.cs" />
+    <Compile Include="wireFrame.cs" />
+    <Compile Include="SimplePostProcessCube.cs" />
+    <Compile Include="SunFlare.cs" />
     <Compile Include="Ocean\Node.cs" />
     <Compile Include="Ocean\OceanFFT.cs" />
     <Compile Include="Ocean\OceanNode.cs" />
@@ -87,11 +158,9 @@
     <Compile Include="Ocean\RTUtility.cs" />
     <Compile Include="Ocean\WriteFloat.cs" />
     <Compile Include="Ocean\FourierGPU.cs" />
-    <Compile Include="Ocean\FakeOceanPQS.cs" />
     <Compile Include="Ocean\FourierCPU.cs" />
-    <Compile Include="wireFrame.cs" />
-    <Compile Include="SimplePostProcessCube.cs" />
-    <Compile Include="SunFlare.cs" />
+    <Compile Include="Ocean\FakeOceanPQS.cs" />
+    <Compile Include="EncodeFloat2D.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -246,10 +315,6 @@
     <None Include="Plugins\Containers\SetQueue.cs.meta" />
     <None Include="Proland\Scripts\Atmo\PreProcessAtmo.cs" />
     <None Include="Plugins\Math\PerlinNoise.cs" />
-    <None Include="Ocean\OceanFFT.cs.meta" />
-    <None Include="Ocean\OceanNode.cs.meta" />
-    <None Include="Ocean\OceanWhiteCaps.cs.meta" />
-    <None Include="Ocean\WriteFloat.cs.meta" />
     <None Include="celestialBodySortableByDistance.cs" />
   </ItemGroup>
 </Project>

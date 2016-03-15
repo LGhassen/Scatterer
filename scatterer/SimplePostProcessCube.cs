@@ -24,7 +24,9 @@ namespace scatterer
 			else
 				cube = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
-			GameObject.Destroy(cube.collider);
+
+			GameObject.Destroy (cube.GetComponent<Collider> ());
+
 			cube.transform.localScale = Vector3.one;
 			meshContainer = cube;
 			
@@ -41,7 +43,8 @@ namespace scatterer
 			var mr = cube.GetComponent<MeshRenderer>();
 			mr.material = material;
 			
-			mr.castShadows = false;
+//			mr.castShadows = false;
+			mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			mr.receiveShadows = false;
 			mr.enabled = true;
 		}

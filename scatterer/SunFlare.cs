@@ -128,7 +128,7 @@ namespace scatterer
 
 
 			hitStatus=false;
-			
+//			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			if (!MapView.MapIsEnabled)
 			{
 	
@@ -149,16 +149,16 @@ namespace scatterer
 				                                                                           - inCore.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 			}
 
-
 			eclipse = hitStatus;
 
 
 			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
-			sunglareMaterial.SetFloat ("aspectRatio", inCore.nearCamera.aspect);
+			sunglareMaterial.SetFloat ("aspectRatio", inCore.scaledSpaceCamera.aspect);
 			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
 
 
 			//check for active PQS
+//			if (!transmittanceSet && inCore.pqsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			if (!transmittanceSet && inCore.pqsEnabled)
 			{
 				if ((lastActivePQS != inCore.managerWactivePQS) || !(lastActivePQS))
@@ -175,7 +175,6 @@ namespace scatterer
 				sunglareMaterial.SetFloat("useTransmittance",1f);
 				transmittanceSet=true;
 			}
-
 			if (transmittanceSet)
 			{
 				if (!inCore.pqsEnabled)
@@ -186,22 +185,22 @@ namespace scatterer
 				else
 				{
 
+
 					if (!MapView.MapIsEnabled)
 						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", inCore.farCamera.transform.position - lastActivePQS.parentCelestialBody.transform.position);
 					else
 						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(inCore.scaledSpaceCamera.transform.position) - lastActivePQS.parentCelestialBody.transform.position);
 
-
 					sunglareMaterial.SetVector ("_Sun_WorldSunDir", lastActivePQS.getDirectionToSun ().normalized);
 				}
 			}
-
 		}	
 
 		public void updateNode()
 		{
 			//drawmesh calls have to be made in update()
 			//if they're done on prerender or anywhere else they don't work as far as I know
+//			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
 			{
 				Graphics.DrawMesh (screenMesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 15,

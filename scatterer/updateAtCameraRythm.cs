@@ -71,11 +71,13 @@ namespace scatterer
 
 			skyMat.SetMatrix ("_Sun_WorldToLocal", m_manager.GetSunWorldToLocalRotation ()); //don't touch this
 
-			m_skynode.UpdateStuff ();
+//			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			{
+				m_skynode.UpdateStuff ();
 
-			m_skynode.InitUniforms(skyMat); //desn't need to be done every frame, take a look at it and clean it up later
-			m_skynode.SetUniforms (skyMat);
-
+				m_skynode.InitUniforms (skyMat); //desn't need to be done every frame, take a look at it and clean it up later
+				m_skynode.SetUniforms (skyMat);
+			}
 
 		}		
 	}
