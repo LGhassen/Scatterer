@@ -8,15 +8,17 @@ using System.Runtime;
 using KSP;
 using KSP.IO;
 using UnityEngine;
-using KSPPluginFramework;
 //using Utils;
 
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	//	public class Core: MonoBehaviourWindow
+//	public class Core: MonoBehaviourWindow
 	public class Core: MonoBehaviour
 	{
+
+		public Rect windowRect = new Rect (0, 0, 400, 50);
+
 		SunFlare customSunFlare;
 		
 		bool visible = false;
@@ -32,7 +34,12 @@ namespace scatterer
 		
 		//		List < celestialBodySortableByDistance > celestialBodiesWithDistance = new List < celestialBodySortableByDistance > ();
 		
-		
+		[Persistent]
+		Vector2 mainMenuWindowLocation=Vector2.zero;
+
+		[Persistent]
+		Vector2 inGameWindowLocation=Vector2.zero;
+
 		[Persistent]
 		public bool
 			render24bitDepthBuffer = true;
@@ -73,7 +80,7 @@ namespace scatterer
 		//		public GameObject copiedSunLight;
 		
 		
-		[Persistent]
+//		[Persistent]
 		public bool craft_WaveInteractions = false;
 		
 		[Persistent]
@@ -154,15 +161,15 @@ namespace scatterer
 		
 		float MapViewScale = 1000f;
 		
-		[Persistent]	public int oceanRenderQueue=2001;
+		[Persistent]
+		public int oceanRenderQueue=2001;
 		
 		float postProcessingalpha = 78f;
 		float postProcessDepth = 200f;
 		
 		float _Post_Extinction_Tint=100f;
 		float postExtinctionMultiplier=100f;
-		
-		
+
 		float postProcessExposure = 18f;
 		
 		//sky properties
@@ -172,13 +179,10 @@ namespace scatterer
 		float mapExposure = 15f;
 		float mapSkyRimeExposure = 15f;
 		float mapAlphaGlobal = 100f;
-		
-		
-		
+
 		public Camera chosenCamera;
 		public int layer = 15;
-		
-		
+
 		//ocean variables
 		public bool stockOcean = false;
 		
@@ -213,13 +217,8 @@ namespace scatterer
 		Vector4 m_choppyness = new Vector4 (2.3f, 2.1f, 1.3f, 0.9f); //strengh of sideways displacement for each grid
 		
 		int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
-		
-		
-		//		float sunReflectionMultiplier = 1f;
-		//		float skyReflectionMultiplier = 1f;
-		//		float seaRefractionMultiplier = 1f;
-		
-		
+
+
 		
 		//other stuff
 		float atmosphereGlobalScale = 1000f;
@@ -253,7 +252,7 @@ namespace scatterer
 			
 			//			WindowCaption = "Scatterer v0.0235: alt+f10/f11 toggle ";
 			//			WindowRect = new Rect (0, 0, 400, 50);
-			
+
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
 			UriBuilder uri = new UriBuilder (codeBase);
 			path = Uri.UnescapeDataString (uri.Path);
@@ -277,12 +276,16 @@ namespace scatterer
 //			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION) {
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER) {
 				isActive = true;
-				Debug.Log ("[Scatterer] Flight/Space center");
+				windowRect.x=inGameWindowLocation.x;
+				windowRect.y=inGameWindowLocation.y;
+//				Debug.Log ("[Scatterer] Flight/Space center");
 			} 
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU) {
 				mainMenu = true;
 				//				Visible = showMenuOnStart;
 				visible = showMenuOnStart;
+				windowRect.x=mainMenuWindowLocation.x;
+				windowRect.y=mainMenuWindowLocation.y;
 				
 				
 				if (useOceanShaders) {
@@ -369,7 +372,7 @@ namespace scatterer
 
 					//find scatterer celestial bodies
 					foreach (scattererCelestialBody sctBody in scattererCelestialBodies) {
-						var _sct = false;
+//						var _sct = false;
 						var _idx = 0;
 						//						var celBody = CelestialBodies.Single (_cb => _cb.bodyName == sctBody.celestialBodyName);
 						var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
@@ -382,7 +385,7 @@ namespace scatterer
 						
 						Debug.Log ("[Scatterer] Celestial Body: " + celBody);
 						if (celBody != null) {
-							_sct = true;
+//							_sct = true;
 							_idx = scattererCelestialBodies.IndexOf (sctBody);
 							Debug.Log ("[Scatterer] Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
 						}
@@ -828,13 +831,15 @@ namespace scatterer
 					Component.Destroy (customSunFlare);
 				}
 				
-				
+				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
+				savePlanetsList();
 				
 			}
 			
 			else if (mainMenu)
 				
 			{
+				mainMenuWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				//				Debug.Log("[Scatterer] saving user settings");
 				savePlanetsList(); //save user preferences //originally this was created only for the planets list, I'll change it later
 			}
@@ -845,16 +850,28 @@ namespace scatterer
 		//		{
 		//		}
 		
-		
+		void OnGUI ()
+		{
+			if (visible)
+			{
+				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0235: alt+f10/f11 toggle");
+
+				//prevent window from going offscreen
+				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
+				windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
+			}
+		}
+
 		//		UI BUTTONS
 		//		This isn't the most elegant section due to how much code is necessary for each element
-		void OnGUI ()
+//		void OnGUI ()
+		void DrawScattererWindow (int windowId)
 			//		internal override void DrawWindow (int id)
 		{
 			//			DragEnabled = true;
-			if (visible)
+//			if (visible)
 			{
-				GUILayout.Label("Scatterer v0.0235: alt+f10/f11 toggle");
+//				GUILayout.Label("Scatterer v0.0235: alt+f10/f11 toggle");
 				
 				GUILayout.BeginHorizontal();
 				//			if (GUILayout.Button("Hide")) Visible = !Visible;
@@ -1625,6 +1642,8 @@ namespace scatterer
 				}
 				
 			}
+
+			GUI.DragWindow();
 		}
 		
 		//		//snippet by Thomas P. from KSPforum

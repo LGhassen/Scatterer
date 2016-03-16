@@ -110,7 +110,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Framework\MonoBehaviourWindow.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="Proland\Scripts\Core\Exceptions\CacheCapacityException.cs" />
     <Compile Include="Proland\Scripts\Core\Exceptions\InvalidParameterException.cs" />
@@ -138,11 +137,8 @@
     <Compile Include="SunNode.cs" />
     <Compile Include="ShaderTool.cs" />
     <Compile Include="EncodeFloat.cs" />
-    <Compile Include="Framework\MonoBehaviourExtended.cs" />
     <Compile Include="Plugins\Containers\DictionaryQueue.cs" />
     <Compile Include="Plugins\Containers\SetQueue.cs" />
-    <Compile Include="Framework\SkinsLibrary.cs" />
-    <Compile Include="Framework\ExtensionsUnity.cs" />
     <Compile Include="updateAtCameraRythm.cs" />
     <Compile Include="configPoint.cs" />
     <Compile Include="scattererCelestialBody.cs" />

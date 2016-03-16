@@ -56,9 +56,9 @@ namespace scatterer
 //		public float postDist = -4000f;
 		public float percentage;
 		public int currentConfigPoint;
-		bool coronasDisabled = false;
+//		bool coronasDisabled = false;
 
-		EncodeFloat encode;
+//		EncodeFloat encode;
 //		EncodeFloat2D encode;
 
 		[Persistent]
@@ -116,7 +116,7 @@ namespace scatterer
 
 //		bool eclipse=false;
 
-		Transform celestialTransform;
+//		Transform celestialTransform;
 		float alt;
 		public float trueAlt;
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType < SkyNode > (null);
@@ -128,9 +128,9 @@ namespace scatterer
 //		[Persistent]
 //		float postProcessMaxAltitude=160000;
 
-		GameObject skyObject;
-		MeshRenderer skyMR;
-		MeshFilter skyMF;
+//		GameObject skyObject;
+//		MeshRenderer skyMR;
+//		MeshFilter skyMF;
 		CelestialBody parentCelestialBody;
 		Transform ParentPlanetTransform;
 
@@ -173,19 +173,19 @@ namespace scatterer
 
 		public bool inScaledSpace {
 			get {
+//				if HighLogic.load
+
 				return !(CurrentPQS != null && CurrentPQS.isActive);
 			}
 		}
 		
 		Vector3 position;
 		bool initiated = false;
-		Camera[] cams;
 
 
 		public Camera farCamera , nearCamera, scaledSpaceCamera;
 
 		public bool postprocessingEnabled = true;
-		int waitBeforeReloadCnt = 0;
 		
 		//		[Persistent] public float alphaCutoff=0.001f;
 		/*[Persistent]*/
@@ -522,9 +522,9 @@ namespace scatterer
 //					toggleCoronas ();
 //				}
 
-				if ((!coronasDisabled)) { 
-					toggleCoronas ();
-				}
+//				if ((!coronasDisabled)) { 
+//					toggleCoronas ();
+//				}
 				
 //				if ((!stocksunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt - 1000) && !MapView.MapIsEnabled)) { //^ is XOR
 //					toggleStockSunglare ();
@@ -570,8 +570,7 @@ namespace scatterer
 //						                  parentCelestialBody.transform, celestialTransform);
 
 					//start in localmode
-					updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this, skyObject,
-					                  parentCelestialBody.transform, celestialTransform);
+					updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
 
 						updaterAdded = true;
 					}
@@ -1136,8 +1135,8 @@ namespace scatterer
 			Component.Destroy (updater);
 			UnityEngine.Object.Destroy (updater);
 			
-			Component.Destroy (skyMR);
-			UnityEngine.Object.Destroy (skyObject);
+//			Component.Destroy (skyMR);
+//			UnityEngine.Object.Destroy (skyObject);
 			
 			Component.Destroy (atmosphereMeshrenderer);
 			UnityEngine.Object.Destroy (atmosphereMesh);
@@ -1160,8 +1159,7 @@ namespace scatterer
 				skyScaledMeshrenderer.enabled = false;
 				skyLocalMeshrenderer.enabled=true;
 
-				updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this, skyObject,
-				                  parentCelestialBody.transform, celestialTransform);
+				updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
 
 				scaledMode=false;
 				Debug.Log("[Scatterer] Sky switched to local mode");
@@ -1171,8 +1169,7 @@ namespace scatterer
 				skyScaledMeshrenderer.enabled = true;
 				skyLocalMeshrenderer.enabled=false;
 
-				updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this, skyObject,
-				                  parentCelestialBody.transform, celestialTransform);
+				updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this,parentCelestialBody.transform);
 
 				scaledMode=true;
 				Debug.Log("[Scatterer] Sky switched to scaled mode");
@@ -1181,16 +1178,13 @@ namespace scatterer
 		}
 
 
-
-		public void destroyskyObject ()
-		{
-			UnityEngine.Object.Destroy (skyObject);
-		}
+		
 
 		
-		public void toggleCoronas ()
-		{
-//			Transform scaledSunTransform = ScaledSpace.Instance.scaledSpaceTransforms.Single (t => t.name == "Sun");
+//		public void toggleCoronas ()
+//		{
+//			Transform scaledSunTransform = ScaledSun. scaledSpaceTransforms.Single (t => t.name == "Sun");
+////			Transform scaledSunTransform = m_manager.GetCore ().GetScaledTransform ("Sun");//
 //			foreach (Transform child in scaledSunTransform) {
 //				MeshRenderer temp;
 //				temp = child.gameObject.GetComponent < MeshRenderer > ();
@@ -1199,7 +1193,7 @@ namespace scatterer
 //				}
 //			}
 //			coronasDisabled = !coronasDisabled;
-		}
+//		}
 		
 		public void toggleStockSunglare ()
 		{
