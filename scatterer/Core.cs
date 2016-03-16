@@ -13,7 +13,6 @@ using UnityEngine;
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-//	public class Core: MonoBehaviourWindow
 	public class Core: MonoBehaviour
 	{
 
@@ -31,6 +30,10 @@ namespace scatterer
 		CelestialBody[] CelestialBodies;
 		
 		//		Light[] lights;
+
+		//		GameObject sunLight,scaledspaceSunLight;
+		//		public GameObject copiedScaledSunLight;
+		//		public GameObject copiedSunLight;
 		
 		//		List < celestialBodySortableByDistance > celestialBodiesWithDistance = new List < celestialBodySortableByDistance > ();
 		
@@ -67,19 +70,13 @@ namespace scatterer
 		[Persistent]
 		public bool
 			showMenuOnStart = true;
-		
-		
-		
+
 		[Persistent]
 		int scrollSectionHeight = 500;
 		
 		bool callCollector=false;
 		
-		//		GameObject sunLight,scaledspaceSunLight;
-		//		public GameObject copiedScaledSunLight;
-		//		public GameObject copiedSunLight;
-		
-		
+
 //		[Persistent]
 		public bool craft_WaveInteractions = false;
 		
@@ -101,6 +98,14 @@ namespace scatterer
 		
 		[Persistent]
 		float godrayResolution = 1f;
+
+		[Persistent]
+		string guiKey1String=KeyCode.F10.ToString();
+		
+		[Persistent]
+		string guiKey2String=KeyCode.F11.ToString();
+
+		KeyCode guiKey1, guiKey2;
 		
 		
 		private Vector2 _scroll;
@@ -114,13 +119,9 @@ namespace scatterer
 		public Manager managerWactivePQS;
 		
 		bool depthBufferSet = false;
-		
-		
+
 		float experimentalAtmoScale=1f;
 		float viewdirOffset=0f;
-		
-		
-		
 		
 		public CelestialBody sunCelestialBody;
 		public string path;
@@ -205,7 +206,6 @@ namespace scatterer
 		float choppynessMultiplier = 1f;
 		
 		//		Vector3 m_oceanUpwellingColor = new Vector3 (0.039f, 0.156f, 0.47f);
-		
 		float oceanUpwellingColorR = 0.0039f;
 		float oceanUpwellingColorG = 0.0156f;
 		float oceanUpwellingColorB = 0.047f;
@@ -246,13 +246,9 @@ namespace scatterer
 			
 		}
 		
-		//		internal override void Awake ()
+
 		void Awake ()
 		{
-			
-			//			WindowCaption = "Scatterer v0.0235: alt+f10/f11 toggle ";
-			//			WindowRect = new Rect (0, 0, 400, 50);
-
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
 			UriBuilder uri = new UriBuilder (codeBase);
 			path = Uri.UnescapeDataString (uri.Path);
@@ -262,194 +258,74 @@ namespace scatterer
 			loadPlanetsList ();
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
 			
-			//			Visible = false;
-			
 			if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 9")) {
 				//				d3d9 = true;
 			} else if (SystemInfo.graphicsDeviceVersion.StartsWith ("OpenGL")) {
 				opengl = true;
 			}
-			
-			
+
 			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion);
 			
 //			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION) {
-			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER) {
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			{
 				isActive = true;
 				windowRect.x=inGameWindowLocation.x;
 				windowRect.y=inGameWindowLocation.y;
-//				Debug.Log ("[Scatterer] Flight/Space center");
 			} 
-			else if (HighLogic.LoadedScene == GameScenes.MAINMENU) {
+
+			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
 				mainMenu = true;
-				//				Visible = showMenuOnStart;
 				visible = showMenuOnStart;
 				windowRect.x=mainMenuWindowLocation.x;
 				windowRect.y=mainMenuWindowLocation.y;
 				
-				
-				if (useOceanShaders) {
-					
-					//find and remove the stock oceans
-					FakeOceanPQS[] fakes = (FakeOceanPQS[])FakeOceanPQS.FindObjectsOfType (typeof(FakeOceanPQS));
-					
-					if (fakes.Length == 0) { //if stock oceans haven't already been replaced
-						foreach (scattererCelestialBody sctBody in scattererCelestialBodies)
-						{
-							if (sctBody.hasOcean)
-							{
-								bool removed = false;
-								var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
-								if (celBody == null)
-								{
-									celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
-								}
-								
-								if (celBody != null)
-								{
-									//Thanks to rbray89 for this snippet and the FakeOcean class which disable the stock ocean in a clean way
-									PQS pqs = celBody.pqsController;
-									if (pqs != null) {
-										PQS ocean = pqs.ChildSpheres [0];
-										if (ocean != null) {
-											GameObject go = new GameObject ();
-											FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
-											fakeOcean.Apply (ocean);
-											removed = true;
-										}
-									}
-								}
-								if (!removed) {
-									Debug.Log ("[Scatterer] Couldn't remove stock ocean for " + sctBody.celestialBodyName);
-								}
-							}
-						}
-						Debug.Log ("[Scatterer] Removed stock oceans");
-					}
-					else
-					{
-						Debug.Log ("[Scatterer] Stock oceans already removed");
-					}
+				//find and remove stock oceans
+				if (useOceanShaders)
+				{
+					removeStockOceans();
 				}
 			}
 		}
 		
-		
-		
-		
-		//		internal override void Update ()
+
 		void Update ()
 		{
 			//toggle whether GUI is visible or not
-			if ((Input.GetKey (KeyCode.LeftAlt) || Input.GetKey (KeyCode.RightAlt)) && (Input.GetKeyDown (KeyCode.F11) || (Input.GetKeyDown (KeyCode.F10))))
-				//				Visible = !Visible;
+			if ((Input.GetKey (KeyCode.LeftAlt) || Input.GetKey (KeyCode.RightAlt)) && (Input.GetKeyDown (guiKey1) || (Input.GetKeyDown (guiKey2))))
 				visible = !visible;
+
+
+
 			if (isActive && ScaledSpace.Instance) {
-				if (!found) {
+				if (!found)
+				{
 					//set shadows
-//					if (terrainShadows && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-					if (terrainShadows)
-					{
-						foreach (CelestialBody _sc in CelestialBodies)
-						{
-							if (_sc.pqsController)
-							{
-								if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
-								{
-									_sc.pqsController.meshCastShadows = false;			//disable in space center because of "ghost" shadow
-									QualitySettings.shadowDistance = 5000;
-									
-								}
-								else
-								{
-									_sc.pqsController.meshCastShadows = true;
-									_sc.pqsController.meshRecieveShadows = true;
-									QualitySettings.shadowDistance = shadowsDistance;
-								}
-							}
-						}
-					}
+					setShadows();
 
 					//find scatterer celestial bodies
-					foreach (scattererCelestialBody sctBody in scattererCelestialBodies) {
-//						var _sct = false;
-						var _idx = 0;
-						//						var celBody = CelestialBodies.Single (_cb => _cb.bodyName == sctBody.celestialBodyName);
-						var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
-						
-						if (celBody == null) {
-							//							celBody = CelestialBodies.Single (_cb => _cb.bodyName == sctBody.transformName);
-							celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
-							
-						}
-						
-						Debug.Log ("[Scatterer] Celestial Body: " + celBody);
-						if (celBody != null) {
-//							_sct = true;
-							_idx = scattererCelestialBodies.IndexOf (sctBody);
-							Debug.Log ("[Scatterer] Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
-						}
-						;
-						
-						sctBody.celestialBody = celBody;
-						
-						//						celestialBodiesWithDistance.Add (new celestialBodySortableByDistance () {
-						//							CelestialBody = sctBody.celestialBody,
-						//							Distance = 0,
-						//							usesScatterer = _sct,
-						//							scattererIndex = _idx
-						//						});
-						
-						var sctBodyTransform = ScaledSpace.Instance.transform.FindChild (sctBody.transformName);
-						if (!sctBodyTransform) {
-							sctBodyTransform = ScaledSpace.Instance.transform.FindChild (sctBody.celestialBodyName);
-						}
-						if (sctBodyTransform) {
-							sctBody.transform = sctBodyTransform;
-							sctBody.hasTransform = true;
-						}
-						sctBody.active = false;
-					}
+					findScattererCelestialBodies();
 
+					//find sun
 					sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == "Sun");
-					
-					
-					//					//we need to load all of the celestial bodies in celestialBodiesWithDistance regardless
-					//					//of whether they are loaded ins catterer or not
-					//					//this is because we need to sort everything by distance to fix their draw orders
-					//					//and avoid kerbin's atmo being visible from behind the mun for example
-					//					for (int k = 0; k < CelestialBodies.Length; k++) {
-					//						bool inScatterer = false;
-					//						for (int i=0; i<scattererCelestialBodies.Count; i++) {
-					//							if (CelestialBodies [k].GetName () == scattererCelestialBodies [i].celestialBodyName) {
-					//								inScatterer = true;
-					//								i += 100;
-					//							}
-					//						}
-					//
-					//						if (!inScatterer) {
-					//							celestialBodiesWithDistance.Add (new celestialBodySortableByDistance () 
-					//							                                {CelestialBody = CelestialBodies[k], Distance = 0, usesScatterer=false, scattererIndex=0 });
-					//						}
-					//					}
-					
 
+					//find main cameras
 					cams = Camera.allCameras;
-					
-					for (int i = 0; i < cams.Length; i++) {
+					for (int i = 0; i < cams.Length; i++)
+					{
 						if (cams [i].name == "Camera ScaledSpace")
 							scaledSpaceCamera = cams [i];
 						
-						if (cams [i].name == "Camera 01") {
+						if (cams [i].name == "Camera 01")
+						{
 							farCamera = cams [i];
-							//							Debug.Log ("orig farCamera.nearClipPlane" + farCamera.nearClipPlane.ToString ());
 							//							farCamera.nearClipPlane = 600f;
 						}
 						
-						if (cams [i].name == "Camera 00") {
+						if (cams [i].name == "Camera 00")
+						{
 							nearCamera = cams [i];
-							//							Debug.Log("orig nearCamera.nearClipPlane"+nearCamera.nearClipPlane.ToString());
-							//							Debug.Log("orig nearCamera.farClipPlane"+nearCamera.farClipPlane.ToString());
 							//							nearCamera.nearClipPlane = 0.15f;
 							//							nearCamera.farClipPlane = 602f;
 						}
@@ -488,7 +364,6 @@ namespace scatterer
 					
 
 					//find and fix renderQueues of kopernicus rings
-					//					Debug.Log("[Scatterer] Fixing renderqueues for Kopernicus rings");
 					foreach (CelestialBody _cb in CelestialBodies)
 					{
 						GameObject ringObject;
@@ -854,7 +729,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0235: alt+f10/f11 toggle");
+				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0235: Alt+"+guiKey1String+"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -864,33 +739,19 @@ namespace scatterer
 
 		//		UI BUTTONS
 		//		This isn't the most elegant section due to how much code is necessary for each element
-//		void OnGUI ()
 		void DrawScattererWindow (int windowId)
-			//		internal override void DrawWindow (int id)
 		{
-			//			DragEnabled = true;
-//			if (visible)
 			{
-//				GUILayout.Label("Scatterer v0.0235: alt+f10/f11 toggle");
-				
-				GUILayout.BeginHorizontal();
-				//			if (GUILayout.Button("Hide")) Visible = !Visible;
-				if (GUILayout.Button("Hide")) visible = !visible;
-				GUILayout.EndHorizontal();
-				
+				GUItoggle("Hide",ref visible);
+								
 				
 				if (mainMenu)  //MAIN MENU options
 				{ 
-					
 					GUILayout.Label (String.Format ("Scatterer: features selector"));
 					useOceanShaders = GUILayout.Toggle(useOceanShaders, "Ocean shaders (may require game restart on change)");
 					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds");
 					GUILayout.Label(String.Format ("(improves terminators, causes issues in the transition)"));
-					
-					//				oceanCloudShadows = GUILayout.Toggle(oceanCloudShadows, "EVE cloud shadows on ocean, may cause artifacts");
-					//				render24bitDepthBuffer=GUILayout.Toggle(render24bitDepthBuffer, "Use 24 bit depth buffer (dx11/Ogl, removes artifacts)");
 					fullLensFlareReplacement=GUILayout.Toggle(fullLensFlareReplacement, "Lens flare shader");
-					
 					useEclipses = GUILayout.Toggle(useEclipses, "Eclipses (WIP, sky/orbit only for now)");
 					useGodrays = GUILayout.Toggle(useGodrays, "Godrays (early WIP)");
 					
@@ -900,7 +761,7 @@ namespace scatterer
 					GUILayout.EndHorizontal ();
 					
 					terrainShadows = GUILayout.Toggle(terrainShadows, "Terrain shadows (disabled in KSC view)");
-					
+
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Menu scroll section height");
 					scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (scrollSectionHeight.ToString ())));
@@ -913,10 +774,6 @@ namespace scatterer
 				
 				else if (isActive)
 				{
-					
-					//								_scroll = GUILayout.BeginScrollView (_scroll);
-					
-					
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Planet:");
 					
@@ -1891,6 +1748,9 @@ namespace scatterer
 		{
 			ConfigNode cnToLoad = ConfigNode.Load (path + "/config/PlanetsList.cfg");
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
+
+			guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
+			guiKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey2String);
 		}
 		
 		public void savePlanetsList ()
@@ -1947,5 +1807,111 @@ namespace scatterer
 				toToggle = !toToggle;
 			GUILayout.EndHorizontal ();
 		}
+
+		void removeStockOceans()
+		{
+			FakeOceanPQS[] fakes = (FakeOceanPQS[])FakeOceanPQS.FindObjectsOfType (typeof(FakeOceanPQS));
+			
+			if (fakes.Length == 0) { //if stock oceans haven't already been replaced
+				foreach (scattererCelestialBody sctBody in scattererCelestialBodies)
+				{
+					if (sctBody.hasOcean)
+					{
+						bool removed = false;
+						var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
+						if (celBody == null)
+						{
+							celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
+						}
+						
+						if (celBody != null)
+						{
+							//Thanks to rbray89 for this snippet and the FakeOcean class which disable the stock ocean in a clean way
+							PQS pqs = celBody.pqsController;
+							if (pqs != null) {
+								PQS ocean = pqs.ChildSpheres [0];
+								if (ocean != null) {
+									GameObject go = new GameObject ();
+									FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
+									fakeOcean.Apply (ocean);
+									removed = true;
+								}
+							}
+						}
+						if (!removed) {
+							Debug.Log ("[Scatterer] Couldn't remove stock ocean for " + sctBody.celestialBodyName);
+						}
+					}
+				}
+				Debug.Log ("[Scatterer] Removed stock oceans");
+			}
+			else
+			{
+				Debug.Log ("[Scatterer] Stock oceans already removed");
+			}
+		}
+
+
+		void findScattererCelestialBodies()
+		{
+			foreach (scattererCelestialBody sctBody in scattererCelestialBodies)
+			{
+				var _idx = 0;
+			
+				var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
+				
+				if (celBody == null)
+				{
+					celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
+				}
+				
+				Debug.Log ("[Scatterer] Celestial Body: " + celBody);
+				if (celBody != null)
+				{
+					_idx = scattererCelestialBodies.IndexOf (sctBody);
+					Debug.Log ("[Scatterer] Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
+				};
+				
+				sctBody.celestialBody = celBody;
+
+				var sctBodyTransform = ScaledSpace.Instance.transform.FindChild (sctBody.transformName);
+				if (!sctBodyTransform)
+				{
+					sctBodyTransform = ScaledSpace.Instance.transform.FindChild (sctBody.celestialBodyName);
+				}
+				if (sctBodyTransform)
+				{
+					sctBody.transform = sctBodyTransform;
+					sctBody.hasTransform = true;
+				}
+				sctBody.active = false;
+			}
+		}
+
+		void setShadows()
+		{
+			if (terrainShadows)
+			{
+				foreach (CelestialBody _sc in CelestialBodies)
+				{
+					if (_sc.pqsController)
+					{
+						if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+						{
+							_sc.pqsController.meshCastShadows = false;			//disable in space center because of "ghost" shadow
+							QualitySettings.shadowDistance = 5000;
+							
+						}
+						else
+						{
+							_sc.pqsController.meshCastShadows = true;
+							_sc.pqsController.meshRecieveShadows = true;
+							QualitySettings.shadowDistance = shadowsDistance;
+						}
+					}
+				}
+			}
+		}
+
 	}
 }
