@@ -387,7 +387,17 @@ namespace scatterer
 				delta = localToOcean * (m_oldlocalToOcean.Inverse () * Vector3d2.Zero ());
 				m_offset += delta;
 			}
-			
+
+
+			//reset offset when bigger than 20000 to avoid floating point issues when later casting the offset to float
+			if (Mathf.Max (Mathf.Abs ((float)m_offset.x), Mathf.Abs ((float)m_offset.y)) > 20000f)
+			{
+				m_offset.x=0.0;
+				m_offset.y=0.0;
+			}
+
+
+
 			m_oldlocalToOcean = localToOcean;
 			
 			Matrix4x4d ctos = ModifiedProjectionMatrix (inCamera);
