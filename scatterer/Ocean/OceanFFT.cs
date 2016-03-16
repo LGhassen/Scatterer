@@ -89,9 +89,16 @@ namespace scatterer {
 		
 		protected RenderTexture m_spectrum01, m_spectrum23;
 		protected RenderTexture m_WTable;
+		
+		public bool rendertexturesCreated {
+			get {
+				return (m_WTable.IsCreated());
+			}
+		}
+
 		RenderTexture[] m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2;
 		RenderTexture[] m_fourierBuffer3, m_fourierBuffer4;
-		RenderTexture m_map0, m_map1, m_map2, m_map3, m_map4;
+		public RenderTexture m_map0, m_map1, m_map2, m_map3, m_map4;
 		
 		
 		//		RenderTexture m_variance;

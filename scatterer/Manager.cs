@@ -17,6 +17,7 @@ namespace scatterer {
 		public bool hasOcean = false;
 		
 		public double m_radius = 600000.0f;
+		int waitBeforeReloadCnt=0;
 		
 		
 		OceanWhiteCaps m_oceanNode;
@@ -63,11 +64,9 @@ namespace scatterer {
 		}
 		
 		
-		public void Update() {
-			
-			//Update the sky and sun
-			
-			
+		public void Update()
+		{
+
 			m_sunNode.setDirectionToSun(getDirectionToSun());
 			m_sunNode.UpdateNode();
 			
@@ -77,6 +76,16 @@ namespace scatterer {
 			if (hasOcean && m_core.useOceanShaders)
 			{
 				m_oceanNode.UpdateNode();
+
+				if (!m_oceanNode.rendertexturesCreated)
+				{
+					waitBeforeReloadCnt++;
+					if (waitBeforeReloadCnt >= 2)
+					{
+						reBuildOcean ();
+						waitBeforeReloadCnt = 0;
+					}
+				}
 			}
 		}
 		
@@ -93,7 +102,7 @@ namespace scatterer {
 		}
 		
 		
-		//this fixes the alt-enter bug the really stupid way but it'll do for now
+		//this fixes the alt-enter bug the really stupid way but it's fast so it'll do for now
 		public void reBuildOcean() {
 			if (hasOcean && m_core.useOceanShaders) {
 				UnityEngine.Object.Destroy(m_oceanNode);
