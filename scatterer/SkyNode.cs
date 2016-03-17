@@ -56,7 +56,7 @@ namespace scatterer
 //		public float postDist = -4000f;
 		public float percentage;
 		public int currentConfigPoint;
-//		bool coronasDisabled = false;
+		bool coronasDisabled = false;
 
 //		EncodeFloat encode;
 //		EncodeFloat2D encode;
@@ -171,11 +171,14 @@ namespace scatterer
 		PQSMod_CelestialBodyTransform currentPQSMod_CelestialBodyTransform=null;
 
 
-		public bool inScaledSpace {
-			get {
-//				if HighLogic.load
-
-				return !(CurrentPQS != null && CurrentPQS.isActive);
+		public bool inScaledSpace
+		{
+			get
+			{
+				if (CurrentPQS!= null)
+					return !(CurrentPQS.isActive);
+				else
+					return true;
 			}
 		}
 		
@@ -433,6 +436,10 @@ namespace scatterer
 
 #endif
 
+//			if ((!coronasDisabled))
+//			{ 
+//				toggleCoronas ();
+//			}
 
 		}
 		
@@ -482,8 +489,7 @@ namespace scatterer
 				Rt = (Rt / Rg) * m_radius;
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
-				sunglareCutoffAlt = experimentalAtmoScale*(Rt - Rg);
-//				cams = Camera.allCameras;
+//				sunglareCutoffAlt = experimentalAtmoScale*(Rt - Rg);
 
 				scaledSpaceCamera=m_manager.GetCore().scaledSpaceCamera;
 //				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
@@ -507,77 +513,22 @@ namespace scatterer
 //					alt = Vector3.Distance (ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position), parentCelestialBody.transform.position);
 
 				trueAlt = alt - m_radius;
-				
-//				if ((sunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt) && !MapView.MapIsEnabled && !eclipse)) { //^ is XOR
-//					toggleSunglare ();
-//				}
-
-//				if ((sunglareEnabled)) { //^ is XOR
-//					toggleSunglare ();
-//				}
-				
-
-//				if ((coronasDisabled) ^ ((trueAlt < sunglareCutoffAlt) && !MapView.MapIsEnabled && !eclipse)) { //^ is XOR
-//				if ((coronasDisabled) ^ ((trueAlt < sunglareCutoffAlt) && !MapView.MapIsEnabled)) { //don't really like how the coronas look on eclipses
-//					toggleCoronas ();
-//				}
-
-//				if ((!coronasDisabled)) { 
-//					toggleCoronas ();
-//				}
-				
-//				if ((!stocksunglareEnabled) ^ ((trueAlt < sunglareCutoffAlt - 1000) && !MapView.MapIsEnabled)) { //^ is XOR
-//					toggleStockSunglare ();
-//				}
-
-//				if (stocksunglareEnabled) { //^ is XOR
-//					toggleStockSunglare ();
-//				}
-
-
 
 
 				interpolateVariables ();
 
-
-				//if alt-tabbing/windowing and rendertextures are lost
-				//this loads them back up
-				//you have to wait for a frame of two because if you do it immediately they don't get loaded
-//				if (!m_inscatter.IsCreated ())
-//				{
-//					waitBeforeReloadCnt++;
-//					if (waitBeforeReloadCnt >= 2)
-//					{
-//						m_inscatter.Release ();
-//						m_transmit.Release ();
-//						m_irradiance.Release ();
-//
-//						initiateOrRestart ();
-//						Debug.Log ("[Scatterer] Reloaded scattering tables for"+parentCelestialBody.name);
-//						m_manager.reBuildOcean ();
-//						waitBeforeReloadCnt = 0;
-//					}
-//				}
-
-
+				if (scaledSpaceCamera && !updaterAdded)
+				{
 					
-					if (scaledSpaceCamera && !updaterAdded)
-					{
-
-						updater = (updateAtCameraRythm)scaledSpaceCamera.gameObject.AddComponent (typeof(updateAtCameraRythm));
-											
-//						updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this, skyObject,
-//						                  parentCelestialBody.transform, celestialTransform);
-
+					updater = (updateAtCameraRythm)scaledSpaceCamera.gameObject.AddComponent (typeof(updateAtCameraRythm));
+					
 					//start in localmode
 					updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
+					
+					updaterAdded = true;
+				}
 
-						updaterAdded = true;
-					}
-				
-//				atmosphereMeshrenderer.enabled = (!inScaledSpace) &&(postprocessingEnabled)&&(trueAlt<postProcessMaxAltitude);
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
-
 
 				bool localSkyCondition;
 
@@ -894,12 +845,12 @@ namespace scatterer
 			
 			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
-			if (currentPQSMod_CelestialBodyTransform)
-			{
-				float fadeStart = currentPQSMod_CelestialBodyTransform.planetFade.fadeStart;
-				float fadeEnd = currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd;
-				mat.SetFloat ("_fade", Mathf.Lerp (1f, 0f, (trueAlt - fadeStart) / (fadeEnd - fadeStart)));
-			}
+//			if (currentPQSMod_CelestialBodyTransform)
+//			{
+//				float fadeStart = currentPQSMod_CelestialBodyTransform.planetFade.fadeStart;
+//				float fadeEnd = currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd;
+//				mat.SetFloat ("_fade", Mathf.Lerp (1f, 0f, (trueAlt - fadeStart) / (fadeEnd - fadeStart)));
+//			}
 		}
 
 		
@@ -939,15 +890,10 @@ namespace scatterer
 		{
 			m_manager = manager;
 		}
-		
-		public void enablePostprocess ()
+
+		public void togglePostProcessing()
 		{
-			postprocessingEnabled = true;
-		}
-		
-		public void disablePostprocess ()
-		{
-			postprocessingEnabled = false;
+			postprocessingEnabled = !postprocessingEnabled;
 		}
 		
 		public void SetPostProcessExposure (float postExposure)
@@ -964,7 +910,8 @@ namespace scatterer
 			if (parentCelestialBody.GetTransform () != null) {
 				_celTransformName = parentCelestialBody.GetTransform ().name;
 			}
-			string[] _possiblePaths = {
+			string[] _possiblePaths =
+			{
 				_basePath + "/" + _celBodyName,
 				_basePath + "/" + _celTransformName
 			};
@@ -1073,7 +1020,6 @@ namespace scatterer
 
 						
 			//load from .half, probably an 8 mb leak every scene change
-			//Maybe just serialize a color array and then load it into unamanaged array?
 			string _file = assetDir + m_filePath + "/inscatter.half";
 			m_inscatter.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 
@@ -1087,22 +1033,6 @@ namespace scatterer
 			m_inscatter.Apply ();
 			m_transmit.Apply ();
 			m_irradiance.Apply ();
-
-			//load from PNG, disabled as PNG seems to causes some banding
-			//probably PNG is limited to 4-bit per channel ie ARGB32
-//			_file = assetDir + m_filePath + "/inscatter.png";
-//			m_inscatter.LoadImage (System.IO.File.ReadAllBytes (_file));
-//
-//			_file = assetDir + m_filePath + "/transmittance.png";
-//			m_transmit.LoadImage (System.IO.File.ReadAllBytes (_file));
-//
-//			_file = assetDir + m_filePath + "/irradiance.png";
-//			m_irradiance.LoadImage (System.IO.File.ReadAllBytes (_file));
-
-
-
-
-
 
 		}
 		
@@ -1147,7 +1077,7 @@ namespace scatterer
 			Component.Destroy (skyLocalMeshrenderer);
 			UnityEngine.Object.Destroy (skyLocalMesh);
 			
-//			RestoreStockAtmosphere ();
+			RestoreStockAtmosphere ();
 			UnityEngine.Object.Destroy (alteredMaterial);
 			UnityEngine.Object.Destroy (originalMaterial);
 		}
@@ -1181,19 +1111,20 @@ namespace scatterer
 		
 
 		
-//		public void toggleCoronas ()
-//		{
-//			Transform scaledSunTransform = ScaledSun. scaledSpaceTransforms.Single (t => t.name == "Sun");
-////			Transform scaledSunTransform = m_manager.GetCore ().GetScaledTransform ("Sun");//
-//			foreach (Transform child in scaledSunTransform) {
-//				MeshRenderer temp;
-//				temp = child.gameObject.GetComponent < MeshRenderer > ();
-//				if (temp != null) {
-//					temp.enabled = coronasDisabled;
-//				}
-//			}
-//			coronasDisabled = !coronasDisabled;
-//		}
+		public void toggleCoronas ()
+		{
+			Transform scaledSunTransform = m_manager.GetCore ().GetScaledTransform ("Sun");
+			foreach (Transform child in scaledSunTransform)
+			{
+				MeshRenderer temp;
+				temp = child.gameObject.GetComponent < MeshRenderer > ();
+				if (temp != null)
+				{
+					temp.enabled = coronasDisabled;
+				}
+			}
+			coronasDisabled = !coronasDisabled;
+		}
 		
 		public void toggleStockSunglare ()
 		{

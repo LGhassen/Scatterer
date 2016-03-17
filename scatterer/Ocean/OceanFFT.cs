@@ -48,8 +48,11 @@ namespace scatterer {
 		//		const float WAVE_KM = 370.0f;	// Eq 59
 		//		const float AMP = 1.0f;
 		
-		[Persistent] public float WAVE_CM = 0.23f; // Eq 59
-		[Persistent] public float WAVE_KM = 370.0f; // Eq 59
+//		[Persistent]
+		public float WAVE_CM = 0.23f; // Eq 59
+
+//		[Persistent]
+		public float WAVE_KM = 370.0f; // Eq 59
 		[Persistent] public float AMP = 1.0f;
 		
 		Material m_initSpectrumMat;
