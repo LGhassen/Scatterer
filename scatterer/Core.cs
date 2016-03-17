@@ -684,8 +684,8 @@ namespace scatterer
 
 		//		UI BUTTONS
 		//		This isn't the most elegant section due to how many elements are here
-		//		And I don't care enough to do it in a cleaner way
-		//		It's a basic UI for tweaking settings and it does it's job
+		//		I don't care enough to do it in a cleaner way
+		//		After all it's a basic UI for tweaking settings and it does it's job
 		void DrawScattererWindow (int windowId)
 		{
 			{

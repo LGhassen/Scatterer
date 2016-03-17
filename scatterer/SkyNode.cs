@@ -24,8 +24,9 @@ namespace scatterer
 	{
 
 
-		[Persistent]
-		public bool forceOFFaniso;
+//		[Persistent]
+//		public bool forceOFFaniso;
+
 		SimplePostProcessCube postProcessCube;
 		GameObject atmosphereMesh;
 		MeshRenderer atmosphereMeshrenderer;
@@ -58,7 +59,7 @@ namespace scatterer
 		public int currentConfigPoint;
 		bool coronasDisabled = false;
 
-//		EncodeFloat encode;
+		EncodeFloat encode;
 //		EncodeFloat2D encode;
 
 		[Persistent]
@@ -136,7 +137,7 @@ namespace scatterer
 
 
 		bool stocksunglareEnabled = true;
-		float sunglareCutoffAlt;
+//		float sunglareCutoffAlt;
 
 		
 		//atmosphere properties
@@ -314,7 +315,7 @@ namespace scatterer
 			m_irradiance.filterMode = FilterMode.Bilinear;
 
 
-			initiateOrRestart ();
+			loadPrecomputedTables ();
 
 #if !skyScaledBox
 			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
@@ -929,131 +930,93 @@ namespace scatterer
 		}
 
 		
-		public void initiateOrRestart ()
+		void loadPrecomputedTables ()
 		{
-//			string _file;
-//
-//			m_inscatter.Create ();
-//			m_transmit.Create ();
-//			m_irradiance.Create ();
-//
-//			if(encode==null)
-//				encode = new EncodeFloat ();
-//
-//
-//			_file = assetDir + m_filePath + "/inscatter.raw";
-//			encode.WriteIntoRenderTexture (m_inscatter, 4, _file);
-//
-//
-//			Texture2D m_inscatter2d = new Texture2D (RES_MU_S * RES_NU, RES_MU * RES_R, TextureFormat.RGBAHalf,false);
-//			m_inscatter2d.wrapMode = TextureWrapMode.Clamp;
-//			m_inscatter2d.filterMode = FilterMode.Bilinear;
-//
-//			RenderTexture.active = m_inscatter;
-//			m_inscatter2d.ReadPixels(new Rect(0, 0, m_inscatter.width, m_inscatter.height), 0, 0);
-//			m_inscatter2d.Apply();
-//
-//			_file = assetDir + m_filePath + "/inscatter.half";
-//			byte[] bytes = m_inscatter2d.GetRawTextureData ();
-//			System.IO.File.WriteAllBytes(_file ,bytes);
-//
-//			_file = assetDir + m_filePath + "/transmittance.raw";
-//			encode.WriteIntoRenderTexture (m_transmit, 3, _file);
-//
-//			Texture2D m_transmittance2d = new Texture2D (m_transmit.width, m_transmit.height, TextureFormat.RGBAHalf,false);
-//			m_transmittance2d.wrapMode = TextureWrapMode.Clamp;
-//			m_transmittance2d.filterMode = FilterMode.Bilinear;
-//			
-//			RenderTexture.active = m_transmit;
-//			m_transmittance2d.ReadPixels(new Rect(0, 0, m_transmit.width, m_transmit.height), 0, 0);
-//			m_transmittance2d.Apply();
-//			
-//			_file = assetDir + m_filePath + "/transmittance.half";
-//			bytes = m_transmittance2d.GetRawTextureData();
-//			System.IO.File.WriteAllBytes(_file ,bytes);
-//
-//			_file = assetDir + m_filePath + "/irradiance.raw";
-//			encode.WriteIntoRenderTexture (m_irradiance, 3, _file);
-//
-//			Texture2D m_irradiance2D = new Texture2D (m_irradiance.width, m_irradiance.height, TextureFormat.RGBAHalf,false);
-//			m_irradiance2D.wrapMode = TextureWrapMode.Clamp;
-//			m_irradiance2D.filterMode = FilterMode.Bilinear;
-//			
-//			RenderTexture.active = m_irradiance;
-//			m_irradiance2D.ReadPixels(new Rect(0, 0, m_irradiance.width, m_irradiance.height), 0, 0);
-//			m_irradiance2D.Apply();
-//			
-//			_file = assetDir + m_filePath + "/irradiance.half";
-//			bytes = m_irradiance2D.GetRawTextureData ();
-//			System.IO.File.WriteAllBytes(_file ,bytes);
-//
-//
-//
-//			encode = null;
-//
-
-
-
-//			string _file;
-//			
-//			EncodeFloat2D encode2d = new EncodeFloat2D();
-//			
-//			_file = assetDir + m_filePath + "/inscatter.raw";
-//			encode2d.WriteIntoTexture2D (m_inscatter, 4, _file);
-//
-//			_file = assetDir + m_filePath + "/inscatter2d.png";
-//			byte[] bytes = m_inscatter.EncodeToPNG ();
-//			System.IO.File.WriteAllBytes(_file ,bytes);
-//
-//			_file = assetDir + m_filePath + "/transmittance.raw";
-//			encode2d.WriteIntoTexture2D (m_transmit, 3, _file);
-//
-//			_file = assetDir + m_filePath + "/transmittance2d.png";
-//			bytes = m_transmit.EncodeToPNG ();
-//			System.IO.File.WriteAllBytes(_file ,bytes);
-////			
-////			_file = assetDir + m_filePath + "/irradiance.raw";
-////			encode2d.WriteIntoTexture2D (m_irradiance, 3, _file);
-//			
-//			encode2d = null;
-
-
-						
+		
 			//load from .half, probably an 8 mb leak every scene change
+			//if no .half file exists, load from .raw file and create .half file
 			string _file = assetDir + m_filePath + "/inscatter.half";
-			m_inscatter.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
+			if (System.IO.File.Exists(_file))
+				m_inscatter.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
+			else
+				loadAndConvertRawFile("inscatter",m_inscatter,4);
 
 			_file = assetDir + m_filePath + "/transmittance.half";
-			m_transmit.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
+
+			if (System.IO.File.Exists(_file))
+				m_transmit.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
+			else
+				loadAndConvertRawFile("transmittance",m_transmit,3);
 
 			_file = assetDir + m_filePath + "/irradiance.half";
-			m_irradiance.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
+
+			if (System.IO.File.Exists(_file))
+				m_irradiance.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
+			else
+				loadAndConvertRawFile("irradiance",m_irradiance,3);
 
 
 			m_inscatter.Apply ();
 			m_transmit.Apply ();
 			m_irradiance.Apply ();
 
+
+			encode = null;
 		}
+
+
+		void loadAndConvertRawFile(string textureName, Texture2D targetTexture2D, int channels)
+		{
+
+			if(encode==null)
+				encode = new EncodeFloat ();
+
+			string _file = assetDir + m_filePath + "/"+textureName+".raw";
+
+			RenderTexture activeRT = RenderTexture.active;
+			RenderTexture tempRT = new RenderTexture (targetTexture2D.width, targetTexture2D.height, 0, RenderTextureFormat.ARGBFloat);
+			m_inscatter.wrapMode = TextureWrapMode.Clamp;
+			m_inscatter.filterMode = FilterMode.Bilinear;
+			tempRT.Create ();
+
+			encode.WriteIntoRenderTexture (tempRT, channels, _file);
+			
+
+			RenderTexture.active = tempRT;
+			targetTexture2D.ReadPixels(new Rect(0, 0, targetTexture2D.width, targetTexture2D.height), 0, 0);
+			targetTexture2D.Apply();
+
+			RenderTexture.active = activeRT;
+			tempRT.Release ();
+
+			_file = assetDir + m_filePath + "/"+textureName+".half";
+
+			byte[] bytes = targetTexture2D .GetRawTextureData();
+			System.IO.File.WriteAllBytes(_file ,bytes);
+
+			Debug.Log ("[Scatterer] Converted "+textureName+".raw to "+textureName+".half");
+
+			UnityEngine.Object.Destroy (tempRT);
+			bytes = null;
+		}
+
+
 		
 		public void OnDestroy ()
 		{
 			saveToConfigNode ();
 			if (m_transmit)
 			{
-//				m_transmit.Release ();
 				UnityEngine.Object.Destroy (m_transmit);
 			}
 
 			if (m_irradiance)
 			{
-//				m_irradiance.Release ();
 				UnityEngine.Object.Destroy (m_irradiance);
 			}
 
 			if (m_inscatter)
 			{
-//				m_inscatter.Release ();
 				UnityEngine.Object.Destroy (m_inscatter);
 			}
 
@@ -1082,7 +1045,7 @@ namespace scatterer
 			UnityEngine.Object.Destroy (originalMaterial);
 		}
 
-		public void toggleScaledMode()
+		void toggleScaledMode()
 		{
 			if (scaledMode) //switch to localMode
 			{
@@ -1108,10 +1071,7 @@ namespace scatterer
 		}
 
 
-		
-
-		
-		public void toggleCoronas ()
+		void toggleCoronas ()
 		{
 			Transform scaledSunTransform = m_manager.GetCore ().GetScaledTransform ("Sun");
 			foreach (Transform child in scaledSunTransform)
@@ -1126,7 +1086,7 @@ namespace scatterer
 			coronasDisabled = !coronasDisabled;
 		}
 		
-		public void toggleStockSunglare ()
+		void toggleStockSunglare ()
 		{
 			if (stocksunglareEnabled) {
 				Sun.Instance.sunFlare.enabled = false;
@@ -1135,23 +1095,8 @@ namespace scatterer
 			}
 			stocksunglareEnabled = !stocksunglareEnabled;
 		}
-		
-		public void toggleAniso ()
-		{
-			if (!forceOFFaniso) {
-				QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
-			} else {
-				QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
-			}
-			
-			forceOFFaniso = !forceOFFaniso;
-		}
-		
-//		public Transform GetScaledTransform (string body)
-//		{
-//			List < Transform > transforms = ScaledSpace.Instance.scaledSpaceTransforms;
-//			return transforms.Single (n => n.name == body);
-//		}
+
+
 		
 		public void loadFromConfigNode (bool loadbackup)
 		{
@@ -1168,6 +1113,12 @@ namespace scatterer
 			}
 
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
+
+			m_radius = (float) m_manager.GetRadius ();
+			
+			Rt = (Rt / Rg) * m_radius;
+			RL = (RL / Rg) * m_radius;
+			Rg = m_radius;
 		}
 		
 		public void saveToConfigNode ()
