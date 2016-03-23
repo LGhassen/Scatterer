@@ -22,6 +22,11 @@ namespace scatterer
 		bool wireFrame=false;
 
 		[Persistent]
+		public bool ignoreRenderTypetags=false;
+
+		bool ambientLight=true;
+
+		[Persistent]
 		List < scattererCelestialBody >
 			scattererCelestialBodies = new List < scattererCelestialBody > {};
 		CelestialBody[] CelestialBodies;
@@ -813,7 +818,12 @@ namespace scatterer
 					Component.Destroy (customSunFlare);
 				}
 
-
+				disableAmbientLight disableAmbient=(disableAmbientLight) scaledSpaceCamera.GetComponent(typeof(disableAmbientLight));
+				if (disableAmbient)
+				{
+					disableAmbient.restoreLight();
+					Component.Destroy(disableAmbient);
+				}
 			
 			}
 
@@ -859,6 +869,9 @@ namespace scatterer
 				GUILayout.EndHorizontal ();
 
 				terrainShadows = GUILayout.Toggle(terrainShadows, "Terrain shadows (disabled in KSC view)");
+
+				ignoreRenderTypetags = GUILayout.Toggle(ignoreRenderTypetags, "Ignore renderType tags");
+
 
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Menu scroll section height");
@@ -1585,6 +1598,26 @@ namespace scatterer
 							scaledSpaceCamera.gameObject.AddComponent (typeof(Wireframe));
 							
 							wireFrame=true;
+						}
+					}
+					
+					GUILayout.EndHorizontal ();
+
+					GUILayout.BeginHorizontal ();
+					if (GUILayout.Button ("Toggle AmbientLight"))
+					{
+						if (ambientLight)
+						{
+							scaledSpaceCamera.gameObject.AddComponent (typeof(disableAmbientLight));
+							ambientLight=false;
+						}
+						
+						else
+						{
+							if (scaledSpaceCamera.GetComponent(typeof(disableAmbientLight)))
+							    Component.Destroy(scaledSpaceCamera.GetComponent(typeof(disableAmbientLight)));
+
+							ambientLight=true;
 						}
 					}
 					

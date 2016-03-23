@@ -89,7 +89,12 @@ namespace scatterer
 				
 				_depthCam.camera.targetTexture = _depthTex;
 //				_depthCam.camera.SetReplacementShader (depthShader, "RenderType");
-				_depthCam.camera.RenderWithShader (depthShader, "RenderType");
+
+				if (!incore.ignoreRenderTypetags)
+					_depthCam.camera.RenderWithShader (depthShader, "RenderType");
+				else
+					_depthCam.camera.RenderWithShader (depthShader, "");
+
 				depthTextureCleared = false;
 				
 				if (incore.useGodrays)
@@ -100,7 +105,11 @@ namespace scatterer
 					
 					_depthCam.camera.targetTexture =  _godrayDepthTex;
 //					_depthCam.camera.SetReplacementShader (GodrayDepthShader, "RenderType");
-					_depthCam.camera.RenderWithShader (GodrayDepthShader, "RenderType");
+					if (!incore.ignoreRenderTypetags)
+						_depthCam.camera.RenderWithShader (GodrayDepthShader, "RenderType");
+					else
+						_depthCam.camera.RenderWithShader (GodrayDepthShader, "");
+
 				}
 				
 				RenderTexture.active=rt;
