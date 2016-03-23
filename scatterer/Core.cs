@@ -103,12 +103,18 @@ namespace scatterer
 		float godrayResolution = 1f;
 
 		[Persistent]
+		string guiModifierKey1String=KeyCode.LeftAlt.ToString();
+
+		[Persistent]
+		string guiModifierKey2String=KeyCode.RightAlt.ToString();
+
+		[Persistent]
 		string guiKey1String=KeyCode.F10.ToString();
 		
 		[Persistent]
 		string guiKey2String=KeyCode.F11.ToString();
 
-		KeyCode guiKey1, guiKey2;
+		KeyCode guiKey1, guiKey2, guiModifierKey1, guiModifierKey2 ;
 		
 		
 		private Vector2 _scroll;
@@ -292,7 +298,7 @@ namespace scatterer
 		void Update ()
 		{
 			//toggle whether GUI is visible or not
-			if ((Input.GetKey (KeyCode.LeftAlt) || Input.GetKey (KeyCode.RightAlt)) && (Input.GetKeyDown (guiKey1) || (Input.GetKeyDown (guiKey2))))
+			if ((Input.GetKey (guiModifierKey1) || Input.GetKey (guiModifierKey2)) && (Input.GetKeyDown (guiKey1) || (Input.GetKeyDown (guiKey2))))
 				visible = !visible;
 
 
@@ -674,7 +680,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.024: Alt+"+guiKey1String+"/"+guiKey2String+" toggle");
+				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.024: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -1358,6 +1364,10 @@ namespace scatterer
 
 			guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
 			guiKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey2String);
+
+			guiModifierKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey1String);
+			guiModifierKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey2String);
+
 		}
 		
 		public void savePlanetsList ()
