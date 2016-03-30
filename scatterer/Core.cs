@@ -25,6 +25,16 @@ namespace scatterer
 		bool wireFrame=false;
 		
 		[Persistent]
+		public bool ignoreRenderTypetags=false;
+
+//		bool ambientLight=true;
+
+		[Persistent]
+		public bool disableAmbientLight=false;
+
+		disableAmbientLight ambientLightScript;
+
+		[Persistent]
 		List < scattererCelestialBody >
 		scattererCelestialBodies = new List < scattererCelestialBody > {};
 		CelestialBody[] CelestialBodies;
@@ -428,6 +438,11 @@ namespace scatterer
 						customSunFlare.start ();
 					}
 
+					if (disableAmbientLight && !ambientLightScript)
+					{
+						ambientLightScript = (disableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(disableAmbientLight));
+					}
+
 //					if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 //					{
 						if (render24bitDepthBuffer && !d3d9 && !customDepthBufferTexture.IsCreated ())
@@ -609,9 +624,11 @@ namespace scatterer
 
 		void OnDestroy ()
 		{
+
+
 			if (isActive) {
 				
-				
+
 				for (int i = 0; i < scattererCelestialBodies.Count; i++) {
 					
 					scattererCelestialBody cur = scattererCelestialBodies [i];
@@ -624,7 +641,17 @@ namespace scatterer
 					}
 					
 				}
-				
+
+
+
+				if (ambientLightScript)
+				{
+					ambientLightScript.restoreLight();
+					Component.Destroy(ambientLightScript);
+				}
+
+
+
 				if(customDepthBuffer)
 				{
 					customDepthBuffer.OnDestroy();
@@ -634,15 +661,19 @@ namespace scatterer
 					UnityEngine.Object.Destroy (customDepthBufferTexture);
 				}
 				
-				
+
 				
 				if(useGodrays)
 				{
-					godrayDepthTexture.Release();
-					UnityEngine.Object.Destroy (godrayDepthTexture);
+					if (godrayDepthTexture)
+					{
+						if (godrayDepthTexture.IsCreated())
+							godrayDepthTexture.Release();
+						UnityEngine.Object.Destroy (godrayDepthTexture);
+					}
 				}
 				
-				
+
 				if (farCamera)
 				{
 					if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
@@ -656,15 +687,18 @@ namespace scatterer
 					if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.Destroy (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
 				}
-				
+
+
 				if (fullLensFlareReplacement && customSunFlare)
 				{
 					Component.Destroy (customSunFlare);
 				}
-				
+
+
+
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				savePlanetsList();
-				
+
 			}
 			
 			else if (mainMenu)	
@@ -675,6 +709,7 @@ namespace scatterer
 			
 		}
 		
+
 
 		void OnGUI ()
 		{
@@ -724,6 +759,10 @@ namespace scatterer
 					GUILayout.Label ("nearClip plane (fixes ocean-coast fighting)");
 					nearClipPlane = float.Parse (GUILayout.TextField (nearClipPlane.ToString ("0.000")));
 					GUILayout.EndHorizontal ();
+
+					ignoreRenderTypetags = GUILayout.Toggle(ignoreRenderTypetags, "Ignore renderType tags");
+
+					disableAmbientLight = GUILayout.Toggle(disableAmbientLight, "Disable scaled space ambient light");
 
 					showMenuOnStart = GUILayout.Toggle(showMenuOnStart, "Show this menu on start-up");
 				}
@@ -1122,16 +1161,37 @@ namespace scatterer
 								wireFrame=true;
 							}
 						}
+
+//						GUILayout.BeginHorizontal ();
+//						if (GUILayout.Button ("Toggle AmbientLight"))
+//						{
+//							if (ambientLight)
+//							{
+//								scaledSpaceCamera.gameObject.AddComponent (typeof(disableAmbientLight));
+//								ambientLight=false;
+//							}
+//							
+//							else
+//							{
+//								if (scaledSpaceCamera.GetComponent(typeof(disableAmbientLight)))
+//									Component.Destroy(scaledSpaceCamera.GetComponent(typeof(disableAmbientLight)));
+//								
+//								ambientLight=true;
+//							}
+//						}
+//						
+//						GUILayout.EndHorizontal ();
 						
 						GUILayout.EndHorizontal ();
 						
 					}
-					
+
 				}
 				
 				else
 				{
 					GUILayout.Label (String.Format ("Inactive in tracking station and VAB/SPH"));
+					GUILayout.EndHorizontal ();
 				}
 				
 			}

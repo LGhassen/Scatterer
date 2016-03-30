@@ -13,8 +13,6 @@ using System.Text;
 using KSP.IO;
 
 
-
-
 namespace scatterer
 {
 	/*
