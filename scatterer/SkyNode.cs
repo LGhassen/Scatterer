@@ -689,7 +689,13 @@ namespace scatterer
 
 			if (m_manager.GetCore ().useEclipses)
 			{
-				Vector3 sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
+				float scaleFactor=ScaledSpace.ScaleFactor;
+
+				Vector3 sunPosRelPlanet=Vector3.zero;
+				if (scaledMode)
+					sunPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+				else
+					sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
 				mat.SetVector ("sunPosAndRadius", new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
 			                                             sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
 
@@ -698,7 +704,7 @@ namespace scatterer
 				//build and set casters matrix
 				castersMatrix1 = Matrix4x4.zero;
 				castersMatrix2 = Matrix4x4.zero;
-				float scaleFactor=ScaledSpace.ScaleFactor;
+
 
 //				Debug.Log("scalefactor "+scaleFactor.ToString());
 
