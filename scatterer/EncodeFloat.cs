@@ -90,7 +90,12 @@ public class EncodeFloat
 			reader.Close ();
 			reader=null;
 
-
+			for(int x = 0 ; x < size; x++) 
+			{
+				//Find the min and max range of data
+				if( UnmanagedReadFloat(new IntPtr(fdataMemoryPointer.ToInt64() + x * 4)) > max) max = UnmanagedReadFloat(new IntPtr(fdataMemoryPointer.ToInt64() + x * 4));
+				if( UnmanagedReadFloat(new IntPtr(fdataMemoryPointer.ToInt64() + x * 4)) < min) min = UnmanagedReadFloat(new IntPtr(fdataMemoryPointer.ToInt64() + x * 4));
+			};
 			
 			min = Mathf.Abs(min);
 			max += min;
