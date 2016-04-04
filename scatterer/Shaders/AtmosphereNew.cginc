@@ -406,7 +406,7 @@ float3 SkyRadiance(float3 camera, float3 viewdir, float3 sundir, out float3 exti
 	float r0 = r;
 	float mu0 = mu;
 
-    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
     //float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
     float din = max(-rMu - deltaSq, 0.0);
     if (din > 0.0) {
@@ -511,7 +511,7 @@ float3 InScattering(float3 camera, float3 _point, float3 sundir, out float3 exti
     float mu0 = mu;
     _point -= viewdir * clamp(shaftWidth, 0.0, d);
 
-    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt, 1e30);
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt, 0.000001);
     float din = max(-rMu - deltaSq, 0.0);
     if (din > 0.0 && din < d) {
         camera += din * viewdir;

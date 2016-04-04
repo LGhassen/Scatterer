@@ -27,39 +27,46 @@
  */
  
 uniform float _Ocean_Radius;
-uniform float3 _Ocean_Horizon1;
-uniform float3 _Ocean_Horizon2;
+//uniform float3 _Ocean_Horizon1;
+//uniform float3 _Ocean_Horizon2;
 uniform float _Ocean_HeightOffset;
 uniform float3 _Ocean_CameraPos;
 uniform float4x4 _Ocean_OceanToCamera;
 uniform float4x4 _Ocean_CameraToOcean;
+
+uniform float3 sphereDir;
+uniform float cosTheta;
+uniform float sinTheta;
  
+
+
 float2 OceanPos(float4 vert, float4x4 stoc, out float t, out float3 cameraDir, out float3 oceanDir) 
 {
-	float horizon = _Ocean_Horizon1.x + _Ocean_Horizon1.y * vert.x;
-	
-	horizon -= sqrt(_Ocean_Horizon2.x + (_Ocean_Horizon2.y + _Ocean_Horizon2.z * vert.x) * vert.x);
-	
-	float4 v = float4(vert.x, min(vert.y, horizon), 0.0, 1.0);
 
-    cameraDir = normalize(mul(stoc, v).xyz);
-    oceanDir = mul(_Ocean_CameraToOcean, float4(cameraDir, 0.0)).xyz;
+	float h = _Ocean_CameraPos.z;
+	float4 v = float4(vert.x, vert.y, 0.0, 1.0);
+    cameraDir = normalize(mul(stoc, v).xyz); 		//Dir in camera space
     
+    float3 n1= cross (sphereDir, cameraDir);				//Normal to plane containing dir to planet and vertex viewdir
+	float3 n2= normalize(cross (n1, sphereDir)); 			//upwards vector in plane space, plane containing CamO and cameraDir
+
+	float3 hor=cosTheta*sphereDir+sinTheta*n2;
+ 
+    cameraDir= ( (dot(n1,cross(hor,cameraDir)) >0) && (h>0)) ? hor : cameraDir ; //checking if viewdir is above horizon
+    																			 //This could probably be optimized
+
+
+    oceanDir = mul(_Ocean_CameraToOcean, float4(cameraDir, 0.0)).xyz;    
     float cz = _Ocean_CameraPos.z;
     float dz = oceanDir.z;
     float radius = _Ocean_Radius;
     
-    if (radius == 0.0) {
-        t = (_Ocean_HeightOffset + -cz) / dz;
-    } 
-    else 
-    {
-        float b = dz * (cz + radius);
-        float c = cz * (cz + 2.0 * radius);
-        float tSphere = - b - sqrt(max(b * b - c, 0.0));
-        float tApprox = - cz / dz * (1.0 + cz / (2.0 * radius) * (1.0 - dz * dz));
-        t = abs((tApprox - tSphere) * dz) < 1.0 ? tApprox : tSphere;
-    }
+    
+    float b = dz * (cz + radius);
+    float c = cz * (cz + 2.0 * radius);
+    float tSphere = - b - sqrt(max(b * b - c, 0.0));
+    float tApprox = - cz / dz * (1.0 + cz / (2.0 * radius) * (1.0 - dz * dz));
+    t = abs((tApprox - tSphere) * dz) < 1.0 ? tApprox : tSphere;
 
     return _Ocean_CameraPos.xy + t * oceanDir.xy;
 }

@@ -11,7 +11,6 @@ Shader "EncodeFloat/DecodeToFloat"
 			CGPROGRAM
 			#include "UnityCG.cginc"
 			#pragma target 3.0
-			//#pragma only_renderers d3d9
 			#pragma vertex vert
 			#pragma fragment frag
 			

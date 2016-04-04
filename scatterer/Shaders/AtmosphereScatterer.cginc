@@ -211,7 +211,57 @@ float3 AnalyticTransmittance(float r, float mu, float d)
     return exp(- betaR * OpticalDepth(HR * _experimentalAtmoScale, r, mu, d) - betaMEx * OpticalDepth(HM * _experimentalAtmoScale, r, mu, d));
 }
 
+//the extinction part extracted from the inscattering function
+float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scaleCoeff, float irradianceFactor)
+{
+    float3 extinction = float3(1, 1, 1);
+    float3 viewdir = _point - camera;
+    float d = length(viewdir) * scaleCoeff;
+    viewdir = viewdir / d;
+    /////////////////////experimental block begin
+    float Rt0=Rt;
+    Rt = Rg + (Rt - Rg) * _experimentalAtmoScale;
+    //                viewdir.x += _viewdirOffset;
+    viewdir = normalize(viewdir);
+    /////////////////////experimental block end
+    float r = length(camera) * scaleCoeff;
+    
+    if (r < 0.9 * Rg) {
+        camera.y += Rg;
+        r = length(camera) * scaleCoeff;
+    }
+    
+    float rMu = dot(camera, viewdir);
+    float mu = rMu / r;
 
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt * Rt, 0.000001);
+//    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt);
+    
+    float din = max(-rMu - deltaSq, 0.0);
+    
+    if (din > 0.0 && din < d)
+    {
+        rMu += din;
+        mu = rMu / Rt;
+        r = Rt;
+        d -= din;
+    }
+
+    if (r < Rg + 1600.0)
+    {
+    	// avoids imprecision problems in aerial perspective near ground
+    	//Not sure if necessary with extinction
+        float f = (Rg + 1600.0) / r;
+        r = r * f;
+    }
+        
+    //set to analyticTransmittance only atm
+    #if defined (useAnalyticTransmittance)
+    extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
+    #endif
+
+    return extinction;
+}
 
 
 //InScattering with modified atmo heights
@@ -244,7 +294,8 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float 
     float mu0 = mu;
     float muExtinction=mu;
     _point -= viewdir * clamp(shaftWidth, 0.0, d);
-    float deltaSq = SQRT(rMu * rMu - r * r + Rt * Rt, 1e30);
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt * Rt, 0.000001);
+//    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt);
     float din = max(-rMu - deltaSq, 0.0);
     if (din > 0.0 && din < d)
     {
@@ -284,30 +335,30 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float 
         //                    }
         //
         #endif
-        #ifdef useHorizonHack
-        const float EPS = 0.004;
-        //                    float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
-        float lim = -SQRT(1.0 - (Rg / r) * (Rg / r),1e30);
-        if (abs(mu - lim) < EPS){                //ground fix, somehow doesn't really make a difference and causes all kind of crap in dx11/ogl
-            float a = ((mu - lim) + EPS) / (2.0 * EPS);
-            mu = lim - EPS;
-            //                        r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-            r1 = SQRT(r * r + d * d + 2.0 * r * d * mu,1e30);
-            mu1 = (r * mu + d) / r1;
-            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
-            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
-            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-            mu = lim + EPS;
-            //                        r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-            r1 = SQRT(r * r + d * d + 2.0 * r * d * mu,1e30);
-            mu1 = (r * mu + d) / r1;
-            inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
-            inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
-            float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-            inScatter = lerp(inScatterA, inScatterB, a);
-        }
-        else
-        #endif
+//        #ifdef useHorizonHack
+//        const float EPS = 0.004;
+//        //                    float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
+//        float lim = -SQRT(1.0 - (Rg / r) * (Rg / r),0.000001);
+//        if (abs(mu - lim) < EPS){                //ground fix, somehow doesn't really make a difference and causes all kind of crap in dx11/ogl
+//            float a = ((mu - lim) + EPS) / (2.0 * EPS);
+//            mu = lim - EPS;
+//            //                        r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+//            r1 = SQRT(r * r + d * d + 2.0 * r * d * mu,0.000001);
+//            mu1 = (r * mu + d) / r1;
+//            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
+//            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+//            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+//            mu = lim + EPS;
+//            //                        r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+//            r1 = SQRT(r * r + d * d + 2.0 * r * d * mu,0.000001);
+//            mu1 = (r * mu + d) / r1;
+//            inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
+//            inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+//            float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+//            inScatter = lerp(inScatterA, inScatterB, a);
+//        }
+//        else
+//        #endif
         {
             float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
             float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);

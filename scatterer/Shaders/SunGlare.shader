@@ -104,7 +104,8 @@
 				float rMu = dot(camera, viewdir);
 				float mu = rMu / r;
 
-    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
+    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
+//    			float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
 
     			float din = max(-rMu - deltaSq, 0.0);
     			if (din > 0.0)
@@ -160,12 +161,12 @@
 				}
 				
 				
-				for (int i=0; i<4; ++i)
+				for (int j=0; j<4; ++j)
     			{
 //        					if (ghost2Settings[i].x == 0)	break;
         					
-        					ghosts+=ghost2Settings[i].x * (tex2D(sunGhost2,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost2Settings[i].w))*
-        					float2(aspectRatio*ghost2Settings[i].y,1)*ghost2Settings[i].z+0.5).rgb);
+        					ghosts+=ghost2Settings[j].x * (tex2D(sunGhost2,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost2Settings[j].w))*
+        					float2(aspectRatio*ghost2Settings[j].y,1)*ghost2Settings[j].z+0.5).rgb);
 				}
 				
 		   	

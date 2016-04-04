@@ -1,11 +1,8 @@
 ﻿
 Shader "Sky/AtmosphereGhoss" {
     SubShader {
-        Tags {
-            "Queue" = "Transparent-5"
-            "IgnoreProjector" = "True"
-            "RenderType" = "Transparent"
-        }
+        Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+        
         Pass {  //extinction pass
             ZWrite off
             Fog {
@@ -45,6 +42,7 @@ Shader "Sky/AtmosphereGhoss" {
                 float2 uv: TEXCOORD1;
                 float2 uv_depth: TEXCOORD2;
             };
+            
             v2f vert(appdata_base v) {
                 v2f o;
                 o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
@@ -58,6 +56,7 @@ Shader "Sky/AtmosphereGhoss" {
                 COMPUTE_EYEDEPTH(o.screenPos.z); //o = -mul( UNITY_MATRIX_MV, v.vertex ).z
                 return o;
             }
+            
             half4 frag(v2f i): COLOR
             {
                 float depth = tex2D(_customDepthTexture, i.uv_depth).r;
@@ -87,8 +86,7 @@ Shader "Sky/AtmosphereGhoss" {
                 }
                 //artifacts fix
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ;
-                float3 extinction = float3(0, 0, 0);
-                float3 inscatter = InScattering2(_camPos, worldPos, extinction, 1.0, 1.0, 1.0);
+                float3 extinction = getExtinction(_camPos, worldPos, 1.0, 1.0, 1.0);
                 float average=(extinction.r+extinction.g+extinction.b)/3;
                 extinction = float3(_Post_Extinction_Tint*extinction.r + (1-_Post_Extinction_Tint)*average,
                 _Post_Extinction_Tint*extinction.g + (1-_Post_Extinction_Tint)*average,
@@ -109,6 +107,7 @@ Pass {
             }
             Cull Front
             Blend OneMinusDstColor One //soft additive
+//			Blend SrcAlpha OneMinusSrcAlpha //alpha
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -130,9 +129,9 @@ Pass {
             uniform float3 _Ocean_Color;
             uniform float3 _camPos; // camera position relative to planet's origin
             uniform sampler2D _customDepthTexture;
-            #if defined (GODRAYS_ON)
+#if defined (GODRAYS_ON)
             uniform sampler2D _godrayDepthTexture;
-            #endif
+#endif
             uniform float4 _MainTex_TexelSize;
             uniform float _openglThreshold;
             uniform float _horizonDepth;
@@ -145,6 +144,7 @@ Pass {
             };
             v2f vert(appdata_base v) {
                 v2f o;
+
                 o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
                 o.screenPos = ComputeScreenPos(o.pos);
                 o.uv = o.screenPos.xy / o.screenPos.w;
@@ -163,10 +163,12 @@ Pass {
                 float4 H = float4(i.uv_depth.x * 2.0f - 1.0f, i.uv_depth.y * 2.0f - 1.0f, depth, 1.0f);
                 float4 D = mul(_ViewProjInv, H);
                 float3 worldPos = D / D.w;  //reconstruct world position from depth
+              
+//                return float4((length(worldPos-_camPos))/10000,0.0,0.0,1.0);
                 //viewdir the stupid way, just for testing
                 //////////////////////////////////////////////////////////////////////////////////////
                 float3 viewdir = normalize(worldPos-_camPos);
-                #if defined (GODRAYS_ON)
+#if defined (GODRAYS_ON)
                 float3 SidewaysFromSun = normalize(cross(_camPos,SUN_DIR));
                 float godrayBlendFactor= 1-abs (dot(SidewaysFromSun,viewdir));
                 float godrayDepth= tex2D(_godrayDepthTexture, i.uv_depth).r;
@@ -175,10 +177,11 @@ Pass {
                     depth=lerp(depth, godrayDepth, godrayBlendFactor);
                     //                   depth=godrayDepth;
                 }
-                #endif
+
                 H = float4(i.uv_depth.x * 2.0f - 1.0f, i.uv_depth.y * 2.0f - 1.0f, depth, 1.0f);
                 D = mul(_ViewProjInv, H);
                 worldPos = D / D.w;
+#endif
                 /////////////////////////////////////////////////////////////////////////////////////////
                 float interSectPt = intersectSphere2(_camPos, worldPos, float3(0.0, 0.0, 0.0), Rg);
                 //this ensures that we're looking in the right direction
@@ -195,7 +198,6 @@ Pass {
                 //if the terrain is in front of the ocean we don't want to cover it up
                 //with the wrong postprocessing depth
                 bool oceanCloserThanTerrain = (length(worldPos2 - _camPos) < length(worldPos - _camPos));
-                float3 oceanColor = float3(1.0, 1.0, 1.0);
                 worldPos = ((rightDir) && oceanCloserThanTerrain) ? worldPos2 : worldPos;
                 //artifacts fix
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ;
@@ -205,6 +207,8 @@ Pass {
                 float dpth = length(worldPos - _camPos);
                 visib = (dpth <= _global_depth) ? (1 - exp(-1 * (4 * dpth / _global_depth))) : visib;
                 return float4(hdr(inscatter)*_global_alpha * visib, 1);
+                
+				
             }
             ENDCG
         }

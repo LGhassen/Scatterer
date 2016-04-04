@@ -21,8 +21,9 @@ v2f vert (appdata_base v) {
     return o;
 }
  
-half4 frag(v2f i) : COLOR {
-    return i.depth.x/i.depth.y;
+float4 frag(v2f i) : COLOR
+{
+    return (i.depth.x/i.depth.y);
 }
 ENDCG
     }

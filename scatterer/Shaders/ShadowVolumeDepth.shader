@@ -1,6 +1,5 @@
 Shader "Custom/VolumeDepth" {
 
-
 SubShader {
     Tags { "RenderType"="Opaque" }
       
@@ -132,9 +131,6 @@ v2f vert (appdata v) {
  
 float4 frag(v2f i) : COLOR {
     
-    //get length of view space vertex -> distance to camera
-    //store in buffer and do all your front face back face stuff
-    //check depth is inferior to zg first
     return i.depth.x/i.depth.y;
 }
 ENDCG

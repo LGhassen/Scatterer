@@ -12,8 +12,8 @@ Shader "Proland/Atmo/Sky"
     		ZWrite Off
 
 //if localSpaceMode //i.e box mode
-//    		ZTest Off
-//    		cull Front
+    		ZTest Off
+    		cull Front
 //endif
 
     		Blend DstColor Zero  //multiplicative blending
@@ -34,7 +34,7 @@ Shader "Proland/Atmo/Sky"
 			#define useAnalyticTransmittance
 			
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-//			#define localSpaceMode
+			#define localSpaceMode
 
 			
 			
@@ -77,6 +77,7 @@ Shader "Proland/Atmo/Sky"
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
+				UNITY_INITIALIZE_OUTPUT(v2f, OUT);
 //			    OUT.dir = (mul(_Globals_CameraToWorld, float4((mul(_Globals_ScreenToCamera, v.vertex)).xyz, 0.0))).xyz;
 ////			    float3x3 wtl = _Sun_WorldToLocal;
 //			    
@@ -218,7 +219,7 @@ Shader "Proland/Atmo/Sky"
 				float mu0 = mu;
 
 
-    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
+    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
 
 
     			float din = max(-rMu - deltaSq, 0.0);
@@ -270,7 +271,7 @@ Shader "Proland/Atmo/Sky"
     			float average=(extinction.r+extinction.g+extinction.b)/3;
     			
     			
-    			extinction = float3(_Extinction_Tint*extinction.r + (1-_Extinction_Tint)*average,
+    			extinction = extinctionMultiplier *  float3(_Extinction_Tint*extinction.r + (1-_Extinction_Tint)*average,
     								_Extinction_Tint*extinction.g + (1-_Extinction_Tint)*average,
     								_Extinction_Tint*extinction.b + (1-_Extinction_Tint)*average);
     								
@@ -324,11 +325,11 @@ Shader "Proland/Atmo/Sky"
 								   lightOccluders1[i].w, sunPosAndRadius.w);
 						}
 						
-						for (int i=0; i<4; ++i)
+						for (int j=0; j<4; ++j)
     					{
-        					if (lightOccluders2[i].w <= 0)	break;
-							eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[i].xyz,
-								   lightOccluders2[i].w, sunPosAndRadius.w);
+        					if (lightOccluders2[j].w <= 0)	break;
+							eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[j].xyz,
+								   lightOccluders2[j].w, sunPosAndRadius.w)	;
 						}
 					}
 
@@ -337,7 +338,7 @@ Shader "Proland/Atmo/Sky"
 			    }
 #endif
 				
-				return float4(extinctionMultiplier * extinction,1.0);
+				return float4(extinction,1.0);
 			}
 			
 			ENDCG
@@ -352,8 +353,8 @@ Shader "Proland/Atmo/Sky"
     		ZWrite Off
 
 //if localSpaceMode
-//    		ZTest Off
-//    		cull Front
+    		ZTest Off
+    		cull Front
 //endif
 
 
@@ -374,7 +375,7 @@ Shader "Proland/Atmo/Sky"
 			
 //			#define eclipses
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-//			#define localSpaceMode
+			#define localSpaceMode
 			
 			
 			//uniform float _Alpha_Cutoff;
@@ -419,6 +420,7 @@ Shader "Proland/Atmo/Sky"
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
+				UNITY_INITIALIZE_OUTPUT(v2f, OUT);
 //			    OUT.dir = (mul(_Globals_CameraToWorld, float4((mul(_Globals_ScreenToCamera, v.vertex)).xyz, 0.0))).xyz;
 //			    
 //			    
@@ -525,7 +527,7 @@ Shader "Proland/Atmo/Sky"
 			float mu0 = mu;
 	
 
-    		float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,1e30);
+    		float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
 
     		float din = max(-rMu - deltaSq, 0.0);
     		if (din > 0.0)
@@ -654,11 +656,11 @@ Shader "Proland/Atmo/Sky"
 								   lightOccluders1[i].w, sunPosAndRadius.w)	;
 						}
 						
-						for (int i=0; i<4; ++i)
+						for (int j=0; j<4; ++j)
     					{
-        					if (lightOccluders2[i].w <= 0)	break;
-							eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[i].xyz,
-								   lightOccluders2[i].w, sunPosAndRadius.w)	;
+        					if (lightOccluders2[j].w <= 0)	break;
+							eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[j].xyz,
+								   lightOccluders2[j].w, sunPosAndRadius.w)	;
 						}
 				}
 #endif
