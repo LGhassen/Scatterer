@@ -98,5 +98,6 @@
     <Compile Include="Ocean\FakeOceanPQS.cs" />
     <Compile Include="EncodeFloat2D.cs" />
     <Compile Include="disableAmbientLight.cs" />
+    <Compile Include="renderTypeFixer.cs" />
   </ItemGroup>
 </Project>
