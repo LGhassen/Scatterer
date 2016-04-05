@@ -243,7 +243,7 @@ namespace scatterer
 			m_mieG = 0.85f;
 		string m_filePath = "/Proland/Textures/Atmo";
 		public Matrix4x4d m_cameraToScreenMatrix;
-		Mesh m_mesh;
+//		Mesh m_mesh;
 
 //		RenderTexture m_inscatter, m_irradiance;
 //		public RenderTexture m_transmit;
@@ -281,8 +281,8 @@ namespace scatterer
 			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
 			
-			m_mesh = MeshFactory.MakePlane (2, 2, MeshFactory.PLANE.XY, false, false);
-			m_mesh.bounds = new Bounds (parentCelestialBody.transform.position, new Vector3 (1e8f, 1e8f, 1e8f));
+//			m_mesh = MeshFactory.MakePlane (2, 2, MeshFactory.PLANE.XY, false, false);
+//			m_mesh.bounds = new Bounds (parentCelestialBody.transform.position, new Vector3 (1e8f, 1e8f, 1e8f));
 			
 			//Inscatter is responsible for the change in the sky color as the sun moves
 			//The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
@@ -522,7 +522,8 @@ namespace scatterer
 					updater = (updateAtCameraRythm)scaledSpaceCamera.gameObject.AddComponent (typeof(updateAtCameraRythm));
 					
 					//start in localmode
-					updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
+//					updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
+					updater.settings (m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
 					
 					updaterAdded = true;
 				}
@@ -1056,7 +1057,8 @@ namespace scatterer
 				skyScaledMeshrenderer.enabled = false;
 				skyLocalMeshrenderer.enabled=true;
 
-				updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
+//				updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
+				updater.settings (m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
 
 				scaledMode=false;
 				Debug.Log("[Scatterer] Sky switched to local mode");
@@ -1066,7 +1068,8 @@ namespace scatterer
 				skyScaledMeshrenderer.enabled = true;
 				skyLocalMeshrenderer.enabled=false;
 
-				updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this,parentCelestialBody.transform);
+//				updater.settings (m_mesh, m_skyMaterialScaled, m_manager, this,parentCelestialBody.transform);
+				updater.settings (m_skyMaterialScaled, m_manager, this,parentCelestialBody.transform);
 
 				scaledMode=true;
 				Debug.Log("[Scatterer] Sky switched to scaled mode");

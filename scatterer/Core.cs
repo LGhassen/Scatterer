@@ -21,7 +21,9 @@ namespace scatterer
 		SunFlare customSunFlare;
 		
 		bool visible = false;
-		
+
+		bool rtsResized=false;
+
 		bool wireFrame=false;
 		
 		[Persistent]
@@ -329,6 +331,9 @@ namespace scatterer
 					cams = Camera.allCameras;
 					for (int i = 0; i < cams.Length; i++)
 					{
+
+//						cams [i].hdr=true;
+
 						if (cams [i].name == "Camera ScaledSpace")
 							scaledSpaceCamera = cams [i];
 						
@@ -617,6 +622,35 @@ namespace scatterer
 					//						d++;
 					//
 					//					}
+
+
+//					RenderTexture[] RenderTextureList = Resources.FindObjectsOfTypeAll<RenderTexture> ();
+//					Debug.Log ("Start rt list");
+//					for (int i=0;i<RenderTextureList.Length;i++)
+//					{
+//						RenderTexture _rt= RenderTextureList[i];
+//						Debug.Log(_rt.name.ToString()+" "+_rt.width.ToString()+" "+ _rt.height.ToString()+" "+_rt.depth.ToString()+" "+_rt.format.ToString()+" ");
+////						if (_rt.name == "ImageEffects Temp" && !rtsResized)
+////						{
+////							_rt = new RenderTexture((int)Screen.width/2,(int)Screen.height/2,_rt.depth, _rt.format);
+////							_rt.filterMode=FilterMode.Trilinear;
+////							_rt.Create();
+////						}
+//					}
+//					Debug.Log ("End rt list");
+////
+////					Debug.Log(scaledSpaceCamera.);
+////
+////					rtsResized=true;
+//
+//					for (int i = 0; i < cams.Length; i++)
+//					{
+//					
+////						cams [i].hdr
+//						
+//						Debug.Log(cams[i].name+" "+cams [i].hdr.ToString ());
+//					}
+
 				}
 			} 
 		}
@@ -720,6 +754,19 @@ namespace scatterer
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
 				windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
+
+//				RenderTexture[] RenderTextureList = Resources.FindObjectsOfTypeAll<RenderTexture> ();
+////				Debug.Log ("Start rt list");
+//				int j=0;
+//				for (int i=0;i<RenderTextureList.Length;i++)
+//				{
+//					RenderTexture _rt= RenderTextureList[i];
+//					if (_rt.name == "ImageEffects Temp")
+//					{
+//						GUI.DrawTexture(new Rect((float)256*j,0.0f,144f,256f),_rt, ScaleMode.ScaleToFit, false);
+//						j++;
+//					}
+//				}
 			}
 		}
 

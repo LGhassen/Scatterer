@@ -19,7 +19,7 @@ namespace scatterer
 	
 	public class updateAtCameraRythm : MonoBehaviour
 	{
-		Mesh m_mesh;
+//		Mesh m_mesh;
 		Manager m_manager;
 		SkyNode m_skynode;
 		Transform parentTransform;
@@ -30,7 +30,7 @@ namespace scatterer
 //		public void settings(Mesh inmesh,Material inSkyMat, Manager inManager, SkyNode inSkyNode,
 //		                     GameObject inSkyObject,Transform inparentTransform, Transform inCelestialTransform)
 
-		public void settings(Mesh inmesh,Material inSkyMat, Manager inManager, SkyNode inSkyNode,
+		public void settings(Material inSkyMat, Manager inManager, SkyNode inSkyNode,
 		                     Transform inparentTransform)
 
 		{
@@ -38,7 +38,7 @@ namespace scatterer
 			m_manager = inManager;
 			m_skynode = inSkyNode;
 			parentTransform = inparentTransform;
-			m_mesh = inmesh;	
+//			m_mesh = inmesh;	
 		}
 		
 
