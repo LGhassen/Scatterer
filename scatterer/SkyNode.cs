@@ -567,12 +567,12 @@ namespace scatterer
 					else
 					{
 //						Debug.Log("over clouds");
-						m_skyMaterialLocal.renderQueue=3001;
+						m_skyMaterialLocal.renderQueue=3002;
 					}
 				}
 
 				if (m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
-					m_skyMaterialScaled.renderQueue=3001;
+					m_skyMaterialScaled.renderQueue=3002;
 				else
 					m_skyMaterialScaled.renderQueue=2001;
 
