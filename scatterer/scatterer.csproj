@@ -51,11 +51,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Core.cs" />
-    <Compile Include="Proland\Scripts\Core\Exceptions\CacheCapacityException.cs" />
-    <Compile Include="Proland\Scripts\Core\Exceptions\InvalidParameterException.cs" />
-    <Compile Include="Proland\Scripts\Core\Exceptions\InvalidStorageException.cs" />
-    <Compile Include="Proland\Scripts\Core\Exceptions\MissingTileException.cs" />
-    <Compile Include="Proland\Scripts\Core\Exceptions\ProlandException.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Plugins\Math\Box2d.cs" />
     <Compile Include="Plugins\Math\Box3d.cs" />
