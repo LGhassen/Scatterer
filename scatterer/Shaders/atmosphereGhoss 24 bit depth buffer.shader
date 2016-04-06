@@ -41,6 +41,7 @@ Shader "Sky/AtmosphereGhoss" {
                 float4 screenPos: TEXCOORD0;
                 float2 uv: TEXCOORD1;
                 float2 uv_depth: TEXCOORD2;
+				float3 view_dir:TEXCOORD3;
             };
             
             v2f vert(appdata_base v) {
@@ -54,36 +55,39 @@ Shader "Sky/AtmosphereGhoss" {
                 o.uv.y = 1 - o.uv.y;
                 #endif
                 COMPUTE_EYEDEPTH(o.screenPos.z); //o = -mul( UNITY_MATRIX_MV, v.vertex ).z
+                o.view_dir = mul(_Object2World, v.vertex) - _WorldSpaceCameraPos;
                 return o;
             }
             
             half4 frag(v2f i): COLOR
             {
                 float depth = tex2D(_customDepthTexture, i.uv_depth).r;
-                bool infinite = (depth == 1.0);
+                bool infinite = (depth == 1.0); //basically viewer ray isn't hitting any terrain
+                
                 float4 H = float4(i.uv_depth.x * 2.0f - 1.0f, (i.uv_depth.y) * 2.0f - 1.0f, depth, 1.0f);
                 float4 D = mul(_ViewProjInv, H);
                 float3 worldPos = D / D.w;  //reconstruct world position from depth
-                float interSectPt = intersectSphere2(_camPos, worldPos, float3(0.0, 0.0, 0.0), Rg);
+                
+                float3 rayDir=i.view_dir;
+                float interSectPt = intersectSphere2(_camPos, rayDir, float3(0.0, 0.0, 0.0), Rg);
+//				float interSectPt = intSphere(_camPos, normalize(worldPos-_camPos), float4(0.0, 0.0, 0.0, Rg));
+//				float interSectPt = sphere(_camPos, worldPos-_camPos, float3(0.0,0.0,0.0), Rg);
                 //this ensures that we're looking in the right direction
                 //That is, the ocean surface intersection point is in front of us
                 //If we look up the intersection point is behind us and we don't want to use that
                 bool rightDir = (interSectPt > 0);
-                //                bool infinite = (length(worldPos) >= (Rg + (Rt - Rg) * _experimentalAtmoScale)); //basically viewer ray isn't hitting any terrain
+
                 if (!(rightDir) && (infinite))
                 {
                     return float4(1.0, 1.0, 1.0, 1.0);
                 }
-                float3 worldPos2 = _camPos + interSectPt * (worldPos - (_camPos));
+                float3 worldPos2 = _camPos + interSectPt * rayDir;
                 //this condition ensures the ocean is in front of the terrain
                 //if the terrain is in front of the ocean we don't want to cover it up
                 //with the wrong postprocessing depth
                 bool oceanCloserThanTerrain = (length(worldPos2 - _camPos) < length(worldPos - _camPos));
-                float3 oceanColor = float3(1.0, 1.0, 1.0);
-                if ((rightDir) && oceanCloserThanTerrain)
-                {
-                    worldPos = worldPos2;
-                }
+				worldPos = ((rightDir) && oceanCloserThanTerrain) ? worldPos2 : worldPos;
+				
                 //artifacts fix
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ;
                 float3 extinction = getExtinction(_camPos, worldPos, 1.0, 1.0, 1.0);
@@ -141,6 +145,7 @@ Pass {
                 float4 screenPos: TEXCOORD0;
                 float2 uv: TEXCOORD1;
                 float2 uv_depth: TEXCOORD2;
+                float3 view_dir:TEXCOORD3;
             };
             v2f vert(appdata_base v) {
                 v2f o;
@@ -154,51 +159,54 @@ Pass {
                 o.uv.y = 1 - o.uv.y;
                 #endif
                 COMPUTE_EYEDEPTH(o.screenPos.z); //o = -mul( UNITY_MATRIX_MV, v.vertex ).z
+				o.view_dir = mul(_Object2World, v.vertex) - _WorldSpaceCameraPos;
                 return o;
             }
             half4 frag(v2f i): COLOR
             {
                 float depth = tex2D(_customDepthTexture, i.uv_depth).r;
-                bool infinite = (depth == 1.0);
-                float4 H = float4(i.uv_depth.x * 2.0f - 1.0f, i.uv_depth.y * 2.0f - 1.0f, depth, 1.0f);
-                float4 D = mul(_ViewProjInv, H);
-                float3 worldPos = D / D.w;  //reconstruct world position from depth
-              
-//                return float4((length(worldPos-_camPos))/10000,0.0,0.0,1.0);
-                //viewdir the stupid way, just for testing
-                //////////////////////////////////////////////////////////////////////////////////////
-                float3 viewdir = normalize(worldPos-_camPos);
+                bool infinite = (depth == 1.0); //basically viewer ray isn't hitting any terrain
+                
+				float3 rayDir=i.view_dir;
+				
 #if defined (GODRAYS_ON)
                 float3 SidewaysFromSun = normalize(cross(_camPos,SUN_DIR));
-                float godrayBlendFactor= 1-abs (dot(SidewaysFromSun,viewdir));
+                float godrayBlendFactor= 1-abs (dot(SidewaysFromSun,normalize(rayDir)));
                 float godrayDepth= tex2D(_godrayDepthTexture, i.uv_depth).r;
-                if ((godrayDepth > 0) && (godrayDepth < depth)&&(depth<1))
-                {
-                    depth=lerp(depth, godrayDepth, godrayBlendFactor);
-                    //                   depth=godrayDepth;
-                }
-
-                H = float4(i.uv_depth.x * 2.0f - 1.0f, i.uv_depth.y * 2.0f - 1.0f, depth, 1.0f);
-                D = mul(_ViewProjInv, H);
-                worldPos = D / D.w;
+                
+//                if ((godrayDepth > 0) && (godrayDepth < depth)&&(depth<1))
+//                {
+//                    depth=lerp(depth, godrayDepth, godrayBlendFactor);
+//                }
+                
+                depth= ((godrayDepth > 0) && (godrayDepth < depth)&&(depth<1)) ? lerp(depth, godrayDepth, godrayBlendFactor) : depth;
 #endif
-                /////////////////////////////////////////////////////////////////////////////////////////
-                float interSectPt = intersectSphere2(_camPos, worldPos, float3(0.0, 0.0, 0.0), Rg);
+                float4 H = float4(i.uv_depth.x * 2.0f - 1.0f, i.uv_depth.y * 2.0f - 1.0f, depth, 1.0f);
+                float4 D = mul(_ViewProjInv, H); //reconstruct world position from depth
+                						  //in this case lerped depth and godray depth
+                float3 worldPos = D / D.w;
+
+
+                float interSectPt = intersectSphere2(_camPos, rayDir, float3(0.0, 0.0, 0.0), Rg);
+                
                 //this ensures that we're looking in the right direction
                 //That is, the ocean surface intersection point is in front of us
                 //If we look up the intersection point is behind us and we don't want to use that
                 bool rightDir = (interSectPt > 0);
-                //                bool infinite = (length(worldPos) >= (Rg + (Rt - Rg) * _experimentalAtmoScale)); //basically viewer ray isn't hitting any terrain
+
                 if (!(rightDir) && (infinite))
                 {
                     return float4(0.0, 0.0, 0.0, 0.0);
                 }
-                float3 worldPos2 = _camPos + interSectPt * (worldPos - (_camPos));
+
+				float3 worldPos2 = _camPos + interSectPt * rayDir;
+				
                 //this condition ensures the ocean is in front of the terrain
                 //if the terrain is in front of the ocean we don't want to cover it up
                 //with the wrong postprocessing depth
                 bool oceanCloserThanTerrain = (length(worldPos2 - _camPos) < length(worldPos - _camPos));
                 worldPos = ((rightDir) && oceanCloserThanTerrain) ? worldPos2 : worldPos;
+                
                 //artifacts fix
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ;
                 float3 extinction = float3(0, 0, 0);
