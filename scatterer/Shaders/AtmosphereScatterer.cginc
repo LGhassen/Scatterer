@@ -167,24 +167,56 @@ float SQRT(float f, float err) {
 
 //stole this from basic GLSL raytracing shader somewhere on the net
 //a quick google search and you'll find it
-float intersectSphere2(float3 p1, float3 p2, float3 p3, float r) {
+//float intersectSphere2(float3 p1, float3 p2, float3 p3, float r) {
+float intersectSphere2(float3 p1, float3 d, float3 p3, float r) {
     // The line passes through p1 and p2:
     // p3 is the sphere center
-    float3 d = p2 - p1;
+	//float3 d = p2 - p1;
     float a = dot(d, d);
     float b = 2.0 * dot(d, p1 - p3);
     float c = dot(p3, p3) + dot(p1, p1) - 2.0 * dot(p3, p1) - r * r;
     float test = b * b - 4.0 * a * c;
-    if (test < 0) {
-        return -1.0;
-    }
-    float u = (-b - sqrt(test)) / (2.0 * a);
+//    if (test < 0)
+//    {
+//        return -1.0;
+//    }
+//    float u = (-b - sqrt(test)) / (2.0 * a);
+    float u = (test < 0) ? -1.0 : (-b - sqrt(test)) / (2.0 * a);
     //                      float3 hitp = p1 + u * (p2 - p1);            //we'll just do this later instead if needed
     //                      return(hitp);
     return u;
 }
 
+//Can't get this simpler version to work, will re-try it later
+//float intSphere( float4 sp, float3 ro, float3 rd, float tm) //sp.xyz sphere Pos? sp.w sphere rad?, r0 ray origin rd ray direction, tm?
+float intSphere( float3 ro, float3 rd, float4 sp) //sp.xyz sphere Pos? sp.w sphere rad?, r0 ray origin rd ray direction, tm?
+{
+    float3 d = ro - sp.xyz;
+    float b = dot(rd,d);
+    float c = dot(d,d) - sp.w*sp.w;
+    float t = b*b-c;
+    t = ( t > 0.0 ) ? -b-sqrt(t) : t;
+    
+//    if( t > 0.0 )
+//    {
+//        t = -b-sqrt(t);
+////        r = (t > 0.0) && (t < tm);
+//    }
 
+    return t;
+}
+
+//Can't get this simpler version to work, will re-try it later
+float sphere(float3 ray, float3 dir, float3 center, float radius)
+{
+ float3 rc = ray-center;
+ float c = dot(rc, rc) - (radius*radius);
+ float b = dot(dir, rc);
+ float d = b*b - c;
+ float t = -b - sqrt(abs(d));
+ float st = step(0.0, min(t,d)); //if min(t,d) >= 0 return 1 else return 0
+ return lerp(-1.0, t, st);
+}
 
 
 // optical depth for ray (r,mu) of length d, using analytic formula
@@ -200,7 +232,6 @@ float OpticalDepth(float H, float r, float mu, float d)
     float2 y = a01s / (2.3193*abs(a01) + sqrt(1.52*a01sq + 4.0)) * float2(1.0, exp(-d/H*(d/(2.0*r)+mu)));
     return sqrt((6.2831*H)*r) * exp((Rg-r)/H) * (x + dot(y, float2(1.0, -1.0)));
 }
-
 
 
 // transmittance(=transparency) of atmosphere for ray (r,mu) of length d
@@ -246,19 +277,25 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
         r = Rt;
         d -= din;
     }
-
-    if (r < Rg + 1600.0)
-    {
-    	// avoids imprecision problems in aerial perspective near ground
-    	//Not sure if necessary with extinction
-        float f = (Rg + 1600.0) / r;
-        r = r * f;
-    }
+	if (r <= Rt)
+    { 
+    	if (r < Rg + 1600.0)
+    	{
+    		// avoids imprecision problems in aerial perspective near ground
+    		//Not sure if necessary with extinction
+        	float f = (Rg + 1600.0) / r;
+        	r = r * f;
+    	}
         
-    //set to analyticTransmittance only atm
-    #if defined (useAnalyticTransmittance)
-    extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
-    #endif
+    	//set to analyticTransmittance only atm
+    	#if defined (useAnalyticTransmittance)
+    	extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
+    	#endif
+    }	
+	else
+    {	//if out of atmosphere
+        extinction = float3(1,1,1);
+    }
 
     return extinction;
 }
@@ -305,7 +342,9 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float 
         r = Rt;
         d -= din;
     }
-    //                if (r <= Rt) { //unncecessary with check in fragment shader, I think
+    
+      if (r <= Rt)
+      { 
         float nu = dot(viewdir, SUN_DIR);
         float muS = dot(camera, SUN_DIR) / r;
         float4 inScatter;
@@ -370,6 +409,11 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float 
         float phase = PhaseFunctionR(nu);
         float phaseM = PhaseFunctionM(nu);
         result = inScatter.rgb * phase + inScatterM * phaseM;
-    //                }
+        }
+    else
+    {	//if out of atmosphere
+        result = float3(0,0,0);
+//        extinction = float3(1,1,1);
+    }
     return result * SUN_INTENSITY;
 }
