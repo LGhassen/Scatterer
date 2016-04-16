@@ -94,5 +94,10 @@
     <Compile Include="EncodeFloat2D.cs" />
     <Compile Include="disableAmbientLight.cs" />
     <Compile Include="renderTypeFixer.cs" />
+    <Compile Include="Ocean\CommandBufferModifiedProjectionMatrix.cs" />
+    <Compile Include="ShaderProperties.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cameraHDRTonemapping.cs" />
   </ItemGroup>
 </Project>

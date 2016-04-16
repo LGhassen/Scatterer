@@ -79,7 +79,7 @@ namespace scatterer {
 		//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 		//		[SerializeField]
 		//		int m_fourierGridSize = 256;
-		[Persistent] public int m_fourierGridSize = 128;
+		public int m_fourierGridSize = 128;
 		
 		//int m_varianceSize = 16;
 		[Persistent] public int m_varianceSize = 4;
@@ -152,7 +152,8 @@ namespace scatterer {
 			
 			m_initSpectrumMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitSpectrum.shader"));;
 			m_initDisplacementMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitDisplacement.shader"));;
-			
+
+			m_fourierGridSize = m_manager.GetCore ().m_fourierGridSize;
 			
 			if (m_fourierGridSize > 256) {
 				Debug.Log("Proland::OceanFFT::Start	- fourier grid size must not be greater than 256, changing to 256");
@@ -207,13 +208,13 @@ namespace scatterer {
 			GenerateWavesSpectrum();
 			CreateWTable();
 			
-			m_initSpectrumMat.SetTexture("_Spectrum01", m_spectrum01);
-			m_initSpectrumMat.SetTexture("_Spectrum23", m_spectrum23);
-			m_initSpectrumMat.SetTexture("_WTable", m_WTable);
-			m_initSpectrumMat.SetVector("_Offset", m_offset);
-			m_initSpectrumMat.SetVector("_InverseGridSizes", m_inverseGridSizes);
+			m_initSpectrumMat.SetTexture (ShaderProperties._Spectrum01_PROPERTY, m_spectrum01);
+			m_initSpectrumMat.SetTexture (ShaderProperties._Spectrum23_PROPERTY, m_spectrum23);
+			m_initSpectrumMat.SetTexture (ShaderProperties._WTable_PROPERTY, m_WTable);
+			m_initSpectrumMat.SetVector (ShaderProperties._Offset_PROPERTY, m_offset);
+			m_initSpectrumMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 			
-			m_initDisplacementMat.SetVector("_InverseGridSizes", m_inverseGridSizes);
+			m_initDisplacementMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 
 //#if CPUmode
 			if (m_manager.GetCore ().craft_WaveInteractions)
@@ -275,7 +276,7 @@ namespace scatterer {
 			RenderTexture[] buffers012 = new RenderTexture[] {
 				m_fourierBuffer0[1], m_fourierBuffer1[1], m_fourierBuffer2[1]
 			};
-			m_initSpectrumMat.SetFloat("_T", t);
+			m_initSpectrumMat.SetFloat (ShaderProperties._T_PROPERTY, t);
 			//			RTUtility.MultiTargetBlit(buffers012, m_initSpectrumMat);
 			RTUtility.MultiTargetBlit(buffers012, m_initSpectrumMat, 0);
 			
@@ -283,8 +284,8 @@ namespace scatterer {
 			RenderTexture[] buffers34 = new RenderTexture[] {
 				m_fourierBuffer3[1], m_fourierBuffer4[1]
 			};
-			m_initDisplacementMat.SetTexture("_Buffer1", m_fourierBuffer1[1]);
-			m_initDisplacementMat.SetTexture("_Buffer2", m_fourierBuffer2[1]);
+			m_initDisplacementMat.SetTexture (ShaderProperties._Buffer1_PROPERTY, m_fourierBuffer1[1]);
+			m_initDisplacementMat.SetTexture (ShaderProperties._Buffer2_PROPERTY, m_fourierBuffer2[1]);
 			//			RTUtility.MultiTargetBlit(buffers34, m_initDisplacementMat);
 			RTUtility.MultiTargetBlit(buffers34, m_initDisplacementMat, 0);
 		}
@@ -439,31 +440,31 @@ namespace scatterer {
 
 				
 				
-					m_oceanMaterialNear.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
-					m_oceanMaterialNear.SetVector("_Ocean_Choppyness", m_choppyness);
-					m_oceanMaterialNear.SetVector("_Ocean_GridSizes", m_gridSizes);
-					//				m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
-					m_oceanMaterialNear.SetFloat("_Ocean_HeightOffset", 0f);
-					m_oceanMaterialNear.SetTexture("_Ocean_Variance", m_variance);
-					m_oceanMaterialNear.SetTexture("_Ocean_Map0", m_map0);
-					m_oceanMaterialNear.SetTexture("_Ocean_Map1", m_map1);
-					m_oceanMaterialNear.SetTexture("_Ocean_Map2", m_map2);
-					m_oceanMaterialNear.SetTexture("_Ocean_Map3", m_map3);
-					m_oceanMaterialNear.SetTexture("_Ocean_Map4", m_map4);
-					m_oceanMaterialNear.SetVector("_VarianceMax", m_varianceMax);
+//					m_oceanMaterialNear.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
+//					m_oceanMaterialNear.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
+//					m_oceanMaterialNear.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+//					//				m_oceanMaterialNear_PROPERTY,t("_Ocean_HeightOffset_PROPERTY, m_oceanLevel);
+//					m_oceanMaterialNear.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
+//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_variance);
+//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
+//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
+//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
+//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
+//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
+//					m_oceanMaterialNear.SetVector (ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
 					
-					m_oceanMaterialFar.SetVector("_Ocean_MapSize", new Vector2(m_fsize, m_fsize));
-					m_oceanMaterialFar.SetVector("_Ocean_Choppyness", m_choppyness);
-					m_oceanMaterialFar.SetVector("_Ocean_GridSizes", m_gridSizes);
-					//				m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", m_oceanLevel);
-					m_oceanMaterialFar.SetFloat("_Ocean_HeightOffset", 0f);
-					m_oceanMaterialFar.SetTexture("_Ocean_Variance", m_variance);
-					m_oceanMaterialFar.SetTexture("_Ocean_Map0", m_map0);
-					m_oceanMaterialFar.SetTexture("_Ocean_Map1", m_map1);
-					m_oceanMaterialFar.SetTexture("_Ocean_Map2", m_map2);
-					m_oceanMaterialFar.SetTexture("_Ocean_Map3", m_map3);
-					m_oceanMaterialFar.SetTexture("_Ocean_Map4", m_map4);
-					m_oceanMaterialFar.SetVector("_VarianceMax", m_varianceMax);
+					m_oceanMaterialFar.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
+					m_oceanMaterialFar.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
+					m_oceanMaterialFar.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+					//				m_oceanMaterialFar.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);
+					m_oceanMaterialFar.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
+					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_variance);
+					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
+					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
+					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
+					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
+					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
+					m_oceanMaterialFar.SetVector (ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
 				}
 //#if !CPUmode
 				//Make sure base class get updated as well
@@ -831,13 +832,13 @@ namespace scatterer {
 			
 			//			buffer.Release();
 			
-			//			m_varianceShader.SetFloat("_SlopeVarianceDelta", 0.5f * (theoreticSlopeVariance - totalSlopeVariance));
-			//			m_varianceShader.SetFloat("_VarianceSize", (float)m_varianceSize);
-			//			m_varianceShader.SetFloat("_Size", m_fsize);
-			//			m_varianceShader.SetVector("_GridSizes", m_gridSizes);
-			//			m_varianceShader.SetTexture(0, "_Spectrum01", m_spectrum01);
-			//			m_varianceShader.SetTexture(0, "_Spectrum23", m_spectrum23);
-			//			m_varianceShader.SetTexture(0, "des", m_variance);
+			//			m_varianceShader.SetFloat (ShaderProperties._SlopeVarianceDelta_PROPERTY, 0.5f * (theoreticSlopeVariance - totalSlopeVariance));
+			//			m_varianceShader.SetFloat (ShaderProperties._VarianceSize_PROPERTY, (float)m_varianceSize);
+			//			m_varianceShader.SetFloat (ShaderProperties._Size_PROPERTY, m_fsize);
+			//			m_varianceShader.SetVector (ShaderProperties._GridSizes_PROPERTY, m_gridSizes);
+			//			m_varianceShader.SetTexture(0, "_Spectrum01_PROPERTY, m_spectrum01);
+			//			m_varianceShader.SetTexture(0, "_Spectrum23_PROPERTY, m_spectrum23);
+			//			m_varianceShader.SetTexture(0, "des_PROPERTY, m_variance);
 			//			
 			//			m_varianceShader.Dispatch(0,m_varianceSize/4,m_varianceSize/4,m_varianceSize/4);
 			

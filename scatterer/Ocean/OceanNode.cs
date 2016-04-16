@@ -43,14 +43,14 @@ namespace scatterer
 	 */
 	public abstract class OceanNode: MonoBehaviour
 	{
-		Matrix4x4d m_cameraToWorldMatrix;
+//		Matrix4x4d m_cameraToWorldMatrix;
 		public Manager m_manager;
 		Core m_core;
 		
 		//		public float theta =1.0f;
 		//		public float phi=1.0f;
 		
-		public Material m_oceanMaterialNear;
+//		public Material m_oceanMaterialNear;
 		public Material m_oceanMaterialFar;
 		OceanUpdateAtCameraRythm oceanupdater;
 
@@ -92,31 +92,14 @@ namespace scatterer
 		[Persistent]
 		public float seaRefractionMultiplier = 1f;
 
-
-
-
-
 		int numGrids;
 		Mesh[] m_screenGrids;
-//		Material emptyMaterial;
-//		Material fakeOceanMaterial;
-//		SimplePostProcessCube oceanPC;
-//		GameObject fakeOceanObject;
-
-//		Mesh fakeOceanMesh;
-//		MeshFilter fakeOceanMF;
-//		MeshRenderer fakeOceanMR;
-//		Material newMat;
-
+		
 		[Persistent] public float fakeOceanAltitude = 15000;
 
-//		GameObject[] waterGameObjectsNear;
-//		MeshRenderer[] waterMeshRenderersNear;
-//		MeshFilter[] waterMeshFiltersNear;
-//
-//		GameObject[] waterGameObjectsFar;
-//		MeshRenderer[] waterMeshRenderersFar;
-//		MeshFilter[] waterMeshFiltersFar;
+		GameObject[] waterGameObjects;
+		MeshRenderer[] waterMeshRenderers;
+		MeshFilter[] waterMeshFilters;
 
 		Matrix4x4d m_oldlocalToOcean;
 		Matrix4x4d m_oldworldToOcean;
@@ -127,7 +110,7 @@ namespace scatterer
 			}
 		}
 
-		
+		CommandBufferModifiedProjectionMatrix cbProjectionMat; 
 
 
 		Vector3d2 m_offset;
@@ -150,19 +133,35 @@ namespace scatterer
 		// Use this for initialization
 		public virtual void Start ()
 		{
-			m_cameraToWorldMatrix = Matrix4x4d.Identity ();
-			
+//			m_cameraToWorldMatrix = Matrix4x4d.Identity ();
+//			
 			//using different materials for both the far and near cameras because they have different projection matrixes
 			//the projection matrix in the shader has to match that of the camera or the projection will be wrong and the ocean will
 			//appear to "shift around"
-			m_oceanMaterialNear = new Material (ShaderTool.GetMatFromShader2 ("CompiledOceanWhiteCaps.shader"));
-			m_oceanMaterialFar = new Material (ShaderTool.GetMatFromShader2 ("CompiledOceanWhiteCaps.shader"));
-			
-			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialNear);
+//			m_oceanMaterialNear = new Material (ShaderTool.GetMatFromShader2 ("CompiledOceanWhiteCaps.shader"));
+
+			if (m_core.oceanPixelLights)
+				m_oceanMaterialFar = new Material (ShaderTool.GetMatFromShader2 ("CompiledOceanWhiteCapsPixelLights.shader"));
+			else
+				m_oceanMaterialFar = new Material (ShaderTool.GetMatFromShader2 ("CompiledOceanWhiteCaps.shader"));
+
+			if (m_core.oceanSkyReflections)
+			{
+				m_oceanMaterialFar.EnableKeyword ("SKY_REFLECTIONS_ON");
+				m_oceanMaterialFar.DisableKeyword ("SKY_REFLECTIONS_OFF");
+			}
+			else
+			{
+				m_oceanMaterialFar.EnableKeyword ("SKY_REFLECTIONS_OFF");
+				m_oceanMaterialFar.DisableKeyword ("SKY_REFLECTIONS_ON");
+			}
+
+
+//			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialNear);
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialFar);
 			
 			m_oldlocalToOcean = Matrix4x4d.Identity ();
-			m_oldworldToOcean = Matrix4x4d.Identity ();
+//			m_oldworldToOcean = Matrix4x4d.Identity ();
 			m_offset = Vector3d2.Zero ();
 			
 			//Create the projected grid. The resolution is the size in pixels
@@ -184,6 +183,9 @@ namespace scatterer
 			
 			m_screenGrids = new Mesh[numGrids];
 
+			waterGameObjects = new GameObject[numGrids];
+			waterMeshRenderers = new MeshRenderer[numGrids];
+			waterMeshFilters = new MeshFilter[numGrids];
 
 			//Make the meshes. The end product will be a grid of verts that cover
 			//the screen on the x and y axis with the z depth at 0. This grid is then
@@ -194,29 +196,54 @@ namespace scatterer
 				
 				m_screenGrids [i] = MakePlane (NX, NY, (float)i / (float)numGrids, 1.0f / (float)numGrids);
 				m_screenGrids [i].bounds = new Bounds (Vector3.zero, new Vector3 (1e8f, 1e8f, 1e8f));	
+
+
+				waterGameObjects[i] = new GameObject();
+				waterGameObjects[i].transform.parent=m_manager.parentCelestialBody.transform; //might be redundant
+				waterMeshFilters[i] = waterGameObjects[i].AddComponent<MeshFilter>();
+				waterMeshFilters[i].mesh.Clear ();
+				waterMeshFilters[i].mesh = m_screenGrids[i];
+
+				waterGameObjects[i].layer = 15;
+				waterMeshRenderers[i] = waterGameObjects[i].AddComponent<MeshRenderer>();
+
+				
+				waterMeshRenderers[i].sharedMaterial = m_oceanMaterialFar;
+				waterMeshRenderers[i].material =m_oceanMaterialFar;
+				
+				waterMeshRenderers[i].shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+				waterMeshRenderers[i].receiveShadows = false;
+
+//				CommandBufferModifiedProjectionMatrix tmp = waterGameObjects[i].AddComponent<CommandBufferModifiedProjectionMatrix>();
+//				tmp.m_core=m_core;
+
+				waterMeshRenderers[i].enabled=true;
 			}
 
-
-
-
+			cbProjectionMat = waterGameObjects[0].AddComponent<CommandBufferModifiedProjectionMatrix>();
+			cbProjectionMat.m_core=m_core;
 
 		}
 		
 		public virtual void OnDestroy ()
 		{
+			if (cbProjectionMat)
+			{
+				cbProjectionMat.Cleanup ();
+				Component.Destroy (cbProjectionMat);
+				UnityEngine.Object.Destroy (cbProjectionMat);
+			}
+
 			//			base.OnDestroy();
-			for (int i = 0; i < numGrids; i++) {
-//				Destroy(waterGameObjectsNear[i]);
-//				Destroy(waterMeshFiltersNear[i]);
-//				Destroy(waterMeshRenderersNear[i]);
-//
-//				Destroy(waterGameObjectsFar[i]);
-//				Destroy(waterMeshFiltersFar[i]);
-//				Destroy(waterMeshRenderersFar[i]);
+			for (int i = 0; i < numGrids; i++)
+			{
+				Destroy(waterGameObjects[i]);
+				Component.Destroy(waterMeshFilters[i]);
+				Component.Destroy(waterMeshRenderers[i]);
 
 				UnityEngine.Object.Destroy (m_screenGrids [i]);
 			}
-			UnityEngine.Object.Destroy (m_oceanMaterialNear);
+//			UnityEngine.Object.Destroy (m_oceanMaterialNear);
 			UnityEngine.Object.Destroy (m_oceanMaterialFar);
 
 			Component.Destroy (oceanupdater);
@@ -284,7 +311,7 @@ namespace scatterer
 					oceanupdater.farCamera = m_manager.m_skyNode.farCamera;
 					oceanupdater.nearCamera = m_manager.m_skyNode.nearCamera;
 					oceanupdater.oceanMaterialFar = m_oceanMaterialFar;
-					oceanupdater.oceanMaterialNear = m_oceanMaterialNear;
+//					oceanupdater.oceanMaterialNear = m_oceanMaterialNear;
 					oceanupdater.m_manager = m_manager;
 				}
 			}
@@ -294,20 +321,20 @@ namespace scatterer
 
 			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
 			{
-				foreach (Mesh mesh in m_screenGrids)
-				{
-
-					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15,
-					                  m_manager.m_skyNode.farCamera, 0, null, false, false);
-					
-					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15,
-					                  m_manager.m_skyNode.nearCamera, 0, null, false, false);
-
-				}
+//				foreach (Mesh mesh in m_screenGrids)
+//				{
+//
+//					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15,
+//					                  m_manager.m_skyNode.farCamera, 0, null, false, false);
+//					
+//					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15,
+//					                  m_manager.m_skyNode.nearCamera, 0, null, false, false);
+//
+//				}
 			}
 
 
-			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
+//			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
 			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;
 
 	
@@ -317,17 +344,15 @@ namespace scatterer
 
 		public void updateStuff (Material oceanMaterial, Camera inCamera)
 		{
+//			m_manager.GetSkyNode ().SetOceanUniforms (m_oceanMaterialFar);
+
 			//Calculates the required data for the projected grid
 			
 			// compute ltoo = localToOcean transform, where ocean frame = tangent space at
 			// camera projection on sphere radius in local space
 			
 			Matrix4x4 ctol1 = inCamera.cameraToWorldMatrix;
-			
-			//position relative to kerbin
-//			Vector3d tmp = (inCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
-			
-			
+
 			Matrix4x4d cameraToWorld = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, ctol1.m03,
 			                                          ctol1.m10, ctol1.m11, ctol1.m12, ctol1.m13,
 			                                          ctol1.m20, ctol1.m21, ctol1.m22, ctol1.m23,
@@ -347,13 +372,14 @@ namespace scatterer
 			Matrix4x4d camToLocal = worldToLocal * cameraToWorld;
 			Matrix4x4d localToCam = camToLocal.Inverse ();
 
+
+
 			// camera in local space relative to planet's origin
 			Vector3d2 cl = new Vector3d2 ();
 			cl = camToLocal * Vector3d2.Zero ();
 
-			
-			double radius = m_manager.GetRadius ();
-//			double radius = m_manager.GetRadius ()+m_oceanLevel;
+//			double radius = m_manager.GetRadius ();
+			double radius = m_manager.GetRadius ()+m_oceanLevel;
 
 			
 			uz = cl.Normalized (); // unit z vector of ocean frame, in local space
@@ -379,7 +405,7 @@ namespace scatterer
 
 
 			Matrix4x4d cameraToOcean = localToOcean * camToLocal;
-
+			Matrix4x4d worldToOcean = localToOcean * worldToLocal;
 
 			Vector3d2 delta = new Vector3d2 (0, 0, 0);
 			
@@ -388,25 +414,28 @@ namespace scatterer
 				m_offset += delta;
 			}
 
-
-			//reset offset when bigger than 20000 to avoid floating point issues when later casting the offset to float
+			//reset offset when bigger than 20000 to  avoid floating point issues when later casting the offset to float
 			if (Mathf.Max (Mathf.Abs ((float)m_offset.x), Mathf.Abs ((float)m_offset.y)) > 20000f)
 			{
 				m_offset.x=0.0;
 				m_offset.y=0.0;
 			}
 
-
-
 			m_oldlocalToOcean = localToOcean;
 			
-			Matrix4x4d ctos = ModifiedProjectionMatrix (inCamera);
-			Matrix4x4d stoc = ctos.Inverse ();
+//			Matrix4x4d ctos = ModifiedProjectionMatrix (inCamera); //moved to command buffer
+//			Matrix4x4d stoc = ctos.Inverse ();
 			
 			Vector3d2 oc = cameraToOcean * Vector3d2.Zero ();
 			
 			h = oc.z;
-			
+
+			offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
+
+			//old horizon code
+			//This breaks down when you tilt the camera by 90 degrees in any direction
+			//I made some new horizon code down, scroll down
+
 //			Vector4d stoc_w = (stoc * Vector4d.UnitW ()).XYZ0 ();
 //			Vector4d stoc_x = (stoc * Vector4d.UnitX ()).XYZ0 ();
 //			Vector4d stoc_y = (stoc * Vector4d.UnitY ()).XYZ0 ();
@@ -414,12 +443,7 @@ namespace scatterer
 //			Vector3d2 A0 = (cameraToOcean * stoc_w).XYZ ();  
 //			Vector3d2 dA = (cameraToOcean * stoc_x).XYZ ();
 //			Vector3d2 B = (cameraToOcean * stoc_y).XYZ ();
-
-			offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
-
-			//old horizon code
-			//This breaks down when you tilt the camera by 90 degrees in any direction
-			//I made some new horizon code down, scroll down
+//
 //			Vector3d2 horizon1, horizon2;
 //
 //			double h1 = h * (h + 2.0 * radius);
@@ -438,35 +462,37 @@ namespace scatterer
 			
 			Vector3d2 sunDir = new Vector3d2 (m_manager.getDirectionToSun ().normalized);
 			Vector3d2 oceanSunDir = localToOcean.ToMatrix3x3d () * sunDir;
-			
-			oceanMaterial.SetVector ("_Ocean_SunDir", oceanSunDir.ToVector3 ());
-			
-			oceanMaterial.SetMatrix ("_Ocean_CameraToOcean", cameraToOcean.ToMatrix4x4 ());
-			oceanMaterial.SetMatrix ("_Ocean_OceanToCamera", cameraToOcean.Inverse ().ToMatrix4x4 ());
-			
-			oceanMaterial.SetMatrix ("_Globals_CameraToScreen", ctos.ToMatrix4x4 ());
-			oceanMaterial.SetMatrix ("_Globals_ScreenToCamera", stoc.ToMatrix4x4 ());
-			
-			oceanMaterial.SetVector ("_Ocean_CameraPos", offset.ToVector3 ());
-			
-			oceanMaterial.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) /*  *0.1f   */);
-			oceanMaterial.SetVector ("_Ocean_ScreenGridSize", new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
-			oceanMaterial.SetFloat ("_Ocean_Radius", (float)(radius+m_oceanLevel));
-			
-			//			oceanMaterial.SetFloat("scale", 1);
-			oceanMaterial.SetFloat ("scale", oceanScale);
 
-			oceanMaterial.SetFloat ("_OceanAlpha", oceanAlpha);
-			oceanMaterial.SetFloat ("alphaRadius", alphaRadius);
-
-			oceanMaterial.SetFloat ("_GlobalOceanAlpha", m_manager.m_skyNode._GlobalOceanAlpha);
-			
+			oceanMaterial.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, cameraToWorld .ToMatrix4x4());
 
 
-//			oceanMaterial.SetFloat ("sunReflectionMultiplier", sunReflectionMultiplier);
-//			oceanMaterial.SetFloat ("skyReflectionMultiplier", skyReflectionMultiplier);
-//			oceanMaterial.SetFloat ("seaRefractionMultiplier", seaRefractionMultiplier);
+			oceanMaterial.SetVector (ShaderProperties._Ocean_SunDir_PROPERTY, oceanSunDir.ToVector3 ());
+			
+			oceanMaterial.SetMatrix (ShaderProperties._Ocean_CameraToOcean_PROPERTY, cameraToOcean.ToMatrix4x4 ());
+			oceanMaterial.SetMatrix (ShaderProperties._Ocean_OceanToCamera_PROPERTY, cameraToOcean.Inverse ().ToMatrix4x4 ());
+			
+//			oceanMaterial.SetMatrix (ShaderProperties._Globals_CameraToScreen_PROPERTY, ctos.ToMatrix4x4 ());
+//			oceanMaterial.SetMatrix (ShaderProperties._Globals_ScreenToCamera_PROPERTY, stoc.ToMatrix4x4 ());
 
+
+			oceanMaterial.SetMatrix (ShaderProperties._Globals_WorldToOcean_PROPERTY, worldToOcean.ToMatrix4x4 ());
+			oceanMaterial.SetMatrix (ShaderProperties._Globals_OceanToWorld_PROPERTY, worldToOcean.Inverse ().ToMatrix4x4 ());
+
+
+			oceanMaterial.SetVector (ShaderProperties._Ocean_CameraPos_PROPERTY, offset.ToVector3 ());
+			
+			oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) /*  *0.1f   */);
+			oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
+			oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
+			
+			//			oceanMaterial.SetFloat("scale_PROPERTY, 1);
+			oceanMaterial.SetFloat (ShaderProperties.scale_PROPERTY, oceanScale);
+
+			oceanMaterial.SetFloat (ShaderProperties._OceanAlpha_PROPERTY, oceanAlpha);
+			oceanMaterial.SetFloat (ShaderProperties.alphaRadius_PROPERTY, alphaRadius);
+
+			oceanMaterial.SetFloat (ShaderProperties._GlobalOceanAlpha_PROPERTY, m_manager.m_skyNode._GlobalOceanAlpha);
+			
 
 			m_manager.GetSkyNode ().SetOceanUniforms (oceanMaterial);
 
@@ -491,28 +517,28 @@ namespace scatterer
 
 			//Theta=angle to horizon, now all that is left to do is check the viewdir against this angle in the shader
 			double cosTheta= rHorizon / (OHL); 
-			double sinTheta=Math.Sqrt (1- cosTheta*cosTheta);
+			double sinTheta= Math.Sqrt (1- cosTheta*cosTheta);
 
-			oceanMaterial.SetVector ("sphereDir", sphereDir.ToVector3 ());
-			oceanMaterial.SetFloat ("cosTheta", (float) cosTheta);
-			oceanMaterial.SetFloat ("sinTheta", (float) sinTheta);
+			oceanMaterial.SetVector (ShaderProperties.sphereDir_PROPERTY, sphereDir.ToVector3 ());
+			oceanMaterial.SetFloat (ShaderProperties.cosTheta_PROPERTY, (float) cosTheta);
+			oceanMaterial.SetFloat (ShaderProperties.sinTheta_PROPERTY, (float) sinTheta);
 
 
 		}
 		
-		public void SetUniforms (Material mat)
-		{
-			//Sets uniforms that this or other gameobjects may need
-			if (mat == null)
-				return;
-			
-			mat.SetFloat ("_Ocean_Sigma", GetMaxSlopeVariance ());
-			mat.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) * 0.1f);
-			mat.SetFloat ("fakeOcean", (m_drawOcean) ? 0.0f : 1.0f);
-			
-			
-			mat.SetFloat ("_Ocean_Level", m_oceanLevel);
-		}
+//		public void SetUniforms (Material mat)
+//		{
+//			//Sets uniforms that this or other gameobjects may need
+//			if (mat == null)
+//				return;
+//			
+//			mat.SetFloat ("_Ocean_Sigma", GetMaxSlopeVariance ());
+//			mat.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) * 0.1f);
+//			mat.SetFloat ("fakeOcean", (m_drawOcean) ? 0.0f : 1.0f);
+//			
+//			
+//			mat.SetFloat ("_Ocean_Level", m_oceanLevel);
+//		}
 		
 		public void setManager (Manager manager)
 		{
@@ -523,89 +549,28 @@ namespace scatterer
 		{
 			m_core = core;
 		}
-		
-		public Matrix4x4d ModifiedProjectionMatrix (Camera inCam)
+
+
+		public Matrix4x4d ModifiedProjectionMatrix (Camera inCam) //moved over to command buffer
 		{
-			/*
-//			float h = (float)(GetHeight() - m_groundHeight);
-//			camera.nearClipPlane = 0.1f * h;
-//			camera.farClipPlane = 1e6f * h;
-			
-//			inCam.ResetProjectionMatrix();
-			
-			Matrix4x4 p = inCam.projectionMatrix;
-//			bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
-			
-//			if(d3d) 
-//			{
-//				if(inCam.actualRenderingPath == RenderingPath.DeferredLighting)
-//				{
-//					// Invert Y for rendering to a render texture
-//					for (int i = 0; i < 4; i++) {
-//						p[1,i] = -p[1,i];
-//					}
-//				}
-//				
-//				// Scale and bias depth range
-//				for (int i = 0; i < 4; i++) {
-//					p[2,i] = p[2,i]*0.5f + p[3,i]*0.5f;
-//				}
-//			}
-			
-			Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d(p);
-			inCam.projectionMatrix = m_cameraToScreenMatrix.ToMatrix4x4(); */
-			
 			Matrix4x4 p;
-			//			if (debugSettings [2])
-			//			if(!MapView.MapIsEnabled)
-			//			{
-			//			float tmpNearclip = inCam.nearClipPlane;
-			//			float tmpFarclip = inCam.farClipPlane;
-			//			
-			//			inCam.nearClipPlane = m_manager.m_skyNode.oceanNearPlane;
-			//			inCam.farClipPlane = m_manager.m_skyNode.oceanFarPlane;
-			
-			//			float h = (float)(GetHeight() - m_groundHeight);
-			//			m_manager.GetCore ().chosenCamera.nearClipPlane = 0.1f * (alt - m_radius);
-			//			m_manager.GetCore ().chosenCamera.farClipPlane = 1e6f * (alt - m_radius);
 			
 			p = inCam.projectionMatrix;
-			
-			{
-				//				if(camera.actualRenderingPath == RenderingPath.DeferredLighting)
-				//				{
-				//					// Invert Y for rendering to a render texture
-				//										for (int i = 0; i < 4; i++) {
-				//											p[1,i] = -p[1,i];
-				//										}
-				//				}
 
-				//if OpenGL isn't detected
-				// Scale and bias depth range
-				if (!m_core.opengl)
-					for (int i = 0; i < 4; i++) {
-						p [2, i] = p [2, i] * 0.5f + p [3, i] * 0.5f;
-					}
+			//if OpenGL isn't detected
+			// Scale and bias depth range
+			if (!m_core.opengl)
+			for (int i = 0; i < 4; i++)
+			{
+				p [2, i] = p [2, i] * 0.5f + p [3, i] * 0.5f;
 			}
-			
-			//			p = scaledSpaceCamera.projectionMatrix;
-			
-			//			inCam.nearClipPlane=tmpNearclip;
-			//			inCam.farClipPlane=tmpFarclip;
-			
-			//			p = scaledSpaceCamera.projectionMatrix;
-			//			}
-			//			else
-			//			{
-			//				p = scaledSpaceCamera.projectionMatrix;
-			//			}
-			
-			
+
+
 			Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d (p);
-			
-			
+
 			return m_cameraToScreenMatrix;
 		}
+
 
 		public void saveToConfigNode ()
 		{
@@ -629,14 +594,14 @@ namespace scatterer
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 		}
 		
-		static bool PQisNotNull (PQ pq)
-		{
-			return pq;
-		}
-
-		static bool PQSisNotNull (PQS pqs)
-		{
-			return pqs;
-		}
+//		static bool PQisNotNull (PQ pq)
+//		{
+//			return pq;
+//		}
+//
+//		static bool PQSisNotNull (PQS pqs)
+//		{
+//			return pqs;
+//		}
 	}
 }

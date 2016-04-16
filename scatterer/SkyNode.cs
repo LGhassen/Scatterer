@@ -21,7 +21,6 @@ namespace scatterer
 	public class SkyNode: MonoBehaviour
 	{
 
-
 //		[Persistent]
 //		public bool forceOFFaniso;
 
@@ -46,8 +45,10 @@ namespace scatterer
 		updateAtCameraRythm updater;
 		bool updaterAdded = false;
 
-		Matrix4x4 castersMatrix1;
-		Matrix4x4 castersMatrix2;
+		Matrix4x4 castersMatrix1=Matrix4x4.zero;
+		Matrix4x4 castersMatrix2=Matrix4x4.zero;
+
+		Vector3 sunPosRelPlanet=Vector3.zero;
 
 		public bool scaledMode = false;
 
@@ -123,13 +124,8 @@ namespace scatterer
 		
 		[Persistent]
 		public float MapViewScale = 1f;
+		
 
-//		[Persistent]
-//		float postProcessMaxAltitude=160000;
-
-//		GameObject skyObject;
-//		MeshRenderer skyMR;
-//		MeshFilter skyMF;
 		CelestialBody parentCelestialBody;
 		Transform ParentPlanetTransform;
 
@@ -160,10 +156,7 @@ namespace scatterer
 		public float mapSkyRimExposure = 0.15f;
 
 		PQS CurrentPQS = null;
-
-//		PQSMeshPlanet CurrentPQS = null;
-
-
+		
 
 
 
@@ -281,9 +274,6 @@ namespace scatterer
 			RL = (RL / Rg) * m_radius;
 			Rg = m_radius;
 			
-//			m_mesh = MeshFactory.MakePlane (2, 2, MeshFactory.PLANE.XY, false, false);
-//			m_mesh.bounds = new Bounds (parentCelestialBody.transform.position, new Vector3 (1e8f, 1e8f, 1e8f));
-			
 			//Inscatter is responsible for the change in the sky color as the sun moves
 			//The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture
@@ -315,12 +305,9 @@ namespace scatterer
 
 			loadPrecomputedTables ();
 
-#if !skyScaledBox
-			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
-#else
+
 			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
 			m_skyMaterialLocal = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyLocal.shader"));
-#endif
 
 			if (m_manager.GetCore ().useEclipses)
 			{
@@ -338,12 +325,8 @@ namespace scatterer
 			}
 
 
-			
 			InitUniforms (m_skyMaterialScaled);
 			InitUniforms (m_skyMaterialLocal);
-			
-//			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
-//			{
 
 
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
@@ -359,14 +342,18 @@ namespace scatterer
 				m_atmosphereMaterial.EnableKeyword("GODRAYS_OFF");
 			}
 
+			if (m_manager.GetCore ().useEclipses)
+			{
+				m_atmosphereMaterial.EnableKeyword ("ECLIPSES_ON");
+				m_atmosphereMaterial.DisableKeyword ("ECLIPSES_OFF");
+			}
+			else
+			{
+				m_atmosphereMaterial.DisableKeyword ("ECLIPSES_ON");
+				m_atmosphereMaterial.EnableKeyword ("ECLIPSES_OFF");
+			}
 
-//			} 
-
-//			else
-//
-//			{
-//				m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
-//			}
+			InitPostprocessMaterial (m_atmosphereMaterial);
 
 			CurrentPQS = parentCelestialBody.pqsController;
 
@@ -375,27 +362,7 @@ namespace scatterer
 				currentPQSMod_CelestialBodyTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> () [0];
 			}
 
-#if !skyScaledBox
 
-			skyObject = new GameObject ();
-			skyMF = skyObject.AddComponent < MeshFilter > ();
-			skyMF.mesh.Clear ();
-			skyMF.mesh = m_mesh;
-			
-			skyObject.layer = 10;
-			celestialTransform = ParentPlanetTransform;
-			skyObject.transform.parent = celestialTransform;
-			
-			skyMR = skyObject.AddComponent < MeshRenderer > ();
-			skyMR.sharedMaterial = m_skyMaterialScaled;
-			skyMR.material = m_skyMaterialScaled;
-			
-			
-			skyMR.castShadows = false;
-			skyMR.receiveShadows = false;
-			
-			skyMR.enabled = true;
-#endif
 			postProcessCube = new SimplePostProcessCube (10000, m_atmosphereMaterial,false);
 			atmosphereMesh = postProcessCube.GameObject;
 			atmosphereMesh.layer = 15;
@@ -410,40 +377,38 @@ namespace scatterer
 			skyScaledCube = new SimplePostProcessCube (skySphereSize, m_skyMaterialScaled,true);
 			skyScaledMesh = skyScaledCube.GameObject;
 			skyScaledMesh.layer = 10;
-			skyScaledMeshrenderer = skyScaledCube.GameObject.GetComponent < MeshRenderer > ();
-			skyScaledMeshrenderer.material = m_skyMaterialScaled;
 			skyScaledMesh.transform.position = ParentPlanetTransform.position;
 			skyScaledMesh.transform.parent = ParentPlanetTransform;
+			skyScaledMeshrenderer = skyScaledCube.GameObject.GetComponent < MeshRenderer > ();
+			skyScaledMeshrenderer.material = m_skyMaterialScaled;
+
 
 			skyScaledMeshrenderer.enabled = false;
 
 			if (m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
-				m_skyMaterialScaled.renderQueue=3001;
+				m_skyMaterialScaled.renderQueue=3002;
 			else
-				m_skyMaterialScaled.renderQueue=2001;
+				m_skyMaterialScaled.renderQueue=3001;
 
 			skyLocalCube = new SimplePostProcessCube (40000, m_skyMaterialLocal,false);
 			skyLocalMesh = skyLocalCube.GameObject;
 			skyLocalMesh.layer = 15;
 			skyLocalMeshrenderer = skyLocalCube.GameObject.GetComponent < MeshRenderer > ();
 			skyLocalMeshrenderer.material = m_skyMaterialLocal;
-//			skyLocalMesh.transform.position = farCamera.transform.position;
-//			skyLocalMesh.transform.parent = farCamera.transform;
+
 
 			m_skyMaterialLocal.renderQueue=1000; //render to background unless over clouds
 			skyLocalMeshrenderer.enabled = true;
 
 #endif
 
-//			if ((!coronasDisabled))
-//			{ 
-//				toggleCoronas ();
-//			}
 
 		}
 		
 		public void UpdateStuff () //to be called by update at camera rythm for some graphical stuff
 		{
+//			skyScaledMesh.transform.position = ParentPlanetTransform.position;
+
 			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
 			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
 			atmosphereMesh.transform.rotation = farCamera.transform.rotation;
@@ -452,20 +417,6 @@ namespace scatterer
 			skyLocalMesh.transform.localRotation = farCamera.transform.localRotation;
 			skyLocalMesh.transform.rotation = farCamera.transform.rotation;
 
-#if skyScaledBox
-//			skyScaledMesh.transform.parent = scaledSpaceCamera.transform;
-//			skyScaledMesh.transform.position = ParentPlanetTransform.position;
-//			skyScaledMesh.transform.parent = ParentPlanetTransform;
-
-//			if (MapView.MapIsEnabled)
-//				skyScaledMesh.transform.position = ScaledSpace.LocalToScaledSpace (parentCelestialBody.transform.position)-scaledSpaceCamera.transform.position;
-//			else
-//				skyScaledMesh.transform.position = ScaledSpace.LocalToScaledSpace (parentCelestialBody.transform.position);
-#endif
-
-//			Debug.Log ("planet " + ScaledSpace.LocalToScaledSpace (parentCelestialBody.transform.position).ToString ());
-//			Debug.Log ("scaledCam " + scaledSpaceCamera.transform.position.ToString ());
-
 			if ((!inScaledSpace) && (!MapView.MapIsEnabled))
 			{
 				if (postprocessingEnabled) {
@@ -473,6 +424,16 @@ namespace scatterer
 					UpdatePostProcessMaterial (m_atmosphereMaterial);
 				}
 			}
+
+
+//			InitUniformsGlobal();
+//			SetUniformsGlobal ();
+//
+//			InitPostprocessMaterialGlobal();
+//			UpdatePostProcessMaterialGlobal();
+//			Shader.SetGlobalVector (ShaderProperties._PlanetOrigin_PROPERTY, m_manager.parentCelestialBody.transform.position);
+//			Shader.SetGlobalFloat (ShaderProperties._GlobalOceanAlpha_PROPERTY, _GlobalOceanAlpha);
+
 		}
 
 		
@@ -575,11 +536,49 @@ namespace scatterer
 				if (m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
 					m_skyMaterialScaled.renderQueue=3002;
 				else
-					m_skyMaterialScaled.renderQueue=2001;
+					m_skyMaterialScaled.renderQueue=3001;
 
 
-//				m_skyMaterialLocal.renderQueue=m_manager.GetCore().oceanRenderQueue;
-//				m_skyMaterialScaled.renderQueue=m_manager.GetCore().oceanRenderQueue;
+
+				if (m_manager.GetCore ().useEclipses)
+				{
+					float scaleFactor=ScaledSpace.ScaleFactor;
+					
+					sunPosRelPlanet=Vector3.zero;
+					if (scaledMode)
+						sunPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+					else
+						sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
+
+					//build and set casters matrix
+					castersMatrix1 = Matrix4x4.zero;
+					castersMatrix2 = Matrix4x4.zero;
+					
+					Vector3 casterPosRelPlanet;
+					for (int i=0; i< Mathf.Min(4, m_manager.eclipseCasters.Count); i++)
+					{
+						if (scaledMode)
+							casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+						else
+							casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+						
+						castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
+						                                       casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+					}
+					
+					
+					
+					for (int i=4; i< Mathf.Min(8, m_manager.eclipseCasters.Count); i++)
+					{
+						if (scaledMode)
+							casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+						else
+							casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+						castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
+						                                           casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+					}
+				}
+
 			}
 		}
 
@@ -593,64 +592,62 @@ namespace scatterer
 				return;
 
 
-			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
+			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			if (!MapView.MapIsEnabled)
 			{
-				mat.SetFloat ("_viewdirOffset", viewdirOffset);
+				mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
 			}
 			else
 			{
-				mat.SetFloat ("_viewdirOffset", 0f);
+				mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, 0f);
 			}
 
-			mat.SetFloat ("extinctionGroundFade", skyExtinctionGroundFade);
+			mat.SetFloat (ShaderProperties.extinctionGroundFade_PROPERTY, skyExtinctionGroundFade);
 
 			if (!MapView.MapIsEnabled)
 			{
-				mat.SetFloat ("_Alpha_Global", alphaGlobal);
-				mat.SetFloat ("_Extinction_Tint", extinctionTint);
-				mat.SetFloat ("extinctionMultiplier", extinctionMultiplier);
-				mat.SetFloat ("extinctionRimFade", skyExtinctionRimFade);
-				mat.SetFloat ("_extinctionScatterIntensity", _extinctionScatterIntensity);
+				mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, alphaGlobal);
+				mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, extinctionTint);
+				mat.SetFloat (ShaderProperties.extinctionMultiplier_PROPERTY, extinctionMultiplier);
+				mat.SetFloat (ShaderProperties.extinctionRimFade_PROPERTY, skyExtinctionRimFade);
+				mat.SetFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, _extinctionScatterIntensity);
 			}
 			else
 			{
-				mat.SetFloat ("_Alpha_Global", mapAlphaGlobal);
-				mat.SetFloat ("_Extinction_Tint", mapExtinctionTint);
-				mat.SetFloat ("extinctionMultiplier", mapExtinctionMultiplier);
-				mat.SetFloat ("extinctionRimFade", mapSkyExtinctionRimFade);
-				mat.SetFloat ("_extinctionScatterIntensity", _mapExtinctionScatterIntensity);
+				mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, mapAlphaGlobal);
+				mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, mapExtinctionTint);
+				mat.SetFloat (ShaderProperties.extinctionMultiplier_PROPERTY, mapExtinctionMultiplier);
+				mat.SetFloat (ShaderProperties.extinctionRimFade_PROPERTY, mapSkyExtinctionRimFade);
+				mat.SetFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, _mapExtinctionScatterIntensity);
 			}
 
 
-			mat.SetFloat ("scale", 1);
-			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
-			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
-			mat.SetFloat ("RL", RL * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.scale_PROPERTY, 1);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
 
 
 			//used to determine the view ray direction in the sky shader
 			if (!MapView.MapIsEnabled)
 			{				
-				mat.SetMatrix ("_Globals_WorldToCamera", farCamera.worldToCameraMatrix);
-				mat.SetMatrix ("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
+				mat.SetMatrix (ShaderProperties._Globals_WorldToCamera_PROPERTY, farCamera.worldToCameraMatrix);
+				mat.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
 			}
 			else
 			{
-				mat.SetMatrix ("_Globals_WorldToCamera", scaledSpaceCamera.worldToCameraMatrix);
-				mat.SetMatrix ("_Globals_CameraToWorld", scaledSpaceCamera.worldToCameraMatrix.inverse);
+				mat.SetMatrix (ShaderProperties._Globals_WorldToCamera_PROPERTY, scaledSpaceCamera.worldToCameraMatrix);
+				mat.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, scaledSpaceCamera.worldToCameraMatrix.inverse);
 			}
 
 			
 			
-			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			mat.SetFloat ("_Sun_Intensity", 100f);
+			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+			mat.SetFloat (ShaderProperties._Sun_Intensity_PROPERTY, 100f);
 			
-//			mat.SetFloat ("_sunglareScale", sunglareScale);
-			
-			mat.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToSun ().normalized);
+			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 
-			Shader.SetGlobalVector ("_Godray_WorldSunDir", m_manager.sunCelestialBody.transform.position
+			Shader.SetGlobalVector (ShaderProperties._Godray_WorldSunDir_PROPERTY, m_manager.sunCelestialBody.transform.position
 				- parentCelestialBody.transform.position);
 
 
@@ -662,104 +659,65 @@ namespace scatterer
 
 			
 			m_cameraToScreenMatrix = new Matrix4x4d (p);
-			mat.SetMatrix ("_Globals_CameraToScreen", m_cameraToScreenMatrix.ToMatrix4x4 ());
-			mat.SetMatrix ("_Globals_ScreenToCamera", m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
+			mat.SetMatrix (ShaderProperties._Globals_CameraToScreen_PROPERTY, m_cameraToScreenMatrix.ToMatrix4x4 ());
+			mat.SetMatrix (ShaderProperties._Globals_ScreenToCamera_PROPERTY, m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
 
 			Vector3 temp = ScaledSpace.ScaledToLocalSpace (scaledSpaceCamera.transform.position);
-			mat.SetVector ("_Globals_WorldCameraPos", temp);
+			mat.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, temp);
+
 
 #if skyScaledBox
 			if (scaledMode)
-				mat.SetVector ("_Globals_Origin", Vector3.Scale(ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position),new Vector3(6000f,6000f,6000f)));
+				mat.SetVector (ShaderProperties._Globals_Origin_PROPERTY, Vector3.Scale(ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position),new Vector3(6000f,6000f,6000f)));
 			else
-				mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
+				mat.SetVector (ShaderProperties._Globals_Origin_PROPERTY, parentCelestialBody.transform.position);
 #else
-			mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
+			mat.SetVector (ShaderProperties._Globals_Origin_PROPERTY, parentCelestialBody.transform.position);
 #endif
 				
 			
 			if (!MapView.MapIsEnabled) {
-				mat.SetFloat ("_Exposure", m_HDRExposure);
-				mat.SetFloat ("_RimExposure", m_rimHDRExposure);
+				mat.SetFloat (ShaderProperties._Exposure_PROPERTY, m_HDRExposure);
+				mat.SetFloat (ShaderProperties._RimExposure_PROPERTY, m_rimHDRExposure);
 			} else {
-				mat.SetFloat ("_Exposure", mapExposure);
-				mat.SetFloat ("_RimExposure", mapSkyRimExposure);
+				mat.SetFloat (ShaderProperties._Exposure_PROPERTY, mapExposure);
+				mat.SetFloat (ShaderProperties._RimExposure_PROPERTY, mapSkyRimExposure);
 			}
 
 
 
 			if (m_manager.GetCore ().useEclipses)
 			{
-				float scaleFactor=ScaledSpace.ScaleFactor;
-
-				Vector3 sunPosRelPlanet=Vector3.zero;
-				if (scaledMode)
-					sunPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
-				else
-					sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
-				mat.SetVector ("sunPosAndRadius", new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
-			                                             sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
-
-
-
-				//build and set casters matrix
-				castersMatrix1 = Matrix4x4.zero;
-				castersMatrix2 = Matrix4x4.zero;
-
-
-//				Debug.Log("scalefactor "+scaleFactor.ToString());
-
-				Vector3 casterPosRelPlanet;
-				for (int i=0; i< Mathf.Min(4, m_manager.eclipseCasters.Count); i++)
-				{
-					if (scaledMode)
-						casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
-					else
-						casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
-
-					castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
-				                                    casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
-				}
-
-
-
-				for (int i=4; i< Mathf.Min(8, m_manager.eclipseCasters.Count); i++)
-				{
-					if (scaledMode)
-						casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
-					else
-						casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
-					castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
-				                                    casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
-				}
-
-				mat.SetMatrix ("lightOccluders1", castersMatrix1);
-				mat.SetMatrix ("lightOccluders2", castersMatrix2);
+				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
+				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
+				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
+				                                               sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
 			}
 		}
 
 
-
 		public void SetOceanUniforms (Material mat)
 		{
+			//Sets uniforms that this or other gameobjects may need
 			if (mat == null)
 				return;
 
-//			mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
-//			mat.SetFloat ("scale", atmosphereGlobalScale);
-			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
-			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
-			mat.SetFloat ("RL", RL * atmosphereGlobalScale);
-			mat.SetVector ("betaR", m_betaR / 1000.0f);
-			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			mat.SetTexture ("_Sky_Transmittance", m_transmit);
-			mat.SetTexture ("_Sky_Inscatter", m_inscatter);
-			mat.SetTexture ("_Sky_Irradiance", m_irradiance);
-			mat.SetFloat ("_Sun_Intensity", 100f);
-			mat.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToSun ().normalized);
-			mat.SetVector ("_Globals_WorldCameraPos", farCamera.transform.position);
-			mat.SetVector ("_Globals_Origin", parentCelestialBody.transform.position);
-			mat.SetFloat ("_Exposure", m_rimHDRExposure);
+			mat.SetFloat (ShaderProperties._Exposure_PROPERTY, m_rimHDRExposure);
+			
+			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
+
+			mat.SetFloat (ShaderProperties.scale_PROPERTY, 1);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
+
+			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+			mat.SetFloat (ShaderProperties._Sun_Intensity_PROPERTY, 100f);
+			
+			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
+
+			mat.SetVector (ShaderProperties._Globals_Origin_PROPERTY, parentCelestialBody.transform.position);
+
 		}
 
 
@@ -767,131 +725,469 @@ namespace scatterer
 
 		public void InitPostprocessMaterial (Material mat)
 		{
-			mat.SetTexture ("_Transmittance", m_transmit);
-			mat.SetTexture ("_Inscatter", m_inscatter);
-			mat.SetTexture ("_Irradiance", m_irradiance);
-			
+
+			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
+			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
+			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
+
 			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
-				mat.SetTexture ("_customDepthTexture", m_manager.GetCore ().customDepthBufferTexture);
+				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, m_manager.GetCore ().customDepthBufferTexture);
 
 			if (m_manager.GetCore ().useGodrays)
-				mat.SetTexture ("_godrayDepthTexture", m_manager.GetCore ().godrayDepthTexture);
+				mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, m_manager.GetCore ().godrayDepthTexture);
 
 			//Consts, best leave these alone
-			mat.SetFloat ("M_PI", Mathf.PI);
-			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
-			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
-			mat.SetFloat ("Rl", RL * atmosphereGlobalScale);
-			mat.SetFloat ("RES_R", RES_R);
-			mat.SetFloat ("RES_MU", RES_MU);
-			mat.SetFloat ("RES_MU_S", RES_MU_S);
-			mat.SetFloat ("RES_NU", RES_NU);
-			mat.SetFloat ("SKY_W", SKY_W);
-			mat.SetFloat ("SKY_H", SKY_H);
+			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.RES_R_PROPERTY, RES_R);
+			mat.SetFloat (ShaderProperties.RES_MU_PROPERTY, RES_MU);
+			mat.SetFloat (ShaderProperties.RES_MU_S_PROPERTY, RES_MU_S);
+			mat.SetFloat (ShaderProperties.RES_NU_PROPERTY, RES_NU);
+			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
+			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
 
-			mat.SetVector ("betaR", m_betaR / 1000.0f);
-			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
+			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 			
-			mat.SetVector ("betaMSca", BETA_MSca / 1000.0f);
-			mat.SetVector ("betaMEx", (BETA_MSca / 1000.0f) / 0.9f);
+			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
+			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
 
-			mat.SetFloat ("HR", HR * 1000.0f);
-			mat.SetFloat ("HM", HM * 1000.0f);
+			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
+			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
 
-			mat.SetVector ("_camPos", farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
-			mat.SetVector ("SUN_DIR", m_manager.GetSunNodeDirection ());
+
+			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.GetSunNodeDirection ());
 		}
 
+		public void InitPostprocessMaterialGlobal ()
+		{
+
+			Shader.SetGlobalTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
+
+			Shader.SetGlobalTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
+
+			Shader.SetGlobalTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
+
+			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
+				Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, m_manager.GetCore ().customDepthBufferTexture);
+
+			if (m_manager.GetCore ().useGodrays)
+				Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, m_manager.GetCore ().godrayDepthTexture);
+
+			//Consts, best leave these alone
+			Shader.SetGlobalFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+
+			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.RES_R_PROPERTY, RES_R);
+			Shader.SetGlobalFloat (ShaderProperties.RES_MU_PROPERTY, RES_MU);
+			Shader.SetGlobalFloat (ShaderProperties.RES_MU_S_PROPERTY, RES_MU_S);
+			Shader.SetGlobalFloat (ShaderProperties.RES_NU_PROPERTY, RES_NU);
+			Shader.SetGlobalFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
+			Shader.SetGlobalFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
+
+			Shader.SetGlobalVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
+			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+
+			Shader.SetGlobalVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
+			Shader.SetGlobalVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
+
+			Shader.SetGlobalFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
+			Shader.SetGlobalFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
+
+			Shader.SetGlobalVector (ShaderProperties._camPos_PROPERTY, farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
+			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.GetSunNodeDirection ());
+		}
 
 
 		public void UpdatePostProcessMaterial (Material mat)
 		{
 
+//			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+//			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+//			mat.SetFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
+//
+//			//mat.SetFloat (ShaderProperties.atmosphereGlobalScale_PROPERTY, atmosphereGlobalScale);
+//
+//			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
+////			mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
+//		
+//			mat.SetFloat (ShaderProperties._global_alpha_PROPERTY, postProcessingAlpha);
+//			mat.SetFloat (ShaderProperties._Exposure_PROPERTY, postProcessExposure);
+//			mat.SetFloat (ShaderProperties._global_depth_PROPERTY, postProcessDepth*1000000);
+//
+//			mat.SetFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, _Post_Extinction_Tint);
+//			mat.SetFloat (ShaderProperties.postExtinctionMultiplier_PROPERTY, postExtinctionMultiplier);
+//
+//
+//			mat.SetFloat (ShaderProperties._openglThreshold_PROPERTY, openglThreshold);
+////			mat.SetFloat (ShaderProperties._edgeThreshold_PROPERTY, edgeThreshold);
+//			
+//
+//			mat.SetFloat(ShaderProperties._Scale_PROPERTY, 1);
+//
+//			mat.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
+//			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.GetSunNodeDirection ());
+//			mat.SetFloat (ShaderProperties.SUN_INTENSITY_PROPERTY, sunIntensity);
+//			
+//			
+//			Matrix4x4 ctol1 = farCamera.cameraToWorldMatrix;
+//			Vector3d tmp = (farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+//			
+//			Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
+//			                                    ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
+//			                                    ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
+//			                                    ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
+//
+//			viewMat = viewMat.Inverse ();
+//			Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
+//			
+//			Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
+//			mat.SetMatrix (ShaderProperties._ViewProjInv_PROPERTY, viewProjMat.inverse);
+//			
+//			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+//
+////			if (currentPQSMod_CelestialBodyTransform)
+////			{
+////				float fadeStart = currentPQSMod_CelestialBodyTransform.planetFade.fadeStart;
+////				float fadeEnd = currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd;
+////				mat.SetFloat (ShaderProperties._fade_PROPERTY, Mathf.Lerp (1f, 0f, (trueAlt - fadeStart) / (fadeEnd - fadeStart)));
+////			}
+//
+//			mat.SetVector (ShaderProperties._camPos_PROPERTY, farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
+//
+////			if (m_manager.GetCore ().useEclipses)
+////			{
+////				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
+////				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
+////				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
+////				                                               sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
+////			}
+			 
 			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
 			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
 			mat.SetFloat ("Rl", RL * atmosphereGlobalScale);
 
-			//mat.SetFloat ("atmosphereGlobalScale", atmosphereGlobalScale);
 
 			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
-//			mat.SetFloat ("_viewdirOffset", viewdirOffset);
-		
+
+				
 			mat.SetFloat ("_global_alpha", postProcessingAlpha);
 			mat.SetFloat ("_Exposure", postProcessExposure);
 			mat.SetFloat ("_global_depth", postProcessDepth*1000000);
 
+			
 			mat.SetFloat ("_Post_Extinction_Tint", _Post_Extinction_Tint);
 			mat.SetFloat ("postExtinctionMultiplier", postExtinctionMultiplier);
 
-
-			mat.SetFloat ("_openglThreshold", openglThreshold);
-//			mat.SetFloat ("_edgeThreshold", edgeThreshold);
 			
+			
+			mat.SetFloat ("_openglThreshold", openglThreshold);
 
+				
+				
 			mat.SetFloat("_Scale", 1);
 
 			mat.SetMatrix ("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
 			mat.SetVector ("SUN_DIR", m_manager.GetSunNodeDirection ());
 			mat.SetFloat ("SUN_INTENSITY", sunIntensity);
+
 			
 			
 			Matrix4x4 ctol1 = farCamera.cameraToWorldMatrix;
 			Vector3d tmp = (farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
 			
 			Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
-			                                    ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
-			                                    ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
-			                                    ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
-
+			                                     ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
+			                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
+			                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
+			
 			viewMat = viewMat.Inverse ();
 			Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
 			
 			Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
 			mat.SetMatrix ("_ViewProjInv", viewProjMat.inverse);
+
 			
 			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+			mat.SetVector ("_camPos", farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
 
-//			if (currentPQSMod_CelestialBodyTransform)
-//			{
-//				float fadeStart = currentPQSMod_CelestialBodyTransform.planetFade.fadeStart;
-//				float fadeEnd = currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd;
-//				mat.SetFloat ("_fade", Mathf.Lerp (1f, 0f, (trueAlt - fadeStart) / (fadeEnd - fadeStart)));
-//			}
+
 		}
 
+		public void UpdatePostProcessMaterialGlobal ()
+		{
+			
+			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
+			
+			//Shader.SetGlobalFloat (ShaderPropertiesatmosphereGlobalScale_PROPERTY, atmosphereGlobalScale);
+			
+			Shader.SetGlobalFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
+			//			Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
+			
+			Shader.SetGlobalFloat (ShaderProperties._global_alpha_PROPERTY, postProcessingAlpha);
+			Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, postProcessExposure);
+			Shader.SetGlobalFloat (ShaderProperties._global_depth_PROPERTY, postProcessDepth*1000000);
+			
+			Shader.SetGlobalFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, _Post_Extinction_Tint);
+			Shader.SetGlobalFloat (ShaderProperties.postExtinctionMultiplier_PROPERTY, postExtinctionMultiplier);
+			
+			
+			Shader.SetGlobalFloat (ShaderProperties._openglThreshold_PROPERTY, openglThreshold);
+			//			Shader.SetGlobalFloat (ShaderProperties._edgeThreshold_PROPERTY, edgeThreshold);
+			
+
+			Shader.SetGlobalFloat (ShaderProperties._Scale_PROPERTY, 1);
+			
+			Shader.SetGlobalMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
+			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.GetSunNodeDirection ());
+			Shader.SetGlobalFloat (ShaderProperties.SUN_INTENSITY_PROPERTY, sunIntensity);
+			
+			
+			Matrix4x4 ctol1 = farCamera.cameraToWorldMatrix;
+			Vector3d tmp = (farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+			
+			Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
+			                                     ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
+			                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
+			                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
+			
+			viewMat = viewMat.Inverse ();
+			Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
+			
+			Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
+			Shader.SetGlobalMatrix (ShaderProperties._ViewProjInv_PROPERTY, viewProjMat.inverse);
+			
+			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+			
+			//			if (currentPQSMod_CelestialBodyTransform)
+			//			{
+			//				float fadeStart = currentPQSMod_CelestialBodyTransform.planetFade.fadeStart;
+			//				float fadeEnd = currentPQSMod_CelestialBodyTransform.planetFade.fadeEnd;
+			//				Shader.SetGlobalFloat (ShaderProperties._fade_PROPERTY, Mathf.Lerp (1f, 0f, (trueAlt - fadeStart) / (fadeEnd - fadeStart)));
+			//			}
+
+			Shader.SetGlobalVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
+
+		}
 		
 		public void InitUniforms (Material mat)
 		{
 			//Init uniforms that this or other gameobjects may need
 			if (mat == null)
 				return;
+
+			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+
+			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
+			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
+			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
+			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
+			mat.SetFloat (ShaderProperties.scale_PROPERTY, Rg * 1 / m_radius);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
 			
-			mat.SetVector ("betaR", m_betaR / 1000.0f);
-			mat.SetTexture ("_Sky_Transmittance", m_transmit);
-			mat.SetTexture ("_Sky_Inscatter", m_inscatter);
-			mat.SetTexture ("_Sky_Irradiance", m_irradiance);
-			mat.SetFloat ("scale", Rg * 1 / m_radius);
-			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
-			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
-			mat.SetFloat ("RL", RL * atmosphereGlobalScale);
-			
-			mat.SetFloat ("TRANSMITTANCE_W", TRANSMITTANCE_W);
-			mat.SetFloat ("TRANSMITTANCE_H", TRANSMITTANCE_H);
-			mat.SetFloat ("SKY_W", SKY_W);
-			mat.SetFloat ("SKY_H", SKY_H);
-			mat.SetFloat ("RES_R", RES_R);
-			mat.SetFloat ("RES_MU", RES_MU);
-			mat.SetFloat ("RES_MU_S", RES_MU_S);
-			mat.SetFloat ("RES_NU", RES_NU);
-			mat.SetFloat ("AVERAGE_GROUND_REFLECTANCE", AVERAGE_GROUND_REFLECTANCE);
-			mat.SetFloat ("HR", HR * 1000.0f);
-			mat.SetFloat ("HM", HM * 1000.0f);
-			mat.SetVector ("betaMSca", BETA_MSca / 1000.0f);
-			mat.SetVector ("betaMEx", (BETA_MSca / 1000.0f) / 0.9f);
-//			mat.SetFloat ("_sunglareScale", sunglareScale);
-			
+			mat.SetFloat (ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
+			mat.SetFloat (ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
+			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
+			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
+			mat.SetFloat (ShaderProperties.RES_R_PROPERTY, RES_R);
+			mat.SetFloat (ShaderProperties.RES_MU_PROPERTY, RES_MU);
+			mat.SetFloat (ShaderProperties.RES_MU_S_PROPERTY, RES_MU_S);
+			mat.SetFloat (ShaderProperties.RES_NU_PROPERTY, RES_NU);
+			mat.SetFloat (ShaderProperties.AVERAGE_GROUND_REFLECTANCE_PROPERTY, AVERAGE_GROUND_REFLECTANCE);
+			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
+			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
+			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
+			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
+//			mat.SetFloat (ShaderProperties._sunglareScale_PROPERTY, sunglareScale);	
 		}
-		
+
+		public void InitUniformsGlobal ()
+		{
+			Shader.SetGlobalFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+			
+			Shader.SetGlobalVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
+
+			Shader.SetGlobalTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
+			Shader.SetGlobalTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
+			Shader.SetGlobalTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
+			Shader.SetGlobalFloat (ShaderProperties.scale_PROPERTY, Rg * 1 / m_radius);
+			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
+			
+			Shader.SetGlobalFloat (ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
+			Shader.SetGlobalFloat (ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
+			Shader.SetGlobalFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
+			Shader.SetGlobalFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
+			Shader.SetGlobalFloat (ShaderProperties.RES_R_PROPERTY, RES_R);
+			Shader.SetGlobalFloat (ShaderProperties.RES_MU_PROPERTY, RES_MU);
+			Shader.SetGlobalFloat (ShaderProperties.RES_MU_S_PROPERTY, RES_MU_S);
+			Shader.SetGlobalFloat (ShaderProperties.RES_NU_PROPERTY, RES_NU);
+			Shader.SetGlobalFloat (ShaderProperties.AVERAGE_GROUND_REFLECTANCE_PROPERTY, AVERAGE_GROUND_REFLECTANCE);
+			Shader.SetGlobalFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
+			Shader.SetGlobalFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
+			Shader.SetGlobalVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
+			Shader.SetGlobalVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
+			//			Shader.SetGlobalFloat (ShaderProperties._sunglareScale_PROPERTY, sunglareScale);	
+		}
+
+		public void SetUniformsGlobal ()
+		{
+
+			Shader.SetGlobalFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
+			if (!MapView.MapIsEnabled)
+			{
+				Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
+			}
+			else
+			{
+				Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, 0f);
+			}
+			
+			Shader.SetGlobalFloat (ShaderProperties.extinctionGroundFade_PROPERTY, skyExtinctionGroundFade);
+			
+			if (!MapView.MapIsEnabled)
+			{
+				Shader.SetGlobalFloat (ShaderProperties._Alpha_Global_PROPERTY, alphaGlobal);
+				Shader.SetGlobalFloat (ShaderProperties._Extinction_Tint_PROPERTY, extinctionTint);
+				Shader.SetGlobalFloat (ShaderProperties.extinctionMultiplier_PROPERTY, extinctionMultiplier);
+				Shader.SetGlobalFloat (ShaderProperties.extinctionRimFade_PROPERTY, skyExtinctionRimFade);
+				Shader.SetGlobalFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, _extinctionScatterIntensity);
+			}
+			else
+			{
+				Shader.SetGlobalFloat (ShaderProperties._Alpha_Global_PROPERTY, mapAlphaGlobal);
+				Shader.SetGlobalFloat (ShaderProperties._Extinction_Tint_PROPERTY, mapExtinctionTint);
+				Shader.SetGlobalFloat (ShaderProperties.extinctionMultiplier_PROPERTY, mapExtinctionMultiplier);
+				Shader.SetGlobalFloat (ShaderProperties.extinctionRimFade_PROPERTY, mapSkyExtinctionRimFade);
+				Shader.SetGlobalFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, _mapExtinctionScatterIntensity);
+			}
+			
+			
+			Shader.SetGlobalFloat (ShaderProperties.scale_PROPERTY, 1);
+			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			Shader.SetGlobalFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
+			
+			
+			//used to determine the view ray direction in the sky shader
+			if (!MapView.MapIsEnabled)
+			{				
+				Shader.SetGlobalMatrix (ShaderProperties._Globals_WorldToCamera_PROPERTY, farCamera.worldToCameraMatrix);
+				Shader.SetGlobalMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
+			}
+			else
+			{
+				Shader.SetGlobalMatrix (ShaderProperties._Globals_WorldToCamera_PROPERTY, scaledSpaceCamera.worldToCameraMatrix);
+				Shader.SetGlobalMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, scaledSpaceCamera.worldToCameraMatrix.inverse);
+			}
+			
+			
+			
+			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+			Shader.SetGlobalFloat (ShaderProperties._Sun_Intensity_PROPERTY, 100f);
+			
+			//			Shader.SetGlobalFloat (ShaderProperties._sunglareScale_PROPERTY, sunglareScale);
+			
+			Shader.SetGlobalVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
+			
+			Shader.SetGlobalVector (ShaderProperties._Godray_WorldSunDir_PROPERTY, m_manager.sunCelestialBody.transform.position
+			                        - parentCelestialBody.transform.position);
+			
+			
+			if (!MapView.MapIsEnabled) {
+				p = farCamera.projectionMatrix;
+			} else {
+				p = scaledSpaceCamera.projectionMatrix;
+			}
+			
+			
+			m_cameraToScreenMatrix = new Matrix4x4d (p);
+			Shader.SetGlobalMatrix (ShaderProperties._Globals_CameraToScreen_PROPERTY, m_cameraToScreenMatrix.ToMatrix4x4 ());
+			Shader.SetGlobalMatrix (ShaderProperties._Globals_ScreenToCamera_PROPERTY, m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
+			
+			Vector3 temp = ScaledSpace.ScaledToLocalSpace (scaledSpaceCamera.transform.position);
+			Shader.SetGlobalVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, temp);
+			
+			#if skyScaledBox
+			if (scaledMode)
+				Shader.SetGlobalVector (ShaderProperties._Globals_Origin_PROPERTY, Vector3.Scale(ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position),new Vector3(6000f,6000f,6000f)));
+			else
+				Shader.SetGlobalVector (ShaderProperties._Globals_Origin_PROPERTY, parentCelestialBody.transform.position);
+			#else
+			Shader.SetGlobalVector (ShaderProperties._Globals_Origin_PROPERTY, parentCelestialBody.transform.position);
+			#endif
+			
+			
+			if (!MapView.MapIsEnabled) {
+				Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, m_HDRExposure);
+				Shader.SetGlobalFloat (ShaderProperties._RimExposure_PROPERTY, m_rimHDRExposure);
+			} else {
+				Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, mapExposure);
+				Shader.SetGlobalFloat (ShaderProperties._RimExposure_PROPERTY, mapSkyRimExposure);
+			}
+
+			
+			if (m_manager.GetCore ().useEclipses)
+			{
+				float scaleFactor=ScaledSpace.ScaleFactor;
+				
+				Vector3 sunPosRelPlanet=Vector3.zero;
+				if (scaledMode)
+					sunPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+				else
+					sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
+				Shader.SetGlobalVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
+				                                                        sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
+				
+				
+				
+				//build and set casters matrix
+				castersMatrix1 = Matrix4x4.zero;
+				castersMatrix2 = Matrix4x4.zero;
+				
+				
+				//				Debug.Log("scalefactor "+scaleFactor.ToString());
+				
+				Vector3 casterPosRelPlanet;
+				for (int i=0; i< Mathf.Min(4, m_manager.eclipseCasters.Count); i++)
+				{
+					if (scaledMode)
+						casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+					else
+						casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+					
+					castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
+					                                       casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+				}
+				
+				
+				
+				for (int i=4; i< Mathf.Min(8, m_manager.eclipseCasters.Count); i++)
+				{
+					if (scaledMode)
+						casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+					else
+						casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+					castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
+					                                           casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+				}
+				
+				Shader.SetGlobalMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
+				Shader.SetGlobalMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
+			}
+		}
+
 		public void setManager (Manager manager)
 		{
 			m_manager = manager;

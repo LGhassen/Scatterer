@@ -35,11 +35,11 @@ namespace scatterer {
 			m_whiteCapsPrecomputeMat = new Material(ShaderTool.GetMatFromShader2("CompiledWhiteCapsPrecompute0.shader"));//shader with two passes, to fix black ocean bug
 			
 			
-			m_initJacobiansMat.SetTexture("_Spectrum01", m_spectrum01);
-			m_initJacobiansMat.SetTexture("_Spectrum23", m_spectrum23);
-			m_initJacobiansMat.SetTexture("_WTable", m_WTable);
-			m_initJacobiansMat.SetVector("_Offset", m_offset);
-			m_initJacobiansMat.SetVector("_InverseGridSizes", m_inverseGridSizes);
+			m_initJacobiansMat.SetTexture(ShaderProperties._Spectrum01_PROPERTY, m_spectrum01);
+			m_initJacobiansMat.SetTexture(ShaderProperties._Spectrum23_PROPERTY, m_spectrum23);
+			m_initJacobiansMat.SetTexture(ShaderProperties._WTable_PROPERTY, m_WTable);
+			m_initJacobiansMat.SetVector (ShaderProperties._Offset_PROPERTY, m_offset);
+			m_initJacobiansMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 		}
 		
 		protected override void CreateRenderTextures() {
@@ -87,7 +87,7 @@ namespace scatterer {
 			RenderTexture[] buffers567 = new RenderTexture[] {
 				m_fourierBuffer5[1], m_fourierBuffer6[1], m_fourierBuffer7[1]
 			};
-			m_initJacobiansMat.SetFloat("_T", t);
+			m_initJacobiansMat.SetFloat (ShaderProperties._T_PROPERTY, t);
 			//			RTUtility.MultiTargetBlit(buffers567, m_initJacobiansMat);
 			RTUtility.MultiTargetBlit(buffers567, m_initJacobiansMat, 0);
 		}
@@ -101,31 +101,31 @@ namespace scatterer {
 					m_fourier.PeformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
 					
 					//original block, two textures in one pass
-					//				m_whiteCapsPrecomputeMat.SetTexture("_Map5", m_fourierBuffer5[m_idx]);
-					//				m_whiteCapsPrecomputeMat.SetTexture("_Map6", m_fourierBuffer6[m_idx]);
-					//				m_whiteCapsPrecomputeMat.SetTexture("_Map7", m_fourierBuffer7[m_idx]);
-					//				m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness * choppynessMultiplier);
+					//				m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map5_PROPERTY, m_fourierBuffer5[m_idx]);
+					//				m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map6_PROPERTY, m_fourierBuffer6[m_idx]);
+					//				m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map7_PROPERTY, m_fourierBuffer7[m_idx]);
+					//				m_whiteCapsPrecomputeMat.SetVector (ShaderProperties._Choppyness_PROPERTY, m_choppyness * choppynessMultiplier);
 					//				RenderTexture[] buffers = new RenderTexture[] {m_foam0, m_foam1};
 					//				RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat, 0);
 					
 					//fixed block, two passes, fixes mipmapping issue resulting in black ocean
-					m_whiteCapsPrecomputeMat.SetTexture("_Map5", m_fourierBuffer5[m_idx]);
-					m_whiteCapsPrecomputeMat.SetTexture("_Map6", m_fourierBuffer6[m_idx]);
-					m_whiteCapsPrecomputeMat.SetTexture("_Map7", m_fourierBuffer7[m_idx]);
-					m_whiteCapsPrecomputeMat.SetVector("_Choppyness", m_choppyness);
+					m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map5_PROPERTY, m_fourierBuffer5[m_idx]);
+					m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map6_PROPERTY, m_fourierBuffer6[m_idx]);
+					m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map7_PROPERTY, m_fourierBuffer7[m_idx]);
+					m_whiteCapsPrecomputeMat.SetVector (ShaderProperties._Choppyness_PROPERTY, m_choppyness);
 					Graphics.Blit (null, m_foam0, m_whiteCapsPrecomputeMat, 0);
 					Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
 					
 					
-					m_oceanMaterialFar.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
-					m_oceanMaterialFar.SetFloat("farWhiteCapStr", m_farWhiteCapStr);
-					m_oceanMaterialFar.SetTexture("_Ocean_Foam0", m_foam0);
-					m_oceanMaterialFar.SetTexture("_Ocean_Foam1", m_foam1);
+					m_oceanMaterialFar.SetFloat (ShaderProperties._Ocean_WhiteCapStr_PROPERTY, m_whiteCapStr);
+					m_oceanMaterialFar.SetFloat (ShaderProperties.farWhiteCapStr_PROPERTY, m_farWhiteCapStr);
+					m_oceanMaterialFar.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);
+					m_oceanMaterialFar.SetTexture(ShaderProperties._Ocean_Foam1_PROPERTY, m_foam1);
 					
-					m_oceanMaterialNear.SetFloat("_Ocean_WhiteCapStr", m_whiteCapStr);
-					m_oceanMaterialNear.SetFloat("farWhiteCapStr", m_farWhiteCapStr);
-					m_oceanMaterialNear.SetTexture("_Ocean_Foam0", m_foam0);
-					m_oceanMaterialNear.SetTexture("_Ocean_Foam1", m_foam1);
+//					m_oceanMaterialNear.SetFloat (ShaderProperties._Ocean_WhiteCapStr_PROPERTY, m_whiteCapStr);
+//					m_oceanMaterialNear.SetFloat (ShaderProperties.farWhiteCapStr_PROPERTY, m_farWhiteCapStr);
+//					m_oceanMaterialNear.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);
+//					m_oceanMaterialNear.SetTexture(ShaderProperties._Ocean_Foam1_PROPERTY, m_foam1);
 				}
 				
 

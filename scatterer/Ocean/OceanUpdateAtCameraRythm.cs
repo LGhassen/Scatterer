@@ -14,7 +14,7 @@ namespace scatterer {
 	
 	public class OceanUpdateAtCameraRythm: MonoBehaviour {
 		public OceanNode m_oceanNode;
-		public Material oceanMaterialNear;
+//		public Material oceanMaterialNear;
 		public Material oceanMaterialFar;
 		public Camera farCamera;
 		public Camera nearCamera;
@@ -26,7 +26,7 @@ namespace scatterer {
 
 			if (!MapView.MapIsEnabled && farCamera && nearCamera && !m_manager.m_skyNode.inScaledSpace && m_oceanNode.GetDrawOcean() ) {
 				m_oceanNode.updateStuff(oceanMaterialFar, farCamera);
-				m_oceanNode.updateStuff(oceanMaterialNear, nearCamera);	
+//				m_oceanNode.updateStuff(oceanMaterialNear, nearCamera);	
 			}
 		}
 	}
