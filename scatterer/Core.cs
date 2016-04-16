@@ -26,7 +26,7 @@ namespace scatterer
 
 		bool wireFrame=false;
 		
-		[Persistent]
+//		[Persistent]
 		public bool ignoreRenderTypetags=false;
 
 //		bool ambientLight=true;
@@ -69,6 +69,14 @@ namespace scatterer
 		[Persistent]
 		public bool
 			useOceanShaders = true;
+
+		[Persistent]
+		public bool
+			oceanSkyReflections = true;
+
+		[Persistent]
+		public bool
+			oceanPixelLights = false;
 		
 		[Persistent]
 		public bool
@@ -179,7 +187,8 @@ namespace scatterer
 		int selectedPlanet = 0;
 		Camera[] cams;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
-		
+
+//		cameraHDRTonemapping tonemapper;
 		
 		float MapViewScale = 1000f;
 		
@@ -236,8 +245,9 @@ namespace scatterer
 		
 		Vector4 m_gridSizes = new Vector4 (5488, 392, 28, 2); //Size in meters (i.e. in spatial domain) of each grid
 		Vector4 m_choppyness = new Vector4 (2.3f, 2.1f, 1.3f, 0.9f); //strengh of sideways displacement for each grid
-		
-		int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
+
+		[Persistent]
+		public int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
 
 		
@@ -334,6 +344,7 @@ namespace scatterer
 
 //						cams [i].hdr=true;
 
+
 						if (cams [i].name == "Camera ScaledSpace")
 							scaledSpaceCamera = cams [i];
 						
@@ -346,6 +357,7 @@ namespace scatterer
 						{
 							nearCamera = cams [i];
 							nearCamera.nearClipPlane = nearClipPlane;
+//							tonemapper = (cameraHDRTonemapping)nearCamera.gameObject.AddComponent (typeof(cameraHDRTonemapping));
 						}
 					}
 					
@@ -651,6 +663,32 @@ namespace scatterer
 //						Debug.Log(cams[i].name+" "+cams [i].hdr.ToString ());
 //					}
 
+//					PQSMod_MeshScatter[] scatters = (PQSMod_MeshScatter[]) PQSMod_MeshScatter.FindObjectsOfType<PQSMod_MeshScatter>();
+//
+//
+//					Debug.Log("begin scatters list");
+//					for (int i=0;i<scatters.Length;i++)
+//					{
+//						PQSMod_MeshScatter _sct = scatters[i];
+//						Debug.Log(_sct.name+" "+_sct.scatterName+" "+_sct.enabled.ToString()+" "+_sct.isActiveAndEnabled.ToString()+" "+_sct.maxScatter.ToString()+" "+_sct.sphere.name);
+//					}
+//
+//					PQSMod_MeshScatter_QuadControl[] scatters2 = (PQSMod_MeshScatter_QuadControl[]) PQSMod_MeshScatter_QuadControl.FindObjectsOfType<PQSMod_MeshScatter_QuadControl>();
+//
+//					Debug.Log(scatters2.Length);
+//					PQSMod_LandClassScatterQuad[] scatters3 = (PQSMod_LandClassScatterQuad[]) PQSMod_LandClassScatterQuad.FindObjectsOfType<PQSMod_LandClassScatterQuad>();
+//					Debug.Log(scatters3.Length);
+
+//					PQSMod_LandClassScatterQuad[] scatters = (PQSMod_LandClassScatterQuad[]) PQSMod_LandClassScatterQuad.FindObjectsOfType<PQSMod_LandClassScatterQuad>();
+//
+//					Debug.Log("begin scatters list");
+//
+//					for (int i=0;i<scatters.Length;i++)
+//					{
+//						PQSMod_LandClassScatterQuad _sct = scatters[i];
+//						Debug.Log(_sct.scatter.scatterName);
+//					}
+
 				}
 			} 
 		}
@@ -695,7 +733,8 @@ namespace scatterer
 					UnityEngine.Object.Destroy (customDepthBufferTexture);
 				}
 				
-
+//				if (tonemapper)
+//					Component.Destroy(tonemapper);
 				
 				if(useGodrays)
 				{
@@ -749,7 +788,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0242: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
+				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0244: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -784,6 +823,14 @@ namespace scatterer
 				{ 
 					GUILayout.Label (String.Format ("Scatterer: features selector"));
 					useOceanShaders = GUILayout.Toggle(useOceanShaders, "Ocean shaders (may require game restart on change)");
+					oceanSkyReflections = GUILayout.Toggle(oceanSkyReflections, "Ocean: accurate sky reflection");
+					oceanPixelLights = GUILayout.Toggle(oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
+
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("Ocean: fourierGridSize (64:fast,128:normal,256:HQ)");
+					m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (m_fourierGridSize.ToString ())));
+					GUILayout.EndHorizontal ();
+
 					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds");
 					GUILayout.Label(String.Format ("(improves terminators, causes issues in the transition)"));
 					fullLensFlareReplacement=GUILayout.Toggle(fullLensFlareReplacement, "Lens flare shader");
@@ -807,7 +854,7 @@ namespace scatterer
 					nearClipPlane = float.Parse (GUILayout.TextField (nearClipPlane.ToString ("0.000")));
 					GUILayout.EndHorizontal ();
 
-					ignoreRenderTypetags = GUILayout.Toggle(ignoreRenderTypetags, "Ignore renderType tags");
+//					ignoreRenderTypetags = GUILayout.Toggle(ignoreRenderTypetags, "Ignore renderType tags");
 
 					disableAmbientLight = GUILayout.Toggle(disableAmbientLight, "Disable scaled space ambient light");
 
@@ -882,7 +929,8 @@ namespace scatterer
 						GUILayout.EndHorizontal ();
 
 						configPoint _cur = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint];
-						
+
+
 						if (!displayOceanSettings)
 						{
 							if (!MapView.MapIsEnabled)
@@ -960,6 +1008,7 @@ namespace scatterer
 
 								GUIfloat("Sky/orbit Alpha", ref alphaGlobal, ref _cur.skyAlpha);
 								GUIfloat("Sky/orbit Exposure", ref exposure, ref _cur.skyExposure);
+//								tonemapper.setExposure(exposure);
 								GUIfloat ("Sky/orbit Rim Exposure", ref skyRimExposure, ref _cur.skyRimExposure);
 								
 								GUIfloat("extinctionMultiplier", ref extinctionMultiplier, ref _cur.skyExtinctionMultiplier);
@@ -1145,7 +1194,11 @@ namespace scatterer
 								GUILayout.EndHorizontal ();
 								
 								GUIint ("Ocean mesh resolution (lower is better)", ref m_resolution, ref oceanNode.m_resolution, 1);
-								GUIint ("m_fourierGridSize(power of 2, 256 max)", ref m_fourierGridSize, ref oceanNode.m_fourierGridSize, 1);
+
+								GUILayout.BeginHorizontal ();
+								GUILayout.Label ("current fourierGridSize: "+m_fourierGridSize.ToString());
+								GUILayout.EndHorizontal ();
+
 								GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
 	
 							}	
@@ -1421,7 +1474,7 @@ namespace scatterer
 			
 			m_gridSizes = oceanNode.m_gridSizes;
 			m_choppyness = oceanNode.m_choppyness;
-			m_fourierGridSize = oceanNode.m_fourierGridSize;
+//			m_fourierGridSize = oceanNode.m_fourierGridSize;
 			
 			m_ansio = oceanNode.m_ansio;
 			
@@ -1432,7 +1485,7 @@ namespace scatterer
 			farWhiteCapStr = oceanNode.m_farWhiteCapStr;
 			
 			m_resolution = oceanNode.m_resolution;
-			m_fourierGridSize = oceanNode.m_fourierGridSize;
+//			m_fourierGridSize = oceanNode.m_fourierGridSize;
 			
 		}
 		

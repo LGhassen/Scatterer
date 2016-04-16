@@ -68,8 +68,11 @@ uniform float3 SUN_DIR;
 
 //uniform float terrain_reflectance;
 uniform float SUN_INTENSITY;
+uniform float _Sun_Intensity;
+
 uniform float _experimentalAtmoScale;
 
+uniform float _viewdirOffset;
 
 float3 hdr(float3 L) {
     L = L * _Exposure;
@@ -164,6 +167,28 @@ float SQRT(float f, float err) {
 }
 
 
+//Source:   wikibooks.org/wiki/GLSL_Programming/Unity/Soft_Shadows_of_Spheres
+//I believe space engine also uses the same approach because the eclipses look the same ;)
+float getEclipseShadow(float3 worldPos, float3 worldLightPos,float3 occluderSpherePosition,
+					   float3 occluderSphereRadius, float3 lightSourceRadius)		
+{											
+	float3 lightDirection = float3(worldLightPos - worldPos);
+	float3 lightDistance = length(lightDirection);
+	lightDirection = lightDirection / lightDistance;
+               
+	// computation of level of shadowing w  
+	float3 sphereDirection = float3(occluderSpherePosition - worldPos);  //occluder planet
+	float sphereDistance = length(sphereDirection);
+	sphereDirection = sphereDirection / sphereDistance;
+            		
+	float dd = lightDistance * (asin(min(1.0, length(cross(lightDirection, sphereDirection)))) 
+			   - asin(min(1.0, occluderSphereRadius / sphereDistance)));
+            
+	float w = smoothstep(-1.0, 1.0, -dd / lightSourceRadius);
+	w = w * smoothstep(0.0, 0.2, dot(lightDirection, sphereDirection));
+            		
+	return (1-w);
+}
 
 //stole this from basic GLSL raytracing shader somewhere on the net
 //a quick google search and you'll find it
@@ -186,6 +211,40 @@ float intersectSphere2(float3 p1, float3 d, float3 p3, float r) {
     //                      return(hitp);
     return u;
 }
+
+
+//for eclipses
+//works from inside sphere
+float intersectSphere4(float3 p1, float3 d, float3 p3, float r)
+{
+	// p1 starting point
+	// d look direction
+	// p3 is the sphere center
+
+	float a = dot(d, d);
+	float b = 2.0 * dot(d, p1 - p3);
+	float c = dot(p3, p3) + dot(p1, p1) - 2.0 * dot(p3, p1) - r*r;
+
+	float test = b*b - 4.0*a*c;
+
+	if (test<0)
+	{
+		return -1.0;
+	}
+	
+  	float u = (-b - sqrt(test)) / (2.0 * a);
+  		
+	//eclipse compatbility for inside the atmosphere
+//  		if (u<0)
+//  		{
+//  			u = (-b + sqrt(test)) / (2.0 * a);
+//  		}
+
+  	u = (u < 0) ? (-b + sqrt(test)) / (2.0 * a) : u;
+  			
+	return u;
+}
+
 
 //Can't get this simpler version to work, will re-try it later
 //float intSphere( float4 sp, float3 ro, float3 rd, float tm) //sp.xyz sphere Pos? sp.w sphere rad?, r0 ray origin rd ray direction, tm?
@@ -243,6 +302,7 @@ float3 AnalyticTransmittance(float r, float mu, float d)
 }
 
 //the extinction part extracted from the inscattering function
+//this is for objects in atmo, computed using analyticTransmittance (better precision and less artifacts) or the precomputed transmittance table
 float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scaleCoeff, float irradianceFactor)
 {
     float3 extinction = float3(1, 1, 1);
@@ -299,6 +359,175 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
 
     return extinction;
 }
+
+//Extinction for a ray going all the way to the end of the atmosphere
+//i.e an infinite ray
+//for clouds so no analyticTransmittance required
+			float3 getSkyExtinction(float3 camera, float3 viewdir) //instead of camera this is the cloud position
+			{
+				float3 extinction = float3(1,1,1);
+
+				Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;		//not really noticeable
+
+				float r = length(camera);
+				float rMu = dot(camera, viewdir);
+				float mu = rMu / r;
+
+    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
+//    			float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+
+    			float din = max(-rMu - deltaSq, 0.0);
+    			if (din > 0.0)
+    			{
+        			camera += din * viewdir;
+        			rMu += din;
+        			mu = rMu / Rt;
+        			r = Rt;
+    			}
+
+//    			extinction = Transmittance(r, mu);
+//
+//    			if (r > Rt) 
+//    			{
+//    				extinction = float3(1,1,1);
+//    			} 
+
+
+    			extinction = (r > Rt) ? float3(1,1,1) : Transmittance(r, mu);
+
+    			return extinction;
+    		}
+    		
+    		float3 sunsetExtinction(float3 camera)
+    		{
+    			return(getSkyExtinction(camera,SUN_DIR));
+    		}
+    		
+
+float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 extinction)//, float shaftWidth)
+{
+	extinction = float3(1,1,1);
+	float3 result = float3(0,0,0);
+	
+	float Rt2=Rt;
+	Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+	
+	
+	viewdir.x+=_viewdirOffset;
+	viewdir=normalize(viewdir);
+
+	//camera *= scale;
+	//camera += viewdir * max(shaftWidth, 0.0);
+	float r = length(camera);
+	float rMu = dot(camera, viewdir);
+	float mu = rMu / r;
+	float r0 = r;
+	float mu0 = mu;
+	
+	float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
+
+	float din = max(-rMu - deltaSq, 0.0);
+	if (din > 0.0)
+	{
+    	camera += din * viewdir;
+    	rMu += din;
+    	mu = rMu / Rt;
+    	r = Rt;
+	}
+	
+	float nu = dot(viewdir, sundir);
+	float muS = dot(camera, sundir) / r;
+    
+//	float4 inScatter = Texture4D(_Sky_Inscatter, r, rMu / r, muS, nu);
+	float4 inScatter = Texture4D(_Inscatter, r, rMu / r, muS, nu);
+    
+	extinction = Transmittance(r, mu);
+    
+	if (r <= Rt) 
+	{
+            
+//        if (shaftWidth > 0.0) 
+//        {
+//            if (mu > 0.0) {
+//                inScatter *= min(Transmittance(r0, mu0) / Transmittance(r, mu), 1.0).rgbr;
+//            } else {
+//                inScatter *= min(Transmittance(r, -mu) / Transmittance(r0, -mu0), 1.0).rgbr;
+//            }
+//        }
+
+    	float3 inScatterM = GetMie(inScatter);
+    	float phase = PhaseFunctionR(nu);
+    	float phaseM = PhaseFunctionM(nu);
+    	result = inScatter.rgb * phase + inScatterM * phaseM;
+	}    
+     else
+	{
+		result = float3(0,0,0);
+		extinction = float3(1,1,1);
+	} 
+	
+	return result * _Sun_Intensity;
+}
+
+float2 GetIrradianceUV(float r, float muS) 
+{
+    float uR = (r - Rg) / (Rt - Rg);
+    float uMuS = (muS + 0.2) / (1.0 + 0.2);
+    return float2(uMuS, uR);
+}
+
+float3 Irradiance(sampler2D samp, float r, float muS) 
+{
+    float2 uv = GetIrradianceUV(r, muS);  
+	return tex2Dlod(samp,float4(uv,0.0,0.0)).rgb;    
+}
+
+// incident sky light at given position, integrated over the hemisphere (irradiance)
+// r=length(x)
+// muS=dot(x,s) / r
+float3 SkyIrradiance(float r, float muS)
+{
+    return Irradiance(_Irradiance, r, muS) * _Sun_Intensity;
+}
+
+// transmittance(=transparency) of atmosphere for infinite ray (r,mu)
+// (mu=cos(view zenith angle)), or zero if ray intersects ground
+
+float3 TransmittanceWithShadow(float r, float mu) 
+{
+    return mu < -sqrt(1.0 - (Rg / r) * (Rg / r)) ? float3(0,0,0) : Transmittance(r, mu);
+}
+
+// incident sun light at given position (radiance)
+// r=length(x)
+// muS=dot(x,s) / r
+float3 SunRadiance(float r, float muS)
+{
+    return TransmittanceWithShadow(r, muS) * _Sun_Intensity;
+}
+
+void SunRadianceAndSkyIrradiance(float3 worldP, float3 worldN, float3 worldS, out float3 sunL, out float3 skyE)
+{
+//	worldP *= scale;
+    float r = length(worldP);
+    if (r < 0.9 * Rg) {
+        worldP.z += Rg;
+        r = length(worldP);
+    }
+    float3 worldV = worldP / r; // vertical vector
+    float muS = dot(worldV, worldS);
+
+    float sunOcclusion = 1.0;// - sunShadow;
+    sunL = SunRadiance(r, muS) * sunOcclusion;
+
+    // ambient occlusion due only to slope, does not take self shadowing into account
+    float skyOcclusion = (1.0 + dot(worldV, worldN)) * 0.5;
+    // factor 2.0 : hack to increase sky contribution (numerical simulation of
+    // "precompued atmospheric scattering" gives less luminance than in reality)
+    skyE = 2.0 * SkyIrradiance(r, muS) * skyOcclusion;
+}
+
+
 
 
 //InScattering with modified atmo heights

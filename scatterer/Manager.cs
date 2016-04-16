@@ -105,6 +105,7 @@ namespace scatterer {
 		//this fixes the alt-enter bug the really stupid way but it's fast so it'll do for now
 		public void reBuildOcean() {
 			if (hasOcean && m_core.useOceanShaders) {
+				m_oceanNode.OnDestroy();
 				UnityEngine.Object.Destroy(m_oceanNode);
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
