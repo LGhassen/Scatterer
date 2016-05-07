@@ -25,6 +25,7 @@
 			uniform float3 _Globals_Origin;
 			
 			uniform float sunGlareScale;
+			uniform float sunGlareFade;
 			
 			uniform sampler2D sunSpikes;
 			uniform sampler2D sunFlare;
@@ -194,6 +195,8 @@
 				float3 extinction = getExtinction(WCP,WSD);
 				if(useTransmittance > 0.0)
 					sunColor*=extinction;
+					
+				sunColor*=sunGlareFade;
 
 				return float4(sunColor,1.0);
 				

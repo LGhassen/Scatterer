@@ -426,6 +426,44 @@ namespace scatterer
 				}
 			}
 
+			if (Core.Instance.useEclipses)
+			{
+				float scaleFactor=ScaledSpace.ScaleFactor;
+				
+				sunPosRelPlanet=Vector3.zero;
+				if (scaledMode)
+					sunPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+				else
+					sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
+				
+				//build and set casters matrix
+				castersMatrix1 = Matrix4x4.zero;
+				castersMatrix2 = Matrix4x4.zero;
+				
+				Vector3 casterPosRelPlanet;
+				for (int i=0; i< Mathf.Min(4, m_manager.eclipseCasters.Count); i++)
+				{
+					if (scaledMode)
+						casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+					else
+						casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+					
+					castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
+					                                       casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+				}
+				
+				
+				
+				for (int i=4; i< Mathf.Min(8, m_manager.eclipseCasters.Count); i++)
+				{
+					if (scaledMode)
+						casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+					else
+						casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
+					castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
+					                                           casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+				}
+			}
 
 //			InitUniformsGlobal();
 //			SetUniformsGlobal ();
@@ -540,47 +578,6 @@ namespace scatterer
 					m_skyMaterialScaled.renderQueue=3001;
 
 
-
-				if (Core.Instance.useEclipses)
-				{
-					float scaleFactor=ScaledSpace.ScaleFactor;
-					
-					sunPosRelPlanet=Vector3.zero;
-					if (scaledMode)
-						sunPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
-					else
-						sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
-
-					//build and set casters matrix
-					castersMatrix1 = Matrix4x4.zero;
-					castersMatrix2 = Matrix4x4.zero;
-					
-					Vector3 casterPosRelPlanet;
-					for (int i=0; i< Mathf.Min(4, m_manager.eclipseCasters.Count); i++)
-					{
-						if (scaledMode)
-							casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
-						else
-							casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
-						
-						castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
-						                                       casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
-					}
-					
-					
-					
-					for (int i=4; i< Mathf.Min(8, m_manager.eclipseCasters.Count); i++)
-					{
-						if (scaledMode)
-							casterPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.eclipseCasters [i].transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
-						else
-							casterPosRelPlanet = m_manager.eclipseCasters [i].transform.position;
-						castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
-						                                           casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
-					}
-				}
-
-//
 //				skyScaledMeshrenderer.enabled = skyEnabled;
 			}
 		}

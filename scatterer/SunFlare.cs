@@ -38,9 +38,13 @@ namespace scatterer
 		bool eclipse=false;
 
 		float sunGlareScale=1;
+		float sunGlareFade=1;
 
 		Mesh screenMesh;
-		
+
+		[Persistent]
+		float sunGlareFadeDistance = 1000000;
+
 		//input settings
 		[Persistent]
 		Vector3 flareSettings = Vector3.zero;
@@ -167,8 +171,18 @@ namespace scatterer
 			sunViewPortPos = inCore.scaledSpaceCamera.WorldToViewportPoint
 				(ScaledSpace.LocalToScaledSpace(inCore.sunCelestialBody.transform.position));
 
-			sunGlareScale = (float) (inCore.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (inCore.sunCelestialBody.transform.position))
-				.magnitude / 2266660f;
+			float dist = (float) (inCore.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (inCore.sunCelestialBody.transform.position))
+				.magnitude;
+
+			sunGlareScale = dist / 2266660f;
+			
+
+			//if dist> 0.75 sunglarefadedistance -->1
+			//if dist < 0.25*sunglarefadedistance -->0
+			//else values smoothstepped in between
+			sunGlareFade = Mathf.SmoothStep(0,1,(dist/sunGlareFadeDistance)-0.25f);
+
+
 
 
 			hitStatus=false;
@@ -199,6 +213,7 @@ namespace scatterer
 			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
 			sunglareMaterial.SetFloat ("aspectRatio", inCore.scaledSpaceCamera.aspect);
 			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
+			sunglareMaterial.SetFloat ("sunGlareFade", sunGlareFade);
 
 
 			//check for active PQS
