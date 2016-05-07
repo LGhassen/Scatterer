@@ -24,6 +24,12 @@ namespace scatterer
 			{
 				instance = this;
 			}
+			else
+			{
+				//destroy any duplicate instances that may be created by a duplicate install
+				Debug.Log("[Scatterer] Destroying duplicate instace, check your install for duplicate mod folders");
+				UnityEngine.Object.Destroy (this);
+			}
 		}
 		
 		public static Core Instance
