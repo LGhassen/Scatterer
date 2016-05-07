@@ -56,6 +56,9 @@ namespace scatterer
 		[Persistent]
 		public bool disableAmbientLight=false;
 
+		[Persistent]
+		public bool loadAlternative_D3D11_OGL_shaders=true;
+
 		disableAmbientLight ambientLightScript;
 
 		[Persistent]
@@ -80,14 +83,14 @@ namespace scatterer
 		[Persistent]
 		float nearClipPlane=0.2f;
 
-		[Persistent]
-		public bool
-			render24bitDepthBuffer = true;
+//		[Persistent]
+//		public bool
+//			render24bitDepthBuffer = true;
 		
 		[Persistent]
 		public bool
 			forceDisableDefaultDepthBuffer = false;
-		
+
 		[Persistent]
 		public bool
 			useOceanShaders = true;
@@ -279,6 +282,7 @@ namespace scatterer
 		public bool depthbufferEnabled = false;
 		public bool d3d9 = false;
 		public bool opengl = false;
+		public bool d3d11 = false;
 		bool isActive = false;
 		bool mainMenu=false;
 		
@@ -303,14 +307,17 @@ namespace scatterer
 			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
 			
-//			if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 9"))
-//			{
-//				//				d3d9 = true;
-//			}
-//			else
-			if (SystemInfo.graphicsDeviceVersion.StartsWith ("OpenGL"))
+			if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 9"))
+			{
+				d3d9 = true;
+			}
+			else if (SystemInfo.graphicsDeviceVersion.StartsWith ("OpenGL"))
 			{
 				opengl = true;
+			}
+			else if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 11"))
+			{
+				d3d11 = true;
 			}
 
 			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion);
@@ -482,7 +489,7 @@ namespace scatterer
 					}
 
 
-					if (render24bitDepthBuffer && !d3d9 && !customDepthBufferTexture.IsCreated ())
+					if (!customDepthBufferTexture.IsCreated ())
 					{
 						customDepthBufferTexture.Create ();
 					}
@@ -894,6 +901,9 @@ namespace scatterer
 //					ignoreRenderTypetags = GUILayout.Toggle(ignoreRenderTypetags, "Ignore renderType tags");
 
 					disableAmbientLight = GUILayout.Toggle(disableAmbientLight, "Disable scaled space ambient light");
+
+					loadAlternative_D3D11_OGL_shaders =
+						GUILayout.Toggle(loadAlternative_D3D11_OGL_shaders, "Load alternative d3d11/ogl shaders");
 
 					showMenuOnStart = GUILayout.Toggle(showMenuOnStart, "Show this menu on start-up");
 				}

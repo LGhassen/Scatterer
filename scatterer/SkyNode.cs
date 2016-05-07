@@ -733,8 +733,8 @@ namespace scatterer
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 
-			if (Core.Instance.render24bitDepthBuffer && !Core.Instance.d3d9)
-				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
+//			if (Core.Instance.render24bitDepthBuffer)
+			mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
 
 			if (Core.Instance.useGodrays)
 				mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.godrayDepthTexture);
@@ -773,8 +773,8 @@ namespace scatterer
 
 			Shader.SetGlobalTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 
-			if (Core.Instance.render24bitDepthBuffer && !Core.Instance.d3d9)
-				Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
+//			if (Core.Instance.render24bitDepthBuffer && !Core.Instance.d3d9)
+			Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
 
 			if (Core.Instance.useGodrays)
 				Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.godrayDepthTexture);

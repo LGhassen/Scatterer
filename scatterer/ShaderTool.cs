@@ -11,43 +11,29 @@ namespace scatterer
 {
 	public class ShaderTool
 	{
-		/*public static Shader GetShader(String resource)
-		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			StreamReader shaderStreamReader = new StreamReader(assembly.GetManifestResourceStream(resource));
-			String shaderTxt = shaderStreamReader.ReadToEnd();
-			return new Material(shaderTxt).shader;
-		}
-		
-		
-		public static Material GetMatFromShader( String resource)
-		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			StreamReader shaderStreamReader = new StreamReader(assembly.GetManifestResourceStream(resource));
-			String shaderTxt = shaderStreamReader.ReadToEnd();
-			return new Material(shaderTxt);
-		}*/
-		
-		public static Material GetMatFromShader(String resource)
-		{
-			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-			UriBuilder uri = new UriBuilder(codeBase);
-			string path = Uri.UnescapeDataString(uri.Path);
-			
-			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "/shaders/" + resource, FileMode.Open, FileAccess.Read));
-			string shaderContent = shaderStream.ReadToEnd();
 
-			Material Mat1= new Material(shaderContent);
-			return Mat1;
-		}
+
 
 		public static Material GetMatFromShader2(String resource)
 		{
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
 			string path = Uri.UnescapeDataString(uri.Path);
-			
-			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "/shaders/" + resource, FileMode.Open, FileAccess.Read));
+
+			string shaderPath = "/shaders/";
+			if (Core.Instance.loadAlternative_D3D11_OGL_shaders)
+			{
+				if (Core.Instance.d3d11)
+				{
+					shaderPath = "/shaders/d3d11/";
+				}
+				else if (Core.Instance.opengl)
+				{
+					shaderPath = "/shaders/ogl/";
+				}
+			}
+
+			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + shaderPath + resource, FileMode.Open, FileAccess.Read));
 			string shaderContent = shaderStream.ReadToEnd();
 			Material Mat2= new Material(shaderContent);
 			return Mat2;
@@ -59,8 +45,21 @@ namespace scatterer
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
 			UriBuilder uri = new UriBuilder(codeBase);
 			string path = Uri.UnescapeDataString(uri.Path);
-			
-			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + "/shaders/" + resource, FileMode.Open, FileAccess.Read));
+
+			string shaderPath = "/shaders/";
+			if (Core.Instance.loadAlternative_D3D11_OGL_shaders)
+			{
+				if (Core.Instance.d3d11)
+				{
+					shaderPath = "/shaders/d3d11/";
+				}
+				else if (Core.Instance.opengl)
+				{
+					shaderPath = "/shaders/ogl/";
+				}
+			}
+
+			StreamReader shaderStream = new StreamReader(new FileStream(Path.GetDirectoryName(path) + shaderPath + resource, FileMode.Open, FileAccess.Read));
 			string shaderContent = shaderStream.ReadToEnd();
 			Material Mat2= new Material(shaderContent);
 			return Mat2.shader;
