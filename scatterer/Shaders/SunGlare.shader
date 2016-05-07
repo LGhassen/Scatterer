@@ -2,7 +2,7 @@
 {
 	SubShader 
 	{
-		Tags {"Queue" = "Transparent" "IgnoreProjector"="True" "RenderType"="Transparent" }
+		Tags {"Queue" = "Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
 	
     	Pass 
     	{
@@ -20,8 +20,7 @@
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma glsl
-
-
+			
 			uniform float3 _Globals_WorldCameraPos;
 			uniform float3 _Globals_Origin;
 			
@@ -137,21 +136,14 @@
 			    float3 WCP = _Globals_WorldCameraPos;
 			    
 				float3 sunColor=0;
-
 				
 				//move aspectRatio precomputations to CPU?
 				sunColor+=flareSettings.x * (tex2D(sunFlare,(IN.uv.xy-sunViewPortPos.xy)*float2(aspectRatio * flareSettings.y,1)* flareSettings.z * sunGlareScale+0.5).rgb);
-			    sunColor+=spikesSettings.x * (tex2D(sunSpikes,(IN.uv.xy-sunViewPortPos.xy)*float2(aspectRatio * spikesSettings.y ,1)* spikesSettings.z * sunGlareScale+0.5).rgb); 
-
-
-//			    sunColor+=0.45*(tex2D(sunFlare,(IN.uv.xy-sunViewPortPos.xy)*float2(aspectRatio,1)*0.85*sunGlareScale+0.5).rgb);
-//			    sunColor+=0.6*(tex2D(sunSpikes,(IN.uv.xy-sunViewPortPos.xy)*float2(aspectRatio,1)*1*sunGlareScale+0.5).rgb); 
-			    
-		    		    
+			    sunColor+=spikesSettings.x * (tex2D(sunSpikes,(IN.uv.xy-sunViewPortPos.xy)*float2(aspectRatio * spikesSettings.y ,1)* spikesSettings.z * sunGlareScale+0.5).rgb);
+			    		    		    
 				float2 toScreenCenter=sunViewPortPos.xy-0.5;
 			   	float3 ghosts=0;
 			
-				
 				for (int i=0; i<4; ++i)
     			{
 //        					if (ghost1Settings[i].x == 0)	break;
@@ -164,34 +156,25 @@
 				for (int j=0; j<4; ++j)
     			{
 //        					if (ghost2Settings[i].x == 0)	break;
-        					
+        					        					
         					ghosts+=ghost2Settings[j].x * (tex2D(sunGhost2,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost2Settings[j].w))*
         					float2(aspectRatio*ghost2Settings[j].y,1)*ghost2Settings[j].z+0.5).rgb);
 				}
-				
-		   	
-//			   	ghosts+=0.54*(tex2D(sunGhost1,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*0.5))*float2(aspectRatio*0.65,1)*2.3+0.5).rgb);
-//			   	ghosts+=0.54*(tex2D(sunGhost1,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*0.7))*float2(aspectRatio,1)*6+0.5).rgb);
-//			   	ghosts+=0.135*(tex2D(sunGhost2,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*0.9))*float2(aspectRatio,1)*3+0.5).rgb);
-//			   	
-//			   	ghosts+=0.054*(tex2D(sunGhost2,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*1.1))*float2(aspectRatio,1)*8+0.5).rgb);
-//			   	ghosts+=0.054*(tex2D(sunGhost2,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*1.3))*float2(aspectRatio,1)*4+0.5).rgb);
-//			   	ghosts+=0.054*(tex2D(sunGhost2,(IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*1.5))*float2(aspectRatio,1)*5+0.5).rgb);
 
-			   	ghosts*=smoothstep(0,1,1-length(toScreenCenter));
+			   	ghosts=ghosts * smoothstep(0,1,1-length(toScreenCenter));
 			   	
 			   	sunColor+=ghosts;
 			    
 				float depth =  tex2D(_customDepthTexture,sunViewPortPos.xy);  //if there's something in the way don't render the flare	
-
-			    float3 extinction = getExtinction(WCP,WSD);
-//				float3 tempSuncolor= (depth < 1) ? 0 : 1.5 * sunColor;
-				float3 tempSuncolor= (depth < 1) ? 0 : sunColor;
 				
-				tempSuncolor= (useTransmittance > 0.0) ? tempSuncolor * extinction : tempSuncolor;
+				if (depth < 1.0)
+					return float4(0.0,0.0,0.0,0.0);
+					
+				float3 extinction = getExtinction(WCP,WSD);
+				if(useTransmittance > 0.0)
+					sunColor*=extinction;
 
-
-				return float4(tempSuncolor,1.0);
+				return float4(sunColor,1.0);
 				
 			}
 			

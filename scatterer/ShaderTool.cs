@@ -11,9 +11,7 @@ namespace scatterer
 {
 	public class ShaderTool
 	{
-
-
-
+		
 		public static Material GetMatFromShader2(String resource)
 		{
 			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
@@ -26,10 +24,6 @@ namespace scatterer
 				if (Core.Instance.d3d11)
 				{
 					shaderPath = "/shaders/d3d11/";
-				}
-				else if (Core.Instance.opengl)
-				{
-					shaderPath = "/shaders/ogl/";
 				}
 			}
 
@@ -52,10 +46,6 @@ namespace scatterer
 				if (Core.Instance.d3d11)
 				{
 					shaderPath = "/shaders/d3d11/";
-				}
-				else if (Core.Instance.opengl)
-				{
-					shaderPath = "/shaders/ogl/";
 				}
 			}
 

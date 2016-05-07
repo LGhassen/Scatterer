@@ -27,7 +27,7 @@ namespace scatterer
 			else
 			{
 				//destroy any duplicate instances that may be created by a duplicate install
-				Debug.Log("[Scatterer] Destroying duplicate instace, check your install for duplicate mod folders");
+				Debug.Log("[Scatterer] Destroying duplicate instance, check your install for duplicate mod folders");
 				UnityEngine.Object.Destroy (this);
 			}
 		}
@@ -873,13 +873,16 @@ namespace scatterer
 				{ 
 					GUILayout.Label (String.Format ("Scatterer: features selector"));
 					useOceanShaders = GUILayout.Toggle(useOceanShaders, "Ocean shaders (may require game restart on change)");
-					oceanSkyReflections = GUILayout.Toggle(oceanSkyReflections, "Ocean: accurate sky reflection");
-					oceanPixelLights = GUILayout.Toggle(oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
 
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Ocean: fourierGridSize (64:fast,128:normal,256:HQ)");
 					m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (m_fourierGridSize.ToString ())));
 					GUILayout.EndHorizontal ();
+
+					oceanSkyReflections = GUILayout.Toggle(oceanSkyReflections, "Ocean: accurate sky reflection");
+					oceanPixelLights = GUILayout.Toggle(oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
+
+
 
 					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds");
 					GUILayout.Label(String.Format ("(improves terminators, causes issues in the transition)"));
@@ -892,7 +895,7 @@ namespace scatterer
 					godrayResolution = float.Parse (GUILayout.TextField (godrayResolution.ToString ("0.000")));
 					GUILayout.EndHorizontal ();
 					
-					terrainShadows = GUILayout.Toggle(terrainShadows, "Terrain shadows (heavy artifacting in dx9)");
+					terrainShadows = GUILayout.Toggle(terrainShadows, "Terrain shadows (heavy artifacting in KSP 1.1.*)");
 
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Menu scroll section height");
@@ -909,7 +912,7 @@ namespace scatterer
 					disableAmbientLight = GUILayout.Toggle(disableAmbientLight, "Disable scaled space ambient light");
 
 					loadAlternative_D3D11_OGL_shaders =
-						GUILayout.Toggle(loadAlternative_D3D11_OGL_shaders, "Load alternative d3d11/ogl shaders");
+						GUILayout.Toggle(loadAlternative_D3D11_OGL_shaders, "Load alternate d3d11 shaders");
 
 					showMenuOnStart = GUILayout.Toggle(showMenuOnStart, "Show this menu on start-up");
 				}
