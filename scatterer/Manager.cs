@@ -13,7 +13,7 @@ namespace scatterer {
 
 		
 		//parent core
-		Core m_core;
+//		Core Core.Instance;
 		public bool hasOcean = false;
 		
 		public double m_radius = 600000.0f;
@@ -52,10 +52,10 @@ namespace scatterer {
 			//m_skyNode.loadFromConfigNode ();
 			//			print ("skynode started");
 			
-			if (hasOcean && m_core.useOceanShaders) {
+			if (hasOcean && Core.Instance.useOceanShaders) {
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
-				m_oceanNode.setCore(m_core);
+				m_oceanNode.setCore(Core.Instance);
 
 				m_oceanNode.loadFromConfigNode(false);
 				m_oceanNode.Start();
@@ -73,7 +73,7 @@ namespace scatterer {
 			
 			m_skyNode.UpdateNode();
 			
-			if (hasOcean && m_core.useOceanShaders)
+			if (hasOcean && Core.Instance.useOceanShaders)
 			{
 				m_oceanNode.UpdateNode();
 
@@ -95,7 +95,7 @@ namespace scatterer {
 			
 			UnityEngine.Object.Destroy(m_sunNode);
 			
-			if (hasOcean && m_core.useOceanShaders) {
+			if (hasOcean && Core.Instance.useOceanShaders) {
 				m_oceanNode.OnDestroy();
 				UnityEngine.Object.Destroy(m_oceanNode);
 			}
@@ -104,12 +104,12 @@ namespace scatterer {
 		
 		//this fixes the alt-enter bug the really stupid way but it's fast so it'll do for now
 		public void reBuildOcean() {
-			if (hasOcean && m_core.useOceanShaders) {
+			if (hasOcean && Core.Instance.useOceanShaders) {
 				m_oceanNode.OnDestroy();
 				UnityEngine.Object.Destroy(m_oceanNode);
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
-				m_oceanNode.setCore(m_core);
+				m_oceanNode.setCore(Core.Instance);
 				m_oceanNode.loadFromConfigNode(false);
 				m_oceanNode.Start();
 				Debug.Log("[Scatterer] Rebuilt Ocean");
@@ -164,13 +164,10 @@ namespace scatterer {
 		public void SetSunNodeUniforms(Material mat) {
 			m_sunNode.SetUniforms(mat);
 		}
+
 		
-		public void SetCore(Core core) {
-			m_core = core;
-		}
-		
-		public Core GetCore() {
-			return (m_core);
-		}
+//		public Core GetCore() {
+//			return (Core.Instance);
+//		}
 	}
 }

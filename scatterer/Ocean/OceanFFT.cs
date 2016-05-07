@@ -153,7 +153,7 @@ namespace scatterer {
 			m_initSpectrumMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitSpectrum.shader"));;
 			m_initDisplacementMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitDisplacement.shader"));;
 
-			m_fourierGridSize = m_manager.GetCore ().m_fourierGridSize;
+			m_fourierGridSize = Core.Instance.m_fourierGridSize;
 			
 			if (m_fourierGridSize > 256) {
 				Debug.Log("Proland::OceanFFT::Start	- fourier grid size must not be greater than 256, changing to 256");
@@ -179,7 +179,7 @@ namespace scatterer {
 
 
 //#if CPUmode
-			if (m_manager.GetCore ().craft_WaveInteractions)
+			if (Core.Instance.craft_WaveInteractions)
 			{
 				m_CPUfourier = new FourierCPU (m_fourierGridSize);
 				
@@ -217,7 +217,7 @@ namespace scatterer {
 			m_initDisplacementMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 
 //#if CPUmode
-			if (m_manager.GetCore ().craft_WaveInteractions)
+			if (Core.Instance.craft_WaveInteractions)
 			{
 				CreateWTableForCPU ();
 			}
@@ -470,7 +470,7 @@ namespace scatterer {
 				//Make sure base class get updated as well
 //				base.UpdateNode();
 //#else
-				if (m_manager.GetCore ().craft_WaveInteractions)
+				if (Core.Instance.craft_WaveInteractions)
 				{
 					if(!(done1&&done2&&done3&&done4&&done5))
 					{
@@ -502,13 +502,13 @@ namespace scatterer {
 				base.UpdateNode();
 
 
-				if (m_manager.GetCore ().craft_WaveInteractions)
+				if (Core.Instance.craft_WaveInteractions)
 				{
 					PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
 					foreach (PartBuoyancy _part in parts)
 					{
 						//				_part.transform
-						Vector3 relativePartPos = _part.transform.position-m_manager.GetCore ().farCamera.transform.position;
+						Vector3 relativePartPos = _part.transform.position-Core.Instance.farCamera.transform.position;
 						
 						//					Debug.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
 						
@@ -749,7 +749,7 @@ namespace scatterer {
 			float[] spectrum23 = new float[m_fourierGridSize * m_fourierGridSize * 4];
 
 //#if CPUmode
-			if (m_manager.GetCore ().craft_WaveInteractions)
+			if (Core.Instance.craft_WaveInteractions)
 			{
 				m_spectrum01vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
 				m_spectrum23vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
@@ -781,7 +781,7 @@ namespace scatterer {
 					
 
 //#if CPUmode
-					if (m_manager.GetCore ().craft_WaveInteractions)
+					if (Core.Instance.craft_WaveInteractions)
 					{
 						m_spectrum01vector[idx].x = sample12XY.x;
 						m_spectrum01vector[idx].y = sample12XY.y;

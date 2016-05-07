@@ -16,6 +16,28 @@ namespace scatterer
 	public class Core: MonoBehaviour
 	{
 
+		private static Core instance;
+		
+		private Core()
+		{
+			if (instance == null)
+			{
+				instance = this;
+			}
+		}
+		
+		public static Core Instance
+		{
+			get 
+			{
+//				if (instance == null)
+//				{
+//					instance = new Core();
+//				}
+				return instance;
+			}
+		}
+
 		public Rect windowRect = new Rect (0, 0, 400, 50);
 
 		SunFlare customSunFlare;
@@ -535,8 +557,7 @@ namespace scatterer
 										}
 										_cur.m_manager.eclipseCasters=eclipseCasters;
 									}
-									
-									_cur.m_manager.SetCore (this);
+
 									_cur.m_manager.hasOcean = _cur.hasOcean;
 									_cur.m_manager.Awake ();
 									_cur.active = true;

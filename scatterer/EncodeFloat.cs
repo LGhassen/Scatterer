@@ -153,7 +153,7 @@ public class EncodeFloat
 //
 			if(m_decodeToFloat == null)
 			{
-				m_decodeToFloat = new Material(ShaderTool.GetMatFromShader("CompiledDecodedToFloat.shader"));
+				m_decodeToFloat = new Material(ShaderTool.GetMatFromShader2("CompiledDecodedToFloat.shader"));
 				
 				
 				if(m_decodeToFloat == null)

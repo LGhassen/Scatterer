@@ -310,7 +310,7 @@ namespace scatterer
 			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
 			m_skyMaterialLocal = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyLocal.shader"));
 
-			if (m_manager.GetCore ().useEclipses)
+			if (Core.Instance.useEclipses)
 			{
 				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_ON");
 				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_OFF");
@@ -332,7 +332,7 @@ namespace scatterer
 
 			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
 			
-			if (m_manager.GetCore().useGodrays)
+			if (Core.Instance.useGodrays)
 			{
 				m_atmosphereMaterial.EnableKeyword("GODRAYS_ON");
 				m_atmosphereMaterial.DisableKeyword("GODRAYS_OFF");
@@ -343,7 +343,7 @@ namespace scatterer
 				m_atmosphereMaterial.EnableKeyword("GODRAYS_OFF");
 			}
 
-			if (m_manager.GetCore ().useEclipses)
+			if (Core.Instance.useEclipses)
 			{
 				m_atmosphereMaterial.EnableKeyword ("ECLIPSES_ON");
 				m_atmosphereMaterial.DisableKeyword ("ECLIPSES_OFF");
@@ -386,7 +386,7 @@ namespace scatterer
 
 			skyScaledMeshrenderer.enabled = false;
 
-			if (m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
+			if (Core.Instance.drawAtmoOnTopOfClouds && drawSkyOverClouds)
 				m_skyMaterialScaled.renderQueue=3002;
 			else
 				m_skyMaterialScaled.renderQueue=3001;
@@ -452,11 +452,11 @@ namespace scatterer
 				Rg = m_radius;
 //				sunglareCutoffAlt = experimentalAtmoScale*(Rt - Rg);
 
-				scaledSpaceCamera=m_manager.GetCore().scaledSpaceCamera;
+				scaledSpaceCamera=Core.Instance.scaledSpaceCamera;
 //				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 				{
-					farCamera=m_manager.GetCore().farCamera;
-					nearCamera=m_manager.GetCore().nearCamera;
+					farCamera=Core.Instance.farCamera;
+					nearCamera=Core.Instance.nearCamera;
 				}
 				
 
@@ -520,7 +520,7 @@ namespace scatterer
 //					toggleScaledMode();
 //				}
 
-				if (!scaledMode && m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
+				if (!scaledMode && Core.Instance.drawAtmoOnTopOfClouds && drawSkyOverClouds)
 				{
 					if (trueAlt<drawOverCloudsAltitude)
 					{
@@ -534,14 +534,14 @@ namespace scatterer
 					}
 				}
 
-				if (m_manager.GetCore().drawAtmoOnTopOfClouds && drawSkyOverClouds)
+				if (Core.Instance.drawAtmoOnTopOfClouds && drawSkyOverClouds)
 					m_skyMaterialScaled.renderQueue=3002;
 				else
 					m_skyMaterialScaled.renderQueue=3001;
 
 
 
-				if (m_manager.GetCore ().useEclipses)
+				if (Core.Instance.useEclipses)
 				{
 					float scaleFactor=ScaledSpace.ScaleFactor;
 					
@@ -689,7 +689,7 @@ namespace scatterer
 
 
 
-			if (m_manager.GetCore ().useEclipses)
+			if (Core.Instance.useEclipses)
 			{
 				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
 				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
@@ -733,11 +733,11 @@ namespace scatterer
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 
-			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
-				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, m_manager.GetCore ().customDepthBufferTexture);
+			if (Core.Instance.render24bitDepthBuffer && !Core.Instance.d3d9)
+				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
 
-			if (m_manager.GetCore ().useGodrays)
-				mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, m_manager.GetCore ().godrayDepthTexture);
+			if (Core.Instance.useGodrays)
+				mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.godrayDepthTexture);
 
 			//Consts, best leave these alone
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
@@ -773,11 +773,11 @@ namespace scatterer
 
 			Shader.SetGlobalTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 
-			if (m_manager.GetCore ().render24bitDepthBuffer && !m_manager.GetCore ().d3d9)
-				Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, m_manager.GetCore ().customDepthBufferTexture);
+			if (Core.Instance.render24bitDepthBuffer && !Core.Instance.d3d9)
+				Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
 
-			if (m_manager.GetCore ().useGodrays)
-				Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, m_manager.GetCore ().godrayDepthTexture);
+			if (Core.Instance.useGodrays)
+				Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.godrayDepthTexture);
 
 			//Consts, best leave these alone
 			Shader.SetGlobalFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
@@ -862,7 +862,7 @@ namespace scatterer
 //
 //			mat.SetVector (ShaderProperties._camPos_PROPERTY, farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
 //
-////			if (m_manager.GetCore ().useEclipses)
+////			if (Core.Instance.useEclipses)
 ////			{
 ////				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
 ////				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
@@ -1141,7 +1141,7 @@ namespace scatterer
 			}
 
 			
-			if (m_manager.GetCore ().useEclipses)
+			if (Core.Instance.useEclipses)
 			{
 				float scaleFactor=ScaledSpace.ScaleFactor;
 				
@@ -1211,7 +1211,7 @@ namespace scatterer
 			parentCelestialBody = inPlanet;
 			var _celBodyName = parentCelestialBody.name;
 			var _celTransformName = parentCelestialBody.name;
-			var _basePath = m_manager.GetCore ().path + "/config";
+			var _basePath = Core.Instance.path + "/config";
 			if (parentCelestialBody.GetTransform () != null) {
 				_celTransformName = parentCelestialBody.GetTransform ().name;
 			}
@@ -1379,7 +1379,7 @@ namespace scatterer
 
 		void toggleCoronas ()
 		{
-			Transform scaledSunTransform = m_manager.GetCore ().GetScaledTransform ("Sun");
+			Transform scaledSunTransform = Core.Instance.GetScaledTransform ("Sun");
 			foreach (Transform child in scaledSunTransform)
 			{
 				MeshRenderer temp;

@@ -334,8 +334,8 @@ namespace scatterer
 			}
 
 
-//			m_oceanMaterialNear.renderQueue = m_manager.GetCore ().oceanRenderQueue;
-			m_oceanMaterialFar.renderQueue=m_manager.GetCore ().oceanRenderQueue;
+//			m_oceanMaterialNear.renderQueue = m_manager.Core.Instance.oceanRenderQueue;
+			m_oceanMaterialFar.renderQueue=Core.Instance.oceanRenderQueue;
 
 	
 		}
