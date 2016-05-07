@@ -8,7 +8,12 @@ namespace scatterer
 	{
 //		private Camera m_Cam;
 		public Core m_core;
-		
+
+		Matrix4x4 ctos;
+		Matrix4x4 stoc;
+
+		CommandBuffer buf = null;
+
 		// We'll want to add a command buffer on any camera that renders us,
 		// so have a dictionary of them.
 		private Dictionary<Camera,CommandBuffer> m_Cameras = new Dictionary<Camera,CommandBuffer>();
@@ -17,6 +22,7 @@ namespace scatterer
 		// Whenever any camera will render us, add a command buffer to do the work on it
 		public void OnWillRenderObject()
 		{
+
 			var act = gameObject.activeInHierarchy && enabled;
 			if (!act)
 			{
@@ -28,23 +34,28 @@ namespace scatterer
 			if (!cam)
 				return;
 			
-			CommandBuffer buf = null;
-			// Did we already add the command buffer on this camera? Nothing to do then.
-			if (m_Cameras.ContainsKey(cam))
-				return;
-			
-			buf = new CommandBuffer();
-			buf.name = "Scatterer - Modified projection matrix for the ocean";
-			m_Cameras[cam] = buf;
+			bool alreadyAdded = m_Cameras.ContainsKey (cam);
+			// Did we already add the command buffer on this camera
+			if (alreadyAdded)
+			{
+				buf = m_Cameras [cam];
+			}
+			else
+			{
+				buf = new CommandBuffer ();
+				buf.name = "Scatterer - Modified projection matrix for the ocean";
 
+				m_Cameras [cam] = buf;
+			}
 
-			Matrix4x4 ctos = ModifiedProjectionMatrix (cam);
-			Matrix4x4 stoc = ctos.inverse;
+			ctos = ModifiedProjectionMatrix (cam);
+			stoc = ctos.inverse;
 
 			buf.SetGlobalMatrix ("_Globals_CameraToScreen", ctos);
 			buf.SetGlobalMatrix ("_Globals_ScreenToCamera", stoc);
-			
-			cam.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, buf);
+
+			if (!alreadyAdded)
+				cam.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, buf);
 		}	
 
 		//if OpenGL isn't detected
