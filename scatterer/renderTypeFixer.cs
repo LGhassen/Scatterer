@@ -44,7 +44,7 @@ namespace scatterer
 				
 			{
 				mat.SetOverrideTag("RenderType", "Opaque");
-				Debug.Log("[Scatterer] Set renderType tag for "+mat.shader.name+" to \"Opaque\"");
+//				Debug.Log("[Scatterer] Set renderType tag for "+mat.shader.name+" to \"Opaque\"");
 			}
 		}
 	}
