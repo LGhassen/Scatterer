@@ -55,10 +55,10 @@ namespace scatterer
 		{
 			sunglareMaterial = new Material (ShaderTool.GetMatFromShader2 ("CompiledSunGlare.shader"));
 
-//			sunSpikes = new Texture2D (2048, 2048);
-//			sunFlare = new Texture2D (1024, 1024);
-//			sunGhost1 = new Texture2D (128, 128);
-//			sunGhost2 = new Texture2D (128, 128);
+			sunSpikes = new Texture2D (2048, 2048);
+			sunFlare = new Texture2D (1024, 1024);
+			sunGhost1 = new Texture2D (128, 128);
+			sunGhost2 = new Texture2D (128, 128);
 
 			//Size is loaded automatically from the files
 			sunSpikes = new Texture2D (1, 1);

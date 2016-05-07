@@ -51,6 +51,7 @@ namespace scatterer
 			string shaderContent = shaderStream.ReadToEnd();
 			Material Mat2= new Material(shaderContent);
 			return Mat2;
+//			return null;
 		}
 
 		public static Shader GetShader2(String resource)

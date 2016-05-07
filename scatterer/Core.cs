@@ -418,7 +418,6 @@ namespace scatterer
 					}
 
 
-//					if (!depthBufferSet && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION)) {
 					if (!depthBufferSet)
 					{
 
@@ -460,13 +459,12 @@ namespace scatterer
 						ambientLightScript = (disableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(disableAmbientLight));
 					}
 
-//					if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-//					{
-						if (render24bitDepthBuffer && !d3d9 && !customDepthBufferTexture.IsCreated ())
-						{
-							customDepthBufferTexture.Create ();
-						}
-//					}
+
+					if (render24bitDepthBuffer && !d3d9 && !customDepthBufferTexture.IsCreated ())
+					{
+						customDepthBufferTexture.Create ();
+					}
+
 
 
 					
@@ -505,7 +503,9 @@ namespace scatterer
 										}
 									}
 								}
-							} else {
+							} 
+							else
+							{
 //								if (dist < _cur.loadDistance && !MapView.MapIsEnabled && _cur.transform && _cur.celestialBody) {
 							if (dist < _cur.loadDistance && _cur.transform && _cur.celestialBody) {
 									_cur.m_manager = new Manager ();
@@ -569,7 +569,22 @@ namespace scatterer
 					if (fullLensFlareReplacement)
 						customSunFlare.updateNode();
 
-					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 					//					GameObject[] list = (GameObject[]) GameObject.FindObjectsOfType(typeof(GameObject));
 					//					int d=0;
 					//					foreach (GameObject _go in list)
@@ -781,6 +796,7 @@ namespace scatterer
 			}
 			
 		}
+
 		
 
 
@@ -1118,6 +1134,18 @@ namespace scatterer
 							}
 
 							GUILayout.EndHorizontal ();
+
+//							GUILayout.BeginHorizontal ();
+//							if (GUILayout.Button ("toggle sky"))
+//							{
+//								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled = !scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled;
+//								if (scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled)
+//									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere();
+//								else
+//									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
+//							}
+//							
+//							GUILayout.EndHorizontal ();
 
 						
 							GUILayout.BeginHorizontal ();

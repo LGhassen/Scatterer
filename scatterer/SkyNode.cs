@@ -36,6 +36,7 @@ namespace scatterer
 		GameObject skyLocalMesh;
 		MeshRenderer skyLocalMeshrenderer;
 
+//		public bool skyEnabled=true;
 
 		float localSkyAltitude;
 		
@@ -579,6 +580,8 @@ namespace scatterer
 					}
 				}
 
+//
+//				skyScaledMeshrenderer.enabled = skyEnabled;
 			}
 		}
 
