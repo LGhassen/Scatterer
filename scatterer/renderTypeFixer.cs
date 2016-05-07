@@ -35,8 +35,13 @@ namespace scatterer
 		public static void fixRenderType(Material mat)
 		{
 			String name = mat.shader.name;
-			if ((name == "Terrain/PQS/PQS Main - Optimised") || (name == "Terrain/PQS/PQS Main Shader") || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (AP) ")
-				|| (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (Fallback) ") || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD"))
+			if ((name == "Terrain/PQS/PQS Main - Optimised")
+			    || (name == "Terrain/PQS/PQS Main Shader")
+			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (AP) ")
+				|| (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (Fallback) ")
+			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD")
+				|| (name.Contains ("PQS Main - Extras")))
+				
 			{
 				mat.SetOverrideTag("RenderType", "Opaque");
 				Debug.Log("[Scatterer] Set renderType tag for "+mat.shader.name+" to \"Opaque\"");
