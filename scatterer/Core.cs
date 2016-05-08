@@ -58,6 +58,7 @@ namespace scatterer
 		public bool ignoreRenderTypetags=false;
 
 //		bool ambientLight=true;
+		
 
 		[Persistent]
 		public bool disableAmbientLight=false;
@@ -145,6 +146,12 @@ namespace scatterer
 		[Persistent]
 		public bool
 			terrainShadows = true;
+
+		[Persistent]
+		float shadowNormalBias=0.4f;
+		
+		[Persistent]
+		float shadowBias=0.125f;
 		
 		[Persistent]
 		public float
@@ -398,36 +405,48 @@ namespace scatterer
 					
 
 					
-					//find sunlight
-					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-					Debug.Log ("number of lights" + lights.Length);
-					foreach (Light _light in lights)
-					{
-						Debug.Log("name:"+_light.gameObject.name);
-						Debug.Log("intensity:"+_light.intensity.ToString());
-						Debug.Log ("mask:"+_light.cullingMask.ToString());
-						Debug.Log ("type:"+_light.type.ToString());
-						Debug.Log ("Parent:"+_light.transform.parent.gameObject.name);
-						Debug.Log ("range:"+_light.range.ToString());
-
-						Debug.Log ("shadows:"+_light.shadows.ToString ());
-						Debug.Log ("shadowStrength:"+_light.shadowStrength.ToString ());
-						Debug.Log ("shadowNormalBias:"+_light.shadowNormalBias.ToString ());
-						Debug.Log ("shadowBias:"+_light.shadowBias.ToString ());
-						
+//					//find sunlight
+//					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+//					Debug.Log ("number of lights" + lights.Length);
+//					foreach (Light _light in lights)
+//					{
+//						Debug.Log("name:"+_light.gameObject.name);
+//						Debug.Log("intensity:"+_light.intensity.ToString());
+//						Debug.Log ("mask:"+_light.cullingMask.ToString());
+//						Debug.Log ("type:"+_light.type.ToString());
+//						Debug.Log ("Parent:"+_light.transform.parent.gameObject.name);
+//						Debug.Log ("range:"+_light.range.ToString());
+//
+//						Debug.Log ("shadows:"+_light.shadows.ToString ());
+//						Debug.Log ("shadowStrength:"+_light.shadowStrength.ToString ());
+//						Debug.Log ("shadowNormalBias:"+_light.shadowNormalBias.ToString ());
+//						Debug.Log ("shadowBias:"+_light.shadowBias.ToString ());
+//						
 //						if (_light.gameObject.name == "Scaledspace SunLight")
 //						{
-//							scaledspaceSunLight=_light.gameObject;
+////							scaledspaceSunLight=_light.gameObject;
 //							Debug.Log("Found scaled sunlight");
+//
+//							_light.shadowNormalBias =shadowNormalBias;
+//							_light.shadowBias=shadowBias;
 //						}
 //						
 //						if (_light.gameObject.name == "SunLight")
 //						{
-//							sunLight=_light.gameObject;
+////							sunLight=_light.gameObject;
 //							Debug.Log("Found sunlight");
+//
+//							Debug.Log("shadow normal bias to set "+shadowNormalBias .ToString());
+//							_light.shadowNormalBias =shadowNormalBias;
+//							Debug.Log("shadow normal bias set "+_light.shadowNormalBias);
+//
+//							Debug.Log("shadow bias to set "+shadowBias.ToString());
+//							_light.shadowBias=shadowBias;
+//							Debug.Log("shadow bias set "+_light.shadowBias);
+//
 //						}
-						
-					}
+//						
+//					}
 					
 					//					copiedScaledSunLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
 					//					scaledspaceSunLight.light.intensity=3;
@@ -843,7 +862,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0245: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
+				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0246: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -900,7 +919,17 @@ namespace scatterer
 					godrayResolution = float.Parse (GUILayout.TextField (godrayResolution.ToString ("0.000")));
 					GUILayout.EndHorizontal ();
 					
-					terrainShadows = GUILayout.Toggle(terrainShadows, "Terrain shadows (heavy artifacting in KSP 1.1.*)");
+					terrainShadows = GUILayout.Toggle(terrainShadows, "Terrain shadows");
+					GUILayout.BeginHorizontal ();
+
+					GUILayout.Label ("Shadow bias");
+					shadowBias = float.Parse (GUILayout.TextField (shadowBias.ToString ("0.000")));
+
+					GUILayout.Label ("Shadow normal bias");
+					shadowNormalBias = float.Parse (GUILayout.TextField (shadowNormalBias.ToString ("0.000")));
+
+					GUILayout.EndHorizontal ();
+
 
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Menu scroll section height");
@@ -1746,17 +1775,31 @@ namespace scatterer
 				{
 					if (_sc.pqsController)
 					{
-						if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
-						{
-							_sc.pqsController.meshCastShadows = false;			//disable in space center because of "ghost" shadow
-							QualitySettings.shadowDistance = 5000;
-							
-						}
-						else
+//						if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+//						{
+//							_sc.pqsController.meshCastShadows = false;			//disable in space center because of "ghost" shadow
+//							QualitySettings.shadowDistance = 5000;
+//							
+//						}
+//						else
 						{
 							_sc.pqsController.meshCastShadows = true;
 							_sc.pqsController.meshRecieveShadows = true;
 							QualitySettings.shadowDistance = shadowsDistance;
+						}
+
+						//set shadow bias
+						//fixes checkerboard artifacts aka shadow acne
+						//find sunlight
+						lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+						foreach (Light _light in lights)
+						{
+							if ((_light.gameObject.name == "Scaledspace SunLight") 
+							    || (_light.gameObject.name == "SunLight"))
+							{
+								_light.shadowNormalBias =shadowNormalBias;
+								_light.shadowBias=shadowBias;
+							}
 						}
 					}
 				}
