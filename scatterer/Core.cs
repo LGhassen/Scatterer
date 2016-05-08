@@ -72,7 +72,7 @@ namespace scatterer
 		scattererCelestialBodies = new List < scattererCelestialBody > {};
 		CelestialBody[] CelestialBodies;
 		
-		//		Light[] lights;
+				Light[] lights;
 
 		//		GameObject sunLight,scaledspaceSunLight;
 		//		public GameObject copiedScaledSunLight;
@@ -398,31 +398,36 @@ namespace scatterer
 					
 
 					
-					//					//find sunlight
-					//					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-					//					Debug.Log ("number of lights" + lights.Length);
-					//					foreach (Light _light in lights)
-					//					{
-					//						Debug.Log("name:"+_light.gameObject.name);
-					//						Debug.Log("intensity:"+_light.intensity.ToString());
-					//						Debug.Log ("mask:"+_light.cullingMask.ToString());
-					//						Debug.Log ("type:"+_light.type.ToString());
-					//						Debug.Log ("Parent:"+_light.transform.parent.gameObject.name);
-					//						Debug.Log ("range:"+_light.range.ToString());
-					//
-					//						if (_light.gameObject.name == "Scaledspace SunLight")
-					//						{
-					//							scaledspaceSunLight=_light.gameObject;
-					//							Debug.Log("Found scaled sunlight");
-					//						}
-					//
-					//						if (_light.gameObject.name == "SunLight")
-					//						{
-					//							sunLight=_light.gameObject;
-					//							Debug.Log("Found sunlight");
-					//						}
-					//
-					//					}
+					//find sunlight
+					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+					Debug.Log ("number of lights" + lights.Length);
+					foreach (Light _light in lights)
+					{
+						Debug.Log("name:"+_light.gameObject.name);
+						Debug.Log("intensity:"+_light.intensity.ToString());
+						Debug.Log ("mask:"+_light.cullingMask.ToString());
+						Debug.Log ("type:"+_light.type.ToString());
+						Debug.Log ("Parent:"+_light.transform.parent.gameObject.name);
+						Debug.Log ("range:"+_light.range.ToString());
+
+						Debug.Log ("shadows:"+_light.shadows.ToString ());
+						Debug.Log ("shadowStrength:"+_light.shadowStrength.ToString ());
+						Debug.Log ("shadowNormalBias:"+_light.shadowNormalBias.ToString ());
+						Debug.Log ("shadowBias:"+_light.shadowBias.ToString ());
+						
+//						if (_light.gameObject.name == "Scaledspace SunLight")
+//						{
+//							scaledspaceSunLight=_light.gameObject;
+//							Debug.Log("Found scaled sunlight");
+//						}
+//						
+//						if (_light.gameObject.name == "SunLight")
+//						{
+//							sunLight=_light.gameObject;
+//							Debug.Log("Found sunlight");
+//						}
+						
+					}
 					
 					//					copiedScaledSunLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
 					//					scaledspaceSunLight.light.intensity=3;
