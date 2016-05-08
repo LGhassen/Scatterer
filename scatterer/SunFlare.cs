@@ -95,7 +95,7 @@ namespace scatterer
 			sunglareMaterial.SetTexture ("sunFlare", sunFlare);
 			sunglareMaterial.SetTexture ("sunGhost1", sunGhost1);
 			sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
-			sunglareMaterial.SetTexture ("sunGhost3", sunGhost2);
+			sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
 
 			sunglareMaterial.SetTexture ("_customDepthTexture", inCore.customDepthBufferTexture);
 
