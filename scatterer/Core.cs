@@ -139,6 +139,10 @@ namespace scatterer
 		[Persistent]
 		public bool
 			useEclipses = true;
+
+		[Persistent]
+		public bool
+			usePlanetShine = true;
 		
 		[Persistent]
 		public bool
@@ -590,6 +594,41 @@ namespace scatterer
 											}
 										}
 										_cur.m_manager.eclipseCasters=eclipseCasters;
+									}
+
+									//Find additional suns and planet shine light sources
+									List<CelestialBody> additionalSuns=new List<CelestialBody> {};
+									List<CelestialBody> planetShineLightSources=new List<CelestialBody> {};
+									
+									if (usePlanetShine)
+									{
+										Debug.Log ("here");
+										Debug.Log(" _cur.additionalSuns.Count"+ _cur.additionalSuns.Count.ToString());
+										for (int k=0; k < _cur.additionalSuns.Count; k++)
+										{
+											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.additionalSuns[k]);
+											if (cc==null)
+												Debug.Log("[Scatterer] Light source "+_cur.additionalSuns[k]+" not found for "+_cur.celestialBodyName);
+											else
+											{
+												additionalSuns.Add(cc);
+												Debug.Log("[Scatterer] Added light source"+_cur.additionalSuns[k]+" for "+_cur.celestialBodyName+" (additional sun)");
+											}
+										}
+										_cur.m_manager.additionalSuns=additionalSuns;
+
+										for (int k=0; k < _cur.planetShineLightSources.Count; k++)
+										{
+											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.planetShineLightSources[k]);
+											if (cc==null)
+												Debug.Log("[Scatterer] Light source "+_cur.planetShineLightSources[k]+" not found for "+_cur.celestialBodyName);
+											else
+											{
+												planetShineLightSources.Add(cc);
+												Debug.Log("[Scatterer] Added light source"+_cur.planetShineLightSources[k]+" for "+_cur.celestialBodyName+" (planet shine source)");
+											}
+										}
+										_cur.m_manager.planetShineLightSources=planetShineLightSources;
 									}
 
 									_cur.m_manager.hasOcean = _cur.hasOcean;

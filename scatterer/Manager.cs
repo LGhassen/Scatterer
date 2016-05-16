@@ -29,6 +29,10 @@ namespace scatterer {
 		
 		public CelestialBody sunCelestialBody;
 		public List<CelestialBody> eclipseCasters;
+
+		public List<CelestialBody> additionalSuns;
+		public List<CelestialBody> planetShineLightSources;
+
 		
 		// Initialization
 		public void Awake() {

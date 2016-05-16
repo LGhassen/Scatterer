@@ -49,6 +49,9 @@ namespace scatterer
 		Matrix4x4 castersMatrix1=Matrix4x4.zero;
 		Matrix4x4 castersMatrix2=Matrix4x4.zero;
 
+		Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
+		Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
+
 		Vector3 sunPosRelPlanet=Vector3.zero;
 
 		public bool scaledMode = false;
@@ -325,6 +328,21 @@ namespace scatterer
 				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_OFF");
 			}
 
+			if (Core.Instance.usePlanetShine)
+			{
+				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_ON");
+				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_OFF");
+				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_ON");
+				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_OFF");
+			}
+			else
+			{
+				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_ON");
+				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_OFF");
+				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_ON");
+				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_OFF");
+			}
+
 
 			InitUniforms (m_skyMaterialScaled);
 			InitUniforms (m_skyMaterialLocal);
@@ -436,7 +454,7 @@ namespace scatterer
 				else
 					sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
 				
-				//build and set casters matrix
+				//build eclipse casters matrix
 				castersMatrix1 = Matrix4x4.zero;
 				castersMatrix2 = Matrix4x4.zero;
 				
@@ -464,6 +482,47 @@ namespace scatterer
 					                                           casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
 				}
 			}
+
+			if (Core.Instance.usePlanetShine)
+			{
+				planetShineRGBMatrix = Matrix4x4.zero;
+				planetShineSourcesMatrix = Matrix4x4.zero;
+
+				//build and set planetShine sources and RGB
+				int currentCount=0;
+
+				for (int i=0; i< Mathf.Min(4, m_manager.additionalSuns.Count); i++)
+				{
+
+					Vector3 sourcePosRelPlanet = (m_manager.additionalSuns[i].position - parentCelestialBody.GetTransform().position).normalized;
+
+					planetShineSourcesMatrix.SetRow (currentCount, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
+					                                                  sourcePosRelPlanet.z, 1.0f));
+		
+					planetShineRGBMatrix.SetRow (currentCount, Vector4.one);
+
+					currentCount++;
+				}
+
+
+				for (int i=0; i< Mathf.Min(4, m_manager.planetShineLightSources.Count); i++)
+				{
+					if (currentCount>3)
+						break;
+
+					Vector3 sourcePosRelPlanet = (m_manager.planetShineLightSources[i].position - parentCelestialBody.GetTransform().position).normalized;
+					
+					planetShineSourcesMatrix.SetRow (currentCount, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
+					                                                  sourcePosRelPlanet.z, 0.0f));
+
+					planetShineRGBMatrix.SetRow (currentCount, Vector4.one);
+					
+					currentCount++;
+				}
+
+				Debug.Log (planetShineSourcesMatrix.ToString());
+			}
+
 
 //			InitUniformsGlobal();
 //			SetUniformsGlobal ();
@@ -693,6 +752,14 @@ namespace scatterer
 				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
 				                                               sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
 			}
+
+
+			if (Core.Instance.usePlanetShine)
+			{
+				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
+				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
+			}
+
 		}
 
 
