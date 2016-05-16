@@ -69,7 +69,6 @@
     <Compile Include="Plugins\Math\Vector4d.cs" />
     <Compile Include="Plugins\Utility\MeshFactory.cs" />
     <Compile Include="SkyNode.cs" />
-    <Compile Include="SunNode.cs" />
     <Compile Include="ShaderTool.cs" />
     <Compile Include="EncodeFloat.cs" />
     <Compile Include="Plugins\Containers\DictionaryQueue.cs" />

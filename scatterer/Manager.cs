@@ -22,7 +22,7 @@ namespace scatterer {
 		
 		OceanWhiteCaps m_oceanNode;
 		public SkyNode m_skyNode;
-		SunNode m_sunNode;
+
 		
 		public CelestialBody parentCelestialBody;
 		public Transform ParentPlanetTransform;
@@ -34,9 +34,6 @@ namespace scatterer {
 		public void Awake() {
 			m_radius = parentCelestialBody.Radius;
 			//			print (m_radius);
-			
-			m_sunNode = new SunNode();
-			m_sunNode.Start();
 			
 			m_skyNode = new SkyNode();
 			m_skyNode.setManager(this);
@@ -65,11 +62,7 @@ namespace scatterer {
 		
 		
 		public void Update()
-		{
-
-			m_sunNode.setDirectionToSun(getDirectionToSun());
-			m_sunNode.UpdateNode();
-			
+		{	
 			
 			m_skyNode.UpdateNode();
 			
@@ -92,8 +85,6 @@ namespace scatterer {
 		public void OnDestroy() {
 			m_skyNode.OnDestroy();
 			UnityEngine.Object.Destroy(m_skyNode);
-			
-			UnityEngine.Object.Destroy(m_sunNode);
 			
 			if (hasOcean && Core.Instance.useOceanShaders) {
 				m_oceanNode.OnDestroy();
@@ -144,15 +135,7 @@ namespace scatterer {
 			return m_radius;
 		}
 		
-		public Vector3 GetSunNodeDirection() {
-			return m_sunNode.GetDirection();
-		}
-		
-		public Matrix4x4 GetSunWorldToLocalRotation() {
-			
-			return m_sunNode.GetWorldToLocalRotation();
-		}
-		
+
 		public OceanWhiteCaps GetOceanNode() {
 			return m_oceanNode;
 		}
@@ -160,14 +143,5 @@ namespace scatterer {
 		public SkyNode GetSkyNode() {
 			return m_skyNode;
 		}
-		
-		public void SetSunNodeUniforms(Material mat) {
-			m_sunNode.SetUniforms(mat);
-		}
-
-		
-//		public Core GetCore() {
-//			return (Core.Instance);
-//		}
 	}
 }

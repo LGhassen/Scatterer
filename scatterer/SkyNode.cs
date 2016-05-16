@@ -758,7 +758,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
 
 
-			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.GetSunNodeDirection ());
+			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun().normalized);
 		}
 
 		public void InitPostprocessMaterialGlobal ()
@@ -799,7 +799,7 @@ namespace scatterer
 			Shader.SetGlobalFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
 
 			Shader.SetGlobalVector (ShaderProperties._camPos_PROPERTY, farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
-			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.GetSunNodeDirection ());
+			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
 		}
 
 
@@ -830,7 +830,7 @@ namespace scatterer
 //			mat.SetFloat(ShaderProperties._Scale_PROPERTY, 1);
 //
 //			mat.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
-//			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.GetSunNodeDirection ());
+//			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
 //			mat.SetFloat (ShaderProperties.SUN_INTENSITY_PROPERTY, sunIntensity);
 //			
 //			
@@ -892,7 +892,7 @@ namespace scatterer
 			mat.SetFloat("_Scale", 1);
 
 			mat.SetMatrix ("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
-			mat.SetVector ("SUN_DIR", m_manager.GetSunNodeDirection ());
+			mat.SetVector ("SUN_DIR", m_manager.getDirectionToSun ().normalized);
 			mat.SetFloat ("SUN_INTENSITY", sunIntensity);
 
 			
@@ -945,7 +945,7 @@ namespace scatterer
 			Shader.SetGlobalFloat (ShaderProperties._Scale_PROPERTY, 1);
 			
 			Shader.SetGlobalMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
-			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.GetSunNodeDirection ());
+			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
 			Shader.SetGlobalFloat (ShaderProperties.SUN_INTENSITY_PROPERTY, sunIntensity);
 			
 			
