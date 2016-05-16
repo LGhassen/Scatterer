@@ -12,8 +12,8 @@ Shader "Proland/Atmo/Sky"
     		ZWrite Off
 
 //if localSpaceMode //i.e box mode
-    		ZTest Off
-    		cull Front
+//    		ZTest Off
+//    		cull Front
 //endif
 
     		Blend DstColor Zero  //multiplicative blending
@@ -35,7 +35,7 @@ Shader "Proland/Atmo/Sky"
 			#define useAnalyticSkyTransmittance
 			
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-			#define localSpaceMode
+//			#define localSpaceMode
 
 			uniform float _Alpha_Global;
 			uniform float4x4 _Globals_CameraToWorld;
@@ -213,8 +213,8 @@ Shader "Proland/Atmo/Sky"
     		ZWrite Off
 
 //if localSpaceMode
-    		ZTest Off
-    		cull Front
+//    		ZTest Off
+//    		cull Front
 //endif
 
  
@@ -235,7 +235,7 @@ Shader "Proland/Atmo/Sky"
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			
-			#define localSpaceMode
+//			#define localSpaceMode
 			
 			uniform float _Alpha_Global;
 			uniform float4x4 _Globals_CameraToWorld;
@@ -314,7 +314,7 @@ float4 frag(v2f IN) : COLOR
 			    float3 inscatter2=0;
 			    for (int i=0; i<4; ++i)
     			{
-    				if (planetShineSources[i].w == 0) break;
+    				if (planetShineRGB[i].w == 0) break;
     				inscatter2+=SkyRadiance2(WCP - _Globals_Origin, d, planetShineSources[i].xyz,extinction)
     							*planetShineRGB[i].xyz*planetShineRGB[i].w;
     			}

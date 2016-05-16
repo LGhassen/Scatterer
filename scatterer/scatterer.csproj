@@ -95,6 +95,7 @@
     <Compile Include="renderTypeFixer.cs" />
     <Compile Include="Ocean\CommandBufferModifiedProjectionMatrix.cs" />
     <Compile Include="ShaderProperties.cs" />
+    <Compile Include="planetshineSource.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />

@@ -30,8 +30,10 @@ namespace scatterer {
 		public CelestialBody sunCelestialBody;
 		public List<CelestialBody> eclipseCasters;
 
-		public List<CelestialBody> additionalSuns;
-		public List<CelestialBody> planetShineLightSources;
+//		public List<CelestialBody> additionalSuns;
+//		public List<CelestialBody> planetShineLightSources;
+
+		public List<planetShineSource> planetshineSources;
 
 		
 		// Initialization
@@ -125,13 +127,9 @@ namespace scatterer {
 			sunCelestialBody = sun;
 		}
 		
-		public Vector3 getDirectionToSun() {
-			//			if (m_skyNode.debugSettings [0]) {
-			return ((sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position));
-			//			} else {
-			//				return((ScaledSpace.LocalToScaledSpace(sunCelestialBody.GetTransform ().position)-ScaledSpace.LocalToScaledSpace(parentCelestialBody.GetTransform ().position)));
-			//			
-			//			}
+		public Vector3 getDirectionToSun()
+		{
+			return (sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position);
 			
 		}
 

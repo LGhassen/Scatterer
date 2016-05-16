@@ -489,38 +489,49 @@ namespace scatterer
 				planetShineSourcesMatrix = Matrix4x4.zero;
 
 				//build and set planetShine sources and RGB
-				int currentCount=0;
+//				int currentCount=0;
+//
+//				for (int i=0; i< Mathf.Min(4, m_manager.additionalSuns.Count); i++)
+//				{
+//
+//					Vector3 sourcePosRelPlanet = (m_manager.additionalSuns[i].position - parentCelestialBody.GetTransform().position).normalized;
+//
+//					planetShineSourcesMatrix.SetRow (currentCount, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
+//					                                                  sourcePosRelPlanet.z, 1.0f));
+//		
+//					planetShineRGBMatrix.SetRow (currentCount, Vector4.one);
+//
+//					currentCount++;
+//				}
+//
+//
+//				for (int i=0; i< Mathf.Min(4, m_manager.planetShineLightSources.Count); i++)
+//				{
+//					if (currentCount>3)
+//						break;
+//
+//					Vector3 sourcePosRelPlanet = (m_manager.planetShineLightSources[i].position - parentCelestialBody.GetTransform().position).normalized;
+//					
+//					planetShineSourcesMatrix.SetRow (currentCount, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
+//					                                                  sourcePosRelPlanet.z, 0.0f));
+//
+//					planetShineRGBMatrix.SetRow (currentCount, Vector4.one);
+//					
+//					currentCount++;
+//				}
 
-				for (int i=0; i< Mathf.Min(4, m_manager.additionalSuns.Count); i++)
-				{
-
-					Vector3 sourcePosRelPlanet = (m_manager.additionalSuns[i].position - parentCelestialBody.GetTransform().position).normalized;
-
-					planetShineSourcesMatrix.SetRow (currentCount, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
-					                                                  sourcePosRelPlanet.z, 1.0f));
-		
-					planetShineRGBMatrix.SetRow (currentCount, Vector4.one);
-
-					currentCount++;
-				}
-
-
-				for (int i=0; i< Mathf.Min(4, m_manager.planetShineLightSources.Count); i++)
-				{
-					if (currentCount>3)
-						break;
-
-					Vector3 sourcePosRelPlanet = (m_manager.planetShineLightSources[i].position - parentCelestialBody.GetTransform().position).normalized;
+				for (int i=0; i< Mathf.Min(4, m_manager.planetshineSources.Count); i++)
+				{	
+					Vector3 sourcePosRelPlanet = (m_manager.planetshineSources[i].body.position - parentCelestialBody.GetTransform().position).normalized;
 					
-					planetShineSourcesMatrix.SetRow (currentCount, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
-					                                                  sourcePosRelPlanet.z, 0.0f));
-
-					planetShineRGBMatrix.SetRow (currentCount, Vector4.one);
+					planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
+					                                                 sourcePosRelPlanet.z, m_manager.planetshineSources[i].isSun? 1.0f:0.0f ));
 					
-					currentCount++;
+					planetShineRGBMatrix.SetRow (i, new Vector4(m_manager.planetshineSources[i].color.x,m_manager.planetshineSources[i].color.y,
+					                                                       m_manager.planetshineSources[i].color.z,m_manager.planetshineSources[i].intensity));
 				}
-
-				Debug.Log (planetShineSourcesMatrix.ToString());
+//
+//				Debug.Log (planetShineSourcesMatrix.ToString());
 			}
 
 
