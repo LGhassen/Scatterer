@@ -102,7 +102,7 @@ namespace scatterer
 		MeshFilter[] waterMeshFilters;
 
 		Matrix4x4d m_oldlocalToOcean;
-		Matrix4x4d m_oldworldToOcean;
+//		Matrix4x4d m_oldworldToOcean;
 
 		public Vector3 offsetVector3{
 			get {

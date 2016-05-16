@@ -23,6 +23,7 @@ namespace scatterer
 			if (instance == null)
 			{
 				instance = this;
+				Debug.Log("[Scatterer] Core instance created");
 			}
 			else
 			{
@@ -36,10 +37,6 @@ namespace scatterer
 		{
 			get 
 			{
-//				if (instance == null)
-//				{
-//					instance = new Core();
-//				}
 				return instance;
 			}
 		}
@@ -50,7 +47,7 @@ namespace scatterer
 		
 		bool visible = false;
 
-		bool rtsResized=false;
+//		bool rtsResized=false;
 
 		bool wireFrame=false;
 		
@@ -73,7 +70,7 @@ namespace scatterer
 		scattererCelestialBodies = new List < scattererCelestialBody > {};
 		CelestialBody[] CelestialBodies;
 		
-				Light[] lights;
+		Light[] lights;
 
 		//		GameObject sunLight,scaledspaceSunLight;
 		//		public GameObject copiedScaledSunLight;
