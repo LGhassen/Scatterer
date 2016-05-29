@@ -49,8 +49,8 @@ namespace scatterer
 		Matrix4x4 castersMatrix1=Matrix4x4.zero;
 		Matrix4x4 castersMatrix2=Matrix4x4.zero;
 
-		Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
-		Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
+		public Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
+		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
 
 		Vector3 sunPosRelPlanet=Vector3.zero;
 
@@ -313,6 +313,8 @@ namespace scatterer
 			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
 			m_skyMaterialLocal = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyLocal.shader"));
 
+			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
+
 			if (Core.Instance.useEclipses)
 			{
 				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_ON");
@@ -334,6 +336,10 @@ namespace scatterer
 				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_OFF");
 				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_ON");
 				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_OFF");
+				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_ON");
+				m_atmosphereMaterial.DisableKeyword ("PLANETSHINE_OFF");
+
+		
 			}
 			else
 			{
@@ -341,6 +347,8 @@ namespace scatterer
 				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_OFF");
 				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_ON");
 				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_OFF");
+				m_atmosphereMaterial.DisableKeyword ("PLANETSHINE_ON");
+				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_OFF");
 			}
 
 
@@ -348,7 +356,7 @@ namespace scatterer
 			InitUniforms (m_skyMaterialLocal);
 
 
-			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
+
 			
 			if (Core.Instance.useGodrays)
 			{
@@ -526,9 +534,22 @@ namespace scatterer
 					
 					planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
 					                                                 sourcePosRelPlanet.z, m_manager.planetshineSources[i].isSun? 1.0f:0.0f ));
-					
+
+					float intensity = m_manager.planetshineSources[i].intensity;
+
+					//compute reflected light intensity if source is not a sun
+					if (!m_manager.planetshineSources[i].isSun)
+					{
+						Vector3 sunPosRelPlanet = (m_manager.sunCelestialBody.position - parentCelestialBody.GetTransform().position).normalized;
+
+						//intensity *= Mathf.SmoothStep(0,1, Mathf.Clamp01(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet)));
+//						intensity *= Mathf.SmoothStep(0,1, 0.5f*(1+(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet))));
+						intensity *= 0.5f*(1+(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet)));
+
+					}
+
 					planetShineRGBMatrix.SetRow (i, new Vector4(m_manager.planetshineSources[i].color.x,m_manager.planetshineSources[i].color.y,
-					                                                       m_manager.planetshineSources[i].color.z,m_manager.planetshineSources[i].intensity));
+					                                                       m_manager.planetshineSources[i].color.z,intensity));
 				}
 //
 //				Debug.Log (planetShineSourcesMatrix.ToString());
@@ -993,7 +1014,11 @@ namespace scatterer
 			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 			mat.SetVector ("_camPos", farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
 
-
+			if (Core.Instance.usePlanetShine)
+			{
+				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
+				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
+			}
 		}
 
 		public void UpdatePostProcessMaterialGlobal ()

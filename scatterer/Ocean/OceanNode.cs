@@ -156,6 +156,17 @@ namespace scatterer
 				m_oceanMaterialFar.DisableKeyword ("SKY_REFLECTIONS_ON");
 			}
 
+			if (Core.Instance.usePlanetShine)
+			{
+				m_oceanMaterialFar.EnableKeyword ("PLANETSHINE_ON");
+				m_oceanMaterialFar.DisableKeyword ("PLANETSHINE_OFF");
+			}
+			else
+			{
+				m_oceanMaterialFar.DisableKeyword ("PLANETSHINE_ON");
+				m_oceanMaterialFar.EnableKeyword ("PLANETSHINE_OFF");
+			}
+
 
 //			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialNear);
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialFar);
@@ -319,8 +330,17 @@ namespace scatterer
 
 			m_drawOcean = m_manager.m_skyNode.trueAlt < fakeOceanAltitude;
 
-			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
+//			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
 			{
+
+				bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace;
+
+				foreach (MeshRenderer _mr in waterMeshRenderers)
+				{
+					_mr.enabled= oceanDraw;
+
+				}
+
 //				foreach (Mesh mesh in m_screenGrids)
 //				{
 //
@@ -523,6 +543,21 @@ namespace scatterer
 			oceanMaterial.SetFloat (ShaderProperties.cosTheta_PROPERTY, (float) cosTheta);
 			oceanMaterial.SetFloat (ShaderProperties.sinTheta_PROPERTY, (float) sinTheta);
 
+			if (Core.Instance.usePlanetShine)
+			{
+				Matrix4x4 planetShineSourcesMatrix=m_manager.m_skyNode.planetShineSourcesMatrix;
+
+				Vector3d2 oceanSunDir2;
+				for (int i=0;i<4;i++)
+				{
+					Vector4 row = planetShineSourcesMatrix.GetRow(i);
+					oceanSunDir2=localToOcean.ToMatrix3x3d () * new Vector3d2(row.x,row.y,row.z);
+					planetShineSourcesMatrix.SetRow(i,new Vector4((float)oceanSunDir2.x,(float)oceanSunDir2.y,(float)oceanSunDir2.z,row.w));
+				}
+				oceanMaterial.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
+
+				oceanMaterial.SetMatrix ("planetShineRGB", m_manager.m_skyNode.planetShineRGBMatrix);
+			}
 
 		}
 		

@@ -83,13 +83,17 @@ Shader "Proland/Ocean/OceanWhiteCaps"
 //			#pragma multi_compile_fwdbase
 			
 			#pragma multi_compile SKY_REFLECTIONS_OFF SKY_REFLECTIONS_ON
+			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			
 //			#include "Utility.cginc"
 //			#include "AtmosphereNew.cginc"
 			#include "AtmosphereScatterer.cginc"
 			#include "OceanBRDF.cginc"
 			#include "OceanDisplacement3.cginc"
-//			#include "lighting.cginc"
+			
+//			#include "Lighting.cginc"
+//			#include "AutoLight.cginc"
+//			#include "OceanLight.cginc"
 			
 			
 			uniform float4x4 _Globals_ScreenToCamera;
@@ -128,7 +132,12 @@ Shader "Proland/Ocean/OceanWhiteCaps"
 			
 			uniform float2 _VarianceMax;
 			
-			uniform sampler2D _Sky_Map;
+			//uniform sampler2D _Sky_Map;
+			
+#if defined (PLANETSHINE_ON)
+			uniform float4x4 planetShineSources;
+			uniform float4x4 planetShineRGB;
+#endif
 			
 			struct v2f 
 			{
@@ -136,6 +145,7 @@ Shader "Proland/Ocean/OceanWhiteCaps"
     			float2  oceanU : TEXCOORD0;
     			float3  oceanP : TEXCOORD1;
 //    			float3  vertexPos : TEXCOORD2;
+//    			LIGHTING_COORDS(3,4)
 			};
 		
 			v2f vert(appdata_base v)
@@ -191,9 +201,8 @@ Shader "Proland/Ocean/OceanWhiteCaps"
 			    OUT.oceanU = u;
 			    OUT.oceanP = oceanP;
 			   	
-////			   	float4 worldPos=mul(_Globals_CameraToWorld , screenP);
-//			   	float4 worldPos=mul(_Globals_OceanToWorld , float4(oceanP,0.0));
-//			    
+//			    float4 worldPos=mul(_Globals_CameraToWorld , screenP);
+//			    OCEAN_TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 //			    OUT.vertexPos=worldPos.xyz;
 			    
     			return OUT;
@@ -295,13 +304,15 @@ Shader "Proland/Ocean/OceanWhiteCaps"
 				
 //				Lsky = ReflectedSkyRadiance(_Sky_Map, V, N, sigmaSq, L);   //flat world, sky_map
 
-
+//				float atten=LIGHT_ATTENUATION(IN)*15;
+				
 #if defined (SKY_REFLECTIONS_ON)
 				Lsky = ReflectedSky(V, N, sigmaSq, L, earthP);   //planet, accurate sky reflections
 #else
 				Lsky = MeanFresnel(V, N, sigmaSq) * skyE / M_PI; 		   //planet, sky irradiance only
 #endif
-																
+				
+						
 				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
 				float3 Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * skyE / M_PI;
 				
@@ -321,6 +332,31 @@ Shader "Proland/Ocean/OceanWhiteCaps"
 				float3 R_ftot = float3(W * l * 0.4);
 				
 				float3 surfaceColor = Lsun + Lsky + Lsea + R_ftot;
+				
+#if defined (PLANETSHINE_ON)
+			    for (int i=0; i<4; ++i)
+    			{
+    				if (planetShineRGB[i].w == 0) break;
+    				
+    				L=planetShineSources[i].xyz;
+					SunRadianceAndSkyIrradiance(earthP, N, L, sunL, skyE);
+					
+					#if defined (SKY_REFLECTIONS_ON)
+						Lsky = ReflectedSky(V, N, sigmaSq, L, earthP);   //planet, accurate sky reflections
+					#else
+						Lsky = MeanFresnel(V, N, sigmaSq) * skyE / M_PI; 		   //planet, sky irradiance only
+					#endif
+				
+					
+					Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
+					Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * skyE / M_PI;
+					l = (sunL * (max(dot(N, L), 0.0)) + skyE) / M_PI;
+					R_ftot = float3(W * l * 0.4);
+					
+					surfaceColor+= (Lsun + Lsky + Lsea + R_ftot)*planetShineRGB[i].xyz*planetShineRGB[i].w;
+				}
+	
+#endif
 				
 //				float3 extinction=0;								
 				// aerial perspective
@@ -571,40 +607,9 @@ Shader "Proland/Ocean/OceanWhiteCaps"
 //			
 //			ENDCG
 //    	}
+    	
+    	
+    	
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

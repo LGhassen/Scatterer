@@ -18,8 +18,11 @@ Shader "Sky/AtmosphereGhoss" {
             #include "UnityCG.cginc"
             #include "AutoLight.cginc"
             #include "AtmosphereScatterer.cginc"
+            
+//           	#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
+            
             uniform float4x4 _ViewProjInv;
-            uniform float _viewdirOffset;
+//            uniform float _viewdirOffset;
             uniform float _Scale;
             uniform float _global_alpha;
             uniform float _global_depth;
@@ -36,6 +39,15 @@ Shader "Sky/AtmosphereGhoss" {
             //   uniform float _edgeThreshold;
             uniform float _horizonDepth;
             uniform float4x4 _Globals_CameraToWorld;
+            
+//            //eclipse uniforms
+//#if defined (ECLIPSES_ON)			
+//			uniform float4 sunPosAndRadius; //xyz sun pos w radius
+//			uniform float4x4 lightOccluders1; //array of light occluders
+//											 //for each float4 xyz pos w radius
+//			uniform float4x4 lightOccluders2;
+//#endif
+            
             struct v2f {
                 float4 pos: SV_POSITION;
                 float4 screenPos: TEXCOORD0;
@@ -97,6 +109,32 @@ Shader "Sky/AtmosphereGhoss" {
                 _Post_Extinction_Tint*extinction.b + (1-_Post_Extinction_Tint)*average);
                 //                extinction = lerp(average, extinction, _Post_Extinction_Tint);
                 extinction = lerp (float3(1,1,1), extinction, postExtinctionMultiplier);
+                
+                
+//#if defined (ECLIPSES_ON)				
+// 				float eclipseShadow = 1;
+// 							
+//            	for (int i=0; i<4; ++i)
+//    			{
+//        			if (lightOccluders1[i].w <= 0)	break;
+//					eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders1[i].xyz,
+//								   lightOccluders1[i].w, sunPosAndRadius.w)	;
+//				}
+//						
+//				for (int j=0; j<4; ++j)
+//    			{
+//        			if (lightOccluders2[j].w <= 0)	break;
+//					eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[j].xyz,
+//								   lightOccluders2[j].w, sunPosAndRadius.w)	;
+//				}
+//
+//				extinction*=eclipseShadow;
+//#endif
+
+
+//                float3 sunExtinction = sunsetExtinction(worldPos); //bad idea
+//                extinction*=sunExtinction;
+                
                 return float4(extinction, 1.0);
             }
             ENDCG
@@ -120,9 +158,13 @@ Pass {
             #include "UnityCG.cginc"
             #include "AutoLight.cginc"
             #include "AtmosphereScatterer.cginc"
+            
             #pragma multi_compile GODRAYS_OFF GODRAYS_ON
+//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
+			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
+            
             uniform float4x4 _ViewProjInv;
-            uniform float _viewdirOffset;
+//            uniform float _viewdirOffset;
             uniform float _Scale;
             uniform float _global_alpha;
 //            uniform float _Exposure;
@@ -140,6 +182,20 @@ Pass {
             uniform float _openglThreshold;
             uniform float _horizonDepth;
             uniform float4x4 _Globals_CameraToWorld;
+            
+//            //eclipse uniforms
+//#if defined (ECLIPSES_ON)			
+//			uniform float4 sunPosAndRadius; //xyz sun pos w radius
+//			uniform float4x4 lightOccluders1; //array of light occluders
+//											 //for each float4 xyz pos w radius
+//			uniform float4x4 lightOccluders2;
+//#endif
+        
+#if defined (PLANETSHINE_ON)
+			uniform float4x4 planetShineSources;
+			uniform float4x4 planetShineRGB;
+#endif
+                    
             struct v2f {
                 float4 pos: SV_POSITION;
                 float4 screenPos: TEXCOORD0;
@@ -164,11 +220,18 @@ Pass {
             }
             half4 frag(v2f i): COLOR
             {
-                float depth = tex2D(_customDepthTexture, i.uv_depth).r;
+                
+				float depth = tex2D(_customDepthTexture, i.uv_depth).r;
                 bool infinite = (depth == 1.0); //basically viewer ray isn't hitting any terrain
                 
 				float3 rayDir=i.view_dir;
 				
+
+                float4 H = float4(i.uv_depth.x * 2.0f - 1.0f, i.uv_depth.y * 2.0f - 1.0f, depth, 1.0f);
+                float4 D = mul(_ViewProjInv, H); //reconstruct world position from depth
+                						  //in this case lerped depth and godray depth
+                float3 worldPos = D / D.w;
+
 #if defined (GODRAYS_ON)
                 float3 SidewaysFromSun = normalize(cross(_camPos,SUN_DIR));
                 float godrayBlendFactor= 1-abs (dot(SidewaysFromSun,normalize(rayDir)));
@@ -180,14 +243,14 @@ Pass {
 //                }
                 
                 depth= ((godrayDepth > 0) && (godrayDepth < depth)&&(depth<1)) ? lerp(depth, godrayDepth, godrayBlendFactor) : depth;
-#endif
-                float4 H = float4(i.uv_depth.x * 2.0f - 1.0f, i.uv_depth.y * 2.0f - 1.0f, depth, 1.0f);
-                float4 D = mul(_ViewProjInv, H); //reconstruct world position from depth
+				H = float4(i.uv_depth.x * 2.0f - 1.0f, i.uv_depth.y * 2.0f - 1.0f, depth, 1.0f);
+                D = mul(_ViewProjInv, H); //reconstruct world position from depth
                 						  //in this case lerped depth and godray depth
-                float3 worldPos = D / D.w;
+                float3 godrayWorldPos = D / D.w;
+#endif
 
 
-                float interSectPt = intersectSphere2(_camPos, rayDir, float3(0.0, 0.0, 0.0), Rg);
+				float interSectPt = intersectSphere2(_camPos, rayDir, float3(0.0, 0.0, 0.0), Rg);
                 
                 //this ensures that we're looking in the right direction
                 //That is, the ocean surface intersection point is in front of us
@@ -207,14 +270,78 @@ Pass {
                 bool oceanCloserThanTerrain = (length(worldPos2 - _camPos) < length(worldPos - _camPos));
                 worldPos = ((rightDir) && oceanCloserThanTerrain) ? worldPos2 : worldPos;
                 
+#if defined (GODRAYS_ON)
+                oceanCloserThanTerrain = (length(worldPos2 - _camPos) < length(godrayWorldPos - _camPos));
+                godrayWorldPos = ((rightDir) && oceanCloserThanTerrain) ? worldPos2 : godrayWorldPos;
+#endif
+                
                 //artifacts fix
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ;
+#if defined (GODRAYS_ON)
+				godrayWorldPos= (length(godrayWorldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(godrayWorldPos) : godrayWorldPos ;
+#endif
                 float3 extinction = float3(0, 0, 0);
-                float3 inscatter = InScattering2(_camPos, worldPos, extinction, 1.0, 1.0, 1.0);
+
+#if defined (GODRAYS_ON)
+                float3 inscatter = InScattering2(_camPos, godrayWorldPos, extinction, SUN_DIR, 1.0, 1.0, 1.0);
                 float visib = 1;
+                float dpth = length(godrayWorldPos - _camPos);
+                visib = (dpth <= _global_depth) ? (1 - exp(-1 * (4 * dpth / _global_depth))) : visib;
+                inscatter*= visib;
+#else
+				float3 inscatter = InScattering2(_camPos, worldPos, extinction, SUN_DIR, 1.0, 1.0, 1.0);
+				float visib = 1;
                 float dpth = length(worldPos - _camPos);
                 visib = (dpth <= _global_depth) ? (1 - exp(-1 * (4 * dpth / _global_depth))) : visib;
-                return float4(hdr(inscatter)*_global_alpha * visib, 1);
+                inscatter*= visib;
+#endif
+                
+#if defined (PLANETSHINE_ON)
+			    float3 inscatter2=0;
+			    for (int i=0; i<4; ++i)
+    			{
+    				if (planetShineRGB[i].w == 0) break;
+    				inscatter2+=InScattering2(_camPos, worldPos,extinction, planetShineSources[i].xyz,1.0, 1.0, 1.0)
+    							*planetShineRGB[i].xyz*planetShineRGB[i].w;
+    			}
+    			
+    			#if defined (GODRAYS_ON)
+    				visib = 1;
+                	dpth = length(worldPos - _camPos);
+                	visib = (dpth <= _global_depth) ? (1 - exp(-1 * (4 * dpth / _global_depth))) : visib;
+                	inscatter+=inscatter2*visib;
+    			#else
+    				inscatter+=inscatter2*visib;
+    			#endif			    
+#endif
+
+				
+//                float visib = 1;
+//                float dpth = length(worldPos - _camPos);
+//                visib = (dpth <= _global_depth) ? (1 - exp(-1 * (4 * dpth / _global_depth))) : visib;
+                
+//#if defined (ECLIPSES_ON)				
+// 				float eclipseShadow = 1;
+// 							
+//            	for (int i=0; i<4; ++i)
+//    			{
+//        			if (lightOccluders1[i].w <= 0)	break;
+//					eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders1[i].xyz,
+//								   lightOccluders1[i].w, sunPosAndRadius.w)	;
+//				}
+//						
+//				for (int j=0; j<4; ++j)
+//    			{
+//        			if (lightOccluders2[j].w <= 0)	break;
+//					eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[j].xyz,
+//								   lightOccluders2[j].w, sunPosAndRadius.w)	;
+//				}
+//
+//				inscatter*=eclipseShadow;
+//#endif
+                
+                
+                return float4(hdr(inscatter)*_global_alpha, 1);
                 
 				
             }
