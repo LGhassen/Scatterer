@@ -72,12 +72,12 @@ namespace scatterer
 		
 		Light[] lights;
 
-		//		GameObject sunLight,scaledspaceSunLight;
-		//		public GameObject copiedScaledSunLight;
-		//		public GameObject copiedSunLight;
-		
-		//		List < celestialBodySortableByDistance > celestialBodiesWithDistance = new List < celestialBodySortableByDistance > ();
-		
+		GameObject sunLight,scaledspaceSunLight;
+		public GameObject copiedScaledSunLight, copiedScaledSunLight2;
+		public GameObject copiedSunLight;
+
+		Cubemap planetShineCookieCubeMap;
+
 		[Persistent]
 		Vector2 mainMenuWindowLocation=Vector2.zero;
 
@@ -192,6 +192,7 @@ namespace scatterer
 		float viewdirOffset=0f;
 		
 		public CelestialBody sunCelestialBody;
+		public CelestialBody munCelestialBody;
 		public string path;
 		bool found = false;
 		bool showInterpolatedValues = false;
@@ -406,52 +407,70 @@ namespace scatterer
 					
 
 					
-//					//find sunlight
-//					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-//					Debug.Log ("number of lights" + lights.Length);
-//					foreach (Light _light in lights)
-//					{
-//						Debug.Log("name:"+_light.gameObject.name);
-//						Debug.Log("intensity:"+_light.intensity.ToString());
-//						Debug.Log ("mask:"+_light.cullingMask.ToString());
-//						Debug.Log ("type:"+_light.type.ToString());
-//						Debug.Log ("Parent:"+_light.transform.parent.gameObject.name);
-//						Debug.Log ("range:"+_light.range.ToString());
-//
-//						Debug.Log ("shadows:"+_light.shadows.ToString ());
-//						Debug.Log ("shadowStrength:"+_light.shadowStrength.ToString ());
-//						Debug.Log ("shadowNormalBias:"+_light.shadowNormalBias.ToString ());
-//						Debug.Log ("shadowBias:"+_light.shadowBias.ToString ());
-//						
-//						if (_light.gameObject.name == "Scaledspace SunLight")
-//						{
-////							scaledspaceSunLight=_light.gameObject;
-//							Debug.Log("Found scaled sunlight");
-//
-//							_light.shadowNormalBias =shadowNormalBias;
-//							_light.shadowBias=shadowBias;
-//						}
-//						
-//						if (_light.gameObject.name == "SunLight")
-//						{
-////							sunLight=_light.gameObject;
-//							Debug.Log("Found sunlight");
-//
-//							Debug.Log("shadow normal bias to set "+shadowNormalBias .ToString());
-//							_light.shadowNormalBias =shadowNormalBias;
-//							Debug.Log("shadow normal bias set "+_light.shadowNormalBias);
-//
-//							Debug.Log("shadow bias to set "+shadowBias.ToString());
-//							_light.shadowBias=shadowBias;
-//							Debug.Log("shadow bias set "+_light.shadowBias);
-//
-//						}
-//						
-//					}
-					
-					//					copiedScaledSunLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
-					//					scaledspaceSunLight.light.intensity=3;
-					
+					//find sunlight
+					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+					Debug.Log ("number of lights" + lights.Length);
+					foreach (Light _light in lights)
+					{
+						Debug.Log("name:"+_light.gameObject.name);
+						Debug.Log("intensity:"+_light.intensity.ToString());
+						Debug.Log ("mask:"+_light.cullingMask.ToString());
+						Debug.Log ("type:"+_light.type.ToString());
+						Debug.Log ("Parent:"+_light.transform.parent.gameObject.name);
+						Debug.Log ("range:"+_light.range.ToString());
+
+						Debug.Log ("shadows:"+_light.shadows.ToString ());
+						Debug.Log ("shadowStrength:"+_light.shadowStrength.ToString ());
+						Debug.Log ("shadowNormalBias:"+_light.shadowNormalBias.ToString ());
+						Debug.Log ("shadowBias:"+_light.shadowBias.ToString ());
+						
+						if (_light.gameObject.name == "Scaledspace SunLight")
+						{
+							scaledspaceSunLight=_light.gameObject;
+							Debug.Log("Found scaled sunlight");
+
+							_light.shadowNormalBias =shadowNormalBias;
+							_light.shadowBias=shadowBias;
+						}
+						
+						if (_light.gameObject.name == "SunLight")
+						{
+							sunLight=_light.gameObject;
+							Debug.Log("Found Sunlight");
+						}
+						
+					}
+
+
+
+					copiedScaledSunLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
+					copiedScaledSunLight2=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
+
+//					copiedScaledSunLight=(UnityEngine.GameObject) Instantiate(sunLight);
+					Debug.Log ("copied scaledSpaceSunlight");
+
+					planetShineCookieCubeMap=new Cubemap(512,TextureFormat.ARGB32,true);
+
+					Texture2D[] cubeMapFaces=new Texture2D[6];
+					for (int i=0;i<6;i++)
+					{
+						cubeMapFaces[i]=new Texture2D(512,512);
+					}
+
+					cubeMapFaces[0].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeX.png")));
+					cubeMapFaces[1].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveX.png")));
+					cubeMapFaces[2].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeY.png")));
+					cubeMapFaces[3].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveY.png")));
+					cubeMapFaces[4].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeZ.png")));
+					cubeMapFaces[5].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveZ.png")));
+
+					planetShineCookieCubeMap.SetPixels(cubeMapFaces[0].GetPixels(),CubemapFace.NegativeX);
+					planetShineCookieCubeMap.SetPixels(cubeMapFaces[1].GetPixels(),CubemapFace.PositiveX);
+					planetShineCookieCubeMap.SetPixels(cubeMapFaces[2].GetPixels(),CubemapFace.NegativeY);
+					planetShineCookieCubeMap.SetPixels(cubeMapFaces[3].GetPixels(),CubemapFace.PositiveY);
+					planetShineCookieCubeMap.SetPixels(cubeMapFaces[4].GetPixels(),CubemapFace.NegativeZ);
+					planetShineCookieCubeMap.SetPixels(cubeMapFaces[5].GetPixels(),CubemapFace.PositiveZ);
+					planetShineCookieCubeMap.Apply();
 
 					//find and fix renderQueues of kopernicus rings
 					foreach (CelestialBody _cb in CelestialBodies)
@@ -460,7 +479,7 @@ namespace scatterer
 						ringObject=GameObject.Find(_cb.name+"Ring");
 						if (ringObject)
 						{
-							ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3002;
+							ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3003;
 							Debug.Log("[Scatterer] Found rings for "+_cb.name);
 						}
 					}
@@ -587,58 +606,31 @@ namespace scatterer
 											{
 												eclipseCasters.Add(cc);
 												Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
-												//											copiedScaledSunLight.light.type=LightType.Point;
-												//											copiedScaledSunLight.light.range=1E9f;
-												//											copiedScaledSunLight.light.cullingMask=sunLight.light.cullingMask;
-												//											copiedSunLight.transform.parent=cc.transform;
+//												if (cc.name == "Mun")
+												if (cc.name == "Jool")
+												{
+													munCelestialBody=cc;
+
+													copiedScaledSunLight.GetComponent<Light>().type=LightType.Point;
+													copiedScaledSunLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
+													copiedScaledSunLight.GetComponent<Light>().range=1E9f;
+													copiedScaledSunLight.GetComponent<Light>().color=new Color(0.6f,1f,0.4f);
+
+													copiedScaledSunLight2.GetComponent<Light>().type=LightType.Point;
+													copiedScaledSunLight2.GetComponent<Light>().cookie=planetShineCookieCubeMap;
+													copiedScaledSunLight2.GetComponent<Light>().range=1E9f;
+													copiedScaledSunLight2.GetComponent<Light>().color=new Color(0.6f,1f,0.4f);
+													copiedScaledSunLight2.GetComponent<Light>().cullingMask=557591;
+												}
 											}
 										}
 										_cur.m_manager.eclipseCasters=eclipseCasters;
 									}
 
-									//Find additional suns and planetshine light sources
-//									List<CelestialBody> additionalSuns=new List<CelestialBody> {};
-//									List<CelestialBody> planetShineLightSources=new List<CelestialBody> {};
-
 									List<planetShineSource> planetshineSources=new List<planetShineSource> {};
 
 									if (usePlanetShine)
-									{
-//										for (int k=0; k < _cur.additionalSuns.Count; k++)
-//										{
-//											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.additionalSuns[k]);
-//											if (cc==null)
-//												Debug.Log("[Scatterer] Light source "+_cur.additionalSuns[k]+" not found for "+_cur.celestialBodyName);
-//											else
-//											{
-//												additionalSuns.Add(cc);
-//												Debug.Log("[Scatterer] Added light source"+_cur.additionalSuns[k]+" for "+_cur.celestialBodyName+" (additional sun)");
-//											}
-//										}
-//										_cur.m_manager.additionalSuns=additionalSuns;
-//
-//										for (int k=0; k < _cur.planetShineLightSources.Count; k++)
-//										{
-//											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.planetShineLightSources[k]);
-//											if (cc==null)
-//												Debug.Log("[Scatterer] Light source "+_cur.planetShineLightSources[k]+" not found for "+_cur.celestialBodyName);
-//											else
-//											{
-//												planetShineLightSources.Add(cc);
-//												Debug.Log("[Scatterer] Added light source"+_cur.planetShineLightSources[k]+" for "+_cur.celestialBodyName+" (planet shine source)");
-//											}
-//										}
-//										_cur.m_manager.planetShineLightSources=planetShineLightSources;
-//
-//										planetShineSource tmpsrc= new planetShineSource();
-//										tmpsrc.bodyName="mun";
-//										tmpsrc.color=Vector4.one;
-//										tmpsrc.intensity=1f;
-//										tmpsrc.isSun=true;
-//
-//										_cur.planetshineSources.Add (tmpsrc);
-
-
+									{								
 										for (int k=0; k < _cur.planetshineSources.Count; k++)
 										{
 											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.planetshineSources[k].bodyName);
@@ -653,10 +645,9 @@ namespace scatterer
 												Debug.Log("[Scatterer] Added light source"+_cur.planetshineSources[k].bodyName+" for "+_cur.celestialBodyName);
 											}
 										}
-
 										_cur.m_manager.planetshineSources = planetshineSources;
-
 									}
+
 
 									_cur.m_manager.hasOcean = _cur.hasOcean;
 									_cur.m_manager.Awake ();
@@ -690,21 +681,20 @@ namespace scatterer
 					if (fullLensFlareReplacement)
 						customSunFlare.updateNode();
 
+					if (munCelestialBody)
+					{
+						copiedScaledSunLight.gameObject.transform.position=ScaledSpace.LocalToScaledSpace(munCelestialBody.transform.position);
+						copiedScaledSunLight.gameObject.transform.LookAt(ScaledSpace.LocalToScaledSpace(sunCelestialBody.transform.position));
 
+						copiedScaledSunLight2.gameObject.transform.position=(munCelestialBody.transform.position);
+						copiedScaledSunLight2.gameObject.transform.LookAt(sunCelestialBody.transform.position);
+					}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+//					if (FlightGlobals.ActiveVessel)
+//					{
+//						copiedScaledSunLight.transform.position=FlightGlobals.ActiveVessel.transform.position;
+//						copiedScaledSunLight.transform.parent=FlightGlobals.ActiveVessel.transform;
+//					}
 
 					//					GameObject[] list = (GameObject[]) GameObject.FindObjectsOfType(typeof(GameObject));
 					//					int d=0;
@@ -835,7 +825,12 @@ namespace scatterer
 
 
 			if (isActive) {
-				
+
+				if (copiedScaledSunLight)
+				{
+					UnityEngine.Object.Destroy(copiedScaledSunLight);
+					UnityEngine.Object.Destroy(copiedScaledSunLight2);
+				}
 
 				for (int i = 0; i < scattererCelestialBodies.Count; i++) {
 					
@@ -1821,7 +1816,7 @@ namespace scatterer
 				{
 					sctBodyTransform = ScaledSpace.Instance.transform.FindChild (sctBody.celestialBodyName);
 				}
-				if (sctBodyTransform)
+				else
 				{
 					sctBody.transform = sctBodyTransform;
 					sctBody.hasTransform = true;
@@ -1838,18 +1833,9 @@ namespace scatterer
 				{
 					if (_sc.pqsController)
 					{
-//						if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
-//						{
-//							_sc.pqsController.meshCastShadows = false;			//disable in space center because of "ghost" shadow
-//							QualitySettings.shadowDistance = 5000;
-//							
-//						}
-//						else
-						{
-							_sc.pqsController.meshCastShadows = true;
-							_sc.pqsController.meshRecieveShadows = true;
-							QualitySettings.shadowDistance = shadowsDistance;
-						}
+						_sc.pqsController.meshCastShadows = true;
+						_sc.pqsController.meshRecieveShadows = true;
+						QualitySettings.shadowDistance = shadowsDistance;
 
 						//set shadow bias
 						//fixes checkerboard artifacts aka shadow acne
