@@ -46,7 +46,6 @@ namespace scatterer
 				_depthCamCamera.enabled = false;
 
 
-
 				depthShader = ShaderTool.GetShader2("CompiledDepthTexture.shader");
 
 
@@ -56,6 +55,7 @@ namespace scatterer
 			}
 
 			_depthCamCamera.CopyFrom(inCamera);
+
 			_depthCamCamera.enabled = false;
 
 			//_depthCam.camera.backgroundColor = new Color(0,0,0,0);
@@ -77,8 +77,6 @@ namespace scatterer
 //			if (incore.pqsEnabled)   //change this to render at any PQS
 			if (renderDepthBuffer)
 			{
-
-
 				//for some reason in KSP this camera wouldn't clear the texture before rendering to it, resulting in a trail effect
 				//this snippet fixes that. We need the texture cleared to full white to mask the sky
 				RenderTexture rt=RenderTexture.active;
@@ -89,10 +87,6 @@ namespace scatterer
 				
 				
 				_depthCamCamera.targetTexture = _depthTex;
-//				_depthCam.camera.SetReplacementShader (depthShader, "RenderType");
-
-////				_depthCamCamera.RenderWithShader (depthShader, "RenderType");
-//				_depthCamCamera.RenderWithShader (depthShader, "");
 
 				if (!incore.ignoreRenderTypetags)
 					_depthCamCamera.RenderWithShader (depthShader, "RenderType");
@@ -107,18 +101,22 @@ namespace scatterer
 					RenderTexture.active= _godrayDepthTex;			
 					GL.Clear(false,true,Color.white);
 
-					
 					_depthCamCamera.targetTexture =  _godrayDepthTex;
-//					_depthCam.camera.SetReplacementShader (GodrayDepthShader, "RenderType");
 
-////					_depthCamCamera.RenderWithShader (GodrayDepthShader, "RenderType");
-//					_depthCamCamera.RenderWithShader (GodrayDepthShader, "");
+//					int culmask = _depthCamCamera.cullingMask;
+					_depthCamCamera.cullingMask=32768; //ignore ships, parts
+					//to avoid black godrays casting from ship
+					//render only terrain for goodrays
+
 
 					if (!incore.ignoreRenderTypetags)
 						_depthCamCamera.RenderWithShader (GodrayDepthShader, "RenderType");
 					else
 						_depthCamCamera.RenderWithShader (GodrayDepthShader, "");
 
+					//restore culling mask when done rendering godrays
+					//not necessary, restored automatically when copying attributes from farcamera above
+//					_depthCamCamera.cullingMask = culmask;
 				}
 				
 				RenderTexture.active=rt;
@@ -126,7 +124,7 @@ namespace scatterer
 		}
 		
 		
-		void OnRenderImage (RenderTexture source, RenderTexture destination) {
+		void OnRenderImage (RenderTexture source, RenderTexture destination){
 			//		material.SetTexture("_DepthNormal", _depthTex);
 			//		ImageEffects.BlitWithMaterial(material, source, destination);
 			//		CleanUpTextures();
