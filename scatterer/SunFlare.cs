@@ -193,7 +193,6 @@ namespace scatterer
 				hitStatus = Physics.Raycast (inCore.farCamera.transform.position,
 				                             (inCore.sunCelestialBody.transform.position- inCore.farCamera.transform.position).normalized,
 				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
-				
 				if(!hitStatus)
 				{
 					hitStatus = Physics.Raycast (inCore.scaledSpaceCamera.transform.position,
@@ -205,6 +204,13 @@ namespace scatterer
 			{
 				hitStatus = Physics.Raycast (inCore.scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(inCore.sunCelestialBody.transform.position)
 				                                                                           - inCore.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
+			}
+
+			if(hitStatus)
+			{
+				//if sun visible, draw sunflare
+				if(hit.transform.gameObject.name == "Sun")
+					hitStatus=false;
 			}
 
 			eclipse = hitStatus;
@@ -270,7 +276,6 @@ namespace scatterer
 			{
 				Graphics.DrawMesh (screenMesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 10,
 				                   inCore.scaledSpaceCamera, 0, null, false, false);
-
 			}
 		}
 
