@@ -17,7 +17,10 @@ namespace scatterer
 	public class SunFlare : MonoBehaviour
 	{	
 		public Material sunglareMaterial;
-		
+
+		public CelestialBody source;
+		public string sourceName;
+
 		Texture2D sunSpikes;
 		Texture2D sunFlare;
 
@@ -79,15 +82,15 @@ namespace scatterer
 			sunGhost3 = new Texture2D (1, 1);
 			
 			
-			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare", "sunSpikes.png")));
+			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "sunSpikes.png")));
 			sunSpikes.wrapMode = TextureWrapMode.Clamp;
-			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare", "sunFlare.png")));
+			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "sunFlare.png")));
 			sunFlare.wrapMode = TextureWrapMode.Clamp;
-			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare", "Ghost1.png")));
+			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "Ghost1.png")));
 			sunGhost1.wrapMode = TextureWrapMode.Clamp;
-			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare", "Ghost2.png")));
+			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "Ghost2.png")));
 			sunGhost2.wrapMode = TextureWrapMode.Clamp;
-			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare", "Ghost3.png")));
+			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "Ghost3.png")));
 			sunGhost3.wrapMode = TextureWrapMode.Clamp;
 
 //			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
@@ -169,9 +172,9 @@ namespace scatterer
 		{
 
 			sunViewPortPos = inCore.scaledSpaceCamera.WorldToViewportPoint
-				(ScaledSpace.LocalToScaledSpace(inCore.sunCelestialBody.transform.position));
+				(ScaledSpace.LocalToScaledSpace(source.transform.position));
 
-			float dist = (float) (inCore.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (inCore.sunCelestialBody.transform.position))
+			float dist = (float) (inCore.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
 				.magnitude;
 
 			sunGlareScale = dist / 2266660f;
@@ -191,25 +194,25 @@ namespace scatterer
 			{
 	
 				hitStatus = Physics.Raycast (inCore.farCamera.transform.position,
-				                             (inCore.sunCelestialBody.transform.position- inCore.farCamera.transform.position).normalized,
+				                             (source.transform.position- inCore.farCamera.transform.position).normalized,
 				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
 				if(!hitStatus)
 				{
 					hitStatus = Physics.Raycast (inCore.scaledSpaceCamera.transform.position,
-					                             (ScaledSpace.LocalToScaledSpace(inCore.sunCelestialBody.transform.position)- inCore.scaledSpaceCamera.transform.position)
+					                             (ScaledSpace.LocalToScaledSpace(source.transform.position)- inCore.scaledSpaceCamera.transform.position)
 					                             .normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 				}
 			}
 			else
 			{
-				hitStatus = Physics.Raycast (inCore.scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(inCore.sunCelestialBody.transform.position)
+				hitStatus = Physics.Raycast (inCore.scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(source.transform.position)
 				                                                                           - inCore.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 			}
 
 			if(hitStatus)
 			{
 				//if sun visible, draw sunflare
-				if(hit.transform.gameObject.name == "Sun")
+				if(hit.transform.gameObject.name == sourceName)
 					hitStatus=false;
 			}
 
@@ -256,7 +259,8 @@ namespace scatterer
 					else
 						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(inCore.scaledSpaceCamera.transform.position) - lastActivePQS.parentCelestialBody.transform.position);
 
-					sunglareMaterial.SetVector ("_Sun_WorldSunDir", lastActivePQS.getDirectionToSun ().normalized);
+//					sunglareMaterial.SetVector ("_Sun_WorldSunDir", lastActivePQS.getDirectionToSun ().normalized);
+					sunglareMaterial.SetVector ("_Sun_WorldSunDir", lastActivePQS.getDirectionToCelestialBody (source).normalized);
 				}
 			}
 		}	
@@ -289,7 +293,7 @@ namespace scatterer
 
 		public void loadConfigNode ()
 		{
-			ConfigNode cnToLoad = ConfigNode.Load (inCore.path + "/sunflare/sunflare.cfg");
+			ConfigNode cnToLoad = ConfigNode.Load (inCore.path + "/sunflare/"+sourceName+"/sunflare.cfg");
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 		}
 

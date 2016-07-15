@@ -43,7 +43,8 @@ namespace scatterer
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
 
-		SunFlare customSunFlare;
+		List<SunFlare> customSunFlares = new List<SunFlare>();
+		bool customSunFlareAdded=false;
 		
 		bool visible = false;
 
@@ -572,12 +573,26 @@ namespace scatterer
 					}
 
 
-					//custom lens flare
-					if ((fullLensFlareReplacement) && !customSunFlare)
+					//custom lens flares
+					if ((fullLensFlareReplacement) && !customSunFlareAdded)
 					{
-						customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
-						customSunFlare.inCore=this;
-						customSunFlare.start ();
+						//dir sunflare directory
+
+						string sunFlarePath=path + "/sunflare";
+						foreach (string s in Directory.GetDirectories(sunFlarePath))
+						{
+							string name = s.Remove(0,s.LastIndexOf('\\')+1);
+
+							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
+							customSunFlare.inCore=this;
+							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == name);
+							customSunFlare.sourceName=name;
+							customSunFlare.start ();
+							customSunFlares.Add(customSunFlare);
+							Debug.Log("Added custom sunflare for "+name);
+						}
+
+						customSunFlareAdded=true;
 					}
 
 					if (disableAmbientLight && !ambientLightScript)
@@ -726,14 +741,19 @@ namespace scatterer
 					}
 					//update sun flare
 					if (fullLensFlareReplacement)
-						customSunFlare.updateNode();
-
+					{
+						foreach (SunFlare customSunFlare in customSunFlares)
+						{
+							customSunFlare.updateNode();
+						}
+					}
+						
 					//update planetshine lights
 					if(usePlanetShine)
 					{
 						foreach (planetShineLight _aLight in celestialLightSources)
 						{
-							Debug.Log("updating "+_aLight.source.name);
+//							Debug.Log("updating "+_aLight.source.name);
 							_aLight.updateLight();
 
 						}
@@ -956,9 +976,13 @@ namespace scatterer
 				}
 
 
-				if (fullLensFlareReplacement && customSunFlare)
+				if (fullLensFlareReplacement && customSunFlareAdded)
 				{
-					Component.Destroy (customSunFlare);
+					foreach (SunFlare customSunFlare in customSunFlares)
+					{
+						Component.Destroy (customSunFlare);
+					}
+
 				}
 
 

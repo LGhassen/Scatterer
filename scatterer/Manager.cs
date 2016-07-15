@@ -123,8 +123,12 @@ namespace scatterer
 		
 		public Vector3 getDirectionToSun()
 		{
-			return (sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position);
-			
+			return (sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position);			
+		}
+
+		public Vector3 getDirectionToCelestialBody(CelestialBody target)
+		{
+			return (target.GetTransform().position - parentCelestialBody.GetTransform().position);			
 		}
 
 		public double GetRadius() {
