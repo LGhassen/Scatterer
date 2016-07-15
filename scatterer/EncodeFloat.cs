@@ -1,3 +1,8 @@
+//this loads a .raw file into a rendertexture
+//previously this used to be the only way to get floating point textures into video memory
+//with unity 5 however we can do the same by using a texture2D
+//this class is still used the first time a new .raw file is loaded
+
 using UnityEngine;
 using System.Collections;
 using System.IO;

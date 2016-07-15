@@ -74,8 +74,6 @@
     <Compile Include="Plugins\Containers\DictionaryQueue.cs" />
     <Compile Include="Plugins\Containers\SetQueue.cs" />
     <Compile Include="updateAtCameraRythm.cs" />
-    <Compile Include="configPoint.cs" />
-    <Compile Include="scattererCelestialBody.cs" />
     <Compile Include="CustomDepthBufferCam.cs" />
     <Compile Include="wireFrame.cs" />
     <Compile Include="SimplePostProcessCube.cs" />
@@ -90,14 +88,19 @@
     <Compile Include="Ocean\FourierGPU.cs" />
     <Compile Include="Ocean\FourierCPU.cs" />
     <Compile Include="Ocean\FakeOceanPQS.cs" />
-    <Compile Include="EncodeFloat2D.cs" />
     <Compile Include="disableAmbientLight.cs" />
     <Compile Include="renderTypeFixer.cs" />
     <Compile Include="Ocean\CommandBufferModifiedProjectionMatrix.cs" />
     <Compile Include="ShaderProperties.cs" />
-    <Compile Include="planetshineSource.cs" />
+    <Compile Include="planetShineLight.cs" />
+    <Compile Include="DataSerialization\configPoint.cs" />
+    <Compile Include="DataSerialization\planetshineSource.cs" />
+    <Compile Include="DataSerialization\scattererCelestialBody.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DataSerialization\" />
   </ItemGroup>
 </Project>

@@ -4,16 +4,15 @@ using System.Collections.Generic;
 
 using KSP.IO;
 
-namespace scatterer {
+namespace scatterer
+{
 	/*
 	 * A manger to organise what order update functions are called
 	 * Provides a location for common settings and allows the nodes to access each other
 	 */
-	public class Manager: MonoBehaviour {
-
+	public class Manager: MonoBehaviour
+	{
 		
-		//parent core
-//		Core Core.Instance;
 		public bool hasOcean = false;
 		
 		public double m_radius = 600000.0f;
@@ -33,7 +32,7 @@ namespace scatterer {
 //		public List<CelestialBody> additionalSuns;
 //		public List<CelestialBody> planetShineLightSources;
 
-		public List<planetShineSource> planetshineSources;
+		public List<atmoPlanetShineSource> planetshineSources;
 
 		
 		// Initialization
@@ -45,15 +44,10 @@ namespace scatterer {
 			m_skyNode.setManager(this);
 			m_skyNode.SetParentCelestialBody(parentCelestialBody);
 			m_skyNode.setParentPlanetTransform(ParentPlanetTransform);
-			//			print ("skynode parent CB and PP set");
-			//m_skyNode.loadSettings ();
+
 			m_skyNode.loadFromConfigNode(false);
 
-			m_skyNode.Start();
-
-			//m_skyNode.loadFromConfigNode(false);
-			//m_skyNode.loadFromConfigNode ();
-			//			print ("skynode started");
+			m_skyNode.Start();		
 			
 			if (hasOcean && Core.Instance.useOceanShaders) {
 				m_oceanNode = new OceanWhiteCaps();
@@ -99,7 +93,7 @@ namespace scatterer {
 		}
 		
 		
-		//this fixes the alt-enter bug the really stupid way but it's fast so it'll do for now
+		//this fixes the alt-enter bug the really stupid way but it's fast and simple so it'll do
 		public void reBuildOcean() {
 			if (hasOcean && Core.Instance.useOceanShaders) {
 				m_oceanNode.OnDestroy();

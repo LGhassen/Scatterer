@@ -528,23 +528,35 @@ namespace scatterer
 
 				for (int i=0; i< Mathf.Min(4, m_manager.planetshineSources.Count); i++)
 				{	
-					Vector3 sourcePosRelPlanet = (m_manager.planetshineSources[i].body.position - parentCelestialBody.GetTransform().position).normalized;
-					
+					Vector3 sourcePosRelPlanet;
+
+					//offset lightsource position to make light follow lit crescent
+					//i.e light doesn't come from the center of the planet but follows the lit side
+					//1/4 of the way from center to surface should be fine
+					Vector3d offsetPos=m_manager.planetshineSources[i].body.position
+						+0.25*m_manager.planetshineSources[i].body.Radius*
+					    (m_manager.sunCelestialBody.position-m_manager.planetshineSources[i].body.position).normalized;
+
+					if (scaledMode)
+						sourcePosRelPlanet = Vector3.Scale(offsetPos - parentCelestialBody.GetTransform().position,new Vector3d(6000f,6000f,6000f));
+					else
+						sourcePosRelPlanet = offsetPos - parentCelestialBody.GetTransform().position;
+
 					planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
 					                                                 sourcePosRelPlanet.z, m_manager.planetshineSources[i].isSun? 1.0f:0.0f ));
 
 					float intensity = m_manager.planetshineSources[i].intensity;
 
 					//compute reflected light intensity if source is not a sun
-					if (!m_manager.planetshineSources[i].isSun)
-					{
-						Vector3 sunPosRelPlanet = (m_manager.sunCelestialBody.position - parentCelestialBody.GetTransform().position).normalized;
-
-						//intensity *= Mathf.SmoothStep(0,1, Mathf.Clamp01(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet)));
-//						intensity *= Mathf.SmoothStep(0,1, 0.5f*(1+(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet))));
-						intensity *= 0.5f*(1+(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet)));
-
-					}
+					//moved to shader for better, less rigid effect
+//					if (!m_manager.planetshineSources[i].isSun)
+//					{
+//						Vector3 sunPosRelPlanet = (m_manager.sunCelestialBody.position - parentCelestialBody.GetTransform().position).normalized;
+//
+//						//intensity *= Mathf.SmoothStep(0,1, Mathf.Clamp01(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet)));
+////						intensity *= Mathf.SmoothStep(0,1, 0.5f*(1+(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet))));
+//						intensity *= 0.5f*(1+(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet)));
+//					}
 
 					planetShineRGBMatrix.SetRow (i, new Vector4(m_manager.planetshineSources[i].color.x,m_manager.planetshineSources[i].color.y,
 					                                                       m_manager.planetshineSources[i].color.z,intensity));
