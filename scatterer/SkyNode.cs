@@ -21,9 +21,6 @@ namespace scatterer
 	public class SkyNode: MonoBehaviour
 	{
 		
-		//		[Persistent]
-		//		public bool forceOFFaniso;
-		
 		SimplePostProcessCube postProcessCube;
 		GameObject atmosphereMesh;
 		MeshRenderer atmosphereMeshrenderer;
@@ -65,7 +62,7 @@ namespace scatterer
 		
 		[Persistent]
 		public float experimentalAtmoScale=1f;
-		float viewdirOffset=0f;
+		//float viewdirOffset=0f;
 		
 		Matrix4x4 p;
 		
@@ -74,25 +71,12 @@ namespace scatterer
 		public float oceanSigma = 0.04156494f;
 		public float _Ocean_Threshold = 25f;
 		
-		//		[Persistent]
-		//		public float sunglareScale = 1f;
-		
-		public float extinctionMultiplier = 1f;
-		
-		public float extinctionTint = 100f;
-		public float skyExtinctionRimFade = 0f;
-		public float skyExtinctionGroundFade = 0f;
-		
 		[Persistent]
 		public float mapExtinctionMultiplier = 1f;
 		[Persistent]
 		public float mapExtinctionTint = 1f;
 		[Persistent]
 		public float mapSkyExtinctionRimFade = 1f;
-		
-		[Persistent]
-		public float
-			_extinctionScatterIntensity = 1f;
 		
 		[Persistent]
 		public float
@@ -104,64 +88,36 @@ namespace scatterer
 		
 		[Persistent]
 		public float drawOverCloudsAltitude = 100000f;
-		
-		public float openglThreshold = 250f;
-		public float edgeThreshold = 0.5f;
-		
-		public float _GlobalOceanAlpha = 1f;
-		
-		public float _Post_Extinction_Tint;
-		public float postExtinctionMultiplier;
-		
+
 		
 		Vector3 sunViewPortPos=Vector3.zero;
-		
-		//		bool eclipse=false;
-		
-		//		Transform celestialTransform;
+
 		float alt;
 		public float trueAlt;
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType < SkyNode > (null);
-		
-		
+
 		[Persistent]
 		public float MapViewScale = 1f;
-		
-		
+
 		CelestialBody parentCelestialBody;
 		Transform ParentPlanetTransform;
 		
 		
 		bool stocksunglareEnabled = true;
-		//		float sunglareCutoffAlt;
-		
-		
+				
 		//atmosphere properties
-		
-		/*[Persistent]*/
-		public float extinctionCoeff = 0.7f;
-		
-		/*[Persistent]*/
-		public float postProcessingAlpha = 0.78f;
-		/*[Persistent]*/
-		public float postProcessDepth = 0.02f;
-		/*[Persistent]*/
-		public float postProcessExposure = 0.18f;
-		//		float inscatteringCoeff=0.8f; //useless, I also removed it from shader
-		
-		/*[Persistent]*/
-		public float m_HDRExposure = 0.2f;
-		public float m_rimHDRExposure = 0.2f;
+		public configPoint interpolatedSettings= new configPoint();
 		[Persistent]
 		public float mapExposure = 0.15f;
 		[Persistent]
 		public float mapSkyRimExposure = 0.15f;
+		[Persistent]
+		public float cloudColorMultiplier=1f;
+		[Persistent]
+		public float cloudScatteringMultiplier=1f;
 		
 		PQS CurrentPQS = null;
-		
-		
-		
-		
+
 		PQSMod_CelestialBodyTransform currentPQSMod_CelestialBodyTransform=null;
 		
 		
@@ -183,10 +139,9 @@ namespace scatterer
 		public Camera farCamera , nearCamera, scaledSpaceCamera;
 		
 		public bool postprocessingEnabled = true;
+
 		
-		//		[Persistent] public float alphaCutoff=0.001f;
-		/*[Persistent]*/
-		public float alphaGlobal = 1f;
+
 		[Persistent]
 		public float mapAlphaGlobal = 1f;
 		float m_radius; // = 600000.0f;
@@ -232,17 +187,12 @@ namespace scatterer
 		[Persistent]
 		Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
 		//Asymmetry factor for the mie phase function
-		//A higher number meands more light is scattered in the forward direction
+		//A higher number means more light is scattered in the forward direction
 		[Persistent]
 		public float
 			m_mieG = 0.85f;
 		string m_filePath = "/Proland/Textures/Atmo";
 		public Matrix4x4d m_cameraToScreenMatrix;
-		//		Mesh m_mesh;
-		
-		//		RenderTexture m_inscatter, m_irradiance;
-		//		public RenderTexture m_transmit;
-		
 		
 		Texture2D m_inscatter, m_irradiance;
 		public Texture2D m_transmit;
@@ -599,8 +549,13 @@ namespace scatterer
 					Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
 						("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
 					
+//					Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
+//						(ShaderProperties._GlobalOceanAlpha_PROPERTY, interpolatedSettings._GlobalOceanAlpha);
+
 					Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-						(ShaderProperties._GlobalOceanAlpha_PROPERTY, _GlobalOceanAlpha);
+						("cloudColorMultiplier", cloudColorMultiplier);
+					Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
+						("cloudScatteringMultiplier", cloudScatteringMultiplier);
 				}
 			}
 			
@@ -665,17 +620,7 @@ namespace scatterer
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
 				
 				bool localSkyCondition;
-				
-				
-				//				if(CurrentPQS!=null)
-				//				{
-				//					localSkyCondition=!CurrentPQS.isActive;   //inScaledSpace
-				//				}
-				//				else
-				//				{
-				//					localSkyCondition=alt > localSkyAltitude;    
-				//				}
-				
+
 				localSkyCondition=alt > localSkyAltitude;
 				if(CurrentPQS!=null)
 				{
@@ -686,11 +631,6 @@ namespace scatterer
 				{
 					toggleScaledMode();
 				}
-				
-				//				if ((inScaledSpace || MapView.MapIsEnabled ) ^ scaledMode)
-				//				{
-				//					toggleScaledMode();
-				//				}
 				
 				if (!scaledMode && Core.Instance.drawAtmoOnTopOfClouds && drawSkyOverClouds)
 				{
@@ -729,22 +669,22 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			if (!MapView.MapIsEnabled)
 			{
-				mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
+				mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, interpolatedSettings.viewdirOffset);
 			}
 			else
 			{
 				mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, 0f);
 			}
 			
-			mat.SetFloat (ShaderProperties.extinctionGroundFade_PROPERTY, skyExtinctionGroundFade);
+			mat.SetFloat (ShaderProperties.extinctionGroundFade_PROPERTY, interpolatedSettings.skyextinctionGroundFade);
 			
 			if (!MapView.MapIsEnabled)
 			{
-				mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, alphaGlobal);
-				mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, extinctionTint);
-				mat.SetFloat (ShaderProperties.extinctionMultiplier_PROPERTY, extinctionMultiplier);
-				mat.SetFloat (ShaderProperties.extinctionRimFade_PROPERTY, skyExtinctionRimFade);
-				mat.SetFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, _extinctionScatterIntensity);
+				mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
+				mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
+				mat.SetFloat (ShaderProperties.extinctionMultiplier_PROPERTY, interpolatedSettings.skyExtinctionMultiplier);
+				mat.SetFloat (ShaderProperties.extinctionRimFade_PROPERTY, interpolatedSettings.skyextinctionRimFade);
+				mat.SetFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, interpolatedSettings._extinctionScatterIntensity);
 			}
 			else
 			{
@@ -811,8 +751,8 @@ namespace scatterer
 			
 			
 			if (!MapView.MapIsEnabled) {
-				mat.SetFloat (ShaderProperties._Exposure_PROPERTY, m_HDRExposure);
-				mat.SetFloat (ShaderProperties._RimExposure_PROPERTY, m_rimHDRExposure);
+				mat.SetFloat (ShaderProperties._Exposure_PROPERTY, interpolatedSettings.skyExposure);
+				mat.SetFloat (ShaderProperties._RimExposure_PROPERTY, interpolatedSettings.skyRimExposure);
 			} else {
 				mat.SetFloat (ShaderProperties._Exposure_PROPERTY, mapExposure);
 				mat.SetFloat (ShaderProperties._RimExposure_PROPERTY, mapSkyRimExposure);
@@ -844,7 +784,7 @@ namespace scatterer
 			if (mat == null)
 				return;
 			
-			mat.SetFloat (ShaderProperties._Exposure_PROPERTY, m_rimHDRExposure);
+			mat.SetFloat (ShaderProperties._Exposure_PROPERTY, interpolatedSettings.skyRimExposure);
 			
 			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			
@@ -1017,17 +957,17 @@ namespace scatterer
 			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
 			
 			
-			mat.SetFloat ("_global_alpha", postProcessingAlpha);
-			mat.SetFloat ("_Exposure", postProcessExposure);
-			mat.SetFloat ("_global_depth", postProcessDepth*1000000);
+			mat.SetFloat ("_global_alpha", interpolatedSettings.postProcessAlpha);
+			mat.SetFloat ("_Exposure", interpolatedSettings.postProcessExposure);
+			mat.SetFloat ("_global_depth", interpolatedSettings.postProcessDepth *1000000);
 			
 			
-			mat.SetFloat ("_Post_Extinction_Tint", _Post_Extinction_Tint);
-			mat.SetFloat ("postExtinctionMultiplier", postExtinctionMultiplier);
+			mat.SetFloat ("_Post_Extinction_Tint", interpolatedSettings._Post_Extinction_Tint);
+			mat.SetFloat ("postExtinctionMultiplier", interpolatedSettings.postExtinctionMultiplier);
 			
 			
 			
-			mat.SetFloat ("_openglThreshold", openglThreshold);
+			mat.SetFloat ("_openglThreshold", interpolatedSettings.openglThreshold);
 			
 			
 			
@@ -1076,15 +1016,15 @@ namespace scatterer
 			Shader.SetGlobalFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			//			Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
 			
-			Shader.SetGlobalFloat (ShaderProperties._global_alpha_PROPERTY, postProcessingAlpha);
-			Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, postProcessExposure);
-			Shader.SetGlobalFloat (ShaderProperties._global_depth_PROPERTY, postProcessDepth*1000000);
+			Shader.SetGlobalFloat (ShaderProperties._global_alpha_PROPERTY, interpolatedSettings.postProcessAlpha);
+			Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, interpolatedSettings.postProcessExposure);
+			Shader.SetGlobalFloat (ShaderProperties._global_depth_PROPERTY, interpolatedSettings.postProcessDepth*1000000);
 			
-			Shader.SetGlobalFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, _Post_Extinction_Tint);
-			Shader.SetGlobalFloat (ShaderProperties.postExtinctionMultiplier_PROPERTY, postExtinctionMultiplier);
+			Shader.SetGlobalFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, interpolatedSettings._Post_Extinction_Tint);
+			Shader.SetGlobalFloat (ShaderProperties.postExtinctionMultiplier_PROPERTY, interpolatedSettings.postExtinctionMultiplier);
 			
 			
-			Shader.SetGlobalFloat (ShaderProperties._openglThreshold_PROPERTY, openglThreshold);
+			Shader.SetGlobalFloat (ShaderProperties._openglThreshold_PROPERTY, interpolatedSettings.openglThreshold);
 			//			Shader.SetGlobalFloat (ShaderProperties._edgeThreshold_PROPERTY, edgeThreshold);
 			
 			
@@ -1193,22 +1133,22 @@ namespace scatterer
 			Shader.SetGlobalFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			if (!MapView.MapIsEnabled)
 			{
-				Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
+				Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, interpolatedSettings.viewdirOffset);
 			}
 			else
 			{
 				Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, 0f);
 			}
 			
-			Shader.SetGlobalFloat (ShaderProperties.extinctionGroundFade_PROPERTY, skyExtinctionGroundFade);
+			Shader.SetGlobalFloat (ShaderProperties.extinctionGroundFade_PROPERTY, interpolatedSettings.skyextinctionGroundFade);
 			
 			if (!MapView.MapIsEnabled)
 			{
-				Shader.SetGlobalFloat (ShaderProperties._Alpha_Global_PROPERTY, alphaGlobal);
-				Shader.SetGlobalFloat (ShaderProperties._Extinction_Tint_PROPERTY, extinctionTint);
-				Shader.SetGlobalFloat (ShaderProperties.extinctionMultiplier_PROPERTY, extinctionMultiplier);
-				Shader.SetGlobalFloat (ShaderProperties.extinctionRimFade_PROPERTY, skyExtinctionRimFade);
-				Shader.SetGlobalFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, _extinctionScatterIntensity);
+				Shader.SetGlobalFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
+				Shader.SetGlobalFloat (ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
+				Shader.SetGlobalFloat (ShaderProperties.extinctionMultiplier_PROPERTY, interpolatedSettings.skyExtinctionMultiplier);
+				Shader.SetGlobalFloat (ShaderProperties.extinctionRimFade_PROPERTY, interpolatedSettings.skyextinctionRimFade);
+				Shader.SetGlobalFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, interpolatedSettings._extinctionScatterIntensity);
 			}
 			else
 			{
@@ -1276,8 +1216,8 @@ namespace scatterer
 			
 			
 			if (!MapView.MapIsEnabled) {
-				Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, m_HDRExposure);
-				Shader.SetGlobalFloat (ShaderProperties._RimExposure_PROPERTY, m_rimHDRExposure);
+				Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, interpolatedSettings.skyExposure);
+				Shader.SetGlobalFloat (ShaderProperties._RimExposure_PROPERTY, interpolatedSettings.skyRimExposure);
 			} else {
 				Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, mapExposure);
 				Shader.SetGlobalFloat (ShaderProperties._RimExposure_PROPERTY, mapSkyRimExposure);
@@ -1342,11 +1282,6 @@ namespace scatterer
 		public void togglePostProcessing()
 		{
 			postprocessingEnabled = !postprocessingEnabled;
-		}
-		
-		public void SetPostProcessExposure (float postExposure)
-		{
-			postProcessExposure = postExposure;
 		}
 		
 		public void SetParentCelestialBody (CelestialBody inPlanet)
@@ -1516,25 +1451,8 @@ namespace scatterer
 				scaledMode=true;
 				Debug.Log("[Scatterer] Sky switched to scaled mode");
 			}
-			
 		}
-		
-		
-		void toggleCoronas ()
-		{
-			Transform scaledSunTransform = Core.Instance.GetScaledTransform ("Sun");
-			foreach (Transform child in scaledSunTransform)
-			{
-				MeshRenderer temp;
-				temp = child.gameObject.GetComponent < MeshRenderer > ();
-				if (temp != null)
-				{
-					temp.enabled = coronasDisabled;
-				}
-			}
-			coronasDisabled = !coronasDisabled;
-		}
-		
+
 		void toggleStockSunglare ()
 		{
 			if (stocksunglareEnabled) {
@@ -1544,9 +1462,7 @@ namespace scatterer
 			}
 			stocksunglareEnabled = !stocksunglareEnabled;
 		}
-		
-		
-		
+
 		public void loadFromConfigNode (bool loadbackup)
 		{
 			ConfigNode cnToLoad;
@@ -1659,93 +1575,26 @@ namespace scatterer
 			}
 		}
 		
-		
-		//Seriously this is ugly as hell fix this, and use lerp
+
 		public void interpolateVariables ()
 		{
-			if (trueAlt <= configPoints [0].altitude) {
-				alphaGlobal = configPoints [0].skyAlpha;
-				m_HDRExposure = configPoints [0].skyExposure;
-				m_rimHDRExposure = configPoints [0].skyRimExposure;
-				postProcessingAlpha = configPoints [0].postProcessAlpha;
-				postProcessDepth = configPoints [0].postProcessDepth;
-				
-				_Post_Extinction_Tint = configPoints [0]._Post_Extinction_Tint;
-				postExtinctionMultiplier = configPoints [0].postExtinctionMultiplier;
-				
-				postProcessExposure = configPoints [0].postProcessExposure;
-				extinctionMultiplier = configPoints [0].skyExtinctionMultiplier;
-				extinctionTint = configPoints [0].skyExtinctionTint;
-				skyExtinctionRimFade = configPoints [0].skyextinctionRimFade;
-				skyExtinctionGroundFade = configPoints [0].skyextinctionGroundFade;
-				
-				_extinctionScatterIntensity = configPoints [0]._extinctionScatterIntensity;
-				
-				
-				
-				//				edgeThreshold = configPoints [0].edgeThreshold;
-				openglThreshold = configPoints [0].openglThreshold;
-				
-				_GlobalOceanAlpha = configPoints [0]._GlobalOceanAlpha;
-				
-				viewdirOffset = configPoints [0].viewdirOffset;
-				currentConfigPoint = 0;
-				
-			} else if (trueAlt > configPoints [configPoints.Count - 1].altitude) {
-				alphaGlobal = configPoints [configPoints.Count - 1].skyAlpha;
-				m_HDRExposure = configPoints [configPoints.Count - 1].skyExposure;
-				m_rimHDRExposure = configPoints [configPoints.Count - 1].skyRimExposure;
-				postProcessingAlpha = configPoints [configPoints.Count - 1].postProcessAlpha;
-				postProcessDepth = configPoints [configPoints.Count - 1].postProcessDepth;
-				
-				_Post_Extinction_Tint = configPoints [configPoints.Count - 1]._Post_Extinction_Tint;
-				postExtinctionMultiplier = configPoints [configPoints.Count - 1].postExtinctionMultiplier;
-				
-				postProcessExposure = configPoints [configPoints.Count - 1].postProcessExposure;
-				extinctionMultiplier = configPoints [configPoints.Count - 1].skyExtinctionMultiplier;
-				extinctionTint = configPoints [configPoints.Count - 1].skyExtinctionTint;
-				skyExtinctionRimFade = configPoints [configPoints.Count - 1].skyextinctionRimFade;
-				skyExtinctionGroundFade = configPoints [configPoints.Count - 1].skyextinctionGroundFade;
-				_extinctionScatterIntensity = configPoints [configPoints.Count - 1]._extinctionScatterIntensity;
-				//				edgeThreshold = configPoints [configPoints.Count - 1].edgeThreshold;
-				openglThreshold = configPoints [configPoints.Count - 1].openglThreshold;
-				
-				_GlobalOceanAlpha = configPoints [configPoints.Count - 1]._GlobalOceanAlpha;
-				
-				
-				viewdirOffset = configPoints [configPoints.Count - 1].viewdirOffset;
+			if (trueAlt <= configPoints [0].altitude)
+			{
+				interpolatedSettings.getValuesFrom(configPoints [0]);
+				currentConfigPoint = 0;	
+			}
+			else if (trueAlt > configPoints [configPoints.Count - 1].altitude) 
+			{
+				interpolatedSettings.getValuesFrom(configPoints [configPoints.Count - 1]);
 				currentConfigPoint = configPoints.Count;
-			} else {
+			}
+			else 
+			{
 				for (int j = 1; j < configPoints.Count; j++) {
-					if ((trueAlt > configPoints [j - 1].altitude) && (trueAlt <= configPoints [j].altitude)) {
+					if ((trueAlt > configPoints [j - 1].altitude) && (trueAlt <= configPoints [j].altitude))
+					{
 						percentage = (trueAlt - configPoints [j - 1].altitude) / (configPoints [j].altitude - configPoints [j - 1].altitude);
-						
-						alphaGlobal = percentage * configPoints [j].skyAlpha + (1 - percentage) * configPoints [j - 1].skyAlpha;
-						m_HDRExposure = percentage * configPoints [j].skyExposure + (1 - percentage) * configPoints [j - 1].skyExposure;
-						m_rimHDRExposure = percentage * configPoints [j].skyRimExposure + (1 - percentage) * configPoints [j - 1].skyRimExposure;
-						postProcessingAlpha = percentage * configPoints [j].postProcessAlpha + (1 - percentage) * configPoints [j - 1].postProcessAlpha;
-						postProcessDepth = percentage * configPoints [j].postProcessDepth + (1 - percentage) * configPoints [j - 1].postProcessDepth;
-						
-						_Post_Extinction_Tint = percentage * configPoints [j]._Post_Extinction_Tint + (1 - percentage) * configPoints [j - 1]._Post_Extinction_Tint;
-						postExtinctionMultiplier = percentage * configPoints [j].postExtinctionMultiplier + (1 - percentage) * configPoints [j - 1].postExtinctionMultiplier;
-						
-						
-						postProcessExposure = percentage * configPoints [j].postProcessExposure + (1 - percentage) * configPoints [j - 1].postProcessExposure;
-						extinctionMultiplier = percentage * configPoints [j].skyExtinctionMultiplier + (1 - percentage) * configPoints [j - 1].skyExtinctionMultiplier;
-						extinctionTint = percentage * configPoints [j].skyExtinctionTint + (1 - percentage) * configPoints [j - 1].skyExtinctionTint;
-						skyExtinctionRimFade = percentage * configPoints [j].skyextinctionRimFade + (1 - percentage) * configPoints [j - 1].skyextinctionRimFade;
-						skyExtinctionGroundFade = percentage * configPoints [j].skyextinctionGroundFade + (1 - percentage) * configPoints [j - 1].skyextinctionGroundFade;
-						
-						_extinctionScatterIntensity = percentage * configPoints [j]._extinctionScatterIntensity + (1 - percentage) * configPoints [j - 1]._extinctionScatterIntensity;
-						
-						
-						//						edgeThreshold = percentage * configPoints [j].edgeThreshold + (1 - percentage) * configPoints [j - 1].edgeThreshold;
-						openglThreshold = percentage * configPoints [j].openglThreshold + (1 - percentage) * configPoints [j - 1].openglThreshold;
-						
-						_GlobalOceanAlpha = percentage * configPoints [j]._GlobalOceanAlpha + (1 - percentage) * configPoints [j - 1]._GlobalOceanAlpha;
-						
-						
-						viewdirOffset = percentage * configPoints [j].viewdirOffset + (1 - percentage) * configPoints [j - 1].viewdirOffset;
+						interpolatedSettings.interpolateValuesFrom(configPoints [j - 1], configPoints [j], percentage);
 						currentConfigPoint = j;
 					}
 				}

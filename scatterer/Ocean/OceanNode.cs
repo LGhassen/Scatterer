@@ -511,7 +511,7 @@ namespace scatterer
 			oceanMaterial.SetFloat (ShaderProperties._OceanAlpha_PROPERTY, oceanAlpha);
 			oceanMaterial.SetFloat (ShaderProperties.alphaRadius_PROPERTY, alphaRadius);
 
-			oceanMaterial.SetFloat (ShaderProperties._GlobalOceanAlpha_PROPERTY, m_manager.m_skyNode._GlobalOceanAlpha);
+			oceanMaterial.SetFloat (ShaderProperties._GlobalOceanAlpha_PROPERTY, m_manager.m_skyNode.interpolatedSettings._GlobalOceanAlpha);
 			
 
 			m_manager.GetSkyNode ().SetOceanUniforms (oceanMaterial);

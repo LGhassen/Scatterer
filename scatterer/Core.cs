@@ -212,6 +212,8 @@ namespace scatterer
 		public bool extinctionEnabled = true;
 		float rimBlend = 20f;
 		float rimpower = 600f;
+		float cloudColorMultiplier=1f;
+		float cloudScatteringMultiplier=1f;
 		float mieG = 0.85f;
 		float openglThreshold = 10f;
 		float _GlobalOceanAlpha = 1f;
@@ -1325,7 +1327,9 @@ namespace scatterer
 							GUIfloat("mieG", ref mieG, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_mieG);
 								
 								
-							
+							GUIfloat("Cloud Color Multiplier", ref cloudColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudColorMultiplier);
+							GUIfloat("Cloud Scattering Multiplier", ref cloudScatteringMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudScatteringMultiplier);
+
 							GUILayout.BeginHorizontal ();
 							GUILayout.Label ("RimBlend");
 							rimBlend = Convert.ToSingle (GUILayout.TextField (rimBlend.ToString ()));
@@ -1615,66 +1619,6 @@ namespace scatterer
 		{
 			SkyNode skyNode = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode;
 			configPoint selected = skyNode.configPoints [selectedConfigPoint];
-			
-//			postProcessingalpha = 100 * selected.postProcessAlpha;
-////			postProcessDepth = 10000 * selected.postProcessDepth;
-//			postProcessDepth = selected.postProcessDepth;
-//			
-//			_Post_Extinction_Tint = 100 * selected._Post_Extinction_Tint;
-//			postExtinctionMultiplier = 100 * selected.postExtinctionMultiplier;
-//			
-//			postProcessExposure = 100 * selected.postProcessExposure;
-//			exposure = 100 * selected.skyExposure;
-//			skyRimExposure = 100 * selected.skyRimExposure;
-//			alphaGlobal = 100 * selected.skyAlpha;
-//			
-//			openglThreshold = selected.openglThreshold;
-//			
-//			_GlobalOceanAlpha = 100 * selected._GlobalOceanAlpha;
-//			//			edgeThreshold = selected.edgeThreshold * 100;
-//			
-//			
-//			mapAlphaGlobal = 100 * skyNode.mapAlphaGlobal;
-//			mapExposure = 100 * skyNode.mapExposure;
-//			mapSkyRimeExposure = 100 * skyNode.mapSkyRimExposure;
-//			configPointsCnt = skyNode.configPoints.Count;
-//			
-//			specR = skyNode.specR;
-//			specG = skyNode.specG;
-//			specB = skyNode.specB;
-//			shininess = skyNode.shininess;
-//			
-//			
-//			rimBlend = skyNode.rimBlend;
-//			rimpower = skyNode.rimpower;
-//			
-//			MapViewScale = skyNode.MapViewScale * 1000f;
-//			extinctionMultiplier = 100 * selected.skyExtinctionMultiplier;
-//			extinctionTint = 100 * selected.skyExtinctionTint;
-//			skyExtinctionRimFade = 100 * selected.skyextinctionRimFade;
-//			skyExtinctionGroundFade = 100 * selected.skyextinctionGroundFade;
-//			_extinctionScatterIntensity = 100 * 00 * selected._extinctionScatterIntensity;
-//			
-//			mapExtinctionMultiplier = 100 * skyNode.mapExtinctionMultiplier;
-//			mapExtinctionTint = 100 * skyNode.mapExtinctionTint;
-//			mapSkyExtinctionRimFade= 100 * skyNode.mapSkyExtinctionRimFade;
-//			_mapExtinctionScatterIntensity = 100 * skyNode._mapExtinctionScatterIntensity;
-//			
-//			showInterpolatedValues = skyNode.displayInterpolatedVariables;
-//			
-//			mieG = skyNode.m_mieG * 100f;
-//			
-//			//			sunglareScale = skyNode.sunglareScale * 100f;
-//			
-//			experimentalAtmoScale = skyNode.experimentalAtmoScale;
-//			
-//			
-//			
-//			
-//			//			globalThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.globalThreshold;
-//			//			horizonDepth = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.horizonDepth * 10000f; ;
-
-
 
 			postProcessingalpha = selected.postProcessAlpha;
 			//			postProcessDepth = 10000 * selected.postProcessDepth;
@@ -1725,6 +1669,10 @@ namespace scatterer
 			mieG = skyNode.m_mieG;
 
 			experimentalAtmoScale = skyNode.experimentalAtmoScale;
+			viewdirOffset = selected.viewdirOffset;
+
+			cloudColorMultiplier = skyNode.cloudColorMultiplier;
+			cloudScatteringMultiplier = skyNode.cloudScatteringMultiplier;
 		}
 		
 		public void getSettingsFromOceanNode ()
