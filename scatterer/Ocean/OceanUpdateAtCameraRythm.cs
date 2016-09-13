@@ -19,7 +19,8 @@ namespace scatterer {
 		public Camera nearCamera;
 		public Manager m_manager=null;
 		
-		public void OnPreRender() {
+		//public void OnPreRender() {
+		public void OnPreCull(){
 			if (!m_manager)
 				Destroy (this);
 

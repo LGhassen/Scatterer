@@ -64,6 +64,9 @@ namespace scatterer
 		[Persistent]
 		public bool loadAlternative_D3D11_OGL_shaders=true;
 
+		[Persistent]
+		public bool integrateWithEVEClouds=true;
+
 		disableAmbientLight ambientLightScript;
 
 		[Persistent]
@@ -72,6 +75,9 @@ namespace scatterer
 		CelestialBody[] CelestialBodies;
 		
 		Light[] lights;
+
+		//map EVE clouds to planet names
+		public Dictionary<String, List<Material> > EVEClouds = new Dictionary<String, List<Material> >();
 
 		GameObject sunLight,scaledspaceSunLight;
 //		public GameObject copiedScaledSunLight, copiedScaledSunLight2;
@@ -343,7 +349,7 @@ namespace scatterer
 
 			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion);
 			
-//			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION) {
+			//if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
 			{
 				isActive = true;
@@ -374,7 +380,6 @@ namespace scatterer
 				visible = !visible;
 
 
-
 			if (isActive && ScaledSpace.Instance) {
 				if (!found)
 				{
@@ -396,19 +401,30 @@ namespace scatterer
 
 
 						if (cams [i].name == "Camera ScaledSpace")
+						{
+							//cams [i].renderingPath=RenderingPath.DeferredShading;
 							scaledSpaceCamera = cams [i];
+						}
 						
 						if (cams [i].name == "Camera 01")
 						{
+							//cams [i].renderingPath=RenderingPath.DeferredShading;
 							farCamera = cams [i];
+							//cams [i].nearClipPlane=1;
+							//cams [i].enabled=false;
+
 						}
 						
 						if (cams [i].name == "Camera 00")
 						{
+							//cams [i].renderingPath=RenderingPath.DeferredShading;
 							nearCamera = cams [i];
 							nearCamera.nearClipPlane = nearClipPlane;
+							//cams [i].farClipPlane=700000;
+							//cams [i].enabled=false;
 //							tonemapper = (cameraHDRTonemapping)nearCamera.gameObject.AddComponent (typeof(cameraHDRTonemapping));
 						}
+
 					}
 					
 
@@ -455,28 +471,32 @@ namespace scatterer
 
 //					Debug.Log ("copied scaledSpaceSunlight");
 
-					planetShineCookieCubeMap=new Cubemap(512,TextureFormat.ARGB32,true);
-
-					Texture2D[] cubeMapFaces=new Texture2D[6];
-					for (int i=0;i<6;i++)
+					//load planetshine "cookie" cubemap
+					if(usePlanetShine)
 					{
-						cubeMapFaces[i]=new Texture2D(512,512);
+						planetShineCookieCubeMap=new Cubemap(512,TextureFormat.ARGB32,true);
+						
+						Texture2D[] cubeMapFaces=new Texture2D[6];
+						for (int i=0;i<6;i++)
+						{
+							cubeMapFaces[i]=new Texture2D(512,512);
+						}
+						
+						cubeMapFaces[0].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeX.png")));
+						cubeMapFaces[1].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveX.png")));
+						cubeMapFaces[2].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeY.png")));
+						cubeMapFaces[3].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveY.png")));
+						cubeMapFaces[4].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeZ.png")));
+						cubeMapFaces[5].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveZ.png")));
+						
+						planetShineCookieCubeMap.SetPixels(cubeMapFaces[0].GetPixels(),CubemapFace.NegativeX);
+						planetShineCookieCubeMap.SetPixels(cubeMapFaces[1].GetPixels(),CubemapFace.PositiveX);
+						planetShineCookieCubeMap.SetPixels(cubeMapFaces[2].GetPixels(),CubemapFace.NegativeY);
+						planetShineCookieCubeMap.SetPixels(cubeMapFaces[3].GetPixels(),CubemapFace.PositiveY);
+						planetShineCookieCubeMap.SetPixels(cubeMapFaces[4].GetPixels(),CubemapFace.NegativeZ);
+						planetShineCookieCubeMap.SetPixels(cubeMapFaces[5].GetPixels(),CubemapFace.PositiveZ);
+						planetShineCookieCubeMap.Apply();
 					}
-
-					cubeMapFaces[0].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeX.png")));
-					cubeMapFaces[1].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveX.png")));
-					cubeMapFaces[2].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeY.png")));
-					cubeMapFaces[3].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveY.png")));
-					cubeMapFaces[4].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeZ.png")));
-					cubeMapFaces[5].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveZ.png")));
-
-					planetShineCookieCubeMap.SetPixels(cubeMapFaces[0].GetPixels(),CubemapFace.NegativeX);
-					planetShineCookieCubeMap.SetPixels(cubeMapFaces[1].GetPixels(),CubemapFace.PositiveX);
-					planetShineCookieCubeMap.SetPixels(cubeMapFaces[2].GetPixels(),CubemapFace.NegativeY);
-					planetShineCookieCubeMap.SetPixels(cubeMapFaces[3].GetPixels(),CubemapFace.PositiveY);
-					planetShineCookieCubeMap.SetPixels(cubeMapFaces[4].GetPixels(),CubemapFace.NegativeZ);
-					planetShineCookieCubeMap.SetPixels(cubeMapFaces[5].GetPixels(),CubemapFace.PositiveZ);
-					planetShineCookieCubeMap.Apply();
 
 					//find and fix renderQueues of kopernicus rings
 					foreach (CelestialBody _cb in CelestialBodies)
@@ -527,9 +547,16 @@ namespace scatterer
 								aPsLight.localLight=LocalPlanetShineLight;
 								
 								celestialLightSources.Add(aPsLight);
-								Debug.Log ("Added celestialLightSource "+aPsLight.source.name);
+								Debug.Log ("[Scatterer] Added celestialLightSource "+aPsLight.source.name);
 							}
 						}
+					}
+
+
+					//find EVE clouds
+					if (integrateWithEVEClouds)
+					{
+						mapEVEClouds();
 					}
 					
 					found = true;
@@ -577,7 +604,6 @@ namespace scatterer
 					if ((fullLensFlareReplacement) && !customSunFlareAdded)
 					{
 						//dir sunflare directory
-
 						string sunFlarePath=path + "/sunflare";
 						foreach (string s in Directory.GetDirectories(sunFlarePath))
 						{
@@ -607,22 +633,25 @@ namespace scatterer
 					}
 
 
-
-					
 					pqsEnabled = false;
 					
 					foreach (scattererCelestialBody _cur in scattererCelestialBodies)
 					{
-						float dist;
+						float dist, shipDist=0f;
 						if (_cur.hasTransform)
 						{
 							dist = Vector3.Distance (ScaledSpace.ScaledToLocalSpace( scaledSpaceCamera.transform.position),
 													 ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
 
+							//don't unload planet the player ship is close to if panning away in map view
+							if (MapView.MapIsEnabled && FlightGlobals.ActiveVessel)
+								shipDist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position,
+							                         ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
+
 							if (_cur.active)
 							{
 //								if (dist > _cur.unloadDistance && !MapView.MapIsEnabled) {
-							if (dist > _cur.unloadDistance) {
+								if (dist > _cur.unloadDistance && shipDist > _cur.unloadDistance) {
 									_cur.m_manager.OnDestroy ();
 									UnityEngine.Object.Destroy (_cur.m_manager);
 									_cur.m_manager = null;
@@ -758,6 +787,10 @@ namespace scatterer
 
 						}
 					}
+
+//					Debug.Log("near cam renpath "+nearCamera.actualRenderingPath.ToString());
+//					//Debug.Log("far cam renpath "+farCamera.actualRenderingPath.ToString());
+//					Debug.Log("scaled cam renpath "+scaledSpaceCamera.actualRenderingPath.ToString());
 
 
 //					if (munCelestialBody)
@@ -1051,7 +1084,8 @@ namespace scatterer
 					oceanSkyReflections = GUILayout.Toggle(oceanSkyReflections, "Ocean: accurate sky reflection");
 					oceanPixelLights = GUILayout.Toggle(oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
 
-
+					usePlanetShine = GUILayout.Toggle(usePlanetShine, "PlanetShine");
+					integrateWithEVEClouds = GUILayout.Toggle(integrateWithEVEClouds, "Integrate effects with EVE clouds");
 
 					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds");
 					GUILayout.Label(String.Format ("(improves terminators, causes issues in the transition)"));
@@ -1388,6 +1422,13 @@ namespace scatterer
 								loadConfigPoint (selectedConfigPoint);
 							}
 							GUILayout.EndHorizontal ();
+
+							GUILayout.BeginHorizontal ();
+							if (GUILayout.Button ("Map EVE clouds"))
+							{
+								mapEVEClouds();
+							}
+							GUILayout.EndHorizontal ();
 						}
 						else
 						{
@@ -1682,24 +1723,14 @@ namespace scatterer
 			showInterpolatedValues = skyNode.displayInterpolatedVariables;
 			
 			mieG = skyNode.m_mieG;
-			
-			//			sunglareScale = skyNode.sunglareScale * 100f;
-			
-			experimentalAtmoScale = skyNode.experimentalAtmoScale;
-			
-			
-			
-			
-			//			globalThreshold = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.globalThreshold;
-			//			horizonDepth = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.horizonDepth * 10000f; ;
 
-			
+			experimentalAtmoScale = skyNode.experimentalAtmoScale;
 		}
 		
 		public void getSettingsFromOceanNode ()
 		{
 			OceanWhiteCaps oceanNode = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
-			
+		
 			oceanLevel = oceanNode.m_oceanLevel;
 			oceanAlpha = oceanNode.oceanAlpha;
 			oceanAlphaRadius = oceanNode.alphaRadius;
@@ -1922,6 +1953,10 @@ namespace scatterer
 					{
 						_sc.pqsController.meshCastShadows = true;
 						_sc.pqsController.meshRecieveShadows = true;
+
+						Debug.Log("[Scatterer] PQS material of "+_sc.name+": "
+						          +_sc.pqsController.surfaceMaterial.shader.name);
+
 						QualitySettings.shadowDistance = shadowsDistance;
 
 						//set shadow bias
@@ -1939,6 +1974,53 @@ namespace scatterer
 					}
 				}
 			}
+		}
+
+		//map EVE clouds to planet names
+		void mapEVEClouds()
+		{
+			EVEClouds.Clear();
+			MeshRenderer[] meshrenderers = Resources.FindObjectsOfTypeAll<MeshRenderer>();
+			foreach (MeshRenderer _mr in meshrenderers)
+			{
+				if ((_mr.material.shader.name == "EVE/Cloud")||(_mr.material.shader.name == "Scatterer-EVE/Cloud"))
+				{
+					string planetName=_mr.gameObject.transform.parent.gameObject.name;
+
+					if (EVEClouds.ContainsKey(planetName))
+					{
+						EVEClouds[planetName].Add(_mr.material);
+					}
+					else
+					{
+						List<Material> cloudsList = new List<Material>();
+						cloudsList.Add(_mr.material);
+						EVEClouds.Add(planetName,cloudsList);
+					}
+					Debug.Log("[Scatterer] Detected EVE cloud layer for planet: "+planetName);
+				}
+			}
+
+			foreach (MeshRenderer _mr in meshrenderers)
+			{
+				if ((_mr.material.shader.name == "EVE/CloudVolumeParticle"))//||(_mr.material.shader.name == "Scatterer-EVE/Cloud"))
+				{
+					string planetName=_mr.gameObject.transform.parent.gameObject.name;
+
+					Debug.Log("[Scatterer] Detected EVE VOLUME layer for planet: "+planetName
+					          +" material id: "+_mr.material.GetInstanceID()+" parent gameobject id: "+_mr.gameObject.transform.parent.gameObject.GetInstanceID());
+				}
+			}
+
+			Material[] Materials = Resources.FindObjectsOfTypeAll<Material>();
+			foreach (Material _mat in Materials)
+			{
+				if ((_mat.shader.name == "EVE/CloudVolumeParticle"))//||(_mr.material.shader.name == "Scatterer-EVE/Cloud"))
+				{
+					Debug.Log("[Scatterer] Detected EVE VOLUME layer Material: "+_mat.name+" material id: "+_mat.GetInstanceID());
+				}
+			}
+
 		}
 
 	}

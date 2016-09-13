@@ -96,6 +96,7 @@
     <Compile Include="DataSerialization\configPoint.cs" />
     <Compile Include="DataSerialization\planetshineSource.cs" />
     <Compile Include="DataSerialization\scattererCelestialBody.cs" />
+    <Compile Include="shaderReplacer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />
