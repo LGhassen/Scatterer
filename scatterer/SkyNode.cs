@@ -131,8 +131,7 @@ namespace scatterer
 					return true;
 			}
 		}
-		
-		Vector3 position;
+
 		bool initiated = false;
 		
 		
@@ -567,9 +566,6 @@ namespace scatterer
 		
 		public void UpdateNode ()
 		{
-			
-			position = parentCelestialBody.transform.position;
-			
 			if (!initiated)
 			{
 				m_radius = (float) m_manager.GetRadius ();
@@ -797,9 +793,6 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties._Sun_Intensity_PROPERTY, 100f);
 			
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
-			
-			mat.SetVector (ShaderProperties._Globals_Origin_PROPERTY, parentCelestialBody.transform.position);
-			
 		}
 		
 		

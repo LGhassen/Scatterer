@@ -52,7 +52,6 @@ namespace scatterer
 		
 //		public Material m_oceanMaterialNear;
 		public Material m_oceanMaterialFar;
-		OceanUpdateAtCameraRythm oceanupdater;
 
 		[Persistent] public Vector3 m_oceanUpwellingColor = new Vector3 (0.0039f, 0.0156f, 0.047f);
 		
@@ -256,9 +255,6 @@ namespace scatterer
 			}
 //			UnityEngine.Object.Destroy (m_oceanMaterialNear);
 			UnityEngine.Object.Destroy (m_oceanMaterialFar);
-
-			Component.Destroy (oceanupdater);
-			UnityEngine.Object.Destroy (oceanupdater);
 		}
 		
 		Mesh MakePlane (int w, int h, float offset, float scale)
@@ -313,21 +309,6 @@ namespace scatterer
 		
 		public virtual void UpdateNode ()
 		{
-			
-			if ((m_manager.m_skyNode.farCamera)) {
-				
-				if (!oceanupdater) {
-					oceanupdater = (OceanUpdateAtCameraRythm)m_manager.m_skyNode.farCamera.gameObject.AddComponent (typeof(OceanUpdateAtCameraRythm));
-					oceanupdater.m_oceanNode = this;
-					oceanupdater.farCamera = m_manager.m_skyNode.farCamera;
-					oceanupdater.nearCamera = m_manager.m_skyNode.nearCamera;
-					oceanupdater.oceanMaterialFar = m_oceanMaterialFar;
-//					oceanupdater.oceanMaterialNear = m_oceanMaterialNear;
-					oceanupdater.m_manager = m_manager;
-				}
-			}
-
-
 			m_drawOcean = m_manager.m_skyNode.trueAlt < fakeOceanAltitude;
 
 //			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
@@ -381,32 +362,32 @@ namespace scatterer
 			
 			//Looking back, I have no idea how I figured this crap out
 			//I probably did the math wrong anyway and it worked by sheer luck and incessant tries
-			Vector4 translation = m_manager.parentCelestialBody.transform.localToWorldMatrix.GetColumn (3);
 
-			
+//			Vector4 translation = m_manager.parentCelestialBody.transform.localToWorldMatrix.GetColumn (3);
+			Vector3d translation = m_manager.parentCelestialBody.position;
+
 			Matrix4x4d worldToLocal = new Matrix4x4d(1, 0, 0, -translation.x,
 			                                         0, 1, 0, -translation.y,
 			                                         0, 0, 1, -translation.z,
 			                                         0, 0, 0, 1);
 
+
 			Matrix4x4d camToLocal = worldToLocal * cameraToWorld;
 			Matrix4x4d localToCam = camToLocal.Inverse ();
-
 
 
 			// camera in local space relative to planet's origin
 			Vector3d2 cl = new Vector3d2 ();
 			cl = camToLocal * Vector3d2.Zero ();
 
-//			double radius = m_manager.GetRadius ();
 			double radius = m_manager.GetRadius ()+m_oceanLevel;
 
-			
 			uz = cl.Normalized (); // unit z vector of ocean frame, in local space
 			
 			if (m_oldlocalToOcean != Matrix4x4d.Identity ()) {
 				ux = (new Vector3d2 (m_oldlocalToOcean.m [1, 0], m_oldlocalToOcean.m [1, 1], m_oldlocalToOcean.m [1, 2])).Cross (uz).Normalized ();
-			} else {
+			} else 
+			{
 				ux = Vector3d2.UnitZ ().Cross (uz).Normalized ();
 			}
 

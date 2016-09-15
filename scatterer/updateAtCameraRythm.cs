@@ -29,12 +29,17 @@ namespace scatterer
 			m_skynode = inSkyNode;
 			parentTransform = inparentTransform;
 		}
-
-//		public void OnPreRender()
-		public void OnPreCull()
-		{	
+		
+		public void OnPreCull(){
 			m_skynode.UpdateStuff ();			
 			m_skynode.SetUniforms (skyMat);
+
+			if (m_manager.hasOcean && Core.Instance.useOceanShaders)
+			{
+				if (!MapView.MapIsEnabled && m_manager.m_skyNode.farCamera && !m_manager.m_skyNode.inScaledSpace && m_manager.GetOceanNode().GetDrawOcean() ) {
+					m_manager.GetOceanNode().updateStuff(m_manager.GetOceanNode().m_oceanMaterialFar, m_manager.m_skyNode.farCamera);
+				}
+			}
 		}
 	}
 }

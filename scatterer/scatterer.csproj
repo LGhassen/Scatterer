@@ -81,7 +81,6 @@
     <Compile Include="Ocean\Node.cs" />
     <Compile Include="Ocean\OceanFFT.cs" />
     <Compile Include="Ocean\OceanNode.cs" />
-    <Compile Include="Ocean\OceanUpdateAtCameraRythm.cs" />
     <Compile Include="Ocean\OceanWhiteCaps.cs" />
     <Compile Include="Ocean\RTUtility.cs" />
     <Compile Include="Ocean\WriteFloat.cs" />
@@ -96,10 +95,10 @@
     <Compile Include="DataSerialization\configPoint.cs" />
     <Compile Include="DataSerialization\planetshineSource.cs" />
     <Compile Include="DataSerialization\scattererCelestialBody.cs" />
-    <Compile Include="shaderReplacer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />
+    <None Include="shaderReplacer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
