@@ -142,16 +142,13 @@ namespace scatterer {
 
 		protected FourierCPU m_CPUfourier;
 
-		
-		// Use this for initialization
+
 		public override void Start()
-			//		public void Start () 
 		{
 			base.Start();
-			
-			
-			m_initSpectrumMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitSpectrum.shader"));;
-			m_initDisplacementMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitDisplacement.shader"));;
+		
+			m_initSpectrumMat = new Material(Core.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
+			m_initDisplacementMat = new Material(Core.Instance.LoadedShaders[ ("Proland/Ocean/InitDisplacement")]);
 
 			m_fourierGridSize = Core.Instance.m_fourierGridSize;
 			

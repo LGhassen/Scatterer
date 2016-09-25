@@ -55,7 +55,6 @@ namespace scatterer
 		//		public float postDist = -4000f;
 		public float percentage;
 		public int currentConfigPoint;
-		bool coronasDisabled = false;
 		
 		EncodeFloat encode;
 		//		EncodeFloat2D encode;
@@ -252,15 +251,12 @@ namespace scatterer
 			//			m_irradiance = new RenderTexture (SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
 			m_irradiance.wrapMode = TextureWrapMode.Clamp;
 			m_irradiance.filterMode = FilterMode.Bilinear;
-			
-			
+						
 			loadPrecomputedTables ();
-			
-			
-			m_skyMaterialScaled = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyScaled.shader"));
-			m_skyMaterialLocal = new Material (ShaderTool.GetMatFromShader2 ("CompiledSkyLocal.shader"));
-			
-			m_atmosphereMaterial = ShaderTool.GetMatFromShader2 ("CompiledAtmosphericScatter.shader");
+
+			m_skyMaterialScaled = new Material (Core.Instance.LoadedShaders[("Scatterer/SkyScaled")]);
+			m_skyMaterialLocal = new Material (Core.Instance.LoadedShaders[("Scatterer/SkyLocal")]);
+			m_atmosphereMaterial = new Material (Core.Instance.LoadedShaders[("Scatterer/AtmosphericScatter")]);
 			
 			if (Core.Instance.useEclipses)
 			{
@@ -334,7 +330,7 @@ namespace scatterer
 				for (int i=0;i<size;i++)
 				{
 					Core.Instance.EVEClouds[parentCelestialBody.name][i].shader = 
-						ShaderTool.GetShader2("ReplacementShaders/SphereCloud.shader");
+						Core.Instance.LoadedShaders["ReplacementShaders/SphereCloud.shader"];
 				}
 			}
 			
@@ -374,6 +370,7 @@ namespace scatterer
 				m_skyMaterialScaled.renderQueue=3002;
 			else
 				m_skyMaterialScaled.renderQueue=3001;
+
 			
 			skyLocalCube = new SimplePostProcessCube (40000, m_skyMaterialLocal,false);
 			skyLocalMesh = skyLocalCube.GameObject;
@@ -646,9 +643,6 @@ namespace scatterer
 					m_skyMaterialScaled.renderQueue=3002;
 				else
 					m_skyMaterialScaled.renderQueue=3001;
-				
-				
-				//				skyScaledMeshrenderer.enabled = skyEnabled;
 			}
 		}
 		

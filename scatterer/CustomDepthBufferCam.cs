@@ -28,8 +28,6 @@ namespace scatterer
 		
 		void OnPreRender () 
 		{
-			//		if (!enabled || !gameObject.active) return;
-			
 			if (!_depthCam) {
 				_depthCam = new GameObject("CustomDepthCamera");
 				_depthCamCamera = _depthCam.AddComponent<Camera>();
@@ -42,15 +40,12 @@ namespace scatterer
 
 				_depthCamCamera.transform.parent=incore.farCamera.transform;
 
-//				_depthCam.camera.enabled = true;
 				_depthCamCamera.enabled = false;
 
-
-				depthShader = ShaderTool.GetShader2("CompiledDepthTexture.shader");
-
+				depthShader = Core.Instance.LoadedShaders[("Scatterer/DepthTexture")];
 
 				if (incore.useGodrays)
-					GodrayDepthShader=ShaderTool.GetShader2("CompiledGodrayDepthTexture.shader");
+					GodrayDepthShader=Core.Instance.LoadedShaders[("Scatterer/GodrayDepthTexture")];
 
 			}
 
@@ -84,16 +79,10 @@ namespace scatterer
 				GL.Clear(false,true,Color.white);
 				//needed only with Rfloat rendertexture (for godray)
 				//not needed for built-in depth
-				
-				
+							
 				_depthCamCamera.targetTexture = _depthTex;
-
-				if (!incore.ignoreRenderTypetags)
-					_depthCamCamera.RenderWithShader (depthShader, "RenderType");
-				else
-					_depthCamCamera.RenderWithShader (depthShader, "");
-
-
+				_depthCamCamera.RenderWithShader (depthShader, "RenderType");
+							
 				depthTextureCleared = false;
 				
 				if (incore.useGodrays)
@@ -107,12 +96,8 @@ namespace scatterer
 					_depthCamCamera.cullingMask=32768; //ignore ships, parts
 					//to avoid black godrays casting from ship
 					//render only terrain for goodrays
-
-
-					if (!incore.ignoreRenderTypetags)
-						_depthCamCamera.RenderWithShader (GodrayDepthShader, "RenderType");
-					else
-						_depthCamCamera.RenderWithShader (GodrayDepthShader, "");
+									
+					_depthCamCamera.RenderWithShader (GodrayDepthShader, "RenderType");
 
 					//restore culling mask when done rendering godrays
 					//not necessary, restored automatically when copying attributes from farcamera above

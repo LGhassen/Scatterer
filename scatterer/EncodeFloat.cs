@@ -158,9 +158,8 @@ public class EncodeFloat
 //
 			if(m_decodeToFloat == null)
 			{
-				m_decodeToFloat = new Material(ShaderTool.GetMatFromShader2("CompiledDecodedToFloat.shader"));
-				
-				
+				m_decodeToFloat = new Material(Core.Instance.LoadedShaders[("EncodeFloat/DecodeToFloat")]);
+
 				if(m_decodeToFloat == null)
 				{
 					Debug.Log("EncodeFloat::WriteIntoRenderTexture2D - could not find shader EncodeFloat/DecodeToFloat. Did you change the shaders name?");

@@ -137,12 +137,11 @@ namespace scatterer
 			//using different materials for both the far and near cameras because they have different projection matrixes
 			//the projection matrix in the shader has to match that of the camera or the projection will be wrong and the ocean will
 			//appear to "shift around"
-//			m_oceanMaterialNear = new Material (ShaderTool.GetMatFromShader2 ("CompiledOceanWhiteCaps.shader"));
 
 			if (m_core.oceanPixelLights)
-				m_oceanMaterialFar = new Material (ShaderTool.GetMatFromShader2 ("CompiledOceanWhiteCapsPixelLights.shader"));
+				m_oceanMaterialFar = new Material (Core.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCapsPixelLights")]);
 			else
-				m_oceanMaterialFar = new Material (ShaderTool.GetMatFromShader2 ("CompiledOceanWhiteCaps.shader"));
+				m_oceanMaterialFar = new Material (Core.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCaps")]);
 
 			if (m_core.oceanSkyReflections)
 			{

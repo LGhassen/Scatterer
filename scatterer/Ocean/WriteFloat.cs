@@ -57,10 +57,9 @@ namespace scatterer
 		/// </summary>
 		public WriteFloat(int w, int h)
 		{
-			
-//			Shader shader = Shader.Find("EncodeFloat/WriteToFloat");
-			Shader shader = ShaderTool.GetShader2 ("CompiledWriteToFloat.shader");
-			
+
+			Shader shader = Core.Instance.LoadedShaders[("EncodeFloat/WriteToFloat")];
+
 			if(shader == null)
 			{
 				throw new InvalidOperationException("Could not find shader EncodeFloat/WriteToFloat. Did you change the shaders name?");

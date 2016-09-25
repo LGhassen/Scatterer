@@ -72,15 +72,13 @@ namespace scatterer
 
 		public void start()
 		{
-			sunglareMaterial = new Material (ShaderTool.GetMatFromShader2 ("CompiledSunGlare.shader"));
-
+			sunglareMaterial = new Material (Core.Instance.LoadedShaders["Scatterer/sunFlare"]);
 			//Size is loaded automatically from the files
 			sunSpikes = new Texture2D (1, 1);
 			sunFlare = new Texture2D (1, 1);
 			sunGhost1 = new Texture2D (1, 1);
 			sunGhost2 = new Texture2D (1, 1);
 			sunGhost3 = new Texture2D (1, 1);
-			
 			
 			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "sunSpikes.png")));
 			sunSpikes.wrapMode = TextureWrapMode.Clamp;
@@ -170,7 +168,6 @@ namespace scatterer
 		
 		public void OnPreRender()
 		{
-
 			sunViewPortPos = inCore.scaledSpaceCamera.WorldToViewportPoint
 				(ScaledSpace.LocalToScaledSpace(source.transform.position));
 
@@ -178,15 +175,11 @@ namespace scatterer
 				.magnitude;
 
 			sunGlareScale = dist / 2266660f;
-			
 
 			//if dist> 0.75 sunglarefadedistance -->1
 			//if dist < 0.25*sunglarefadedistance -->0
 			//else values smoothstepped in between
 			sunGlareFade = Mathf.SmoothStep(0,1,(dist/sunGlareFadeDistance)-0.25f);
-
-
-
 
 			hitStatus=false;
 //			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
@@ -218,12 +211,10 @@ namespace scatterer
 
 			eclipse = hitStatus;
 
-
 			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
 			sunglareMaterial.SetFloat ("aspectRatio", inCore.scaledSpaceCamera.aspect);
 			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
 			sunglareMaterial.SetFloat ("sunGlareFade", sunGlareFade);
-
 
 			//check for active PQS
 //			if (!transmittanceSet && inCore.pqsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))

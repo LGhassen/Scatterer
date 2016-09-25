@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using System.Runtime;
 using KSP;
 using KSP.IO;
 using UnityEngine;
+
 //using Utils;
 
 namespace scatterer
@@ -51,19 +53,13 @@ namespace scatterer
 //		bool rtsResized=false;
 
 		bool wireFrame=false;
-		
-//		[Persistent]
-		public bool ignoreRenderTypetags=false;
-
-//		bool ambientLight=true;
-		
 
 		[Persistent]
 		public bool disableAmbientLight=false;
-
+		
 		[Persistent]
-		public bool loadAlternative_D3D11_OGL_shaders=true;
-
+		public string mainSunCelestialBodyName="Sun";
+		
 		[Persistent]
 		public bool integrateWithEVEClouds=true;
 
@@ -186,7 +182,8 @@ namespace scatterer
 		string guiKey2String=KeyCode.F11.ToString();
 
 		KeyCode guiKey1, guiKey2, guiModifierKey1, guiModifierKey2 ;
-		
+
+		public Dictionary<string, Shader> LoadedShaders = new Dictionary<string, Shader>();
 		
 		private Vector2 _scroll;
 		private Vector2 _scroll2;
@@ -357,6 +354,7 @@ namespace scatterer
 				isActive = true;
 				windowRect.x=inGameWindowLocation.x;
 				windowRect.y=inGameWindowLocation.y;
+				LoadAssetBundle();
 			} 
 
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
@@ -375,6 +373,33 @@ namespace scatterer
 		}
 		
 
+		public void LoadAssetBundle()
+		{
+			string shaderspath;
+
+			if (Application.platform == RuntimePlatform.WindowsPlayer)
+				shaderspath = path + "/shaders/scatterershaders-windows";
+			else if (Application.platform == RuntimePlatform.LinuxPlayer)
+				shaderspath = path+"/shaders/scatterershaders-linux";
+			else
+				shaderspath = path+"/shaders/scatterershaders-macosx";
+
+			using (WWW www = new WWW("file://"+shaderspath))
+			{
+				AssetBundle bundle = www.assetBundle;
+				Shader[] shaders = bundle.LoadAllAssets<Shader>();
+
+				foreach (Shader shader in shaders)
+				{
+					//Debug.Log ("[Scatterer]"+shader.name+" loaded. Supported?"+shader.isSupported.ToString());
+					LoadedShaders.Add(shader.name, shader);
+				}
+
+				bundle.Unload(false); // unload the raw asset bundle
+				www.Dispose();
+			}
+		}
+
 		void Update ()
 		{
 			//toggle whether GUI is visible or not
@@ -392,7 +417,7 @@ namespace scatterer
 					findScattererCelestialBodies();
 
 					//find sun
-					sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == "Sun");
+					sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == mainSunCelestialBodyName);
 
 					//find main cameras
 					cams = Camera.allCameras;
@@ -1042,7 +1067,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0248: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
+				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0249: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -1122,12 +1147,7 @@ namespace scatterer
 					nearClipPlane = float.Parse (GUILayout.TextField (nearClipPlane.ToString ("0.000")));
 					GUILayout.EndHorizontal ();
 
-//					ignoreRenderTypetags = GUILayout.Toggle(ignoreRenderTypetags, "Ignore renderType tags");
-
 					disableAmbientLight = GUILayout.Toggle(disableAmbientLight, "Disable scaled space ambient light");
-
-					loadAlternative_D3D11_OGL_shaders =
-						GUILayout.Toggle(loadAlternative_D3D11_OGL_shaders, "Load alternate d3d11 shaders");
 
 					showMenuOnStart = GUILayout.Toggle(showMenuOnStart, "Show this menu on start-up");
 				}

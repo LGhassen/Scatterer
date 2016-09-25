@@ -29,10 +29,9 @@ namespace scatterer {
 		//		protected override void Start() 
 		public override void Start() {
 			base.Start();
-			
-			m_initJacobiansMat = new Material(ShaderTool.GetMatFromShader2("CompiledInitJacobians.shader"));
-//			m_whiteCapsPrecomputeMat = new Material(ShaderTool.GetMatFromShader2("CompiledWhiteCapsPrecompute.shader")); //original shader
-			m_whiteCapsPrecomputeMat = new Material(ShaderTool.GetMatFromShader2("CompiledWhiteCapsPrecompute0.shader"));//shader with two passes, to fix black ocean bug
+
+			m_initJacobiansMat = new Material(Core.Instance.LoadedShaders[ ("Proland/Ocean/InitJacobians")]);
+			m_whiteCapsPrecomputeMat = new Material(Core.Instance.LoadedShaders[("Proland/Ocean/WhiteCapsPrecompute0")]);
 			
 			
 			m_initJacobiansMat.SetTexture(ShaderProperties._Spectrum01_PROPERTY, m_spectrum01);
