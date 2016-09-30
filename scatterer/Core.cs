@@ -60,8 +60,8 @@ namespace scatterer
 		[Persistent]
 		public string mainSunCelestialBodyName="Sun";
 		
-		[Persistent]
-		public bool integrateWithEVEClouds=true;
+//		[Persistent]
+		public bool integrateWithEVEClouds=false;
 
 		disableAmbientLight ambientLightScript;
 
@@ -143,9 +143,9 @@ namespace scatterer
 		public bool
 			useEclipses = true;
 
-		[Persistent]
+//		[Persistent]
 		public bool
-			usePlanetShine = true;
+			usePlanetShine = false;
 		
 		[Persistent]
 		List<planetShineLightSource> celestialLightSourcesData=new List<planetShineLightSource> {};
@@ -634,7 +634,8 @@ namespace scatterer
 						string sunFlarePath=path + "/sunflare";
 						foreach (string s in Directory.GetDirectories(sunFlarePath))
 						{
-							string name = s.Remove(0,s.LastIndexOf('\\')+1);
+							int index = Mathf.Max(s.LastIndexOf('\\'), s.LastIndexOf('/'))+1;
+							string name = s.Remove(0,index);
 
 							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
 							customSunFlare.inCore=this;
@@ -685,7 +686,7 @@ namespace scatterer
 									//ReactivateAtmosphere(cur.transformName,cur.originalPlanetMaterialBackup);
 									_cur.active = false;
 									callCollector=true;
-									
+
 									Debug.Log ("[Scatterer] Effects unloaded for " + _cur.celestialBodyName);
 								} else {
 
@@ -1067,7 +1068,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0249: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
+				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0250: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -1111,8 +1112,8 @@ namespace scatterer
 					oceanSkyReflections = GUILayout.Toggle(oceanSkyReflections, "Ocean: accurate sky reflection");
 					oceanPixelLights = GUILayout.Toggle(oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
 
-					usePlanetShine = GUILayout.Toggle(usePlanetShine, "PlanetShine");
-					integrateWithEVEClouds = GUILayout.Toggle(integrateWithEVEClouds, "Integrate effects with EVE clouds");
+//					usePlanetShine = GUILayout.Toggle(usePlanetShine, "PlanetShine");
+//					integrateWithEVEClouds = GUILayout.Toggle(integrateWithEVEClouds, "Integrate effects with EVE clouds");
 
 					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds");
 					GUILayout.Label(String.Format ("(improves terminators, causes issues in the transition)"));
@@ -1943,7 +1944,7 @@ namespace scatterer
 				}
 			}
 		}
-
+	
 		//map EVE clouds to planet names
 		void mapEVEClouds()
 		{

@@ -587,20 +587,21 @@ namespace scatterer {
 			m_spectrum01 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 			m_spectrum01.filterMode = FilterMode.Point;
 			m_spectrum01.wrapMode = TextureWrapMode.Repeat;
-			m_spectrum01.enableRandomWrite = true;
+//			m_spectrum01.enableRandomWrite = false;
+			m_spectrum01.enableRandomWrite = false;
 			m_spectrum01.Create();
 			
 			m_spectrum23 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 			m_spectrum23.filterMode = FilterMode.Point;
 			m_spectrum23.wrapMode = TextureWrapMode.Repeat;
-			m_spectrum23.enableRandomWrite = true;
+			m_spectrum23.enableRandomWrite = false;
 			m_spectrum23.Create();
 			
 
 			m_WTable = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 			m_WTable.filterMode = FilterMode.Point;
 			m_WTable.wrapMode = TextureWrapMode.Clamp;
-			m_WTable.enableRandomWrite = true;
+			m_WTable.enableRandomWrite = false;
 			m_WTable.Create();
 			
 			//			m_variance = new RenderTexture(m_varianceSize, m_varianceSize, 0, RenderTextureFormat.RHalf);
@@ -608,7 +609,7 @@ namespace scatterer {
 			//			m_variance.wrapMode = TextureWrapMode.Clamp;
 			//			m_variance.filterMode = FilterMode.Bilinear;
 			//			m_variance.isVolume = true;
-			//			m_variance.enableRandomWrite = true;
+			//			m_variance.enableRandomWrite = false;
 			//			m_variance.useMipMap = true;
 			//			m_variance.Create();
 			
