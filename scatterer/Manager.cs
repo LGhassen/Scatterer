@@ -47,6 +47,7 @@ namespace scatterer
 
 			m_skyNode.loadFromConfigNode(false);
 
+
 			m_skyNode.Start();		
 			
 			if (hasOcean && Core.Instance.useOceanShaders) {

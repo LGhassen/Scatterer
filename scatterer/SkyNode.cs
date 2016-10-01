@@ -189,7 +189,7 @@ namespace scatterer
 		[Persistent]
 		public float
 			m_mieG = 0.85f;
-		string m_filePath = "/Proland/Textures/Atmo";
+		//string m_filePath = "/Proland/Textures/Atmo";
 		public Matrix4x4d m_cameraToScreenMatrix;
 		
 		Texture2D m_inscatter, m_irradiance;
@@ -214,8 +214,10 @@ namespace scatterer
 			new configPoint(5000f, 1f, 0.25f,0.25f, 1f, 0.4f, 0.23f, 1f, 100f,0f, 0f, 250f, 0.5f,0f,100f,100f,1f,1f)
 			, new configPoint(15000f, 1f, 0.15f,0.15f, 1f, 8f, 0.23f, 1f, 100f,0f,0f, 250f, 0.5f,0f,100f,100f,1f,1f)
 		};
-		public string assetDir;
-		
+		//public string assetDir;
+
+		[Persistent]
+		public string assetPath;
 		
 		public void Start ()
 		{
@@ -1274,23 +1276,6 @@ namespace scatterer
 		public void SetParentCelestialBody (CelestialBody inPlanet)
 		{
 			parentCelestialBody = inPlanet;
-			var _celBodyName = parentCelestialBody.name;
-			var _celTransformName = parentCelestialBody.name;
-			var _basePath = Core.Instance.path + "/config";
-			if (parentCelestialBody.GetTransform () != null) {
-				_celTransformName = parentCelestialBody.GetTransform ().name;
-			}
-			string[] _possiblePaths =
-			{
-				_basePath + "/" + _celBodyName,
-				_basePath + "/" + _celTransformName
-			};
-			
-			foreach (string _dir in _possiblePaths) {
-				if (Directory.Exists (_dir)) {
-					assetDir = _dir;
-				}
-			}
 		}
 		
 		public void setParentPlanetTransform (Transform parentTransform)
@@ -1304,20 +1289,20 @@ namespace scatterer
 			
 			//load from .half, probably an 8 mb leak every scene change
 			//if no .half file exists, load from .raw file and create .half file
-			string _file = assetDir + m_filePath + "/inscatter.half";
+			string _file = Core.Instance.gameDataPath + assetPath + "/inscatter.half";
 			if (System.IO.File.Exists(_file))
 				m_inscatter.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
 				loadAndConvertRawFile("inscatter",m_inscatter,4);
 			
-			_file = assetDir + m_filePath + "/transmittance.half";
+			_file = Core.Instance.gameDataPath + assetPath + "/transmittance.half";
 			
 			if (System.IO.File.Exists(_file))
 				m_transmit.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
 				loadAndConvertRawFile("transmittance",m_transmit,3);
 			
-			_file = assetDir + m_filePath + "/irradiance.half";
+			_file = Core.Instance.gameDataPath + assetPath + "/irradiance.half";
 			
 			if (System.IO.File.Exists(_file))
 				m_irradiance.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
@@ -1340,7 +1325,14 @@ namespace scatterer
 			if(encode==null)
 				encode = new EncodeFloat ();
 			
-			string _file = assetDir + m_filePath + "/"+textureName+".raw";
+			string _file = Core.Instance.gameDataPath + assetPath + "/"+textureName+".raw";
+
+			if (!System.IO.File.Exists(_file))
+			{
+				Debug.Log("[Scatterer] no "+textureName+".raw or "+textureName+".half file found for "
+				          +parentCelestialBody.name);
+				return;
+			}
 			
 			RenderTexture activeRT = RenderTexture.active;
 			RenderTexture tempRT = new RenderTexture (targetTexture2D.width, targetTexture2D.height, 0, RenderTextureFormat.ARGBFloat);
@@ -1349,8 +1341,7 @@ namespace scatterer
 			tempRT.Create ();
 			
 			encode.WriteIntoRenderTexture (tempRT, channels, _file);
-			
-			
+						
 			RenderTexture.active = tempRT;
 			targetTexture2D.ReadPixels(new Rect(0, 0, targetTexture2D.width, targetTexture2D.height), 0, 0);
 			targetTexture2D.Apply();
@@ -1358,7 +1349,7 @@ namespace scatterer
 			RenderTexture.active = activeRT;
 			tempRT.Release ();
 			
-			_file = assetDir + m_filePath + "/"+textureName+".half";
+			_file = Core.Instance.gameDataPath + assetPath + "/"+textureName+".half";
 			
 			byte[] bytes = targetTexture2D .GetRawTextureData();
 			System.IO.File.WriteAllBytes(_file ,bytes);
@@ -1452,17 +1443,32 @@ namespace scatterer
 
 		public void loadFromConfigNode (bool loadbackup)
 		{
-			ConfigNode cnToLoad;
+			ConfigNode cnToLoad = new ConfigNode();
 			
-			if (loadbackup) 
+//			if (loadbackup) 
+//			{
+//				cnToLoad = ConfigNode.Load (assetDir + "/SettingsBackup.cfg");
+//			}			
+////			else
+//			{
+//				cnToLoad = ConfigNode.Load (assetDir + "/Settings.cfg");
+//			}
+
+
+			foreach (ConfigNode _cn in Core.Instance.atmoConfNodes)
 			{
-				cnToLoad = ConfigNode.Load (assetDir + "/SettingsBackup.cfg");
+				if (_cn.TryGetNode(parentCelestialBody.name,ref cnToLoad))
+				{
+					Debug.Log("[Scatterer] config found for: "+parentCelestialBody.name);
+					break;
+				}
 			}
-			
-			else
-			{
-				cnToLoad = ConfigNode.Load (assetDir + "/Settings.cfg");
-			}
+
+//			if (cnToLoad == null)
+//			{
+//				Debug.Log("[Scatterer] config not found for: "+parentCelestialBody.name);
+//				return;
+//			}
 			
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 			
@@ -1475,8 +1481,8 @@ namespace scatterer
 		
 		public void saveToConfigNode ()
 		{
-			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-			cnTemp.Save (assetDir + "/Settings.cfg");
+//			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
+//			cnTemp.Save (assetDir + "/Settings.cfg");
 		}
 		
 		public void backupAtmosphereMaterial ()

@@ -589,34 +589,33 @@ namespace scatterer
 
 		public void saveToConfigNode ()
 		{
-			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-			cnTemp.Save (m_manager.m_skyNode.assetDir + "/OceanSettings.cfg");
+//			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
+//			cnTemp.Save (m_manager.m_skyNode.assetDir + "/OceanSettings.cfg");
 		}
 		
 		public void loadFromConfigNode (bool loadBackup)
 		{
-			ConfigNode cnToLoad;
+			ConfigNode cnToLoad= new ConfigNode();
 
-			if (loadBackup)
+//			if (loadBackup)
+//			{
+//				cnToLoad = ConfigNode.Load (m_manager.m_skyNode.assetDir + "/OceanSettingsBackup.cfg");
+//			}
+//
+//			else
+//			{
+//				cnToLoad = ConfigNode.Load (m_manager.m_skyNode.assetDir + "/OceanSettings.cfg");
+//			}
+						
+			foreach (ConfigNode _cn in Core.Instance.oceanConfNodes)
 			{
-				cnToLoad = ConfigNode.Load (m_manager.m_skyNode.assetDir + "/OceanSettingsBackup.cfg");
-			}
-
-			else
-			{
-				cnToLoad = ConfigNode.Load (m_manager.m_skyNode.assetDir + "/OceanSettings.cfg");
+				if (_cn.TryGetNode(m_manager.parentCelestialBody.name,ref cnToLoad))
+				{
+					Debug.Log("[Scatterer] ocean config found for: "+m_manager.parentCelestialBody.name);
+					break;
+				}
 			}
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 		}
-		
-//		static bool PQisNotNull (PQ pq)
-//		{
-//			return pq;
-//		}
-//
-//		static bool PQSisNotNull (PQS pqs)
-//		{
-//			return pqs;
-//		}
 	}
 }

@@ -45,6 +45,7 @@ namespace scatterer
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
 
+		planetsListReader scattererPlanetsListReader = new planetsListReader ();
 		List<SunFlare> customSunFlares = new List<SunFlare>();
 		bool customSunFlareAdded=false;
 		
@@ -65,9 +66,9 @@ namespace scatterer
 
 		disableAmbientLight ambientLightScript;
 
-		[Persistent]
-		List < scattererCelestialBody >
-		scattererCelestialBodies = new List < scattererCelestialBody > {};
+		//[Persistent]
+		List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody > {};
+
 		CelestialBody[] CelestialBodies;
 		
 		Light[] lights;
@@ -147,11 +148,15 @@ namespace scatterer
 		public bool
 			usePlanetShine = false;
 		
-		[Persistent]
+		//[Persistent]
 		List<planetShineLightSource> celestialLightSourcesData=new List<planetShineLightSource> {};
 		
 		List<planetShineLight> celestialLightSources=new List<planetShineLight> {};
-		
+
+		ConfigNode[] confNodes;
+		public ConfigNode[] atmoConfNodes;
+		public ConfigNode[] oceanConfNodes;
+
 		[Persistent]
 		public bool
 			terrainShadows = true;
@@ -202,7 +207,7 @@ namespace scatterer
 		
 		public CelestialBody sunCelestialBody;
 		public CelestialBody munCelestialBody;
-		public string path;
+		public string path, gameDataPath;
 		bool found = false;
 		bool showInterpolatedValues = false;
 		public bool stockSunglare = false;
@@ -326,9 +331,12 @@ namespace scatterer
 			UriBuilder uri = new UriBuilder (codeBase);
 			path = Uri.UnescapeDataString (uri.Path);
 			path = Path.GetDirectoryName (path);
-			
+
+			int index = path.LastIndexOf ("GameData");
+			gameDataPath= path.Remove(index+9, path.Length-index-9);
+
 			//load the planets list and the settings
-			loadPlanetsList ();
+			loadSettings ();
 
 			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
@@ -401,11 +409,10 @@ namespace scatterer
 		}
 
 		void Update ()
-		{
+		{		
 			//toggle whether GUI is visible or not
 			if ((Input.GetKey (guiModifierKey1) || Input.GetKey (guiModifierKey2)) && (Input.GetKeyDown (guiKey1) || (Input.GetKeyDown (guiKey2))))
 				visible = !visible;
-
 
 			if (isActive && ScaledSpace.Instance) {
 				if (!found)
@@ -846,9 +853,6 @@ namespace scatterer
 					//						}
 					//						d++;
 					//					}
-					
-					
-					
 					//					Material[] list = (Material[]) Material.FindObjectsOfType(typeof(Material));
 					//					int d=0;
 					//					foreach (Material _mtl in list)
@@ -1049,14 +1053,14 @@ namespace scatterer
 
 
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
-				savePlanetsList();
+				//savePlanetsList();
 
 			}
 			
 			else if (mainMenu)	
 			{
 				mainMenuWindowLocation=new Vector2(windowRect.x,windowRect.y);
-				savePlanetsList(); //save user preferences //originally this was created only for the planets list, I'll change it later
+				//savePlanetsList(); //save user preferences //originally this was created only for the planets list, I'll change it later
 			}
 			
 		}
@@ -1764,16 +1768,37 @@ namespace scatterer
 			viewdirOffset = _cur.viewdirOffset;
 		}
 		
-		public void loadPlanetsList ()
+		public void loadSettings ()
 		{
-			ConfigNode cnToLoad = ConfigNode.Load (path + "/config/PlanetsList.cfg");
-			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
+			//load scatterer config
+			confNodes = GameDatabase.Instance.GetConfigNodes ("Scatterer_config");
+			if (confNodes.Length == 0)
+			{
+				Debug.Log ("[Scatterer] No config file found, check your install");
+				return;
+			}
+
+			if (confNodes.Length > 1)
+			{
+				Debug.Log ("[Scatterer] Multiple config files detected, check your install");
+			}
+
+			ConfigNode.LoadObjectFromConfig (this, confNodes [0]);
 
 			guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
 			guiKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey2String);
 
 			guiModifierKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey1String);
 			guiModifierKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey2String);
+
+			//load planetsList
+			scattererPlanetsListReader.loadPlanetsList ();
+			scattererCelestialBodies = scattererPlanetsListReader.scattererCelestialBodies;
+			celestialLightSourcesData = scattererPlanetsListReader.celestialLightSourcesData;
+
+			//load atmo and ocean conf nodes
+			atmoConfNodes=GameDatabase.Instance.GetConfigNodes ("Scatterer_atmosphere");
+			oceanConfNodes=GameDatabase.Instance.GetConfigNodes ("Scatterer_ocean");
 
 		}
 		
