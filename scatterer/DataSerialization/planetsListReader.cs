@@ -15,10 +15,16 @@ namespace scatterer
 	public class planetsListReader
 	{
 		[Persistent]
+		public string mainSunCelestialBodyName="Sun";
+
+		[Persistent]
 		public List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody > {};
 
 		[Persistent]
 		public List<planetShineLightSource> celestialLightSourcesData=new List<planetShineLightSource> {};
+
+		[Persistent]
+		public List<string> sunflares=new List<string> {};
 
 		public void loadPlanetsList ()
 		{

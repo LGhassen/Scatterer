@@ -58,7 +58,7 @@ namespace scatterer
 		[Persistent]
 		public bool disableAmbientLight=false;
 		
-		[Persistent]
+//		[Persistent]
 		public string mainSunCelestialBodyName="Sun";
 		
 //		[Persistent]
@@ -67,6 +67,8 @@ namespace scatterer
 		disableAmbientLight ambientLightScript;
 		
 		List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody > {};
+
+		public List<string> sunflaresList=new List<string> {};
 
 		CelestialBody[] CelestialBodies;
 		
@@ -155,7 +157,7 @@ namespace scatterer
 		public UrlDir.UrlConfig[] atmoConfigs;
 		public UrlDir.UrlConfig[] oceanConfigs;
 
-
+		public ConfigNode[] sunflareConfigs;
 
 		[Persistent]
 		public bool
@@ -638,15 +640,15 @@ namespace scatterer
 					if ((fullLensFlareReplacement) && !customSunFlareAdded)
 					{
 						//dir sunflare directory
-						string sunFlarePath=path + "/sunflare";
-						foreach (string s in Directory.GetDirectories(sunFlarePath))
+						//string sunFlarePath=path + "/sunflare";
+						foreach (string sunflareBody in sunflaresList)
 						{
-							int index = Mathf.Max(s.LastIndexOf('\\'), s.LastIndexOf('/'))+1;
-							string name = s.Remove(0,index);
+//							int index = Mathf.Max(s.LastIndexOf('\\'), s.LastIndexOf('/'))+1;
+//							string name = s.Remove(0,index);
 
 							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
-							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == name);
-							customSunFlare.sourceName=name;
+							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
+							customSunFlare.sourceName=sunflareBody;
 							customSunFlare.start ();
 							customSunFlares.Add(customSunFlare);
 							Debug.Log("Added custom sunflare for "+name);
@@ -1071,7 +1073,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0250: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
+				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0255: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -1792,14 +1794,19 @@ namespace scatterer
 			guiModifierKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey1String);
 			guiModifierKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey2String);
 
-			//load planetsList
+			//load planetsList, light sources list and sunflares list
 			scattererPlanetsListReader.loadPlanetsList ();
 			scattererCelestialBodies = scattererPlanetsListReader.scattererCelestialBodies;
 			celestialLightSourcesData = scattererPlanetsListReader.celestialLightSourcesData;
+			sunflaresList = scattererPlanetsListReader.sunflares;
+			mainSunCelestialBodyName = scattererPlanetsListReader.mainSunCelestialBodyName;
 
 			//load atmo and ocean configs
 			atmoConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_atmosphere");
 			oceanConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_ocean");
+
+			//load sunflare configs
+			sunflareConfigs = GameDatabase.Instance.GetConfigNodes ("Scatterer_sunflare");
 		}
 		
 		public void saveSettings ()

@@ -16,6 +16,10 @@ namespace scatterer
 	
 	public class SunFlare : MonoBehaviour
 	{	
+
+		[Persistent]
+		public string assetPath;
+
 		public Material sunglareMaterial;
 
 		public CelestialBody source;
@@ -70,6 +74,8 @@ namespace scatterer
 
 		public void start()
 		{
+			loadConfigNode ();
+
 			sunglareMaterial = new Material (Core.Instance.LoadedShaders["Scatterer/sunFlare"]);
 			//Size is loaded automatically from the files
 			sunSpikes = new Texture2D (1, 1);
@@ -78,15 +84,15 @@ namespace scatterer
 			sunGhost2 = new Texture2D (1, 1);
 			sunGhost3 = new Texture2D (1, 1);
 			
-			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "sunSpikes.png")));
+			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "sunSpikes.png")));
 			sunSpikes.wrapMode = TextureWrapMode.Clamp;
-			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "sunFlare.png")));
+			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "sunFlare.png")));
 			sunFlare.wrapMode = TextureWrapMode.Clamp;
-			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "Ghost1.png")));
+			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "Ghost1.png")));
 			sunGhost1.wrapMode = TextureWrapMode.Clamp;
-			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "Ghost2.png")));
+			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "Ghost2.png")));
 			sunGhost2.wrapMode = TextureWrapMode.Clamp;
-			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "Ghost3.png")));
+			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "Ghost3.png")));
 			sunGhost3.wrapMode = TextureWrapMode.Clamp;
 
 //			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
@@ -104,9 +110,6 @@ namespace scatterer
 			screenMesh.bounds = new Bounds (Vector4.zero, new Vector3 (Mathf.Infinity, Mathf.Infinity, Mathf.Infinity));
 
 			Sun.Instance.sunFlare.enabled = false;
-
-
-			loadConfigNode ();
 
 			//didn't want to serialize the matrices directly as the result is pretty unreadable
 			//sorry about the mess, I'll make a cleaner way later
@@ -280,9 +283,19 @@ namespace scatterer
 //			cnTemp.Save (Core.Instance.path + "/sunflare/sunflare.cfg");
 //		}
 
+
+
 		public void loadConfigNode ()
 		{
-			ConfigNode cnToLoad = ConfigNode.Load (Core.Instance.path + "/sunflare/"+sourceName+"/sunflare.cfg");
+			ConfigNode cnToLoad = new ConfigNode ();
+			foreach (ConfigNode _cn in Core.Instance.sunflareConfigs)
+			{
+				if (_cn.TryGetNode(sourceName, ref cnToLoad))
+				{
+					Debug.Log("[Scatterer] sunflare config found for "+sourceName);
+					break;
+				}
+			}	
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 		}
 
