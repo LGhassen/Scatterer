@@ -43,6 +43,8 @@ namespace scatterer
 	 */
 	public abstract class OceanNode: MonoBehaviour
 	{
+		public UrlDir.UrlConfig configUrl;
+
 //		Matrix4x4d m_cameraToWorldMatrix;
 		public Manager m_manager;
 		Core m_core;
@@ -589,32 +591,31 @@ namespace scatterer
 
 		public void saveToConfigNode ()
 		{
-//			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-//			cnTemp.Save (m_manager.m_skyNode.assetDir + "/OceanSettings.cfg");
+			configUrl.config.RemoveNodes (m_manager.parentCelestialBody.name);
+			
+			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
+			cnTemp.name = m_manager.parentCelestialBody.name;
+			configUrl.config.AddNode (cnTemp);
+			
+			Debug.Log("[Scatterer] saving "+m_manager.parentCelestialBody.name+
+			          " ocean config to: "+configUrl.parent.url);
+			configUrl.parent.SaveConfigs ();
 		}
 		
-		public void loadFromConfigNode (bool loadBackup)
+		public void loadFromConfigNode ()
 		{
-			ConfigNode cnToLoad= new ConfigNode();
-
-//			if (loadBackup)
-//			{
-//				cnToLoad = ConfigNode.Load (m_manager.m_skyNode.assetDir + "/OceanSettingsBackup.cfg");
-//			}
-//
-//			else
-//			{
-//				cnToLoad = ConfigNode.Load (m_manager.m_skyNode.assetDir + "/OceanSettings.cfg");
-//			}
-						
-			foreach (ConfigNode _cn in Core.Instance.oceanConfNodes)
+			ConfigNode cnToLoad = new ConfigNode();
+			
+			foreach (UrlDir.UrlConfig _url in Core.Instance.oceanConfigs)
 			{
-				if (_cn.TryGetNode(m_manager.parentCelestialBody.name,ref cnToLoad))
+				if (_url.config.TryGetNode(m_manager.parentCelestialBody.name,ref cnToLoad))
 				{
+					configUrl = _url;
 					Debug.Log("[Scatterer] ocean config found for: "+m_manager.parentCelestialBody.name);
 					break;
 				}
 			}
+			
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 		}
 	}

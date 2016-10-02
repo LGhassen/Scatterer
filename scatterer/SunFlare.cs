@@ -32,8 +32,6 @@ namespace scatterer
 
 		bool transmittanceSet= false;
 
-		public Core inCore;
-
 		Vector3 sunViewPortPos=Vector3.zero;
 
 		RaycastHit hit;
@@ -80,15 +78,15 @@ namespace scatterer
 			sunGhost2 = new Texture2D (1, 1);
 			sunGhost3 = new Texture2D (1, 1);
 			
-			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "sunSpikes.png")));
+			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "sunSpikes.png")));
 			sunSpikes.wrapMode = TextureWrapMode.Clamp;
-			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "sunFlare.png")));
+			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "sunFlare.png")));
 			sunFlare.wrapMode = TextureWrapMode.Clamp;
-			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "Ghost1.png")));
+			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "Ghost1.png")));
 			sunGhost1.wrapMode = TextureWrapMode.Clamp;
-			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "Ghost2.png")));
+			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "Ghost2.png")));
 			sunGhost2.wrapMode = TextureWrapMode.Clamp;
-			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", inCore.path+"/sunflare/"+sourceName, "Ghost3.png")));
+			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.path+"/sunflare/"+sourceName, "Ghost3.png")));
 			sunGhost3.wrapMode = TextureWrapMode.Clamp;
 
 //			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
@@ -98,7 +96,7 @@ namespace scatterer
 			sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
 			sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
 
-			sunglareMaterial.SetTexture ("_customDepthTexture", inCore.customDepthBufferTexture);
+			sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.customDepthBufferTexture);
 
 			sunglareMaterial.renderQueue = 3100;
 
@@ -168,10 +166,10 @@ namespace scatterer
 		
 		public void OnPreRender()
 		{
-			sunViewPortPos = inCore.scaledSpaceCamera.WorldToViewportPoint
+			sunViewPortPos = Core.Instance.scaledSpaceCamera.WorldToViewportPoint
 				(ScaledSpace.LocalToScaledSpace(source.transform.position));
 
-			float dist = (float) (inCore.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
+			float dist = (float) (Core.Instance.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
 				.magnitude;
 
 			sunGlareScale = dist / 2266660f;
@@ -186,20 +184,20 @@ namespace scatterer
 			if (!MapView.MapIsEnabled)
 			{
 	
-				hitStatus = Physics.Raycast (inCore.farCamera.transform.position,
-				                             (source.transform.position- inCore.farCamera.transform.position).normalized,
+				hitStatus = Physics.Raycast (Core.Instance.farCamera.transform.position,
+				                             (source.transform.position- Core.Instance.farCamera.transform.position).normalized,
 				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
 				if(!hitStatus)
 				{
-					hitStatus = Physics.Raycast (inCore.scaledSpaceCamera.transform.position,
-					                             (ScaledSpace.LocalToScaledSpace(source.transform.position)- inCore.scaledSpaceCamera.transform.position)
+					hitStatus = Physics.Raycast (Core.Instance.scaledSpaceCamera.transform.position,
+					                             (ScaledSpace.LocalToScaledSpace(source.transform.position)- Core.Instance.scaledSpaceCamera.transform.position)
 					                             .normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 				}
 			}
 			else
 			{
-				hitStatus = Physics.Raycast (inCore.scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(source.transform.position)
-				                                                                           - inCore.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
+				hitStatus = Physics.Raycast (Core.Instance.scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(source.transform.position)
+				                                                                           - Core.Instance.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 			}
 
 			if(hitStatus)
@@ -212,21 +210,21 @@ namespace scatterer
 			eclipse = hitStatus;
 
 			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
-			sunglareMaterial.SetFloat ("aspectRatio", inCore.scaledSpaceCamera.aspect);
+			sunglareMaterial.SetFloat ("aspectRatio", Core.Instance.scaledSpaceCamera.aspect);
 			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
 			sunglareMaterial.SetFloat ("sunGlareFade", sunGlareFade);
 
 			//check for active PQS
-//			if (!transmittanceSet && inCore.pqsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-			if (!transmittanceSet && inCore.pqsEnabled)
+//			if (!transmittanceSet && Core.Instance.pqsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			if (!transmittanceSet && Core.Instance.pqsEnabled)
 			{
-				if ((lastActivePQS != inCore.managerWactivePQS) || !(lastActivePQS))
+				if ((lastActivePQS != Core.Instance.managerWactivePQS) || !(lastActivePQS))
 				{
-					sunglareMaterial.SetFloat ("Rg", inCore.managerWactivePQS.m_skyNode.Rg);
-					sunglareMaterial.SetFloat ("Rt", inCore.managerWactivePQS.m_skyNode.Rt);
-					sunglareMaterial.SetTexture ("_Sky_Transmittance", inCore.managerWactivePQS.m_skyNode.m_transmit);
+					sunglareMaterial.SetFloat ("Rg", Core.Instance.managerWactivePQS.m_skyNode.Rg);
+					sunglareMaterial.SetFloat ("Rt", Core.Instance.managerWactivePQS.m_skyNode.Rt);
+					sunglareMaterial.SetTexture ("_Sky_Transmittance", Core.Instance.managerWactivePQS.m_skyNode.m_transmit);
 
-					lastActivePQS = inCore.managerWactivePQS;
+					lastActivePQS = Core.Instance.managerWactivePQS;
 
 					Debug.Log("[Scatterer] Sunflare: loaded new transmittance table");
 				}
@@ -236,7 +234,7 @@ namespace scatterer
 			}
 			if (transmittanceSet)
 			{
-				if (!inCore.pqsEnabled)
+				if (!Core.Instance.pqsEnabled)
 				{
 					sunglareMaterial.SetFloat ("useTransmittance", 0f);
 					transmittanceSet = false;
@@ -246,9 +244,9 @@ namespace scatterer
 
 
 					if (!MapView.MapIsEnabled)
-						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", inCore.farCamera.transform.position - lastActivePQS.parentCelestialBody.transform.position);
+						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", Core.Instance.farCamera.transform.position - lastActivePQS.parentCelestialBody.transform.position);
 					else
-						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(inCore.scaledSpaceCamera.transform.position) - lastActivePQS.parentCelestialBody.transform.position);
+						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Core.Instance.scaledSpaceCamera.transform.position) - lastActivePQS.parentCelestialBody.transform.position);
 
 //					sunglareMaterial.SetVector ("_Sun_WorldSunDir", lastActivePQS.getDirectionToSun ().normalized);
 					sunglareMaterial.SetVector ("_Sun_WorldSunDir", lastActivePQS.getDirectionToCelestialBody (source).normalized);
@@ -264,13 +262,13 @@ namespace scatterer
 			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
 			{
 				Graphics.DrawMesh (screenMesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 15,
-				                   inCore.nearCamera, 0, null, false, false);
+				                   Core.Instance.nearCamera, 0, null, false, false);
 			}
 			
 			else if (!eclipse && (sunViewPortPos.z > 0))
 			{
 				Graphics.DrawMesh (screenMesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 10,
-				                   inCore.scaledSpaceCamera, 0, null, false, false);
+				                   Core.Instance.scaledSpaceCamera, 0, null, false, false);
 			}
 		}
 
@@ -279,12 +277,12 @@ namespace scatterer
 //		public void saveToConfigNode ()
 //		{
 //			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-//			cnTemp.Save (inCore.path + "/sunflare/sunflare.cfg");
+//			cnTemp.Save (Core.Instance.path + "/sunflare/sunflare.cfg");
 //		}
 
 		public void loadConfigNode ()
 		{
-			ConfigNode cnToLoad = ConfigNode.Load (inCore.path + "/sunflare/"+sourceName+"/sunflare.cfg");
+			ConfigNode cnToLoad = ConfigNode.Load (Core.Instance.path + "/sunflare/"+sourceName+"/sunflare.cfg");
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 		}
 

@@ -20,7 +20,8 @@ namespace scatterer
 	 */
 	public class SkyNode: MonoBehaviour
 	{
-		
+		public UrlDir.UrlConfig configUrl;
+
 		SimplePostProcessCube postProcessCube;
 		GameObject atmosphereMesh;
 		MeshRenderer atmosphereMeshrenderer;
@@ -259,7 +260,11 @@ namespace scatterer
 			m_skyMaterialScaled = new Material (Core.Instance.LoadedShaders[("Scatterer/SkyScaled")]);
 			m_skyMaterialLocal = new Material (Core.Instance.LoadedShaders[("Scatterer/SkyLocal")]);
 			m_atmosphereMaterial = new Material (Core.Instance.LoadedShaders[("Scatterer/AtmosphericScatter")]);
-			
+
+			m_skyMaterialLocal.SetOverrideTag ("IgnoreProjector", "True");
+			m_skyMaterialScaled.SetOverrideTag ("IgnoreProjector", "True");
+			m_atmosphereMaterial.SetOverrideTag ("IgnoreProjector", "True");
+
 			if (Core.Instance.useEclipses)
 			{
 				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_ON");
@@ -322,7 +327,7 @@ namespace scatterer
 				m_atmosphereMaterial.DisableKeyword ("ECLIPSES_ON");
 				m_atmosphereMaterial.EnableKeyword ("ECLIPSES_OFF");
 			}
-			
+
 			InitPostprocessMaterial (m_atmosphereMaterial);
 			
 			//replace shaders of EVE clouds
@@ -354,7 +359,6 @@ namespace scatterer
 			
 			
 			#if skyScaledBox
-			//			float skycubeSize = 2.5f * m_radius / ScaledSpace.ScaleFactor;
 			float skySphereSize = 2*(4 * (Rt-Rg) + Rg) / ScaledSpace.ScaleFactor;
 			localSkyAltitude = 6 * (Rt-Rg) + Rg;
 			skyScaledCube = new SimplePostProcessCube (skySphereSize, m_skyMaterialScaled,true);
@@ -1441,35 +1445,20 @@ namespace scatterer
 			stocksunglareEnabled = !stocksunglareEnabled;
 		}
 
-		public void loadFromConfigNode (bool loadbackup)
+		public void loadFromConfigNode ()
 		{
 			ConfigNode cnToLoad = new ConfigNode();
-			
-//			if (loadbackup) 
-//			{
-//				cnToLoad = ConfigNode.Load (assetDir + "/SettingsBackup.cfg");
-//			}			
-////			else
-//			{
-//				cnToLoad = ConfigNode.Load (assetDir + "/Settings.cfg");
-//			}
 
-
-			foreach (ConfigNode _cn in Core.Instance.atmoConfNodes)
+			foreach (UrlDir.UrlConfig _url in Core.Instance.atmoConfigs)
 			{
-				if (_cn.TryGetNode(parentCelestialBody.name,ref cnToLoad))
+				if (_url.config.TryGetNode(parentCelestialBody.name,ref cnToLoad))
 				{
+					configUrl = _url;
 					Debug.Log("[Scatterer] config found for: "+parentCelestialBody.name);
 					break;
 				}
 			}
 
-//			if (cnToLoad == null)
-//			{
-//				Debug.Log("[Scatterer] config not found for: "+parentCelestialBody.name);
-//				return;
-//			}
-			
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 			
 			m_radius = (float) m_manager.GetRadius ();
@@ -1481,8 +1470,15 @@ namespace scatterer
 		
 		public void saveToConfigNode ()
 		{
-//			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-//			cnTemp.Save (assetDir + "/Settings.cfg");
+			configUrl.config.RemoveNodes (parentCelestialBody.name);
+
+			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
+			cnTemp.name = parentCelestialBody.name;
+			configUrl.config.AddNode (cnTemp);
+
+			Debug.Log("[Scatterer] saving "+parentCelestialBody.name+
+			          " atmo config to: "+configUrl.parent.url);
+			configUrl.parent.SaveConfigs ();
 		}
 		
 		public void backupAtmosphereMaterial ()

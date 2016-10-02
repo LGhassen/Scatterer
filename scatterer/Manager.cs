@@ -45,7 +45,7 @@ namespace scatterer
 			m_skyNode.SetParentCelestialBody(parentCelestialBody);
 			m_skyNode.setParentPlanetTransform(ParentPlanetTransform);
 
-			m_skyNode.loadFromConfigNode(false);
+			m_skyNode.loadFromConfigNode();
 
 
 			m_skyNode.Start();		
@@ -55,7 +55,7 @@ namespace scatterer
 				m_oceanNode.setManager(this);
 				m_oceanNode.setCore(Core.Instance);
 
-				m_oceanNode.loadFromConfigNode(false);
+				m_oceanNode.loadFromConfigNode();
 				m_oceanNode.Start();
 
 			}
@@ -102,7 +102,7 @@ namespace scatterer
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
 				m_oceanNode.setCore(Core.Instance);
-				m_oceanNode.loadFromConfigNode(false);
+				m_oceanNode.loadFromConfigNode();
 				m_oceanNode.Start();
 				Debug.Log("[Scatterer] Rebuilt Ocean");
 			}

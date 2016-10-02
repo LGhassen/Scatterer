@@ -65,8 +65,7 @@ namespace scatterer
 		public bool integrateWithEVEClouds=false;
 
 		disableAmbientLight ambientLightScript;
-
-		//[Persistent]
+		
 		List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody > {};
 
 		CelestialBody[] CelestialBodies;
@@ -147,15 +146,16 @@ namespace scatterer
 //		[Persistent]
 		public bool
 			usePlanetShine = false;
-		
-		//[Persistent]
+
 		List<planetShineLightSource> celestialLightSourcesData=new List<planetShineLightSource> {};
 		
 		List<planetShineLight> celestialLightSources=new List<planetShineLight> {};
 
-		ConfigNode[] confNodes;
-		public ConfigNode[] atmoConfNodes;
-		public ConfigNode[] oceanConfNodes;
+		UrlDir.UrlConfig[] baseConfigs;
+		public UrlDir.UrlConfig[] atmoConfigs;
+		public UrlDir.UrlConfig[] oceanConfigs;
+
+
 
 		[Persistent]
 		public bool
@@ -611,7 +611,7 @@ namespace scatterer
 
 						customDepthBuffer = (CustomDepthBufferCam)farCamera.gameObject.AddComponent (typeof(CustomDepthBufferCam));
 						customDepthBuffer.inCamera = farCamera;
-						customDepthBuffer.incore = this;
+						customDepthBuffer.start();
 
 						customDepthBufferTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
 						customDepthBufferTexture.useMipMap=false;
@@ -645,7 +645,6 @@ namespace scatterer
 							string name = s.Remove(0,index);
 
 							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
-							customSunFlare.inCore=this;
 							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == name);
 							customSunFlare.sourceName=name;
 							customSunFlare.start ();
@@ -1053,14 +1052,14 @@ namespace scatterer
 
 
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
-				//savePlanetsList();
+				saveSettings();
 
 			}
 			
 			else if (mainMenu)	
 			{
 				mainMenuWindowLocation=new Vector2(windowRect.x,windowRect.y);
-				//savePlanetsList(); //save user preferences //originally this was created only for the planets list, I'll change it later
+				saveSettings();
 			}
 			
 		}
@@ -1155,6 +1154,11 @@ namespace scatterer
 					disableAmbientLight = GUILayout.Toggle(disableAmbientLight, "Disable scaled space ambient light");
 
 					showMenuOnStart = GUILayout.Toggle(showMenuOnStart, "Show this menu on start-up");
+
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label (".cfg file used:");
+					GUILayout.TextField(baseConfigs [0].parent.url);
+					GUILayout.EndHorizontal ();
 				}
 				
 				
@@ -1439,25 +1443,24 @@ namespace scatterer
 							
 							if (GUILayout.Button ("Load atmo"))
 							{
-								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode (false);
+								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode ();
 								getSettingsFromSkynode ();
 								loadConfigPoint (selectedConfigPoint);
 							}
-							
-							if (GUILayout.Button ("Load backup"))
-							{
-								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode (true);
-								getSettingsFromSkynode ();
-								loadConfigPoint (selectedConfigPoint);
-							}
+
 							GUILayout.EndHorizontal ();
 
 							GUILayout.BeginHorizontal ();
-							if (GUILayout.Button ("Map EVE clouds"))
-							{
-								mapEVEClouds();
-							}
+							GUILayout.Label (".cfg file used:");
+							GUILayout.TextField(scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configUrl.parent.url);
 							GUILayout.EndHorizontal ();
+
+//							GUILayout.BeginHorizontal ();
+//							if (GUILayout.Button ("Map EVE clouds"))
+//							{
+//								mapEVEClouds();
+//							}
+//							GUILayout.EndHorizontal ();
 						}
 						else
 						{
@@ -1530,23 +1533,20 @@ namespace scatterer
 							
 							GUILayout.BeginHorizontal ();
 							
-							
-							
-							
-							
+
 							if (GUILayout.Button ("Save ocean")) {
 								scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().saveToConfigNode ();
 							}
 							
 							if (GUILayout.Button ("Load ocean")) {
-								scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().loadFromConfigNode (false);
+								scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().loadFromConfigNode ();
 								getSettingsFromOceanNode ();
 							}
-							
-							if (GUILayout.Button ("Load backup")) {
-								scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().loadFromConfigNode (true);
-								getSettingsFromOceanNode ();
-							}
+							GUILayout.EndHorizontal ();
+
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label (".cfg file used:");
+							GUILayout.TextField(scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode().configUrl.parent.url);
 							GUILayout.EndHorizontal ();
 						}
 						
@@ -1771,19 +1771,20 @@ namespace scatterer
 		public void loadSettings ()
 		{
 			//load scatterer config
-			confNodes = GameDatabase.Instance.GetConfigNodes ("Scatterer_config");
-			if (confNodes.Length == 0)
+			baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
+			if (baseConfigs.Length == 0)
 			{
 				Debug.Log ("[Scatterer] No config file found, check your install");
 				return;
 			}
 
-			if (confNodes.Length > 1)
+			if (baseConfigs.Length > 1)
 			{
 				Debug.Log ("[Scatterer] Multiple config files detected, check your install");
 			}
 
-			ConfigNode.LoadObjectFromConfig (this, confNodes [0]);
+			ConfigNode.LoadObjectFromConfig (this, (baseConfigs [0]).config);
+
 
 			guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
 			guiKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey2String);
@@ -1796,16 +1797,17 @@ namespace scatterer
 			scattererCelestialBodies = scattererPlanetsListReader.scattererCelestialBodies;
 			celestialLightSourcesData = scattererPlanetsListReader.celestialLightSourcesData;
 
-			//load atmo and ocean conf nodes
-			atmoConfNodes=GameDatabase.Instance.GetConfigNodes ("Scatterer_atmosphere");
-			oceanConfNodes=GameDatabase.Instance.GetConfigNodes ("Scatterer_ocean");
-
+			//load atmo and ocean configs
+			atmoConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_atmosphere");
+			oceanConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_ocean");
 		}
 		
-		public void savePlanetsList ()
+		public void saveSettings ()
 		{
-			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-			cnTemp.Save (path + "/config/PlanetsList.cfg");
+			baseConfigs [0].config = ConfigNode.CreateConfigFromObject (this);
+			baseConfigs [0].config.name = "Scatterer_config";
+			Debug.Log ("[Scatterer] Saving settings to: " + baseConfigs [0].parent.url+".cfg");
+			baseConfigs [0].parent.SaveConfigs ();
 		}
 		
 		public void GUIfloat (string label, ref float local, ref float target)

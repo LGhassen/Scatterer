@@ -1,16 +1,17 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace scatterer
 {
 	
 	public class CustomDepthBufferCam : MonoBehaviour
 	{
-		
+		List<Projector> EVEprojector=new List<Projector> {};
+		int projectorCount=0;
+
 		public Camera inCamera;
-		
-		public Core incore;
 
 		public RenderTexture _depthTex;
 		public RenderTexture _godrayDepthTex;
@@ -20,46 +21,45 @@ namespace scatterer
 		public bool depthTextureCleared = false; //clear depth texture when away from PQS, for the sunflare shader
 		//Later I'll make the shader stop checking the depth buffer instead
 		
-		//private Material viewCustomBufferShader;
-		
 		private Shader depthShader;
 		private Shader GodrayDepthShader;
 		
-		
+		public void start()
+		{
+			_depthCam = new GameObject("CustomDepthCamera");
+			_depthCamCamera = _depthCam.AddComponent<Camera>();
+			
+			_depthCamCamera.CopyFrom(inCamera);
+			
+			_depthCamCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
+			_depthCamCamera.nearClipPlane=Core.Instance.farCamera.nearClipPlane;
+			_depthCamCamera.depthTextureMode=DepthTextureMode.None;
+			
+			_depthCamCamera.transform.parent=Core.Instance.farCamera.transform;			
+			_depthCamCamera.enabled = false;
+			
+			depthShader = Core.Instance.LoadedShaders[("Scatterer/DepthTexture")];
+			
+			if (Core.Instance.useGodrays)
+				GodrayDepthShader=Core.Instance.LoadedShaders[("Scatterer/GodrayDepthTexture")];
+
+
+			Projector[] list = (Projector[]) Projector.FindObjectsOfType(typeof(Projector));
+			for(int i=0;i<list.Length;i++)
+			{
+				if (list[i].material.name == "EVE/CloudShadow")
+					EVEprojector.Add(list[i]);
+			}
+			projectorCount = EVEprojector.Count;
+		}
+	
+
 		void OnPreRender () 
 		{
-			if (!_depthCam) {
-				_depthCam = new GameObject("CustomDepthCamera");
-				_depthCamCamera = _depthCam.AddComponent<Camera>();
-
-				_depthCamCamera.CopyFrom(inCamera);
-				
-				_depthCamCamera.farClipPlane=incore.farCamera.farClipPlane;
-				_depthCamCamera.nearClipPlane=incore.farCamera.nearClipPlane;
-				_depthCamCamera.depthTextureMode=DepthTextureMode.None;
-
-				_depthCamCamera.transform.parent=incore.farCamera.transform;
-
-				_depthCamCamera.enabled = false;
-
-				depthShader = Core.Instance.LoadedShaders[("Scatterer/DepthTexture")];
-
-				if (incore.useGodrays)
-					GodrayDepthShader=Core.Instance.LoadedShaders[("Scatterer/GodrayDepthTexture")];
-
-			}
-
 			_depthCamCamera.CopyFrom(inCamera);
-
 			_depthCamCamera.enabled = false;
 
-			//_depthCam.camera.backgroundColor = new Color(0,0,0,0);
-			//_depthCam.camera.clearFlags = CameraClearFlags.SolidColor;
-			
-			//inCamera.camera.SetReplacementShader(depthShader,"RenderType");
-			
 			//disable rendering of the custom depth buffer when away from PQS
-
 			bool renderDepthBuffer = false;
 			if (FlightGlobals.ActiveVessel)
 			{
@@ -67,9 +67,8 @@ namespace scatterer
 					renderDepthBuffer = FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController.isActive;
 			}
 
-			renderDepthBuffer = renderDepthBuffer || incore.pqsEnabled;
+			renderDepthBuffer = renderDepthBuffer || Core.Instance.pqsEnabled;
 
-//			if (incore.pqsEnabled)   //change this to render at any PQS
 			if (renderDepthBuffer)
 			{
 				//for some reason in KSP this camera wouldn't clear the texture before rendering to it, resulting in a trail effect
@@ -77,60 +76,47 @@ namespace scatterer
 				RenderTexture rt=RenderTexture.active;
 				RenderTexture.active= _depthTex;			
 				GL.Clear(false,true,Color.white);
-				//needed only with Rfloat rendertexture (for godray)
-				//not needed for built-in depth
 							
+				//disable EVE shadow projector
+				int i=0;
+				for(i=0;i<projectorCount;i++)
+				{
+					EVEprojector[i].enabled=false;
+				}
+
 				_depthCamCamera.targetTexture = _depthTex;
 				_depthCamCamera.RenderWithShader (depthShader, "RenderType");
 							
 				depthTextureCleared = false;
 				
-				if (incore.useGodrays)
+				if (Core.Instance.useGodrays)
 				{
 					RenderTexture.active= _godrayDepthTex;			
 					GL.Clear(false,true,Color.white);
 
 					_depthCamCamera.targetTexture =  _godrayDepthTex;
-
-//					int culmask = _depthCamCamera.cullingMask;
-					_depthCamCamera.cullingMask=32768; //ignore ships, parts
-					//to avoid black godrays casting from ship
-					//render only terrain for goodrays
-									
+					_depthCamCamera.cullingMask=32768; //ignore ships, parts, to avoid black godrays casting from ship
 					_depthCamCamera.RenderWithShader (GodrayDepthShader, "RenderType");
-
-					//restore culling mask when done rendering godrays
-					//not necessary, restored automatically when copying attributes from farcamera above
-//					_depthCamCamera.cullingMask = culmask;
 				}
-				
+
+				//re-enable EVE shadow projector
+				for(i=0;i<projectorCount;i++)
+				{
+					EVEprojector[i].enabled=true;
+				}
+
+				//restore active rendertexture
 				RenderTexture.active=rt;
 			}
 		}
 		
 		
-		void OnRenderImage (RenderTexture source, RenderTexture destination){
-			//		material.SetTexture("_DepthNormal", _depthTex);
-			//		ImageEffects.BlitWithMaterial(material, source, destination);
-			//		CleanUpTextures();
-			//			RenderTexture.active = _depthCam;
-			//			Texture2D dest = new Texture2D (Screen.width, Screen.height);
-			//			_depthCam.camera.targetTexture = destination;
-			//			
-			//			
-			//			_depthCam.camera.SetReplacementShader(depthShader,"RenderType");
-			//			
-			//			
-			//			_depthCam.camera.RenderWithShader(depthShader,"RenderType");
-			
-			if (incore.depthbufferEnabled)
+		void OnRenderImage (RenderTexture source, RenderTexture destination)
+		{
+			if (Core.Instance.depthbufferEnabled)
 			{
-				//				Graphics.Blit (_depthTex, destination, viewCustomBufferShader, 0);
 				Graphics.Blit (_depthTex, destination);
-//				Graphics.Blit (_godrayDepthTex, destination);
-				
 			}
-			
 		}
 		
 		public void clearDepthTexture()
