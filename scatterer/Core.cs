@@ -19,7 +19,7 @@ namespace scatterer
 	{
 
 		private static Core instance;
-		
+
 		private Core()
 		{
 			if (instance == null)
@@ -44,6 +44,7 @@ namespace scatterer
 		}
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
+		int windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
 
 		planetsListReader scattererPlanetsListReader = new planetsListReader ();
 		List<SunFlare> customSunFlares = new List<SunFlare>();
@@ -668,7 +669,6 @@ namespace scatterer
 						customDepthBufferTexture.Create ();
 					}
 
-
 					pqsEnabled = false;
 					
 					foreach (scattererCelestialBody _cur in scattererCelestialBodies)
@@ -1073,7 +1073,9 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (0, windowRect, DrawScattererWindow, "Scatterer v0.0255: "+ guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String+"/"+guiKey2String+" toggle");
+				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0255: "
+				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
+				                               +"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -1457,12 +1459,12 @@ namespace scatterer
 							GUILayout.TextField(scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configUrl.parent.url);
 							GUILayout.EndHorizontal ();
 
-//							GUILayout.BeginHorizontal ();
-//							if (GUILayout.Button ("Map EVE clouds"))
-//							{
-//								mapEVEClouds();
-//							}
-//							GUILayout.EndHorizontal ();
+							GUILayout.BeginHorizontal ();
+							if (GUILayout.Button ("Map EVE clouds"))
+							{
+								mapEVEClouds();
+							}
+							GUILayout.EndHorizontal ();
 						}
 						else
 						{

@@ -11,7 +11,6 @@ namespace scatterer
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class ShaderReplacer : MonoBehaviour
 	{
-		static Dictionary<String, Shader> shaderDictionary = new Dictionary<String, Shader>();
 		private void Awake()
 		{
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
@@ -19,23 +18,7 @@ namespace scatterer
 				GameEvents.onGameSceneLoadRequested.Add(GameSceneLoaded);
 			}
 		}
-		
-		public static Shader GetShaderFromName(String name)
-		{
-			if (shaderDictionary.ContainsKey(name))
-			{
-				return shaderDictionary[name];
-			}
-			else
-			{
-				//Assembly assembly = Assembly.GetExecutingAssembly();
-				Shader shader = ShaderTool.GetShader2("ReplacementShaders/" +name + ".shader");
-				shaderDictionary[name] = shader;
-				return shader;
-			}
-		}
 
-//		private void Awake()
 		private void GameSceneLoaded(GameScenes scene)
 		{
 			if (scene == GameScenes.SPACECENTER || scene == GameScenes.FLIGHT)
@@ -46,7 +29,6 @@ namespace scatterer
 				{
 					ReplaceShader(mat);
 				}
-				
 			}
 		}
 		
@@ -77,48 +59,39 @@ namespace scatterer
 				//			case "KSP/Emissive/Bumped Specular":
 				//				replacementShader = GetShaderFromName("CompiledEmissiveBumpedSpecular");
 				//				break;
-			case "Terrain/PQS/PQS Main - Optimised":
-				Debug.Log("[Scatterer] replacing Terrain/PQS/PQS Main - Optimised");
-				replacementShader = GetShaderFromName("ScattererPQS");
-				Debug.Log("[Scatterer] Shader replaced");
-				break;
-			case "Scatterer/Terrain - test":
-				Debug.Log("[Scatterer] replacing Scatterer/Terrain - test");
-				replacementShader = GetShaderFromName("ScattererPQS");
-				Debug.Log("[Scatterer] Shader replaced");
-				break;
-			case "Terrain/PQS/Sphere Projection SURFACE QUAD":
-				Debug.Log("[Scatterer] replacing Terrain/PQS/Sphere Projection SURFACE QUAD");
-				replacementShader = GetShaderFromName("PQSProjectionSurfaceQuad");
-				Debug.Log("[Scatterer] Shader replaced");
-				break;
+//			case "Terrain/PQS/PQS Main - Optimised":
+//				Debug.Log("[Scatterer] replacing Terrain/PQS/PQS Main - Optimised");
+////				replacementShader = GetShaderFromName("ScattererPQS");
+//				Debug.Log("[Scatterer] Shader replaced");
+//				break;
+//			case "Scatterer/Terrain - test":
+//				Debug.Log("[Scatterer] replacing Scatterer/Terrain - test");
+//				replacementShader = GetShaderFromName("ScattererPQS");
+//				Debug.Log("[Scatterer] Shader replaced");
+//				break;
+//			case "Terrain/PQS/Sphere Projection SURFACE QUAD":
+//				Debug.Log("[Scatterer] replacing Terrain/PQS/Sphere Projection SURFACE QUAD");
+//				replacementShader = GetShaderFromName("PQSProjectionSurfaceQuad");
+//				Debug.Log("[Scatterer] Shader replaced");
+//				break;
 
 			case "EVE/Cloud":
 				Debug.Log("[Scatterer] replacing EVE/Cloud");
-				replacementShader = GetShaderFromName("SphereCloud");
-				MeshRenderer[] meshrenderers = Resources.FindObjectsOfTypeAll<MeshRenderer>();
-				foreach (MeshRenderer _mr in meshrenderers)
-				{
-					if ((_mr.material == mat) || (_mr.material.shader.name == mat.shader.name)) 
-					{
-						Debug.Log("parent of EVE/Cloud" + _mr.gameObject.name);
-						Debug.Log("parent transform" + _mr.gameObject.transform.parent.gameObject.name);
-					}
-				}
+				replacementShader = Core.Instance.LoadedShaders["Scatterer-EVE/Cloud"];
+//				MeshRenderer[] meshrenderers = Resources.FindObjectsOfTypeAll<MeshRenderer>();
+//				foreach (MeshRenderer _mr in meshrenderers)
+//				{
+//					if ((_mr.material == mat) || (_mr.material.shader.name == mat.shader.name)) 
+//					{
+//						Debug.Log("parent of EVE/Cloud" + _mr.gameObject.name);
+//						Debug.Log("parent transform" + _mr.gameObject.transform.parent.gameObject.name);
+//					}
+//				}
 				Debug.Log("[Scatterer] Shader replaced");
 				break;
 			case "Scatterer-EVE/Cloud":
 				Debug.Log("[Scatterer] replacing EVE/Cloud");
-				replacementShader = GetShaderFromName("SphereCloud");
-				meshrenderers = Resources.FindObjectsOfTypeAll<MeshRenderer>();
-				foreach (MeshRenderer _mr in meshrenderers)
-				{
-					if ((_mr.material == mat) || (_mr.material.shader.name == mat.shader.name)) 
-					{
-						Debug.Log("parent of EVE/Cloud" + _mr.gameObject.name);
-						Debug.Log("parent transform" + _mr.gameObject.transform.parent.gameObject.name);
-					}
-				}
+				replacementShader = Core.Instance.LoadedShaders["Scatterer-EVE/Cloud"];
 				Debug.Log("[Scatterer] Shader replaced");
 				break;
 
