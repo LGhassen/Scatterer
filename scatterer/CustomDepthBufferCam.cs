@@ -38,10 +38,10 @@ namespace scatterer
 			_depthCamCamera.transform.parent=Core.Instance.farCamera.transform;			
 			_depthCamCamera.enabled = false;
 			
-			depthShader = Core.Instance.LoadedShaders[("Scatterer/DepthTexture")];
+			depthShader = ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthTexture")];
 			
 			if (Core.Instance.useGodrays)
-				GodrayDepthShader=Core.Instance.LoadedShaders[("Scatterer/GodrayDepthTexture")];
+				GodrayDepthShader=ShaderReplacer.Instance.LoadedShaders[("Scatterer/GodrayDepthTexture")];
 
 
 			Projector[] list = (Projector[]) Projector.FindObjectsOfType(typeof(Projector));

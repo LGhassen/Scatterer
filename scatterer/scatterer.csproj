@@ -92,10 +92,10 @@
     <Compile Include="DataSerialization\planetshineSource.cs" />
     <Compile Include="DataSerialization\scattererCelestialBody.cs" />
     <Compile Include="DataSerialization\planetsListReader.cs" />
+    <Compile Include="shaderReplacer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />
-    <None Include="shaderReplacer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

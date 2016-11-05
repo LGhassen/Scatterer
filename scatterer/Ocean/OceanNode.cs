@@ -141,9 +141,9 @@ namespace scatterer
 			//appear to "shift around"
 
 			if (m_core.oceanPixelLights)
-				m_oceanMaterialFar = new Material (Core.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCapsPixelLights")]);
+				m_oceanMaterialFar = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCapsPixelLights")]);
 			else
-				m_oceanMaterialFar = new Material (Core.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCaps")]);
+				m_oceanMaterialFar = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCaps")]);
 
 			if (m_core.oceanSkyReflections)
 			{

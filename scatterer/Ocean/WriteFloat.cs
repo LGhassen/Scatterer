@@ -58,7 +58,7 @@ namespace scatterer
 		public WriteFloat(int w, int h)
 		{
 
-			Shader shader = Core.Instance.LoadedShaders[("EncodeFloat/WriteToFloat")];
+			Shader shader = ShaderReplacer.Instance.LoadedShaders[("EncodeFloat/WriteToFloat")];
 
 			if(shader == null)
 			{

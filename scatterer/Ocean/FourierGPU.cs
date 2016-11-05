@@ -30,7 +30,7 @@ public class FourierGPU
 			size = Mathf.NextPowerOfTwo(size);
 		}
 		
-		Shader shader = Core.Instance.LoadedShaders[("Scatterer/Fourier")];
+			Shader shader = ShaderReplacer.Instance.LoadedShaders[("Scatterer/Fourier")];
 
 		if(shader == null) Debug.Log("FourierGPU::FourierGPU - Could not find shader Math/Fourier");
 	

@@ -30,8 +30,8 @@ namespace scatterer {
 		public override void Start() {
 			base.Start();
 
-			m_initJacobiansMat = new Material(Core.Instance.LoadedShaders[ ("Proland/Ocean/InitJacobians")]);
-			m_whiteCapsPrecomputeMat = new Material(Core.Instance.LoadedShaders[("Proland/Ocean/WhiteCapsPrecompute0")]);
+			m_initJacobiansMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitJacobians")]);
+			m_whiteCapsPrecomputeMat = new Material(ShaderReplacer.Instance.LoadedShaders[("Proland/Ocean/WhiteCapsPrecompute0")]);
 			
 			
 			m_initJacobiansMat.SetTexture(ShaderProperties._Spectrum01_PROPERTY, m_spectrum01);

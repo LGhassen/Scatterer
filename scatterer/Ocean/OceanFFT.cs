@@ -147,8 +147,8 @@ namespace scatterer {
 		{
 			base.Start();
 		
-			m_initSpectrumMat = new Material(Core.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
-			m_initDisplacementMat = new Material(Core.Instance.LoadedShaders[ ("Proland/Ocean/InitDisplacement")]);
+			m_initSpectrumMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
+			m_initDisplacementMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitDisplacement")]);
 
 			m_fourierGridSize = Core.Instance.m_fourierGridSize;
 			

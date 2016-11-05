@@ -158,7 +158,7 @@ public class EncodeFloat
 //
 			if(m_decodeToFloat == null)
 			{
-				m_decodeToFloat = new Material(Core.Instance.LoadedShaders[("EncodeFloat/DecodeToFloat")]);
+				m_decodeToFloat = new Material(ShaderReplacer.Instance.LoadedShaders[("EncodeFloat/DecodeToFloat")]);
 
 				if(m_decodeToFloat == null)
 				{

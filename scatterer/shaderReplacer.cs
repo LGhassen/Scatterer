@@ -1,142 +1,202 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
+using System.IO;
+using System.Reflection;
+using System.Runtime;
+using KSP;
+using KSP.IO;
 using UnityEngine;
-//using Utils;
+
 
 namespace scatterer
 {
-	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
+	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
 	public class ShaderReplacer : MonoBehaviour
 	{
-		private void Awake()
+		private static ShaderReplacer instance;
+		public Dictionary<string, Shader> LoadedShaders = new Dictionary<string, Shader>();
+		string path;
+		
+		private ShaderReplacer()
 		{
-			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			if (instance == null)
 			{
-				GameEvents.onGameSceneLoadRequested.Add(GameSceneLoaded);
+				instance = this;
+				Debug.Log("[Scatterer] ShaderReplacer instance created");
 			}
-		}
-
-		private void GameSceneLoaded(GameScenes scene)
-		{
-			if (scene == GameScenes.SPACECENTER || scene == GameScenes.FLIGHT)
-//			if (HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.FLIGHT)
+			else
 			{
-				Material[] materials = Resources.FindObjectsOfTypeAll<Material>();
-				foreach (Material mat in materials)
-				{
-					ReplaceShader(mat);
-				}
+				//destroy any duplicate instances that may be created by a duplicate install
+				Debug.Log("[Scatterer] Destroying duplicate instance, check your install for duplicate mod folders");
+				UnityEngine.Object.Destroy (this);
 			}
 		}
 		
-		public static void ReplaceShader(Material mat)
+		public static ShaderReplacer Instance
+		{
+			get 
+			{
+				return instance;
+			}
+		}
+		
+
+		private void Awake()
+		{
+			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
+			UriBuilder uri = new UriBuilder (codeBase);
+			path = Uri.UnescapeDataString (uri.Path);
+			path = Path.GetDirectoryName (path);
+
+			LoadAssetBundle ();
+		}
+
+		public void LoadAssetBundle()
+		{
+			string shaderspath;
+			
+			if (Application.platform == RuntimePlatform.WindowsPlayer)
+				shaderspath = path + "/shaders/scatterershaders-windows";
+			else if (Application.platform == RuntimePlatform.LinuxPlayer)
+				shaderspath = path+"/shaders/scatterershaders-linux";
+			else
+				shaderspath = path+"/shaders/scatterershaders-macosx";
+			
+			using (WWW www = new WWW("file://"+shaderspath))
+			{
+				AssetBundle bundle = www.assetBundle;
+				Shader[] shaders = bundle.LoadAllAssets<Shader>();
+				
+				foreach (Shader shader in shaders)
+				{
+					//Debug.Log ("[Scatterer]"+shader.name+" loaded. Supported?"+shader.isSupported.ToString());
+					LoadedShaders.Add(shader.name, shader);
+				}
+				
+				bundle.Unload(false); // unload the raw asset bundle
+				www.Dispose();
+			}
+		}
+
+		public void replaceEVEshaders()
+		{
+			//reflection get EVE shader dictionary
+			Debug.Log ("[Scatterer] Replacing EVE shaders");
+			
+			//find EVE shaderloader
+			Type EVEshaderLoaderType = getType ("ShaderLoader.ShaderLoaderClass");
+
+			if (EVEshaderLoaderType == null)
+			{
+				Debug.Log("[Scatterer] Eve shaderloader type not found");
+				return;
+			}
+			else
+			{
+				Debug.Log("[Scatterer] Eve shaderloader type found");
+			}
+			
+			Debug.Log("[Scatterer] Eve shaderloader version: " + EVEshaderLoaderType.Assembly.GetName().ToString());
+			
+			Dictionary<string, Shader> EVEshaderDictionary;
+			
+			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
+				BindingFlags.Instance | BindingFlags.Static;
+			
+			try
+			{
+				//				EVEinstance = EVEType.GetField("Instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+				EVEshaderDictionary = EVEshaderLoaderType.GetField("shaderDictionary", flags).GetValue(null) as Dictionary<string, Shader> ;
+			}
+			catch (Exception)
+			{
+				Debug.Log("[Scatterer] No EVE shader dictionary found");
+				return;
+			}
+			if (EVEshaderDictionary == null)
+			{
+				Debug.Log("[Scatterer] Failed grabbing EVE shader dictionary");
+				return;
+			}
+			else
+			{
+				Debug.Log("[Scatterer] Successfully grabbed EVE shader dictionary");
+			}
+
+			if (EVEshaderDictionary.ContainsKey("EVE/Cloud"))
+			{
+				EVEshaderDictionary["EVE/Cloud"] = LoadedShaders["Scatterer-EVE/Cloud"];
+			}
+			else
+			{
+				List<Material> cloudsList = new List<Material>();
+				EVEshaderDictionary.Add("EVE/Cloud",LoadedShaders["Scatterer-EVE/Cloud"]);
+			}
+
+			Debug.Log("[Scatterer] replaced EVE/Cloud in EVE shader dictionary");
+
+			if (EVEshaderDictionary.ContainsKey("EVE/CloudVolumeParticle"))
+			{
+				EVEshaderDictionary["EVE/CloudVolumeParticle"] = LoadedShaders["Scatterer-EVE/CloudVolumeParticle"];
+			}
+			else
+			{
+				List<Material> cloudsList = new List<Material>();
+				EVEshaderDictionary.Add("EVE/CloudVolumeParticle",LoadedShaders["Scatterer-EVE/CloudVolumeParticle"]);
+			}
+
+			Debug.Log("[Scatterer] replaced EVE/CloudVolumeParticle in EVE shader dictionary");
+
+			Material[] materials = Resources.FindObjectsOfTypeAll<Material>();
+			foreach (Material mat in materials)
+			{
+				ReplaceEVEShader(mat);
+			}
+		}
+
+		private void ReplaceEVEShader(Material mat)
 		{
 			String name = mat.shader.name;
 			Shader replacementShader = null;
 			switch (name)
 			{
-				//			case "KSP/Diffuse":
-				//				replacementShader = GetShaderFromName("CompiledDiffuse");
-				//				break;
-				//			case "KSP/Unlit":
-				//				replacementShader = GetShaderFromName("CompiledUnlit");
-				//				break;
-				//			case "KSP/Specular":
-				//				replacementShader = GetShaderFromName("CompiledSpecular");
-				//				break;
-				//			case "KSP/Bumped":
-				//				replacementShader = GetShaderFromName("CompiledBumped");
-				//				break;
-				//			case "KSP/Bumped Specular":
-				//				replacementShader = GetShaderFromName("CompiledBumpedSpecular");
-				//				break;
-				//			case "KSP/Emissive/Specular":
-				//				replacementShader = GetShaderFromName("CompiledEmissiveSpecular");
-				//				break;
-				//			case "KSP/Emissive/Bumped Specular":
-				//				replacementShader = GetShaderFromName("CompiledEmissiveBumpedSpecular");
-				//				break;
-//			case "Terrain/PQS/PQS Main - Optimised":
-//				Debug.Log("[Scatterer] replacing Terrain/PQS/PQS Main - Optimised");
-////				replacementShader = GetShaderFromName("ScattererPQS");
-//				Debug.Log("[Scatterer] Shader replaced");
-//				break;
-//			case "Scatterer/Terrain - test":
-//				Debug.Log("[Scatterer] replacing Scatterer/Terrain - test");
-//				replacementShader = GetShaderFromName("ScattererPQS");
-//				Debug.Log("[Scatterer] Shader replaced");
-//				break;
-//			case "Terrain/PQS/Sphere Projection SURFACE QUAD":
-//				Debug.Log("[Scatterer] replacing Terrain/PQS/Sphere Projection SURFACE QUAD");
-//				replacementShader = GetShaderFromName("PQSProjectionSurfaceQuad");
-//				Debug.Log("[Scatterer] Shader replaced");
-//				break;
-
 			case "EVE/Cloud":
 				Debug.Log("[Scatterer] replacing EVE/Cloud");
-				replacementShader = Core.Instance.LoadedShaders["Scatterer-EVE/Cloud"];
-//				MeshRenderer[] meshrenderers = Resources.FindObjectsOfTypeAll<MeshRenderer>();
-//				foreach (MeshRenderer _mr in meshrenderers)
-//				{
-//					if ((_mr.material == mat) || (_mr.material.shader.name == mat.shader.name)) 
-//					{
-//						Debug.Log("parent of EVE/Cloud" + _mr.gameObject.name);
-//						Debug.Log("parent transform" + _mr.gameObject.transform.parent.gameObject.name);
-//					}
-//				}
+				replacementShader = LoadedShaders["Scatterer-EVE/Cloud"];
 				Debug.Log("[Scatterer] Shader replaced");
 				break;
-			case "Scatterer-EVE/Cloud":
-				Debug.Log("[Scatterer] replacing EVE/Cloud");
-				replacementShader = Core.Instance.LoadedShaders["Scatterer-EVE/Cloud"];
+			case "EVE/CloudVolumeParticle":
+				Debug.Log("[Scatterer] replacing EVE/CloudVolumeParticle");
+				replacementShader = LoadedShaders["Scatterer-EVE/CloudVolumeParticle"];
 				Debug.Log("[Scatterer] Shader replaced");
 				break;
-
-//			case "EVE/CloudVolumeParticle":
-//				Debug.Log("[Scatterer] EVE/CloudVolumeParticle");
-//				replacementShader = GetShaderFromName("CloudVolumeParticle");
-//				Debug.Log("[Scatterer] Shader replaced");
-//				break;
-
-
-//			case "Terrain/PQS/PQS Main Shader":
-//				replacementShader = GetShaderFromName("CompiledPQSMainShader");
-//				break;
-//			case "Terrain/PQS/Ocean Surface Quad":
-//				replacementShader = GetShaderFromName("CompiledPQSOceanSurfaceQuad");
-//				break;
-//			case "Terrain/PQS/Ocean Surface Quad (Fallback)":
-//				replacementShader = GetShaderFromName("CompiledPQSOceanSurfaceQuadFallback");
-//				break;
-//			case "Terrain/PQS/Sphere Projection SURFACE QUAD (AP) ":
-//				replacementShader = GetShaderFromName("CompiledPQSProjectionAerialQuadRelative");
-//				break;
-//			case "Terrain/PQS/Sphere Projection SURFACE QUAD (Fallback) ":
-//				replacementShader = GetShaderFromName("CompiledPQSProjectionFallback");
-//				break;
-//			case "Terrain/PQS/Sphere Projection SURFACE QUAD":
-//				replacementShader = GetShaderFromName("CompiledPQSProjectionSurfaceQuad");
-//				break;
-//			case "Terrain/Scaled Planet (Simple)": 
-//				replacementShader = GetShaderFromName("CompiledScaledPlanetSimple");
-//				break;
-//			case "Terrain/Scaled Planet (RimAerial)": 
-//				replacementShader = GetShaderFromName("CompiledScaledPlanetRimAerial");
-//				break;
-				//			case "Unlit/Transparent":	
-				//				replacementShader = GetShaderFromName("CompiledUnlitAlpha");
-				//				break;
 			default:
 				return;
-				
 			}
 			if (replacementShader != null)
 			{
 				mat.shader = replacementShader;
 			}
+		}
+
+		internal static Type getType(string name)
+		{
+			Type type = null;
+			AssemblyLoader.loadedAssemblies.TypeOperation(t =>
+			{
+				if (t.FullName == name)
+					type = t;
+			}
+			);
+			
+			if (type != null)
+			{
+				return type;
+			}
+			return null;
 		}
 	}
 }
