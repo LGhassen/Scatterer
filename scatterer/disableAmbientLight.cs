@@ -16,9 +16,8 @@ namespace scatterer
 
 	public class disableAmbientLight : MonoBehaviour
 	{
-//		Color ambientLight;
-
-		float ambientIntensity=0f;
+		Color ambientLight;
+		Color originalAmbientLight;
 
 		Light[] lights;
 		GameObject sunLight,scaledspaceSunLight;
@@ -36,15 +35,18 @@ namespace scatterer
 				if (_light.gameObject.name == "Scaledspace SunLight")
 				{
 					scaledspaceSunLight=_light.gameObject;
-//					Debug.Log("[Scatterer] Found scaled sunlight");
+					Debug.Log("[Scatterer] disableAmbientLight: Found scaled sunlight");
 				}
 				
 				if (_light.gameObject.name == "SunLight")
 				{
 					sunLight=_light.gameObject;
-//					Debug.Log("[Scatterer] Found sunlight");
+					Debug.Log("[Scatterer] disableAmbientLight: Found sunlight");
 				}				
 			}
+
+			originalAmbientLight = RenderSettings.ambientLight;
+			ambientLight = Color.black;
 
 			_scaledspaceSunLight = scaledspaceSunLight.GetComponent<Light> ();
 			originalScaledSunlightIntensity = _scaledspaceSunLight.intensity;
@@ -53,10 +55,9 @@ namespace scatterer
 
 		public void OnPreRender()
 		{
-			ambientIntensity = RenderSettings.ambientIntensity;
-			RenderSettings.ambientIntensity = 0f;
+			Debug.Log ("[Scatterer] disableAmbientLight: on prerender");
+			RenderSettings.ambientLight = ambientLight;
 			_scaledspaceSunLight.intensity=0.95f;
-
 		}
 
 		public void OnPostRender()
@@ -66,7 +67,7 @@ namespace scatterer
 
 		public void restoreLight()
 		{
-			RenderSettings.ambientIntensity = ambientIntensity;
+			RenderSettings.ambientLight = originalAmbientLight;
 			_scaledspaceSunLight.intensity = originalScaledSunlightIntensity;
 		}
 	}
