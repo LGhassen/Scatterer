@@ -55,7 +55,6 @@ namespace scatterer
 
 		public void OnPreRender()
 		{
-			Debug.Log ("[Scatterer] disableAmbientLight: on prerender");
 			RenderSettings.ambientLight = ambientLight;
 			_scaledspaceSunLight.intensity=0.95f;
 		}

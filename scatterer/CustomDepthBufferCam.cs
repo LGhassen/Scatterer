@@ -44,6 +44,12 @@ namespace scatterer
 				GodrayDepthShader=ShaderReplacer.Instance.LoadedShaders[("Scatterer/GodrayDepthTexture")];
 
 
+			mapEVEshadowProjectors ();
+		}
+	
+		void mapEVEshadowProjectors()
+		{
+			EVEprojector.Clear ();
 			Projector[] list = (Projector[]) Projector.FindObjectsOfType(typeof(Projector));
 			for(int i=0;i<list.Length;i++)
 			{
@@ -52,7 +58,6 @@ namespace scatterer
 			}
 			projectorCount = EVEprojector.Count;
 		}
-	
 
 		void OnPreRender () 
 		{
@@ -79,9 +84,17 @@ namespace scatterer
 							
 				//disable EVE shadow projector
 				int i=0;
-				for(i=0;i<projectorCount;i++)
+				try
 				{
-					EVEprojector[i].enabled=false;
+					for(i=0;i<projectorCount;i++)
+					{
+						EVEprojector[i].enabled=false;
+					}
+				}
+				catch(Exception)
+				{
+					Debug.Log("[Scatterer] Custom depth buffer: null EVE shadow projectors, remapping...");
+					mapEVEshadowProjectors();
 				}
 
 				_depthCamCamera.targetTexture = _depthTex;

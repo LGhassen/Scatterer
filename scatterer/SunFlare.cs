@@ -162,7 +162,7 @@ namespace scatterer
 			sunglareMaterial.SetMatrix ("ghost3Settings1", ghost3Settings1);
 			sunglareMaterial.SetMatrix ("ghost3Settings2", ghost3Settings2);
 
-			Debug.Log ("[Scatterer] added custom sun flare");
+			Debug.Log ("[Scatterer] Added custom sun flare for "+sourceName);
 
 		}
 		
@@ -292,7 +292,7 @@ namespace scatterer
 			{
 				if (_cn.TryGetNode(sourceName, ref cnToLoad))
 				{
-					Debug.Log("[Scatterer] sunflare config found for "+sourceName);
+					Debug.Log("[Scatterer] Sunflare config found for "+sourceName);
 					break;
 				}
 			}	

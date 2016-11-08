@@ -611,7 +611,7 @@ namespace scatterer
 				if (_url.config.TryGetNode(m_manager.parentCelestialBody.name,ref cnToLoad))
 				{
 					configUrl = _url;
-					Debug.Log("[Scatterer] ocean config found for: "+m_manager.parentCelestialBody.name);
+					Debug.Log("[Scatterer] Ocean config found for: "+m_manager.parentCelestialBody.name);
 					break;
 				}
 			}

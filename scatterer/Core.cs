@@ -227,6 +227,7 @@ namespace scatterer
 		float rimBlend = 20f;
 		float rimpower = 600f;
 		float cloudColorMultiplier=1f;
+		float volumetricsColorMultiplier=1f;
 		float cloudScatteringMultiplier=1f;
 		float cloudExtinctionHeightMultiplier=1f;
 		float mieG = 0.85f;
@@ -625,15 +626,19 @@ namespace scatterer
 						//string sunFlarePath=path + "/sunflare";
 						foreach (string sunflareBody in sunflaresList)
 						{
-//							int index = Mathf.Max(s.LastIndexOf('\\'), s.LastIndexOf('/'))+1;
-//							string name = s.Remove(0,index);
-
-							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
-							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
-							customSunFlare.sourceName=sunflareBody;
-							customSunFlare.start ();
-							customSunFlares.Add(customSunFlare);
-							Debug.Log("Added custom sunflare for "+name);
+							try
+							{
+								SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
+								customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
+								customSunFlare.sourceName=sunflareBody;
+								customSunFlare.start ();
+								customSunFlares.Add(customSunFlare);
+							}
+							catch (Exception stupid)
+							{
+								Debug.Log("[Scatterer] Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
+								continue;
+							}
 						}
 
 						customSunFlareAdded=true;
@@ -1058,7 +1063,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0256: "
+				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0270 preview: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
@@ -1108,7 +1113,7 @@ namespace scatterer
 					integrateWithEVEClouds = GUILayout.Toggle(integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 
 					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds");
-					GUILayout.Label(String.Format ("(improves terminators, causes issues in the transition)"));
+					GUILayout.Label(String.Format ("(old option to shade EVE clouds from orbit)"));
 					fullLensFlareReplacement=GUILayout.Toggle(fullLensFlareReplacement, "Lens flare shader");
 					useEclipses = GUILayout.Toggle(useEclipses, "Eclipses (WIP, sky/orbit only for now)");
 					useGodrays = GUILayout.Toggle(useGodrays, "Godrays (early WIP)");
@@ -1348,6 +1353,7 @@ namespace scatterer
 								
 								
 							GUIfloat("Cloud Color Multiplier", ref cloudColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudColorMultiplier);
+							GUIfloat("Volumetrics Color Multiplier", ref volumetricsColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsColorMultiplier);
 							GUIfloat("Cloud Scattering Multiplier", ref cloudScatteringMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudScatteringMultiplier);
 							GUIfloat("Cloud Extinction Height Multiplier", ref cloudExtinctionHeightMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudExtinctionHeightMultiplier);
 
@@ -1452,6 +1458,14 @@ namespace scatterer
 							if (GUILayout.Button ("Map EVE clouds"))
 							{
 								mapEVEClouds();
+								foreach (scattererCelestialBody _cel in scattererCelestialBodies)
+								{
+									if (_cel.active)
+									{
+										if (!_cel.m_manager.m_skyNode.inScaledSpace)
+											_cel.m_manager.m_skyNode.mapEVEvolumetrics();
+									}
+								}
 							}
 							GUILayout.EndHorizontal ();
 						}
@@ -1690,6 +1704,7 @@ namespace scatterer
 			viewdirOffset = selected.viewdirOffset;
 
 			cloudColorMultiplier = skyNode.cloudColorMultiplier;
+			volumetricsColorMultiplier = skyNode.volumetricsColorMultiplier;
 			cloudScatteringMultiplier = skyNode.cloudScatteringMultiplier;
 			cloudExtinctionHeightMultiplier = skyNode.cloudExtinctionHeightMultiplier;
 		}
@@ -1990,7 +2005,7 @@ namespace scatterer
 		}
 
 		//map EVE clouds to planet names
-		void mapEVEClouds()
+		public void mapEVEClouds()
 		{
 			Debug.Log ("[Scatterer] mapping EVE clouds");
 			EVEClouds.Clear();
@@ -2042,113 +2057,44 @@ namespace scatterer
 
 			foreach (object _obj in objectList)
 			{
+				String body = _obj.GetType().GetField("body", flags).GetValue(_obj) as String;
+
+				if (EVECloudObjects.ContainsKey(body))
+				{
+					EVECloudObjects[body].Add(_obj);
+				}
+				else
+				{
+					List<object> objectsList = new List<object>();
+					objectsList.Add(_obj);
+					EVECloudObjects.Add(body,objectsList);
+				}
+
 				object cloud2dObj = _obj.GetType().GetField("layer2D", flags).GetValue(_obj) as object;
+				if (cloud2dObj==null)
+				{
+					Debug.Log("[Scatterer] layer2d not found for layer on planet :"+body);
+					continue;
+				}
 				GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
 				if (cloudmesh==null)
 				{
-					Debug.Log("[scatterer] cloudmesh null");
+					Debug.Log("[Scatterer] cloudmesh null");
 					return;
 				}
 
-				string planetName=cloudmesh.transform.parent.gameObject.name; 
-				if (EVEClouds.ContainsKey(planetName))
+				if (EVEClouds.ContainsKey(body))
 				{
-					EVEClouds[planetName].Add(cloudmesh.GetComponent < MeshRenderer > ().material);
-					EVECloudObjects[planetName].Add(_obj);
+					EVEClouds[body].Add(cloudmesh.GetComponent < MeshRenderer > ().material);
 				}
 				else
 				{
 					List<Material> cloudsList = new List<Material>();
 					cloudsList.Add(cloudmesh.GetComponent < MeshRenderer > ().material);
-					EVEClouds.Add(planetName,cloudsList);
-
-					List<object> objectsList = new List<object>();
-					objectsList.Add(_obj);
-					EVECloudObjects.Add(planetName,objectsList);
+					EVEClouds.Add(body,cloudsList);
 				}
-				Debug.Log("[Scatterer] Detected EVE cloud layer for planet: "+planetName);
+				Debug.Log("[Scatterer] Detected EVE 2d cloud layer for planet: "+body);
 			}
-
-//			Material[] mats = Resources.FindObjectsOfTypeAll<Material>();
-//			Debug.Log ("mats.Length " + mats.Length);
-//			foreach (Material _mr in mats)
-//			{
-//				if ((_mr.shader.name == "EVE/CloudVolumeParticle")||(_mr.shader.name == "Scatterer-EVE/CloudVolumeParticle"))
-//				{
-//					Debug.Log(_mr.shader.name);
-//				}
-//			}
-
-//			MeshRenderer[] MeshRenderers = Resources.FindObjectsOfTypeAll<MeshRenderer>();
-//			Debug.Log ("MeshRenderers.Length " + MeshRenderers.Length);
-//			foreach (MeshRenderer _mr in MeshRenderers)
-//			{
-//				if ((_mr.material.shader.name == "EVE/CloudVolumeParticle")||(_mr.material.shader.name == "Scatterer-EVE/CloudVolumeParticle"))
-//				{
-//					Debug.Log(_mr.material.shader.name);
-//				}
-//			}
-
-//			EVEClouds.Clear();
-//			CelestialBody KerbinCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == "Kerbin");
-//			GameObject[] GOs = (GameObject[])KerbinCelestialBody.transform.GetComponentsInChildren<GameObject> ();
-//
-//			foreach (GameObject _GO in GOs)
-//			{
-//				Debug.Log("GameObject: "+_GO.name);
-//			}
-//
-//			MeshRenderer[] MRs = (MeshRenderer[])KerbinCelestialBody.transform.GetComponentsInChildren<MeshRenderer> ();
-//
-//			foreach (MeshRenderer _mr in MRs)
-//			{
-//				if ((_mr.material.shader.name == "EVE/Cloud")||(_mr.material.shader.name == "Scatterer-EVE/Cloud"))
-//				{
-//					string planetName=_mr.gameObject.transform.parent.gameObject.name;
-//					
-//					if (EVEClouds.ContainsKey(planetName))
-//					{
-//						EVEClouds[planetName].Add(_mr.material);
-//					}
-//					else
-//					{
-//						List<Material> cloudsList = new List<Material>();
-//						cloudsList.Add(_mr.material);
-//						EVEClouds.Add(planetName,cloudsList);
-//					}
-//					Debug.Log("[Scatterer] Detected EVE cloud layer for planet: "+planetName);
-//				}
-//			}
-
-//			Transform[] TRs = (Transform[])KerbinCelestialBody.transform.GetComponentsInChildren<Transform> ();
-//
-//			foreach (Transform _TR in TRs)
-//			{
-//				Debug.Log("Transform parent: "+_TR.parent.name);
-//			}
-
-//			foreach (MeshRenderer _mr in meshrenderers)
-//			{
-//				if ((_mr.material.shader.name == "EVE/CloudVolumeParticle"))//||(_mr.material.shader.name == "Scatterer-EVE/Cloud"))
-//				{
-//					string planetName=_mr.gameObject.transform.parent.gameObject.name;
-//
-//					Debug.Log("[Scatterer] Detected EVE VOLUME layer for planet: "+planetName
-//					          +" material id: "+_mr.material.GetInstanceID()+" parent gameobject id: "+_mr.gameObject.transform.parent.gameObject.GetInstanceID());
-//				}
-//			}
-//
-//			Material[] Materials = Resources.FindObjectsOfTypeAll<Material>();
-//			foreach (Material _mat in Materials)
-//			{
-//				if ((_mat.shader.name == "EVE/CloudVolumeParticle"))//||(_mr.material.shader.name == "Scatterer-EVE/Cloud"))
-//				{
-//					Debug.Log("[Scatterer] Detected EVE VOLUME layer Material: "+_mat.name+" material id: "+_mat.GetInstanceID());
-//				}
-//			}
-
-		}
-
-
+		}		
 	}
 }

@@ -136,7 +136,7 @@ namespace scatterer
 				EVEshaderDictionary.Add("EVE/Cloud",LoadedShaders["Scatterer-EVE/Cloud"]);
 			}
 
-			Debug.Log("[Scatterer] replaced EVE/Cloud in EVE shader dictionary");
+			Debug.Log("[Scatterer] Replaced EVE/Cloud in EVE shader dictionary");
 
 			if (EVEshaderDictionary.ContainsKey("EVE/CloudVolumeParticle"))
 			{

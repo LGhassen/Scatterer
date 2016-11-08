@@ -114,6 +114,8 @@ namespace scatterer
 		[Persistent]
 		public float cloudColorMultiplier=1f;
 		[Persistent]
+		public float volumetricsColorMultiplier = 1f;
+		[Persistent]
 		public float cloudScatteringMultiplier=1f;
 		[Persistent]
 		public float cloudExtinctionHeightMultiplier=1f;
@@ -538,52 +540,61 @@ namespace scatterer
 			//maybe refactor?
 			if ((Core.Instance.integrateWithEVEClouds) && (Core.Instance.EVEClouds.ContainsKey(parentCelestialBody.name)))
 			{
-				//2d clouds
-				int size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
-				for (int i=0;i<size;i++)
+				try
 				{
-					//keep these for now or something breaks in the extinction
-					InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-					SetUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-					
-					InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-					UpdatePostProcessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-					
-					Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
-						("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
-
-					Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-						("cloudColorMultiplier", cloudColorMultiplier);
-					Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-						("cloudScatteringMultiplier", cloudScatteringMultiplier);
-					Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-						("cloudExtinctionHeightMultiplier", cloudExtinctionHeightMultiplier);
-				}
-
-				//volumetrics
-				//if in local mode and mapping is done
-				if (!inScaledSpace && !mapVolumetrics)
-				{
-					size = EVEvolumetrics.Count;
+					//2d clouds
+					int size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
 					for (int i=0;i<size;i++)
 					{
 						//keep these for now or something breaks in the extinction
-						InitUniforms(EVEvolumetrics[i]);
-						SetUniforms(EVEvolumetrics[i]);
+						InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+						SetUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 						
-						InitPostprocessMaterial(EVEvolumetrics[i]);
-						UpdatePostProcessMaterial(EVEvolumetrics[i]);
+						InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+						UpdatePostProcessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 						
-						EVEvolumetrics[i].SetVector
+						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
 							("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
 						
-						EVEvolumetrics[i].SetFloat
+						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
 							("cloudColorMultiplier", cloudColorMultiplier);
-						EVEvolumetrics[i].SetFloat
+						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
 							("cloudScatteringMultiplier", cloudScatteringMultiplier);
-						EVEvolumetrics[i].SetFloat
+						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
 							("cloudExtinctionHeightMultiplier", cloudExtinctionHeightMultiplier);
 					}
+					
+					//volumetrics
+					//if in local mode and mapping is done
+					if (!inScaledSpace && !mapVolumetrics)
+					{
+						size = EVEvolumetrics.Count;
+						for (int i=0;i<size;i++)
+						{
+							//keep these for now or something breaks in the extinction
+							InitUniforms(EVEvolumetrics[i]);
+							SetUniforms(EVEvolumetrics[i]);
+							
+							InitPostprocessMaterial(EVEvolumetrics[i]);
+							UpdatePostProcessMaterial(EVEvolumetrics[i]);
+							
+							EVEvolumetrics[i].SetVector
+								("_PlanetWorldPos", m_manager.parentCelestialBody.transform.position);
+							
+							EVEvolumetrics[i].SetFloat
+								("cloudColorMultiplier", volumetricsColorMultiplier);
+							EVEvolumetrics[i].SetFloat
+								("cloudScatteringMultiplier", cloudScatteringMultiplier);
+							EVEvolumetrics[i].SetFloat
+								("cloudExtinctionHeightMultiplier", cloudExtinctionHeightMultiplier);
+						}
+					}
+				}
+				catch (Exception)
+				{
+					Debug.Log("[Scatterer] Null EVE clouds, remapping...");
+					Core.Instance.mapEVEClouds();
+					mapVolumetrics=true;
 				}
 			}
 			
@@ -621,15 +632,15 @@ namespace scatterer
 			//then do the mapping
 			if (mapVolumetrics)
 			{
-				if (waitCounter<6)
+				if (waitCounter<10)
 				{
 					waitCounter++;
 				}
 				else
 				{
-					mapEVEvolumetrics();
 					mapVolumetrics=false;
 					waitCounter=0;
+					mapEVEvolumetrics(); //do this last so if it fails we just ignore it
 				}
 			}
 
@@ -1518,7 +1529,7 @@ namespace scatterer
 				if (_url.config.TryGetNode(parentCelestialBody.name,ref cnToLoad))
 				{
 					configUrl = _url;
-					Debug.Log("[Scatterer] config found for: "+parentCelestialBody.name);
+					Debug.Log("[Scatterer] Atmosphere config found for: "+parentCelestialBody.name);
 					break;
 				}
 			}
@@ -1659,30 +1670,30 @@ namespace scatterer
 		{
 			Debug.Log ("[Scatterer] Mapping EVE volumetrics for planet: "+parentCelestialBody.name);
 
+			EVEvolumetrics.Clear ();
+
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
 
-			Debug.Log (Core.Instance.EVECloudObjects.Count.ToString ());
-			Debug.Log (Core.Instance.EVECloudObjects[parentCelestialBody.name].Count.ToString ());
-			Debug.Log (parentCelestialBody.name);
 			List<object> cloudObjs = Core.Instance.EVECloudObjects[parentCelestialBody.name];
 
-			try
+			foreach (object _obj in cloudObjs)
 			{
-				foreach (object _obj in cloudObjs)
+				try
 				{
 					object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags).GetValue(_obj) as object;
 					object layerVolume = cloudsPQS.GetType().GetField("layerVolume", flags).GetValue(cloudsPQS) as object;
 					Material ParticleMaterial = layerVolume.GetType().GetField("ParticleMaterial", flags).GetValue(layerVolume) as Material;
 					EVEvolumetrics.Add (ParticleMaterial);
 				}
+//				catch (Exception stupid)
+				catch (Exception)
+				{
+//					Debug.Log("[Scatterer] Null volumetric clouds on planet: "+parentCelestialBody.name + stupid.ToString());
+					continue;
+				}
 			}
-			catch (Exception)
-			{
-				Debug.Log("[Scatterer] Null volumetric clouds on planet: "+parentCelestialBody.name);
-				return;
-			}
-			
+						
 			Debug.Log("[Scatterer] Detected "+EVEvolumetrics.Count+" EVE volumetric layers for planet: "+parentCelestialBody.name);
 		}
 	}
