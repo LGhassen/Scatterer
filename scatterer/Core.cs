@@ -157,6 +157,10 @@ namespace scatterer
 		public bool
 			useEclipses = true;
 
+		[Persistent]
+		public bool
+			useRingShadows = true;
+
 //		[Persistent]
 		public bool
 			usePlanetShine = false;
@@ -526,6 +530,11 @@ namespace scatterer
 						{
 							ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3003;
 							Debug.Log("[Scatterer] Found rings for "+_cb.name);
+
+//							ringObject.GetComponent < MeshRenderer > ().material.shader=
+//													ShaderReplacer.Instance.LoadedShaders["Scatterer/Rings"];
+//
+//							Debug.Log("[Scatterer] Replaced ring shader for "+_cb.name);
 						}
 					}
 
@@ -1116,6 +1125,7 @@ namespace scatterer
 					GUILayout.Label(String.Format ("(old option to shade EVE clouds from orbit)"));
 					fullLensFlareReplacement=GUILayout.Toggle(fullLensFlareReplacement, "Lens flare shader");
 					useEclipses = GUILayout.Toggle(useEclipses, "Eclipses (WIP, sky/orbit only for now)");
+					useRingShadows = GUILayout.Toggle(useRingShadows, "Kopernicus ring shadows");
 					useGodrays = GUILayout.Toggle(useGodrays, "Godrays (early WIP)");
 					
 					GUILayout.BeginHorizontal ();
@@ -1556,8 +1566,7 @@ namespace scatterer
 							GUILayout.TextField(scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode().configUrl.parent.url);
 							GUILayout.EndHorizontal ();
 						}
-						
-						
+
 						GUILayout.BeginHorizontal ();
 						
 						if (GUILayout.Button ("Toggle WireFrame"))

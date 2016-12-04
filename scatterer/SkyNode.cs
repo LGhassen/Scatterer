@@ -276,6 +276,21 @@ namespace scatterer
 				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_ON");
 				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_OFF");
 			}
+
+			if (Core.Instance.useRingShadows)
+			{
+				m_skyMaterialScaled.EnableKeyword ("RINGSHADOWS_ON");
+				m_skyMaterialScaled.DisableKeyword ("RINGSHADOWS_OFF");
+				m_skyMaterialLocal.EnableKeyword ("RINGSHADOWS_ON");
+				m_skyMaterialLocal.DisableKeyword ("RINGSHADOWS_OFF");
+			}
+			else
+			{
+				m_skyMaterialScaled.DisableKeyword ("RINGSHADOWS_ON");
+				m_skyMaterialScaled.EnableKeyword ("RINGSHADOWS_OFF");
+				m_skyMaterialLocal.DisableKeyword ("RINGSHADOWS_ON");
+				m_skyMaterialLocal.EnableKeyword ("RINGSHADOWS_OFF");
+			}
 			
 			if (Core.Instance.usePlanetShine)
 			{
@@ -1298,7 +1313,7 @@ namespace scatterer
 				
 				Vector3 sunPosRelPlanet=Vector3.zero;
 				if (scaledMode)
-					sunPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor));
+					sunPosRelPlanet = Vector3.Scale(ScaledSpace.LocalToScaledSpace(m_manager.sunCelestialBody.transform.position),new Vector3(scaleFactor, scaleFactor,scaleFactor)); //wtf?
 				else
 					sunPosRelPlanet = m_manager.sunCelestialBody.transform.position;
 				Shader.SetGlobalVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
