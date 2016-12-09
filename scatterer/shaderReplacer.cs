@@ -64,7 +64,9 @@ namespace scatterer
 				shaderspath = path+"/shaders/scatterershaders-linux";
 			else
 				shaderspath = path+"/shaders/scatterershaders-macosx";
-			
+
+			LoadedShaders.Clear ();
+
 			using (WWW www = new WWW("file://"+shaderspath))
 			{
 				AssetBundle bundle = www.assetBundle;

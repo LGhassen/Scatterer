@@ -102,7 +102,12 @@ namespace scatterer
 		CelestialBody parentCelestialBody;
 		Transform ParentPlanetTransform;
 		
-		
+		GameObject ringObject;
+		float ringInnerRadius, ringOuterRadius;
+		Texture2D ringTexture;
+
+		bool hasRingObjectAndShadowActivated = false;
+
 		bool stocksunglareEnabled = true;
 				
 		//atmosphere properties
@@ -276,21 +281,6 @@ namespace scatterer
 				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_ON");
 				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_OFF");
 			}
-
-			if (Core.Instance.useRingShadows)
-			{
-				m_skyMaterialScaled.EnableKeyword ("RINGSHADOWS_ON");
-				m_skyMaterialScaled.DisableKeyword ("RINGSHADOWS_OFF");
-				m_skyMaterialLocal.EnableKeyword ("RINGSHADOWS_ON");
-				m_skyMaterialLocal.DisableKeyword ("RINGSHADOWS_OFF");
-			}
-			else
-			{
-				m_skyMaterialScaled.DisableKeyword ("RINGSHADOWS_ON");
-				m_skyMaterialScaled.EnableKeyword ("RINGSHADOWS_OFF");
-				m_skyMaterialLocal.DisableKeyword ("RINGSHADOWS_ON");
-				m_skyMaterialLocal.EnableKeyword ("RINGSHADOWS_OFF");
-			}
 			
 			if (Core.Instance.usePlanetShine)
 			{
@@ -328,10 +318,6 @@ namespace scatterer
 				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_OFF");
 
 			}
-			
-			
-			InitUniforms (m_skyMaterialScaled);
-			InitUniforms (m_skyMaterialLocal);
 			
 			
 			if (Core.Instance.useGodrays)
@@ -405,7 +391,85 @@ namespace scatterer
 			skyLocalMeshrenderer.enabled = true;
 			
 			#endif
-			
+
+
+
+			if (Core.Instance.useRingShadows && Core.Instance.useEclipses)
+			{
+				ringObject = GameObject.Find (parentCelestialBody.name + "Ring");
+				if (ringObject)
+				{
+					
+					Debug.Log ("[Scatterer] Found ring for " + parentCelestialBody.name);
+
+					Material ringMat = ringObject.GetComponent < MeshRenderer > ().material;
+
+					Debug.Log ("[Scatterer] ring innerRadius " + ringMat.GetFloat ("innerRadius").ToString ());
+					Debug.Log ("[Scatterer] ring outerRadius " + ringMat.GetFloat ("outerRadius").ToString ());
+
+					Debug.Log ("[Scatterer] ring sunRadius " + ringMat.GetFloat ("sunRadius").ToString ());
+					Debug.Log ("[Scatterer] ring planetRadius " + ringMat.GetFloat ("planetRadius").ToString ());
+
+					Debug.Log ("[Scatterer] ring penumbraMultiplier " + ringMat.GetFloat ("penumbraMultiplier").ToString ());
+					
+					ringInnerRadius = ringMat.GetFloat ("innerRadius") * 6000; //*6000 to convert to local space size
+					ringOuterRadius = ringMat.GetFloat ("outerRadius") * 6000;
+
+					hasRingObjectAndShadowActivated = true;
+					
+					MonoBehaviour[] scripts = (MonoBehaviour[]) ringObject.GetComponents<MonoBehaviour>();
+					
+					foreach( MonoBehaviour _script in scripts)
+					{						
+						Debug.Log("script.GetType().ToString() "+_script.GetType().ToString());
+
+						if (_script.GetType().ToString().Contains("Ring")) //production-quality code
+						{
+							const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
+								BindingFlags.Instance | BindingFlags.Static;
+
+							FieldInfo[] fields = _script.GetType().GetFields(flags);
+
+							foreach(FieldInfo fi in fields)
+							{
+								Debug.Log("fi.Name "+fi.Name+" fi.GetType() "+fi.GetType());
+							}
+							
+							try
+							{
+								ringTexture = _script.GetType().GetField("texture", flags).GetValue(_script) as Texture2D;
+								Debug.Log("[Scatterer] ring texture fetch successful");
+								Debug.Log("[Scatterer] ringTexture.width "+ringTexture.width.ToString());
+								Debug.Log("[Scatterer] ringTexture.height "+ringTexture.height.ToString());
+							}
+							catch (Exception e)
+							{
+								Debug.Log("[Scatterer] Kopernicus ring exception "+e.ToString());
+								Debug.Log("[Scatterer] Disabling ring shadows for "+parentCelestialBody.name);
+								hasRingObjectAndShadowActivated=false;
+							}
+						}
+					}
+				}
+			}
+
+			if (hasRingObjectAndShadowActivated)
+			{
+				m_skyMaterialScaled.EnableKeyword ("RINGSHADOW_ON");
+				m_skyMaterialScaled.DisableKeyword ("RINGSHADOW_OFF");
+				m_skyMaterialLocal.EnableKeyword ("RINGSHADOW_ON");
+				m_skyMaterialLocal.DisableKeyword ("RINGSHADOW_OFF");
+			}
+			else
+			{
+				m_skyMaterialScaled.DisableKeyword ("RINGSHADOW_ON");
+				m_skyMaterialScaled.EnableKeyword ("RINGSHADOW_OFF");
+				m_skyMaterialLocal.DisableKeyword ("RINGSHADOW_ON");
+				m_skyMaterialLocal.EnableKeyword ("RINGSHADOW_OFF");
+			}
+
+			InitUniforms (m_skyMaterialScaled);
+			InitUniforms (m_skyMaterialLocal);
 			
 		}
 		
@@ -860,6 +924,12 @@ namespace scatterer
 				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
 				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
 			}
+
+			if (hasRingObjectAndShadowActivated)
+			{
+				mat.SetVector("ringNormal", ringObject.transform.up);
+				Material ringMat = ringObject.GetComponent < MeshRenderer > ().material;
+			}
 			
 		}
 		
@@ -1177,6 +1247,17 @@ namespace scatterer
 			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
 			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
 			//			mat.SetFloat (ShaderProperties._sunglareScale_PROPERTY, sunglareScale);	
+
+			//ring shadow parameters
+			if (hasRingObjectAndShadowActivated)
+			{
+				mat.SetFloat("ringInnerRadius", ringInnerRadius);
+				mat.SetFloat("ringOuterRadius", ringOuterRadius);
+
+				mat.SetVector("ringNormal", ringObject.transform.up);
+
+				mat.SetTexture("ringTexture", ringTexture);
+			}
 		}
 		
 		public void InitUniformsGlobal ()
