@@ -7,7 +7,8 @@ namespace scatterer
 	public class CommandBufferModifiedProjectionMatrix : MonoBehaviour
 	{
 //		private Camera m_Cam;
-		public Core m_core;
+
+		public OceanNode oceanNode;
 
 		Matrix4x4 ctos;
 		Matrix4x4 stoc;
@@ -29,11 +30,12 @@ namespace scatterer
 				Cleanup();
 				return;
 			}
-			
-			var cam = Camera.current;
+
+
+			Camera cam = Camera.current;
 			if (!cam)
 				return;
-			
+
 			bool alreadyAdded = m_Cameras.ContainsKey (cam);
 			// Did we already add the command buffer on this camera
 			if (alreadyAdded)
@@ -66,7 +68,7 @@ namespace scatterer
 			
 			p = inCam.projectionMatrix;
 
-			if (!m_core.opengl)
+			if (!Core.Instance.opengl)
 				for (int i = 0; i < 4; i++)
 			{
 				p [2, i] = p [2, i] * 0.5f + p [3, i] * 0.5f;
@@ -96,6 +98,10 @@ namespace scatterer
 		public void OnDisable()
 		{
 			Cleanup();
+		}
+
+		public void OnDestroy()
+		{
 		}
 	}
 }

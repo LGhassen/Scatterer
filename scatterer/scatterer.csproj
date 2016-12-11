@@ -100,6 +100,8 @@
     <Compile Include="DataSerialization\scattererCelestialBody.cs" />
     <Compile Include="DataSerialization\planetsListReader.cs" />
     <Compile Include="shaderReplacer.cs" />
+    <Compile Include="DisableEffectsForTextureReplacer.cs" />
+    <Compile Include="DisableEffectsChecker.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />

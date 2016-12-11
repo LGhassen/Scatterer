@@ -1,4 +1,5 @@
 //used just to remove the postprocessing and the ocean from texture replacer's reflections because they look messed up and bog down performance
+//this script gets added to the camera to disable the effects on
 
 using UnityEngine;
 using System.Collections;
@@ -17,7 +18,8 @@ namespace scatterer
 	public class DisableEffectsForTextureReplacer : MonoBehaviour
 	{
 		public MeshRenderer[] waterMeshRenderers;
-		public int numGrids;
+		public MeshRenderer postProcessingCube;
+		public int numGrids=0;
 
 		public DisableEffectsForTextureReplacer ()
 		{
@@ -25,6 +27,8 @@ namespace scatterer
 
 		public void OnPreCull()
 		{
+			postProcessingCube.enabled = false;
+
 			for (int i=0; i < numGrids; i++)
 			{
 				waterMeshRenderers[i].enabled=false;
@@ -34,6 +38,8 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
+			postProcessingCube.enabled = true;
+
 			for (int i=0; i < numGrids; i++)
 			{
 				waterMeshRenderers[i].enabled=true;

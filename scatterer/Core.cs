@@ -1125,7 +1125,7 @@ namespace scatterer
 					GUILayout.Label(String.Format ("(old option to shade EVE clouds from orbit)"));
 					fullLensFlareReplacement=GUILayout.Toggle(fullLensFlareReplacement, "Lens flare shader");
 					useEclipses = GUILayout.Toggle(useEclipses, "Eclipses (WIP, sky/orbit only for now)");
-					useRingShadows = GUILayout.Toggle(useRingShadows, "Kopernicus ring shadows, requires eclipses");
+					useRingShadows = GUILayout.Toggle(useRingShadows, "Kopernicus ring shadows");
 					useGodrays = GUILayout.Toggle(useGodrays, "Godrays (early WIP)");
 					
 					GUILayout.BeginHorizontal ();

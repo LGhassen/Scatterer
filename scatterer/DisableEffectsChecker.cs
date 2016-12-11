@@ -1,4 +1,6 @@
 //used just to remove the postprocessing and the ocean from texture replacer's reflections because they look messed up and bog down performance
+//this part gets added to the postprocessingCube, it will then detect when TR attempts to render it and a script to the TR camera to disable the effects on it
+//the TR camera only gets created only once an IVA kerbal appears on screen, and thus it is necessary to do this as the camera may not exist when scatterer is initializing
 
 using UnityEngine;
 using System.Collections;
@@ -14,31 +16,47 @@ using KSP.IO;
 
 namespace scatterer
 {
-	public class DisableEffectsForTextureReplacer : MonoBehaviour
+	public class DisableEffectsChecker : MonoBehaviour
 	{
-		public MeshRenderer[] waterMeshRenderers;
-		public int numGrids;
+		DisableEffectsForTextureReplacer effectsDisabler;
+		public SkyNode skynode;
 
-		public DisableEffectsForTextureReplacer ()
+		public DisableEffectsChecker ()
 		{
 		}
 
-		public void OnPreCull()
+		public void OnWillRenderObject()
 		{
-			for (int i=0; i < numGrids; i++)
+			Camera cam = Camera.current;
+			if (!cam)
+				return;
+
+			if (cam.name == "TRReflectionCamera" && !effectsDisabler)
 			{
-				waterMeshRenderers[i].enabled=false;
+				effectsDisabler = (DisableEffectsForTextureReplacer) cam.gameObject.AddComponent(typeof(DisableEffectsForTextureReplacer));
+
+				Debug.Log("adding postprocesscube");
+				effectsDisabler.postProcessingCube=skynode.postProcessCube.GameObject.GetComponent<MeshRenderer>();
+
+				if (skynode.m_manager.hasOcean && Core.Instance.useOceanShaders)
+				{
+					Debug.Log("adding watermeshrenderers");
+					effectsDisabler.waterMeshRenderers = skynode.m_manager.GetOceanNode().waterMeshRenderers;
+					Debug.Log("adding numgrid");
+					effectsDisabler.numGrids = skynode.m_manager.GetOceanNode().numGrids;
+				}
+				Debug.Log("[Scatterer] Post-processing and ocean effects disabled from Texture Replacer reflections");
 			}
 
 		}
 
-		public void OnPostRender()
+		public void OnDestroy()
 		{
-			for (int i=0; i < numGrids; i++)
+			if (effectsDisabler) 
 			{
-				waterMeshRenderers[i].enabled=true;
+				Component.Destroy (effectsDisabler);
+				UnityEngine.Object.Destroy (effectsDisabler);
 			}
-			
 		}
 	}
 }

@@ -93,13 +93,13 @@ namespace scatterer
 		[Persistent]
 		public float seaRefractionMultiplier = 1f;
 
-		int numGrids;
+		public int numGrids;
 		Mesh[] m_screenGrids;
 		
 		[Persistent] public float fakeOceanAltitude = 15000;
 
 		GameObject[] waterGameObjects;
-		MeshRenderer[] waterMeshRenderers;
+		public MeshRenderer[] waterMeshRenderers;
 		MeshFilter[] waterMeshFilters;
 
 		Matrix4x4d m_oldlocalToOcean;
@@ -112,7 +112,6 @@ namespace scatterer
 		}
 
 		CommandBufferModifiedProjectionMatrix cbProjectionMat; 
-
 
 		Vector3d2 m_offset;
 		public Vector3d2 offset;
@@ -232,8 +231,7 @@ namespace scatterer
 			}
 
 			cbProjectionMat = waterGameObjects[0].AddComponent<CommandBufferModifiedProjectionMatrix>();
-			cbProjectionMat.m_core=m_core;
-
+			cbProjectionMat.oceanNode = this;
 		}
 		
 		public virtual void OnDestroy ()
@@ -241,6 +239,7 @@ namespace scatterer
 			if (cbProjectionMat)
 			{
 				cbProjectionMat.Cleanup ();
+				cbProjectionMat.OnDestroy ();
 				Component.Destroy (cbProjectionMat);
 				UnityEngine.Object.Destroy (cbProjectionMat);
 			}
