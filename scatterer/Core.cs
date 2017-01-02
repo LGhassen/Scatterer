@@ -264,7 +264,7 @@ namespace scatterer
 
 //		cameraHDRTonemapping tonemapper;
 		
-		float MapViewScale = 1000f;
+//		float MapViewScale = 1000f;
 		
 		[Persistent]
 		public int oceanRenderQueue=2001;
@@ -374,8 +374,7 @@ namespace scatterer
 
 			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion);
 			
-			//if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
-			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
 				isActive = true;
 				windowRect.x=inGameWindowLocation.x;
@@ -394,6 +393,7 @@ namespace scatterer
 				{
 					removeStockOceans();
 				}
+
 			}
 		}
 
@@ -602,28 +602,29 @@ namespace scatterer
 
 					if (!depthBufferSet)
 					{
-
-						customDepthBuffer = (CustomDepthBufferCam)farCamera.gameObject.AddComponent (typeof(CustomDepthBufferCam));
-						customDepthBuffer.inCamera = farCamera;
-						customDepthBuffer.start();
-
-						customDepthBufferTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
-						customDepthBufferTexture.useMipMap=false;
-						customDepthBufferTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
-						customDepthBufferTexture.Create ();
-
-						if (useGodrays)
+						if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 						{
-							godrayDepthTexture = new RenderTexture ((int)(Screen.width*godrayResolution),(int)(Screen.height*godrayResolution),16, RenderTextureFormat.RFloat);
+							customDepthBuffer = (CustomDepthBufferCam)farCamera.gameObject.AddComponent (typeof(CustomDepthBufferCam));
+							customDepthBuffer.inCamera = farCamera;
+							customDepthBuffer.start();
 							
-							godrayDepthTexture.filterMode = FilterMode.Bilinear;
-							godrayDepthTexture.useMipMap=false;
-							customDepthBuffer._godrayDepthTex = godrayDepthTexture;
-							godrayDepthTexture.Create ();
+							customDepthBufferTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
+							customDepthBufferTexture.useMipMap=false;
+							customDepthBufferTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
+							customDepthBufferTexture.Create ();
+							
+							if (useGodrays)
+							{
+								godrayDepthTexture = new RenderTexture ((int)(Screen.width*godrayResolution),(int)(Screen.height*godrayResolution),16, RenderTextureFormat.RFloat);
+								
+								godrayDepthTexture.filterMode = FilterMode.Bilinear;
+								godrayDepthTexture.useMipMap=false;
+								customDepthBuffer._godrayDepthTex = godrayDepthTexture;
+								godrayDepthTexture.Create ();
+							}
+							
+							customDepthBuffer._depthTex = customDepthBufferTexture;
 						}
-						
-						customDepthBuffer._depthTex = customDepthBufferTexture;
-
 						depthBufferSet = true;
 					}
 
@@ -658,10 +659,12 @@ namespace scatterer
 						ambientLightScript = (disableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(disableAmbientLight));
 					}
 
-
-					if (!customDepthBufferTexture.IsCreated ())
+					if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 					{
-						customDepthBufferTexture.Create ();
+						if (!customDepthBufferTexture.IsCreated ())
+						{
+							customDepthBufferTexture.Create ();
+						}
 					}
 
 					pqsEnabled = false;
@@ -694,7 +697,6 @@ namespace scatterer
 								} else {
 
 									_cur.m_manager.Update ();
-//									if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 									{
 										if (!_cur.m_manager.m_skyNode.inScaledSpace)
 										{
@@ -1072,7 +1074,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0270 preview: "
+				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0275 preview: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
@@ -1702,7 +1704,7 @@ namespace scatterer
 			rimBlend = skyNode.rimBlend;
 			rimpower = skyNode.rimpower;
 			
-			MapViewScale = skyNode.MapViewScale;
+			//MapViewScale = skyNode.MapViewScale;
 			extinctionMultiplier = selected.skyExtinctionMultiplier;
 			extinctionTint = selected.skyExtinctionTint;
 			skyExtinctionRimFade = selected.skyextinctionRimFade;
@@ -1982,8 +1984,8 @@ namespace scatterer
 						_sc.pqsController.meshCastShadows = true;
 						_sc.pqsController.meshRecieveShadows = true;
 
-						Debug.Log("[Scatterer] PQS material of "+_sc.name+": "
-						          +_sc.pqsController.surfaceMaterial.shader.name);
+//						Debug.Log("[Scatterer] PQS material of "+_sc.name+": "
+//						          +_sc.pqsController.surfaceMaterial.shader.name);
 
 						QualitySettings.shadowDistance = shadowsDistance;
 

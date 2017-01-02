@@ -154,6 +154,7 @@ namespace scatterer
 
 			Debug.Log("[Scatterer] replaced EVE/CloudVolumeParticle in EVE shader dictionary");
 
+			//replace shaders of already created materials
 			Material[] materials = Resources.FindObjectsOfTypeAll<Material>();
 			foreach (Material mat in materials)
 			{

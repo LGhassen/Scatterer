@@ -97,7 +97,7 @@ namespace scatterer
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType < SkyNode > (null);
 
 		[Persistent]
-		public float MapViewScale = 1f;
+		//public float MapViewScale = 1f;
 
 		CelestialBody parentCelestialBody;
 		Transform ParentPlanetTransform;
@@ -404,17 +404,6 @@ namespace scatterer
 
 					Material ringMat = ringObject.GetComponent < MeshRenderer > ().material;
 
-					Debug.Log ("[Scatterer] ring innerRadius " + ringMat.GetFloat ("innerRadius").ToString ());
-					Debug.Log ("[Scatterer] ring outerRadius " + ringMat.GetFloat ("outerRadius").ToString ());
-
-					Debug.Log ("[Scatterer] ring sunRadius " + ringMat.GetFloat ("sunRadius").ToString ());
-					Debug.Log ("[Scatterer] ring planetRadius " + ringMat.GetFloat ("planetRadius").ToString ());
-
-					Debug.Log ("[Scatterer] ring penumbraMultiplier " + ringMat.GetFloat ("penumbraMultiplier").ToString ());
-					
-					ringInnerRadius = ringMat.GetFloat ("innerRadius") * 6000; //*6000 to convert to local space size
-					ringOuterRadius = ringMat.GetFloat ("outerRadius") * 6000;
-
 					hasRingObjectAndShadowActivated = true;
 					
 					MonoBehaviour[] scripts = (MonoBehaviour[]) ringObject.GetComponents<MonoBehaviour>();
@@ -441,6 +430,15 @@ namespace scatterer
 								Debug.Log("[Scatterer] ring texture fetch successful");
 								Debug.Log("[Scatterer] ringTexture.width "+ringTexture.width.ToString());
 								Debug.Log("[Scatterer] ringTexture.height "+ringTexture.height.ToString());
+
+								ringInnerRadius = (float) _script.GetType().GetField("innerRadius", flags).GetValue(_script);
+								Debug.Log ("[Scatterer] ring innerRadius (scaled) " + ringInnerRadius.ToString ());
+
+								ringOuterRadius = (float) _script.GetType().GetField("outerRadius", flags).GetValue(_script);
+								Debug.Log ("[Scatterer] ring outerRadius (scaled) " + ringOuterRadius.ToString ());
+
+								ringInnerRadius *= 6000; //*6000 to convert to local space size
+								ringOuterRadius *= 6000;
 							}
 							catch (Exception e)
 							{
@@ -476,22 +474,28 @@ namespace scatterer
 		public void UpdateStuff () //to be called by update at camera rythm for some graphical stuff
 		{
 			//			skyScaledMesh.transform.position = ParentPlanetTransform.position;
-			
+
+			//if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			if (!inScaledSpace)
+			{
 			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
 			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
 			atmosphereMesh.transform.rotation = farCamera.transform.rotation;
-			
+				
 			skyLocalMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
 			skyLocalMesh.transform.localRotation = farCamera.transform.localRotation;
 			skyLocalMesh.transform.rotation = farCamera.transform.rotation;
-			
-			if ((!inScaledSpace) && (!MapView.MapIsEnabled))
-			{
+//			}
+//			
+//			if ((!inScaledSpace) && (!MapView.MapIsEnabled))
+			if (!MapView.MapIsEnabled) {
 				if (postprocessingEnabled) {
 					InitPostprocessMaterial (m_atmosphereMaterial);
 					UpdatePostProcessMaterial (m_atmosphereMaterial);
 				}
 			}
+
+		}
 			
 			if (Core.Instance.useEclipses)
 			{
@@ -630,10 +634,12 @@ namespace scatterer
 						SetUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 						
 						InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-						UpdatePostProcessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+
+						if (!inScaledSpace)
+							UpdatePostProcessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 						
-						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
-							("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
+//						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
+//							("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
 						
 						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
 							("cloudColorMultiplier", cloudColorMultiplier);
@@ -655,7 +661,9 @@ namespace scatterer
 							SetUniforms(EVEvolumetrics[i]);
 							
 							InitPostprocessMaterial(EVEvolumetrics[i]);
-							UpdatePostProcessMaterial(EVEvolumetrics[i]);
+
+							if (!inScaledSpace)
+								UpdatePostProcessMaterial(EVEvolumetrics[i]);
 							
 							EVEvolumetrics[i].SetVector
 								("_PlanetWorldPos", m_manager.parentCelestialBody.transform.position);
@@ -733,7 +741,7 @@ namespace scatterer
 				//				sunglareCutoffAlt = experimentalAtmoScale*(Rt - Rg);
 				
 				scaledSpaceCamera=Core.Instance.scaledSpaceCamera;
-				//				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+
 				{
 					farCamera=Core.Instance.farCamera;
 					nearCamera=Core.Instance.nearCamera;
@@ -743,24 +751,64 @@ namespace scatterer
 				backupAtmosphereMaterial ();
 				tweakStockAtmosphere ();
 
-				//will disable postprocessing and ocean effects for Texture Replacer reflections
+				//disable postprocessing and ocean effects for Texture Replacer reflections
 				DisableEffectsChecker effectsDisabler = postProcessCube.GameObject.AddComponent<DisableEffectsChecker>();
 				effectsDisabler.skynode = this;
+
+				//after the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
+				//call EVE clouds2D.reassign() method to set the shader properties
+				if (Core.Instance.integrateWithEVEClouds)
+				{
+					try
+					{
+						const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
+							BindingFlags.Instance | BindingFlags.Static;
+
+						foreach (object _obj in Core.Instance.EVECloudObjects[parentCelestialBody.name]) 
+						{
+							object cloud2dObj = _obj.GetType().GetField("layer2D", flags).GetValue(_obj) as object;
+							if (cloud2dObj==null)
+							{
+								Debug.Log("[Scatterer] layer2d not found for layer on planet: "+parentCelestialBody.name);
+								continue;
+							}
+
+							bool cloud2dScaled = (bool) cloud2dObj.GetType().GetField("isScaled", flags).GetValue(cloud2dObj);
+							Debug.Log("[Scatterer] clouds2d scaled: "+cloud2dScaled.ToString());
+
+							MethodInfo scaledGetter = cloud2dObj.GetType().GetProperty("Scaled").GetGetMethod();
+							MethodInfo scaledSetter = cloud2dObj.GetType().GetProperty("Scaled").GetSetMethod();
+
+							//if in scaled mode, switch it to local then back to scaled, to set all the properties
+							if (cloud2dScaled)
+								scaledSetter.Invoke(cloud2dObj,new object[] { !cloud2dScaled });
+
+							scaledSetter.Invoke(cloud2dObj,new object[] { cloud2dScaled });
+
+						}
+					}
+
+					catch (Exception stupid)
+					{
+						Debug.Log ("[Scatterer] Error calling clouds2d.reassign() on planet: " + parentCelestialBody.name + stupid.ToString ());
+					}
+				}
+
 
 				initiated = true;
 				
 			}
 			else
 			{
-				//				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-				alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
-				//				else
-				//					alt = Vector3.Distance (ScaledSpace.ScaledToLocalSpace(scaledSpaceCamera.transform.position), parentCelestialBody.transform.position);
-				
-				trueAlt = alt - m_radius;
-				
-				
-				interpolateVariables ();
+				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+				{
+					alt = Vector3.Distance (farCamera.transform.position, parentCelestialBody.transform.position);
+					
+					trueAlt = alt - m_radius;
+					
+					
+					interpolateVariables ();
+				}
 				
 				if (scaledSpaceCamera && !updaterAdded)
 				{
@@ -777,8 +825,11 @@ namespace scatterer
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
 				
 				bool localSkyCondition;
+				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+					localSkyCondition=alt > localSkyAltitude;
+				else
+					localSkyCondition = true;
 
-				localSkyCondition=alt > localSkyAltitude;
 				if(CurrentPQS!=null)
 				{
 					localSkyCondition=localSkyCondition && !CurrentPQS.isActive;   //inScaledSpace
@@ -854,7 +905,7 @@ namespace scatterer
 			
 			
 			//used to determine the view ray direction in the sky shader
-			if (!MapView.MapIsEnabled)
+			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{				
 				mat.SetMatrix (ShaderProperties._Globals_WorldToCamera_PROPERTY, farCamera.worldToCameraMatrix);
 				mat.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
@@ -876,7 +927,7 @@ namespace scatterer
 			                        - parentCelestialBody.transform.position);
 			
 			
-			if (!MapView.MapIsEnabled) 
+			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION)) 
 			{
 				p = farCamera.projectionMatrix;
 			}
@@ -999,46 +1050,46 @@ namespace scatterer
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun().normalized);
 		}
 		
-		public void InitPostprocessMaterialGlobal ()
-		{
-			
-			Shader.SetGlobalTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
-			
-			Shader.SetGlobalTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
-			
-			Shader.SetGlobalTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-			
-			//			if (Core.Instance.render24bitDepthBuffer && !Core.Instance.d3d9)
-			Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
-			
-			if (Core.Instance.useGodrays)
-				Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.godrayDepthTexture);
-			
-			//Consts, best leave these alone
-			Shader.SetGlobalFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
-			
-			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
-			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
-			Shader.SetGlobalFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
-			Shader.SetGlobalFloat (ShaderProperties.RES_R_PROPERTY, RES_R);
-			Shader.SetGlobalFloat (ShaderProperties.RES_MU_PROPERTY, RES_MU);
-			Shader.SetGlobalFloat (ShaderProperties.RES_MU_S_PROPERTY, RES_MU_S);
-			Shader.SetGlobalFloat (ShaderProperties.RES_NU_PROPERTY, RES_NU);
-			Shader.SetGlobalFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
-			Shader.SetGlobalFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
-			
-			Shader.SetGlobalVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
-			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
-			Shader.SetGlobalVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
-			Shader.SetGlobalVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
-			
-			Shader.SetGlobalFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
-			Shader.SetGlobalFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
-			
-			Shader.SetGlobalVector (ShaderProperties._camPos_PROPERTY, farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
-			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
-		}
+//		public void InitPostprocessMaterialGlobal ()
+//		{
+//			
+//			Shader.SetGlobalTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
+//			
+//			Shader.SetGlobalTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
+//			
+//			Shader.SetGlobalTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
+//			
+//			//			if (Core.Instance.render24bitDepthBuffer && !Core.Instance.d3d9)
+//			Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
+//			
+//			if (Core.Instance.useGodrays)
+//				Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.godrayDepthTexture);
+//			
+//			//Consts, best leave these alone
+//			Shader.SetGlobalFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+//			
+//			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+//			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+//			Shader.SetGlobalFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
+//			Shader.SetGlobalFloat (ShaderProperties.RES_R_PROPERTY, RES_R);
+//			Shader.SetGlobalFloat (ShaderProperties.RES_MU_PROPERTY, RES_MU);
+//			Shader.SetGlobalFloat (ShaderProperties.RES_MU_S_PROPERTY, RES_MU_S);
+//			Shader.SetGlobalFloat (ShaderProperties.RES_NU_PROPERTY, RES_NU);
+//			Shader.SetGlobalFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
+//			Shader.SetGlobalFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
+//			
+//			Shader.SetGlobalVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
+//			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+//			
+//			Shader.SetGlobalVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
+//			Shader.SetGlobalVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
+//			
+//			Shader.SetGlobalFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
+//			Shader.SetGlobalFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
+//			
+//			Shader.SetGlobalVector (ShaderProperties._camPos_PROPERTY, farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
+//			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
+//		}
 		
 		
 		public void UpdatePostProcessMaterial (Material mat)
@@ -1098,56 +1149,56 @@ namespace scatterer
 			}
 		}
 		
-		public void UpdatePostProcessMaterialGlobal ()
-		{
-			
-			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
-			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
-			Shader.SetGlobalFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
-			
-			//Shader.SetGlobalFloat (ShaderPropertiesatmosphereGlobalScale_PROPERTY, atmosphereGlobalScale);
-			
-			Shader.SetGlobalFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
-			//			Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
-			
-			Shader.SetGlobalFloat (ShaderProperties._global_alpha_PROPERTY, interpolatedSettings.postProcessAlpha);
-			Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, interpolatedSettings.postProcessExposure);
-			Shader.SetGlobalFloat (ShaderProperties._global_depth_PROPERTY, interpolatedSettings.postProcessDepth*1000000);
-			
-			Shader.SetGlobalFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, interpolatedSettings._Post_Extinction_Tint);
-			Shader.SetGlobalFloat (ShaderProperties.postExtinctionMultiplier_PROPERTY, interpolatedSettings.postExtinctionMultiplier);
-			
-			
-			Shader.SetGlobalFloat (ShaderProperties._openglThreshold_PROPERTY, interpolatedSettings.openglThreshold);
-			//			Shader.SetGlobalFloat (ShaderProperties._edgeThreshold_PROPERTY, edgeThreshold);
-			
-			
-			Shader.SetGlobalFloat (ShaderProperties._Scale_PROPERTY, 1);
-			
-			Shader.SetGlobalMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
-			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
-			Shader.SetGlobalFloat (ShaderProperties.SUN_INTENSITY_PROPERTY, sunIntensity);
-			
-			
-			Matrix4x4 ctol1 = farCamera.cameraToWorldMatrix;
-			Vector3d tmp = (farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
-			
-			Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
-			                                     ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
-			                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
-			                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
-			
-			viewMat = viewMat.Inverse ();
-			Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
-			
-			Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
-			Shader.SetGlobalMatrix (ShaderProperties._ViewProjInv_PROPERTY, viewProjMat.inverse);
-			
-			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
-			Shader.SetGlobalVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
-			
-		}
+//		public void UpdatePostProcessMaterialGlobal ()
+//		{
+//			
+//			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+//			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+//			Shader.SetGlobalFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
+//			
+//			//Shader.SetGlobalFloat (ShaderPropertiesatmosphereGlobalScale_PROPERTY, atmosphereGlobalScale);
+//			
+//			Shader.SetGlobalFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
+//			//			Shader.SetGlobalFloat (ShaderProperties._viewdirOffset_PROPERTY, viewdirOffset);
+//			
+//			Shader.SetGlobalFloat (ShaderProperties._global_alpha_PROPERTY, interpolatedSettings.postProcessAlpha);
+//			Shader.SetGlobalFloat (ShaderProperties._Exposure_PROPERTY, interpolatedSettings.postProcessExposure);
+//			Shader.SetGlobalFloat (ShaderProperties._global_depth_PROPERTY, interpolatedSettings.postProcessDepth*1000000);
+//			
+//			Shader.SetGlobalFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, interpolatedSettings._Post_Extinction_Tint);
+//			Shader.SetGlobalFloat (ShaderProperties.postExtinctionMultiplier_PROPERTY, interpolatedSettings.postExtinctionMultiplier);
+//			
+//			
+//			Shader.SetGlobalFloat (ShaderProperties._openglThreshold_PROPERTY, interpolatedSettings.openglThreshold);
+//			//			Shader.SetGlobalFloat (ShaderProperties._edgeThreshold_PROPERTY, edgeThreshold);
+//			
+//			
+//			Shader.SetGlobalFloat (ShaderProperties._Scale_PROPERTY, 1);
+//			
+//			Shader.SetGlobalMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, farCamera.worldToCameraMatrix.inverse);
+//			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
+//			Shader.SetGlobalFloat (ShaderProperties.SUN_INTENSITY_PROPERTY, sunIntensity);
+//			
+//			
+//			Matrix4x4 ctol1 = farCamera.cameraToWorldMatrix;
+//			Vector3d tmp = (farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+//			
+//			Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
+//			                                     ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
+//			                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
+//			                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
+//			
+//			viewMat = viewMat.Inverse ();
+//			Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
+//			
+//			Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
+//			Shader.SetGlobalMatrix (ShaderProperties._ViewProjInv_PROPERTY, viewProjMat.inverse);
+//			
+//			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+//			
+//			Shader.SetGlobalVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
+//			
+//		}
 		
 		public void InitUniforms (Material mat)
 		{
@@ -1520,26 +1571,31 @@ namespace scatterer
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
 
-			List<object> cloudObjs = Core.Instance.EVECloudObjects[parentCelestialBody.name];
-
-			foreach (object _obj in cloudObjs)
+			if (Core.Instance.EVECloudObjects.ContainsKey (parentCelestialBody.name)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
 			{
-				try
+				List<object> cloudObjs = Core.Instance.EVECloudObjects [parentCelestialBody.name];
+				
+				foreach (object _obj in cloudObjs)
 				{
-					object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags).GetValue(_obj) as object;
-					object layerVolume = cloudsPQS.GetType().GetField("layerVolume", flags).GetValue(cloudsPQS) as object;
-					Material ParticleMaterial = layerVolume.GetType().GetField("ParticleMaterial", flags).GetValue(layerVolume) as Material;
-					EVEvolumetrics.Add (ParticleMaterial);
-				}
-//				catch (Exception stupid)
-				catch (Exception)
-				{
-//					Debug.Log("[Scatterer] Null volumetric clouds on planet: "+parentCelestialBody.name + stupid.ToString());
-					continue;
-				}
+					try
+					{
+						object cloudsPQS = _obj.GetType ().GetField ("cloudsPQS", flags).GetValue (_obj) as object;
+						object layerVolume = cloudsPQS.GetType ().GetField ("layerVolume", flags).GetValue (cloudsPQS) as object;
+						Material ParticleMaterial = layerVolume.GetType ().GetField ("ParticleMaterial", flags).GetValue (layerVolume) as Material;
+						EVEvolumetrics.Add (ParticleMaterial);
+					}
+					catch (Exception stupid)
+					{
+						Debug.Log ("[Scatterer] Volumetric clouds error on planet: " + parentCelestialBody.name + stupid.ToString ());
+						continue;
+					}
+				}				
+				Debug.Log ("[Scatterer] Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + parentCelestialBody.name);
 			}
-						
-			Debug.Log("[Scatterer] Detected "+EVEvolumetrics.Count+" EVE volumetric layers for planet: "+parentCelestialBody.name);
+			else
+			{
+				Debug.Log ("[Scatterer] No cloud objects for planet: " + parentCelestialBody.name);
+			}
 		}
 	}
 }

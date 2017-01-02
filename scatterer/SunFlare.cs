@@ -102,7 +102,10 @@ namespace scatterer
 			sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
 			sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
 
-			sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.customDepthBufferTexture);
+			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+				sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.customDepthBufferTexture);
+			else
+				sunglareMaterial.SetTexture ("_customDepthTexture", Texture2D.whiteTexture);
 
 			sunglareMaterial.renderQueue = 3100;
 
@@ -183,8 +186,8 @@ namespace scatterer
 			sunGlareFade = Mathf.SmoothStep(0,1,(dist/sunGlareFadeDistance)-0.25f);
 
 			hitStatus=false;
-//			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-			if (!MapView.MapIsEnabled)
+			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			//if (!MapView.MapIsEnabled)
 			{
 	
 				hitStatus = Physics.Raycast (Core.Instance.farCamera.transform.position,
@@ -261,8 +264,8 @@ namespace scatterer
 		{
 			//drawmesh calls have to be made in update()
 			//if they're done on prerender or anywhere else they don't work as far as I know
-//			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
+			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			//if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
 			{
 				Graphics.DrawMesh (screenMesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 15,
 				                   Core.Instance.nearCamera, 0, null, false, false);
