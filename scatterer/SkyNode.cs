@@ -473,30 +473,24 @@ namespace scatterer
 		
 		public void UpdateStuff () //to be called by update at camera rythm for some graphical stuff
 		{
-			//			skyScaledMesh.transform.position = ParentPlanetTransform.position;
-
-			//if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			if (!inScaledSpace)
 			{
-			atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
-			atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
-			atmosphereMesh.transform.rotation = farCamera.transform.rotation;
-				
-			skyLocalMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
-			skyLocalMesh.transform.localRotation = farCamera.transform.localRotation;
-			skyLocalMesh.transform.rotation = farCamera.transform.rotation;
-//			}
-//			
-//			if ((!inScaledSpace) && (!MapView.MapIsEnabled))
-			if (!MapView.MapIsEnabled) {
-				if (postprocessingEnabled) {
-					InitPostprocessMaterial (m_atmosphereMaterial);
-					UpdatePostProcessMaterial (m_atmosphereMaterial);
+				atmosphereMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
+				atmosphereMesh.transform.localRotation = farCamera.transform.localRotation;
+				atmosphereMesh.transform.rotation = farCamera.transform.rotation;
+
+				skyLocalMesh.transform.position = farCamera.transform.position + postDist * farCamera.transform.forward;
+				skyLocalMesh.transform.localRotation = farCamera.transform.localRotation;
+				skyLocalMesh.transform.rotation = farCamera.transform.rotation;
+
+				if (!MapView.MapIsEnabled) {
+					if (postprocessingEnabled) {
+						InitPostprocessMaterial (m_atmosphereMaterial);
+						UpdatePostProcessMaterial (m_atmosphereMaterial);
+					}
 				}
 			}
 
-		}
-			
 			if (Core.Instance.useEclipses)
 			{
 				float scaleFactor=ScaledSpace.ScaleFactor;
@@ -535,43 +529,11 @@ namespace scatterer
 					                                           casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
 				}
 			}
-			
+
 			if (Core.Instance.usePlanetShine)
 			{
 				planetShineRGBMatrix = Matrix4x4.zero;
 				planetShineSourcesMatrix = Matrix4x4.zero;
-				
-				//build and set planetShine sources and RGB
-				//				int currentCount=0;
-				//
-				//				for (int i=0; i< Mathf.Min(4, m_manager.additionalSuns.Count); i++)
-				//				{
-				//
-				//					Vector3 sourcePosRelPlanet = (m_manager.additionalSuns[i].position - parentCelestialBody.GetTransform().position).normalized;
-				//
-				//					planetShineSourcesMatrix.SetRow (currentCount, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
-				//					                                                  sourcePosRelPlanet.z, 1.0f));
-				//		
-				//					planetShineRGBMatrix.SetRow (currentCount, Vector4.one);
-				//
-				//					currentCount++;
-				//				}
-				//
-				//
-				//				for (int i=0; i< Mathf.Min(4, m_manager.planetShineLightSources.Count); i++)
-				//				{
-				//					if (currentCount>3)
-				//						break;
-				//
-				//					Vector3 sourcePosRelPlanet = (m_manager.planetShineLightSources[i].position - parentCelestialBody.GetTransform().position).normalized;
-				//					
-				//					planetShineSourcesMatrix.SetRow (currentCount, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
-				//					                                                  sourcePosRelPlanet.z, 0.0f));
-				//
-				//					planetShineRGBMatrix.SetRow (currentCount, Vector4.one);
-				//					
-				//					currentCount++;
-				//				}
 				
 				for (int i=0; i< Mathf.Min(4, m_manager.planetshineSources.Count); i++)
 				{	
@@ -594,30 +556,10 @@ namespace scatterer
 					
 					float intensity = m_manager.planetshineSources[i].intensity;
 					
-					//compute reflected light intensity if source is not a sun
-					//moved to shader for better, less rigid effect
-					//					if (!m_manager.planetshineSources[i].isSun)
-					//					{
-					//						Vector3 sunPosRelPlanet = (m_manager.sunCelestialBody.position - parentCelestialBody.GetTransform().position).normalized;
-					//
-					//						//intensity *= Mathf.SmoothStep(0,1, Mathf.Clamp01(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet)));
-					////						intensity *= Mathf.SmoothStep(0,1, 0.5f*(1+(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet))));
-					//						intensity *= 0.5f*(1+(-Vector3.Dot(sourcePosRelPlanet,sunPosRelPlanet)));
-					//					}
-					
 					planetShineRGBMatrix.SetRow (i, new Vector4(m_manager.planetshineSources[i].color.x,m_manager.planetshineSources[i].color.y,
 					                                            m_manager.planetshineSources[i].color.z,intensity));
 				}
-				//
-				//				Debug.Log (planetShineSourcesMatrix.ToString());
 			}
-			
-			
-			//			InitUniformsGlobal();
-			//			SetUniformsGlobal ();
-			//
-			//			InitPostprocessMaterialGlobal();
-			//			UpdatePostProcessMaterialGlobal();
 			
 			//update EVE cloud shaders
 			//maybe refactor?
@@ -694,7 +636,7 @@ namespace scatterer
 		public void UpdateNode ()
 		{
 
-			if (CurrentPQS != null)
+			if ((CurrentPQS != null) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
 				bool prevState = inScaledSpace;
 				inScaledSpace = !(CurrentPQS.isActive);

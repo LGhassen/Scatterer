@@ -29,7 +29,6 @@ namespace scatterer
 		public void loadPlanetsList ()
 		{
 			ConfigNode[] confNodes = GameDatabase.Instance.GetConfigNodes ("Scatterer_planetsList");
-			Debug.Log (confNodes.Length.ToString ());
 			if (confNodes.Length == 0) {
 				Debug.Log ("[Scatterer] No planetsList file found, check your install");
 				return;
