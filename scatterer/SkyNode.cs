@@ -889,13 +889,12 @@ namespace scatterer
 			
 			#if skyScaledBox
 			if (scaledMode)
-				mat.SetVector (ShaderProperties._Globals_Origin_PROPERTY, Vector3.Scale(ScaledSpace.LocalToScaledSpace(parentCelestialBody.transform.position),new Vector3(6000f,6000f,6000f)));
+				mat.SetVector (ShaderProperties._Scatterer_Origin_PROPERTY, Vector3.Scale(ParentPlanetTransform.transform.position, new Vector3(6000f,6000f,6000f)));
 			else
-				mat.SetVector (ShaderProperties._Globals_Origin_PROPERTY, parentCelestialBody.transform.position);
+				mat.SetVector (ShaderProperties._Scatterer_Origin_PROPERTY, parentCelestialBody.transform.position);
 			#else
-			mat.SetVector (ShaderProperties._Globals_Origin_PROPERTY, parentCelestialBody.transform.position);
+			mat.SetVector (ShaderProperties._Scatterer_Origin_PROPERTY, parentCelestialBody.transform.position);
 			#endif
-			
 			
 			if (!MapView.MapIsEnabled) {
 				mat.SetFloat (ShaderProperties._Exposure_PROPERTY, interpolatedSettings.skyExposure);

@@ -51,8 +51,8 @@ namespace scatterer
 		private static int _Globals_ScreenToCamera;
 		public static int _Globals_WorldCameraPos_PROPERTY { get { return _Globals_WorldCameraPos; } }
 		private static int _Globals_WorldCameraPos;
-		public static int _Globals_Origin_PROPERTY { get { return _Globals_Origin; } }
-		private static int _Globals_Origin;
+		public static int _Scatterer_Origin_PROPERTY { get { return _Scatterer_Origin; } }
+		private static int _Scatterer_Origin;
 		public static int _Exposure_PROPERTY { get { return _Exposure; } }
 		private static int _Exposure;
 		public static int _RimExposure_PROPERTY { get { return _RimExposure; } }
@@ -245,7 +245,7 @@ namespace scatterer
 			_Globals_CameraToScreen = Shader.PropertyToID("_Globals_CameraToScreen");
 			_Globals_ScreenToCamera = Shader.PropertyToID("_Globals_ScreenToCamera");
 			_Globals_WorldCameraPos = Shader.PropertyToID("_Globals_WorldCameraPos");
-			_Globals_Origin = Shader.PropertyToID("_Globals_Origin");
+			_Scatterer_Origin = Shader.PropertyToID("_Scatterer_Origin");
 			_Exposure = Shader.PropertyToID("_Exposure");
 			_RimExposure = Shader.PropertyToID("_RimExposure");
 			lightOccluders1 = Shader.PropertyToID("lightOccluders1");
