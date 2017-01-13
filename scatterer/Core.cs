@@ -97,9 +97,6 @@ namespace scatterer
 		[Persistent]
 		Vector2 inGameWindowLocation=Vector2.zero;
 
-		[Persistent]
-		float nearClipPlane=0.2f;
-
 //		[Persistent]
 //		public bool
 //			render24bitDepthBuffer = true;
@@ -210,6 +207,7 @@ namespace scatterer
 		private Vector2 _scroll2;
 		public bool pqsEnabled = false;
 		bool displayOceanSettings = false;
+		bool displaySunflareSettings = false;
 		CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
 		public RenderTexture godrayDepthTexture;
@@ -233,7 +231,7 @@ namespace scatterer
 		float cloudColorMultiplier=1f;
 		float volumetricsColorMultiplier=1f;
 		float cloudScatteringMultiplier=1f;
-		float cloudExtinctionHeightMultiplier=1f;
+		float cloudSkyIrradianceMultiplier = 1f;
 		float mieG = 0.85f;
 		float openglThreshold = 10f;
 		float _GlobalOceanAlpha = 1f;
@@ -433,7 +431,6 @@ namespace scatterer
 						{
 							//cams [i].renderingPath=RenderingPath.DeferredShading;
 							farCamera = cams [i];
-							//cams [i].nearClipPlane=1;
 							//cams [i].enabled=false;
 
 						}
@@ -442,7 +439,6 @@ namespace scatterer
 						{
 							//cams [i].renderingPath=RenderingPath.DeferredShading;
 							nearCamera = cams [i];
-							nearCamera.nearClipPlane = nearClipPlane;
 							//cams [i].farClipPlane=700000;
 							//cams [i].enabled=false;
 //							tonemapper = (cameraHDRTonemapping)nearCamera.gameObject.AddComponent (typeof(cameraHDRTonemapping));
@@ -528,7 +524,7 @@ namespace scatterer
 						ringObject=GameObject.Find(_cb.name+"Ring");
 						if (ringObject)
 						{
-							ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3003;
+							ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3005;
 							Debug.Log("[Scatterer] Found rings for "+_cb.name);
 
 //							ringObject.GetComponent < MeshRenderer > ().material.shader=
@@ -714,7 +710,9 @@ namespace scatterer
 									_cur.m_manager = new Manager ();
 									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
 									_cur.m_manager.setParentPlanetTransform (_cur.transform);
-									_cur.m_manager.setSunCelestialBody (sunCelestialBody);
+
+									CelestialBody currentSunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.mainSunCelestialBody);
+									_cur.m_manager.setSunCelestialBody (currentSunCelestialBody);
 									
 									//Find eclipse casters
 									List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
@@ -1123,8 +1121,8 @@ namespace scatterer
 //					usePlanetShine = GUILayout.Toggle(usePlanetShine, "PlanetShine");
 					integrateWithEVEClouds = GUILayout.Toggle(integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 
-					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds");
-					GUILayout.Label(String.Format ("(old option to shade EVE clouds from orbit)"));
+					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds(old cloud shading)");
+
 					fullLensFlareReplacement=GUILayout.Toggle(fullLensFlareReplacement, "Lens flare shader");
 					useEclipses = GUILayout.Toggle(useEclipses, "Eclipses (WIP, sky/orbit only for now)");
 					useRingShadows = GUILayout.Toggle(useRingShadows, "Kopernicus ring shadows");
@@ -1150,11 +1148,6 @@ namespace scatterer
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Menu scroll section height");
 					scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (scrollSectionHeight.ToString ())));
-					GUILayout.EndHorizontal ();
-
-					GUILayout.BeginHorizontal ();
-					GUILayout.Label ("nearClip plane (fixes ocean-coast fighting)");
-					nearClipPlane = float.Parse (GUILayout.TextField (nearClipPlane.ToString ("0.000")));
 					GUILayout.EndHorizontal ();
 
 					disableAmbientLight = GUILayout.Toggle(disableAmbientLight, "Disable scaled space ambient light");
@@ -1227,12 +1220,20 @@ namespace scatterer
 						
 						if (GUILayout.Button ("Atmosphere settings")) {
 							displayOceanSettings = false;
+							displaySunflareSettings = false;
 						}
 						
 						if (GUILayout.Button ("Ocean settings")) {
 							if (scattererCelestialBodies [selectedPlanet].hasOcean)
 								displayOceanSettings = true;
+
+							displaySunflareSettings = false;
 						}
+
+//						if (GUILayout.Button ("Sunflare(s) Settings")) {
+//							displayOceanSettings = false;
+//							displaySunflareSettings = true;
+//						}
 						
 						GUILayout.EndHorizontal ();
 
@@ -1367,7 +1368,8 @@ namespace scatterer
 							GUIfloat("Cloud Color Multiplier", ref cloudColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudColorMultiplier);
 							GUIfloat("Volumetrics Color Multiplier", ref volumetricsColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsColorMultiplier);
 							GUIfloat("Cloud Scattering Multiplier", ref cloudScatteringMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudScatteringMultiplier);
-							GUIfloat("Cloud Extinction Height Multiplier", ref cloudExtinctionHeightMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudExtinctionHeightMultiplier);
+							GUIfloat("Cloud Sky irradiance Multiplierr", ref cloudSkyIrradianceMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudSkyIrradianceMultiplier);
+
 
 
 							GUILayout.BeginHorizontal ();
@@ -1726,7 +1728,7 @@ namespace scatterer
 			cloudColorMultiplier = skyNode.cloudColorMultiplier;
 			volumetricsColorMultiplier = skyNode.volumetricsColorMultiplier;
 			cloudScatteringMultiplier = skyNode.cloudScatteringMultiplier;
-			cloudExtinctionHeightMultiplier = skyNode.cloudExtinctionHeightMultiplier;
+			cloudSkyIrradianceMultiplier = skyNode.cloudSkyIrradianceMultiplier;
 		}
 		
 		public void getSettingsFromOceanNode ()
@@ -1826,7 +1828,7 @@ namespace scatterer
 			scattererCelestialBodies = scattererPlanetsListReader.scattererCelestialBodies;
 			celestialLightSourcesData = scattererPlanetsListReader.celestialLightSourcesData;
 			sunflaresList = scattererPlanetsListReader.sunflares;
-			mainSunCelestialBodyName = scattererPlanetsListReader.mainSunCelestialBodyName;
+			//mainSunCelestialBodyName = scattererPlanetsListReader.mainSunCelestialBodyName;
 
 			//load atmo and ocean configs
 			atmoConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_atmosphere");

@@ -14,8 +14,8 @@ namespace scatterer
 {
 	public class planetsListReader
 	{
-		[Persistent]
-		public string mainSunCelestialBodyName="Sun";
+//		[Persistent]
+//		public string mainSunCelestialBodyName="Sun";
 
 		[Persistent]
 		public List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody > {};

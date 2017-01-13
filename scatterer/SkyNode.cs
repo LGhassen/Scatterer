@@ -123,7 +123,7 @@ namespace scatterer
 		[Persistent]
 		public float cloudScatteringMultiplier=1f;
 		[Persistent]
-		public float cloudExtinctionHeightMultiplier=1f;
+		public float cloudSkyIrradianceMultiplier=1f;
 		
 		PQS CurrentPQS = null;
 
@@ -577,7 +577,7 @@ namespace scatterer
 						
 						InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 
-						if (!inScaledSpace)
+						//if (!inScaledSpace)
 							UpdatePostProcessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 						
 //						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
@@ -588,7 +588,7 @@ namespace scatterer
 						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
 							("cloudScatteringMultiplier", cloudScatteringMultiplier);
 						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-							("cloudExtinctionHeightMultiplier", cloudExtinctionHeightMultiplier);
+							("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
 					}
 					
 					//volumetrics
@@ -615,7 +615,8 @@ namespace scatterer
 							EVEvolumetrics[i].SetFloat
 								("cloudScatteringMultiplier", cloudScatteringMultiplier);
 							EVEvolumetrics[i].SetFloat
-								("cloudExtinctionHeightMultiplier", cloudExtinctionHeightMultiplier);
+								("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
+
 						}
 					}
 				}
@@ -799,7 +800,7 @@ namespace scatterer
 				if (Core.Instance.drawAtmoOnTopOfClouds && drawSkyOverClouds)
 					m_skyMaterialScaled.renderQueue=3002;
 				else
-					m_skyMaterialScaled.renderQueue=3001;
+					m_skyMaterialScaled.renderQueue=2999; //this lets modified EVE clouds draw over sky
 			}
 		}
 		
@@ -1050,39 +1051,38 @@ namespace scatterer
 			
 			mat.SetFloat ("_Post_Extinction_Tint", interpolatedSettings._Post_Extinction_Tint);
 			mat.SetFloat ("postExtinctionMultiplier", interpolatedSettings.postExtinctionMultiplier);
-			
-			
-			
+
 			mat.SetFloat ("_openglThreshold", interpolatedSettings.openglThreshold);
-			
-			
+
 			
 			mat.SetFloat("_Scale", 1);
-			
-			mat.SetMatrix ("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
+
 			mat.SetVector ("SUN_DIR", m_manager.getDirectionToSun ().normalized);
 			mat.SetFloat ("SUN_INTENSITY", sunIntensity);
 			
+			if (farCamera)
+			{
+				mat.SetMatrix ("_Globals_CameraToWorld", farCamera.worldToCameraMatrix.inverse);
+				Matrix4x4 ctol1 = farCamera.cameraToWorldMatrix;
+				Vector3d tmp = (farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+				
+				Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
+				                                     ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
+				                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
+				                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
+				
+				viewMat = viewMat.Inverse ();
+				Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
+				
+				mat.SetVector ("_camPos", farCamera.transform.position - parentCelestialBody.transform.position);  //better do this small calculation here
 			
+
+				Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
+				mat.SetMatrix ("_ViewProjInv", viewProjMat.inverse);
 			
-			Matrix4x4 ctol1 = farCamera.cameraToWorldMatrix;
-			Vector3d tmp = (farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
-			
-			Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
-			                                     ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
-			                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
-			                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
-			
-			viewMat = viewMat.Inverse ();
-			Matrix4x4 projMat = GL.GetGPUProjectionMatrix (farCamera.projectionMatrix, false);
-			
-			Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
-			mat.SetMatrix ("_ViewProjInv", viewProjMat.inverse);
-			
-			
+			}
 			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			mat.SetVector ("_camPos", farCamera.transform.position-parentCelestialBody.transform.position);  //better do this small calculation here
-			
+
 			if (Core.Instance.usePlanetShine)
 			{
 				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
@@ -1523,6 +1523,10 @@ namespace scatterer
 						object cloudsPQS = _obj.GetType ().GetField ("cloudsPQS", flags).GetValue (_obj) as object;
 						object layerVolume = cloudsPQS.GetType ().GetField ("layerVolume", flags).GetValue (cloudsPQS) as object;
 						Material ParticleMaterial = layerVolume.GetType ().GetField ("ParticleMaterial", flags).GetValue (layerVolume) as Material;
+											
+						ParticleMaterial.EnableKeyword ("SCATTERER_ON");
+						ParticleMaterial.DisableKeyword ("SCATTERER_OFF");
+
 						EVEvolumetrics.Add (ParticleMaterial);
 					}
 					catch (Exception stupid)

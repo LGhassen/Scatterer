@@ -10,6 +10,7 @@ namespace scatterer
 		[Persistent] public string transformName;
 		[Persistent] public float loadDistance;
 		[Persistent] public float unloadDistance;
+		[Persistent] public string mainSunCelestialBody;
 		[Persistent] public bool hasOcean;
 		[Persistent] public List<string> eclipseCasters=new List<string> {};
 
@@ -27,7 +28,7 @@ namespace scatterer
 		
 		public scattererCelestialBody (string inCelestialBodyName, string inTransformName, float inloadDistance,
 		                               float inUnloadDistance, bool inHasOcean, List<string> inEclipseCasters,
-		                               List<atmoPlanetShineSource> inPlanetShineSources)
+		                               List<atmoPlanetShineSource> inPlanetShineSources, string inSun)
 		{
 			celestialBodyName = inCelestialBodyName;
 			transformName=inTransformName;
@@ -37,6 +38,7 @@ namespace scatterer
 			eclipseCasters = inEclipseCasters;
 
 			planetshineSources = inPlanetShineSources;
+			mainSunCelestialBody = inSun;
 		}
 
 		public scattererCelestialBody (CelestialBody inCelestialBody, Transform inTransform)
