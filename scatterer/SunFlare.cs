@@ -188,10 +188,10 @@ namespace scatterer
 			//else values smoothstepped in between
 			sunGlareFade = Mathf.SmoothStep(0,1,(dist/sunGlareFadeDistance)-0.25f);
 
-			//if dist < 0.75 * ghostFadeDistance -->1
-			//if dist > ghostFadeDistance -->0
+			//if dist < 0.5 * ghostFadeDistance -->1
+			//if dist > 1.5 * ghostFadeDistance -->0
 			//else values smoothstepped in between
-			ghostFade = Mathf.SmoothStep(0,1,(dist-0.75f*ghostFadeDistance)/(0.25f*ghostFadeDistance));
+			ghostFade = Mathf.SmoothStep(0,1,(dist-0.5f*ghostFadeDistance)/(ghostFadeDistance));
 			ghostFade = 1 - ghostFade;
 
 			hitStatus=false;
