@@ -229,9 +229,11 @@ namespace scatterer
 		float rimBlend = 20f;
 		float rimpower = 600f;
 		float cloudColorMultiplier=1f;
-		float volumetricsColorMultiplier=1f;
 		float cloudScatteringMultiplier=1f;
 		float cloudSkyIrradianceMultiplier = 1f;
+		float volumetricsColorMultiplier=1f;
+//		float volumetricsScatteringMultiplier=1f;
+//		float volumetricsSkyIrradianceMultiplier = 1f;
 		float mieG = 0.85f;
 		float openglThreshold = 10f;
 		float _GlobalOceanAlpha = 1f;
@@ -1364,13 +1366,16 @@ namespace scatterer
 
 							GUIfloat("mieG", ref mieG, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_mieG);
 								
+							if (integrateWithEVEClouds)
+							{
+								GUIfloat("Cloud Color Multiplier", ref cloudColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudColorMultiplier);
+								GUIfloat("Cloud Scattering Multiplier", ref cloudScatteringMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudScatteringMultiplier);
+								GUIfloat("Cloud Sky irradiance Multiplier", ref cloudSkyIrradianceMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudSkyIrradianceMultiplier);
 								
-							GUIfloat("Cloud Color Multiplier", ref cloudColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudColorMultiplier);
-							GUIfloat("Volumetrics Color Multiplier", ref volumetricsColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsColorMultiplier);
-							GUIfloat("Cloud Scattering Multiplier", ref cloudScatteringMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudScatteringMultiplier);
-							GUIfloat("Cloud Sky irradiance Multiplierr", ref cloudSkyIrradianceMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudSkyIrradianceMultiplier);
-
-
+								GUIfloat("Volumetrics Color Multiplier", ref volumetricsColorMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsColorMultiplier);
+//								GUIfloat("Volumetrics Scattering Multiplier", ref volumetricsScatteringMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsScatteringMultiplier);
+//								GUIfloat("Volumetrics Sky irradiance Multiplier", ref volumetricsSkyIrradianceMultiplier, ref scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsSkyIrradianceMultiplier);
+							}
 
 							GUILayout.BeginHorizontal ();
 							GUILayout.Label ("RimBlend");
@@ -1726,9 +1731,12 @@ namespace scatterer
 			viewdirOffset = selected.viewdirOffset;
 
 			cloudColorMultiplier = skyNode.cloudColorMultiplier;
-			volumetricsColorMultiplier = skyNode.volumetricsColorMultiplier;
 			cloudScatteringMultiplier = skyNode.cloudScatteringMultiplier;
 			cloudSkyIrradianceMultiplier = skyNode.cloudSkyIrradianceMultiplier;
+
+			volumetricsColorMultiplier = skyNode.volumetricsColorMultiplier;
+//			volumetricsScatteringMultiplier = skyNode.volumetricsScatteringMultiplier;
+//			volumetricsSkyIrradianceMultiplier = skyNode.volumetricsSkyIrradianceMultiplier;
 		}
 		
 		public void getSettingsFromOceanNode ()

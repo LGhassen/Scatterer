@@ -45,17 +45,19 @@ namespace scatterer
 				}				
 			}
 
-			originalAmbientLight = RenderSettings.ambientLight;
-			ambientLight = Color.black;
 
+
+			ambientLight = Color.black;
 			_scaledspaceSunLight = scaledspaceSunLight.GetComponent<Light> ();
-			originalScaledSunlightIntensity = _scaledspaceSunLight.intensity;
 
 		}
 
 		public void OnPreRender()
 		{
+			originalAmbientLight = RenderSettings.ambientLight;
 			RenderSettings.ambientLight = ambientLight;
+
+			originalScaledSunlightIntensity = _scaledspaceSunLight.intensity;
 			_scaledspaceSunLight.intensity=0.95f;
 		}
 

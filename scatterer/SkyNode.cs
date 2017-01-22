@@ -119,12 +119,17 @@ namespace scatterer
 		[Persistent]
 		public float cloudColorMultiplier=1f;
 		[Persistent]
-		public float volumetricsColorMultiplier = 1f;
-		[Persistent]
 		public float cloudScatteringMultiplier=1f;
 		[Persistent]
 		public float cloudSkyIrradianceMultiplier=1f;
 		
+		[Persistent]
+		public float volumetricsColorMultiplier = 1f;
+//		[Persistent]
+//		public float volumetricsScatteringMultiplier=1f;
+//		[Persistent]
+//		public float volumetricsSkyIrradianceMultiplier = 1f;
+
 		PQS CurrentPQS = null;
 
 		PQSMod_CelestialBodyTransform currentPQSMod_CelestialBodyTransform=null;
@@ -612,10 +617,10 @@ namespace scatterer
 							
 							EVEvolumetrics[i].SetFloat
 								("cloudColorMultiplier", volumetricsColorMultiplier);
-							EVEvolumetrics[i].SetFloat
-								("cloudScatteringMultiplier", cloudScatteringMultiplier);
-							EVEvolumetrics[i].SetFloat
-								("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
+//							EVEvolumetrics[i].SetFloat
+//								("cloudScatteringMultiplier", volumetricsScatteringMultiplier);
+//							EVEvolumetrics[i].SetFloat
+//								("cloudSkyIrradianceMultiplier", volumetricsSkyIrradianceMultiplier);
 
 						}
 					}
