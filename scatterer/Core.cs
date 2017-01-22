@@ -47,7 +47,7 @@ namespace scatterer
 		int windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
 
 		planetsListReader scattererPlanetsListReader = new planetsListReader ();
-		List<SunFlare> customSunFlares = new List<SunFlare>();
+		public List<SunFlare> customSunFlares = new List<SunFlare>();
 		bool customSunFlareAdded=false;
 		
 		bool visible = false;
@@ -186,7 +186,7 @@ namespace scatterer
 		public float
 			shadowsDistance=100000;
 		
-		[Persistent]
+		//[Persistent]
 		float godrayResolution = 1f;
 
 		[Persistent]
@@ -211,8 +211,6 @@ namespace scatterer
 		CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
 		public RenderTexture godrayDepthTexture;
-		
-		public Manager managerWactivePQS;
 		
 		bool depthBufferSet = false;
 
@@ -699,8 +697,6 @@ namespace scatterer
 										if (!_cur.m_manager.m_skyNode.inScaledSpace)
 										{
 											pqsEnabled = true;
-											//assuming only 1 pqs can be active at a time
-											managerWactivePQS = _cur.m_manager;
 										}
 									}
 								}
@@ -798,9 +794,10 @@ namespace scatterer
 					//if in mapView check that depth texture is clear for the sunflare shader
 					if (customDepthBuffer)
 					{
-					if (!customDepthBuffer.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabled) )
-						customDepthBuffer.clearDepthTexture();
+						if (!customDepthBuffer.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabled) )
+							customDepthBuffer.clearDepthTexture();
 					}
+
 					//update sun flare
 					if (fullLensFlareReplacement)
 					{
@@ -1041,6 +1038,7 @@ namespace scatterer
 				{
 					foreach (SunFlare customSunFlare in customSunFlares)
 					{
+						customSunFlare.cleanUp();
 						Component.Destroy (customSunFlare);
 					}
 
@@ -1123,17 +1121,17 @@ namespace scatterer
 //					usePlanetShine = GUILayout.Toggle(usePlanetShine, "PlanetShine");
 					integrateWithEVEClouds = GUILayout.Toggle(integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 
-					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds(old cloud shading)");
+					drawAtmoOnTopOfClouds= GUILayout.Toggle(drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds(old cloud shading, use with EVE 7-4)");
 
 					fullLensFlareReplacement=GUILayout.Toggle(fullLensFlareReplacement, "Lens flare shader");
 					useEclipses = GUILayout.Toggle(useEclipses, "Eclipses (WIP, sky/orbit only for now)");
 					useRingShadows = GUILayout.Toggle(useRingShadows, "Kopernicus ring shadows");
 					useGodrays = GUILayout.Toggle(useGodrays, "Godrays (early WIP)");
 					
-					GUILayout.BeginHorizontal ();
-					GUILayout.Label ("Godray resolution scale");
-					godrayResolution = float.Parse (GUILayout.TextField (godrayResolution.ToString ("0.000")));
-					GUILayout.EndHorizontal ();
+//					GUILayout.BeginHorizontal ();
+//					GUILayout.Label ("Godray resolution scale");
+//					godrayResolution = float.Parse (GUILayout.TextField (godrayResolution.ToString ("0.000")));
+//					GUILayout.EndHorizontal ();
 					
 					terrainShadows = GUILayout.Toggle(terrainShadows, "Terrain shadows");
 					GUILayout.BeginHorizontal ();

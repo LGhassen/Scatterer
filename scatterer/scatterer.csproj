@@ -102,6 +102,7 @@
     <Compile Include="shaderReplacer.cs" />
     <Compile Include="DisableEffectsForTextureReplacer.cs" />
     <Compile Include="DisableEffectsChecker.cs" />
+    <Compile Include="SunflareCameraHook.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />

@@ -186,7 +186,8 @@ namespace scatterer
 		public Material m_skyMaterialScaled, m_skyMaterialLocal;
 		
 		//		public Material sunglareMaterial;
-		
+
+		Material sunflareExtinctionMaterial;
 		
 		Material originalMaterial;
 		Material alteredMaterial;
@@ -272,41 +273,41 @@ namespace scatterer
 			m_skyMaterialScaled.SetOverrideTag ("IgnoreProjector", "True");
 			m_atmosphereMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
-			if (Core.Instance.useEclipses)
-			{
-				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_ON");
-				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_OFF");
-				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_ON");
-				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_OFF");
-			}
-			else
-			{
-				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_ON");
-				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_OFF");
-				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_ON");
-				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_OFF");
-			}
-			
-			if (Core.Instance.usePlanetShine)
-			{
-				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_ON");
-				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_OFF");
-				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_ON");
-				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_OFF");
-				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_ON");
-				m_atmosphereMaterial.DisableKeyword ("PLANETSHINE_OFF");
-				
-				
-			}
-			else
-			{
-				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_ON");
-				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_OFF");
-				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_ON");
-				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_OFF");
-				m_atmosphereMaterial.DisableKeyword ("PLANETSHINE_ON");
-				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_OFF");
-			}
+//			if (Core.Instance.useEclipses)
+//			{
+//				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_ON");
+//				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_OFF");
+//				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_ON");
+//				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_OFF");
+//			}
+//			else
+//			{
+//				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_ON");
+//				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_OFF");
+//				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_ON");
+//				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_OFF");
+//			}
+//			
+//			if (Core.Instance.usePlanetShine)
+//			{
+//				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_ON");
+//				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_OFF");
+//				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_ON");
+//				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_OFF");
+//				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_ON");
+//				m_atmosphereMaterial.DisableKeyword ("PLANETSHINE_OFF");
+//				
+//				
+//			}
+//			else
+//			{
+//				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_ON");
+//				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_OFF");
+//				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_ON");
+//				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_OFF");
+//				m_atmosphereMaterial.DisableKeyword ("PLANETSHINE_ON");
+//				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_OFF");
+//			}
 
 			if (Core.Instance.useAlternateShaderSQRT)
 			{
@@ -456,23 +457,42 @@ namespace scatterer
 				}
 			}
 
-			if (hasRingObjectAndShadowActivated)
-			{
-				m_skyMaterialScaled.EnableKeyword ("RINGSHADOW_ON");
-				m_skyMaterialScaled.DisableKeyword ("RINGSHADOW_OFF");
-				m_skyMaterialLocal.EnableKeyword ("RINGSHADOW_ON");
-				m_skyMaterialLocal.DisableKeyword ("RINGSHADOW_OFF");
-			}
-			else
-			{
-				m_skyMaterialScaled.DisableKeyword ("RINGSHADOW_ON");
-				m_skyMaterialScaled.EnableKeyword ("RINGSHADOW_OFF");
-				m_skyMaterialLocal.DisableKeyword ("RINGSHADOW_ON");
-				m_skyMaterialLocal.EnableKeyword ("RINGSHADOW_OFF");
-			}
+//			if (hasRingObjectAndShadowActivated)
+//			{
+//				m_skyMaterialScaled.EnableKeyword ("RINGSHADOW_ON");
+//				m_skyMaterialScaled.DisableKeyword ("RINGSHADOW_OFF");
+//				m_skyMaterialLocal.EnableKeyword ("RINGSHADOW_ON");
+//				m_skyMaterialLocal.DisableKeyword ("RINGSHADOW_OFF");
+//			}
+//			else
+//			{
+//				m_skyMaterialScaled.DisableKeyword ("RINGSHADOW_ON");
+//				m_skyMaterialScaled.EnableKeyword ("RINGSHADOW_OFF");
+//				m_skyMaterialLocal.DisableKeyword ("RINGSHADOW_ON");
+//				m_skyMaterialLocal.EnableKeyword ("RINGSHADOW_OFF");
+//			}
 
 			InitUniforms (m_skyMaterialScaled);
 			InitUniforms (m_skyMaterialLocal);
+
+			if (Core.Instance.fullLensFlareReplacement)
+			{
+				sunflareExtinctionMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer/sunFlareExtinction"]);
+				sunflareExtinctionMaterial.SetFloat ("Rg", Rg);
+				sunflareExtinctionMaterial.SetFloat ("Rt", Rt);
+				sunflareExtinctionMaterial.SetTexture ("_Sky_Transmittance", m_transmit);
+
+				if (hasRingObjectAndShadowActivated)
+				{
+					sunflareExtinctionMaterial.SetFloat ("ringInnerRadius", ringInnerRadius);
+					sunflareExtinctionMaterial.SetFloat ("ringOuterRadius", ringOuterRadius);
+					
+					sunflareExtinctionMaterial.SetVector ("ringNormal", ringObject.transform.up);
+					
+					sunflareExtinctionMaterial.SetTexture ("ringTexture", ringTexture);
+				}
+
+			}
 			
 		}
 		
@@ -632,7 +652,30 @@ namespace scatterer
 					mapVolumetrics=true;
 				}
 			}
-			
+
+			//update extinction for sunflares
+			if (Core.Instance.fullLensFlareReplacement)
+			{
+				foreach (SunFlare customSunFlare in Core.Instance.customSunFlares)
+				{
+					//render extinction to texture
+					sunflareExtinctionMaterial.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
+
+					if (!MapView.MapIsEnabled)
+						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", Core.Instance.farCamera.transform.position - parentCelestialBody.transform.position);
+					else
+						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Core.Instance.scaledSpaceCamera.transform.position) - parentCelestialBody.transform.position);
+
+					Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 0); //pass 0 for sunflare extinction
+
+					if (hasRingObjectAndShadowActivated)
+					{
+						sunflareExtinctionMaterial.SetVector("ringNormal", ringObject.transform.up);
+						Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 1); //pass 1 for ring extinction
+					}
+				}
+			}
+
 			//			Shader.SetGlobalVector ("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
 			//			Shader.SetGlobalFloat (ShaderProperties._GlobalOceanAlpha_PROPERTY, _GlobalOceanAlpha);
 			
@@ -995,6 +1038,17 @@ namespace scatterer
 			
 			
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun().normalized);
+
+			if (Core.Instance.usePlanetShine)
+			{
+				mat.EnableKeyword ("PLANETSHINE_ON");
+				mat.DisableKeyword ("PLANETSHINE_OFF");	
+			}
+			else
+			{
+				mat.DisableKeyword ("PLANETSHINE_ON");
+				mat.EnableKeyword ("PLANETSHINE_OFF");
+			}
 		}
 		
 //		public void InitPostprocessMaterialGlobal ()
@@ -1182,12 +1236,45 @@ namespace scatterer
 			//ring shadow parameters
 			if (hasRingObjectAndShadowActivated)
 			{
-				mat.SetFloat("ringInnerRadius", ringInnerRadius);
-				mat.SetFloat("ringOuterRadius", ringOuterRadius);
+				mat.EnableKeyword ("RINGSHADOW_ON");
+				mat.DisableKeyword ("RINGSHADOW_OFF");
 
-				mat.SetVector("ringNormal", ringObject.transform.up);
+				mat.SetFloat ("ringInnerRadius", ringInnerRadius);
+				mat.SetFloat ("ringOuterRadius", ringOuterRadius);
 
-				mat.SetTexture("ringTexture", ringTexture);
+				mat.SetVector ("ringNormal", ringObject.transform.up);
+
+				mat.SetTexture ("ringTexture", ringTexture);
+			}
+			else
+			{
+				mat.DisableKeyword ("RINGSHADOW_ON");
+				mat.EnableKeyword ("RINGSHADOW_OFF");
+				mat.DisableKeyword ("RINGSHADOW_ON");
+				mat.EnableKeyword ("RINGSHADOW_OFF");
+			}
+
+
+			if (Core.Instance.useEclipses)
+			{
+				mat.EnableKeyword ("ECLIPSES_ON");
+				mat.DisableKeyword ("ECLIPSES_OFF");
+			}
+			else
+			{
+				mat.DisableKeyword ("ECLIPSES_ON");
+				mat.EnableKeyword ("ECLIPSES_OFF");
+			}
+			
+			if (Core.Instance.usePlanetShine)
+			{
+				mat.EnableKeyword ("PLANETSHINE_ON");
+				mat.DisableKeyword ("PLANETSHINE_OFF");	
+			}
+			else
+			{
+				mat.DisableKeyword ("PLANETSHINE_ON");
+				mat.EnableKeyword ("PLANETSHINE_OFF");
 			}
 		}
 

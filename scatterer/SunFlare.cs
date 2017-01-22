@@ -32,9 +32,9 @@ namespace scatterer
 		Texture2D sunGhost2;
 		Texture2D sunGhost3;
 
-		Manager lastActivePQS=null; //manager with last active PQS, for atmosphere transmittance data
-
-		bool transmittanceSet= false;
+		public RenderTexture extinctionTexture;
+		int waitBeforeReloadCnt = 0;
+		SunflareCameraHook nearCameraHook, scaledCameraHook;
 
 		Vector3 sunViewPortPos=Vector3.zero;
 
@@ -155,6 +155,8 @@ namespace scatterer
 				ghost3Settings2.SetRow(i,ghost3SettingsList2[i]);
 			}
 
+			extinctionTexture = new RenderTexture (4, 4, 0, RenderTextureFormat.ARGB32);
+			extinctionTexture.Create ();
 
 			sunglareMaterial.SetVector ("flareSettings", flareSettings);
 			sunglareMaterial.SetVector ("spikesSettings", spikesSettings);
@@ -168,12 +170,25 @@ namespace scatterer
 			sunglareMaterial.SetMatrix ("ghost3Settings1", ghost3Settings1);
 			sunglareMaterial.SetMatrix ("ghost3Settings2", ghost3Settings2);
 
+			sunglareMaterial.SetTexture ("extinctionTexture", extinctionTexture);
+
+
+			scaledCameraHook = (SunflareCameraHook) Core.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
+			scaledCameraHook.flare = this;
+
+			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			{
+				nearCameraHook = (SunflareCameraHook)Core.Instance.nearCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
+				nearCameraHook.flare = this;
+			}
+
+
 			Debug.Log ("[Scatterer] Added custom sun flare for "+sourceName);
 
 		}
 		
-		
-		public void OnPreRender()
+//		public void OnPreRender()
+		public void updateProperties()
 		{
 			sunViewPortPos = Core.Instance.scaledSpaceCamera.WorldToViewportPoint
 				(ScaledSpace.LocalToScaledSpace(source.transform.position));
@@ -228,50 +243,37 @@ namespace scatterer
 			sunglareMaterial.SetFloat ("aspectRatio", Core.Instance.scaledSpaceCamera.aspect);
 			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
 			sunglareMaterial.SetFloat ("sunGlareFade", sunGlareFade);
-			sunglareMaterial.SetFloat ("ghostFade", ghostFade);
-
-			//check for active PQS
-//			if (!transmittanceSet && Core.Instance.pqsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-			if (!transmittanceSet && Core.Instance.pqsEnabled)
-			{
-				if ((lastActivePQS != Core.Instance.managerWactivePQS) || !(lastActivePQS))
-				{
-					sunglareMaterial.SetFloat ("Rg", Core.Instance.managerWactivePQS.m_skyNode.Rg);
-					sunglareMaterial.SetFloat ("Rt", Core.Instance.managerWactivePQS.m_skyNode.Rt);
-					sunglareMaterial.SetTexture ("_Sky_Transmittance", Core.Instance.managerWactivePQS.m_skyNode.m_transmit);
-
-					lastActivePQS = Core.Instance.managerWactivePQS;
-
-					Debug.Log("[Scatterer] Sunflare: loaded new transmittance table");
-				}
-
-				sunglareMaterial.SetFloat("useTransmittance",1f);
-				transmittanceSet=true;
-			}
-			if (transmittanceSet)
-			{
-				if (!Core.Instance.pqsEnabled)
-				{
-					sunglareMaterial.SetFloat ("useTransmittance", 0f);
-					transmittanceSet = false;
-				}
-				else
-				{
-
-
-					if (!MapView.MapIsEnabled)
-						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", Core.Instance.farCamera.transform.position - lastActivePQS.parentCelestialBody.transform.position);
-					else
-						sunglareMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Core.Instance.scaledSpaceCamera.transform.position) - lastActivePQS.parentCelestialBody.transform.position);
-
-//					sunglareMaterial.SetVector ("_Sun_WorldSunDir", lastActivePQS.getDirectionToSun ().normalized);
-					sunglareMaterial.SetVector ("_Sun_WorldSunDir", lastActivePQS.getDirectionToCelestialBody (source).normalized);
-				}
-			}
+			sunglareMaterial.SetFloat ("ghostFade", ghostFade);		
 		}	
 
 		public void updateNode()
+		//public void Update()
 		{
+			//if rendertexture is lost, wait a bit before re-creating it
+			if (!extinctionTexture.IsCreated())
+			{
+				waitBeforeReloadCnt++;
+				if (waitBeforeReloadCnt >= 2)
+				{
+					extinctionTexture.Create();
+					waitBeforeReloadCnt = 0;
+				}
+			}
+
+			//enable or disable scaled or near script depending on trackstation or mapview
+			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			{
+				nearCameraHook.enabled = true;
+				scaledCameraHook.enabled = false;
+			}
+			else
+			{
+				if (nearCameraHook)
+					nearCameraHook.enabled=false;
+
+				scaledCameraHook.enabled=true;
+			}
+
 			//drawmesh calls have to be made in update()
 			//if they're done on prerender or anywhere else they don't work as far as I know
 			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
@@ -288,7 +290,16 @@ namespace scatterer
 			}
 		}
 
+		public void clearExtinction()
+		{
+			RenderTexture rt=RenderTexture.active;
+			RenderTexture.active= extinctionTexture;			
 
+			GL.Clear(false,true,Color.white);
+
+			//restore active rendertexture
+			RenderTexture.active=rt;
+		}	
 
 //		public void saveToConfigNode ()
 //		{
@@ -296,7 +307,19 @@ namespace scatterer
 //			cnTemp.Save (Core.Instance.path + "/sunflare/sunflare.cfg");
 //		}
 
-
+		public void cleanUp()
+		{
+			if (nearCameraHook)
+			{
+				Component.Destroy (nearCameraHook);
+				UnityEngine.Object.Destroy (nearCameraHook);
+			}
+			if (scaledCameraHook)
+			{
+				Component.Destroy (scaledCameraHook);
+				UnityEngine.Object.Destroy (scaledCameraHook);
+			}
+		}
 
 		public void loadConfigNode ()
 		{
