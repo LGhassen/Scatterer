@@ -44,11 +44,14 @@ namespace scatterer
 
 		float sunGlareScale=1;
 		float sunGlareFade=1;
+		float ghostFade=1;
 
 		Mesh screenMesh;
 
 		[Persistent]
-		float sunGlareFadeDistance = 1000000;
+		float sunGlareFadeDistance = 250000;
+		[Persistent]
+		float ghostFadeDistance = 13500000;
 
 		//input settings
 		[Persistent]
@@ -180,10 +183,16 @@ namespace scatterer
 
 			sunGlareScale = dist / 2266660f;
 
-			//if dist> 0.75 sunglarefadedistance -->1
-			//if dist < 0.25*sunglarefadedistance -->0
+			//if dist > 1.25*sunglareFadeDistance -->1
+			//if dist < 0.25*sunglareFadeDistance -->0
 			//else values smoothstepped in between
 			sunGlareFade = Mathf.SmoothStep(0,1,(dist/sunGlareFadeDistance)-0.25f);
+
+			//if dist < 0.75 * ghostFadeDistance -->1
+			//if dist > ghostFadeDistance -->0
+			//else values smoothstepped in between
+			ghostFade = Mathf.SmoothStep(0,1,(dist-0.75f*ghostFadeDistance)/(0.25f*ghostFadeDistance));
+			ghostFade = 1 - ghostFade;
 
 			hitStatus=false;
 			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
@@ -219,6 +228,7 @@ namespace scatterer
 			sunglareMaterial.SetFloat ("aspectRatio", Core.Instance.scaledSpaceCamera.aspect);
 			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
 			sunglareMaterial.SetFloat ("sunGlareFade", sunGlareFade);
+			sunglareMaterial.SetFloat ("ghostFade", ghostFade);
 
 			//check for active PQS
 //			if (!transmittanceSet && Core.Instance.pqsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
