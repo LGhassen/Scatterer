@@ -221,8 +221,10 @@ namespace scatterer
 				waterMeshRenderers[i].sharedMaterial = m_oceanMaterialFar;
 				waterMeshRenderers[i].material =m_oceanMaterialFar;
 				
-				waterMeshRenderers[i].shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+
 				waterMeshRenderers[i].receiveShadows = false;
+				waterMeshRenderers[i].shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+
 
 //				CommandBufferModifiedProjectionMatrix tmp = waterGameObjects[i].AddComponent<CommandBufferModifiedProjectionMatrix>();
 //				tmp.m_core=m_core;

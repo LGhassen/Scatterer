@@ -588,39 +588,45 @@ namespace scatterer
 			
 			//update EVE cloud shaders
 			//maybe refactor?
-			if ((Core.Instance.integrateWithEVEClouds) && (Core.Instance.EVEClouds.ContainsKey(parentCelestialBody.name)))
+			if (Core.Instance.integrateWithEVEClouds)
 			{
 				try
 				{
-					//2d clouds
-					int size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
-					for (int i=0;i<size;i++)
-					{
-						//keep these for now or something breaks in the extinction
-						InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-						SetUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-						
-						InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+					int size;
 
-						//if (!inScaledSpace)
+					//2d clouds
+					if(Core.Instance.EVEClouds.ContainsKey(parentCelestialBody.name))
+					{
+						size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
+						for (int i=0;i<size;i++)
+						{
+							//keep these for now or something breaks in the extinction
+							InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+							SetUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+							
+							InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+							
+							//if (!inScaledSpace)
 							UpdatePostProcessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-						
-//						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
-//							("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
-						
-						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-							("cloudColorMultiplier", cloudColorMultiplier);
-						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-							("cloudScatteringMultiplier", cloudScatteringMultiplier);
-						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-							("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
+							
+							//						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
+							//							("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
+							
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
+								("cloudColorMultiplier", cloudColorMultiplier);
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
+								("cloudScatteringMultiplier", cloudScatteringMultiplier);
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
+								("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
+						}
 					}
-					
+
 					//volumetrics
 					//if in local mode and mapping is done
 					if (!inScaledSpace && !mapVolumetrics)
 					{
 						size = EVEvolumetrics.Count;
+
 						for (int i=0;i<size;i++)
 						{
 							//keep these for now or something breaks in the extinction
@@ -628,9 +634,7 @@ namespace scatterer
 							SetUniforms(EVEvolumetrics[i]);
 							
 							InitPostprocessMaterial(EVEvolumetrics[i]);
-
-							if (!inScaledSpace)
-								UpdatePostProcessMaterial(EVEvolumetrics[i]);
+							UpdatePostProcessMaterial(EVEvolumetrics[i]);
 							
 							EVEvolumetrics[i].SetVector
 								("_PlanetWorldPos", m_manager.parentCelestialBody.transform.position);
@@ -641,7 +645,6 @@ namespace scatterer
 //								("cloudScatteringMultiplier", volumetricsScatteringMultiplier);
 //							EVEvolumetrics[i].SetFloat
 //								("cloudSkyIrradianceMultiplier", volumetricsSkyIrradianceMultiplier);
-
 						}
 					}
 				}
@@ -693,7 +696,8 @@ namespace scatterer
 				if (!inScaledSpace && prevState)
 				{
 					//set flag to map EVE volumetrics after a few frames
-					mapVolumetrics=true;
+					if (Core.Instance.integrateWithEVEClouds)
+						mapVolumetrics=true;
 				}
 
 				//if we go from local to scaled, clear volumetrics
@@ -765,7 +769,6 @@ namespace scatterer
 							}
 
 							bool cloud2dScaled = (bool) cloud2dObj.GetType().GetField("isScaled", flags).GetValue(cloud2dObj);
-							Debug.Log("[Scatterer] clouds2d scaled: "+cloud2dScaled.ToString());
 
 							MethodInfo scaledGetter = cloud2dObj.GetType().GetProperty("Scaled").GetGetMethod();
 							MethodInfo scaledSetter = cloud2dObj.GetType().GetProperty("Scaled").GetSetMethod();
@@ -1624,7 +1627,6 @@ namespace scatterer
 					catch (Exception stupid)
 					{
 						Debug.Log ("[Scatterer] Volumetric clouds error on planet: " + parentCelestialBody.name + stupid.ToString ());
-						continue;
 					}
 				}				
 				Debug.Log ("[Scatterer] Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + parentCelestialBody.name);

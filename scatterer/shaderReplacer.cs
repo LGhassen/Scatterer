@@ -19,6 +19,10 @@ namespace scatterer
 		private static ShaderReplacer instance;
 		public Dictionary<string, Shader> LoadedShaders = new Dictionary<string, Shader>();
 		string path;
+
+		Dictionary<string, Shader> EVEshaderDictionary;
+
+		public Dictionary<string, string> gameShaders = new Dictionary<string, string>();
 		
 		private ShaderReplacer()
 		{
@@ -96,76 +100,118 @@ namespace scatterer
 			if (EVEshaderLoaderType == null)
 			{
 				Debug.Log("[Scatterer] Eve shaderloader type not found");
-				return;
 			}
 			else
 			{
 				Debug.Log("[Scatterer] Eve shaderloader type found");
+
+				Debug.Log("[Scatterer] Eve shaderloader version: " + EVEshaderLoaderType.Assembly.GetName().ToString());
+				
+				const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
+					BindingFlags.Instance | BindingFlags.Static;
+				
+				try
+				{
+					//				EVEinstance = EVEType.GetField("Instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+					EVEshaderDictionary = EVEshaderLoaderType.GetField("shaderDictionary", flags).GetValue(null) as Dictionary<string, Shader> ;
+				}
+				catch (Exception)
+				{
+					Debug.Log("[Scatterer] No EVE shader dictionary found");
+				}
+
+				if (EVEshaderDictionary == null)
+				{
+					Debug.Log("[Scatterer] Failed grabbing EVE shader dictionary");
+				}
+				else
+				{
+					Debug.Log("[Scatterer] Successfully grabbed EVE shader dictionary");
+
+
+					if (EVEshaderDictionary.ContainsKey("EVE/Cloud"))
+					{
+						EVEshaderDictionary["EVE/Cloud"] = LoadedShaders["Scatterer-EVE/Cloud"];
+					}
+					else
+					{
+						List<Material> cloudsList = new List<Material>();
+						EVEshaderDictionary.Add("EVE/Cloud",LoadedShaders["Scatterer-EVE/Cloud"]);
+					}
+					
+					Debug.Log("[Scatterer] Replaced EVE/Cloud in EVE shader dictionary");
+					
+					if (EVEshaderDictionary.ContainsKey("EVE/CloudVolumeParticle"))
+					{
+						EVEshaderDictionary["EVE/CloudVolumeParticle"] = LoadedShaders["Scatterer-EVE/CloudVolumeParticle"];
+					}
+					else
+					{
+						List<Material> cloudsList = new List<Material>();
+						EVEshaderDictionary.Add("EVE/CloudVolumeParticle",LoadedShaders["Scatterer-EVE/CloudVolumeParticle"]);
+					}
+					
+					Debug.Log("[Scatterer] replaced EVE/CloudVolumeParticle in EVE shader dictionary");
+				}
 			}
 			
-			Debug.Log("[Scatterer] Eve shaderloader version: " + EVEshaderLoaderType.Assembly.GetName().ToString());
-			
-			Dictionary<string, Shader> EVEshaderDictionary;
-			
-			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
-				BindingFlags.Instance | BindingFlags.Static;
-			
-			try
-			{
-				//				EVEinstance = EVEType.GetField("Instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-				EVEshaderDictionary = EVEshaderLoaderType.GetField("shaderDictionary", flags).GetValue(null) as Dictionary<string, Shader> ;
-			}
-			catch (Exception)
-			{
-				Debug.Log("[Scatterer] No EVE shader dictionary found");
-				return;
-			}
-			if (EVEshaderDictionary == null)
-			{
-				Debug.Log("[Scatterer] Failed grabbing EVE shader dictionary");
-				return;
-			}
-			else
-			{
-				Debug.Log("[Scatterer] Successfully grabbed EVE shader dictionary");
-			}
-
-			if (EVEshaderDictionary.ContainsKey("EVE/Cloud"))
-			{
-				EVEshaderDictionary["EVE/Cloud"] = LoadedShaders["Scatterer-EVE/Cloud"];
-			}
-			else
-			{
-				List<Material> cloudsList = new List<Material>();
-				EVEshaderDictionary.Add("EVE/Cloud",LoadedShaders["Scatterer-EVE/Cloud"]);
-			}
-
-			Debug.Log("[Scatterer] Replaced EVE/Cloud in EVE shader dictionary");
-
-			if (EVEshaderDictionary.ContainsKey("EVE/CloudVolumeParticle"))
-			{
-				EVEshaderDictionary["EVE/CloudVolumeParticle"] = LoadedShaders["Scatterer-EVE/CloudVolumeParticle"];
-			}
-			else
-			{
-				List<Material> cloudsList = new List<Material>();
-				EVEshaderDictionary.Add("EVE/CloudVolumeParticle",LoadedShaders["Scatterer-EVE/CloudVolumeParticle"]);
-			}
-
-			Debug.Log("[Scatterer] replaced EVE/CloudVolumeParticle in EVE shader dictionary");
 
 			//replace shaders of already created materials
 			Material[] materials = Resources.FindObjectsOfTypeAll<Material>();
+
+			//gameShaders.Clear ();
+
 			foreach (Material mat in materials)
 			{
-				ReplaceEVEShader(mat);
+				//ReplaceGameShader(mat);
+
+				if (EVEshaderDictionary!= null)
+				{
+					ReplaceEVEShader(mat);
+				}
 			}
+
+//			foreach (string key in gameShaders.Keys)
+//			{
+//				Debug.Log(gameShaders[key]);
+//			}
 		}
+
+//		private void ReplaceGameShader(Material mat)
+//		{
+//			String name = mat.shader.name;
+//			Shader replacementShader = null;
+//			
+//			if (!gameShaders.ContainsKey (name))
+//			{
+//				gameShaders [name] = "shader " + name + " materials: " + mat.name;
+//			}
+//			else
+//			{
+//				gameShaders [name] = gameShaders [name] + " " + mat.name;
+//			}
+//			
+//			switch (name)
+//			{
+//			case "Terrain/PQS/PQS Main - Optimised":
+//				Debug.Log("[Scatterer] replacing PQS main optimised");
+//				replacementShader = LoadedShaders["Scatterer/PQS/PQS Main - Optimised"];
+//				Debug.Log("[Scatterer] Shader replaced");
+//				break;
+//			default:
+//				return;
+//			}
+//			if (replacementShader != null)
+//			{
+//				mat.shader = replacementShader;
+//			}
+//		}
 
 		private void ReplaceEVEShader(Material mat)
 		{
 			String name = mat.shader.name;
 			Shader replacementShader = null;
+
 			switch (name)
 			{
 			case "EVE/Cloud":
@@ -178,6 +224,11 @@ namespace scatterer
 				replacementShader = LoadedShaders["Scatterer-EVE/CloudVolumeParticle"];
 				Debug.Log("[Scatterer] Shader replaced");
 				break;
+//			case "Terrain/PQS/PQS Main - Optimised":
+//				Debug.Log("[Scatterer] replacing PQS main optimised");
+//				replacementShader = LoadedShaders["Scatterer/PQS/PQS Main - Optimised"];
+//				Debug.Log("[Scatterer] Shader replaced");
+//				break;
 			default:
 				return;
 			}

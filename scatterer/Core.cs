@@ -43,6 +43,13 @@ namespace scatterer
 			}
 		}
 
+//		float nearCamNearClip=0.1f;
+//		float nearCamFarClip=300f;
+//		float farCamNearClip=300f;
+//		float farCamFarClip=700000f;
+
+
+
 		public Rect windowRect = new Rect (0, 0, 400, 50);
 		int windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
 
@@ -420,7 +427,6 @@ namespace scatterer
 
 //						cams [i].hdr=true;
 
-
 						if (cams [i].name == "Camera ScaledSpace")
 						{
 							//cams [i].renderingPath=RenderingPath.DeferredShading;
@@ -632,9 +638,10 @@ namespace scatterer
 						//string sunFlarePath=path + "/sunflare";
 						foreach (string sunflareBody in sunflaresList)
 						{
+							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
+
 							try
 							{
-								SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
 								customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
 								customSunFlare.sourceName=sunflareBody;
 								customSunFlare.start ();
@@ -643,6 +650,15 @@ namespace scatterer
 							catch (Exception stupid)
 							{
 								Debug.Log("[Scatterer] Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
+																
+								Component.Destroy(customSunFlare);
+								UnityEngine.Object.Destroy(customSunFlare);
+
+								if (customSunFlares.Contains(customSunFlare))
+								{
+									customSunFlares.Remove(customSunFlare);
+								}
+
 								continue;
 							}
 						}
@@ -1072,7 +1088,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0275 preview: "
+				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0301: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
@@ -1449,7 +1465,28 @@ namespace scatterer
 //							
 //							GUILayout.EndHorizontal ();
 
-						
+//							GUILayout.BeginHorizontal ();
+//							GUIfloat("nearCamNearClip",ref nearCamNearClip,ref nearCamNearClip);
+//							GUIfloat("nearCamFarClip",ref nearCamFarClip,ref nearCamFarClip);
+//							GUILayout.EndHorizontal ();
+//
+//							GUILayout.BeginHorizontal ();
+//							GUIfloat("farCamNearClip",ref farCamNearClip,ref farCamNearClip);
+//							GUIfloat("farCamFarClip",ref farCamFarClip,ref farCamFarClip);
+//							GUILayout.EndHorizontal ();
+//
+//							nearCamera.nearClipPlane = nearCamNearClip;
+//							nearCamera.farClipPlane = nearCamFarClip;
+//							
+//							farCamera.nearClipPlane = farCamNearClip;
+//							farCamera.farClipPlane = farCamFarClip;
+//
+//							GUILayout.BeginHorizontal ();
+//							GUIfloat("shadowsDistance",ref shadowsDistance,ref shadowsDistance);
+//							GUILayout.EndHorizontal ();
+//
+//							QualitySettings.shadowDistance= shadowsDistance;
+
 							GUILayout.BeginHorizontal ();
 							if (GUILayout.Button ("Save atmo"))
 							{
