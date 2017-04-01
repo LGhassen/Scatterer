@@ -10,4 +10,12 @@ This project is under the following license:
 
  GNU GENERAL PUBLIC LICENSE Version 3
 
-Copyright (c) 2015 Ghassen Lahmar
+Shader files borrowed from the EVE mod are under the MIT license:
+-SphereCloud.Shader
+-CloudVolumeParticle.shader
+-cubeMap.cginc
+-EVEUtils.cginc
+-alphaMap.cginc
+-noiseSimplex.cginc
+ 
+Copyright (c) 2015-2017 Ghassen Lahmar

@@ -1,0 +1,23 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{2D2D7C67-66E7-8662-8224-C86548AE8CFA}") = "scattererShaders", "Assembly-CSharp.csproj", "{87622294-0BFC-2C93-A2E6-774E6D27C210}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87622294-0BFC-2C93-A2E6-774E6D27C210}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87622294-0BFC-2C93-A2E6-774E6D27C210}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87622294-0BFC-2C93-A2E6-774E6D27C210}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87622294-0BFC-2C93-A2E6-774E6D27C210}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+																																																																																																																																														GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal
