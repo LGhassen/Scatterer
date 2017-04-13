@@ -80,6 +80,9 @@ namespace scatterer
 			loadConfigNode ();
 
 			sunglareMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/sunFlare"]);
+			sunglareMaterial.SetOverrideTag ("IGNOREPROJECTOR", "True");
+			sunglareMaterial.SetOverrideTag ("IgnoreProjector", "True");
+
 			//Size is loaded automatically from the files
 			sunSpikes = new Texture2D (1, 1);
 			sunFlare = new Texture2D (1, 1);

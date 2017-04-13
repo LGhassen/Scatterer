@@ -36,7 +36,7 @@ namespace scatterer
 				effectsDisabler = (DisableEffectsForTextureReplacer) cam.gameObject.AddComponent(typeof(DisableEffectsForTextureReplacer));
 
 				Debug.Log("adding postprocesscube");
-				effectsDisabler.postProcessingCube=skynode.postProcessCube.GameObject.GetComponent<MeshRenderer>();
+				effectsDisabler.postProcessingCube=skynode.atmosphereMesh.GetComponent<MeshRenderer>();
 
 				if (skynode.m_manager.hasOcean && Core.Instance.useOceanShaders)
 				{

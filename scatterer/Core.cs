@@ -194,7 +194,7 @@ namespace scatterer
 			shadowsDistance=100000;
 		
 		//[Persistent]
-		float godrayResolution = 1f;
+		//float godrayResolution = 1f;
 
 		[Persistent]
 		string guiModifierKey1String=KeyCode.LeftAlt.ToString();
@@ -215,7 +215,7 @@ namespace scatterer
 		public bool pqsEnabled = false;
 		bool displayOceanSettings = false;
 		bool displaySunflareSettings = false;
-		CustomDepthBufferCam customDepthBuffer;
+		public CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
 		public RenderTexture godrayDepthTexture;
 		
@@ -609,7 +609,7 @@ namespace scatterer
 							customDepthBuffer = (CustomDepthBufferCam)farCamera.gameObject.AddComponent (typeof(CustomDepthBufferCam));
 							customDepthBuffer.inCamera = farCamera;
 							customDepthBuffer.start();
-							
+
 							customDepthBufferTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
 							customDepthBufferTexture.useMipMap=false;
 							customDepthBufferTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
@@ -617,14 +617,14 @@ namespace scatterer
 							
 							if (useGodrays)
 							{
-								godrayDepthTexture = new RenderTexture ((int)(Screen.width*godrayResolution),(int)(Screen.height*godrayResolution),16, RenderTextureFormat.RFloat);
-								
-								godrayDepthTexture.filterMode = FilterMode.Bilinear;
+
+								godrayDepthTexture = new RenderTexture (Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
+								godrayDepthTexture.filterMode = FilterMode.Point;
 								godrayDepthTexture.useMipMap=false;
 								customDepthBuffer._godrayDepthTex = godrayDepthTexture;
 								godrayDepthTexture.Create ();
 							}
-							
+
 							customDepthBuffer._depthTex = customDepthBufferTexture;
 						}
 						depthBufferSet = true;
@@ -634,8 +634,6 @@ namespace scatterer
 					//custom lens flares
 					if ((fullLensFlareReplacement) && !customSunFlareAdded)
 					{
-						//dir sunflare directory
-						//string sunFlarePath=path + "/sunflare";
 						foreach (string sunflareBody in sunflaresList)
 						{
 							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));

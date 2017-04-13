@@ -32,7 +32,6 @@ struct appdata {
 struct v2f {
     float4 pos : SV_POSITION;
     float3 vertexPosView : TEXCOORD0;
-    float4 vertexPosClip : TEXCOORD1;
 };
 
 float3 LinePlaneIntersection(float3 linePoint, float3 lineVec, float3 planeNormal, float3 planePoint)
@@ -55,9 +54,8 @@ float3 LinePlaneIntersection(float3 linePoint, float3 lineVec, float3 planeNorma
 //		if(dotDenominator != 0.0f)
 		{
 			length =  dotNumerator / dotDenominator;
-  			intersection= (length > 0.0) ? linePoint + normalize(lineVec) * (length) : linePoint;
-  			//intersection= (length > 600.0) ? linePoint + normalize(lineVec) * (length-600) : linePoint;
-  			intersection= (length > 1.0) ? linePoint + normalize(lineVec) * (length-1.0) : linePoint;
+//  			intersection= (length > 0.0) ? linePoint + normalize(lineVec) * (length) : linePoint;
+  			intersection= (length > 600.0) ? linePoint + normalize(lineVec) * (length-600) : linePoint;
   			
 			//create a vector from the linePoint to the intersection point
 //			intersectVector = normalize(lineVec) * length;
@@ -90,7 +88,7 @@ v2f vert (appdata v)
 	float3 _LightDirViewSpace = mul(UNITY_MATRIX_MV, float4(_LightDirObjectSpace,0.0)); 
 	v.vertex = mul(UNITY_MATRIX_MV, v.vertex);  //both in view space
 
-    float3 toLight=normalize(_LightDirViewSpace); //why isn't lightDirWorldSpace already normalized?
+    float3 toLight=normalize(_LightDirViewSpace); //wasn't normalized already?
     
     float backFactor = dot( toLight, mul(UNITY_MATRIX_MV,float4(v.normal,0.0)) );
    	float backfaceFactor = dot(float3(0,0,1),    mul(UNITY_MATRIX_MV,float4(v.normal,0.0)));
@@ -108,26 +106,14 @@ v2f vert (appdata v)
     
     o.pos = mul (UNITY_MATRIX_P, v.vertex);
     o.vertexPosView = v.vertex.xyz;
-    o.vertexPosClip = o.pos;
+
     return o;
 
 }
-
-struct fout {
-	float4 color : COLOR;
-	float depth : DEPTH;
-};
  
-//float4 frag(v2f i) : COLOR {
-fout frag(v2f i) {
+float4 frag(v2f i) : COLOR {
     
-    fout OUT;
-    OUT.color=abs(i.vertexPosView.z) / 750000.0;
-
-	float C=1.0;
-	float _offset=2.0;
-	OUT.depth = (log(C * i.vertexPosClip.z + _offset) / log(C * _ProjectionParams.z + _offset));
-	return OUT;
+    return abs(i.vertexPosView.z / 750000.0) ; /// 750000.0; //here return view-space z instead
 }
 ENDCG
     }

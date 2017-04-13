@@ -16,7 +16,7 @@ namespace scatterer
 		public RenderTexture _depthTex;
 		public RenderTexture _godrayDepthTex;
 		private GameObject _depthCam;
-		private Camera _depthCamCamera;
+		public Camera _depthCamCamera;
 		
 		public bool depthTextureCleared = false; //clear depth texture when away from PQS, for the sunflare shader
 		//Later I'll make the shader stop checking the depth buffer instead
@@ -32,7 +32,7 @@ namespace scatterer
 			_depthCamCamera.CopyFrom(inCamera);
 			
 			_depthCamCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
-			_depthCamCamera.nearClipPlane=Core.Instance.farCamera.nearClipPlane;
+			_depthCamCamera.nearClipPlane=Core.Instance.nearCamera.nearClipPlane;
 			_depthCamCamera.depthTextureMode=DepthTextureMode.None;
 			
 			_depthCamCamera.transform.parent=Core.Instance.farCamera.transform;			
@@ -63,6 +63,9 @@ namespace scatterer
 		{
 			_depthCamCamera.CopyFrom(inCamera);
 			_depthCamCamera.enabled = false;
+
+			_depthCamCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
+			_depthCamCamera.nearClipPlane=Core.Instance.nearCamera.nearClipPlane;
 
 			//disable rendering of the custom depth buffer when away from PQS
 			bool renderDepthBuffer = false;
