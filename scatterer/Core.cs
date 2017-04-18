@@ -10,8 +10,6 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-//using Utils;
-
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -43,13 +41,6 @@ namespace scatterer
 			}
 		}
 
-//		float nearCamNearClip=0.1f;
-//		float nearCamFarClip=300f;
-//		float farCamNearClip=300f;
-//		float farCamFarClip=700000f;
-
-
-
 		public Rect windowRect = new Rect (0, 0, 400, 50);
 		int windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
 
@@ -58,8 +49,6 @@ namespace scatterer
 		bool customSunFlareAdded=false;
 		
 		bool visible = false;
-
-//		bool rtsResized=false;
 
 		bool wireFrame=false;
 
@@ -89,7 +78,7 @@ namespace scatterer
 		//as far as I understand CloudObjects in EVE contain the 2d clouds and the volumetrics for a given
 		//layer on a given planet, however due to the way they are handled in EVE they don't directly reference
 		//their parent planet and the volumetrics are only created when the PQS is active
-		//I map them here to facilitate accesing the volumetrics later
+		//I map them here to facilitate accessing the volumetrics later
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 
 		GameObject sunLight,scaledspaceSunLight;
@@ -108,9 +97,9 @@ namespace scatterer
 //		public bool
 //			render24bitDepthBuffer = true;
 
-		[Persistent]
-		public bool
-			useAlternateShaderSQRT = false;
+//		[Persistent]
+//		public bool
+//			useAlternateShaderSQRT = false;
 
 		[Persistent]
 		public bool
@@ -123,6 +112,10 @@ namespace scatterer
 		[Persistent]
 		public bool
 			oceanSkyReflections = true;
+
+		[Persistent]
+		public bool
+			oceanRefraction = true;
 
 		[Persistent]
 		public bool
@@ -218,6 +211,8 @@ namespace scatterer
 		public CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
 		public RenderTexture godrayDepthTexture;
+		public refractionCamera refractionCam;
+		public RenderTexture refractionTexture;
 		
 		bool depthBufferSet = false;
 
@@ -424,53 +419,30 @@ namespace scatterer
 					cams = Camera.allCameras;
 					for (int i = 0; i < cams.Length; i++)
 					{
-
-//						cams [i].hdr=true;
-
 						if (cams [i].name == "Camera ScaledSpace")
 						{
-							//cams [i].renderingPath=RenderingPath.DeferredShading;
 							scaledSpaceCamera = cams [i];
 						}
 						
 						if (cams [i].name == "Camera 01")
 						{
-							//cams [i].renderingPath=RenderingPath.DeferredShading;
 							farCamera = cams [i];
-							//cams [i].enabled=false;
 
 						}
 						
 						if (cams [i].name == "Camera 00")
 						{
-							//cams [i].renderingPath=RenderingPath.DeferredShading;
 							nearCamera = cams [i];
-							//cams [i].farClipPlane=700000;
-							//cams [i].enabled=false;
-//							tonemapper = (cameraHDRTonemapping)nearCamera.gameObject.AddComponent (typeof(cameraHDRTonemapping));
 						}
-
 					}
 					
 
 					
-					//find sunlight
+					//find sunlight and set shadow bias
 					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-//					Debug.Log ("number of lights" + lights.Length);
+
 					foreach (Light _light in lights)
 					{
-//						Debug.Log("name:"+_light.gameObject.name);
-//						Debug.Log("intensity:"+_light.intensity.ToString());
-//						Debug.Log ("mask:"+_light.cullingMask.ToString());
-//						Debug.Log ("type:"+_light.type.ToString());
-//						Debug.Log ("Parent:"+_light.transform.parent.gameObject.name);
-//						Debug.Log ("range:"+_light.range.ToString());
-//
-//						Debug.Log ("shadows:"+_light.shadows.ToString ());
-//						Debug.Log ("shadowStrength:"+_light.shadowStrength.ToString ());
-//						Debug.Log ("shadowNormalBias:"+_light.shadowNormalBias.ToString ());
-//						Debug.Log ("shadowBias:"+_light.shadowBias.ToString ());
-						
 						if (_light.gameObject.name == "Scaledspace SunLight")
 						{
 							scaledspaceSunLight=_light.gameObject;
@@ -486,15 +458,6 @@ namespace scatterer
 							Debug.Log("Found Sunlight");
 						}						
 					}
-
-
-
-//					copiedScaledSunLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
-//					copiedScaledSunLight2=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
-
-//					copiedScaledSunLight=(UnityEngine.GameObject) Instantiate(sunLight);
-
-//					Debug.Log ("copied scaledSpaceSunlight");
 
 					//load planetshine "cookie" cubemap
 					if(usePlanetShine)
@@ -532,13 +495,16 @@ namespace scatterer
 						{
 							ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3005;
 							Debug.Log("[Scatterer] Found rings for "+_cb.name);
-
-//							ringObject.GetComponent < MeshRenderer > ().material.shader=
-//													ShaderReplacer.Instance.LoadedShaders["Scatterer/Rings"];
-//
-//							Debug.Log("[Scatterer] Replaced ring shader for "+_cb.name);
 						}
 					}
+
+//					//find and fix renderqueue of sun corona
+//					Transform scaledSunTransform=GetScaledTransform(mainSunCelestialBodyName);
+//					foreach (Transform child in scaledSunTransform)
+//					{
+//						MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
+//						temp.material.renderQueue = 3000;
+//					}
 
 					//set up planetshine lights
 					if(usePlanetShine)
@@ -626,6 +592,22 @@ namespace scatterer
 							}
 
 							customDepthBuffer._depthTex = customDepthBufferTexture;
+
+							//refraction stuff
+							if (useOceanShaders && oceanRefraction)
+							{
+								refractionCam = (refractionCamera) farCamera.gameObject.AddComponent (typeof(refractionCamera));
+								refractionCam.inCamera = farCamera;
+								refractionCam.start();
+
+								refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
+								refractionTexture.useMipMap=false;
+								refractionTexture.filterMode = FilterMode.Bilinear;
+								refractionTexture.Create ();
+
+								refractionCam._refractionTex = refractionTexture;
+							}
+
 						}
 						depthBufferSet = true;
 					}
@@ -675,6 +657,14 @@ namespace scatterer
 						{
 							customDepthBufferTexture.Create ();
 						}
+
+						if (useOceanShaders && oceanRefraction)
+						{
+							if (!refractionTexture.IsCreated ())
+							{
+								refractionTexture.Create ();
+							}
+						}
 					}
 
 					pqsEnabled = false;
@@ -694,12 +684,10 @@ namespace scatterer
 
 							if (_cur.active)
 							{
-//								if (dist > _cur.unloadDistance && !MapView.MapIsEnabled) {
 								if (dist > _cur.unloadDistance && shipDist > _cur.unloadDistance) {
 									_cur.m_manager.OnDestroy ();
 									UnityEngine.Object.Destroy (_cur.m_manager);
 									_cur.m_manager = null;
-									//ReactivateAtmosphere(cur.transformName,cur.originalPlanetMaterialBackup);
 									_cur.active = false;
 									callCollector=true;
 
@@ -717,7 +705,6 @@ namespace scatterer
 							} 
 							else
 							{
-//								if (dist < _cur.loadDistance && !MapView.MapIsEnabled && _cur.transform && _cur.celestialBody) {
 							if (dist < _cur.loadDistance && _cur.transform && _cur.celestialBody) {
 									_cur.m_manager = new Manager ();
 									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
@@ -740,22 +727,6 @@ namespace scatterer
 											{
 												eclipseCasters.Add(cc);
 												Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
-//												if (cc.name == "Mun")
-//												if (cc.name == "Jool")
-//												{
-//													munCelestialBody=cc;
-//
-//													copiedScaledSunLight.GetComponent<Light>().type=LightType.Point;
-//													copiedScaledSunLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
-//													copiedScaledSunLight.GetComponent<Light>().range=1E9f;
-//													copiedScaledSunLight.GetComponent<Light>().color=new Color(0.6f,1f,0.4f);
-//
-//													copiedScaledSunLight2.GetComponent<Light>().type=LightType.Point;
-//													copiedScaledSunLight2.GetComponent<Light>().cookie=planetShineCookieCubeMap;
-//													copiedScaledSunLight2.GetComponent<Light>().range=1E9f;
-//													copiedScaledSunLight2.GetComponent<Light>().color=new Color(0.6f,1f,0.4f);
-//													copiedScaledSunLight2.GetComponent<Light>().cullingMask=557591;
-//												}
 											}
 										}
 										_cur.m_manager.eclipseCasters=eclipseCasters;
@@ -831,138 +802,6 @@ namespace scatterer
 
 						}
 					}
-
-//					Debug.Log("near cam renpath "+nearCamera.actualRenderingPath.ToString());
-//					//Debug.Log("far cam renpath "+farCamera.actualRenderingPath.ToString());
-//					Debug.Log("scaled cam renpath "+scaledSpaceCamera.actualRenderingPath.ToString());
-
-
-//					if (munCelestialBody)
-//					{
-//						copiedScaledSunLight.gameObject.transform.position=ScaledSpace.LocalToScaledSpace(munCelestialBody.transform.position);
-//						copiedScaledSunLight.gameObject.transform.LookAt(ScaledSpace.LocalToScaledSpace(sunCelestialBody.transform.position));
-//
-//						copiedScaledSunLight2.gameObject.transform.position=(munCelestialBody.transform.position);
-//						copiedScaledSunLight2.gameObject.transform.LookAt(sunCelestialBody.transform.position);
-//					}
-
-
-					//					GameObject[] list = (GameObject[]) GameObject.FindObjectsOfType(typeof(GameObject));
-					//					int d=0;
-					//					foreach (GameObject _go in list)
-					//					{
-					//						Debug.Log("object i "+d.ToString()+" "+_go.name);
-					//						if (_go.transform.parent)
-					//							Debug.Log("object i parent"+d.ToString()+" "+_go.transform.parent.gameObject.name);
-					//						MeshRenderer[] list2 = (MeshRenderer[]) _go.GetComponentsInChildren<MeshRenderer>();
-					//						foreach (MeshRenderer _mrr in list2)
-					//						{
-					//							Debug.Log("meshrenderer"+ _mrr.name);
-					//							Debug.Log("meshrenderer mat"+ _mrr.material.name);
-					//						}
-					//						d++;
-					//					}
-					//					Material[] list = (Material[]) Material.FindObjectsOfType(typeof(Material));
-					//					int d=0;
-					//					foreach (Material _mtl in list)
-					//					{
-					//						Debug.Log("material i "+d.ToString()+" "+ _mtl.name);
-					//						d++;
-					//					}
-					//					
-					//					MeshRenderer[] list2 = (MeshRenderer[]) MeshRenderer.FindObjectsOfType(typeof(MeshRenderer));
-					//					d=0;
-					//					foreach (MeshRenderer _mrr in list2)
-					//					{
-					//						Debug.Log("meshrenderer i "+d.ToString()+" "+ _mrr.name);
-					//						d++;
-					//					}
-					
-					//					GameObject kerbinClouds = GameObject.Find("Kerbin-clouds1");
-					//					if (kerbinClouds)
-					//					{
-					//						Debug.Log("Kerbin clouds found");
-					//						MeshRenderer[] list = kerbinClouds.GetComponentsInChildren<MeshRenderer>();
-					//						int d=0;
-					//						foreach (MeshRenderer _mrr in list)
-					//						{
-					//							Debug.Log("Meshrenderer "+d.ToString()+" "+ _mrr.name);
-					////							Debug.Log("Meshrenderer "+d.ToString()+" "+ .GetType().ToString ());
-					//							d++;
-					//						}
-					//					}
-					////					Resources.FindObjectsOfTypeAll(typeof(HalfSphere));
-					//					HalfSphere[] halfs =  Resources.FindObjectsOfTypeAll(typeof(HalfSphere));  ;
-					////					UnityEngine.Object[] halfs =  FindObjectsOfType(typeof(HalfSphere));
-					//					int d=0;
-					////					foreach (HalfSphere _hlf in halfs)
-					//					foreach (UnityEngine.Object _hlf in halfs)
-					//					{
-					//						HalfSphere _hlff = (HalfSphere) _hlf;
-					//						Debug.Log("_hlf "+d.ToString()+" GameObject.name "+_hlf.GameObject.name);
-					//						if (_hlf.GameObject.GetComponentInChildren<MeshRenderer>())
-					//						{
-					//							MeshRenderer idekk =_hlf.GameObject.GetComponentInChildren<MeshRenderer>();
-					//							Debug.Log("_hlf "+d.ToString()+" mat.name "+idekk.material.name);
-					//						}
-					//						d++;
-					//
-					//					}
-
-
-//					RenderTexture[] RenderTextureList = Resources.FindObjectsOfTypeAll<RenderTexture> ();
-//					Debug.Log ("Start rt list");
-//					for (int i=0;i<RenderTextureList.Length;i++)
-//					{
-//						RenderTexture _rt= RenderTextureList[i];
-//						Debug.Log(_rt.name.ToString()+" "+_rt.width.ToString()+" "+ _rt.height.ToString()+" "+_rt.depth.ToString()+" "+_rt.format.ToString()+" ");
-////						if (_rt.name == "ImageEffects Temp" && !rtsResized)
-////						{
-////							_rt = new RenderTexture((int)Screen.width/2,(int)Screen.height/2,_rt.depth, _rt.format);
-////							_rt.filterMode=FilterMode.Trilinear;
-////							_rt.Create();
-////						}
-//					}
-//					Debug.Log ("End rt list");
-////
-////					Debug.Log(scaledSpaceCamera.);
-////
-////					rtsResized=true;
-//
-//					for (int i = 0; i < cams.Length; i++)
-//					{
-//					
-////						cams [i].hdr
-//						
-//						Debug.Log(cams[i].name+" "+cams [i].hdr.ToString ());
-//					}
-
-//					PQSMod_MeshScatter[] scatters = (PQSMod_MeshScatter[]) PQSMod_MeshScatter.FindObjectsOfType<PQSMod_MeshScatter>();
-//
-//
-//					Debug.Log("begin scatters list");
-//					for (int i=0;i<scatters.Length;i++)
-//					{
-//						PQSMod_MeshScatter _sct = scatters[i];
-//						Debug.Log(_sct.name+" "+_sct.scatterName+" "+_sct.enabled.ToString()+" "+_sct.isActiveAndEnabled.ToString()+" "+_sct.maxScatter.ToString()+" "+_sct.sphere.name);
-//					}
-//
-//					PQSMod_MeshScatter_QuadControl[] scatters2 = (PQSMod_MeshScatter_QuadControl[]) PQSMod_MeshScatter_QuadControl.FindObjectsOfType<PQSMod_MeshScatter_QuadControl>();
-//
-//					Debug.Log(scatters2.Length);
-//					PQSMod_LandClassScatterQuad[] scatters3 = (PQSMod_LandClassScatterQuad[]) PQSMod_LandClassScatterQuad.FindObjectsOfType<PQSMod_LandClassScatterQuad>();
-//					Debug.Log(scatters3.Length);
-
-//					PQSMod_LandClassScatterQuad[] scatters = (PQSMod_LandClassScatterQuad[]) PQSMod_LandClassScatterQuad.FindObjectsOfType<PQSMod_LandClassScatterQuad>();
-//
-//					Debug.Log("begin scatters list");
-//
-//					for (int i=0;i<scatters.Length;i++)
-//					{
-//						PQSMod_LandClassScatterQuad _sct = scatters[i];
-//						Debug.Log(_sct.scatter.scatterName);
-//					}
-
 				}
 			} 
 		}
@@ -970,14 +809,8 @@ namespace scatterer
 
 		void OnDestroy ()
 		{
-			if (isActive) {
-
-//				if (copiedScaledSunLight)
-//				{
-//					UnityEngine.Object.Destroy(copiedScaledSunLight);
-//					UnityEngine.Object.Destroy(copiedScaledSunLight2);
-//				}
-
+			if (isActive)
+			{
 				if(usePlanetShine)
 				{
 					foreach (planetShineLight _aLight in celestialLightSources)
@@ -1000,15 +833,11 @@ namespace scatterer
 					
 				}
 
-
-
 				if (ambientLightScript)
 				{
 					ambientLightScript.restoreLight();
 					Component.Destroy(ambientLightScript);
 				}
-
-
 
 				if(customDepthBuffer)
 				{
@@ -1018,9 +847,15 @@ namespace scatterer
 					customDepthBufferTexture.Release();
 					UnityEngine.Object.Destroy (customDepthBufferTexture);
 				}
-				
-//				if (tonemapper)
-//					Component.Destroy(tonemapper);
+
+				if(refractionCam)
+				{
+					refractionCam.OnDestroy();
+					Component.Destroy (refractionCam);
+					UnityEngine.Object.Destroy (refractionCam);
+					refractionTexture.Release();
+					UnityEngine.Object.Destroy (refractionTexture);
+				}
 				
 				if(useGodrays)
 				{
@@ -1058,11 +893,8 @@ namespace scatterer
 
 				}
 
-
-
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				saveSettings();
-
 			}
 			
 			else if (mainMenu)	
@@ -1079,9 +911,6 @@ namespace scatterer
 			
 		}
 
-		
-
-
 		void OnGUI ()
 		{
 			if (visible)
@@ -1093,19 +922,6 @@ namespace scatterer
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
 				windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
-
-//				RenderTexture[] RenderTextureList = Resources.FindObjectsOfTypeAll<RenderTexture> ();
-////				Debug.Log ("Start rt list");
-//				int j=0;
-//				for (int i=0;i<RenderTextureList.Length;i++)
-//				{
-//					RenderTexture _rt= RenderTextureList[i];
-//					if (_rt.name == "ImageEffects Temp")
-//					{
-//						GUI.DrawTexture(new Rect((float)256*j,0.0f,144f,256f),_rt, ScaleMode.ScaleToFit, false);
-//						j++;
-//					}
-//				}
 			}
 		}
 
@@ -1117,8 +933,7 @@ namespace scatterer
 		{
 			{
 				GUItoggle("Hide",ref visible);
-								
-				
+
 				if (mainMenu)  //MAIN MENU options
 				{ 
 					GUILayout.Label (String.Format ("Scatterer: features selector"));
@@ -1130,6 +945,7 @@ namespace scatterer
 					GUILayout.EndHorizontal ();
 
 					oceanSkyReflections = GUILayout.Toggle(oceanSkyReflections, "Ocean: accurate sky reflection");
+					oceanRefraction = GUILayout.Toggle(oceanRefraction, "Ocean: refraction effects");
 					oceanPixelLights = GUILayout.Toggle(oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
 
 //					usePlanetShine = GUILayout.Toggle(usePlanetShine, "PlanetShine");
@@ -1166,7 +982,7 @@ namespace scatterer
 
 					disableAmbientLight = GUILayout.Toggle(disableAmbientLight, "Disable scaled space ambient light");
 
-					useAlternateShaderSQRT = GUILayout.Toggle(useAlternateShaderSQRT, "Alternate SQRT in shader (potential fix for halo around planets)");
+					//useAlternateShaderSQRT = GUILayout.Toggle(useAlternateShaderSQRT, "Alternate SQRT in shader (potential fix for halo around planets)");
 
 					showMenuOnStart = GUILayout.Toggle(showMenuOnStart, "Show this menu on start-up");
 
@@ -1175,9 +991,7 @@ namespace scatterer
 					GUILayout.TextField(baseConfigs [0].parent.url);
 					GUILayout.EndHorizontal ();
 				}
-				
-				
-				
+
 				else if (isActive)
 				{
 					GUILayout.BeginHorizontal ();
@@ -1222,16 +1036,12 @@ namespace scatterer
 					GUILayout.Label ("Load distance:" + scattererCelestialBodies [selectedPlanet].loadDistance.ToString ()+
 					                 "                             Unload distance:" + scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
 					GUILayout.EndHorizontal ();
-					
-					
-					
-					
-					if (scattererCelestialBodies [selectedPlanet].active) {
+
+					if (scattererCelestialBodies [selectedPlanet].active)
+					{
 						configPointsCnt = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
-						
-						
+
 						GUILayout.BeginHorizontal ();
-						
 						if (GUILayout.Button ("Atmosphere settings")) {
 							displayOceanSettings = false;
 							displaySunflareSettings = false;
@@ -1248,11 +1058,9 @@ namespace scatterer
 //							displayOceanSettings = false;
 //							displaySunflareSettings = true;
 //						}
-						
 						GUILayout.EndHorizontal ();
 
 						configPoint _cur = scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint];
-
 
 						if (!displayOceanSettings)
 						{
@@ -1424,8 +1232,7 @@ namespace scatterer
 								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
 							}
 							GUILayout.EndHorizontal ();
-							
-//								if (showInterpolatedValues)
+
 							if (!MapView.MapIsEnabled)
 							{
 								GUILayout.BeginHorizontal ();
@@ -1438,17 +1245,14 @@ namespace scatterer
 								GUILayout.EndHorizontal ();
 							}
 							GUILayout.EndScrollView ();
-							
 
 							GUILayout.BeginHorizontal ();
-
 							GUItoggle("Toggle depth buffer", ref depthbufferEnabled);
 
 							if (GUILayout.Button ("Toggle PostProcessing"))
 							{
 								scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePostProcessing();
 							}
-
 							GUILayout.EndHorizontal ();
 
 //							GUILayout.BeginHorizontal ();
@@ -1460,30 +1264,7 @@ namespace scatterer
 //								else
 //									scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
 //							}
-//							
 //							GUILayout.EndHorizontal ();
-
-//							GUILayout.BeginHorizontal ();
-//							GUIfloat("nearCamNearClip",ref nearCamNearClip,ref nearCamNearClip);
-//							GUIfloat("nearCamFarClip",ref nearCamFarClip,ref nearCamFarClip);
-//							GUILayout.EndHorizontal ();
-//
-//							GUILayout.BeginHorizontal ();
-//							GUIfloat("farCamNearClip",ref farCamNearClip,ref farCamNearClip);
-//							GUIfloat("farCamFarClip",ref farCamFarClip,ref farCamFarClip);
-//							GUILayout.EndHorizontal ();
-//
-//							nearCamera.nearClipPlane = nearCamNearClip;
-//							nearCamera.farClipPlane = nearCamFarClip;
-//							
-//							farCamera.nearClipPlane = farCamNearClip;
-//							farCamera.farClipPlane = farCamFarClip;
-//
-//							GUILayout.BeginHorizontal ();
-//							GUIfloat("shadowsDistance",ref shadowsDistance,ref shadowsDistance);
-//							GUILayout.EndHorizontal ();
-//
-//							QualitySettings.shadowDistance= shadowsDistance;
 
 							GUILayout.BeginHorizontal ();
 							if (GUILayout.Button ("Save atmo"))
@@ -1523,14 +1304,10 @@ namespace scatterer
 						}
 						else
 						{
-
 							OceanWhiteCaps oceanNode = scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
-
 							GUItoggle("Toggle ocean", ref stockOcean);
-
 							_scroll2 = GUILayout.BeginScrollView (_scroll2, false, true, GUILayout.Width (400), GUILayout.Height (scrollSectionHeight+100));
 							{
-								
 								GUIfloat ("ocean Level", ref oceanLevel, ref oceanNode.m_oceanLevel);
 								GUIfloat ("Alpha/WhiteCap Radius", ref oceanAlphaRadius, ref oceanNode.alphaRadius);
 								GUIfloat ("ocean Alpha", ref oceanAlpha, ref oceanNode.oceanAlpha);
@@ -1579,7 +1356,6 @@ namespace scatterer
 								GUILayout.EndHorizontal ();
 
 								GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
-	
 							}	
 							GUILayout.EndScrollView ();
 							
@@ -1610,7 +1386,6 @@ namespace scatterer
 						}
 
 						GUILayout.BeginHorizontal ();
-						
 						if (GUILayout.Button ("Toggle WireFrame"))
 						{
 							if (wireFrame)
@@ -1636,76 +1411,24 @@ namespace scatterer
 								wireFrame=true;
 							}
 						}
-
-//						GUILayout.BeginHorizontal ();
-//						if (GUILayout.Button ("Toggle AmbientLight"))
-//						{
-//							if (ambientLight)
-//							{
-//								scaledSpaceCamera.gameObject.AddComponent (typeof(disableAmbientLight));
-//								ambientLight=false;
-//							}
-//							
-//							else
-//							{
-//								if (scaledSpaceCamera.GetComponent(typeof(disableAmbientLight)))
-//									Component.Destroy(scaledSpaceCamera.GetComponent(typeof(disableAmbientLight)));
-//								
-//								ambientLight=true;
-//							}
-//						}
-//						
-//						GUILayout.EndHorizontal ();
-						
 						GUILayout.EndHorizontal ();
 
 						GUILayout.BeginHorizontal ();
-						
 						if (GUILayout.Button ("Reload shader bundles"))
 						{
 							ShaderReplacer.Instance.LoadAssetBundle();
 						}
-
 						GUILayout.EndHorizontal ();
-						
 					}
-
 				}
-				
 				else
 				{
 					GUILayout.Label (String.Format ("Inactive in tracking station and VAB/SPH"));
 					GUILayout.EndHorizontal ();
 				}
-				
 			}
-
 			GUI.DragWindow();
 		}
-		
-		//		//snippet by Thomas P. from KSPforum
-		//		public void DeactivateAtmosphere(string name) {
-		//			Transform t = ScaledSpace.Instance.transform.FindChild(name);
-		//			
-		//			for (int i = 0; i < t.childCount; i++) {
-		//				if (t.GetChild(i).gameObject.layer == 9) {
-		//					// Deactivate the Athmosphere-renderer
-		//					t.GetChild(i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive(false);
-		//					g
-		//					// Reset the shader parameters
-		//					Material sharedMaterial = t.renderer.sharedMaterial;
-		//					
-		//					//sharedMaterial.SetTexture(Shader.PropertyToID("_rimColorRamp"), null);
-		//					//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), 0);
-		//					//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), 0);
-		//					
-		//					// Stop our script
-		//					i = t.childCount + 10;
-		//				}
-		//			}
-		//		}
-		
-		
 		
 		public void getSettingsFromSkynode ()
 		{

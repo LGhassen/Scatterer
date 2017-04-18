@@ -18,3 +18,4 @@ E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\Temp\bin\Rele
 E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\Temp\bin\Release\UnityEngine.Networking.xml
 E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\obj\Release\Assembly-CSharp.dll
 E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\obj\Release\Assembly-CSharp.pdb
+E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\obj\Release\Assembly-CSharp.csprojResolveAssemblyReference.cache

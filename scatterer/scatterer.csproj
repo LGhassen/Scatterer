@@ -103,6 +103,7 @@
     <Compile Include="DisableEffectsChecker.cs" />
     <Compile Include="SunflareCameraHook.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="refractionCamera.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />

@@ -166,9 +166,22 @@ namespace scatterer
 				m_oceanMaterialFar.EnableKeyword ("PLANETSHINE_OFF");
 			}
 
+			if (m_core.oceanRefraction)
+			{
+				m_oceanMaterialFar.EnableKeyword ("REFRACTION_ON");
+				m_oceanMaterialFar.DisableKeyword ("REFRACTION_OFF");
+			}
+			else
+			{
+				m_oceanMaterialFar.EnableKeyword ("REFRACTION_OFF");
+				m_oceanMaterialFar.DisableKeyword ("REFRACTION_ON");
+			}
+
 
 //			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialNear);
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialFar);
+			m_oceanMaterialFar.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
+			m_oceanMaterialFar.SetTexture ("_BackgroundTexture", Core.Instance.refractionTexture);
 			
 			m_oldlocalToOcean = Matrix4x4d.Identity ();
 //			m_oldworldToOcean = Matrix4x4d.Identity ();

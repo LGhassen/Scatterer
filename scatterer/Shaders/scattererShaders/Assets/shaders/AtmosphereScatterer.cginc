@@ -166,12 +166,19 @@ float3 Transmittance(float r, float mu, float Rt0)
 }
 
 
-//fixes artifacts in d3d9
+//fixes artifacts in d3d9, d3d11 and opengl
 float SQRT(float f, float err) {
-#if (!defined(SHADER_API_D3D9) && !defined(DEFAULT_SQRT_ON))
-	return sqrt(f);
+//#if (!defined(SHADER_API_D3D9) && !defined(DEFAULT_SQRT_ON))
+//	return sqrt(f);
+//#else
+//    return f >= 0.0 ? sqrt(f) : err;        
+//#endif
+	//return f > 0.0 ? sqrt(f) : 0.0;
+
+#if defined(SHADER_API_D3D9)
+	return f >= 0.0 ? sqrt(f) : err;
 #else
-    return f >= 0.0 ? sqrt(f) : err;        
+	return 1 / rsqrt (f);
 #endif
 }
 
@@ -389,13 +396,15 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
     }
 	if (r <= Rt)
     { 
-    	if (r < Rg + 1600.0)
-    	{
-    		// avoids imprecision problems in aerial perspective near ground
-    		//Not sure if necessary with extinction
-        	float f = (Rg + 1600.0) / r;
-        	r = r * f;
-    	}
+//    	if (r < Rg + 1600.0)
+//    	{
+//    		// avoids imprecision problems in aerial perspective near ground
+//    		//Not sure if necessary with extinction
+//        	float f = (Rg + 1600.0) / r;
+//        	r = r * f;
+//    	}
+
+		r = (r < Rg + 1600.0) ? (Rg + 1600.0) : r;
         
     	//set to analyticTransmittance only atm
     	#if defined (useAnalyticTransmittance)
@@ -657,8 +666,8 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 
 	float mu = rMu / r;
 
-	float r0 = r;
-	float mu0 = mu;
+//	float r0 = r;
+//	float mu0 = mu;
 	
 	float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
 
@@ -700,6 +709,75 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 	{
 		result = float3(0,0,0);
 		extinction = float3(1,1,1);
+	} 
+	
+	return result * _Sun_Intensity;
+}
+
+//same as 2 but with no extinction
+float3 SkyRadiance3(float3 camera, float3 viewdir, float3 sundir)//, out float3 extinction)//, float shaftWidth)
+{
+	float3 result = float3(0,0,0);
+	
+	float Rt2=Rt;
+	Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+	
+	
+	//viewdir.x+=_viewdirOffset;
+	viewdir=normalize(viewdir);
+
+	//camera *= scale;
+	//camera += viewdir * max(shaftWidth, 0.0);
+	float r = length(camera);
+
+	float rMu = dot(camera, viewdir);
+	rMu+=_viewdirOffset * r;
+
+	//float mu = rMu / r;
+
+	//float r0 = r;
+	//float mu0 = mu;
+	
+	float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
+
+	float din = max(-rMu - deltaSq, 0.0);
+	if (din > 0.0)
+	{
+    	camera += din * viewdir;
+    	rMu += din;
+    	//mu = rMu / Rt;
+    	r = Rt;
+	}
+	
+	float nu = dot(viewdir, sundir);
+	float muS = dot(camera, sundir) / r;
+    
+//	float4 inScatter = Texture4D(_Sky_Inscatter, r, rMu / r, muS, nu);
+	float4 inScatter = Texture4D(_Inscatter, r, rMu / r, muS, nu);
+    
+	//extinction = Transmittance(r, mu);
+    
+	if (r <= Rt) 
+	{
+            
+//        if (shaftWidth > 0.0) 
+//        {
+//            if (mu > 0.0) {
+//                inScatter *= min(Transmittance(r0, mu0) / Transmittance(r, mu), 1.0).rgbr;
+//            } else {
+//                inScatter *= min(Transmittance(r, -mu) / Transmittance(r0, -mu0), 1.0).rgbr;
+//            }
+//        }
+
+    	float3 inScatterM = GetMie(inScatter);
+    	float phase = PhaseFunctionR(nu);
+    	float phaseM = PhaseFunctionM(nu);
+    	result = inScatter.rgb * phase + inScatterM * phaseM;
+	}    
+     else
+	{
+		result = float3(0,0,0);
+		//extinction = float3(1,1,1);
 	} 
 	
 	return result * _Sun_Intensity;

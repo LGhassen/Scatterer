@@ -30,7 +30,7 @@ Shader "Scatterer/SkyScaled"
 			#define useAnalyticSkyTransmittance
 			
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-			#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
+			//#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 //			#define localSpaceMode
 
@@ -251,7 +251,7 @@ Shader "Scatterer/SkyScaled"
 			#include "AtmosphereScatterer.cginc"
 			
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-			#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
+			//#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 //			#define PLANETSHINE_OFF
@@ -329,8 +329,7 @@ float4 frag(v2f IN) : COLOR
 					_Exposure=_RimExposure;
 				}
 
-			    float3 extinction;
-			    float3 inscatter = SkyRadiance2(WCP - _Scatterer_Origin, d, WSD,extinction);
+			    float3 inscatter = SkyRadiance3(WCP - _Scatterer_Origin, d, WSD);
 
 				//find worldPos of the point in the atmo we're looking at directly
 				//necessary for eclipses, ring shadows and planetshine
@@ -363,7 +362,7 @@ float4 frag(v2f IN) : COLOR
 						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - worldPos),WSD)),0);
 					}
 				    				
-    				inscatter2+=SkyRadiance2(WCP - _Scatterer_Origin, d, normalize(planetShineSources[i].xyz),extinction)
+    				inscatter2+=SkyRadiance3(WCP - _Scatterer_Origin, d, normalize(planetShineSources[i].xyz))
     							*planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
     			}
 			    

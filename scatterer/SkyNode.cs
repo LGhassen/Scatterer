@@ -50,7 +50,8 @@ namespace scatterer
 		
 		Vector3 sunPosRelPlanet=Vector3.zero;
 		
-		public bool scaledMode = false;
+		//public bool scaledMode = false;
+		public bool scaledMode = true;
 		
 		public float postDist = -4500f;
 		//		public float postDist = -4000f;
@@ -309,21 +310,21 @@ namespace scatterer
 //				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_OFF");
 //			}
 
-			if (Core.Instance.useAlternateShaderSQRT)
-			{
-				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_OFF");
-				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_ON");
-				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_OFF");
-				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_ON");
-			}
-			else
-			{
-				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_ON");
-				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_OFF");
-				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_ON");
-				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_OFF");
-
-			}
+//			if (Core.Instance.useAlternateShaderSQRT)
+//			{
+//				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_OFF");
+//				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_ON");
+//				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_OFF");
+//				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_ON");
+//			}
+//			else
+//			{
+//				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_ON");
+//				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_OFF");
+//				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_ON");
+//				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_OFF");
+//
+//			}
 			
 			
 			if (Core.Instance.useGodrays)
@@ -394,7 +395,7 @@ namespace scatterer
 			skyScaledMeshrenderer.material = m_skyMaterialScaled;
 			
 			
-			skyScaledMeshrenderer.enabled = false;
+			//skyScaledMeshrenderer.enabled = false;
 			
 			if (Core.Instance.drawAtmoOnTopOfClouds && drawSkyOverClouds)
 				m_skyMaterialScaled.renderQueue=3002;
@@ -410,7 +411,11 @@ namespace scatterer
 			
 			
 			m_skyMaterialLocal.renderQueue=1000; //render to background unless over clouds
-			skyLocalMeshrenderer.enabled = true;
+			//skyLocalMeshrenderer.enabled = true;
+
+			//start in scaledMode
+			skyScaledMeshrenderer.enabled = true;
+			skyLocalMeshrenderer.enabled=false;
 			
 			#endif
 
@@ -762,6 +767,15 @@ namespace scatterer
 				DisableEffectsChecker effectsDisabler = atmosphereMesh.AddComponent<DisableEffectsChecker>();
 				effectsDisabler.skynode = this;
 
+//				if (Core.Instance.useOceanShaders && m_manager.hasOcean)
+//				{
+//					Core.Instance.refractionCam.waterMeshRenderers=m_manager.GetOceanNode().waterMeshRenderers;
+//					Core.Instance.refractionCam.numGrids = m_manager.GetOceanNode().numGrids;
+//					Core.Instance.refractionCam.postProcessingCube = atmosphereMeshrenderer;
+//					Core.Instance.refractionCam.iSkyNode = this;
+//					Debug.Log("skynode added refraction cam");
+//				}
+
 				//after the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
 				//call EVE clouds2D.reassign() method to set the shader properties
 				if (Core.Instance.integrateWithEVEClouds)
@@ -820,10 +834,9 @@ namespace scatterer
 				{
 					
 					updater = (updateAtCameraRythm)scaledSpaceCamera.gameObject.AddComponent (typeof(updateAtCameraRythm));
-					
-					//start in localmode
-					//					updater.settings (m_mesh, m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
-					updater.settings (m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
+
+					//updater.settings (m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
+					updater.settings (m_skyMaterialScaled, m_manager, this,parentCelestialBody.transform);
 					
 					updaterAdded = true;
 				}
@@ -1012,6 +1025,8 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties._Sun_Intensity_PROPERTY, 100f);
 			
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
+
+			mat.SetVector("_camForward", farCamera.transform.forward);
 		}
 		
 		
@@ -1364,6 +1379,15 @@ namespace scatterer
 		{
 			if (scaledMode) //switch to localMode
 			{
+				if (Core.Instance.useOceanShaders && m_manager.hasOcean && Core.Instance.oceanRefraction)
+				{
+					Core.Instance.refractionCam.waterMeshRenderers=m_manager.GetOceanNode().waterMeshRenderers;
+					Core.Instance.refractionCam.numGrids = m_manager.GetOceanNode().numGrids;
+					Core.Instance.refractionCam.postProcessingCube = atmosphereMeshrenderer;
+					Core.Instance.refractionCam.iSkyNode = this;
+					Debug.Log("skynode added refraction cam");
+				}
+
 				skyScaledMeshrenderer.enabled = false;
 				skyLocalMeshrenderer.enabled=true;
 
@@ -1449,7 +1473,8 @@ namespace scatterer
 				}
 			}
 		}
-		
+
+		//surely there is a simpler way to do this
 		public void RestoreStockAtmosphere ()
 		{
 			Transform t = ScaledSpace.Instance.transform.FindChild (ParentPlanetTransform.name);
@@ -1488,31 +1513,6 @@ namespace scatterer
 				}
 			}
 		}
-		
-		//snippet by Thomas P. from KSPforum
-		public void DeactivateAtmosphere ()
-		{
-			//Transform t = ParentPlanetTransform;
-			Transform t = ScaledSpace.Instance.transform.FindChild (ParentPlanetTransform.name);
-			
-			for (int i = 0; i < t.childCount; i++) {
-				if (t.GetChild (i).gameObject.layer == 9) {
-					// Deactivate the Athmosphere-renderer
-					t.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (false);
-					
-					// Reset the shader parameters
-					//				Material sharedMaterial = t.renderer.sharedMaterial;
-					
-					//sharedMaterial.SetTexture(Shader.PropertyToID("_rimColorRamp"), null);
-					//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimBlend"), 0);
-					//					sharedMaterial.SetFloat(Shader.PropertyToID("_rimPower"), 0);
-					
-					// Stop our script
-					i = t.childCount + 10;
-				}
-			}
-		}
-		
 
 		public void interpolateVariables ()
 		{

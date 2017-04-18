@@ -394,7 +394,7 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 			#pragma multi_compile_fwdadd
 			
 			#include "Utility.cginc"
-			#include "AtmosphereNew.cginc"
+			//#include "AtmosphereNew.cginc"
 			#include "OceanBRDF.cginc"
 			#include "OceanDisplacement3.cginc"
 			

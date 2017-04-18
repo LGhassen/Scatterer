@@ -95,7 +95,7 @@ namespace scatterer
 		
 		
 		//this fixes the alt-enter bug the really stupid way but it's fast and simple so it'll do
-		public void reBuildOcean() {
+		public void reBuildOcean(){
 			if (hasOcean && Core.Instance.useOceanShaders) {
 				m_oceanNode.OnDestroy();
 				UnityEngine.Object.Destroy(m_oceanNode);
@@ -104,6 +104,13 @@ namespace scatterer
 				m_oceanNode.setCore(Core.Instance);
 				m_oceanNode.loadFromConfigNode();
 				m_oceanNode.Start();
+
+				if (Core.Instance.oceanRefraction)
+				{
+					Core.Instance.refractionCam.waterMeshRenderers=m_oceanNode.waterMeshRenderers;
+					Core.Instance.refractionCam.numGrids = m_oceanNode.numGrids;
+				}
+
 				Debug.Log("[Scatterer] Rebuilt Ocean");
 			}
 			

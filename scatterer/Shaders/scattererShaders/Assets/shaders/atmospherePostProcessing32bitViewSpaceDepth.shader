@@ -20,7 +20,6 @@ Shader "Scatterer/AtmosphericScatter" {
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma glsl
             #pragma target 3.0
             #include "UnityCG.cginc"
             #include "AtmosphereScatterer.cginc"
@@ -28,7 +27,6 @@ Shader "Scatterer/AtmosphericScatter" {
 //           	#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
             
             uniform float4x4 _ViewProjInv;
-//            uniform float _viewdirOffset;
             uniform float _Scale;
             uniform float _global_alpha;
             uniform float _global_depth;
@@ -41,9 +39,7 @@ Shader "Scatterer/AtmosphericScatter" {
             uniform float _Post_Extinction_Tint;
             uniform float postExtinctionMultiplier;
             uniform sampler2D _customDepthTexture;
-            uniform float4 _MainTex_TexelSize;
             uniform float _openglThreshold;
-            //   uniform float _edgeThreshold;
             uniform float _horizonDepth;
             uniform float4x4 _Globals_CameraToWorld;
             uniform float4x4 scattererFrustumCorners;
@@ -94,11 +90,8 @@ Shader "Scatterer/AtmosphericScatter" {
                 bool infinite = (fragDepth == 1.0); //basically viewer ray isn't hitting any terrain
                 float minDepth = minDistance * aa;
                 bool fragmentInsideOfClippingRange = (minDepth <= _ProjectionParams.z) && (minDepth  >= _ProjectionParams.y); //if fragment depth outside of current camera clipping range, return empty pixel
-                																															 //effects are now rendered on both near and far cameras due to full-scene depth buffer
-				if ((!rightDir && infinite) || !fragmentInsideOfClippingRange)
-                {
-                    return float4(1.0, 1.0, 1.0, 1.0);
-                }
+
+				bool returnPixel = fragmentInsideOfClippingRange && (rightDir || (!infinite));
 
                 float3 worldPos = minDistance*rayDir + _camPos;
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
@@ -134,7 +127,7 @@ Shader "Scatterer/AtmosphericScatter" {
 //				extinction*=eclipseShadow;
 //#endif
 
-                return float4(extinction, 1.0);
+                return float4( returnPixel? extinction : float3(1.0,1.0,1.0) , 1.0);
             }
             ENDCG
         }
@@ -153,7 +146,6 @@ Pass {
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma glsl
             #pragma target 3.0
             #include "UnityCG.cginc"
             #include "AtmosphereScatterer.cginc"
@@ -177,7 +169,7 @@ Pass {
 #if defined (GODRAYS_ON)
             uniform sampler2D _godrayDepthTexture;
 #endif
-            uniform float4 _MainTex_TexelSize;
+            //uniform float4 _MainTex_TexelSize;
             uniform float _openglThreshold;
             uniform float _horizonDepth;
             uniform float4x4 _Globals_CameraToWorld;
@@ -230,20 +222,16 @@ Pass {
 				bool rightDir = (oceanDistance > 0); 												//this ensures that we're looking in the right direction // ie ocean surface intersection point is in front of us
 				bool  oceanCloserThanTerrain = rightDir && (oceanDistance < fragDistance);						//this condition ensures the ocean is in front of the terrain, if it's in front we use its pos else we don't
 				float minDistance = oceanCloserThanTerrain ? oceanDistance : fragDistance;
-				                
+
                 bool infinite = (fragDepth == 1.0); //basically viewer ray isn't hitting any terrain
                 float minDepth = minDistance * aa;
-                bool fragmentInsideOfClippingRange = (minDepth <= _ProjectionParams.z) && (minDepth  >= _ProjectionParams.y); //if fragment depth outside of current camera clipping range, return empty pixel
-                																															 //effects are now rendered on both near and far cameras due to full-scene depth buffer
-				if ((!rightDir && infinite) || !fragmentInsideOfClippingRange)
-                {
-                    return float4(0.0, 0.0, 0.0, 0.0);
-                }
+                bool fragmentInsideOfClippingRange = ((minDepth  >= _ProjectionParams.y)  && (minDepth <= _ProjectionParams.z)); //if fragment depth outside of current camera clipping range, return empty pixel
+				bool returnPixel = fragmentInsideOfClippingRange && (rightDir || (!infinite));
 
                 float3 worldPos = minDistance*rayDir + _camPos;
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
-//Now do the same shit but for godrays
+//Now do the same but for godrays
 //WorldPos and godrayWorldPos are kept separate to ensure compatibility with planetshine, light from sun and other sources should be handled separately
 //ie if the sun is casting godrays light from the moon shouldn't have the same godrays but render at normal terrain depth
 //technically the moon should also render its own godrays but I would need a buffer for each additional light source so NO.
@@ -251,16 +239,16 @@ Pass {
 				float godrayDepth= tex2D(_godrayDepthTexture, i.uv).r;
 				float godrayDistance = godrayDepth * 750000 /aa;
 
-				//fade godrays when looking at them sideways by lerping to terrain depth
+//				//fade godrays when looking at them sideways by lerping to terrain depth
                 float3 SidewaysFromSun = normalize(cross(_camPos,SUN_DIR)); 		//can't we simplify this? the idea is to get how far we're looking from plane, containing the sun, the planet center and the camera
                 float godrayBlendFactor= 1-abs (dot(SidewaysFromSun,rayDir));	//and fade the godray depth to terrain depth based on that
-                godrayDistance = (godrayDistance > 0) && (godrayDistance < fragDistance) && (fragDepth<1) ? lerp(fragDistance, godrayDistance, godrayBlendFactor) : fragDistance;
+                godrayDistance = (godrayDistance > 10) ? lerp(minDistance, godrayDistance, godrayBlendFactor) : godrayDistance; //10 or any arbitrary distance that would prevent lerping when on the backside of mountain or w/e
+                godrayDistance = (godrayDistance < minDistance) ? godrayDistance : minDistance;
 
-				oceanCloserThanTerrain = rightDir && (oceanDistance < godrayDistance);
-				minDistance = oceanCloserThanTerrain ? oceanDistance : godrayDistance;
-                
+				bool oceanCloserThanGodray = (rightDir) && (oceanDistance < godrayDistance);
+				minDistance = oceanCloserThanGodray ? oceanDistance : godrayDistance;
                 float3 godrayWorldPos = minDistance * rayDir + _camPos;
-				godrayWorldPos= length(godrayWorldPos) < (Rg + _openglThreshold) ? (Rg + _openglThreshold) * normalize(godrayWorldPos) : godrayWorldPos ; //artifacts fix
+				godrayWorldPos=( (length(godrayWorldPos) < (Rg + _openglThreshold)) ? ((Rg + _openglThreshold) * normalize(godrayWorldPos)) : godrayWorldPos); //artifacts fix
 #endif
 
                 float3 extinction = float3(0, 0, 0);
@@ -271,23 +259,23 @@ Pass {
 				float3 inscatter = InScattering2(_camPos, worldPos, extinction, SUN_DIR, 1.0, 1.0, 1.0);
 #endif
                 
-#if defined (PLANETSHINE_ON)
-			    float3 inscatter2=0;
-			    for (int i=0; i<4; ++i)
-    			{
-    				if (planetShineRGB[i].w == 0) break; //intensity of zero? break for love
-
-			   		float intensity=1;  
-			   		if (planetShineSources[i].w != 1.0f)
-					{
-						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - worldPos),SUN_DIR)),0); //if source is not a sun compute intensity of light from angle to light source
-																													  //totally made up formula by eyeballing it
-					}
-    				
-    				inscatter+=InScattering2(_camPos, worldPos,extinction, normalize(planetShineSources[i].xyz),1.0, 1.0, 1.0)
-    							*planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
-    			}
-#endif
+//#if defined (PLANETSHINE_ON)
+//			    float3 inscatter2=0;
+//			    for (int i=0; i<4; ++i)
+//    			{
+//    				if (planetShineRGB[i].w == 0) break; //intensity of zero? break for love
+//
+//			   		float intensity=1;  
+//			   		if (planetShineSources[i].w != 1.0f)
+//					{
+//						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - worldPos),SUN_DIR)),0); //if source is not a sun compute intensity of light from angle to light source
+//																													  //totally made up formula by eyeballing it
+//					}
+//    				
+//    				inscatter+=InScattering2(_camPos, worldPos,extinction, normalize(planetShineSources[i].xyz),1.0, 1.0, 1.0)
+//    							*planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
+//    			}
+//#endif
                 
 //#if defined (ECLIPSES_ON)				
 // 				float eclipseShadow = 1;
@@ -309,8 +297,9 @@ Pass {
 //				inscatter*=eclipseShadow;
 //#endif
 
-				inscatter*= (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0; //no idea how I came up with this but may revisit it soon
-                return float4(hdr(inscatter)*_global_alpha, 1);                				
+				inscatter*= ( (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ); //somehow the shader compiler for OpenGL behaves differently around braces
+																														  //and the shader won't work unless you put braces EVERYWHERE
+                return float4(hdr(inscatter)*_global_alpha*returnPixel, 1);                				
             }
             ENDCG
         }
