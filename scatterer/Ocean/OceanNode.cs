@@ -44,25 +44,20 @@ namespace scatterer
 	public abstract class OceanNode: MonoBehaviour
 	{
 		public UrlDir.UrlConfig configUrl;
-
-//		Matrix4x4d m_cameraToWorldMatrix;
+		
 		public Manager m_manager;
-		Core m_core;
-		
-		//		public float theta =1.0f;
-		//		public float phi=1.0f;
-		
-//		public Material m_oceanMaterialNear;
-		public Material m_oceanMaterialFar;
 
-		[Persistent] public Vector3 m_oceanUpwellingColor = new Vector3 (0.0039f, 0.0156f, 0.047f);
+		public Material m_oceanMaterial;
+
+		[Persistent]
+		public Vector3 m_oceanUpwellingColor = new Vector3 (0.0039f, 0.0156f, 0.047f);
+
+		[Persistent]
+		public Vector3 m_UnderwaterColor = new Vector3 (0.1f, 0.75f, 0.8f);
 		
 		//Sea level in meters
 		[Persistent]
 		public float m_oceanLevel = 0.0f;
-
-//		bool stockOceanExists = true;
-//		PQS ocean;
 
 		double h = 0;
 		//The maximum altitude at which the ocean must be displayed.
@@ -83,15 +78,14 @@ namespace scatterer
 		[Persistent]
 		public float alphaRadius = 3000f;
 
+		[Persistent]
+		public float transparencyDepth = 60f;
 
 		[Persistent]
-		public float sunReflectionMultiplier = 1f;
+		public float darknessDepth = 1000f;
 
 		[Persistent]
-		public float skyReflectionMultiplier = 1f;
-		
-		[Persistent]
-		public float seaRefractionMultiplier = 1f;
+		public float refractionIndex = 1.33f;
 
 		public int numGrids;
 		Mesh[] m_screenGrids;
@@ -102,8 +96,12 @@ namespace scatterer
 		public MeshRenderer[] waterMeshRenderers;
 		MeshFilter[] waterMeshFilters;
 
+		public GameObject underwaterGameObject; //contains the underwater postprocessing mesh
+		MeshRenderer underwaterMeshrenderer;
+		MeshFilter underwaterMeshFilter;
+		Material underwaterPostProcessingMaterial;
+
 		Matrix4x4d m_oldlocalToOcean;
-//		Matrix4x4d m_oldworldToOcean;
 
 		public Vector3 offsetVector3{
 			get {
@@ -139,50 +137,56 @@ namespace scatterer
 			//the projection matrix in the shader has to match that of the camera or the projection will be wrong and the ocean will
 			//appear to "shift around"
 
-			if (m_core.oceanPixelLights)
-				m_oceanMaterialFar = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCapsPixelLights")]);
+			if (Core.Instance.oceanPixelLights)
+				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCapsPixelLights")]);
 			else
-				m_oceanMaterialFar = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCaps")]);
+				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCaps")]);
 
-			if (m_core.oceanSkyReflections)
+			if (Core.Instance.oceanSkyReflections)
 			{
-				m_oceanMaterialFar.EnableKeyword ("SKY_REFLECTIONS_ON");
-				m_oceanMaterialFar.DisableKeyword ("SKY_REFLECTIONS_OFF");
+				m_oceanMaterial.EnableKeyword ("SKY_REFLECTIONS_ON");
+				m_oceanMaterial.DisableKeyword ("SKY_REFLECTIONS_OFF");
 			}
 			else
 			{
-				m_oceanMaterialFar.EnableKeyword ("SKY_REFLECTIONS_OFF");
-				m_oceanMaterialFar.DisableKeyword ("SKY_REFLECTIONS_ON");
+				m_oceanMaterial.EnableKeyword ("SKY_REFLECTIONS_OFF");
+				m_oceanMaterial.DisableKeyword ("SKY_REFLECTIONS_ON");
 			}
 
 			if (Core.Instance.usePlanetShine)
 			{
-				m_oceanMaterialFar.EnableKeyword ("PLANETSHINE_ON");
-				m_oceanMaterialFar.DisableKeyword ("PLANETSHINE_OFF");
+				m_oceanMaterial.EnableKeyword ("PLANETSHINE_ON");
+				m_oceanMaterial.DisableKeyword ("PLANETSHINE_OFF");
 			}
 			else
 			{
-				m_oceanMaterialFar.DisableKeyword ("PLANETSHINE_ON");
-				m_oceanMaterialFar.EnableKeyword ("PLANETSHINE_OFF");
+				m_oceanMaterial.DisableKeyword ("PLANETSHINE_ON");
+				m_oceanMaterial.EnableKeyword ("PLANETSHINE_OFF");
 			}
 
-			if (m_core.oceanRefraction)
+			if (Core.Instance.oceanRefraction)
 			{
-				m_oceanMaterialFar.EnableKeyword ("REFRACTION_ON");
-				m_oceanMaterialFar.DisableKeyword ("REFRACTION_OFF");
+				m_oceanMaterial.EnableKeyword ("REFRACTION_ON");
+				m_oceanMaterial.DisableKeyword ("REFRACTION_OFF");
 			}
 			else
 			{
-				m_oceanMaterialFar.EnableKeyword ("REFRACTION_OFF");
-				m_oceanMaterialFar.DisableKeyword ("REFRACTION_ON");
+				m_oceanMaterial.EnableKeyword ("REFRACTION_OFF");
+				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
 			}
 
 
 //			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialNear);
-			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialFar);
-			m_oceanMaterialFar.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
-			m_oceanMaterialFar.SetTexture ("_BackgroundTexture", Core.Instance.refractionTexture);
-			
+
+
+			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterial);
+
+			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
+
+			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.refractionTexture);
+
+			m_oceanMaterial.renderQueue=2050;
+
 			m_oldlocalToOcean = Matrix4x4d.Identity ();
 //			m_oldworldToOcean = Matrix4x4d.Identity ();
 			m_offset = Vector3d2.Zero ();
@@ -231,8 +235,8 @@ namespace scatterer
 				waterMeshRenderers[i] = waterGameObjects[i].AddComponent<MeshRenderer>();
 
 				
-				waterMeshRenderers[i].sharedMaterial = m_oceanMaterialFar;
-				waterMeshRenderers[i].material =m_oceanMaterialFar;
+				waterMeshRenderers[i].sharedMaterial = m_oceanMaterial;
+				waterMeshRenderers[i].material =m_oceanMaterial;
 				
 
 				waterMeshRenderers[i].receiveShadows = false;
@@ -240,17 +244,52 @@ namespace scatterer
 
 
 //				CommandBufferModifiedProjectionMatrix tmp = waterGameObjects[i].AddComponent<CommandBufferModifiedProjectionMatrix>();
-//				tmp.m_core=m_core;
+//				tmp.Core.Instance=Core.Instance;
 
 				waterMeshRenderers[i].enabled=true;
 			}
 
 			cbProjectionMat = waterGameObjects[0].AddComponent<CommandBufferModifiedProjectionMatrix>();
 			cbProjectionMat.oceanNode = this;
+
+			underwaterGameObject = new GameObject ();
+			
+			if (underwaterGameObject.GetComponent<MeshFilter> ())
+				underwaterMeshFilter = underwaterGameObject.GetComponent<MeshFilter> ();
+			else
+				underwaterMeshFilter = underwaterGameObject.AddComponent<MeshFilter>();
+			
+			underwaterMeshFilter.mesh.Clear ();
+			underwaterMeshFilter.mesh = MeshFactory.MakePlaneWithFrustumIndexes();
+			underwaterMeshFilter.mesh.bounds = new Bounds(Vector3.zero, new Vector3(1e8f,1e8f, 1e8f));
+
+			if (underwaterGameObject.GetComponent<MeshRenderer> ())
+				underwaterMeshrenderer = underwaterGameObject.GetComponent<MeshRenderer> ();
+			else
+				underwaterMeshrenderer = underwaterGameObject.AddComponent<MeshRenderer>();
+
+			underwaterPostProcessingMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/UnderwaterScatter")]);			
+			underwaterPostProcessingMaterial.SetOverrideTag ("IgnoreProjector", "True");
+			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterPostProcessingMaterial);
+			underwaterPostProcessingMaterial.renderQueue=2049;
+
+			if (Core.Instance.oceanRefraction && (HighLogic.LoadedScene != GameScenes.TRACKSTATION))
+				Core.Instance.refractionCam.underwaterPostProcessing = underwaterMeshrenderer;
+			underwaterMeshrenderer.sharedMaterial = underwaterPostProcessingMaterial;
+			underwaterMeshrenderer.material = underwaterPostProcessingMaterial;
+			
+			underwaterMeshrenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			underwaterMeshrenderer.receiveShadows = false;
+			underwaterMeshrenderer.enabled = true;
+			
+			underwaterGameObject.layer = 15;
+
 		}
 		
 		public virtual void OnDestroy ()
 		{
+			Debug.Log ("ocean node ondestroy");
+
 			if (cbProjectionMat)
 			{
 				cbProjectionMat.Cleanup ();
@@ -268,8 +307,16 @@ namespace scatterer
 
 				UnityEngine.Object.Destroy (m_screenGrids [i]);
 			}
-//			UnityEngine.Object.Destroy (m_oceanMaterialNear);
-			UnityEngine.Object.Destroy (m_oceanMaterialFar);
+
+			if (underwaterMeshrenderer)
+			{
+				UnityEngine.Object.Destroy(underwaterGameObject);
+				Component.Destroy(underwaterMeshrenderer);
+				Component.Destroy(underwaterMeshFilter);
+			}
+
+			UnityEngine.Object.Destroy (m_oceanMaterial);
+			UnityEngine.Object.Destroy (underwaterPostProcessingMaterial);
 		}
 		
 		Mesh MakePlane (int w, int h, float offset, float scale)
@@ -326,7 +373,7 @@ namespace scatterer
 		{
 			m_drawOcean = m_manager.m_skyNode.trueAlt < fakeOceanAltitude;
 
-//			if (!MapView.MapIsEnabled && !m_core.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
+//			if (!MapView.MapIsEnabled && !Core.Instance.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
 			{
 
 				bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace;
@@ -340,7 +387,7 @@ namespace scatterer
 //				foreach (Mesh mesh in m_screenGrids)
 //				{
 //
-//					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialFar, 15,
+//					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterial, 15,
 //					                  m_manager.m_skyNode.farCamera, 0, null, false, false);
 //					
 //					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15,
@@ -351,8 +398,10 @@ namespace scatterer
 
 
 //			m_oceanMaterialNear.renderQueue = m_manager.Core.Instance.oceanRenderQueue;
-			m_oceanMaterialFar.renderQueue=Core.Instance.oceanRenderQueue;
+			//m_oceanMaterial.renderQueue=Core.Instance.oceanRenderQueue;
+			//m_oceanMaterial.renderQueue=2050;
 
+			underwaterMeshrenderer.enabled = (h < 0);
 	
 		}
 
@@ -360,7 +409,7 @@ namespace scatterer
 
 		public void updateStuff (Material oceanMaterial, Camera inCamera)
 		{
-//			m_manager.GetSkyNode ().SetOceanUniforms (m_oceanMaterialFar);
+//			m_manager.GetSkyNode ().SetOceanUniforms (m_oceanMaterial);
 
 			//Calculates the required data for the projected grid
 			
@@ -446,6 +495,20 @@ namespace scatterer
 			
 			h = oc.z;
 
+			if (h < 0)
+			{
+				oceanMaterial.EnableKeyword("UNDERWATER_ON");
+				oceanMaterial.DisableKeyword("UNDERWATER_OFF");
+			}
+			else
+			{
+				oceanMaterial.EnableKeyword("UNDERWATER_OFF");
+				oceanMaterial.DisableKeyword("UNDERWATER_ON");
+			}
+
+			//				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_ON");
+			//				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_OFF");
+
 			offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
 
 			//old horizon code
@@ -497,7 +560,9 @@ namespace scatterer
 
 			oceanMaterial.SetVector (ShaderProperties._Ocean_CameraPos_PROPERTY, offset.ToVector3 ());
 			
-			oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) /*  *0.1f   */);
+			//oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, new Color (m_oceanUpwellingColor.x, m_oceanUpwellingColor.y, m_oceanUpwellingColor.z));
+			oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
+			oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
 			oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
 			oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
 			
@@ -555,6 +620,18 @@ namespace scatterer
 				oceanMaterial.SetMatrix ("planetShineRGB", m_manager.m_skyNode.planetShineRGBMatrix);
 			}
 
+			m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterPostProcessingMaterial);
+			underwaterPostProcessingMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
+
+			m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex);
+			m_oceanMaterial.SetFloat ("transparencyDepth", transparencyDepth);
+			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);
+
+			underwaterPostProcessingMaterial.SetFloat ("transparencyDepth", transparencyDepth);
+			underwaterPostProcessingMaterial.SetFloat ("darknessDepth", darknessDepth);
+
+			//underwaterPostProcessingMaterial.SetFloat ("refractionIndex", refractionIndex);
+
 		}
 		
 //		public void SetUniforms (Material mat)
@@ -575,12 +652,6 @@ namespace scatterer
 		{
 			m_manager = manager;
 		}
-		
-		public void setCore (Core core)
-		{
-			m_core = core;
-		}
-
 
 		public Matrix4x4d ModifiedProjectionMatrix (Camera inCam) //moved over to command buffer
 		{
@@ -590,7 +661,7 @@ namespace scatterer
 
 			//if OpenGL isn't detected
 			// Scale and bias depth range
-			if (!m_core.opengl)
+			if (!Core.Instance.opengl)
 			for (int i = 0; i < 4; i++)
 			{
 				p [2, i] = p [2, i] * 0.5f + p [3, i] * 0.5f;

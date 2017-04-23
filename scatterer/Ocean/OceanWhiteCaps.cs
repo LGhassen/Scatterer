@@ -17,6 +17,8 @@ namespace scatterer {
 		
 		[Persistent] public float m_whiteCapStr = 0.1f;
 
+		[Persistent] public float shoreFoam = 1.0f;
+
 		[Persistent] public float m_farWhiteCapStr = 0.1f;
 
 		[Persistent] public float choppynessMultiplier = 1f;
@@ -116,11 +118,14 @@ namespace scatterer {
 					Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
 					
 					
-					m_oceanMaterialFar.SetFloat (ShaderProperties._Ocean_WhiteCapStr_PROPERTY, m_whiteCapStr);
-					m_oceanMaterialFar.SetFloat (ShaderProperties.farWhiteCapStr_PROPERTY, m_farWhiteCapStr);
-					m_oceanMaterialFar.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);
-					m_oceanMaterialFar.SetTexture(ShaderProperties._Ocean_Foam1_PROPERTY, m_foam1);
-					
+					m_oceanMaterial.SetFloat (ShaderProperties._Ocean_WhiteCapStr_PROPERTY, m_whiteCapStr);
+					m_oceanMaterial.SetFloat (ShaderProperties.farWhiteCapStr_PROPERTY, m_farWhiteCapStr);
+					m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);
+					m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam1_PROPERTY, m_foam1);
+
+
+					m_oceanMaterial.SetFloat ("shoreFoam", shoreFoam);
+
 //					m_oceanMaterialNear.SetFloat (ShaderProperties._Ocean_WhiteCapStr_PROPERTY, m_whiteCapStr);
 //					m_oceanMaterialNear.SetFloat (ShaderProperties.farWhiteCapStr_PROPERTY, m_farWhiteCapStr);
 //					m_oceanMaterialNear.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);

@@ -53,7 +53,6 @@ namespace scatterer
 			if (hasOcean && Core.Instance.useOceanShaders) {
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
-				m_oceanNode.setCore(Core.Instance);
 
 				m_oceanNode.loadFromConfigNode();
 				m_oceanNode.Start();
@@ -101,7 +100,6 @@ namespace scatterer
 				UnityEngine.Object.Destroy(m_oceanNode);
 				m_oceanNode = new OceanWhiteCaps();
 				m_oceanNode.setManager(this);
-				m_oceanNode.setCore(Core.Instance);
 				m_oceanNode.loadFromConfigNode();
 				m_oceanNode.Start();
 

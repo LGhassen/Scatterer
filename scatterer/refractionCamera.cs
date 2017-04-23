@@ -17,6 +17,7 @@ namespace scatterer
 
 		public MeshRenderer[] waterMeshRenderers;
 		public MeshRenderer postProcessingCube;
+		public MeshRenderer underwaterPostProcessing;
 		public int numGrids=0;
 
 		public SkyNode iSkyNode;
@@ -67,9 +68,19 @@ namespace scatterer
 				//this snippet fixes that. We need the texture cleared to full white to mask the sky
 				RenderTexture rt=RenderTexture.active;
 				RenderTexture.active= _refractionTex;			
-				GL.Clear(false,true,Color.white);
+				GL.Clear(false,true,Color.black);
 				//here disable the ocean and the postprocessing stuff
+				bool prev = postProcessingCube.enabled;
 				postProcessingCube.enabled = false;
+
+				bool prev2=false;
+
+				if (underwaterPostProcessing)
+				{
+					prev2 = underwaterPostProcessing.enabled;
+					underwaterPostProcessing.enabled =false;
+				}
+
 				for (int i=0; i < numGrids; i++)
 				{
 					waterMeshRenderers[i].enabled=false;
@@ -80,8 +91,10 @@ namespace scatterer
 				_refractionCamCamera.Render();
 
 				//here re-enable the ocean and the postprocessing stuff
-				postProcessingCube.enabled = true;
-				
+				postProcessingCube.enabled = prev;
+				if (underwaterPostProcessing)
+					underwaterPostProcessing.enabled = prev2;
+
 				for (int i=0; i < numGrids; i++)
 				{
 					waterMeshRenderers[i].enabled=true;

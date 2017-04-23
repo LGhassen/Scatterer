@@ -88,6 +88,7 @@
      <None Include="Assets\shaders\SkyScaledBox.shader" />
      <None Include="Assets\shaders\ShadowVolumeDepth - Copy.shader" />
      <None Include="Assets\shaders\alphaMap.cginc" />
+     <None Include="Assets\shaders\underwaterPostProcessing32bitViewSpaceDepth.shader" />
      <None Include="Assets\shaders\OceanWhiteCapsModProj3.shader" />
      <None Include="Assets\shaders\OldOrUnused\AccumulateExposure.shader" />
      <None Include="Assets\shaders\SphereCloud.shader" />

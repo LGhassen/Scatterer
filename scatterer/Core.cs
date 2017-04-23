@@ -93,6 +93,9 @@ namespace scatterer
 		[Persistent]
 		Vector2 inGameWindowLocation=Vector2.zero;
 
+		[Persistent]
+		float nearClipPlane=0.5f;
+
 //		[Persistent]
 //		public bool
 //			render24bitDepthBuffer = true;
@@ -266,8 +269,8 @@ namespace scatterer
 		
 //		float MapViewScale = 1000f;
 		
-		[Persistent]
-		public int oceanRenderQueue=2001;
+//		[Persistent]
+//		public int oceanRenderQueue=2001;
 		
 		float postProcessingalpha = 78f;
 		float postProcessDepth = 200f;
@@ -313,7 +316,16 @@ namespace scatterer
 		float oceanUpwellingColorR = 0.0039f;
 		float oceanUpwellingColorG = 0.0156f;
 		float oceanUpwellingColorB = 0.047f;
+
+		float oceanUnderwaterColorR = 0.1f;
+		float oceanUnderwaterColorG = 0.75f;
+		float oceanUnderwaterColorB = 0.8f;
 		
+		float transparencyDepth = 60f;
+		float darknessDepth = 1000f;
+		float refractionIndex = 1.33f;
+		float shoreFoam = 1.0f;
+
 		int m_resolution = 4;
 		//		int MAX_VERTS = 65000;
 		
@@ -398,7 +410,7 @@ namespace scatterer
 		}
 
 		void Update ()
-		{		
+		{	
 			//toggle whether GUI is visible or not
 			if ((Input.GetKey (guiModifierKey1) || Input.GetKey (guiModifierKey2)) && (Input.GetKeyDown (guiKey1) || (Input.GetKeyDown (guiKey2))))
 				visible = !visible;
@@ -433,6 +445,7 @@ namespace scatterer
 						if (cams [i].name == "Camera 00")
 						{
 							nearCamera = cams [i];
+							nearCamera.nearClipPlane = nearClipPlane;
 						}
 					}
 					
@@ -570,7 +583,7 @@ namespace scatterer
 
 					if (!depthBufferSet)
 					{
-						if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+						if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 						{
 							customDepthBuffer = (CustomDepthBufferCam)farCamera.gameObject.AddComponent (typeof(CustomDepthBufferCam));
 							customDepthBuffer.inCamera = farCamera;
@@ -684,7 +697,7 @@ namespace scatterer
 
 							if (_cur.active)
 							{
-								if (dist > _cur.unloadDistance && shipDist > _cur.unloadDistance) {
+								if (dist > _cur.unloadDistance && (shipDist > _cur.unloadDistance || shipDist == 0f )) {
 									_cur.m_manager.OnDestroy ();
 									UnityEngine.Object.Destroy (_cur.m_manager);
 									_cur.m_manager = null;
@@ -915,7 +928,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0301: "
+				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0310 preview: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
@@ -1311,11 +1324,19 @@ namespace scatterer
 								GUIfloat ("ocean Level", ref oceanLevel, ref oceanNode.m_oceanLevel);
 								GUIfloat ("Alpha/WhiteCap Radius", ref oceanAlphaRadius, ref oceanNode.alphaRadius);
 								GUIfloat ("ocean Alpha", ref oceanAlpha, ref oceanNode.oceanAlpha);
+
+								GUIfloat ("Transparency Depth", ref transparencyDepth, ref oceanNode.transparencyDepth);
+								GUIfloat ("Darkness Depth", ref darknessDepth, ref oceanNode.darknessDepth);
+								GUIfloat ("Refraction Index", ref refractionIndex, ref oceanNode.refractionIndex);
+								GUIfloat ("Shore foam", ref shoreFoam, ref oceanNode.shoreFoam);
+
 								GUIfloat ("whiteCapStr (foam)", ref m_whiteCapStr, ref oceanNode.m_whiteCapStr);
 								GUIfloat ("far whiteCapStr", ref farWhiteCapStr, ref oceanNode.m_farWhiteCapStr);
 								GUIfloat ("choppyness multiplier", ref choppynessMultiplier, ref oceanNode.choppynessMultiplier);
 
 								GUIvector3 ("Ocean Upwelling Color", ref oceanUpwellingColorR, ref oceanUpwellingColorG, ref oceanUpwellingColorB, ref oceanNode.m_oceanUpwellingColor);
+
+								GUIvector3 ("Ocean Underwater Color", ref oceanUnderwaterColorR, ref oceanUnderwaterColorG, ref oceanUnderwaterColorB, ref oceanNode.m_UnderwaterColor);
 
 								GUILayout.BeginHorizontal ();
 								GUILayout.Label ("To apply the next setting press \"rebuild ocean\" and wait");
@@ -1355,7 +1376,7 @@ namespace scatterer
 								GUILayout.Label ("current fourierGridSize: "+m_fourierGridSize.ToString());
 								GUILayout.EndHorizontal ();
 
-								GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
+								//GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
 							}	
 							GUILayout.EndScrollView ();
 							
@@ -1506,7 +1527,16 @@ namespace scatterer
 			oceanUpwellingColorR = oceanNode.m_oceanUpwellingColor.x;
 			oceanUpwellingColorG = oceanNode.m_oceanUpwellingColor.y;
 			oceanUpwellingColorB = oceanNode.m_oceanUpwellingColor.z;
-			
+
+			oceanUnderwaterColorR = oceanNode.m_UnderwaterColor.x;
+			oceanUnderwaterColorG = oceanNode.m_UnderwaterColor.y;
+			oceanUnderwaterColorB = oceanNode.m_UnderwaterColor.z;
+
+			transparencyDepth = oceanNode.transparencyDepth;
+			darknessDepth = oceanNode.darknessDepth;
+			refractionIndex = oceanNode.refractionIndex;
+			shoreFoam = oceanNode.shoreFoam;
+
 			oceanScale = oceanNode.oceanScale;
 			
 			choppynessMultiplier = oceanNode.choppynessMultiplier;

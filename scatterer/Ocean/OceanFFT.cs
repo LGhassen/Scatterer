@@ -450,18 +450,18 @@ namespace scatterer {
 //					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
 //					m_oceanMaterialNear.SetVector (ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
 					
-					m_oceanMaterialFar.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
-					m_oceanMaterialFar.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
-					m_oceanMaterialFar.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
-					//				m_oceanMaterialFar.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);
-					m_oceanMaterialFar.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
-					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_variance);
-					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
-					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
-					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
-					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
-					m_oceanMaterialFar.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
-					m_oceanMaterialFar.SetVector (ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
+					m_oceanMaterial.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
+					m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
+					m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+					//				m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);
+					m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
+					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_variance);
+					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
+					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
+					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
+					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
+					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
+					m_oceanMaterial.SetVector (ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
 				}
 //#if !CPUmode
 				//Make sure base class get updated as well

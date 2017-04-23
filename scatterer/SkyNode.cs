@@ -842,7 +842,12 @@ namespace scatterer
 				}
 				
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
-				
+
+				if(Core.Instance.useOceanShaders && m_manager.hasOcean)
+				{
+					atmosphereMeshrenderer.enabled = atmosphereMeshrenderer.enabled && (trueAlt >= 0);
+				}
+
 				bool localSkyCondition;
 				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 					localSkyCondition=alt > localSkyAltitude;

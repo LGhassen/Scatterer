@@ -40,8 +40,8 @@ namespace scatterer
 			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (AP) ")
 				|| (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (Fallback) ")
 			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD")
-				|| (name.Contains ("PQS Main - Extras")))
-				
+				|| (name.Contains ("PQS Main - Extras")
+			    || (name == "Legacy Shaders/Transparent/Specular")))    //fixes kerbal visor leaking into water refraction
 			{
 				mat.SetOverrideTag("RenderType", "Opaque");
 //				Debug.Log("[Scatterer] Set renderType tag for "+mat.shader.name+" to \"Opaque\"");
