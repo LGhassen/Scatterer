@@ -481,7 +481,6 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 oceanCol = underwaterDepth * hdrNoExposure(waterLightExtinction * oceanColor(-Vworld,Lworld,float3(0.0,0.0,0.0)));
 
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
-
 				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
 				return float4(finalColor,1.0);

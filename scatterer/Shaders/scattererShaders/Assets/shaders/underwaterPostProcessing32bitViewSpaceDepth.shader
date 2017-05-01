@@ -74,12 +74,13 @@ Pass {
 																			//for other effects like SSAO as well
 				float fragDistance = fragDepth /aa;
 
-                bool infinite = (fragDepth == 1.0); //basically viewer ray isn't hitting any terrain
+                //bool infinite = (fragDepth == 1.0); //basically viewer ray isn't hitting any terrain
 
                 bool fragmentInsideOfClippingRange = ((fragDepth  >= _ProjectionParams.y)  && (fragDepth <= _ProjectionParams.z)); //if fragment depth outside of current camera clipping range, return empty pixel
-				bool returnPixel = fragmentInsideOfClippingRange && (!infinite);
+				//bool returnPixel = fragmentInsideOfClippingRange && (!infinite);
+				bool returnPixel = fragmentInsideOfClippingRange;
 
-				float waterLigthExtinction = length(getSkyExtinction(normalize(_camPos) * Rg, SUN_DIR));
+				float waterLigthExtinction = length(getSkyExtinction(normalize(_camPos) * (Rg + 2.25) , SUN_DIR));
 
 
 
@@ -89,9 +90,7 @@ Pass {
 				//underwaterDepth = max (underwaterDepth, 0.0);
 
 				float3 waterColor= underwaterDepth * hdrNoExposure( waterLigthExtinction * oceanColor(rayDir,SUN_DIR,float3(0.0,0.0,0.0)));
-
 				float alpha = min(fragDistance/transparencyDepth,1.0);
-
 				return float4(waterColor, alpha*returnPixel);
 			}
 //
