@@ -87,6 +87,9 @@ namespace scatterer
 		[Persistent]
 		public float refractionIndex = 1.33f;
 
+		public bool isUnderwater = false;
+		bool underwaterMode = false;
+
 		public int numGrids;
 		Mesh[] m_screenGrids;
 		
@@ -280,7 +283,7 @@ namespace scatterer
 			
 			underwaterMeshrenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			underwaterMeshrenderer.receiveShadows = false;
-			underwaterMeshrenderer.enabled = true;
+			underwaterMeshrenderer.enabled = false;
 			
 			underwaterGameObject.layer = 15;
 
@@ -401,7 +404,13 @@ namespace scatterer
 			//m_oceanMaterial.renderQueue=Core.Instance.oceanRenderQueue;
 			//m_oceanMaterial.renderQueue=2050;
 
-			underwaterMeshrenderer.enabled = (h < 0);
+			//underwaterMeshrenderer.enabled = (h < 0);
+			isUnderwater = h < 0;
+
+			if (underwaterMode ^ isUnderwater)
+			{
+				toggleUnderwaterMode();
+			}
 	
 		}
 
@@ -493,18 +502,7 @@ namespace scatterer
 			
 			Vector3d2 oc = cameraToOcean * Vector3d2.Zero ();
 			
-			h = oc.z;
-
-			if (h < 0)
-			{
-				oceanMaterial.EnableKeyword("UNDERWATER_ON");
-				oceanMaterial.DisableKeyword("UNDERWATER_OFF");
-			}
-			else
-			{
-				oceanMaterial.EnableKeyword("UNDERWATER_OFF");
-				oceanMaterial.DisableKeyword("UNDERWATER_ON");
-			}
+			h = oc.z;					
 
 			//				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_ON");
 			//				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_OFF");
@@ -647,7 +645,27 @@ namespace scatterer
 //			
 //			mat.SetFloat ("_Ocean_Level", m_oceanLevel);
 //		}
-		
+
+		void toggleUnderwaterMode()
+		{
+			if (underwaterMode) //switch to over water
+			{
+				underwaterMeshrenderer.enabled = false;
+
+				m_oceanMaterial.EnableKeyword("UNDERWATER_OFF");
+				m_oceanMaterial.DisableKeyword("UNDERWATER_ON");
+
+			}
+			else   //switch to underwater 
+			{
+				underwaterMeshrenderer.enabled = true;
+				m_oceanMaterial.EnableKeyword("UNDERWATER_ON");
+				m_oceanMaterial.DisableKeyword("UNDERWATER_OFF");
+			}
+
+			underwaterMode = !underwaterMode;
+		}
+
 		public void setManager (Manager manager)
 		{
 			m_manager = manager;

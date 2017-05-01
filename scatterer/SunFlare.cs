@@ -279,7 +279,7 @@ namespace scatterer
 
 			//drawmesh calls have to be made in update()
 			//if they're done on prerender or anywhere else they don't work as far as I know
-			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION) && !(Core.Instance.underwater))
 			//if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
 			{
 				Graphics.DrawMesh (screenMesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 15,

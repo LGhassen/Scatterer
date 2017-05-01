@@ -206,6 +206,7 @@ namespace scatterer
 		KeyCode guiKey1, guiKey2, guiModifierKey1, guiModifierKey2 ;
 			
 		public bool pqsEnabled = false;
+		public bool underwater = false;
 		public CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
 		public RenderTexture godrayDepthTexture;
@@ -579,6 +580,7 @@ namespace scatterer
 					}
 
 					pqsEnabled = false;
+					underwater = false;
 					
 					foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
 					{
@@ -610,6 +612,11 @@ namespace scatterer
 										if (!_cur.m_manager.m_skyNode.inScaledSpace)
 										{
 											pqsEnabled = true;
+										}
+
+										if (_cur.m_manager.hasOcean && useOceanShaders && pqsEnabled)
+										{
+											underwater = _cur.m_manager.GetOceanNode().isUnderwater;
 										}
 									}
 								}
