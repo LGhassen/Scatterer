@@ -110,6 +110,7 @@
     <Compile Include="SunflareCameraHook.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="refractionCamera.cs" />
+    <Compile Include="GUIhandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cameraHDRTonemapping.cs" />
