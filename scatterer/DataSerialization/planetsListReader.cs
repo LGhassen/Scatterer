@@ -12,16 +12,16 @@ using UnityEngine;
 
 namespace scatterer
 {
-	public class planetsListReader
+	public class PlanetsListReader
 	{
 //		[Persistent]
 //		public string mainSunCelestialBodyName="Sun";
 
 		[Persistent]
-		public List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody > {};
+		public List <ScattererCelestialBody> scattererCelestialBodies = new List <ScattererCelestialBody> {};
 
 		[Persistent]
-		public List<planetShineLightSource> celestialLightSourcesData=new List<planetShineLightSource> {};
+		public List<PlanetShineLightSource> celestialLightSourcesData=new List<PlanetShineLightSource> {};
 
 		[Persistent]
 		public List<string> sunflares=new List<string> {};

@@ -39,7 +39,7 @@ namespace scatterer
 		[Persistent]
 		public bool displayInterpolatedVariables = false;
 		
-		updateAtCameraRythm updater;
+		UpdateOnCameraPreCull updater;
 		bool updaterAdded = false;
 		
 		Matrix4x4 castersMatrix1=Matrix4x4.zero;
@@ -112,7 +112,7 @@ namespace scatterer
 		bool stocksunglareEnabled = true;
 				
 		//atmosphere properties
-		public configPoint interpolatedSettings= new configPoint();
+		public ConfigPoint interpolatedSettings= new ConfigPoint();
 		[Persistent]
 		public float mapExposure = 0.15f;
 		[Persistent]
@@ -220,9 +220,9 @@ namespace scatterer
 		[Persistent]
 		public float shininess = 0f;
 		[Persistent]
-		public List < configPoint > configPoints = new List < configPoint > {
-			new configPoint(5000f, 1f, 0.25f,0.25f, 1f, 0.4f, 0.23f, 1f, 100f,0f, 0f, 250f, 0.5f,0f,100f,100f,1f,1f)
-			, new configPoint(15000f, 1f, 0.15f,0.15f, 1f, 8f, 0.23f, 1f, 100f,0f,0f, 250f, 0.5f,0f,100f,100f,1f,1f)
+		public List < ConfigPoint > configPoints = new List < ConfigPoint > {
+			new ConfigPoint(5000f, 1f, 0.25f,0.25f, 1f, 0.4f, 0.23f, 1f, 100f,0f, 0f, 250f, 0.5f,0f,100f,100f,1f,1f)
+			, new ConfigPoint(15000f, 1f, 0.15f,0.15f, 1f, 8f, 0.23f, 1f, 100f,0f,0f, 250f, 0.5f,0f,100f,100f,1f,1f)
 		};
 		//public string assetDir;
 
@@ -833,7 +833,7 @@ namespace scatterer
 				if (scaledSpaceCamera && !updaterAdded)
 				{
 					
-					updater = (updateAtCameraRythm)scaledSpaceCamera.gameObject.AddComponent (typeof(updateAtCameraRythm));
+					updater = (UpdateOnCameraPreCull)scaledSpaceCamera.gameObject.AddComponent (typeof(UpdateOnCameraPreCull));
 
 					//updater.settings (m_skyMaterialLocal, m_manager, this,parentCelestialBody.transform);
 					updater.settings (m_skyMaterialScaled, m_manager, this,parentCelestialBody.transform);

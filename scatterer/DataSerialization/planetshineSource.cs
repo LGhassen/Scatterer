@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace scatterer
 {
-	public class atmoPlanetShineSource
+	public class AtmoPlanetShineSource
 	{
 		[Persistent] public string bodyName;
 		[Persistent] public Vector3 color;
@@ -13,7 +13,7 @@ namespace scatterer
 		public CelestialBody body;
 	}
 
-	public class planetShineLightSource
+	public class PlanetShineLightSource
 	{
 		[Persistent] public string bodyName;
 		[Persistent] public Vector3 color;

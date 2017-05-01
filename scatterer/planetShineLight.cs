@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 namespace scatterer
 {
-	public class planetShineLight : MonoBehaviour
+	public class PlanetShineLight : MonoBehaviour
 	{
 		public GameObject scaledLight, localLight;
 		public bool isSun;

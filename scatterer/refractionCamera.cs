@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace scatterer
 {
 	
-	public class refractionCamera : MonoBehaviour
+	public class RefractionCamera : MonoBehaviour
 	{
 		public Camera inCamera;
 		

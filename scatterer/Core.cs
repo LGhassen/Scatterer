@@ -45,7 +45,7 @@ namespace scatterer
 
 		GUIhandler GUItool= new GUIhandler();
 
-		planetsListReader scattererPlanetsListReader = new planetsListReader ();
+		PlanetsListReader scattererPlanetsListReader = new PlanetsListReader ();
 		public List<SunFlare> customSunFlares = new List<SunFlare>();
 		bool customSunFlareAdded=false;
 		
@@ -60,9 +60,9 @@ namespace scatterer
 		[Persistent]
 		public bool integrateWithEVEClouds=false;
 
-		disableAmbientLight ambientLightScript;
+		DisableAmbientLight ambientLightScript;
 		
-		public List < scattererCelestialBody > scattererCelestialBodies = new List < scattererCelestialBody > {};
+		public List <ScattererCelestialBody > scattererCelestialBodies = new List <ScattererCelestialBody> {};
 
 		public List<string> sunflaresList=new List<string> {};
 
@@ -164,9 +164,9 @@ namespace scatterer
 		public bool
 			usePlanetShine = false;
 
-		List<planetShineLightSource> celestialLightSourcesData=new List<planetShineLightSource> {};
+		List<PlanetShineLightSource> celestialLightSourcesData=new List<PlanetShineLightSource> {};
 		
-		List<planetShineLight> celestialLightSources=new List<planetShineLight> {};
+		List<PlanetShineLight> celestialLightSources=new List<PlanetShineLight> {};
 
 		public UrlDir.UrlConfig[] baseConfigs;
 		public UrlDir.UrlConfig[] atmoConfigs;
@@ -209,7 +209,7 @@ namespace scatterer
 		public CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
 		public RenderTexture godrayDepthTexture;
-		public refractionCamera refractionCam;
+		public RefractionCamera refractionCam;
 		public RenderTexture refractionTexture;
 		
 		bool depthBufferSet = false;
@@ -420,12 +420,12 @@ namespace scatterer
 					//set up planetshine lights
 					if(usePlanetShine)
 					{
-						foreach (planetShineLightSource _aSource in celestialLightSourcesData)
+						foreach (PlanetShineLightSource _aSource in celestialLightSourcesData)
 						{
 							var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
 							if (celBody)
 							{
-								planetShineLight aPsLight= new planetShineLight();
+								PlanetShineLight aPsLight= new PlanetShineLight();
 								aPsLight.isSun=_aSource.isSun;
 								aPsLight.source=celBody;
 								aPsLight.sunCelestialBody=sunCelestialBody;
@@ -507,7 +507,7 @@ namespace scatterer
 							//refraction stuff
 							if (useOceanShaders && oceanRefraction)
 							{
-								refractionCam = (refractionCamera) farCamera.gameObject.AddComponent (typeof(refractionCamera));
+								refractionCam = (RefractionCamera) farCamera.gameObject.AddComponent (typeof(RefractionCamera));
 								refractionCam.inCamera = farCamera;
 								refractionCam.start();
 
@@ -559,7 +559,7 @@ namespace scatterer
 
 					if (disableAmbientLight && !ambientLightScript)
 					{
-						ambientLightScript = (disableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(disableAmbientLight));
+						ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
 					}
 
 					if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
@@ -580,7 +580,7 @@ namespace scatterer
 
 					pqsEnabled = false;
 					
-					foreach (scattererCelestialBody _cur in scattererCelestialBodies)
+					foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
 					{
 						float dist, shipDist=0f;
 						if (_cur.hasTransform)
@@ -643,7 +643,7 @@ namespace scatterer
 										_cur.m_manager.eclipseCasters=eclipseCasters;
 									}
 
-									List<atmoPlanetShineSource> planetshineSources=new List<atmoPlanetShineSource> {};
+									List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
 
 									if (usePlanetShine)
 									{								
@@ -654,7 +654,7 @@ namespace scatterer
 												Debug.Log("[Scatterer] planetshine source "+_cur.planetshineSources[k].bodyName+" not found for "+_cur.celestialBodyName);
 											else
 											{
-												atmoPlanetShineSource src=_cur.planetshineSources[k];
+												AtmoPlanetShineSource src=_cur.planetshineSources[k];
 												src.body=cc;
 												_cur.planetshineSources[k].body=cc;
 												planetshineSources.Add (src);
@@ -706,7 +706,7 @@ namespace scatterer
 					//update planetshine lights
 					if(usePlanetShine)
 					{
-						foreach (planetShineLight _aLight in celestialLightSources)
+						foreach (PlanetShineLight _aLight in celestialLightSources)
 						{
 //							Debug.Log("updating "+_aLight.source.name);
 							_aLight.updateLight();
@@ -724,7 +724,7 @@ namespace scatterer
 			{
 				if(usePlanetShine)
 				{
-					foreach (planetShineLight _aLight in celestialLightSources)
+					foreach (PlanetShineLight _aLight in celestialLightSources)
 					{
 						_aLight.OnDestroy();
 						UnityEngine.Object.Destroy(_aLight);
@@ -733,7 +733,7 @@ namespace scatterer
 
 				for (int i = 0; i < scattererCelestialBodies.Count; i++) {
 					
-					scattererCelestialBody cur = scattererCelestialBodies [i];
+					ScattererCelestialBody cur = scattererCelestialBodies [i];
 					if (cur.active) {
 						cur.m_manager.OnDestroy ();
 						UnityEngine.Object.Destroy (cur.m_manager);
@@ -819,6 +819,9 @@ namespace scatterer
 				mainMenuWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				saveSettings();
 			}
+
+
+			UnityEngine.Object.Destroy (GUItool);
 			
 		}
 
@@ -826,10 +829,6 @@ namespace scatterer
 		{
 			if (visible)
 			{
-//				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v0.0310 preview: "
-//				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
-//				                               +"/"+guiKey2String+" toggle");
-
 				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0310 preview: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
@@ -886,62 +885,13 @@ namespace scatterer
 			Debug.Log ("[Scatterer] Saving settings to: " + baseConfigs [0].parent.url+".cfg");
 			baseConfigs [0].parent.SaveConfigs ();
 		}
-		
-//		public void GUIfloat (string label, ref float local, ref float target)
-//		{
-//			GUILayout.BeginHorizontal ();
-//			GUILayout.Label (label);
-//			
-//			local = float.Parse (GUILayout.TextField (local.ToString ("00000.0000")));
-//			if (GUILayout.Button ("Set")) {
-//				target = local;
-//			}
-//			GUILayout.EndHorizontal ();
-//		}
-//		
-//		public void GUIint (string label, ref int local, ref int target, int divisionFactor)
-//		{
-//			GUILayout.BeginHorizontal ();
-//			GUILayout.Label (label);
-//			local = (Int32)(Convert.ToInt32 (GUILayout.TextField (local.ToString ())));
-//			
-//			
-//			if (GUILayout.Button ("Set")) {
-//				target = local / divisionFactor;
-//			}
-//			GUILayout.EndHorizontal ();
-//		}
-//		
-//		public void GUIvector3 (string label, ref float localR, ref float localG, ref float localB, ref Vector3 target)
-//		{
-//			GUILayout.BeginHorizontal ();
-//			GUILayout.Label (label);
-//			
-//			localR = float.Parse (GUILayout.TextField (localR.ToString ("0000.00000")));
-//			localG = float.Parse (GUILayout.TextField (localG.ToString ("0000.00000")));
-//			localB = float.Parse (GUILayout.TextField (localB.ToString ("0000.00000")));
-//			
-//			if (GUILayout.Button ("Set")) {
-//				target = new Vector3 (localR, localG, localB);
-//			}
-//			GUILayout.EndHorizontal ();
-//		}
-//		
-//		
-//		public void GUItoggle (string label, ref bool toToggle)
-//		{
-//			GUILayout.BeginHorizontal ();
-//			if (GUILayout.Button (label))
-//				toToggle = !toToggle;
-//			GUILayout.EndHorizontal ();
-//		}
 
 		void removeStockOceans()
 		{
 			FakeOceanPQS[] fakes = (FakeOceanPQS[])FakeOceanPQS.FindObjectsOfType (typeof(FakeOceanPQS));
 			
 			if (fakes.Length == 0) { //if stock oceans haven't already been replaced
-				foreach (scattererCelestialBody sctBody in scattererCelestialBodies)
+				foreach (ScattererCelestialBody sctBody in scattererCelestialBodies)
 				{
 					if (sctBody.hasOcean)
 					{
@@ -982,7 +932,7 @@ namespace scatterer
 
 		void findScattererCelestialBodies()
 		{
-			foreach (scattererCelestialBody sctBody in scattererCelestialBodies)
+			foreach (ScattererCelestialBody sctBody in scattererCelestialBodies)
 			{
 				var _idx = 0;
 			

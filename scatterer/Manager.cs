@@ -32,7 +32,7 @@ namespace scatterer
 //		public List<CelestialBody> additionalSuns;
 //		public List<CelestialBody> planetShineLightSources;
 
-		public List<atmoPlanetShineSource> planetshineSources;
+		public List<AtmoPlanetShineSource> planetshineSources;
 
 		
 		// Initialization

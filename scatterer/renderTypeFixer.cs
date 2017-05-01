@@ -8,7 +8,7 @@ using UnityEngine;
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	public class renderTypeFixer : MonoBehaviour
+	public class RenderTypeFixer : MonoBehaviour
 	{
 		static Dictionary<String, Shader> shaderDictionary = new Dictionary<String, Shader>();
 		private void Awake()

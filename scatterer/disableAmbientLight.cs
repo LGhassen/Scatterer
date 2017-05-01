@@ -14,7 +14,7 @@ using KSP.IO;
 namespace scatterer
 {
 
-	public class disableAmbientLight : MonoBehaviour
+	public class DisableAmbientLight : MonoBehaviour
 	{
 		Color ambientLight;
 		Color originalAmbientLight;
@@ -26,7 +26,7 @@ namespace scatterer
 
 		Light _scaledspaceSunLight;
 
-		public disableAmbientLight()
+		public DisableAmbientLight()
 		{
 			//find sunlight
 			lights = (Light[]) Light.FindObjectsOfType(typeof( Light));

@@ -57,7 +57,7 @@ namespace scatterer
 		float mapSkyExtinctionRimFade=1f;
 		float specR = 0f, specG = 0f, specB = 0f, shininess = 0f;
 		
-		//configPoint variables 		
+		//ConfigPoint variables 		
 		float pointAltitude = 0f;
 		float newCfgPtAlt = 0f;
 		int configPointsCnt;
@@ -253,7 +253,7 @@ namespace scatterer
 					//						}
 					GUILayout.EndHorizontal ();
 					
-					configPoint _cur = Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint];
+					ConfigPoint _cur = Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint];
 					
 					if (!displayOceanSettings)
 					{
@@ -265,7 +265,7 @@ namespace scatterer
 							if (GUILayout.Button ("Add"))
 							{
 								Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1,
-								                                                                                   new configPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, skyRimExposure/100,
+								                                                                                   new ConfigPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, skyRimExposure/100,
 								                 postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100,
 								                 extinctionMultiplier / 100, extinctionTint / 100, skyExtinctionRimFade/100, skyExtinctionGroundFade/100,
 								                 openglThreshold, edgeThreshold / 100,viewdirOffset,_Post_Extinction_Tint/100,
@@ -484,7 +484,7 @@ namespace scatterer
 						if (GUILayout.Button ("Map EVE clouds"))
 						{
 							Core.Instance.mapEVEClouds();
-							foreach (scattererCelestialBody _cel in Core.Instance.scattererCelestialBodies)
+							foreach (ScattererCelestialBody _cel in Core.Instance.scattererCelestialBodies)
 							{
 								if (_cel.active)
 								{
@@ -685,7 +685,7 @@ namespace scatterer
 		public void getSettingsFromSkynode ()
 		{
 			SkyNode skyNode = Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode;
-			configPoint selected = skyNode.configPoints [selectedConfigPoint];
+			ConfigPoint selected = skyNode.configPoints [selectedConfigPoint];
 			
 			postProcessingalpha = selected.postProcessAlpha;
 			//			postProcessDepth = 10000 * selected.postProcessDepth;
@@ -800,7 +800,7 @@ namespace scatterer
 		
 		public void loadConfigPoint (int point)
 		{
-			configPoint _cur = Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point];
+			ConfigPoint _cur = Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point];
 			
 			postProcessDepth = _cur.postProcessDepth;
 			_Post_Extinction_Tint = _cur._Post_Extinction_Tint;

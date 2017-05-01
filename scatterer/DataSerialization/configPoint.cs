@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 namespace scatterer
 {
-	public class configPoint
+	public class ConfigPoint
 	{
 				[Persistent] public float altitude;
 				[Persistent] public float skyAlpha;
@@ -25,7 +25,7 @@ namespace scatterer
 
 
 
-		public configPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inSkyRimExposure,float inPostProcessAlpha,
+		public ConfigPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inSkyRimExposure,float inPostProcessAlpha,
 		                   float inPostProcessDepth,float inPostProcessExposure, float inSkyExtinctionMultiplier,
 		                   float inSkyExtinctionTint, float inSkyextinctionRimFade,float inSkyextinctionGroundFade, float inOpenglThreshold, float inEdgeThreshold, float inViewdirOffset, float in_Post_Extinction_Tint,
 		                   float inpostExtinctionMultiplier, float in_GlobalOceanAlpha, float in_extinctionScatterIntensity)
@@ -50,7 +50,7 @@ namespace scatterer
 			_extinctionScatterIntensity = in_extinctionScatterIntensity;
 		}
 
-		public void getValuesFrom(configPoint inConfigPoint)
+		public void getValuesFrom(ConfigPoint inConfigPoint)
 		{
 			//altitude=inConfigPoint.altitude;
 			skyAlpha=inConfigPoint.skyAlpha;
@@ -72,7 +72,7 @@ namespace scatterer
 			_extinctionScatterIntensity = inConfigPoint._extinctionScatterIntensity;
 		}
 
-		public void interpolateValuesFrom(configPoint inConfigPoint1, configPoint inConfigPoint2, float x)
+		public void interpolateValuesFrom(ConfigPoint inConfigPoint1, ConfigPoint inConfigPoint2, float x)
 		{
 			//altitude
 			skyAlpha=Mathf.Lerp(inConfigPoint1.skyAlpha, inConfigPoint2.skyAlpha ,x);
@@ -94,7 +94,7 @@ namespace scatterer
 			_extinctionScatterIntensity = Mathf.Lerp(inConfigPoint1._extinctionScatterIntensity, inConfigPoint2._extinctionScatterIntensity ,x);
 		}
 
-		public configPoint()
+		public ConfigPoint()
 		{
 
 		}

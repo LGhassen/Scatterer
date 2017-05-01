@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace scatterer
 {
-	public class scattererCelestialBody
+	public class ScattererCelestialBody
 	{
 		[Persistent] public string celestialBodyName;
 		[Persistent] public string transformName;
@@ -14,7 +14,7 @@ namespace scatterer
 		[Persistent] public bool hasOcean;
 		[Persistent] public List<string> eclipseCasters=new List<string> {};
 
-		[Persistent] public List<atmoPlanetShineSource> planetshineSources=new List<atmoPlanetShineSource> {};
+		[Persistent] public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
 	
 
 
@@ -26,9 +26,9 @@ namespace scatterer
 		public Material originalPlanetMaterialBackup;
 		
 		
-		public scattererCelestialBody (string inCelestialBodyName, string inTransformName, float inloadDistance,
+		public ScattererCelestialBody (string inCelestialBodyName, string inTransformName, float inloadDistance,
 		                               float inUnloadDistance, bool inHasOcean, List<string> inEclipseCasters,
-		                               List<atmoPlanetShineSource> inPlanetShineSources, string inSun)
+		                               List<AtmoPlanetShineSource> inPlanetShineSources, string inSun)
 		{
 			celestialBodyName = inCelestialBodyName;
 			transformName=inTransformName;
@@ -41,13 +41,13 @@ namespace scatterer
 			mainSunCelestialBody = inSun;
 		}
 
-		public scattererCelestialBody (CelestialBody inCelestialBody, Transform inTransform)
+		public ScattererCelestialBody (CelestialBody inCelestialBody, Transform inTransform)
 		{
 			transform = inTransform;
 			celestialBody = inCelestialBody;
 		}
 		
-		public scattererCelestialBody ()
+		public ScattererCelestialBody ()
 		{
 			
 		}

@@ -15,7 +15,7 @@ using KSP.IO;
 namespace scatterer
 {
 	
-	public class updateAtCameraRythm : MonoBehaviour
+	public class UpdateOnCameraPreCull : MonoBehaviour
 	{
 		Manager m_manager;
 		SkyNode m_skynode;
