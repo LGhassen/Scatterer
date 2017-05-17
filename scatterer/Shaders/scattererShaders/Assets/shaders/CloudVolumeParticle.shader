@@ -213,44 +213,44 @@ Shader "Scatterer-EVE/CloudVolumeParticle" {
 					//o.color.rgb *= Terminator(_WorldSpaceLightPos0, worldNormal);
 
 
-//#ifdef SCATTERER_ON
-//					//float3 worldPos = mul(unity_ObjectToWorld, localOrigin);
-//					float3 worldPos = origin;
+#ifdef SCATTERER_ON
+					//float3 worldPos = mul(unity_ObjectToWorld, localOrigin);
+					float3 worldPos = origin;
+
+					float3 extinction = float3(0, 0, 0);
+
+					float3 WCP = _WorldSpaceCameraPos; //unity supplied, in local Space
+
+//					float3 worigin = mul(unity_ObjectToWorld, float4(0,0,0,1)).xyz;
+					float3 worigin = _PlanetWorldPos;
+                	
+					float3 relWorldPos=worldPos-worigin;
+					float3 relCameraPos=WCP-worigin;
+					//relWorldPos=lerp(Rg*normalize(relWorldPos),relWorldPos,cloudExtinctionHeightMultiplier);					
+
+					//extinction of light from sun to cloud
+					float3 sunExtinction = getSkyExtinction(relWorldPos,_Sun_WorldSunDir);
+
+					//extinction from cloud to observer
+					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);
+
+					o.color.rgb *= cloudColorMultiplier * extinction * sunExtinction;
+
+//					//skyLight
+//					float3 skyE = SimpleSkyirradiance(relWorldPos, viewDir.xyz, _Sun_WorldSunDir);
 //
-//					float3 extinction = float3(0, 0, 0);
-//
-//					float3 WCP = _WorldSpaceCameraPos; //unity supplied, in local Space
-//
-////					float3 worigin = mul(unity_ObjectToWorld, float4(0,0,0,1)).xyz;
-//					float3 worigin = _PlanetWorldPos;
-//                	
-//					float3 relWorldPos=worldPos-worigin;
-//					float3 relCameraPos=WCP-worigin;
-//					//relWorldPos=lerp(Rg*normalize(relWorldPos),relWorldPos,cloudExtinctionHeightMultiplier);					
-//
-//					//extinction of light from sun to cloud
-//					float3 sunExtinction = getSkyExtinction(relWorldPos,_Sun_WorldSunDir);
+//					o.color.rgb *= cloudColorMultiplier * extinction * sunExtinction + skyE*cloudSkyIrradianceMultiplier;
+
+//					o.relWorldPos = relWorldPos;
+//					//inScattering from cloud to observer
+//					float3 inscatter = InScattering2(relCameraPos, relWorldPos, extinction, _Sun_WorldSunDir, 1.0, 1.0, 1.0);
+//					o.inScattering = inscatter * cloudScatteringMultiplier;
 //
 //					//extinction from cloud to observer
 //					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);
 //
-//					o.color.rgb *= cloudColorMultiplier * extinction * sunExtinction;
-//
-////					//skyLight
-////					float3 skyE = SimpleSkyirradiance(relWorldPos, viewDir.xyz, _Sun_WorldSunDir);
-////
-////					o.color.rgb *= cloudColorMultiplier * extinction * sunExtinction + skyE*cloudSkyIrradianceMultiplier;
-//
-////					o.relWorldPos = relWorldPos;
-////					//inScattering from cloud to observer
-////					float3 inscatter = InScattering2(relCameraPos, relWorldPos, extinction, _Sun_WorldSunDir, 1.0, 1.0, 1.0);
-////					o.inScattering = inscatter * cloudScatteringMultiplier;
-////
-////					//extinction from cloud to observer
-////					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);
-////
-////					o.color.rgb *= cloudColorMultiplier * extinction;					 
-//#endif	
+//					o.color.rgb *= cloudColorMultiplier * extinction;					 
+#endif	
 				
 
 
