@@ -129,12 +129,12 @@ Shader "Scatterer/SkyLocal"
 				if (intersectSphere2(WCP,d,_Scatterer_Origin,Rg) > 0)
 				{
 					float distInAtmo= intersectSphere2(WCP,d,_Scatterer_Origin,Rg)-intersectSphere2(WCP,d,_Scatterer_Origin,Rt);
-					extinction = AnalyticTransmittance(r, mu, (distInAtmo));
+					extinction = AnalyticTransmittanceNormalized(r, mu, (distInAtmo));
 				}
 				else
 					extinction = Transmittance(r, mu); 
 				
-//				extinction = min(AnalyticTransmittance(r, mu, (distInAtmo)),1.0); //haven't tried this yet
+//				extinction = min(AnalyticTransmittanceNormalized(r, mu, (distInAtmo)),1.0); //haven't tried this yet
 
 #else				
     			extinction = Transmittance(r, mu);    			
@@ -155,10 +155,11 @@ Shader "Scatterer/SkyLocal"
 					extinction= float3(1.0,1.0,1.0)*extinctionRimFade +(1-extinctionRimFade)*extinction;
 				}
 
+#if defined (ECLIPSES_ON) || defined (RINGSHADOW_ON)
 				//find worldPos of the point in the atmo we're looking at directly
 				//necessary for eclipses, ring shadows and planetshine
 				float3 worldPos;
-#if defined (ECLIPSES_ON) || defined (RINGSHADOW_ON)
+
 			    interSectPt= intersectSphere4(WCP,d,_Scatterer_Origin,Rt);//*_rimQuickFixMultiplier
 			    
 				if (interSectPt != -1)

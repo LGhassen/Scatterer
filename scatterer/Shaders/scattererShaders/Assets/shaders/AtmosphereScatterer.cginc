@@ -350,12 +350,35 @@ float OpticalDepth(float H, float r, float mu, float d)
 }
 
 
+//Same as above but normalizes relative to radius
+float OpticalDepthNormalized(float H, float r, float mu, float d)
+{
+	float Rg1 = 6000000.0;
+	r = r * Rg1 / Rg;
+	d = d * Rg1 / Rg;
+
+    float a = sqrt((0.5/H)*r);
+    float2 a01 = a*float2(mu, mu + d / r);
+    float2 a01s = sign(a01);
+    float2 a01sq = a01*a01;
+    float x = a01s.y > a01s.x ? exp(a01sq.x) : 0.0;
+    float2 y = a01s / (2.3193*abs(a01) + sqrt(1.52*a01sq + 4.0)) * float2(1.0, exp(-d/H*(d/(2.0*r)+mu)));
+    return sqrt((6.2831*H)*r) * exp((Rg1-r)/H) * (x + dot(y, float2(1.0, -1.0)));
+}
+
+
 // transmittance(=transparency) of atmosphere for ray (r,mu) of length d
 // (mu=cos(view zenith angle)), intersections with ground ignored
 // uses analytic formula instead of transmittance texture
 float3 AnalyticTransmittance(float r, float mu, float d)
 {
     return exp(- betaR * OpticalDepth(HR * _experimentalAtmoScale, r, mu, d) - betaMEx * OpticalDepth(HM * _experimentalAtmoScale, r, mu, d));
+}
+
+//same as above but normalizes relative to radius
+float3 AnalyticTransmittanceNormalized(float r, float mu, float d)
+{
+    return exp(- betaR * OpticalDepthNormalized(HR * _experimentalAtmoScale, r, mu, d) - betaMEx * OpticalDepthNormalized(HM * _experimentalAtmoScale, r, mu, d));
 }
 
 //the extinction part extracted from the inscattering function
@@ -409,6 +432,67 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
     	//set to analyticTransmittance only atm
     	#if defined (useAnalyticTransmittance)
     	extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
+    	#endif
+    }	
+	else
+    {	//if out of atmosphere
+        extinction = float3(1,1,1);
+    }
+
+    return extinction;
+}
+
+//the extinction part extracted from the inscattering function
+//this is for objects in atmo, computed using analyticTransmittance (better precision and less artifacts) or the precomputed transmittance table
+float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, float scaleCoeff, float irradianceFactor)
+{
+    float3 extinction = float3(1, 1, 1);
+    float3 viewdir = _point - camera;
+    float d = length(viewdir) * scaleCoeff;
+    viewdir = viewdir / d;
+    /////////////////////experimental block begin
+    float Rt0=Rt;
+    Rt = Rg + (Rt - Rg) * _experimentalAtmoScale;
+    //                viewdir.x += _viewdirOffset;
+    viewdir = normalize(viewdir);
+    /////////////////////experimental block end
+    float r = length(camera) * scaleCoeff;
+    
+    if (r < 0.9 * Rg) {
+        camera.y += Rg;
+        r = length(camera) * scaleCoeff;
+    }
+    
+    float rMu = dot(camera, viewdir);
+    float mu = rMu / r;
+
+    float deltaSq = SQRT(rMu * rMu - r * r + Rt * Rt, 0.000001);
+//    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt);
+    
+    float din = max(-rMu - deltaSq, 0.0);
+    
+    if (din > 0.0 && din < d)
+    {
+        rMu += din;
+        mu = rMu / Rt;
+        r = Rt;
+        d -= din;
+    }
+	if (r <= Rt)
+    { 
+//    	if (r < Rg + 1600.0)
+//    	{
+//    		// avoids imprecision problems in aerial perspective near ground
+//    		//Not sure if necessary with extinction
+//        	float f = (Rg + 1600.0) / r;
+//        	r = r * f;
+//    	}
+
+		r = (r < Rg + 1600.0) ? (Rg + 1600.0) : r;
+        
+    	//set to analyticTransmittance only atm
+    	#if defined (useAnalyticTransmittance)
+    	extinction = min(AnalyticTransmittanceNormalized(r, mu, d), 1.0);
     	#endif
     }	
 	else
