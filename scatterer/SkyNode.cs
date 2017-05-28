@@ -442,7 +442,7 @@ namespace scatterer
 					
 					foreach( MonoBehaviour _script in scripts)
 					{						
-						Debug.Log("script.GetType().ToString() "+_script.GetType().ToString());
+						//Debug.Log("script.GetType().ToString() "+_script.GetType().ToString());
 
 						if (_script.GetType().ToString().Contains("Ring")) //production-quality code
 						{
@@ -453,7 +453,7 @@ namespace scatterer
 
 							foreach(FieldInfo fi in fields)
 							{
-								Debug.Log("fi.Name "+fi.Name+" fi.GetType() "+fi.GetType());
+								//Debug.Log("fi.Name "+fi.Name+" fi.GetType() "+fi.GetType());
 							}
 							
 							try
@@ -463,11 +463,21 @@ namespace scatterer
 								Debug.Log("[Scatterer] ringTexture.width "+ringTexture.width.ToString());
 								Debug.Log("[Scatterer] ringTexture.height "+ringTexture.height.ToString());
 
-								ringInnerRadius = (float) _script.GetType().GetField("innerRadius", flags).GetValue(_script);
-								Debug.Log ("[Scatterer] ring innerRadius (scaled) " + ringInnerRadius.ToString ());
+//								ringInnerRadius = (float) _script.GetType().GetField("innerRadius", flags).GetValue(_script);
+//								Debug.Log ("[Scatterer] ring innerRadius (scaled) " + ringInnerRadius.ToString ());
+//
+//								ringOuterRadius = (float) _script.GetType().GetField("outerRadius", flags).GetValue(_script);
+//								Debug.Log ("[Scatterer] ring outerRadius (scaled) " + ringOuterRadius.ToString ());
 
-								ringOuterRadius = (float) _script.GetType().GetField("outerRadius", flags).GetValue(_script);
-								Debug.Log ("[Scatterer] ring outerRadius (scaled) " + ringOuterRadius.ToString ());
+								//ringMR
+								MeshRenderer ringMR = _script.GetType().GetField("ringMR", flags).GetValue(_script) as MeshRenderer;
+								Debug.Log("[Scatterer] ringMR fetch successful");
+
+								ringInnerRadius = ringMR.material.GetFloat("innerRadius");
+								ringOuterRadius = ringMR.material.GetFloat("outerRadius");
+
+								Debug.Log ("[Scatterer] ring innerRadius (with parent scale) " + ringInnerRadius.ToString ());
+								Debug.Log ("[Scatterer] ring outerRadius (with parent scale) " + ringOuterRadius.ToString ());
 
 								ringInnerRadius *= 6000; //*6000 to convert to local space size
 								ringOuterRadius *= 6000;
@@ -610,7 +620,7 @@ namespace scatterer
 			
 			//update EVE cloud shaders
 			//maybe refactor?
-			if (Core.Instance.integrateWithEVEClouds)
+			if (Core.Instance.integrateWithEVEClouds && m_manager.usesCloudIntegration)
 			{
 				try
 				{
@@ -641,6 +651,9 @@ namespace scatterer
 							Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
 								("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
 
+
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("SCATTERER_ON");
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("SCATTERER_OFF");
 						}
 					}
 
@@ -668,6 +681,9 @@ namespace scatterer
 //								("cloudScatteringMultiplier", volumetricsScatteringMultiplier);
 //							EVEvolumetrics[i].SetFloat
 //								("cloudSkyIrradianceMultiplier", volumetricsSkyIrradianceMultiplier);
+
+							EVEvolumetrics[i].EnableKeyword ("SCATTERER_ON");
+							EVEvolumetrics[i].DisableKeyword ("SCATTERER_OFF");
 						}
 					}
 				}
@@ -1403,6 +1419,43 @@ namespace scatterer
 			RestoreStockAtmosphere ();
 			UnityEngine.Object.Destroy (alteredMaterial);
 			UnityEngine.Object.Destroy (originalMaterial);
+
+			//disable eve integration scatterer flag
+			if (Core.Instance.integrateWithEVEClouds && m_manager.usesCloudIntegration)
+			{
+				try
+				{
+					int size;
+					
+					//2d clouds
+					if(Core.Instance.EVEClouds.ContainsKey(parentCelestialBody.name))
+					{
+						size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
+						for (int i=0;i<size;i++)
+						{
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("SCATTERER_ON");
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("SCATTERER_OFF");
+						}
+					}
+					
+					//volumetrics
+					//if in local mode and mapping is done
+					if (!inScaledSpace && !mapVolumetrics)
+					{
+						size = EVEvolumetrics.Count;
+						
+						for (int i=0;i<size;i++)
+						{
+							EVEvolumetrics[i].DisableKeyword ("SCATTERER_ON");
+							EVEvolumetrics[i].EnableKeyword ("SCATTERER_OFF");
+						}
+					}
+				}
+				catch (Exception)
+				{
+					//TODO
+				}
+			}
 		}
 		
 		void toggleScaledMode()

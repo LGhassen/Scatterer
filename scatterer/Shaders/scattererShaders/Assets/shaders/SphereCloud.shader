@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'defined SCATTERER_ON' with 'defined (SCATTERER_ON)'
+
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
 Shader "Scatterer-EVE/Cloud" {
@@ -61,18 +63,17 @@ Shader "Scatterer-EVE/Cloud" {
 				#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 				#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 				#pragma multi_compile PRESERVECLOUDCOLORS_OFF PRESERVECLOUDCOLORS_ON
+				#pragma multi_compile SCATTERER_OFF SCATTERER_ON
 				
 #ifndef MAP_TYPE_CUBE2_1
 #pragma multi_compile ALPHAMAP_N_1 ALPHAMAP_1
 #endif
 				#include "alphaMap.cginc"
 				#include "cubeMap.cginc"
-
-//				#define SCATTERER_ON
 				
-//#ifdef SCATTERER_ON
+#ifdef SCATTERER_ON
 				#include "AtmosphereScatterer.cginc"
-//#endif
+#endif
 
 				CUBEMAP_DEF_1(_MainTex)
 
@@ -106,7 +107,7 @@ Shader "Scatterer-EVE/Cloud" {
 				uniform float3 _Scatterer_Origin;
 
 				//scatterer eclipse uniforms
-#if defined (ECLIPSES_ON)			
+#if defined (SCATTERER_ON) && defined (ECLIPSES_ON)
 				uniform float4 sunPosAndRadius; //xyz sun pos w radius
 				uniform float4x4 lightOccluders1; //array of light occluders
 											 //for each float4 xyz pos w radius
@@ -114,7 +115,7 @@ Shader "Scatterer-EVE/Cloud" {
 #endif
 
 			//stuff for kopernicus ring shadows
-#if defined (RINGSHADOW_ON)	
+#if defined (SCATTERER_ON) && defined (RINGSHADOW_ON)	
 			uniform sampler2D ringTexture;
 			uniform float ringInnerRadius;
 			uniform float ringOuterRadius;
@@ -136,8 +137,12 @@ Shader "Scatterer-EVE/Cloud" {
 					float3 worldNormal : TEXCOORD4;
 					float3 viewDir : TEXCOORD5;
 					float4 projPos : TEXCOORD6;
+#if defined (SCATTERER_ON)
 					float3 worldOrigin: TEXCOORD7;
 					LIGHTING_COORDS(8,9)
+#else
+					LIGHTING_COORDS(7,8)
+#endif					
 				};
 
 
@@ -160,8 +165,9 @@ Shader "Scatterer-EVE/Cloud" {
 					TRANSFER_VERTEX_TO_FRAGMENT(o);
 
 					o.L = _PlanetOrigin - _WorldSpaceCameraPos.xyz;
-
+#if defined (SCATTERER_ON)
 					o.worldOrigin = origin;
+#endif
 
 					return o;
 				}
@@ -212,41 +218,42 @@ Shader "Scatterer-EVE/Cloud" {
 					color.a *= 1 - sphereCheck;
 #endif
 
-					//color.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies);  //not sure why but causes artifacts with scatterer on
+//#if !defined (SCATTERER_ON)
+//					color.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies);  //not sure why but causes artifacts with scatterer on
+//#endif					
 					float4 texColor = color;
 
-//
-//					//lighting
-//					half transparency = color.a;
-//					float4 scolor = SpecularColorLight(_WorldSpaceLightPos0, IN.viewDir, IN.worldNormal, color, 0, 0, LIGHT_ATTENUATION(IN));
-//					scolor *= Terminator(normalize(_WorldSpaceLightPos0), IN.worldNormal);
-//					scolor.a = transparency;
+//SCATTERER_OFF
+#if !defined (SCATTERER_ON)
+					//lighting
+					half transparency = color.a;
+					float4 scolor = SpecularColorLight(_WorldSpaceLightPos0, IN.viewDir, IN.worldNormal, color, 0, 0, LIGHT_ATTENUATION(IN));
+					scolor *= Terminator(normalize(_WorldSpaceLightPos0), IN.worldNormal);
+					scolor.a = transparency;
 
-//					float4 scolor = float4(1.0,1.0,1.0,color.a);
-//
-//#ifdef SOFT_DEPTH_ON
-//					float depth = UNITY_SAMPLE_DEPTH(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(IN.projPos)));
-//					depth = LinearEyeDepth(depth);
-//					float partZ = IN.projPos.z;
-//					float fade = saturate(_InvFade * (depth - partZ));
-//					scolor.a *= fade;
-//#endif
+	#ifdef SOFT_DEPTH_ON
+					float depth = UNITY_SAMPLE_DEPTH(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(IN.projPos)));
+					depth = LinearEyeDepth(depth);
+					float partZ = IN.projPos.z;
+					float fade = saturate(_InvFade * (depth - partZ));
+					scolor.a *= fade;
+	#endif
 
-
-//					scolor.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies);
-
-					//#ifdef SCATTERER_ON
+					//scolor.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies); //causes artifacts idk why
+					OUT.color = lerp(scolor, texColor, _MinLight);
+//SCATTERER_ON
+#else 
 					float3 extinction = float3(0, 0, 0);
 
-#ifdef WORLD_SPACE_ON
+	#ifdef WORLD_SPACE_ON
 					float3 WCP = _WorldSpaceCameraPos; //unity supplied, in local Space
 					float3 worldPos = IN.worldVert;
 					float3 worldOrigin = IN.worldOrigin;
-#else
+	#else
 			    	float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
 					float3 worldPos = IN.worldVert * 6000;
 					float3 worldOrigin = IN.worldOrigin * 6000;
-#endif
+	#endif
 
 					float3 relWorldPos=worldPos-worldOrigin;
 					float alt = length(relWorldPos);
@@ -267,20 +274,20 @@ Shader "Scatterer-EVE/Cloud" {
 
 					//skyLight
 					float3 skyE = SimpleSkyirradiance(relWorldPos, IN.viewDir, _Sun_WorldSunDir);
-#if defined (PRESERVECLOUDCOLORS_OFF)
+	#if defined (PRESERVECLOUDCOLORS_OFF)
 					color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction+ inscatter*cloudScatteringMultiplier+skyE*cloudSkyIrradianceMultiplier), color.a); //not bad
 					//color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction*skyE*cloudSkyIrradianceMultiplier+ inscatter*cloudScatteringMultiplier), color.a); //not bad
-#else
+	#else
 					float3 cloudColor = color.rgb*cloudColorMultiplier*extinction*hdrNoExposure(skyE * cloudSkyIrradianceMultiplier);
 					//float3 cloudColor = color.rgb*cloudColorMultiplier*extinction;
 					//float3 otherColors = hdrNoExposure(inscatter * cloudScatteringMultiplier + skyE * cloudSkyIrradianceMultiplier);
 					float3 otherColors = hdrNoExposure(inscatter * cloudScatteringMultiplier);
 					
 					color = float4(cloudColor + (float3(1.0,1.0,1.0)-cloudColor)*otherColors, color.a); //basically soft blend
-#endif					
+	#endif					
 
 /////////////////ECLIPSES///////////////////////////////		
-#if defined (ECLIPSES_ON)				
+	#if defined (ECLIPSES_ON)				
  					float eclipseShadow = 1; 						
 
 					for (int i=0; i<4; ++i)
@@ -300,7 +307,7 @@ Shader "Scatterer-EVE/Cloud" {
 					}
 
 					color.rgb*=eclipseShadow;
-#endif
+	#endif
 
 ///////////////////RING SHADOWS///////////////////////////////			
 //#if defined (RINGSHADOW_ON)
@@ -336,7 +343,10 @@ Shader "Scatterer-EVE/Cloud" {
 //					OUT.color = lerp(scolor, color, _MinLight);					
 //					color.rgb*= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies); //causes artifacts with SVE for some reason
 
+
 					OUT.color = lerp(color, texColor, _MinLight);
+//endif SCATTERER_ON
+#endif
 					
 					float depthWithOffset = IN.projPos.z;
 #ifndef WORLD_SPACE_ON

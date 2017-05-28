@@ -673,6 +673,7 @@ namespace scatterer
 
 
 									_cur.m_manager.hasOcean = _cur.hasOcean;
+									_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
 									_cur.m_manager.Awake ();
 									_cur.active = true;
 

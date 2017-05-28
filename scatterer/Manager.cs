@@ -14,6 +14,7 @@ namespace scatterer
 	{
 		
 		public bool hasOcean = false;
+		public bool usesCloudIntegration = true;
 		
 		public double m_radius = 600000.0f;
 		int waitBeforeReloadCnt=0;

@@ -380,7 +380,7 @@ namespace scatterer
 						
 						GUIfloat("mieG", ref mieG, ref Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_mieG);
 						
-						if (Core.Instance.integrateWithEVEClouds)
+						if (Core.Instance.integrateWithEVEClouds && Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.usesCloudIntegration)
 						{
 							GUIfloat("Cloud Color Multiplier", ref cloudColorMultiplier, ref Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudColorMultiplier);
 							GUIfloat("Cloud Scattering Multiplier", ref cloudScatteringMultiplier, ref Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudScatteringMultiplier);
