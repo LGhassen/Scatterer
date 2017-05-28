@@ -78,6 +78,8 @@ namespace scatterer
 		public float mapExtinctionTint = 1f;
 		[Persistent]
 		public float mapSkyExtinctionRimFade = 1f;
+		[Persistent]
+		public float mapGroundExtinctionFade = 0f;
 		
 		[Persistent]
 		public float
@@ -118,11 +120,11 @@ namespace scatterer
 		[Persistent]
 		public float mapSkyRimExposure = 0.15f;
 		[Persistent]
-		public float cloudColorMultiplier=1f;
+		public float cloudColorMultiplier=3f;
 		[Persistent]
-		public float cloudScatteringMultiplier=1f;
+		public float cloudScatteringMultiplier=0.2f;
 		[Persistent]
-		public float cloudSkyIrradianceMultiplier=1f;
+		public float cloudSkyIrradianceMultiplier=0.05f;
 		
 		[Persistent]
 		public float volumetricsColorMultiplier = 1f;
@@ -161,7 +163,10 @@ namespace scatterer
 		float RL; // = (64210.0f/63600f) * 600000.0f;
 		[Persistent]
 		public float atmosphereGlobalScale = 1f;
-		
+
+		[Persistent]
+		public bool EVEIntegration_preserveCloudColors = false;
+
 		//Dimensions of the tables
 		const int TRANSMITTANCE_W = 256;
 		const int TRANSMITTANCE_H = 64;
@@ -618,10 +623,10 @@ namespace scatterer
 						for (int i=0;i<size;i++)
 						{
 							//keep these for now or something breaks in the extinction
-							InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+							//InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 							SetUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 							
-							InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+							//InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
 							
 							//if (!inScaledSpace)
 							UpdatePostProcessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
@@ -635,6 +640,7 @@ namespace scatterer
 								("cloudScatteringMultiplier", cloudScatteringMultiplier);
 							Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
 								("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
+
 						}
 					}
 
@@ -804,7 +810,26 @@ namespace scatterer
 								scaledSetter.Invoke(cloud2dObj,new object[] { !cloud2dScaled });
 
 							scaledSetter.Invoke(cloud2dObj,new object[] { cloud2dScaled });
+						}
 
+						//initialize other params here
+						int size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
+						for (int i=0;i<size;i++)
+						{
+							InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+							InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
+							
+							if (EVEIntegration_preserveCloudColors)
+							{
+								Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
+								Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							}
+							else
+							{
+								Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
+								Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
+							}
+							
 						}
 					}
 
@@ -901,9 +926,7 @@ namespace scatterer
 			{
 				mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, 0f);
 			}
-			
-			mat.SetFloat (ShaderProperties.extinctionGroundFade_PROPERTY, interpolatedSettings.skyextinctionGroundFade);
-			
+
 			if (!MapView.MapIsEnabled)
 			{
 				mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
@@ -911,6 +934,7 @@ namespace scatterer
 				mat.SetFloat (ShaderProperties.extinctionMultiplier_PROPERTY, interpolatedSettings.skyExtinctionMultiplier);
 				mat.SetFloat (ShaderProperties.extinctionRimFade_PROPERTY, interpolatedSettings.skyextinctionRimFade);
 				mat.SetFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, interpolatedSettings._extinctionScatterIntensity);
+				mat.SetFloat (ShaderProperties.extinctionGroundFade_PROPERTY, interpolatedSettings.skyextinctionGroundFade);
 			}
 			else
 			{
@@ -919,6 +943,7 @@ namespace scatterer
 				mat.SetFloat (ShaderProperties.extinctionMultiplier_PROPERTY, mapExtinctionMultiplier);
 				mat.SetFloat (ShaderProperties.extinctionRimFade_PROPERTY, mapSkyExtinctionRimFade);
 				mat.SetFloat (ShaderProperties._extinctionScatterIntensity_PROPERTY, _mapExtinctionScatterIntensity);
+				mat.SetFloat (ShaderProperties.extinctionGroundFade_PROPERTY, mapGroundExtinctionFade);
 			}
 			
 			
@@ -1583,5 +1608,31 @@ namespace scatterer
 				Debug.Log ("[Scatterer] No cloud objects for planet: " + parentCelestialBody.name);
 			}
 		}
+
+		public void togglePreserveCloudColors()
+		{
+			if (Core.Instance.integrateWithEVEClouds)
+			{
+				if(Core.Instance.EVEClouds.ContainsKey(parentCelestialBody.name)) //change to a bool hasclouds
+				{
+					int size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
+					for (int i=0;i<size;i++)
+					{
+						if (EVEIntegration_preserveCloudColors)
+						{
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
+						}
+						else
+						{
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
+						}
+					}
+				}
+				EVEIntegration_preserveCloudColors =!EVEIntegration_preserveCloudColors;
+			}
+		}
+
 	}
 }

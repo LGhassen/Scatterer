@@ -60,7 +60,8 @@ Shader "Scatterer-EVE/Cloud" {
 				//scatterer eclipses and ring shadows
 				#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 				#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
-
+				#pragma multi_compile PRESERVECLOUDCOLORS_OFF PRESERVECLOUDCOLORS_ON
+				
 #ifndef MAP_TYPE_CUBE2_1
 #pragma multi_compile ALPHAMAP_N_1 ALPHAMAP_1
 #endif
@@ -211,7 +212,7 @@ Shader "Scatterer-EVE/Cloud" {
 					color.a *= 1 - sphereCheck;
 #endif
 
-					//color.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies);
+					//color.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies);  //not sure why but causes artifacts with scatterer on
 					float4 texColor = color;
 
 //
@@ -238,16 +239,21 @@ Shader "Scatterer-EVE/Cloud" {
 					float3 extinction = float3(0, 0, 0);
 
 #ifdef WORLD_SPACE_ON
-				float3 WCP = _WorldSpaceCameraPos; //unity supplied, in local Space
-				float3 worldPos = IN.worldVert;
-				float3 worldOrigin = IN.worldOrigin;
+					float3 WCP = _WorldSpaceCameraPos; //unity supplied, in local Space
+					float3 worldPos = IN.worldVert;
+					float3 worldOrigin = IN.worldOrigin;
 #else
-			    float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
-				float3 worldPos = IN.worldVert * 6000;
-				float3 worldOrigin = IN.worldOrigin * 6000;
+			    	float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
+					float3 worldPos = IN.worldVert * 6000;
+					float3 worldOrigin = IN.worldOrigin * 6000;
 #endif
 
 					float3 relWorldPos=worldPos-worldOrigin;
+					float alt = length(relWorldPos);
+					float threshold = Rg * 1.00333333;
+
+					relWorldPos = (alt < threshold) ? normalize(relWorldPos) * (threshold) : relWorldPos;   //artifacts fix (black scattering and overbright skyirradiance) when cloud altitude < Rg *( 1 + 2000/600000)
+
 					float3 relCameraPos=WCP-worldOrigin;
 
                 	//inScattering from cloud to observer
@@ -257,12 +263,21 @@ Shader "Scatterer-EVE/Cloud" {
 					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);
 
 					//extinction of light from sun to cloud
-					float3 sunExtinction = getSkyExtinction(relWorldPos,_Sun_WorldSunDir);
+					extinction*=getSkyExtinction(relWorldPos,_Sun_WorldSunDir);					
 
 					//skyLight
 					float3 skyE = SimpleSkyirradiance(relWorldPos, IN.viewDir, _Sun_WorldSunDir);
-
-					color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction*sunExtinction+(inscatter)*cloudScatteringMultiplier+skyE*cloudSkyIrradianceMultiplier), color.a); //not bad
+#if defined (PRESERVECLOUDCOLORS_OFF)
+					color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction+ inscatter*cloudScatteringMultiplier+skyE*cloudSkyIrradianceMultiplier), color.a); //not bad
+					//color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction*skyE*cloudSkyIrradianceMultiplier+ inscatter*cloudScatteringMultiplier), color.a); //not bad
+#else
+					float3 cloudColor = color.rgb*cloudColorMultiplier*extinction*hdrNoExposure(skyE * cloudSkyIrradianceMultiplier);
+					//float3 cloudColor = color.rgb*cloudColorMultiplier*extinction;
+					//float3 otherColors = hdrNoExposure(inscatter * cloudScatteringMultiplier + skyE * cloudSkyIrradianceMultiplier);
+					float3 otherColors = hdrNoExposure(inscatter * cloudScatteringMultiplier);
+					
+					color = float4(cloudColor + (float3(1.0,1.0,1.0)-cloudColor)*otherColors, color.a); //basically soft blend
+#endif					
 
 /////////////////ECLIPSES///////////////////////////////		
 #if defined (ECLIPSES_ON)				

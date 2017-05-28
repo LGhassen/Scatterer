@@ -35,6 +35,7 @@ namespace scatterer
 		float cloudColorMultiplier=1f;
 		float cloudScatteringMultiplier=1f;
 		float cloudSkyIrradianceMultiplier = 1f;
+		float cloudExtinctionMultiplier = 1f;
 		float volumetricsColorMultiplier=1f;
 		//		float volumetricsScatteringMultiplier=1f;
 		//		float volumetricsSkyIrradianceMultiplier = 1f;
@@ -386,6 +387,14 @@ namespace scatterer
 							GUIfloat("Cloud Sky irradiance Multiplier", ref cloudSkyIrradianceMultiplier, ref Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudSkyIrradianceMultiplier);
 							
 							GUIfloat("Volumetrics Color Multiplier", ref volumetricsColorMultiplier, ref Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsColorMultiplier);
+
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("Preserve cloud colors ");
+							GUILayout.TextField ( Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.EVEIntegration_preserveCloudColors.ToString ());
+							if (GUILayout.Button ("Toggle"))
+								Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePreserveCloudColors();
+							GUILayout.EndHorizontal ();
+
 							//								GUIfloat("Volumetrics Scattering Multiplier", ref volumetricsScatteringMultiplier, ref Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsScatteringMultiplier);
 							//								GUIfloat("Volumetrics Sky irradiance Multiplier", ref volumetricsSkyIrradianceMultiplier, ref Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsSkyIrradianceMultiplier);
 						}
