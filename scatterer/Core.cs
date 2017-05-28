@@ -99,9 +99,9 @@ namespace scatterer
 //		public bool
 //			render24bitDepthBuffer = true;
 
-//		[Persistent]
-//		public bool
-//			useAlternateShaderSQRT = false;
+		[Persistent]
+		public bool
+			useAlternateShaderSQRT = false;
 
 		[Persistent]
 		public bool

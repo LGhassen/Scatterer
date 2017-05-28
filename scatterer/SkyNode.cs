@@ -315,21 +315,21 @@ namespace scatterer
 //				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_OFF");
 //			}
 
-//			if (Core.Instance.useAlternateShaderSQRT)
-//			{
-//				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_OFF");
-//				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_ON");
-//				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_OFF");
-//				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_ON");
-//			}
-//			else
-//			{
-//				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_ON");
-//				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_OFF");
-//				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_ON");
-//				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_OFF");
-//
-//			}
+			if (Core.Instance.useAlternateShaderSQRT)
+			{
+				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_OFF");
+				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_ON");
+				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_OFF");
+				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_ON");
+			}
+			else
+			{
+				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_ON");
+				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_OFF");
+				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_ON");
+				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_OFF");
+
+			}
 			
 			
 			if (Core.Instance.useGodrays)

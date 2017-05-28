@@ -31,7 +31,7 @@ Shader "Scatterer/SkyScaled"
 			#define useAnalyticSkyTransmittance
 			
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-			//#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
+			#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 //			#define localSpaceMode
 

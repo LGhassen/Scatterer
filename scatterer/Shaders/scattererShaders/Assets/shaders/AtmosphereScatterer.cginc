@@ -168,18 +168,19 @@ float3 Transmittance(float r, float mu, float Rt0)
 
 //fixes artifacts in d3d9, d3d11 and opengl
 float SQRT(float f, float err) {
-//#if (!defined(SHADER_API_D3D9) && !defined(DEFAULT_SQRT_ON))
-//	return sqrt(f);
-//#else
-//    return f >= 0.0 ? sqrt(f) : err;        
-//#endif
-	//return f > 0.0 ? sqrt(f) : 0.0;
-
-#if defined(SHADER_API_D3D9)
-	return f >= 0.0 ? sqrt(f) : err;
+#if (!defined(SHADER_API_D3D9) && !defined(DEFAULT_SQRT_ON))
+	return sqrt(f);
 #else
-	return 1 / rsqrt (f);
+    return f >= 0.0 ? sqrt(f) : err;        
 #endif
+	return f > 0.0 ? sqrt(f) : 0.0;
+
+//unreliable
+//#if defined(SHADER_API_D3D9)
+//	return f >= 0.0 ? sqrt(f) : err;
+//#else
+//	return 1 / rsqrt (f);
+//#endif
 }
 
 
