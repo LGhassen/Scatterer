@@ -35,7 +35,7 @@ namespace scatterer
 		float cloudColorMultiplier=1f;
 		float cloudScatteringMultiplier=1f;
 		float cloudSkyIrradianceMultiplier = 1f;
-		float cloudExtinctionMultiplier = 1f;
+		//float cloudExtinctionMultiplier = 1f;
 		float volumetricsColorMultiplier=1f;
 		//		float volumetricsScatteringMultiplier=1f;
 		//		float volumetricsSkyIrradianceMultiplier = 1f;

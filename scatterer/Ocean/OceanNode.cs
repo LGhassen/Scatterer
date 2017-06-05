@@ -50,6 +50,9 @@ namespace scatterer
 		public Material m_oceanMaterial;
 
 		[Persistent]
+		string name;
+
+		[Persistent]
 		public Vector3 m_oceanUpwellingColor = new Vector3 (0.0039f, 0.0156f, 0.047f);
 
 		[Persistent]
@@ -708,18 +711,41 @@ namespace scatterer
 		public void loadFromConfigNode ()
 		{
 			ConfigNode cnToLoad = new ConfigNode();
-			
+			ConfigNode[] configNodeArray;
+			bool found = false;
+
 			foreach (UrlDir.UrlConfig _url in Core.Instance.oceanConfigs)
 			{
-				if (_url.config.TryGetNode(m_manager.parentCelestialBody.name,ref cnToLoad))
+				configNodeArray = _url.config.GetNodes("Ocean");
+				
+				foreach(ConfigNode _cn in configNodeArray)
 				{
-					configUrl = _url;
-					Debug.Log("[Scatterer] Ocean config found for: "+m_manager.parentCelestialBody.name);
-					break;
+					if (_cn.HasValue("name") && _cn.GetValue("name") == m_manager.parentCelestialBody.name)
+					{
+						cnToLoad = _cn;
+						configUrl = _url;
+						found = true;
+						break;
+					}
 				}
 			}
 			
-			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
+			if (found)
+			{
+				Debug.Log("[Scatterer] Ocean config found for: "+m_manager.parentCelestialBody.name);
+				
+				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
+			}
+			else
+			{
+				Debug.Log("[Scatterer] Ocean config not found for: "+m_manager.parentCelestialBody.name);
+				Debug.Log("[Scatterer] Removing ocean for "+m_manager.parentCelestialBody.name +" from planets list");
+				
+				(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == m_manager.parentCelestialBody.name)).hasOcean = false;
+				
+				this.OnDestroy();
+				UnityEngine.Object.Destroy (this);
+			}
 		}
 	}
 }

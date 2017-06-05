@@ -20,6 +20,9 @@ namespace scatterer
 	 */
 	public class SkyNode: MonoBehaviour
 	{
+		[Persistent]
+		string name;
+
 		public UrlDir.UrlConfig configUrl;
 		
 		public GameObject atmosphereMesh;
@@ -1505,27 +1508,54 @@ namespace scatterer
 			stocksunglareEnabled = !stocksunglareEnabled;
 		}
 
-		public void loadFromConfigNode ()
+		public bool loadFromConfigNode ()
 		{
 			ConfigNode cnToLoad = new ConfigNode();
+			ConfigNode[] configNodeArray;
+			bool found = false;
 
 			foreach (UrlDir.UrlConfig _url in Core.Instance.atmoConfigs)
 			{
-				if (_url.config.TryGetNode(parentCelestialBody.name,ref cnToLoad))
+				configNodeArray = _url.config.GetNodes("Atmo");
+				//if (_url.config.TryGetNode("Atmo",ref cnToLoad))
+
+				foreach(ConfigNode _cn in configNodeArray)
 				{
-					configUrl = _url;
-					Debug.Log("[Scatterer] Atmosphere config found for: "+parentCelestialBody.name);
-					break;
+					if (_cn.HasValue("name") && _cn.GetValue("name") == parentCelestialBody.name)
+					{
+						cnToLoad = _cn;
+						configUrl = _url;
+						found = true;
+						break;
+					}
 				}
 			}
 
-			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
+			if (found)
+			{
+				Debug.Log("[Scatterer] Atmosphere config found for: "+parentCelestialBody.name);
+
+				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			
-			m_radius = (float) m_manager.GetRadius ();
+				m_radius = (float)m_manager.GetRadius ();
 			
-			Rt = (Rt / Rg) * m_radius;
-			RL = (RL / Rg) * m_radius;
-			Rg = m_radius;
+				Rt = (Rt / Rg) * m_radius;
+				RL = (RL / Rg) * m_radius;
+				Rg = m_radius;
+			}
+			else
+			{
+				Debug.Log("[Scatterer] Atmosphere config not found for: "+parentCelestialBody.name);
+				Debug.Log("[Scatterer] Removing "+parentCelestialBody.name +" from planets list");
+
+				Core.Instance.scattererCelestialBodies.Remove(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == parentCelestialBody.name));
+
+				m_manager.OnDestroy();
+				UnityEngine.Object.Destroy (m_manager);
+				UnityEngine.Object.Destroy (this);
+			}
+
+			return found;
 		}
 		
 		public void saveToConfigNode ()
