@@ -52,6 +52,9 @@ namespace scatterer
 		public bool visible = false;
 
 		[Persistent]
+		public bool autosavePlanetSettingsOnSceneChange=true;
+
+		[Persistent]
 		public bool disableAmbientLight=false;
 		
 //		[Persistent]

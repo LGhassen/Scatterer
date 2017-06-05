@@ -1388,7 +1388,11 @@ namespace scatterer
 		
 		public void OnDestroy ()
 		{
-			saveToConfigNode ();
+			if (Core.Instance.autosavePlanetSettingsOnSceneChange)
+			{
+				saveToConfigNode ();
+			}
+
 			if (m_transmit)
 			{
 				UnityEngine.Object.Destroy (m_transmit);
