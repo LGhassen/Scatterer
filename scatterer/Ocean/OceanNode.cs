@@ -694,18 +694,33 @@ namespace scatterer
 			return m_cameraToScreenMatrix;
 		}
 
-
 		public void saveToConfigNode ()
 		{
-			configUrl.config.RemoveNodes (m_manager.parentCelestialBody.name);
+			ConfigNode[] configNodeArray;
+			bool found = false;
 			
-			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-			cnTemp.name = m_manager.parentCelestialBody.name;
-			configUrl.config.AddNode (cnTemp);
+			configNodeArray = configUrl.config.GetNodes("Ocean");
 			
-			Debug.Log("[Scatterer] saving "+m_manager.parentCelestialBody.name+
-			          " ocean config to: "+configUrl.parent.url);
-			configUrl.parent.SaveConfigs ();
+			foreach(ConfigNode _cn in configNodeArray)
+			{
+				if (_cn.HasValue("name") && _cn.GetValue("name") == m_manager.parentCelestialBody.name)
+				{
+					ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
+					_cn.ClearData();
+					ConfigNode.Merge (_cn, cnTemp);
+					_cn.name="Ocean";
+					Debug.Log("[Scatterer] saving "+m_manager.parentCelestialBody.name+
+					          " ocean config to: "+configUrl.parent.url);
+					configUrl.parent.SaveConfigs ();
+					found=true;
+					break;
+				}
+			}
+			
+			if (!found)
+			{
+				Debug.Log("[Scatterer] couldn't find config file to save to");
+			}
 		}
 		
 		public void loadFromConfigNode ()

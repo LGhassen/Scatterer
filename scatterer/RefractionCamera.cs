@@ -70,6 +70,8 @@ namespace scatterer
 				RenderTexture.active= _refractionTex;			
 				GL.Clear(false,true,Color.black);
 				//here disable the ocean and the postprocessing stuff
+				//can we disable EVE clouds here as well?
+				//also, disable it over a certain altitude
 				bool prev = postProcessingCube.enabled;
 				postProcessingCube.enabled = false;
 

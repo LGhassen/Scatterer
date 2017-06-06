@@ -1560,15 +1560,30 @@ namespace scatterer
 		
 		public void saveToConfigNode ()
 		{
-			configUrl.config.RemoveNodes (parentCelestialBody.name);
+			ConfigNode[] configNodeArray;
+			bool found = false;
 
-			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-			cnTemp.name = parentCelestialBody.name;
-			configUrl.config.AddNode (cnTemp);
+			configNodeArray = configUrl.config.GetNodes("Atmo");
+			
+			foreach(ConfigNode _cn in configNodeArray)
+			{
+				if (_cn.HasValue("name") && _cn.GetValue("name") == parentCelestialBody.name)
+				{
+					ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
+					_cn.ClearData();
+					ConfigNode.Merge (_cn, cnTemp);
+					_cn.name="Atmo";
+					Debug.Log("[Scatterer] saving "+parentCelestialBody.name+" atmo config to: "+configUrl.parent.url);
+					configUrl.parent.SaveConfigs ();
+					found=true;
+					break;
+				}
+			}
 
-			Debug.Log("[Scatterer] saving "+parentCelestialBody.name+
-			          " atmo config to: "+configUrl.parent.url);
-			configUrl.parent.SaveConfigs ();
+			if (!found)
+			{
+				Debug.Log("[Scatterer] couldn't find config file to save to");
+			}
 		}
 		
 		public void backupAtmosphereMaterial ()
