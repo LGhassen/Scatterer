@@ -50,9 +50,6 @@ namespace scatterer
 		public Material m_oceanMaterial;
 
 		[Persistent]
-		string name;
-
-		[Persistent]
 		public Vector3 m_oceanUpwellingColor = new Vector3 (0.0039f, 0.0156f, 0.047f);
 
 		[Persistent]
@@ -92,6 +89,9 @@ namespace scatterer
 
 		public bool isUnderwater = false;
 		bool underwaterMode = false;
+
+		public bool renderRefractions = false;
+		bool isRenderingRefractions = false;
 
 		public int numGrids;
 		Mesh[] m_screenGrids;
@@ -237,7 +237,8 @@ namespace scatterer
 				waterMeshFilters[i].mesh.Clear ();
 				waterMeshFilters[i].mesh = m_screenGrids[i];
 
-				waterGameObjects[i].layer = 15;
+				//waterGameObjects[i].layer = 15;
+				waterGameObjects[i].layer = 23;
 				waterMeshRenderers[i] = waterGameObjects[i].AddComponent<MeshRenderer>();
 
 				
@@ -288,7 +289,8 @@ namespace scatterer
 			underwaterMeshrenderer.receiveShadows = false;
 			underwaterMeshrenderer.enabled = false;
 			
-			underwaterGameObject.layer = 15;
+			//underwaterGameObject.layer = 15;
+			underwaterGameObject.layer = 23;
 
 		}
 		
@@ -414,9 +416,14 @@ namespace scatterer
 			{
 				toggleUnderwaterMode();
 			}
-	
-		}
 
+			//renderRefractions = Mathf.Abs (h) <= 1000f;
+			renderRefractions = (Mathf.Abs ((float) h ) <= 200);
+			if ((renderRefractions ^ isRenderingRefractions) && Core.Instance.oceanRefraction)
+			{
+				toggleRefractions();
+			}
+		}
 
 
 		public void updateStuff (Material oceanMaterial, Camera inCamera)
@@ -667,6 +674,25 @@ namespace scatterer
 			}
 
 			underwaterMode = !underwaterMode;
+		}
+
+		void toggleRefractions()
+		{
+			if (isRenderingRefractions) //switch to refractions off
+			{
+				m_oceanMaterial.EnableKeyword ("REFRACTION_OFF");
+				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
+				//Debug.Log("[Scatterer] Refractions off");
+				
+			}
+			else   //switch to refractions on
+			{
+				m_oceanMaterial.EnableKeyword ("REFRACTION_ON");
+				m_oceanMaterial.DisableKeyword ("REFRACTION_OFF");
+				//Debug.Log("[Scatterer] Refractions on");
+			}
+			
+			isRenderingRefractions = !isRenderingRefractions;
 		}
 
 		public void setManager (Manager manager)

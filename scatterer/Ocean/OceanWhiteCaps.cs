@@ -10,6 +10,9 @@ namespace scatterer {
 		Material m_initJacobiansMat;
 		
 		Material m_whiteCapsPrecomputeMat;
+
+		[Persistent]
+		protected string name;
 		
 		[Persistent] public int m_foamAnsio = 9;
 		

@@ -21,7 +21,7 @@ namespace scatterer
 	public class SkyNode: MonoBehaviour
 	{
 		[Persistent]
-		string name;
+		protected string name;
 
 		public UrlDir.UrlConfig configUrl;
 		
@@ -388,7 +388,8 @@ namespace scatterer
 			atmosphereMeshrenderer.receiveShadows = false;
 			atmosphereMeshrenderer.enabled = true;
 
-			atmosphereMesh.layer = 15;
+			//atmosphereMesh.layer = 15;
+			atmosphereMesh.layer = 23;
 
 			
 			#if skyScaledBox
@@ -413,7 +414,8 @@ namespace scatterer
 			
 			skyLocalCube = new SimplePostProcessCube (40000, m_skyMaterialLocal,false);
 			skyLocalMesh = skyLocalCube.GameObject;
-			skyLocalMesh.layer = 15;
+			//skyLocalMesh.layer = 15;
+			skyLocalMesh.layer = 23;
 			skyLocalMeshrenderer = skyLocalCube.GameObject.GetComponent < MeshRenderer > ();
 			skyLocalMeshrenderer.material = m_skyMaterialLocal;
 			

@@ -43,6 +43,9 @@ namespace scatterer
 			_refractionCamCamera.CopyFrom(inCamera);
 			_refractionCamCamera.enabled = false;
 
+			_refractionCamCamera.cullingMask=9076737; //essentially the same as farcamera except ignoring transparentFX
+													  //the idea is to move clouds (and maybe cloud shadow projectors?) and water shaders to transparentFX to improve performance
+
 			//disable rendering when away from PQS
 			bool renderRefractionBuffer = false;
 			if (FlightGlobals.ActiveVessel)
@@ -50,9 +53,10 @@ namespace scatterer
 				if (FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController)
 					renderRefractionBuffer = FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController.isActive;
 			}
-			renderRefractionBuffer = renderRefractionBuffer || Core.Instance.pqsEnabled;
+			renderRefractionBuffer = (renderRefractionBuffer || Core.Instance.pqsEnabled) && iSkyNode.m_manager.hasOcean;
 
-			if (renderRefractionBuffer && postProcessingCube)
+			//I'm so sorry for this ugly-ass code
+			if (renderRefractionBuffer && postProcessingCube && iSkyNode.m_manager.GetOceanNode().renderRefractions)
 			{
 				//take a random frustum corner and compute the angle to the camera forward direction
 				//there is probably a simple formula to do this but I'm feeling lazy today so using the unity methods
