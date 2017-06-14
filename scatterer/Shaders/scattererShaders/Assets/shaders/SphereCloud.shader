@@ -36,14 +36,14 @@ Shader "Scatterer-EVE/Cloud" {
 		//AlphaTest Greater 0
 		//ColorMask RGB
 		Cull Off
-		//Lighting On
+		Lighting On
 		ZWrite Off
 
 		SubShader {
 			Pass {
 
-//				Lighting On
-//				Tags { "LightMode" = "ForwardBase"}
+				Lighting On
+				Tags { "LightMode" = "ForwardBase"}
 
 				CGPROGRAM
 
@@ -61,7 +61,7 @@ Shader "Scatterer-EVE/Cloud" {
 
 				//scatterer eclipses and ring shadows
 				#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-				#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
+//				#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 				#pragma multi_compile PRESERVECLOUDCOLORS_OFF PRESERVECLOUDCOLORS_ON
 				#pragma multi_compile SCATTERER_OFF SCATTERER_ON
 				
@@ -100,11 +100,13 @@ Shader "Scatterer-EVE/Cloud" {
 				sampler2D _CameraDepthTexture;
 				float _DepthPull;
 
+#if defined (SCATTERER_ON)
 				uniform float cloudColorMultiplier;
 				uniform float cloudScatteringMultiplier;
 				uniform float cloudSkyIrradianceMultiplier;
 				uniform float3 _Sun_WorldSunDir;
 				uniform float3 _Scatterer_Origin;
+#endif
 
 				//scatterer eclipse uniforms
 #if defined (SCATTERER_ON) && defined (ECLIPSES_ON)
@@ -114,13 +116,13 @@ Shader "Scatterer-EVE/Cloud" {
 				uniform float4x4 lightOccluders2;
 #endif
 
-			//stuff for kopernicus ring shadows
-#if defined (SCATTERER_ON) && defined (RINGSHADOW_ON)	
-			uniform sampler2D ringTexture;
-			uniform float ringInnerRadius;
-			uniform float ringOuterRadius;
-			uniform float3 ringNormal;
-#endif
+//			//stuff for kopernicus ring shadows
+//#if defined (SCATTERER_ON) && defined (RINGSHADOW_ON)	
+//			uniform sampler2D ringTexture;
+//			uniform float ringInnerRadius;
+//			uniform float ringOuterRadius;
+//			uniform float3 ringNormal;
+//#endif
 
 				struct appdata_t {
 					float4 vertex : POSITION;
@@ -136,12 +138,10 @@ Shader "Scatterer-EVE/Cloud" {
 					float4 objMain : TEXCOORD3;
 					float3 worldNormal : TEXCOORD4;
 					float3 viewDir : TEXCOORD5;
-					float4 projPos : TEXCOORD6;
+					LIGHTING_COORDS(6,7)
+					float4 projPos : TEXCOORD8;
 #if defined (SCATTERER_ON)
-					float3 worldOrigin: TEXCOORD7;
-					LIGHTING_COORDS(8,9)
-#else
-					LIGHTING_COORDS(7,8)
+					float3 worldOrigin: TEXCOORD9;
 #endif					
 				};
 
@@ -201,6 +201,7 @@ Shader "Scatterer-EVE/Cloud" {
 
 					color.a = lerp(0, color.a, distAlpha);
 
+					//suspect
 
 #ifdef WORLD_SPACE_ON
 					float3 worldDir = normalize(IN.worldVert - _WorldSpaceCameraPos.xyz);
@@ -218,10 +219,9 @@ Shader "Scatterer-EVE/Cloud" {
 					color.a *= 1 - sphereCheck;
 #endif
 
-//#if !defined (SCATTERER_ON)
-//					color.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies);  //not sure why but causes artifacts with scatterer on
-//#endif					
-					float4 texColor = color;
+
+
+
 
 //SCATTERER_OFF
 #if !defined (SCATTERER_ON)
@@ -240,9 +240,10 @@ Shader "Scatterer-EVE/Cloud" {
 	#endif
 
 					//scolor.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies); //causes artifacts idk why
-					OUT.color = lerp(scolor, texColor, _MinLight);
+					OUT.color = lerp(scolor, color, _MinLight);
 //SCATTERER_ON
 #else 
+					float4 texColor = color;
 					float3 extinction = float3(0, 0, 0);
 
 	#ifdef WORLD_SPACE_ON
@@ -333,12 +334,6 @@ Shader "Scatterer-EVE/Cloud" {
 //
 //				color.rgb*=ringShadow;
 //#endif
-
-//					// ambient occlusion due only to slope, does not take self shadowing into account
-//    				float skyOcclusion = (1.0 + dot(worldV, worldN)) * 0.5;
-//    				// factor 2.0 : hack to increase sky contribution (numerical simulation of
-//    				// "precompued atmospheric scattering" gives less luminance than in reality)
-//    				skyE = 2.0 * SkyIrradiance(r, muS) * skyOcclusion;
 
 //					OUT.color = lerp(scolor, color, _MinLight);					
 //					color.rgb*= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies); //causes artifacts with SVE for some reason
