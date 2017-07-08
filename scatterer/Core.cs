@@ -840,7 +840,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0315 preview: "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0320b: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
@@ -899,9 +899,12 @@ namespace scatterer
 
 		void removeStockOceans()
 		{
-			FakeOceanPQS[] fakes = (FakeOceanPQS[])FakeOceanPQS.FindObjectsOfType (typeof(FakeOceanPQS));
-			
-			if (fakes.Length == 0) { //if stock oceans haven't already been replaced
+			//FakeOceanPQS[] fakes = (FakeOceanPQS[])FakeOceanPQS.FindObjectsOfType (typeof(FakeOceanPQS));
+
+			//if stock oceans haven't already been replaced
+			//if (fakes.Length == 0) 
+			{ 
+				Material invisibleOcean = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
 				foreach (ScattererCelestialBody sctBody in scattererCelestialBodies)
 				{
 					if (sctBody.hasOcean)
@@ -918,11 +921,25 @@ namespace scatterer
 							//Thanks to rbray89 for this snippet and the FakeOcean class which disable the stock ocean in a clean way
 							PQS pqs = celBody.pqsController;
 							if (pqs != null) {
+
+								Debug.Log("Scatterer celbody "+celBody.name);
+								for (int i=0;i<pqs.ChildSpheres.Count();i++)
+								{
+									Debug.Log(i.ToString()+" "+pqs.ChildSpheres[i].name);
+									Debug.Log(pqs.surfaceMaterial.shader.name);
+									Debug.Log(pqs.surfaceMaterial.name);
+								}
+
 								PQS ocean = pqs.ChildSpheres [0];
 								if (ocean != null) {
-									GameObject go = new GameObject ();
-									FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
-									fakeOcean.Apply (ocean);
+
+									//									GameObject go = new GameObject ();
+									//									FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
+									//									fakeOcean.Apply (ocean);
+
+									//pqs.surfaceMaterial = invisibleOcean;
+									ocean.surfaceMaterial = invisibleOcean;
+
 									removed = true;
 								}
 							}
@@ -934,10 +951,10 @@ namespace scatterer
 				}
 				Debug.Log ("[Scatterer] Removed stock oceans");
 			}
-			else
-			{
-				Debug.Log ("[Scatterer] Stock oceans already removed");
-			}
+//			else
+//			{
+//				Debug.Log ("[Scatterer] Stock oceans already removed");
+//			}
 		}
 
 
