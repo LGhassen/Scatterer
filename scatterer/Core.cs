@@ -163,7 +163,7 @@ namespace scatterer
 		public bool
 			useRingShadows = true;
 
-//		[Persistent]
+		//[Persistent]
 		public bool
 			usePlanetShine = false;
 
@@ -441,7 +441,8 @@ namespace scatterer
 								if (!_aSource.isSun)
 									ScaledPlanetShineLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
 								
-								ScaledPlanetShineLight.GetComponent<Light>().range=1E9f;
+								//ScaledPlanetShineLight.GetComponent<Light>().range=1E9f;
+								ScaledPlanetShineLight.GetComponent<Light>().range=_aSource.scaledRange;
 								ScaledPlanetShineLight.GetComponent<Light>().color=new Color(_aSource.color.x,_aSource.color.y,_aSource.color.z);
 								ScaledPlanetShineLight.name=celBody.name+"PlanetShineLight(ScaledSpace)";
 								
@@ -449,9 +450,12 @@ namespace scatterer
 								LocalPlanetShineLight.GetComponent<Light>().type=LightType.Point;
 								if (!_aSource.isSun)
 									LocalPlanetShineLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
-								LocalPlanetShineLight.GetComponent<Light>().range=1E9f;
+								//LocalPlanetShineLight.GetComponent<Light>().range=1E9f;
+								LocalPlanetShineLight.GetComponent<Light>().range=_aSource.scaledRange*6000;
 								LocalPlanetShineLight.GetComponent<Light>().color=new Color(_aSource.color.x,_aSource.color.y,_aSource.color.z);
 								LocalPlanetShineLight.GetComponent<Light>().cullingMask=557591;
+								LocalPlanetShineLight.GetComponent<Light>().shadows=LightShadows.Soft;
+								LocalPlanetShineLight.GetComponent<Light>().shadowCustomResolution=2048;
 								LocalPlanetShineLight.name=celBody.name+"PlanetShineLight(LocalSpace)";
 								
 								aPsLight.scaledLight=ScaledPlanetShineLight;

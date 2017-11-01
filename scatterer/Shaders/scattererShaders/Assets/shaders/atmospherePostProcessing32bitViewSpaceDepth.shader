@@ -231,6 +231,32 @@ Pass {
                 float3 worldPos = minDistance*rayDir + _camPos;
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
+                float3 inscatter=0.0;
+                float3 extinction=0.0;
+
+#if defined (PLANETSHINE_ON)
+			    float3 inscatter2=0;
+			    for (int j=0; j<4; ++j)
+    			{
+    				if (planetShineRGB[j].w == 0) break;
+
+			   		float intensity=1;  
+			   		if (planetShineSources[j].w != 1.0f)
+					{
+						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[j].xyz - worldPos),SUN_DIR)),0); //if source is not a sun compute intensity of light from angle to light source
+																													  //totally made up formula by eyeballing it
+					}
+    				
+    				inscatter2+=InScattering2(_camPos, worldPos,extinction, normalize(planetShineSources[j].xyz),1.0, 1.0, 1.0)
+    							*planetShineRGB[j].xyz*planetShineRGB[j].w*intensity;
+    			}
+
+
+				inscatter+= inscatter2 * ( (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ); //somehow the shader compiler for OpenGL behaves differently around braces
+																														  //and the shader won't work unless you put braces EVERYWHERE
+#endif
+
+
 //Now do the same but for godrays
 //WorldPos and godrayWorldPos are kept separate to ensure compatibility with planetshine, light from sun and other sources should be handled separately
 //ie if the sun is casting godrays light from the moon shouldn't have the same godrays but render at normal terrain depth
@@ -249,33 +275,16 @@ Pass {
 				minDistance = oceanCloserThanGodray ? oceanDistance : godrayDistance;
                 float3 godrayWorldPos = minDistance * rayDir + _camPos;
 				godrayWorldPos=( (length(godrayWorldPos) < (Rg + _openglThreshold)) ? ((Rg + _openglThreshold) * normalize(godrayWorldPos)) : godrayWorldPos); //artifacts fix
-#endif
 
-                float3 extinction = float3(0, 0, 0);
+				inscatter+= InScattering2(_camPos, godrayWorldPos, extinction, SUN_DIR, 1.0, 1.0, 1.0)*
+							( (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ); //somehow the shader compiler for OpenGL behaves differently around braces;
 
-#if defined (GODRAYS_ON)
-                float3 inscatter = InScattering2(_camPos, godrayWorldPos, extinction, SUN_DIR, 1.0, 1.0, 1.0);
 #else
-				float3 inscatter = InScattering2(_camPos, worldPos, extinction, SUN_DIR, 1.0, 1.0, 1.0);
+				inscatter+= InScattering2(_camPos, worldPos, extinction, SUN_DIR, 1.0, 1.0, 1.0) * 
+							( (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ); //somehow the shader compiler for OpenGL behaves differently around braces
 #endif
-                
-//#if defined (PLANETSHINE_ON)
-//			    float3 inscatter2=0;
-//			    for (int i=0; i<4; ++i)
-//    			{
-//    				if (planetShineRGB[i].w == 0) break; //intensity of zero? break for love
-//
-//			   		float intensity=1;  
-//			   		if (planetShineSources[i].w != 1.0f)
-//					{
-//						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - worldPos),SUN_DIR)),0); //if source is not a sun compute intensity of light from angle to light source
-//																													  //totally made up formula by eyeballing it
-//					}
-//    				
-//    				inscatter+=InScattering2(_camPos, worldPos,extinction, normalize(planetShineSources[i].xyz),1.0, 1.0, 1.0)
-//    							*planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
-//    			}
-//#endif
+
+				//inscatter*= ( (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ); //somehow the shader compiler for OpenGL behaves differently around braces
                 
 //#if defined (ECLIPSES_ON)				
 // 				float eclipseShadow = 1;
@@ -297,8 +306,6 @@ Pass {
 //				inscatter*=eclipseShadow;
 //#endif
 
-				inscatter*= ( (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ); //somehow the shader compiler for OpenGL behaves differently around braces
-																														  //and the shader won't work unless you put braces EVERYWHERE
                 return float4(hdr(inscatter)*_global_alpha*returnPixel, 1);                				
             }
             ENDCG

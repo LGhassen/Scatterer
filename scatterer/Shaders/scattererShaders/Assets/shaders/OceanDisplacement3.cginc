@@ -99,8 +99,8 @@ float2 OceanPos2(float4 vert, float4x4 stoc, out float t, out float3 cameraDir, 
     //float tSphere = - b - sqrt(max(b * b - c, 0.0));
     //float discriminant = b*b - 4* a * c
     float tSphere = - b + sqrt(max(b * b - c, 0.0));
-    //float tApprox = - cz / dz * (1.0 + cz / (2.0 * radius) * (1.0 - dz * dz));
-    //t = abs((tApprox - tSphere) * dz) < 1.0 ? tApprox : tSphere;
+//    float tApprox = - cz / dz * (1.0 + cz / (2.0 * radius) * (1.0 - dz * dz));
+//    t = abs((tApprox - tSphere) * dz) < 1.0 ? tApprox : tSphere;
 
     t = tSphere;
 

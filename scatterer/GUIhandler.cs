@@ -147,7 +147,7 @@ namespace scatterer
 				Core.Instance.oceanRefraction = GUILayout.Toggle(Core.Instance.oceanRefraction, "Ocean: refraction effects");
 				Core.Instance.oceanPixelLights = GUILayout.Toggle(Core.Instance.oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
 				
-				//					Core.Instance.usePlanetShine = GUILayout.Toggle(Core.Instance.usePlanetShine, "PlanetShine");
+				//Core.Instance.usePlanetShine = GUILayout.Toggle(Core.Instance.usePlanetShine, "PlanetShine");
 				Core.Instance.integrateWithEVEClouds = GUILayout.Toggle(Core.Instance.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 				
 				Core.Instance.drawAtmoOnTopOfClouds= GUILayout.Toggle(Core.Instance.drawAtmoOnTopOfClouds, "Draw atmo on top of EVE clouds(old cloud shading, use with EVE 7-4)");

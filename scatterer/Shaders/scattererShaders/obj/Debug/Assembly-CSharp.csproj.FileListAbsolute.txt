@@ -16,6 +16,5 @@ E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\Temp\bin\Debu
 E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\Temp\bin\Debug\UnityEditor.xml
 E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\Temp\bin\Debug\UnityEngine.UI.xml
 E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\Temp\bin\Debug\UnityEngine.Networking.xml
-E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
 E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\obj\Debug\Assembly-CSharp.dll
 E:\gh\scattererGithub\Scatterer\scatterer\Shaders\scattererShaders\obj\Debug\Assembly-CSharp.pdb
