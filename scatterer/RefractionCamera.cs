@@ -45,13 +45,15 @@ namespace scatterer
 
 			_refractionCamCamera.cullingMask=9076737; //essentially the same as farcamera except ignoring transparentFX
 													  //the idea is to move clouds (and maybe cloud shadow projectors?) and water shaders to transparentFX to improve performance
-
 			//disable rendering when away from PQS
 			bool renderRefractionBuffer = false;
+
 			if (FlightGlobals.ActiveVessel)
 			{
 				if (FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController)
+				{
 					renderRefractionBuffer = FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController.isActive;
+				}
 			}
 			renderRefractionBuffer = (renderRefractionBuffer || Core.Instance.pqsEnabled) && iSkyNode.m_manager.hasOcean;
 
@@ -62,7 +64,7 @@ namespace scatterer
 				//there is probably a simple formula to do this but I'm feeling lazy today so using the unity methods
 				Vector3 topLeft = _refractionCamCamera.ViewportPointToRay(new Vector3(0f,1f,0f)).direction;
 				topLeft.Normalize();
-				
+
 				float angle = Vector3.Dot (topLeft, _refractionCamCamera.transform.forward);
 				
 				_refractionCamCamera.nearClipPlane=Mathf.Max(iSkyNode.trueAlt * angle,Core.Instance.nearCamera.nearClipPlane);
@@ -78,9 +80,7 @@ namespace scatterer
 				//also, disable it over a certain altitude
 				bool prev = postProcessingCube.enabled;
 				postProcessingCube.enabled = false;
-
 				bool prev2=false;
-
 				if (underwaterPostProcessing)
 				{
 					prev2 = underwaterPostProcessing.enabled;

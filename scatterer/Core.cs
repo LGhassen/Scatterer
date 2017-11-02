@@ -224,7 +224,6 @@ namespace scatterer
 		public CelestialBody munCelestialBody;
 		public string path, gameDataPath;
 		bool found = false;
-		public bool stockSunglare = false;
 		public bool extinctionEnabled = true;
 		
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
@@ -535,6 +534,13 @@ namespace scatterer
 					//custom lens flares
 					if ((fullLensFlareReplacement) && !customSunFlareAdded)
 					{
+						//disable stock fun flares
+						global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
+						foreach(global::SunFlare _flare in stockFlares)
+						{
+							_flare.enabled=false;
+						}
+
 						foreach (string sunflareBody in sunflaresList)
 						{
 							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
@@ -844,7 +850,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0320b: "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0321dev: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 

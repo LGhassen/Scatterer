@@ -113,8 +113,6 @@ namespace scatterer
 		Texture2D ringTexture;
 
 		bool hasRingObjectAndShadowActivated = false;
-
-		bool stocksunglareEnabled = true;
 				
 		//atmosphere properties
 		public ConfigPoint interpolatedSettings= new ConfigPoint();
@@ -1471,12 +1469,15 @@ namespace scatterer
 		{
 			if (scaledMode) //switch to localMode
 			{
-				if (Core.Instance.useOceanShaders && m_manager.hasOcean && Core.Instance.oceanRefraction)
+				if (Core.Instance.useOceanShaders && Core.Instance.oceanRefraction)
 				{
-					Core.Instance.refractionCam.waterMeshRenderers=m_manager.GetOceanNode().waterMeshRenderers;
-					Core.Instance.refractionCam.numGrids = m_manager.GetOceanNode().numGrids;
-					Core.Instance.refractionCam.postProcessingCube = atmosphereMeshrenderer;
 					Core.Instance.refractionCam.iSkyNode = this;
+					if (m_manager.hasOcean)
+					{
+						Core.Instance.refractionCam.waterMeshRenderers=m_manager.GetOceanNode().waterMeshRenderers;
+						Core.Instance.refractionCam.numGrids = m_manager.GetOceanNode().numGrids;
+						Core.Instance.refractionCam.postProcessingCube = atmosphereMeshrenderer;
+					}
 					Debug.Log("skynode added refraction cam");
 				}
 
@@ -1498,16 +1499,6 @@ namespace scatterer
 				scaledMode=true;
 				Debug.Log("[Scatterer] Sky switched to scaled mode");
 			}
-		}
-
-		void toggleStockSunglare ()
-		{
-			if (stocksunglareEnabled) {
-				Sun.Instance.sunFlare.enabled = false;
-			} else {
-				Sun.Instance.sunFlare.enabled = true;
-			}
-			stocksunglareEnabled = !stocksunglareEnabled;
 		}
 
 		public bool loadFromConfigNode ()
