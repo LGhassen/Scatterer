@@ -122,17 +122,9 @@ namespace scatterer
 
 		public Vector3d2 ux, uy, uz, oo;
 		
-		//If the ocean should be drawn. To minimize depth fighting
-		bool m_drawOcean;
-		
 		//Concrete classes must provide a function that returns the
 		//variance of the waves need for the BRDF rendering of waves
 		public abstract float GetMaxSlopeVariance ();
-		
-		public bool GetDrawOcean ()
-		{
-			return m_drawOcean;
-		}
 		
 		// Use this for initialization
 		public virtual void Start ()
@@ -376,11 +368,9 @@ namespace scatterer
 			
 			return mesh;
 		}
-		
+
 		public virtual void UpdateNode ()
 		{
-			m_drawOcean = m_manager.m_skyNode.trueAlt < fakeOceanAltitude;
-
 //			if (!MapView.MapIsEnabled && !Core.Instance.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
 			{
 
@@ -389,7 +379,6 @@ namespace scatterer
 				foreach (MeshRenderer _mr in waterMeshRenderers)
 				{
 					_mr.enabled= oceanDraw;
-
 				}
 
 //				foreach (Mesh mesh in m_screenGrids)

@@ -36,7 +36,7 @@ namespace scatterer
 
 			if (m_manager.hasOcean && Core.Instance.useOceanShaders)
 			{
-				if (!MapView.MapIsEnabled && m_manager.m_skyNode.farCamera && !m_manager.m_skyNode.inScaledSpace && m_manager.GetOceanNode().GetDrawOcean() ) {
+				if (!MapView.MapIsEnabled && m_manager.m_skyNode.farCamera && !m_manager.m_skyNode.inScaledSpace) {
 					m_manager.GetOceanNode().updateStuff(m_manager.GetOceanNode().m_oceanMaterial, m_manager.m_skyNode.farCamera);
 				}
 			}
