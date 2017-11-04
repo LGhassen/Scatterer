@@ -892,18 +892,13 @@ namespace scatterer
 					atmosphereMeshrenderer.enabled = atmosphereMeshrenderer.enabled && (trueAlt >= 0);
 				}
 
-				bool localSkyCondition;
-				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-					localSkyCondition=alt > localSkyAltitude;
-				else
-					localSkyCondition = true;
-
-				if(CurrentPQS!=null)
+				bool scaledSkyCondition = MapView.MapIsEnabled; //scaledSkyCondition true -> scaledmode
+				if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && CurrentPQS!=null)
 				{
-					localSkyCondition=localSkyCondition && !CurrentPQS.isActive;   //inScaledSpace
+					scaledSkyCondition |= !CurrentPQS.isActive;
 				}
-				
-				if ((localSkyCondition || MapView.MapIsEnabled ) ^ scaledMode)
+
+				if (scaledSkyCondition ^ scaledMode)
 				{
 					toggleScaledMode();
 				}

@@ -479,6 +479,12 @@ namespace scatterer
 
 				if (ScaledSpace.Instance && scaledSpaceCamera)
 				{
+					if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+					{
+						//magically fix stupid issues when reverting to space center from map view
+						MapView.MapIsEnabled = false;
+					}
+
 					if (callCollector)
 					{
 						GC.Collect();
