@@ -534,7 +534,7 @@ namespace scatterer
 					//custom lens flares
 					if ((fullLensFlareReplacement) && !customSunFlareAdded)
 					{
-						//disable stock fun flares
+						//disable stock sun flares
 						global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
 						foreach(global::SunFlare _flare in stockFlares)
 						{
@@ -542,7 +542,7 @@ namespace scatterer
 							if (sunflaresList.Contains(_flare.sun.name))
 							{
 								Debug.Log("[Scatterer] Disabling stock sunflare for "+_flare.sun.name);
-								_flare.enabled=false;
+								_flare.sunFlare.enabled=false;
 							}
 						}
 
@@ -609,13 +609,16 @@ namespace scatterer
 													 ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
 
 							//don't unload planet the player ship is close to if panning away in map view
-							if (MapView.MapIsEnabled && FlightGlobals.ActiveVessel)
+							if (FlightGlobals.ActiveVessel)
+							{
 								shipDist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position,
 							                         ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
+							}
 
 							if (_cur.active)
 							{
 								if (dist > _cur.unloadDistance && (shipDist > _cur.unloadDistance || shipDist == 0f )) {
+
 									_cur.m_manager.OnDestroy ();
 									UnityEngine.Object.Destroy (_cur.m_manager);
 									_cur.m_manager = null;
@@ -828,6 +831,15 @@ namespace scatterer
 						Component.Destroy (customSunFlare);
 					}
 
+					//re-enable stock sun flares
+					global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
+					foreach(global::SunFlare _flare in stockFlares)
+					{						
+						if (sunflaresList.Contains(_flare.sun.name))
+						{
+							_flare.sunFlare.enabled=true;
+						}
+					}
 				}
 
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
