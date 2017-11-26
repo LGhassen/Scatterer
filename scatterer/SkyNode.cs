@@ -136,8 +136,6 @@ namespace scatterer
 
 		PQS CurrentPQS = null;
 
-		PQSMod_CelestialBodyTransform currentPQSMod_CelestialBodyTransform=null;
-
 		public bool inScaledSpace = true;
 
 		bool initiated = false;
@@ -304,12 +302,8 @@ namespace scatterer
 			InitPostprocessMaterial (m_atmosphereMaterial);
 						
 			CurrentPQS = parentCelestialBody.pqsController;
-			
-			if (CurrentPQS)
-			{
-				currentPQSMod_CelestialBodyTransform = CurrentPQS.GetComponentsInChildren<PQSMod_CelestialBodyTransform> () [0];
-			}
-
+			CurrentPQS.isActive = false; //sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
+										 //this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
 
 			atmosphereMesh = new GameObject ();
 
@@ -497,7 +491,6 @@ namespace scatterer
 					}
 				}
 			}
-
 			if (Core.Instance.useEclipses)
 			{
 				float scaleFactor=ScaledSpace.ScaleFactor;
@@ -523,8 +516,6 @@ namespace scatterer
 					castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y,
 					                                       casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
 				}
-				
-				
 				
 				for (int i=4; i< Mathf.Min(8, m_manager.eclipseCasters.Count); i++)
 				{
@@ -567,7 +558,7 @@ namespace scatterer
 					                                            m_manager.planetshineSources[i].color.z,intensity));
 				}
 			}
-			
+
 			//update EVE cloud shaders
 			//maybe refactor?
 			if (Core.Instance.integrateWithEVEClouds && m_manager.usesCloudIntegration)
