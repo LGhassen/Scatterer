@@ -279,59 +279,6 @@ namespace scatterer
 			m_skyMaterialLocal.SetOverrideTag ("IgnoreProjector", "True");
 			m_skyMaterialScaled.SetOverrideTag ("IgnoreProjector", "True");
 			m_atmosphereMaterial.SetOverrideTag ("IgnoreProjector", "True");
-
-//			if (Core.Instance.useEclipses)
-//			{
-//				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_ON");
-//				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_OFF");
-//				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_ON");
-//				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_OFF");
-//			}
-//			else
-//			{
-//				m_skyMaterialScaled.DisableKeyword ("ECLIPSES_ON");
-//				m_skyMaterialScaled.EnableKeyword ("ECLIPSES_OFF");
-//				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_ON");
-//				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_OFF");
-//			}
-//			
-//			if (Core.Instance.usePlanetShine)
-//			{
-//				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_ON");
-//				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_OFF");
-//				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_ON");
-//				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_OFF");
-//				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_ON");
-//				m_atmosphereMaterial.DisableKeyword ("PLANETSHINE_OFF");
-//				
-//				
-//			}
-//			else
-//			{
-//				m_skyMaterialScaled.DisableKeyword ("PLANETSHINE_ON");
-//				m_skyMaterialScaled.EnableKeyword ("PLANETSHINE_OFF");
-//				m_skyMaterialLocal.DisableKeyword ("PLANETSHINE_ON");
-//				m_skyMaterialLocal.EnableKeyword ("PLANETSHINE_OFF");
-//				m_atmosphereMaterial.DisableKeyword ("PLANETSHINE_ON");
-//				m_atmosphereMaterial.EnableKeyword ("PLANETSHINE_OFF");
-//			}
-
-			if (Core.Instance.useAlternateShaderSQRT)
-			{
-				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_OFF");
-				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_ON");
-				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_OFF");
-				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_ON");
-			}
-			else
-			{
-				m_skyMaterialScaled.EnableKeyword ("DEFAULT_SQRT_ON");
-				m_skyMaterialScaled.DisableKeyword ("DEFAULT_SQRT_OFF");
-				m_skyMaterialLocal.EnableKeyword ("DEFAULT_SQRT_ON");
-				m_skyMaterialLocal.DisableKeyword ("DEFAULT_SQRT_OFF");
-
-			}
-			
 			
 			if (Core.Instance.useGodrays)
 			{

@@ -165,25 +165,6 @@ float3 Transmittance(float r, float mu, float Rt0)
     //#endif
 }
 
-
-//fixes artifacts in d3d9, d3d11 and opengl
-float SQRT(float f, float err) {
-#if (!defined(SHADER_API_D3D9) && !defined(DEFAULT_SQRT_ON))
-	return sqrt(f);
-#else
-    return f >= 0.0 ? sqrt(f) : err;        
-#endif
-	return f > 0.0 ? sqrt(f) : 0.0;
-
-//unreliable
-//#if defined(SHADER_API_D3D9)
-//	return f >= 0.0 ? sqrt(f) : err;
-//#else
-//	return 1 / rsqrt (f);
-//#endif
-}
-
-
 //Source:   wikibooks.org/wiki/GLSL_Programming/Unity/Soft_Shadows_of_Spheres
 //I believe space engine also uses the same approach because the eclipses look the same ;)
 float getEclipseShadow(float3 worldPos, float3 worldLightPos,float3 occluderSpherePosition,
@@ -406,8 +387,8 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
     float rMu = dot(camera, viewdir);
     float mu = rMu / r;
 
-    float deltaSq = SQRT(rMu * rMu - r * r + Rt * Rt, 0.000001);
-//    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt);
+    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float deltaSq = sqrt(dSq);
     
     float din = max(-rMu - deltaSq, 0.0);
     
@@ -418,7 +399,7 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
         r = Rt;
         d -= din;
     }
-	if (r <= Rt)
+	if (r <= Rt && dSq >= 0.0) 
     { 
 //    	if (r < Rg + 1600.0)
 //    	{
@@ -428,7 +409,7 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
 //        	r = r * f;
 //    	}
 
-		r = (r < Rg + 1600.0) ? (Rg + 1600.0) : r;
+		r = (r < Rg + 1600.0) ? (Rg + 1600.0) : r; //wtf is this?
         
     	//set to analyticTransmittance only atm
     	#if defined (useAnalyticTransmittance)
@@ -467,8 +448,8 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
     float rMu = dot(camera, viewdir);
     float mu = rMu / r;
 
-    float deltaSq = SQRT(rMu * rMu - r * r + Rt * Rt, 0.000001);
-//    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt);
+    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float deltaSq = sqrt(dSq);
     
     float din = max(-rMu - deltaSq, 0.0);
     
@@ -479,7 +460,7 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
         r = Rt;
         d -= din;
     }
-	if (r <= Rt)
+	if (r <= Rt && dSq >= 0.0) 
     { 
 //    	if (r < Rg + 1600.0)
 //    	{
@@ -517,8 +498,8 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 				float rMu = dot(camera, viewdir);
 				float mu = rMu / r;
 
-    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
-//    			float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+			    float dSq = rMu * rMu - r * r + Rt*Rt;
+			    float deltaSq = sqrt(dSq);
 
     			float din = max(-rMu - deltaSq, 0.0);
     			if (din > 0.0)
@@ -531,7 +512,7 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 
     			extinction = Transmittance(r, mu);
 
-    			if (r > Rt) 
+    			if (r > Rt || dSq < 0.0) 
     			{
     				extinction = float3(1,1,1);
     			} 				
@@ -569,8 +550,8 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 				float rMu = dot(camera, viewdir);
 				float mu = rMu / r;
 
-    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
-//    			float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+			    float dSq = rMu * rMu - r * r + Rt*Rt;
+			    float deltaSq = sqrt(dSq);
 
     			float din = max(-rMu - deltaSq, 0.0);
     			if (din > 0.0)
@@ -586,7 +567,7 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 				float distInAtmo = abs(intersectSphere4(camera,viewdir,float3(0,0,0),Rt));
 				extinction = AnalyticTransmittance(r, mu, distInAtmo);
 
-    			if (r > Rt) 
+    			if (r > Rt || dSq < 0.0) 
     			{
     				extinction = float3(1,1,1);
     			} 				
@@ -625,8 +606,8 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 				float rMu = dot(camera, viewdir);
 				float mu = rMu / r;
 
-    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
-//    			float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+			    float dSq = rMu * rMu - r * r + Rt*Rt;
+			    float deltaSq = sqrt(dSq);
 
     			float din = max(-rMu - deltaSq, 0.0);
     			if (din > 0.0)
@@ -642,7 +623,7 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 				float distInAtmo = abs(intersectSphere4(camera,viewdir,float3(0,0,0),Rt));
 				float3 analyticExtinction = AnalyticTransmittance(r, mu, distInAtmo);
 
-    			if (r > Rt) 
+    			if (r > Rt || dSq < 0.0) 
     			{
     				extinction = float3(1,1,1);
     			} 				
@@ -694,7 +675,7 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 //    float rMu = dot(camera, viewdir);
 //    float mu = rMu / r;
 //
-//    float deltaSq = SQRT(rMu * rMu - r * r + Rt * Rt, 0.000001);
+//    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt, 0.000001);
 ////    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt);
 //    
 //    float din = max(-rMu - deltaSq, 0.0);
@@ -754,7 +735,8 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 //	float r0 = r;
 //	float mu0 = mu;
 	
-	float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
+    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float deltaSq = sqrt(dSq);
 
 	float din = max(-rMu - deltaSq, 0.0);
 	if (din > 0.0)
@@ -773,7 +755,7 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
     
 	extinction = Transmittance(r, mu);
     
-	if (r <= Rt) 
+	if (r <= Rt && dSq >= 0.0)
 	{
             
 //        if (shaftWidth > 0.0) 
@@ -820,10 +802,8 @@ float3 SkyRadiance3(float3 camera, float3 viewdir, float3 sundir)//, out float3 
 
 	//float mu = rMu / r;
 
-	//float r0 = r;
-	//float mu0 = mu;
-	
-	float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
+    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float deltaSq = sqrt(dSq);
 
 	float din = max(-rMu - deltaSq, 0.0);
 	if (din > 0.0)
@@ -837,12 +817,11 @@ float3 SkyRadiance3(float3 camera, float3 viewdir, float3 sundir)//, out float3 
 	float nu = dot(viewdir, sundir);
 	float muS = dot(camera, sundir) / r;
     
-//	float4 inScatter = Texture4D(_Sky_Inscatter, r, rMu / r, muS, nu);
 	float4 inScatter = Texture4D(_Inscatter, r, rMu / r, muS, nu);
     
 	//extinction = Transmittance(r, mu);
     
-	if (r <= Rt) 
+	if (r <= Rt && dSq >= 0.0) 
 	{
             
 //        if (shaftWidth > 0.0) 
@@ -977,8 +956,8 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float3
     float mu0 = mu;
     float muExtinction=mu;
     _point -= viewdir * clamp(shaftWidth, 0.0, d);
-    float deltaSq = SQRT(rMu * rMu - r * r + Rt * Rt, 0.000001);
-//    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt);
+    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float deltaSq = sqrt(dSq);
     float din = max(-rMu - deltaSq, 0.0);
     if (din > 0.0 && din < d)
     {
@@ -989,7 +968,7 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float3
         d -= din;
     }
     
-      if (r <= Rt)
+      if (r <= Rt && dSq >= 0.0) 
       { 
         float nu = dot(viewdir, sunDir);
         float muS = dot(camera, sunDir) / r;
@@ -1023,19 +1002,19 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float3
 //        #ifdef useHorizonHack
 //        const float EPS = 0.004;
 //        //                    float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
-//        float lim = -SQRT(1.0 - (Rg / r) * (Rg / r),0.000001);
+//        float lim = -sqrt(1.0 - (Rg / r) * (Rg / r),0.000001);
 //        if (abs(mu - lim) < EPS){                //ground fix, somehow doesn't really make a difference and causes all kind of crap in dx11/ogl
 //            float a = ((mu - lim) + EPS) / (2.0 * EPS);
 //            mu = lim - EPS;
 //            //                        r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-//            r1 = SQRT(r * r + d * d + 2.0 * r * d * mu,0.000001);
+//            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu,0.000001);
 //            mu1 = (r * mu + d) / r1;
 //            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
 //            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
 //            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
 //            mu = lim + EPS;
 //            //                        r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-//            r1 = SQRT(r * r + d * d + 2.0 * r * d * mu,0.000001);
+//            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu,0.000001);
 //            mu1 = (r * mu + d) / r1;
 //            inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
 //            inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);

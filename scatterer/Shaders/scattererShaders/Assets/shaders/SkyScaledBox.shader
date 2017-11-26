@@ -30,7 +30,7 @@ Shader "Scatterer/SkyLocal"
 			#define useAnalyticSkyTransmittance
 			
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-			#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
+			//#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 			#define localSpaceMode
 
@@ -106,7 +106,8 @@ Shader "Scatterer/SkyLocal"
 				float r0 = r;
 				float mu0 = mu;
 
-    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
+    			float dSq = rMu * rMu - r * r + Rt*Rt;
+    			float deltaSq = sqrt(dSq);
 
     			float din = max(-rMu - deltaSq, 0.0);
     			
@@ -118,7 +119,7 @@ Shader "Scatterer/SkyLocal"
         			r = Rt;
     			}
     			
-    			if (r > Rt)
+    			if (r > Rt || dSq < 0.0)
     			{
     				return float4(1.0,1.0,1.0,1.0);
    				} 

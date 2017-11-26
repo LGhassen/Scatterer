@@ -31,7 +31,7 @@ Shader "Scatterer/SkyScaled"
 			#define useAnalyticSkyTransmittance
 			
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-			#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
+			//#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 //			#define localSpaceMode
 
@@ -107,7 +107,8 @@ Shader "Scatterer/SkyScaled"
 				float r0 = r;
 				float mu0 = mu;
 
-    			float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
+    			float dSq = rMu * rMu - r * r + Rt*Rt;
+    			float deltaSq = sqrt(dSq);
 
     			float din = max(-rMu - deltaSq, 0.0);
     			
@@ -119,7 +120,7 @@ Shader "Scatterer/SkyScaled"
         			r = Rt;
     			}
     			
-    			if (r > Rt)
+    			if (r > Rt || dSq < 0.0)
     			{
     				return float4(1.0,1.0,1.0,1.0);
    				} 
@@ -311,7 +312,7 @@ Shader "Scatterer/SkyScaled"
 				
     			return OUT;
 			}
-			
+
 	
 float4 frag(v2f IN) : COLOR
 			{

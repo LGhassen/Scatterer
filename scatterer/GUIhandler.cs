@@ -176,8 +176,6 @@ namespace scatterer
 				
 				Core.Instance.disableAmbientLight = GUILayout.Toggle(Core.Instance.disableAmbientLight, "Disable scaled space ambient light");
 				
-				Core.Instance.useAlternateShaderSQRT = GUILayout.Toggle(Core.Instance.useAlternateShaderSQRT, "Alternate SQRT in shader (potential fix for halo around planets)");
-				
 				Core.Instance.showMenuOnStart = GUILayout.Toggle(Core.Instance.showMenuOnStart, "Show this menu on start-up");
 				
 				GUILayout.BeginHorizontal ();

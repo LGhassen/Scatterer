@@ -104,10 +104,6 @@ namespace scatterer
 
 		[Persistent]
 		public bool
-			useAlternateShaderSQRT = false;
-
-		[Persistent]
-		public bool
 			forceDisableDefaultDepthBuffer = false;
 
 		[Persistent]
@@ -873,7 +869,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0321dev: "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0322dev: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
