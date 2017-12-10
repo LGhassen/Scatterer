@@ -646,71 +646,83 @@ namespace scatterer
 							} 
 							else
 							{
-							if (dist < _cur.loadDistance && _cur.transform && _cur.celestialBody) {
-									_cur.m_manager = new Manager ();
-									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
-									_cur.m_manager.setParentPlanetTransform (_cur.transform);
-
-									CelestialBody currentSunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.mainSunCelestialBody);
-									_cur.m_manager.setSunCelestialBody (currentSunCelestialBody);
-									
-									//Find eclipse casters
-									List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
-
-									if (useEclipses)
+							if (dist < _cur.loadDistance && _cur.transform && _cur.celestialBody)
+								{
+									try
 									{
-										for (int k=0; k < _cur.eclipseCasters.Count; k++)
+										_cur.m_manager = new Manager ();
+										_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
+										_cur.m_manager.setParentPlanetTransform (_cur.transform);
+										
+										CelestialBody currentSunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.mainSunCelestialBody);
+										_cur.m_manager.setSunCelestialBody (currentSunCelestialBody);
+										
+										//Find eclipse casters
+										List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
+										
+										if (useEclipses)
 										{
-											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.eclipseCasters[k]);
-											if (cc==null)
-												Debug.Log("[Scatterer] Eclipse caster "+_cur.eclipseCasters[k]+" not found for "+_cur.celestialBodyName);
-											else
+											for (int k=0; k < _cur.eclipseCasters.Count; k++)
 											{
-												eclipseCasters.Add(cc);
-												Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
+												var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.eclipseCasters[k]);
+												if (cc==null)
+													Debug.Log("[Scatterer] Eclipse caster "+_cur.eclipseCasters[k]+" not found for "+_cur.celestialBodyName);
+												else
+												{
+													eclipseCasters.Add(cc);
+													Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
+												}
 											}
+											_cur.m_manager.eclipseCasters=eclipseCasters;
 										}
-										_cur.m_manager.eclipseCasters=eclipseCasters;
-									}
-
-									List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
-
-									if (usePlanetShine)
-									{								
-										for (int k=0; k < _cur.planetshineSources.Count; k++)
-										{
-											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.planetshineSources[k].bodyName);
-											if (cc==null)
-												Debug.Log("[Scatterer] planetshine source "+_cur.planetshineSources[k].bodyName+" not found for "+_cur.celestialBodyName);
-											else
+										
+										List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
+										
+										if (usePlanetShine)
+										{								
+											for (int k=0; k < _cur.planetshineSources.Count; k++)
 											{
-												AtmoPlanetShineSource src=_cur.planetshineSources[k];
-												src.body=cc;
-												_cur.planetshineSources[k].body=cc;
-												planetshineSources.Add (src);
-												Debug.Log("[Scatterer] Added planetshine source"+_cur.planetshineSources[k].bodyName+" for "+_cur.celestialBodyName);
+												var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.planetshineSources[k].bodyName);
+												if (cc==null)
+													Debug.Log("[Scatterer] planetshine source "+_cur.planetshineSources[k].bodyName+" not found for "+_cur.celestialBodyName);
+												else
+												{
+													AtmoPlanetShineSource src=_cur.planetshineSources[k];
+													src.body=cc;
+													_cur.planetshineSources[k].body=cc;
+													planetshineSources.Add (src);
+													Debug.Log("[Scatterer] Added planetshine source"+_cur.planetshineSources[k].bodyName+" for "+_cur.celestialBodyName);
+												}
 											}
+											_cur.m_manager.planetshineSources = planetshineSources;
 										}
-										_cur.m_manager.planetshineSources = planetshineSources;
+										
+										
+										_cur.m_manager.hasOcean = _cur.hasOcean;
+										_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
+										_cur.m_manager.Awake ();
+										_cur.active = true;
+										
+										
+										GUItool.selectedConfigPoint = 0;
+										GUItool.displayOceanSettings = false;
+										GUItool.selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
+										GUItool.getSettingsFromSkynode ();
+										if (_cur.hasOcean && useOceanShaders) {
+											GUItool.getSettingsFromOceanNode ();
+										}
+										
+										callCollector=true;
+										Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
 									}
-
-
-									_cur.m_manager.hasOcean = _cur.hasOcean;
-									_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
-									_cur.m_manager.Awake ();
-									_cur.active = true;
-
-
-									GUItool.selectedConfigPoint = 0;
-									GUItool.displayOceanSettings = false;
-									GUItool.selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
-									GUItool.getSettingsFromSkynode ();
-									if (_cur.hasOcean && useOceanShaders) {
-										GUItool.getSettingsFromOceanNode ();
+									catch(Exception e)
+									{
+										Debug.Log ("[Scatterer] Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
+										_cur.m_manager.OnDestroy();
+										scattererCelestialBodies.Remove(_cur);
+										Debug.Log ("[Scatterer] "+ _cur.celestialBodyName +" removed from active planets.");
+										return;
 									}
-									
-									callCollector=true;
-									Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
 								}
 							}
 						}
