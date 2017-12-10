@@ -302,8 +302,11 @@ namespace scatterer
 			InitPostprocessMaterial (m_atmosphereMaterial);
 						
 			CurrentPQS = parentCelestialBody.pqsController;
-			CurrentPQS.isActive = false; //sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
-										 //this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
+			if (!ReferenceEquals (CurrentPQS, null))
+			{
+					CurrentPQS.isActive = false; 	//sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
+													//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
+			}
 
 			atmosphereMesh = new GameObject ();
 
@@ -792,7 +795,7 @@ namespace scatterer
 
 					catch (Exception stupid)
 					{
-						Debug.Log ("[Scatterer] Error calling clouds2d.reassign() on planet: " + parentCelestialBody.name + stupid.ToString ());
+						Debug.Log ("[Scatterer] Error calling clouds2d.reassign() on planet: " + parentCelestialBody.name +" Exception returned: "+stupid.ToString ());
 					}
 				}
 
