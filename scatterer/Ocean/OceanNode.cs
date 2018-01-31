@@ -183,7 +183,7 @@ namespace scatterer
 
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.refractionTexture);
 
-			m_oceanMaterial.renderQueue=2050;
+			m_oceanMaterial.renderQueue=2460;
 
 			m_oldlocalToOcean = Matrix4x4d.Identity ();
 //			m_oldworldToOcean = Matrix4x4d.Identity ();
@@ -270,7 +270,7 @@ namespace scatterer
 			underwaterPostProcessingMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/UnderwaterScatter")]);			
 			underwaterPostProcessingMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterPostProcessingMaterial);
-			underwaterPostProcessingMaterial.renderQueue=2049;
+			underwaterPostProcessingMaterial.renderQueue=2459; //draw over fairings which is 2450
 
 			if (Core.Instance.oceanRefraction && (HighLogic.LoadedScene != GameScenes.TRACKSTATION))
 				Core.Instance.refractionCam.underwaterPostProcessing = underwaterMeshrenderer;

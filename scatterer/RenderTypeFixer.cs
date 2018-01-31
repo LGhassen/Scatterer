@@ -18,7 +18,7 @@ namespace scatterer
 				GameEvents.onGameSceneLoadRequested.Add(GameSceneLoaded);
 			}
 		}
-
+		
 		
 		private void GameSceneLoaded(GameScenes scene)
 		{
@@ -38,13 +38,18 @@ namespace scatterer
 			if ((name == "Terrain/PQS/PQS Main - Optimised")
 			    || (name == "Terrain/PQS/PQS Main Shader")
 			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (AP) ")
-				|| (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (Fallback) ")
+			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (Fallback) ")
 			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD")
-				|| (name.Contains ("PQS Main - Extras")
+			    || (name.Contains ("PQS Main - Extras")
 			    || (name == "Legacy Shaders/Transparent/Specular")))    //fixes kerbal visor leaking into water refraction
 			{
 				mat.SetOverrideTag("RenderType", "Opaque");
-//				Debug.Log("[Scatterer] Set renderType tag for "+mat.shader.name+" to \"Opaque\"");
+			}
+			
+			//fixes trees and cutouts
+			if ( (name == "Legacy Shaders/Transparent/Cutout") || (name == "KSP/Alpha/Cutoff") || (name == "KSP/Specular (Cutoff)"))
+			{
+				mat.SetOverrideTag("RenderType", "TransparentCutout");
 			}
 		}
 	}
