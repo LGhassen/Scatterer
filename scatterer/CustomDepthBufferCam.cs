@@ -67,13 +67,8 @@ namespace scatterer
 
 			//disable rendering of the custom depth buffer when away from PQS
 			bool renderDepthBuffer = false;
-			if (FlightGlobals.ActiveVessel)
-			{
-				if (FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController)
-					renderDepthBuffer = FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController.isActive;
-			}
 
-			renderDepthBuffer = renderDepthBuffer || Core.Instance.pqsEnabled;
+			renderDepthBuffer = (Core.Instance.fullLensFlareReplacement && Core.Instance.isGlobalPQSEnabled) || Core.Instance.isPQSEnabledOnScattererPlanet  ; //render if PQS regardless of atmospheric effects for sunflare intersection
 
 			if (renderDepthBuffer)
 			{

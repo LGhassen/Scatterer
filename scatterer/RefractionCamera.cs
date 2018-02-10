@@ -28,6 +28,7 @@ namespace scatterer
 			_refractionCamCamera = _refractionCam.AddComponent<Camera>();
 			
 			_refractionCamCamera.CopyFrom(inCamera);
+			_refractionCamCamera.transform.parent = inCamera.transform;
 			
 			_refractionCamCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
 			_refractionCamCamera.nearClipPlane=Core.Instance.farCamera.nearClipPlane;
@@ -42,31 +43,16 @@ namespace scatterer
 		{
 			if (!ReferenceEquals (iSkyNode, null))
 			{
-				//disable rendering when away from PQS
-				bool renderRefractionBuffer = false;
-
-				if (FlightGlobals.ActiveVessel)
+				if (postProcessingCube && iSkyNode.m_manager.GetOceanNode ().renderRefractions)
 				{
-					if (FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController)
-					{
-						renderRefractionBuffer = FlightGlobals.ActiveVessel.orbit.referenceBody.pqsController.isActive;
-					}
-				}
-
-				renderRefractionBuffer = (renderRefractionBuffer || Core.Instance.pqsEnabled) && iSkyNode.m_manager.hasOcean;
-
-				//I'm so sorry for this ugly-ass code
-				if (renderRefractionBuffer && postProcessingCube && iSkyNode.m_manager.GetOceanNode ().renderRefractions)
-				{
-					_refractionCamCamera.CopyFrom (inCamera);
+					_refractionCamCamera.fieldOfView = inCamera.fieldOfView;
 					_refractionCamCamera.enabled = false;
 					
 					_refractionCamCamera.cullingMask = 9076737; //essentially the same as farcamera except ignoring transparentFX
 					//the idea is to move clouds (and maybe cloud shadow projectors?) and water shaders to transparentFX to improve performance
 
-
 					//take a random frustum corner and compute the angle to the camera forward direction
-					//there is probably a simple formula to do this but I'm feeling lazy today so using the unity methods
+					//there is probably a simple formula to do this
 					Vector3 topLeft = _refractionCamCamera.ViewportPointToRay (new Vector3 (0f, 1f, 0f)).direction;
 					topLeft.Normalize ();
 
@@ -76,13 +62,12 @@ namespace scatterer
 					_refractionCamCamera.farClipPlane = Mathf.Max (300f, 200 * _refractionCamCamera.nearClipPlane); //magic
 
 					//for some reason in KSP this camera wouldn't clear the texture before rendering to it, resulting in a trail effect
-					//this snippet fixes that. We need the texture cleared to full white to mask the sky
+					//this snippet fixes that. We need the texture cleared to full black to mask the sky
 					RenderTexture rt = RenderTexture.active;
-					RenderTexture.active = _refractionTex;			
+					RenderTexture.active = _refractionTex;
 					GL.Clear (false, true, Color.black);
 					//here disable the ocean and the postprocessing stuff
 					//can we disable EVE clouds here as well?
-					//also, disable it over a certain altitude
 					bool prev = postProcessingCube.enabled;
 					postProcessingCube.enabled = false;
 					bool prev2 = false;
@@ -113,25 +98,6 @@ namespace scatterer
 				}
 			}
 		}
-		
-		
-//		void OnRenderImage (RenderTexture source, RenderTexture destination)
-//		{
-//			if (Core.Instance.depthbufferEnabled)
-//			{
-//				Graphics.Blit (_depthTex, destination);
-//			}
-//		}
-		
-//		public void clearDepthTexture()
-//		{
-//			RenderTexture rt=RenderTexture.active;
-//			RenderTexture.active= _depthTex;			
-//			GL.Clear(false,true,Color.white);
-//			RenderTexture.active=rt;
-//			
-//			depthTextureCleared = true;
-//		}
 		
 		public void OnDestroy ()
 		{

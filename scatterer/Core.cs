@@ -16,7 +16,7 @@ namespace scatterer
 	public class Core: MonoBehaviour
 	{	
 		private static Core instance;
-
+		
 		private Core()
 		{
 			if (instance == null)
@@ -203,8 +203,29 @@ namespace scatterer
 		string guiKey2String=KeyCode.F11.ToString();
 
 		KeyCode guiKey1, guiKey2, guiModifierKey1, guiModifierKey2 ;
-			
-		public bool pqsEnabled = false;
+
+		//means a PQS enabled for the closest celestial body, regardless of whether it uses scatterer effects or not
+		bool globalPQSEnabled = false;
+
+		public bool isGlobalPQSEnabled
+		{
+			get
+			{
+				return globalPQSEnabled;
+			}
+		}
+
+		//means a PQS enabled for a celestial body which scatterer effects are active on (is this useless?)
+		bool pqsEnabledOnScattererPlanet = false;
+
+		public bool isPQSEnabledOnScattererPlanet
+		{
+			get
+			{
+				return pqsEnabledOnScattererPlanet;
+			}
+		}
+		
 		public bool underwater = false;
 		public CustomDepthBufferCam customDepthBuffer;
 		public RenderTexture customDepthBufferTexture;
@@ -471,7 +492,6 @@ namespace scatterer
 					
 					found = true;
 				}
-				
 
 				if (ScaledSpace.Instance && scaledSpaceCamera)
 				{
@@ -599,7 +619,15 @@ namespace scatterer
 						}
 					}
 
-					pqsEnabled = false;
+					//
+					globalPQSEnabled = false;
+					if (FlightGlobals.currentMainBody )
+					{
+						if (FlightGlobals.currentMainBody.pqsController)
+							globalPQSEnabled = FlightGlobals.currentMainBody.pqsController.isActive;
+					}
+
+					pqsEnabledOnScattererPlanet = false;
 					underwater = false;
 					
 					foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
@@ -634,10 +662,10 @@ namespace scatterer
 									{
 										if (!_cur.m_manager.m_skyNode.inScaledSpace)
 										{
-											pqsEnabled = true;
+											pqsEnabledOnScattererPlanet = true;
 										}
 
-										if (_cur.m_manager.hasOcean && useOceanShaders && pqsEnabled)
+										if (_cur.m_manager.hasOcean && useOceanShaders && pqsEnabledOnScattererPlanet)
 										{
 											underwater = _cur.m_manager.GetOceanNode().isUnderwater;
 										}
@@ -733,7 +761,7 @@ namespace scatterer
 					//if in mapView check that depth texture is clear for the sunflare shader
 					if (customDepthBuffer)
 					{
-						if (!customDepthBuffer.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabled) )
+						if (!customDepthBuffer.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
 							customDepthBuffer.clearDepthTexture();
 					}
 
