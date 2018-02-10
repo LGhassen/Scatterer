@@ -30,7 +30,9 @@ namespace scatterer
 			_depthCamCamera = _depthCam.AddComponent<Camera>();
 			
 			_depthCamCamera.CopyFrom(inCamera);
-			
+			_depthCamCamera.transform.parent = inCamera.transform;
+
+			_depthCamCamera.enabled = false;
 			_depthCamCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
 			_depthCamCamera.nearClipPlane=Core.Instance.nearCamera.nearClipPlane;
 			_depthCamCamera.depthTextureMode=DepthTextureMode.None;
@@ -61,11 +63,7 @@ namespace scatterer
 
 		void OnPreRender () 
 		{
-			_depthCamCamera.CopyFrom(inCamera);
-			_depthCamCamera.enabled = false;
-
-			_depthCamCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
-			_depthCamCamera.nearClipPlane=Core.Instance.nearCamera.nearClipPlane;
+			_depthCamCamera.fieldOfView = inCamera.fieldOfView;
 
 			//disable rendering of the custom depth buffer when away from PQS
 			bool renderDepthBuffer = false;
