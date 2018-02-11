@@ -61,17 +61,11 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Manager.cs" />
-    <Compile Include="Plugins\Math\Box2d.cs" />
-    <Compile Include="Plugins\Math\Box3d.cs" />
-    <Compile Include="Plugins\Math\Frustum.cs" />
-    <Compile Include="Plugins\Math\ImprovedPerlinNoise.cs" />
     <Compile Include="Plugins\Math\MathUtility.cs" />
-    <Compile Include="Plugins\Math\Matrix2x2d.cs" />
     <Compile Include="Plugins\Math\Matrix3x3.cs" />
     <Compile Include="Plugins\Math\Matrix3x3d.cs" />
     <Compile Include="Plugins\Math\Matrix4x4d.cs" />
     <Compile Include="Plugins\Math\Quat.cs" />
-    <Compile Include="Plugins\Math\Seg2d.cs" />
     <Compile Include="Plugins\Math\Vector2d.cs" />
     <Compile Include="Plugins\Math\Vector2i.cs" />
     <Compile Include="Plugins\Math\Vector3d2.cs" />
@@ -79,8 +73,6 @@
     <Compile Include="Plugins\Utility\MeshFactory.cs" />
     <Compile Include="SkyNode.cs" />
     <Compile Include="EncodeFloat.cs" />
-    <Compile Include="Plugins\Containers\DictionaryQueue.cs" />
-    <Compile Include="Plugins\Containers\SetQueue.cs" />
     <Compile Include="CustomDepthBufferCam.cs" />
     <Compile Include="SimplePostProcessCube.cs" />
     <Compile Include="SunFlare.cs" />
@@ -115,5 +107,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
+    <Folder Include="PlanetEffects\" />
   </ItemGroup>
 </Project>
