@@ -60,7 +60,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Manager.cs" />
     <Compile Include="Plugins\Math\MathUtility.cs" />
     <Compile Include="Plugins\Math\Matrix3x3.cs" />
     <Compile Include="Plugins\Math\Matrix3x3d.cs" />
@@ -71,42 +70,45 @@
     <Compile Include="Plugins\Math\Vector3d2.cs" />
     <Compile Include="Plugins\Math\Vector4d.cs" />
     <Compile Include="Plugins\Utility\MeshFactory.cs" />
-    <Compile Include="SkyNode.cs" />
-    <Compile Include="EncodeFloat.cs" />
     <Compile Include="CustomDepthBufferCam.cs" />
-    <Compile Include="SimplePostProcessCube.cs" />
-    <Compile Include="SunFlare.cs" />
-    <Compile Include="Ocean\Node.cs" />
-    <Compile Include="Ocean\OceanNode.cs" />
-    <Compile Include="Ocean\OceanWhiteCaps.cs" />
-    <Compile Include="Ocean\RTUtility.cs" />
-    <Compile Include="Ocean\WriteFloat.cs" />
-    <Compile Include="Ocean\FourierGPU.cs" />
-    <Compile Include="Ocean\FourierCPU.cs" />
-    <Compile Include="Ocean\FakeOceanPQS.cs" />
-    <Compile Include="DisableAmbientLight.cs" />
-    <Compile Include="RenderTypeFixer.cs" />
-    <Compile Include="Ocean\CommandBufferModifiedProjectionMatrix.cs" />
-    <Compile Include="ShaderProperties.cs" />
-    <Compile Include="PlanetShineLight.cs" />
     <Compile Include="DataSerialization\ConfigPoint.cs" />
     <Compile Include="DataSerialization\PlanetshineSource.cs" />
     <Compile Include="DataSerialization\ScattererCelestialBody.cs" />
     <Compile Include="DataSerialization\PlanetsListReader.cs" />
-    <Compile Include="ShaderReplacer.cs" />
-    <Compile Include="DisableEffectsForTextureReplacer.cs" />
-    <Compile Include="DisableEffectsChecker.cs" />
-    <Compile Include="SunflareCameraHook.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="RefractionCamera.cs" />
-    <Compile Include="GUIhandler.cs" />
-    <Compile Include="WireFrame.cs" />
-    <Compile Include="BufferRenderingManager.cs" />
-    <Compile Include="Ocean\OceanFFTcpu.cs" />
-    <Compile Include="Ocean\OceanFFTgpu.cs" />
+    <Compile Include="Utilities\WireFrame.cs" />
+    <Compile Include="Utilities\DisableEffectsForTextureReplacer.cs" />
+    <Compile Include="Utilities\DisableEffectsChecker.cs" />
+    <Compile Include="Utilities\DisableAmbientLight.cs" />
+    <Compile Include="Utilities\BufferRenderingManager.cs" />
+    <Compile Include="Utilities\EncodeFloat.cs" />
+    <Compile Include="Utilities\GUIhandler.cs" />
+    <Compile Include="Utilities\ShaderReplacer.cs" />
+    <Compile Include="Utilities\ShaderProperties.cs" />
+    <Compile Include="Utilities\RenderTypeFixer.cs" />
+    <Compile Include="Effects\DynamicLoaded\Manager.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\Node.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\OceanNode.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\OceanWhiteCaps.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\RTUtility.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\WriteFloat.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\FourierGPU.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\FourierCPU.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\FakeOceanPQS.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\CommandBufferModifiedProjectionMatrix.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\OceanFFTcpu.cs" />
+    <Compile Include="Effects\DynamicLoaded\Ocean\OceanFFTgpu.cs" />
+    <Compile Include="Effects\DynamicLoaded\Atmosphere\SkyNode.cs" />
+    <Compile Include="Effects\DynamicLoaded\SimplePostProcessCube.cs" />
+    <Compile Include="Effects\Global\SunFlare.cs" />
+    <Compile Include="Effects\Global\SunflareCameraHook.cs" />
+    <Compile Include="Effects\Global\PlanetShineLight.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
-    <Folder Include="PlanetEffects\" />
+    <Folder Include="Utilities\" />
+    <Folder Include="Effects\" />
+    <Folder Include="Effects\Global\" />
   </ItemGroup>
 </Project>
