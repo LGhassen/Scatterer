@@ -1,11 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 namespace scatterer {
 	/*
 	 * Extend the OceanFFT node to also generate ocean white caps.
 	 */
-	public class OceanWhiteCaps: OceanFFT {
+	public class OceanWhiteCaps: OceanFFTgpu {
 		
 		Material m_initJacobiansMat;
 		

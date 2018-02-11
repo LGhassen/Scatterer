@@ -254,10 +254,6 @@ namespace scatterer
 		[Persistent]
 		public int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
-
-		
-
-		
 		public bool depthbufferEnabled = false;
 		public bool d3d9 = false;
 		public bool opengl = false;
@@ -597,7 +593,7 @@ namespace scatterer
 						ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
 					}
 
-					if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 					{
 						if (useOceanShaders && oceanRefraction)
 						{

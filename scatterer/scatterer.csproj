@@ -81,12 +81,10 @@
     <Compile Include="EncodeFloat.cs" />
     <Compile Include="Plugins\Containers\DictionaryQueue.cs" />
     <Compile Include="Plugins\Containers\SetQueue.cs" />
-    <Compile Include="UpdateOnCameraPreCull.cs" />
     <Compile Include="CustomDepthBufferCam.cs" />
     <Compile Include="SimplePostProcessCube.cs" />
     <Compile Include="SunFlare.cs" />
     <Compile Include="Ocean\Node.cs" />
-    <Compile Include="Ocean\OceanFFT.cs" />
     <Compile Include="Ocean\OceanNode.cs" />
     <Compile Include="Ocean\OceanWhiteCaps.cs" />
     <Compile Include="Ocean\RTUtility.cs" />
@@ -111,6 +109,9 @@
     <Compile Include="RefractionCamera.cs" />
     <Compile Include="GUIhandler.cs" />
     <Compile Include="WireFrame.cs" />
+    <Compile Include="BufferRenderingManager.cs" />
+    <Compile Include="Ocean\OceanFFTcpu.cs" />
+    <Compile Include="Ocean\OceanFFTgpu.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
