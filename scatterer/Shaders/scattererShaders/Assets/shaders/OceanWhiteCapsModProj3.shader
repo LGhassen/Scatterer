@@ -397,15 +397,16 @@ Shader "Scatterer/OceanWhiteCaps"
 #endif
 
 
-				float fragDepth = tex2D(_customDepthTexture, uv).r * 750000;
-				//float fragDistance = fragDepth /angleToCameraAxis;
+				float fragDepth = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000;
 				float angleToCameraAxis = dot(IN.viewSpaceDirDist.xyz, float3(0.0,0.0,-1.0));
 				float ocDepth = IN.viewSpaceDirDist.w * angleToCameraAxis;
 				float depth= fragDepth - ocDepth;
 
+#if defined (REFRACTION_ON)
 				uv = (depth < 0) ? IN.depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
-				fragDepth = tex2D(_customDepthTexture, uv).r * 750000;
+				fragDepth = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000;
 				depth= fragDepth - ocDepth;
+#endif
 
 				depth = depth / angleToCameraAxis; //distance from depth (approx, doesn't take in consideration refraction angle but whatever, should be small enough)
 
@@ -413,6 +414,8 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				float outAlpha=lerp(0.0,1.0,depth/transparencyDepth);
 				_Ocean_WhiteCapStr=lerp(shoreFoam,_Ocean_WhiteCapStr, depth*0.2);
+				_Ocean_WhiteCapStr= (depth <= 0.0) ? 0.0 : _Ocean_WhiteCapStr; //fixes white outline around objects in front of the ocean
+
 				//_Ocean_WhiteCapStr=lerp(0.0,_Ocean_WhiteCapStr, depth*10); //check
 				//_Ocean_WhiteCapStr*=(depth < 0.005) ? lerp (0.0,1.0,depth * 200): 1.0; //softer shore foam edge
 				float outWhiteCapStr=lerp(_Ocean_WhiteCapStr,farWhiteCapStr,clampFactor);
