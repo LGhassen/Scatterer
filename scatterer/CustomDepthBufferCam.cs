@@ -23,7 +23,7 @@ namespace scatterer
 		
 		private Shader depthShader;
 		private Shader GodrayDepthShader;
-		
+
 		public void start()
 		{
 			_depthCam = new GameObject("CustomDepthCamera");

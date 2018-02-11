@@ -37,19 +37,21 @@ namespace scatterer
 
 		
 		// Initialization
-		public void Awake() {
+		public void Awake()
+		{
 			m_radius = parentCelestialBody.Radius;
 			//			print (m_radius);
 			
-			m_skyNode = new SkyNode();
+			//m_skyNode = new SkyNode();
+			m_skyNode = (SkyNode) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SkyNode));
 			m_skyNode.setManager(this);
+			m_skyNode.usesCloudIntegration = usesCloudIntegration;
 			m_skyNode.SetParentCelestialBody(parentCelestialBody);
 			m_skyNode.setParentPlanetTransform(ParentPlanetTransform);
 			
 			if (m_skyNode.loadFromConfigNode())
 			{
-				
-				m_skyNode.Start();		
+				m_skyNode.Init();		
 				
 				if (hasOcean && Core.Instance.useOceanShaders) {
 					m_oceanNode = new OceanWhiteCaps();
@@ -85,8 +87,12 @@ namespace scatterer
 			}
 		}
 		
-		public void OnDestroy() {
-			m_skyNode.OnDestroy();
+		public void OnDestroy()
+		{
+			m_skyNode.Cleanup();
+
+			Component.Destroy(m_skyNode);
+
 			UnityEngine.Object.Destroy(m_skyNode);
 			
 			if (hasOcean && Core.Instance.useOceanShaders) {

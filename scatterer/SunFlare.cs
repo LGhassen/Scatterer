@@ -109,7 +109,7 @@ namespace scatterer
 			sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
 
 			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-				sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.customDepthBufferTexture);
+				sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.bufferRenderingManager.depthTexture);
 			else
 				sunglareMaterial.SetTexture ("_customDepthTexture", Texture2D.whiteTexture);
 

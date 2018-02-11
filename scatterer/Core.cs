@@ -225,10 +225,10 @@ namespace scatterer
 				return pqsEnabledOnScattererPlanet;
 			}
 		}
-		
+
 		public bool underwater = false;
-		public CustomDepthBufferCam customDepthBuffer;
-		public RenderTexture customDepthBufferTexture;
+
+		public BufferRenderingManager bufferRenderingManager;
 		public RenderTexture godrayDepthTexture;
 		public RefractionCamera refractionCam;
 		public RenderTexture refractionTexture;
@@ -512,26 +512,17 @@ namespace scatterer
 					{
 						if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 						{
-							customDepthBuffer = (CustomDepthBufferCam)farCamera.gameObject.AddComponent (typeof(CustomDepthBufferCam));
-							customDepthBuffer.inCamera = farCamera;
-							customDepthBuffer.start();
-
-							customDepthBufferTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
-							customDepthBufferTexture.useMipMap=false;
-							customDepthBufferTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
-							customDepthBufferTexture.Create ();
-							
-							if (useGodrays)
-							{
-
-								godrayDepthTexture = new RenderTexture (Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
-								godrayDepthTexture.filterMode = FilterMode.Point;
-								godrayDepthTexture.useMipMap=false;
-								customDepthBuffer._godrayDepthTex = godrayDepthTexture;
-								godrayDepthTexture.Create ();
-							}
-
-							customDepthBuffer._depthTex = customDepthBufferTexture;
+//							if (useGodrays)
+//							{
+//
+//								godrayDepthTexture = new RenderTexture (Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
+//								godrayDepthTexture.filterMode = FilterMode.Point;
+//								godrayDepthTexture.useMipMap=false;
+//								customDepthBuffer._godrayDepthTex = godrayDepthTexture;
+//								godrayDepthTexture.Create ();
+//							}
+//
+//							customDepthBuffer._depthTex = customDepthBufferTexture;
 
 							//refraction stuff
 							if (useOceanShaders && oceanRefraction)
@@ -548,6 +539,9 @@ namespace scatterer
 								refractionCam._refractionTex = refractionTexture;
 							}
 
+
+							bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
+							bufferRenderingManager.start();
 						}
 						depthBufferSet = true;
 					}
@@ -605,11 +599,6 @@ namespace scatterer
 
 					if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 					{
-						if (!customDepthBufferTexture.IsCreated ())
-						{
-							customDepthBufferTexture.Create ();
-						}
-
 						if (useOceanShaders && oceanRefraction)
 						{
 							if (!refractionTexture.IsCreated ())
@@ -619,7 +608,6 @@ namespace scatterer
 						}
 					}
 
-					//
 					globalPQSEnabled = false;
 					if (FlightGlobals.currentMainBody )
 					{
@@ -725,7 +713,9 @@ namespace scatterer
 											_cur.m_manager.planetshineSources = planetshineSources;
 										}
 										
-										
+										if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+											_cur.hasOcean=false;
+
 										_cur.m_manager.hasOcean = _cur.hasOcean;
 										_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
 										_cur.m_manager.Awake ();
@@ -746,7 +736,14 @@ namespace scatterer
 									catch(Exception e)
 									{
 										Debug.Log ("[Scatterer] Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
+										try
+										{
 										_cur.m_manager.OnDestroy();
+										}
+										catch(Exception ee)
+										{
+											Debug.Log ("[Scatterer] manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
+										}
 										scattererCelestialBodies.Remove(_cur);
 										Debug.Log ("[Scatterer] "+ _cur.celestialBodyName +" removed from active planets.");
 										return;
@@ -759,10 +756,16 @@ namespace scatterer
 					//fixDrawOrders ();
 					
 					//if in mapView check that depth texture is clear for the sunflare shader
-					if (customDepthBuffer)
+//					if (customDepthBuffer)
+//					{
+//						if (!customDepthBuffer.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
+//							customDepthBuffer.clearDepthTexture();
+//					}
+
+					if (bufferRenderingManager)
 					{
-						if (!customDepthBuffer.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
-							customDepthBuffer.clearDepthTexture();
+						if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
+							bufferRenderingManager.clearDepthTexture();
 					}
 
 					//update sun flare
@@ -821,13 +824,11 @@ namespace scatterer
 					Component.Destroy(ambientLightScript);
 				}
 
-				if(customDepthBuffer)
+
+				if (bufferRenderingManager)
 				{
-					customDepthBuffer.OnDestroy();
-					Component.Destroy (customDepthBuffer);
-					UnityEngine.Object.Destroy (customDepthBuffer);
-					customDepthBufferTexture.Release();
-					UnityEngine.Object.Destroy (customDepthBufferTexture);
+					bufferRenderingManager.OnDestroy();
+					Component.Destroy (bufferRenderingManager);
 				}
 
 				if(refractionCam)
@@ -839,15 +840,15 @@ namespace scatterer
 					UnityEngine.Object.Destroy (refractionTexture);
 				}
 				
-				if(useGodrays)
-				{
-					if (godrayDepthTexture)
-					{
-						if (godrayDepthTexture.IsCreated())
-							godrayDepthTexture.Release();
-						UnityEngine.Object.Destroy (godrayDepthTexture);
-					}
-				}
+//				if(useGodrays)
+//				{
+//					if (godrayDepthTexture)
+//					{
+//						if (godrayDepthTexture.IsCreated())
+//							godrayDepthTexture.Release();
+//						UnityEngine.Object.Destroy (godrayDepthTexture);
+//					}
+//				}
 				
 
 				if (farCamera)

@@ -75,6 +75,7 @@
      <None Include="Assets\shaders\OldOrUnused\SphereCloud - Copy (3).shader" />
      <None Include="Assets\shaders\OceanDisplacement3.cginc" />
      <None Include="Assets\shaders\OceanWhiteCapsModProj3PixelLights.shader" />
+     <None Include="Assets\shaders\ScatteringReplacementShader.shader" />
      <None Include="Assets\shaders\EVE\old\alphaMap.cginc" />
      <None Include="Assets\shaders\OceanBRDF.cginc" />
      <None Include="Assets\shaders\WhiteCapsPrecompute0.shader" />

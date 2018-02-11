@@ -179,8 +179,9 @@ namespace scatterer
 
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterial);
 
-			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.customDepthBufferTexture);
+			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 
+			//if (Core.Instance.oceanRefraction)
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.refractionTexture);
 
 			m_oceanMaterial.renderQueue=2460;
@@ -627,8 +628,6 @@ namespace scatterer
 			underwaterPostProcessingMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			underwaterPostProcessingMaterial.SetFloat ("darknessDepth", darknessDepth);
 
-			//underwaterPostProcessingMaterial.SetFloat ("refractionIndex", refractionIndex);
-
 		}
 		
 //		public void SetUniforms (Material mat)
@@ -671,14 +670,14 @@ namespace scatterer
 			{
 				m_oceanMaterial.EnableKeyword ("REFRACTION_OFF");
 				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
-				//Debug.Log("[Scatterer] Refractions off");
+				Debug.Log("[Scatterer] Refractions off: high altitude");
 				
 			}
 			else   //switch to refractions on
 			{
 				m_oceanMaterial.EnableKeyword ("REFRACTION_ON");
 				m_oceanMaterial.DisableKeyword ("REFRACTION_OFF");
-				//Debug.Log("[Scatterer] Refractions on");
+				Debug.Log("[Scatterer] Refractions on: low altitude");
 			}
 			
 			isRenderingRefractions = !isRenderingRefractions;
