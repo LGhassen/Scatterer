@@ -1,3 +1,8 @@
+//rendering steps
+//scaledSpaceCamera.OnPrecull -> skynodes update the extinction texture one after one
+//camerahook on the relevant scaledSpace or farCamera -> clear the extinction texture before the next frame
+//						while taking care of keeping it around until the rendering has finished (either nearCamera or scaledCamera)
+
 
 using UnityEngine;
 using System.Collections;
@@ -189,8 +194,7 @@ namespace scatterer
 			Debug.Log ("[Scatterer] Added custom sun flare for "+sourceName);
 
 		}
-		
-//		public void OnPreRender()
+
 		public void updateProperties()
 		{
 			sunViewPortPos = Core.Instance.scaledSpaceCamera.WorldToViewportPoint
@@ -321,6 +325,12 @@ namespace scatterer
 			{
 				Component.Destroy (scaledCameraHook);
 				UnityEngine.Object.Destroy (scaledCameraHook);
+			}
+
+			if (extinctionTexture)
+			{
+				extinctionTexture.Release();
+				UnityEngine.Object.Destroy (extinctionTexture);
 			}
 		}
 
