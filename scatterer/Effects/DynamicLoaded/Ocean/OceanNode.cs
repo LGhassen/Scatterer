@@ -125,9 +125,13 @@ namespace scatterer
 		//Concrete classes must provide a function that returns the
 		//variance of the waves need for the BRDF rendering of waves
 		public abstract float GetMaxSlopeVariance ();
-		
+
+		//refractions
+		private GameObject _refractionGO;
+		public Camera _refractionCamera;
+
 		// Use this for initialization
-		public virtual void Start ()
+		public virtual void Init ()
 		{
 //			m_cameraToWorldMatrix = Matrix4x4d.Identity ();
 //			
@@ -182,7 +186,7 @@ namespace scatterer
 			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 
 			//if (Core.Instance.oceanRefraction)
-			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.refractionTexture);
+			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture);
 
 			m_oceanMaterial.renderQueue=2460;
 
@@ -273,8 +277,6 @@ namespace scatterer
 			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterPostProcessingMaterial);
 			underwaterPostProcessingMaterial.renderQueue=2459; //draw over fairings which is 2450
 
-			if (Core.Instance.oceanRefraction && (HighLogic.LoadedScene != GameScenes.TRACKSTATION))
-				Core.Instance.refractionCam.underwaterPostProcessing = underwaterMeshrenderer;
 			underwaterMeshrenderer.sharedMaterial = underwaterPostProcessingMaterial;
 			underwaterMeshrenderer.material = underwaterPostProcessingMaterial;
 			
@@ -285,9 +287,21 @@ namespace scatterer
 			//underwaterGameObject.layer = 15;
 			underwaterGameObject.layer = 23;
 
+			//refraction camera
+			_refractionGO = new GameObject("ScattererRefractionGameObject");
+			_refractionCamera = _refractionGO.AddComponent<Camera>();
+			
+			_refractionCamera.CopyFrom(Core.Instance.farCamera);
+			_refractionCamera.transform.parent = Core.Instance.farCamera.transform;
+			
+			_refractionCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
+			_refractionCamera.nearClipPlane=Core.Instance.farCamera.nearClipPlane;
+			_refractionCamera.depthTextureMode=DepthTextureMode.None;
+			_refractionCamera.enabled = false;
+
 		}
 		
-		public virtual void OnDestroy ()
+		public virtual void Cleanup ()
 		{
 			Debug.Log ("ocean node ondestroy");
 
@@ -314,6 +328,17 @@ namespace scatterer
 				UnityEngine.Object.Destroy(underwaterGameObject);
 				Component.Destroy(underwaterMeshrenderer);
 				Component.Destroy(underwaterMeshFilter);
+			}
+
+			if (_refractionCamera)
+			{
+				Component.Destroy(_refractionCamera);
+				UnityEngine.Object.Destroy(_refractionCamera);
+			}
+
+			if(_refractionGO)
+			{
+				UnityEngine.Object.Destroy(_refractionGO);
 			}
 
 			UnityEngine.Object.Destroy (m_oceanMaterial);
@@ -413,6 +438,76 @@ namespace scatterer
 			{
 				toggleRefractions();
 			}
+		}
+
+		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPrecull of SkyNode (added to ScaledSpaceCamera, executes first)
+		{
+			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)  //shouldn't this go somewhere in oceannode? //or maybe here to keep update order
+			{
+				updateStuff(m_oceanMaterial, Core.Instance.farCamera);
+			}
+
+			//refractions
+			if (renderRefractions)
+			{
+
+
+				_refractionCamera.fieldOfView = Core.Instance.farCamera.fieldOfView;
+				//_refractionCamera.enabled = false;
+				
+				_refractionCamera.cullingMask = 9076737; //essentially the same as farcamera except ignoring transparentFX
+				//the idea is to move clouds (and maybe cloud shadow projectors?) and water shaders to transparentFX to improve performance
+				
+				//take a random frustum corner and compute the angle to the camera forward direction
+				//there is probably a simple formula to do this
+				Vector3 topLeft = _refractionCamera.ViewportPointToRay (new Vector3 (0f, 1f, 0f)).direction;
+				topLeft.Normalize ();
+				
+				float angle = Vector3.Dot (topLeft, _refractionCamera.transform.forward);
+
+				//dybamically change the clipping planes to fit what is visible from the water surface to somewhere around what the water "fog" lets you see
+				_refractionCamera.nearClipPlane = Mathf.Max (m_manager.m_skyNode.trueAlt * angle, Core.Instance.nearCamera.nearClipPlane);
+				_refractionCamera.farClipPlane = Mathf.Max (300f, 200 * _refractionCamera.nearClipPlane);
+				
+				//for some reason in KSP this camera wouldn't clear the texture before rendering to it, resulting in a trail effect
+				//this snippet fixes that. We need the texture cleared to full black to mask the sky
+				RenderTexture rt = RenderTexture.active;
+				RenderTexture.active = Core.Instance.bufferRenderingManager.refractionTexture; //use the one refraction texture from the bufferRenderingManager
+				GL.Clear (false, true, Color.black);
+
+				//here disable the ocean and the postprocessing stuff
+				//can we disable EVE clouds here as well?
+				bool prev = m_manager.m_skyNode.atmosphereMeshrenderer.enabled;
+				m_manager.m_skyNode.atmosphereMeshrenderer.enabled = false;
+				bool prev2 = false;
+				//if (underwaterMeshrenderer)
+				{
+					prev2 = underwaterMeshrenderer.enabled;
+					underwaterMeshrenderer.enabled = false;
+				}
+				
+				for (int i=0; i < numGrids; i++) {
+					waterMeshRenderers [i].enabled = false;
+				}
+				
+				//render
+				_refractionCamera.targetTexture = Core.Instance.bufferRenderingManager.refractionTexture;
+				_refractionCamera.Render ();
+				
+				//here re-enable the ocean and the postprocessing stuff
+				m_manager.m_skyNode.atmosphereMeshrenderer.enabled = prev;
+				//if (underwaterMeshrenderer)
+					underwaterMeshrenderer.enabled = prev2;
+				
+				for (int i=0; i < numGrids; i++)
+				{
+					waterMeshRenderers [i].enabled = true;
+				}
+				
+				//restore active rendertexture
+				RenderTexture.active = rt;
+			}
+
 		}
 
 
@@ -772,7 +867,7 @@ namespace scatterer
 				
 				(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == m_manager.parentCelestialBody.name)).hasOcean = false;
 				
-				this.OnDestroy();
+				this.Cleanup();
 				UnityEngine.Object.Destroy (this);
 			}
 		}

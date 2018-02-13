@@ -22,11 +22,10 @@ namespace scatterer
 	{
 		[Persistent]
 		protected string name;
-
 		public UrlDir.UrlConfig configUrl;
 		
 		public GameObject atmosphereMesh;
-		MeshRenderer atmosphereMeshrenderer;
+		public MeshRenderer atmosphereMeshrenderer;
 		MeshFilter atmosphereMeshFilter;
 		
 		SimplePostProcessCube skyScaledCube;
@@ -484,14 +483,6 @@ namespace scatterer
 				SetUniforms (m_skyMaterialScaled);
 			else
 				SetUniforms (m_skyMaterialLocal);
-			
-			if (m_manager.hasOcean && Core.Instance.useOceanShaders)
-			{
-				if (!MapView.MapIsEnabled && Core.Instance.farCamera && !inScaledSpace)  //shouldn't this go somewhere in oceannode? //or maybe here to keep update order
-				{
-					m_manager.GetOceanNode().updateStuff(m_manager.GetOceanNode().m_oceanMaterial, Core.Instance.farCamera);
-				}
-			}
 		}
 
 		public void UpdateStuff () //to be called by onPrerender for some graphical stuff
@@ -672,15 +663,11 @@ namespace scatterer
 					}
 				}
 			}
-
-			//			Shader.SetGlobalVector ("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
-			//			Shader.SetGlobalFloat (ShaderProperties._GlobalOceanAlpha_PROPERTY, _GlobalOceanAlpha);
 		}
 		
 		
 		public void UpdateNode ()
 		{
-
 			if ((CurrentPQS != null) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
 				bool prevState = inScaledSpace;
@@ -735,15 +722,6 @@ namespace scatterer
 				//disable postprocessing and ocean effects for Texture Replacer reflections
 				DisableEffectsChecker effectsDisabler = atmosphereMesh.AddComponent<DisableEffectsChecker>();
 				effectsDisabler.skynode = this;
-
-//				if (Core.Instance.useOceanShaders && m_manager.hasOcean)
-//				{
-//					Core.Instance.refractionCam.waterMeshRenderers=m_manager.GetOceanNode().waterMeshRenderers;
-//					Core.Instance.refractionCam.numGrids = m_manager.GetOceanNode().numGrids;
-//					Core.Instance.refractionCam.postProcessingCube = atmosphereMeshrenderer;
-//					Core.Instance.refractionCam.iSkyNode = this;
-//					Debug.Log("skynode added refraction cam");
-//				}
 
 				//after the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
 				//call EVE clouds2D.reassign() method to set the shader properties
@@ -1375,18 +1353,6 @@ namespace scatterer
 		{
 			if (scaledMode) //switch to localMode
 			{
-				if (Core.Instance.useOceanShaders && Core.Instance.oceanRefraction)
-				{
-					Core.Instance.refractionCam.iSkyNode = this;
-					if (m_manager.hasOcean)
-					{
-						Core.Instance.refractionCam.waterMeshRenderers=m_manager.GetOceanNode().waterMeshRenderers;
-						Core.Instance.refractionCam.numGrids = m_manager.GetOceanNode().numGrids;
-						Core.Instance.refractionCam.postProcessingCube = atmosphereMeshrenderer;
-					}
-					Debug.Log("skynode added refraction cam");
-				}
-
 				skyScaledMeshrenderer.enabled = false;
 				skyLocalMeshrenderer.enabled=true;
 				
@@ -1586,6 +1552,10 @@ namespace scatterer
 					{
 						object cloudsPQS = _obj.GetType ().GetField ("cloudsPQS", flags).GetValue (_obj) as object;
 						object layerVolume = cloudsPQS.GetType ().GetField ("layerVolume", flags).GetValue (cloudsPQS) as object;
+
+						//TODO take this snippet and use it somewhere else to disable volumetrics when rendering
+						//GameObject volumeHolder = layerVolume.GetType ().GetField ("VolumeHolder", flags).GetValue (layerVolume) as GameObject;
+
 						Material ParticleMaterial = layerVolume.GetType ().GetField ("ParticleMaterial", flags).GetValue (layerVolume) as Material;
 											
 						ParticleMaterial.EnableKeyword ("SCATTERER_ON");

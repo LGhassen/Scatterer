@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Proland: a procedural landscape rendering library.
  * Copyright (c) 2008-2011 INRIA
  *
@@ -115,9 +115,9 @@ namespace scatterer {
 		}
 
 
-		public override void Start()
+		public override void Init()
 		{
-			base.Start();
+			base.Init();
 		
 			m_initSpectrumMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
 			m_initDisplacementMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitDisplacement")]);
@@ -279,10 +279,10 @@ namespace scatterer {
 			base.UpdateNode();
 		}
 		
-		public override void OnDestroy()
+		public override void Cleanup()
 			//		protected override void OnDestroy()
 		{
-			base.OnDestroy();
+			base.Cleanup();
 			
 			m_map0.Release();
 			m_map1.Release();

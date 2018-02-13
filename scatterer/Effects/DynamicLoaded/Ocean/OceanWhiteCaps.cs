@@ -32,8 +32,8 @@ namespace scatterer {
 		RenderTexture m_foam0, m_foam1;
 		
 		//		protected override void Start() 
-		public override void Start() {
-			base.Start();
+		public override void Init() {
+			base.Init();
 
 			m_initJacobiansMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitJacobians")]);
 			m_whiteCapsPrecomputeMat = new Material(ShaderReplacer.Instance.LoadedShaders[("Proland/Ocean/WhiteCapsPrecompute0")]);
@@ -71,8 +71,8 @@ namespace scatterer {
 			base.CreateRenderTextures();
 		}
 		
-		public override void OnDestroy() {
-			base.OnDestroy();
+		public override void Cleanup() {
+			base.Cleanup();
 			
 			m_foam0.Release();
 			m_foam1.Release();

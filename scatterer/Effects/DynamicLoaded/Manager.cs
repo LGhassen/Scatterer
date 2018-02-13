@@ -40,9 +40,7 @@ namespace scatterer
 		public void Awake()
 		{
 			m_radius = parentCelestialBody.Radius;
-			//			print (m_radius);
-			
-			//m_skyNode = new SkyNode();
+
 			m_skyNode = (SkyNode) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SkyNode));
 			m_skyNode.setManager(this);
 			m_skyNode.usesCloudIntegration = usesCloudIntegration;
@@ -53,12 +51,13 @@ namespace scatterer
 			{
 				m_skyNode.Init();		
 				
-				if (hasOcean && Core.Instance.useOceanShaders) {
-					m_oceanNode = new OceanWhiteCaps();
+				if (hasOcean && Core.Instance.useOceanShaders)
+				{
+					m_oceanNode = (OceanWhiteCaps) Core.Instance.farCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
 					m_oceanNode.setManager(this);
 					
 					m_oceanNode.loadFromConfigNode();
-					m_oceanNode.Start();
+					m_oceanNode.Init();
 					
 				}
 				
@@ -96,26 +95,29 @@ namespace scatterer
 			UnityEngine.Object.Destroy(m_skyNode);
 			
 			if (hasOcean && Core.Instance.useOceanShaders) {
-				m_oceanNode.OnDestroy();
+				m_oceanNode.Cleanup();
 				UnityEngine.Object.Destroy(m_oceanNode);
 			}
 		}
 		
 		
 		//this fixes the alt-enter bug the really stupid way but it's fast and simple so it'll do
-		public void reBuildOcean(){
-			if (hasOcean && Core.Instance.useOceanShaders) {
-				m_oceanNode.OnDestroy();
+		public void reBuildOcean()
+		{
+			if (hasOcean && Core.Instance.useOceanShaders)
+			{
+				m_oceanNode.Cleanup();
+				Component.Destroy(m_oceanNode);
 				UnityEngine.Object.Destroy(m_oceanNode);
-				m_oceanNode = new OceanWhiteCaps();
+
+				m_oceanNode = (OceanWhiteCaps) Core.Instance.farCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
 				m_oceanNode.setManager(this);
 				m_oceanNode.loadFromConfigNode();
-				m_oceanNode.Start();
+				m_oceanNode.Init();
 
-				if (Core.Instance.oceanRefraction)
+				if (Core.Instance.oceanRefraction && Core.Instance.bufferRenderingManager.refractionTexture.IsCreated())
 				{
-					Core.Instance.refractionCam.waterMeshRenderers=m_oceanNode.waterMeshRenderers;
-					Core.Instance.refractionCam.numGrids = m_oceanNode.numGrids;
+					Core.Instance.bufferRenderingManager.refractionTexture.Create();
 				}
 
 				Debug.Log("[Scatterer] Rebuilt Ocean");

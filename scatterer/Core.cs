@@ -230,13 +230,7 @@ namespace scatterer
 
 		public BufferRenderingManager bufferRenderingManager;
 		public RenderTexture godrayDepthTexture;
-		public RefractionCamera refractionCam;
-		public RenderTexture refractionTexture;
-		
-		bool depthBufferSet = false;
 
-
-		
 		public CelestialBody sunCelestialBody;
 		public CelestialBody munCelestialBody;
 		public string path, gameDataPath;
@@ -479,6 +473,13 @@ namespace scatterer
 						}
 					}
 
+					//create buffer manager
+					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+					{
+						bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
+						bufferRenderingManager.start();
+					}
+
 
 					//find EVE clouds
 					if (integrateWithEVEClouds)
@@ -504,43 +505,25 @@ namespace scatterer
 					}
 
 
-					if (!depthBufferSet)
-					{
-						if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
-						{
-//							if (useGodrays)
-//							{
-//
-//								godrayDepthTexture = new RenderTexture (Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
-//								godrayDepthTexture.filterMode = FilterMode.Point;
-//								godrayDepthTexture.useMipMap=false;
-//								customDepthBuffer._godrayDepthTex = godrayDepthTexture;
-//								godrayDepthTexture.Create ();
-//							}
-//
-//							customDepthBuffer._depthTex = customDepthBufferTexture;
+//					if (!depthBufferSet)
+//					{
+//						if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+//						{
+////							if (useGodrays)
+////							{
+////
+////								godrayDepthTexture = new RenderTexture (Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
+////								godrayDepthTexture.filterMode = FilterMode.Point;
+////								godrayDepthTexture.useMipMap=false;
+////								customDepthBuffer._godrayDepthTex = godrayDepthTexture;
+////								godrayDepthTexture.Create ();
+////							}
 
-							//refraction stuff
-							if (useOceanShaders && oceanRefraction)
-							{
-								refractionCam = (RefractionCamera) farCamera.gameObject.AddComponent (typeof(RefractionCamera));
-								refractionCam.inCamera = farCamera;
-								refractionCam.start();
-
-								refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
-								refractionTexture.useMipMap=false;
-								refractionTexture.filterMode = FilterMode.Bilinear;
-								refractionTexture.Create ();
-
-								refractionCam._refractionTex = refractionTexture;
-							}
-
-
-							bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
-							bufferRenderingManager.start();
-						}
-						depthBufferSet = true;
-					}
+//							bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
+//							bufferRenderingManager.start();
+//						}
+//						depthBufferSet = true;
+//					}
 
 
 					//custom lens flares
@@ -591,17 +574,6 @@ namespace scatterer
 					if (disableAmbientLight && !ambientLightScript)
 					{
 						ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
-					}
-
-					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
-					{
-						if (useOceanShaders && oceanRefraction)
-						{
-							if (!refractionTexture.IsCreated ())
-							{
-								refractionTexture.Create ();
-							}
-						}
 					}
 
 					globalPQSEnabled = false;
@@ -826,15 +798,6 @@ namespace scatterer
 					bufferRenderingManager.OnDestroy();
 					Component.Destroy (bufferRenderingManager);
 				}
-
-				if(refractionCam)
-				{
-					refractionCam.OnDestroy();
-					Component.Destroy (refractionCam);
-					UnityEngine.Object.Destroy (refractionCam);
-					refractionTexture.Release();
-					UnityEngine.Object.Destroy (refractionTexture);
-				}
 				
 //				if(useGodrays)
 //				{
@@ -988,13 +951,13 @@ namespace scatterer
 							PQS pqs = celBody.pqsController;
 							if (pqs != null) {
 
-								Debug.Log("Scatterer celbody "+celBody.name);
-								for (int i=0;i<pqs.ChildSpheres.Count();i++)
-								{
-									Debug.Log(i.ToString()+" "+pqs.ChildSpheres[i].name);
-									Debug.Log(pqs.surfaceMaterial.shader.name);
-									Debug.Log(pqs.surfaceMaterial.name);
-								}
+								//Debug.Log("Scatterer celbody "+celBody.name);
+//								for (int i=0;i<pqs.ChildSpheres.Count();i++)
+//								{
+//									Debug.Log(i.ToString()+" "+pqs.ChildSpheres[i].name);
+//									Debug.Log(pqs.surfaceMaterial.shader.name);
+//									Debug.Log(pqs.surfaceMaterial.name);
+//								}
 
 								PQS ocean = pqs.ChildSpheres [0];
 								if (ocean != null) {
@@ -1005,6 +968,8 @@ namespace scatterer
 
 									//pqs.surfaceMaterial = invisibleOcean;
 									ocean.surfaceMaterial = invisibleOcean;
+									ocean.surfaceMaterial.SetOverrideTag("IgnoreProjector","True");
+									ocean.surfaceMaterial.SetOverrideTag("ForceNoShadowCasting","True");
 
 									removed = true;
 								}

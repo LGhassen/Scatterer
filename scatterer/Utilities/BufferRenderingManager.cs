@@ -12,6 +12,7 @@ namespace scatterer
 
 		//RenderTextures
 		public RenderTexture depthTexture; 			//custom depth buffer texture
+		public RenderTexture refractionTexture; 	//textures for the refractions, created once and accessed from here, but rendered to from oceanNode
 				
 		//Shaders
 		Shader depthShader;
@@ -41,6 +42,10 @@ namespace scatterer
 			depthTexture.antiAliasing = GameSettings.ANTI_ALIASING; //fixes some issue with aliased objects in front of water
 			depthTexture.Create ();
 
+			refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
+			refractionTexture.useMipMap=false;
+			refractionTexture.filterMode = FilterMode.Bilinear;
+			refractionTexture.Create ();
 
 			//Camera creation and setup
 			//replacementCamera = new Camera();
@@ -171,6 +176,11 @@ namespace scatterer
 			{
 				depthTexture.Release ();
 				UnityEngine.Object.Destroy (depthTexture);
+			}
+			if (refractionTexture)
+			{
+				refractionTexture.Release ();
+				UnityEngine.Object.Destroy (refractionTexture);
 			}
 			if (bufferRenderingManagerGO)
 				UnityEngine.Object.Destroy (bufferRenderingManagerGO);

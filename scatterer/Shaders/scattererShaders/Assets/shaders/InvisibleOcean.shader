@@ -27,13 +27,15 @@
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
-    			OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+    			//OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+    			OUT.pos = 0;
     			return OUT;
 			}
 
 
 			float4 frag(v2f IN) : COLOR
 			{
+				discard;
 				return float4(0.0,0.0,0.0,0.0);			
 			}
 			
