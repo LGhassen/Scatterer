@@ -13,7 +13,6 @@ using UnityEngine;
 
 namespace scatterer
 {
-	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
 	public class ShaderReplacer : MonoBehaviour
 	{
 		private static ShaderReplacer instance;
@@ -26,29 +25,24 @@ namespace scatterer
 		
 		private ShaderReplacer()
 		{
-			if (instance == null)
-			{
-				instance = this;
-				Debug.Log("[Scatterer] ShaderReplacer instance created");
-			}
-			else
-			{
-				//destroy any duplicate instances that may be created by a duplicate install
-				Debug.Log("[Scatterer] Destroying duplicate instance, check your install for duplicate mod folders");
-				UnityEngine.Object.Destroy (this);
-			}
+			Init ();
 		}
 		
 		public static ShaderReplacer Instance
 		{
 			get 
 			{
+				if (ReferenceEquals(instance,null))
+				{
+					instance = new ShaderReplacer();
+					Debug.Log("[Scatterer] ShaderReplacer instance created");
+				}
 				return instance;
 			}
 		}
 		
 
-		private void Awake()
+		private void Init()
 		{
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
 			UriBuilder uri = new UriBuilder (codeBase);
