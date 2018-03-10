@@ -12,11 +12,12 @@ namespace scatterer
 
 		//RenderTextures
 		public RenderTexture depthTexture; 			//custom depth buffer texture
+		public RenderTexture godrayDepthTexture; 			//custom depth buffer texture
 		public RenderTexture refractionTexture; 	//textures for the refractions, created once and accessed from here, but rendered to from oceanNode
 				
 		//Shaders
 		Shader depthShader;
-		//Shader GodrayDepthShader;
+		Shader GodrayDepthShader;
 
 		//Camera
 		Camera replacementCamera;					//camera that will have shader replacement used on it, will copy it's settings from the farCamera
@@ -37,7 +38,6 @@ namespace scatterer
 			//create textures
 			depthTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
 			depthTexture.useMipMap  = false;
-			depthTexture.generateMips = false;
 			depthTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
 			depthTexture.antiAliasing = GameSettings.ANTI_ALIASING; //fixes some issue with aliased objects in front of water
 			depthTexture.Create ();
@@ -63,6 +63,19 @@ namespace scatterer
 			//Shader setup
 			depthShader = ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthTexture")];
 
+			if (Core.Instance.useGodrays)
+				GodrayDepthShader=ShaderReplacer.Instance.LoadedShaders[("Scatterer/GodrayDepthTexture")];
+
+
+			//godray stuff
+			if (Core.Instance.useGodrays && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+			{
+				godrayDepthTexture = new RenderTexture (Screen.width, Screen.height, 16, RenderTextureFormat.RFloat);
+				godrayDepthTexture.filterMode = FilterMode.Point;
+				godrayDepthTexture.useMipMap = false;
+				godrayDepthTexture.Create ();
+			}
+
 			mapEVEshadowProjectors ();			
 		}
 
@@ -70,6 +83,7 @@ namespace scatterer
 		{
 			//update Camera
 			replacementCamera.fieldOfView = Core.Instance.farCamera.fieldOfView;
+			replacementCamera.enabled = false;
 
 			//check buffers are created
 			//if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
@@ -97,15 +111,16 @@ namespace scatterer
 				depthTextureCleared = false;
 
 				//TODO render godrays?
-//				if (Core.Instance.useGodrays)
-//				{
-//					RenderTexture.active= _godrayDepthTex;			
-//					GL.Clear(false,true,Color.white);
-//					
-//					_depthCamCamera.targetTexture =  _godrayDepthTex;
-//					_depthCamCamera.cullingMask=32768; //ignore ships, parts, to avoid black godrays casting from ship
-//					_depthCamCamera.RenderWithShader (GodrayDepthShader, "RenderType");
-//				}
+				if (Core.Instance.useGodrays)
+				{
+					RenderTexture.active= godrayDepthTexture;			
+					GL.Clear(false,true,Color.white);
+					
+					replacementCamera.targetTexture =  godrayDepthTexture;
+					replacementCamera.cullingMask=32768; //ignore ships, parts, to avoid black godrays casting from ship
+					replacementCamera.RenderWithShader (GodrayDepthShader, "RenderType");
+					replacementCamera.cullingMask = Core.Instance.farCamera.cullingMask; //restore normal culling mask after rendering godrays
+				}
 				
 				//re-enable EVE shadow projector
 				enableEVEshadowProjectors();
@@ -115,14 +130,14 @@ namespace scatterer
 			}
 		}
 		
-		//for debugging purposes
-		void OnRenderImage (RenderTexture source, RenderTexture destination)
-		{
-			if (Core.Instance.depthbufferEnabled)
-			{
-				Graphics.Blit (depthTexture, destination);
-			}
-		}
+//		//for debugging purposes
+//		void OnRenderImage (RenderTexture source, RenderTexture destination)
+//		{
+//			if (Core.Instance.depthbufferEnabled)
+//			{
+//				Graphics.Blit (depthTexture, destination);
+//			}
+//		}
 		
 		public void clearDepthTexture()
 		{

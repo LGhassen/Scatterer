@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 Shader "Scatterer/SkyLocal" 
 {
 	SubShader 
@@ -73,7 +75,7 @@ Shader "Scatterer/SkyLocal"
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
-    			OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+    			OUT.pos = UnityObjectToClipPos(v.vertex);
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
     			return OUT;
 			}
@@ -302,7 +304,7 @@ Shader "Scatterer/SkyLocal"
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
-			    OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+			    OUT.pos = UnityObjectToClipPos(v.vertex);
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				
     			return OUT;

@@ -447,7 +447,6 @@ namespace scatterer
 						GUILayout.EndScrollView ();
 						
 						GUILayout.BeginHorizontal ();
-						GUItoggle("Toggle depth buffer", ref Core.Instance.depthbufferEnabled);
 						
 						if (GUILayout.Button ("Toggle PostProcessing"))
 						{

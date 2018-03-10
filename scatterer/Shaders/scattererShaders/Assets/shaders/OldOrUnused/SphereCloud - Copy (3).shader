@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
 Shader "Scatterer-EVE/Cloud" {
@@ -121,7 +123,7 @@ Shader "Scatterer-EVE/Cloud" {
 				{
 					v2f o;
 					UNITY_INITIALIZE_OUTPUT(v2f, o);
-					o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+					o.pos = UnityObjectToClipPos(v.vertex);
 
 					float4 vertexPos = mul(unity_ObjectToWorld, v.vertex);
 					float3 origin = mul(unity_ObjectToWorld, float4(0,0,0,1)).xyz;

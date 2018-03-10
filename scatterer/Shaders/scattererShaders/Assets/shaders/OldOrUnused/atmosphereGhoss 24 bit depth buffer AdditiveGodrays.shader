@@ -1,4 +1,6 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
 
 Shader "Sky/AtmosphereGhoss" {
@@ -60,7 +62,7 @@ Shader "Sky/AtmosphereGhoss" {
             
             v2f vert(appdata_base v) {
                 v2f o;
-                o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+                o.pos = UnityObjectToClipPos(v.vertex);
                 o.screenPos = ComputeScreenPos(o.pos);
                 o.uv = o.screenPos.xy / o.screenPos.w;
                 o.uv_depth = o.uv;
@@ -208,7 +210,7 @@ Pass {
             v2f vert(appdata_base v) {
                 v2f o;
 
-                o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+                o.pos = UnityObjectToClipPos(v.vertex);
                 o.screenPos = ComputeScreenPos(o.pos);
                 o.uv = o.screenPos.xy / o.screenPos.w;
                 o.uv_depth = o.uv;

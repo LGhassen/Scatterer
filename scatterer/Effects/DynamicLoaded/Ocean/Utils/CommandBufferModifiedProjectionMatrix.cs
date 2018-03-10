@@ -61,19 +61,18 @@ namespace scatterer
 		}	
 
 		//if OpenGL isn't detected
-		// Scale and bias depth range
 		public Matrix4x4 ModifiedProjectionMatrix (Camera inCam)
 		{
 			Matrix4x4 p;
 			
 			p = inCam.projectionMatrix;
+			p = GL.GetGPUProjectionMatrix (p, false);
 
 			if (!Core.Instance.opengl)
-				for (int i = 0; i < 4; i++)
 			{
-				p [2, i] = p [2, i] * 0.5f + p [3, i] * 0.5f;
+				p = p * Matrix4x4.Scale(new Vector3(1, -1, 1)); //not a perfect fix, flips front and back faces
+																//to fix this faces are flipped in OceanNode when the mesh is created
 			}
-
 			return p;
 		}
 

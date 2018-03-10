@@ -1,4 +1,6 @@
-﻿Shader "Scatterer/AtmosphericScatter" {
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "Scatterer/AtmosphericScatter" {
     SubShader {
           Tags { "Queue" = "Transparent+1" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
 //scattering pass
@@ -65,7 +67,7 @@ Pass {
             v2f vert(appdata_base v) {
                 v2f o;
 
-                o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+                o.pos = UnityObjectToClipPos(v.vertex);
                 o.screenPos = ComputeScreenPos(o.pos);
                 o.uv = o.screenPos.xy / o.screenPos.w;
                 o.uv_depth = o.uv;

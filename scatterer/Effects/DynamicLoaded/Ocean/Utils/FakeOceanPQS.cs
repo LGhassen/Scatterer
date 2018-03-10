@@ -20,6 +20,8 @@ namespace scatterer
 				if(Regex.IsMatch(t.name, "[A-z][np]"))
 					t.gameObject.SetActive(false);
 			}
+
+			//these two lines are responsible for the flying tiles bug since 1.3, no idea what changed
 			sphere.maxLevel = 0;
 			sphere.minLevel = 0;
 		}

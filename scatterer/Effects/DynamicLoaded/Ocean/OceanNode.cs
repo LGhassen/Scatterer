@@ -390,6 +390,10 @@ namespace scatterer
 			mesh.vertices = vertices;
 			mesh.uv = texcoords;
 			mesh.triangles = indices;
+
+			if (!Core.Instance.opengl)
+				mesh.triangles = mesh.triangles.Reverse ().ToArray (); //flip faces if we don't have OpenGL, we get backfaces because of projection Matrix
+
 			mesh.normals = normals;
 			
 			return mesh;
@@ -467,12 +471,11 @@ namespace scatterer
 
 				//dybamically change the clipping planes to fit what is visible from the water surface to somewhere around what the water "fog" lets you see
 				_refractionCamera.nearClipPlane = Mathf.Max (m_manager.m_skyNode.trueAlt * angle, Core.Instance.nearCamera.nearClipPlane);
-				_refractionCamera.farClipPlane = Mathf.Max (300f, 200 * _refractionCamera.nearClipPlane);
+				_refractionCamera.farClipPlane = Mathf.Max (300f, 200f * _refractionCamera.nearClipPlane);
 				
 				//for some reason in KSP this camera wouldn't clear the texture before rendering to it, resulting in a trail effect
 				//this snippet fixes that. We need the texture cleared to full black to mask the sky
 				RenderTexture rt = RenderTexture.active;
-				RenderTexture.active = Core.Instance.bufferRenderingManager.refractionTexture; //use the one refraction texture from the bufferRenderingManager
 				GL.Clear (false, true, Color.black);
 
 				//here disable the ocean and the postprocessing stuff
@@ -781,26 +784,6 @@ namespace scatterer
 		public void setManager (Manager manager)
 		{
 			m_manager = manager;
-		}
-
-		public Matrix4x4d ModifiedProjectionMatrix (Camera inCam) //moved over to command buffer
-		{
-			Matrix4x4 p;
-			
-			p = inCam.projectionMatrix;
-
-			//if OpenGL isn't detected
-			// Scale and bias depth range
-			if (!Core.Instance.opengl)
-			for (int i = 0; i < 4; i++)
-			{
-				p [2, i] = p [2, i] * 0.5f + p [3, i] * 0.5f;
-			}
-
-
-			Matrix4x4d m_cameraToScreenMatrix = new Matrix4x4d (p);
-
-			return m_cameraToScreenMatrix;
 		}
 
 		public void saveToConfigNode ()

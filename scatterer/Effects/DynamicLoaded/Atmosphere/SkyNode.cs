@@ -968,7 +968,6 @@ namespace scatterer
 		
 		public void InitPostprocessMaterial (Material mat)
 		{
-			
 			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
@@ -978,7 +977,7 @@ namespace scatterer
 				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 			
 			if (Core.Instance.useGodrays)
-				mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.godrayDepthTexture);
+				mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
 			
 			//Consts, best leave these alone
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
@@ -1081,10 +1080,20 @@ namespace scatterer
 
 				Matrix4x4 _frustumCorners = Matrix4x4.identity;
 
-				_frustumCorners.SetRow (0, bottomLeft); 
-				_frustumCorners.SetRow (1, bottomRight);		
-				_frustumCorners.SetRow (2, topLeft);
-				_frustumCorners.SetRow (3, topRight);	
+				if(!Core.Instance.opengl) //if we don't have openGL flip frustum corners (and in the shader flip UVs)
+				{
+					_frustumCorners.SetRow (0, topLeft); 
+					_frustumCorners.SetRow (1, topRight);		
+					_frustumCorners.SetRow (2, bottomLeft);
+					_frustumCorners.SetRow (3, bottomRight);	
+				}
+				else
+				{
+					_frustumCorners.SetRow (0, bottomLeft); 
+					_frustumCorners.SetRow (1, bottomRight);		
+					_frustumCorners.SetRow (2, topLeft);
+					_frustumCorners.SetRow (3, topRight);	
+				}
 				
 				mat.SetMatrix ("scattererFrustumCorners", _frustumCorners);
 			}

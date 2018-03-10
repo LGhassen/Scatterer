@@ -229,7 +229,6 @@ namespace scatterer
 		public bool underwater = false;
 
 		public BufferRenderingManager bufferRenderingManager;
-		public RenderTexture godrayDepthTexture;
 
 		public CelestialBody sunCelestialBody;
 		public CelestialBody munCelestialBody;
@@ -242,13 +241,9 @@ namespace scatterer
 		public Camera chosenCamera;
 		public int layer = 15;
 
-//		//ocean variables
-//		public bool stockOcean = false;
-
 		[Persistent]
 		public int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
-
-		public bool depthbufferEnabled = false;
+		
 		public bool d3d9 = false;
 		public bool opengl = false;
 		public bool d3d11 = false;
@@ -354,6 +349,7 @@ namespace scatterer
 						{
 							nearCamera = cams [i];
 							nearCamera.nearClipPlane = nearClipPlane;
+							farCamera.nearClipPlane = nearCamera.farClipPlane; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
 						}
 					}
 					
@@ -480,7 +476,6 @@ namespace scatterer
 						bufferRenderingManager.start();
 					}
 
-
 					//find EVE clouds
 					if (integrateWithEVEClouds)
 					{
@@ -503,28 +498,6 @@ namespace scatterer
 						GC.Collect();
 						callCollector=false;
 					}
-
-
-//					if (!depthBufferSet)
-//					{
-//						if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
-//						{
-////							if (useGodrays)
-////							{
-////
-////								godrayDepthTexture = new RenderTexture (Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
-////								godrayDepthTexture.filterMode = FilterMode.Point;
-////								godrayDepthTexture.useMipMap=false;
-////								customDepthBuffer._godrayDepthTex = godrayDepthTexture;
-////								godrayDepthTexture.Create ();
-////							}
-
-//							bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
-//							bufferRenderingManager.start();
-//						}
-//						depthBufferSet = true;
-//					}
-
 
 					//custom lens flares
 					if ((fullLensFlareReplacement) && !customSunFlareAdded)
@@ -567,7 +540,6 @@ namespace scatterer
 								continue;
 							}
 						}
-
 						customSunFlareAdded=true;
 					}
 
@@ -585,7 +557,7 @@ namespace scatterer
 
 					pqsEnabledOnScattererPlanet = false;
 					underwater = false;
-					
+
 					foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
 					{
 						float dist, shipDist=0f;
@@ -720,15 +692,6 @@ namespace scatterer
 							}
 						}
 					}
-
-					//fixDrawOrders ();
-					
-					//if in mapView check that depth texture is clear for the sunflare shader
-//					if (customDepthBuffer)
-//					{
-//						if (!customDepthBuffer.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
-//							customDepthBuffer.clearDepthTexture();
-//					}
 
 					if (bufferRenderingManager)
 					{
@@ -966,7 +929,6 @@ namespace scatterer
 									//									FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
 									//									fakeOcean.Apply (ocean);
 
-									//pqs.surfaceMaterial = invisibleOcean;
 									ocean.surfaceMaterial = invisibleOcean;
 									ocean.surfaceMaterial.SetOverrideTag("IgnoreProjector","True");
 									ocean.surfaceMaterial.SetOverrideTag("ForceNoShadowCasting","True");

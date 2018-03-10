@@ -1,10 +1,10 @@
 How to use:
 
-1) Get Unity version that matches KSP (5.4.0.f3 at this time)
+1) Get Unity version that matches KSP (2017.1.3p1 at this time)
 
 2) Navigate to this project in Unity
 
-3) Go into .\Assets\Shaders\ExportAssetBundle.cs and modify the output directory to where you want the compiled shaders to go
+3) Go into .\Assets\Editor\ExportAssetBundle.cs and modify the output directory to where you want the compiled shaders to go
 
 
 
