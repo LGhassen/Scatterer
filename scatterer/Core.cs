@@ -349,7 +349,7 @@ namespace scatterer
 						{
 							nearCamera = cams [i];
 							nearCamera.nearClipPlane = nearClipPlane;
-							farCamera.nearClipPlane = nearCamera.farClipPlane; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
+							farCamera.nearClipPlane = nearCamera.farClipPlane-0.2f; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
 						}
 					}
 					
@@ -832,7 +832,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0325dev: "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0326: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
