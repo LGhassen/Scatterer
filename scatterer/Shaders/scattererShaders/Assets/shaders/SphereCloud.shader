@@ -1,9 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-// Upgrade NOTE: replaced 'defined SCATTERER_ON' with 'defined (SCATTERER_ON)'
-
-// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
 Shader "Scatterer-EVE/Cloud" {
 	Properties{
 		_Color("Color Tint", Color) = (1,1,1,1)
@@ -17,6 +11,7 @@ Shader "Scatterer-EVE/Cloud" {
 		_UVNoiseScale("UV Noise Scale", Range(0,0.1)) = 0.01
 		_UVNoiseStrength("UV Noise Strength", Range(0,0.1)) = 0.002
 		_UVNoiseAnimation("UV Noise Animation", Vector) = (0.002,0.001,0)
+		_UniversalTime("Universal Time", Vector) = (0,0,0,0)
 		_MinLight("Minimum Light", Range(0,1)) = 0
 		_DistFade("Fade Distance", Range(0,100)) = 10
 		_DistFadeVert("Fade Scale", Range(0,1)) = .002

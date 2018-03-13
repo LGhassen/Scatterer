@@ -33,6 +33,8 @@
 	float _SunRadius = 1;
 	float3 _SunPos;
 
+	float4 _UniversalTime;
+
 	/*=========================================================================*
 	* R A N D _ R O T A T I O N Author: Jim Arvo, 1991 *
 	* *

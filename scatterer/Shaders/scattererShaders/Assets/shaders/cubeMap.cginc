@@ -116,7 +116,7 @@ inline half4 GetCubeMapPerturbed(sampler2D texSampler, float3 cubeVect, sampler2
 {
 	float3 cubeVectNorm = normalize(cubeVect);
 	float2 uv = GetCubeUV(cubeVectNorm, float2(0, 0));
-	float2 uvd = fmod(uv, uvNoiseScale) / uvNoiseScale + uvNoiseAnimation*float2(_Time.x,_Time.x);
+	float2 uvd = fmod(uv, uvNoiseScale) / uvNoiseScale + uvNoiseAnimation*float2(_UniversalTime.x, _UniversalTime.x);
 	uv += (tex2D(uvNoiseSampler, uvd) - float2(0.5, 0.5))*uvNoiseStrength;
 	float4 uvdd = Derivatives(uv);
 	half4 tex = tex2D(texSampler, uv, uvdd.xy, uvdd.zw);
@@ -144,7 +144,7 @@ inline half4 GetCubeMapPerturbed(samplerCUBE texSampler, float3 cubeVect, sample
 	float2 uv;
 	uv.x = .5 + (INV_2PI*atan2(cubeVect.x, cubeVect.z));
 	uv.y = INV_PI*acos(cubeVect.y);
-	float2 uvd = fmod(cubeVect, uvNoiseScale) / uvNoiseScale + uvNoiseAnimation*float2(_Time.x, _Time.x);
+	float2 uvd = fmod(cubeVect, uvNoiseScale) / uvNoiseScale + uvNoiseAnimation*float2(_UniversalTime.x, _UniversalTime.x);
 	cubeVect.xy += (tex2D(uvNoiseSampler, uvd) - float2(0.5, 0.5))*uvNoiseStrength;
 	half4 tex = texCUBE(texSampler, cubeVect);
 	return tex;
@@ -205,7 +205,7 @@ inline half4 GetCubeMapPerturbed(sampler2D texXn, sampler2D texXp, sampler2D tex
 {
 	GetCubeCubeUV(cubeVect);
 
-	float2 uvd = fmod(uv, uvNoiseScale) / uvNoiseScale + uvNoiseAnimation*float2(_Time.x, _Time.x);
+	float2 uvd = fmod(uv, uvNoiseScale) / uvNoiseScale + uvNoiseAnimation*float2(_UniversalTime.x, _UniversalTime.x);
 	uv += (tex2D(uvNoiseSampler, uvd) - float2(0.5, 0.5))*uvNoiseStrength;
 
 	//this fixes UV discontinuity on Y-X seam by swapping uv coords in derivative calcs when in the X quadrants.
@@ -269,7 +269,7 @@ inline half4 GetCubeMapPerturbed(sampler2D texSamplerPos, sampler2D texSamplerNe
 {
 	GetCubeCubeUV(cubeVect);
 
-	float2 uvd = fmod(uv, uvNoiseScale) / uvNoiseScale + uvNoiseAnimation*float2(_Time.x, _Time.x);
+	float2 uvd = fmod(uv, uvNoiseScale) / uvNoiseScale + uvNoiseAnimation*float2(_UniversalTime.x, _UniversalTime.x);
 	uv += (tex2D(uvNoiseSampler, uvd) - float2(0.5, 0.5))*uvNoiseStrength;
 
 	float4 uvdd = CubeDerivatives(uv, 1);
@@ -296,8 +296,6 @@ inline half4 GetCubeDetailMapNoLOD(sampler2D texSampler, float3 cubeVect, float 
 	half4 tex = tex2Dlod(texSampler, uv4);
 	return tex;
 }
-
-
 
 inline half4 GetCubeDetailMap(sampler2D texSampler, float3 cubeVect, float detailScale)
 {
