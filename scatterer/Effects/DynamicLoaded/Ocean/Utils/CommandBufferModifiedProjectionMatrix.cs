@@ -68,7 +68,7 @@ namespace scatterer
 			p = inCam.projectionMatrix;
 			p = GL.GetGPUProjectionMatrix (p, false);
 
-			if (!Core.Instance.opengl)
+			if (!Core.Instance.opengl && (GameSettings.ANTI_ALIASING > 0))
 			{
 				p = p * Matrix4x4.Scale(new Vector3(1, -1, 1)); //not a perfect fix, flips front and back faces
 																//to fix this faces are flipped in OceanNode when the mesh is created

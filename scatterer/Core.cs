@@ -832,7 +832,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0326: "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0327: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 

@@ -1080,7 +1080,7 @@ namespace scatterer
 
 				Matrix4x4 _frustumCorners = Matrix4x4.identity;
 
-				if(!Core.Instance.opengl) //if we don't have openGL flip frustum corners (and in the shader flip UVs)
+				if(!Core.Instance.opengl && (GameSettings.ANTI_ALIASING != 0)) //if we don't have openGL flip frustum corners (and in the shader flip UVs)
 				{
 					_frustumCorners.SetRow (0, topLeft); 
 					_frustumCorners.SetRow (1, topRight);		

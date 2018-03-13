@@ -119,7 +119,7 @@ namespace scatterer
 					
 					Vector3 pos = new Vector3(p.x, p.y, (float)(x + 2*y));
 					
-					if (!Core.Instance.opengl) //flip UVs if we aren't in OpenGL mode
+					if (!Core.Instance.opengl && (GameSettings.ANTI_ALIASING != 0)) //flip UVs if we aren't if we are in Direct3D and have AA
 					{
 						uv.y=1-uv.y;
 					}
