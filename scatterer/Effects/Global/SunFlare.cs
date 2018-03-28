@@ -200,6 +200,8 @@ namespace scatterer
 			sunViewPortPos = Core.Instance.scaledSpaceCamera.WorldToViewportPoint
 				(ScaledSpace.LocalToScaledSpace(source.transform.position));
 
+			sunViewPortPos.y = (!Core.Instance.opengl && (GameSettings.ANTI_ALIASING == 0) && MapView.MapIsEnabled) ? 1 - sunViewPortPos.y : sunViewPortPos.y;
+
 			float dist = (float) (Core.Instance.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
 				.magnitude;
 

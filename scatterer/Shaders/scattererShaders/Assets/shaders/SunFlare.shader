@@ -71,9 +71,9 @@
     			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
     			OUT.uv = v.texcoord.xy;
 
-#if UNITY_UV_STARTS_AT_TOP
-				OUT.uv.y = 1.0 - OUT.uv.y;
-#endif
+//#if UNITY_UV_STARTS_AT_TOP
+//				OUT.uv.y = 1.0 - OUT.uv.y;
+//#endif
     			return OUT;
 			}
 
