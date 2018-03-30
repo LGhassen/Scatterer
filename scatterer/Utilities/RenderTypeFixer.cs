@@ -41,7 +41,8 @@ namespace scatterer
 			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (Fallback) ")
 			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD")
 			    || (name.Contains ("PQS Main - Extras")
-			    || (name == "Legacy Shaders/Transparent/Specular")))    //fixes kerbal visor leaking into water refraction
+			    || (name == "Legacy Shaders/Transparent/Specular")    //fixes kerbal visor leaking into water refraction
+			    || (name == "KSP/Emissive/Diffuse")))    			  //fixes new mk1-3 pod
 			{
 				mat.SetOverrideTag("RenderType", "Opaque");
 			}
