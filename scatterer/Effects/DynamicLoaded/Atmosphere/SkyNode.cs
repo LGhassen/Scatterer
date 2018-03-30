@@ -803,8 +803,9 @@ namespace scatterer
 					atmosphereMeshrenderer.enabled = atmosphereMeshrenderer.enabled && (trueAlt >= 0);
 				}
 
-				bool scaledSkyCondition = MapView.MapIsEnabled; //scaledSkyCondition true -> scaledmode
-				if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && CurrentPQS!=null)
+				bool scaledSkyCondition = MapView.MapIsEnabled || (ReferenceEquals(CurrentPQS,null)); //scaledSkyCondition true -> scaledmode
+
+				if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && !ReferenceEquals(CurrentPQS,null))
 				{
 					scaledSkyCondition |= !CurrentPQS.isActive;
 				}
