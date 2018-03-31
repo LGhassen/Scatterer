@@ -40,13 +40,13 @@ namespace scatterer
 			depthTexture.useMipMap  = false;
 			depthTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
 			//depthTexture.antiAliasing = GameSettings.ANTI_ALIASING; //fixes some issue with aliased objects in front of water, creates halo on edge of objects however
-			depthTexture.antiAliasing = 0;
+			depthTexture.antiAliasing = 1;
 			depthTexture.Create ();
 
 			refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
 			refractionTexture.useMipMap=false;
 			refractionTexture.filterMode = FilterMode.Bilinear;
-			refractionTexture.antiAliasing = 0;
+			refractionTexture.antiAliasing = 1;
 			refractionTexture.Create ();
 
 			//Camera creation and setup
@@ -74,7 +74,7 @@ namespace scatterer
 			{
 				godrayDepthTexture = new RenderTexture (Screen.width, Screen.height, 16, RenderTextureFormat.RFloat);
 				godrayDepthTexture.filterMode = FilterMode.Point;
-				godrayDepthTexture.antiAliasing = 0;
+				godrayDepthTexture.antiAliasing = 1;
 				godrayDepthTexture.useMipMap = false;
 				godrayDepthTexture.Create ();
 			}

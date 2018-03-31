@@ -287,7 +287,7 @@ namespace scatterer
 				d3d11 = true;
 			}
 
-			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion);
+			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
 			
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
@@ -832,7 +832,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0328dev: "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0329: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
