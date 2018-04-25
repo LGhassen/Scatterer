@@ -295,23 +295,22 @@ Shader "Scatterer/SkyLocal"
 		
 			struct v2f 
 			{
-    			float4 pos : SV_POSITION;
-    			float3 worldPos : TEXCOORD0;
-    			
+    			//float4 pos : SV_POSITION;
+    			float3 worldPos : TEXCOORD0;    			
 			};
 			
 
-			v2f vert(appdata_base v)
+			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
 			{
 				v2f OUT;
-			    OUT.pos = UnityObjectToClipPos(v.vertex);
+			    outpos = UnityObjectToClipPos(v.vertex);
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				
     			return OUT;
 			}
 			
 	
-float4 frag(v2f IN) : COLOR
+float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
 			    float3 WSD = _Sun_WorldSunDir;
 
@@ -428,7 +427,8 @@ float4 frag(v2f IN) : COLOR
 #if defined (PLANETSHINE_ON)
 				finalColor+=inscatter2;
 #endif
-				return float4(_Alpha_Global*hdr(finalColor),1.0);			    	
+				//return float4(_Alpha_Global*hdr(finalColor),1.0);
+				return float4(_Alpha_Global*dither(hdr(finalColor), screenPos),1.0);
 	
 			}
 			

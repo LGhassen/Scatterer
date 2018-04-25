@@ -76,6 +76,35 @@ uniform float _viewdirOffset;
 
 uniform float cloudTerminatorSmooth;
 
+float3 dither (float3 iColor, float2 iScreenPos)
+{
+	const float bayerPattern[64] = {
+        		0,  32,  8, 40,  2, 34, 10, 42,
+        		48, 16, 56, 24, 50, 18, 58, 26,
+        		12, 44,  4, 36, 14, 46,  6, 38,
+        		60, 28, 52, 20, 62, 30, 54, 22,
+        		3,  35, 11, 43,  1, 33,  9, 41,
+        		51, 19, 59, 27, 49, 17, 57, 25,
+        		15, 47,  7, 39, 13, 45,  5, 37,
+        		63, 31, 55, 23, 61, 29, 53, 21};
+
+    float bayer=bayerPattern[int(fmod(int(iScreenPos.x),8)+8 * fmod(int(iScreenPos.y),8))]/64;
+
+    const float rgbByteMax=255.;
+
+    float3 rgb=iColor*rgbByteMax;
+    float3 head=floor(rgb);
+    float3 tail=frac(rgb);
+
+    return (head + step(bayer,tail)) / rgbByteMax;
+}
+
+float4 dither (float4 iColor, float2 iScreenPos)
+{
+	return float4(dither(iColor.rgb, iScreenPos), iColor.a);
+}
+
+
 float3 hdr(float3 L) {
     L = L * _Exposure;
     L.r = L.r < 1.413 ? pow(L.r * 0.38317, 1.0 / 2.2) : 1.0 - exp(-L.r);

@@ -761,7 +761,7 @@ namespace scatterer
 					bufferRenderingManager.OnDestroy();
 					Component.Destroy (bufferRenderingManager);
 				}
-				
+
 //				if(useGodrays)
 //				{
 //					if (godrayDepthTexture)
@@ -832,7 +832,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0329: "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0330: "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
