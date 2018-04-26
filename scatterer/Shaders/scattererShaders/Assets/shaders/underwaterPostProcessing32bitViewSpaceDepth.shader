@@ -36,15 +36,15 @@ Pass {
                     
             struct v2f
             {
-                float4 pos: SV_POSITION;
+                //float4 pos: SV_POSITION;
                 float2 uv: TEXCOORD0;
                 float3 view_dir:TEXCOORD1;
             };
 
-            v2f vert(appdata_base v)
+            v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
             {
                 v2f o;
-                o.pos = float4(v.vertex.xy,1.0,1.0);
+                outpos = float4(v.vertex.xy,1.0,1.0);
 				o.uv=v.texcoord.xy;
 				o.view_dir = scattererFrustumCorners[(int) v.vertex.z]; 	//interpolated from frustum corners world viewdir
                 return o;
@@ -60,7 +60,7 @@ Pass {
 				return waterColor;
 			}
 
-            half4 frag(v2f i): COLOR
+            half4 frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
             {
 				float fragDepth = tex2D(_customDepthTexture, i.uv).r * 750000;                
 
@@ -80,8 +80,7 @@ Pass {
 				//bool returnPixel = fragmentInsideOfClippingRange && (!infinite);
 				bool returnPixel = fragmentInsideOfClippingRange;
 
-				float waterLigthExtinction = length(getSkyExtinction(normalize(_camPos) * (Rg + 2.25) , SUN_DIR));
-
+				float waterLigthExtinction = length(getSkyExtinction(normalize(_camPos + 10.0) * Rg , SUN_DIR));
 
 
 				float underwaterDepth = Rg - length(_camPos);
@@ -91,7 +90,8 @@ Pass {
 
 				float3 waterColor= underwaterDepth * hdrNoExposure( waterLigthExtinction * oceanColor(rayDir,SUN_DIR,float3(0.0,0.0,0.0)));
 				float alpha = min(fragDistance/transparencyDepth,1.0);
-				return float4(waterColor, alpha*returnPixel);
+				//return float4(waterColor, alpha*returnPixel);
+				return float4(dither(waterColor, screenPos), alpha*returnPixel);
 			}
 //
             ENDCG

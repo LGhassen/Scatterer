@@ -150,7 +150,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			
 			struct v2f 
 			{
-    			float4  pos : SV_POSITION;
+    			//float4  pos : SV_POSITION;
     			float2  oceanU : TEXCOORD0;
     			float3  oceanP : TEXCOORD1;
     			float4	viewSpaceDirDist : TEXCOORD2;
@@ -158,7 +158,7 @@ Shader "Scatterer/OceanWhiteCaps"
 //    			LIGHTING_COORDS(3,4)
 			};
 		
-			v2f vert(appdata_base v)
+			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
 			{
 				float t;
 				float3 cameraDir, oceanDir;
@@ -206,13 +206,13 @@ Shader "Scatterer/OceanWhiteCaps"
     			float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);   //position in camera space?
     			float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
-				OUT.pos = mul(_Globals_CameraToScreen, screenP);
+				outpos = mul(_Globals_CameraToScreen, screenP);
 								
 			    OUT.oceanU = u;
 			    OUT.oceanP = oceanP;
 			    OUT.viewSpaceDirDist = float4(cameraDir,t); //xyz camera space viewDir, w length
 
-			    float4 screenPos = ComputeScreenPos(OUT.pos);
+			    float4 screenPos = ComputeScreenPos(outpos);
 			    OUT.depthUV.xy = screenPos.xy / screenPos.w;
 
 //			    float4 worldPos=mul(_Globals_CameraToWorld , screenP);
@@ -305,7 +305,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				return waterColor;
 			}
 
-			float4 frag(v2f IN) : COLOR
+			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
 
     			float3 L = _Ocean_SunDir;
@@ -532,7 +532,8 @@ Shader "Scatterer/OceanWhiteCaps"
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
 				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
-				return float4(finalColor,1.0);
+				//return float4(finalColor,1.0);
+				return float4(dither(finalColor, screenPos),1.0);
 		#else
 				float3 finalColor = lerp(backGrnd, hdr(surfaceColor), outAlpha);  //refraction on and not underwater
 				return float4(finalColor, _GlobalOceanAlpha);
@@ -566,7 +567,8 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
-				return float4(finalColor,1.0);
+				//return float4(finalColor,1.0);
+				return float4(dither(finalColor, screenPos),1.0);
 		#else
 				return float4(hdr(surfaceColor),_GlobalOceanAlpha * outAlpha);
 		#endif
