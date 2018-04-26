@@ -723,7 +723,8 @@ namespace scatterer
 
 			underwaterPostProcessingMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			underwaterPostProcessingMaterial.SetFloat ("darknessDepth", darknessDepth);
-
+			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
+			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture);
 		}
 		
 //		public void SetUniforms (Material mat)

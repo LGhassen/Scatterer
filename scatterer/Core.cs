@@ -249,6 +249,7 @@ namespace scatterer
 		public bool d3d11 = false;
 		public bool isActive = false;
 		public bool mainMenu=false;
+		string versionNumber = "0.0331";
 		
 		//Material originalMaterial;
 		
@@ -287,6 +288,7 @@ namespace scatterer
 				d3d11 = true;
 			}
 
+			Debug.Log ("[Scatterer] Version:"+versionNumber);
 			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
 			
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
@@ -832,13 +834,19 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v0.0330: "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer "+versionNumber+": "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
 				windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
+
+				//for debugging
+//				if (bufferRenderingManager.depthTexture)
+//				{
+//					GUI.DrawTexture(new Rect(0,0,512, 512), bufferRenderingManager.depthTexture);
+//				}
 			}
 		}
 		

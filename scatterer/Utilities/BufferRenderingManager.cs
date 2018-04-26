@@ -36,21 +36,22 @@ namespace scatterer
 			//Debug.Log ("[Scatterer] Antialiasing level detected: " + GameSettings.ANTI_ALIASING);
 
 			//create textures
-			depthTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.RFloat);
+			depthTexture = new RenderTexture ( Screen.width, Screen.height,16, RenderTextureFormat.RFloat);
+			depthTexture.name = "scattererDepthTexture";
 			depthTexture.useMipMap  = false;
 			depthTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
 			//depthTexture.antiAliasing = GameSettings.ANTI_ALIASING; //fixes some issue with aliased objects in front of water, creates halo on edge of objects however
-			depthTexture.antiAliasing = 1;
+			depthTexture.antiAliasing = 0;
 			depthTexture.Create ();
 
 			refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
+			refractionTexture.name = "scattererRefractionTexture";
 			refractionTexture.useMipMap=false;
 			refractionTexture.filterMode = FilterMode.Bilinear;
-			refractionTexture.antiAliasing = 1;
+			refractionTexture.antiAliasing = 0;
 			refractionTexture.Create ();
 
 			//Camera creation and setup
-			//replacementCamera = new Camera();
 			bufferRenderingManagerGO = new GameObject("ScattererBufferManager");
 			replacementCamera = bufferRenderingManagerGO.AddComponent<Camera>();
 
@@ -73,8 +74,9 @@ namespace scatterer
 			if (Core.Instance.useGodrays && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
 				godrayDepthTexture = new RenderTexture (Screen.width, Screen.height, 16, RenderTextureFormat.RFloat);
+				godrayDepthTexture.name = "scattererGodrayDepthTexture";
 				godrayDepthTexture.filterMode = FilterMode.Point;
-				godrayDepthTexture.antiAliasing = 1;
+				godrayDepthTexture.antiAliasing = 0;
 				godrayDepthTexture.useMipMap = false;
 				godrayDepthTexture.Create ();
 			}
@@ -89,12 +91,36 @@ namespace scatterer
 			replacementCamera.enabled = false;
 
 			//check buffers are created
-			//if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			if (!depthTexture)
 			{
-				if (!depthTexture.IsCreated ())
-				{
-					depthTexture.Create ();
-				}
+				Debug.Log("recreating depth texture");
+				depthTexture = new RenderTexture ( Screen.width, Screen.height,16, RenderTextureFormat.RFloat);
+				depthTexture.name = "scattererDepthTexture";
+				depthTexture.useMipMap  = false;
+				depthTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
+				depthTexture.antiAliasing = 0;
+				depthTexture.Create ();
+			}
+
+			if (!depthTexture.IsCreated ())
+			{
+				depthTexture.Create ();
+			}
+
+			if (!refractionTexture)
+			{
+				Debug.Log("recreating refraction texture");
+				refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
+				refractionTexture.name = "scattererRefractionTexture";
+				refractionTexture.useMipMap=false;
+				refractionTexture.filterMode = FilterMode.Bilinear;
+				refractionTexture.antiAliasing = 0;
+				refractionTexture.Create ();
+			}
+
+			if (!refractionTexture.IsCreated ())
+			{
+				refractionTexture.Create ();
 			}
 
 			//Render depth buffer
@@ -104,7 +130,7 @@ namespace scatterer
 				RenderTexture rt=RenderTexture.active;
 				RenderTexture.active= depthTexture;			
 				GL.Clear(false,true,Color.white);
-				
+
 				//disable EVE shadow projector
 				disableEVEshadowProjectors();
 
@@ -113,7 +139,7 @@ namespace scatterer
 				replacementCamera.RenderWithShader (depthShader, "RenderType");				
 				depthTextureCleared = false;
 
-				//TODO render godrays?
+				//render godrays
 				if (Core.Instance.useGodrays)
 				{
 					RenderTexture.active= godrayDepthTexture;			
@@ -132,15 +158,6 @@ namespace scatterer
 				RenderTexture.active=rt;
 			}
 		}
-		
-//		//for debugging purposes
-//		void OnRenderImage (RenderTexture source, RenderTexture destination)
-//		{
-//			if (Core.Instance.depthbufferEnabled)
-//			{
-//				Graphics.Blit (depthTexture, destination);
-//			}
-//		}
 		
 		public void clearDepthTexture()
 		{

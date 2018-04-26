@@ -252,7 +252,10 @@ namespace scatterer
 			sunglareMaterial.SetFloat ("aspectRatio", Core.Instance.scaledSpaceCamera.aspect);
 			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
 			sunglareMaterial.SetFloat ("sunGlareFade", sunGlareFade);
-			sunglareMaterial.SetFloat ("ghostFade", ghostFade);		
+			sunglareMaterial.SetFloat ("ghostFade", ghostFade);
+
+			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+				sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.bufferRenderingManager.depthTexture);
 		}	
 
 		public void updateNode()
