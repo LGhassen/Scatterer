@@ -249,7 +249,7 @@ namespace scatterer
 		public bool d3d11 = false;
 		public bool isActive = false;
 		public bool mainMenu=false;
-		string versionNumber = "0.0331";
+		string versionNumber = "0.0331b";
 		
 		//Material originalMaterial;
 		
@@ -834,7 +834,7 @@ namespace scatterer
 		{
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer "+versionNumber+": "
+				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v"+versionNumber+": "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
 

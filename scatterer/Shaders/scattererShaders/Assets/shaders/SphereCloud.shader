@@ -189,7 +189,7 @@ Shader "Scatterer-EVE/Cloud" {
 					half detailLevel = saturate(2 * _DetailDist*viewDist);
 					color = _Color * main.rgba * lerp(detail.rgba, 1, detailLevel);
 
-					float rim = saturate(dot(IN.viewDir, IN.worldNormal));
+					float rim = saturate(abs(dot(IN.viewDir, IN.worldNormal)));
 					rim = saturate(pow(_FalloffScale*rim,_FalloffPow));
 					float dist = distance(IN.worldVert,_WorldSpaceCameraPos);
 					float distLerp = saturate(_RimDist*(distance(_PlanetOrigin,_WorldSpaceCameraPos) - _RimDistSub*distance(IN.worldVert,_PlanetOrigin)));
