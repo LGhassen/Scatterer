@@ -298,6 +298,8 @@ namespace scatterer
 			_refractionCamera.nearClipPlane=Core.Instance.farCamera.nearClipPlane;
 			_refractionCamera.depthTextureMode=DepthTextureMode.None;
 			_refractionCamera.enabled = false;
+			_refractionCamera.clearFlags = CameraClearFlags.SolidColor;
+			_refractionCamera.backgroundColor = Color.black;
 
 		}
 		
@@ -469,12 +471,7 @@ namespace scatterer
 					//dybamically change the clipping planes to fit what is visible from the water surface to somewhere around what the water "fog" lets you see
 					_refractionCamera.nearClipPlane = Mathf.Max (m_manager.m_skyNode.trueAlt * angle, Core.Instance.nearCamera.nearClipPlane);
 					_refractionCamera.farClipPlane = Mathf.Max (300f, 200f * _refractionCamera.nearClipPlane);
-					
-					//for some reason in KSP this camera wouldn't clear the texture before rendering to it, resulting in a trail effect
-					//this snippet fixes that. We need the texture cleared to full black to mask the sky
-					RenderTexture rt = RenderTexture.active;
-					GL.Clear (false, true, Color.black);
-					
+
 					//here disable the ocean and the postprocessing stuff
 					//can we disable EVE clouds here as well?
 					bool prev = m_manager.m_skyNode.atmosphereMeshrenderer.enabled;
@@ -489,11 +486,12 @@ namespace scatterer
 					for (int i=0; i < numGrids; i++) {
 						waterMeshRenderers [i].enabled = false;
 					}
-					
+
 					//render
 					_refractionCamera.targetTexture = Core.Instance.bufferRenderingManager.refractionTexture;
 					_refractionCamera.Render ();
-					
+
+
 					//here re-enable the ocean and the postprocessing stuff
 					m_manager.m_skyNode.atmosphereMeshrenderer.enabled = prev;
 					//if (underwaterMeshrenderer)
@@ -503,9 +501,6 @@ namespace scatterer
 					{
 						waterMeshRenderers [i].enabled = true;
 					}
-					
-					//restore active rendertexture
-					RenderTexture.active = rt;
 				}
 			}
 

@@ -32,25 +32,7 @@ namespace scatterer
 		int projectorCount=0;
 
 		public void start()
-		{
-			//Debug.Log ("[Scatterer] Antialiasing level detected: " + GameSettings.ANTI_ALIASING);
-
-			//create textures
-			depthTexture = new RenderTexture ( Screen.width, Screen.height,16, RenderTextureFormat.RFloat);
-			depthTexture.name = "scattererDepthTexture";
-			depthTexture.useMipMap  = false;
-			depthTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
-			//depthTexture.antiAliasing = GameSettings.ANTI_ALIASING; //fixes some issue with aliased objects in front of water, creates halo on edge of objects however
-			depthTexture.antiAliasing = 0;
-			depthTexture.Create ();
-
-			refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
-			refractionTexture.name = "scattererRefractionTexture";
-			refractionTexture.useMipMap=false;
-			refractionTexture.filterMode = FilterMode.Bilinear;
-			refractionTexture.antiAliasing = 0;
-			refractionTexture.Create ();
-
+		{					
 			//Camera creation and setup
 			bufferRenderingManagerGO = new GameObject("ScattererBufferManager");
 			replacementCamera = bufferRenderingManagerGO.AddComponent<Camera>();
@@ -59,6 +41,8 @@ namespace scatterer
 			replacementCamera.transform.parent = Core.Instance.farCamera.transform;
 			
 			replacementCamera.enabled = false;
+			replacementCamera.clearFlags = CameraClearFlags.SolidColor;
+			replacementCamera.backgroundColor = Color.white;
 			replacementCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
 			replacementCamera.nearClipPlane=Core.Instance.nearCamera.nearClipPlane;
 			replacementCamera.depthTextureMode=DepthTextureMode.None;
@@ -69,17 +53,7 @@ namespace scatterer
 			if (Core.Instance.useGodrays)
 				GodrayDepthShader=ShaderReplacer.Instance.LoadedShaders[("Scatterer/GodrayDepthTexture")];
 
-
-			//godray stuff
-			if (Core.Instance.useGodrays && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
-			{
-				godrayDepthTexture = new RenderTexture (Screen.width, Screen.height, 16, RenderTextureFormat.RFloat);
-				godrayDepthTexture.name = "scattererGodrayDepthTexture";
-				godrayDepthTexture.filterMode = FilterMode.Point;
-				godrayDepthTexture.antiAliasing = 0;
-				godrayDepthTexture.useMipMap = false;
-				godrayDepthTexture.Create ();
-			}
+			createTextures();
 
 			mapEVEshadowProjectors ();			
 		}
@@ -88,49 +62,17 @@ namespace scatterer
 		{
 			//update Camera
 			replacementCamera.fieldOfView = Core.Instance.farCamera.fieldOfView;
-			replacementCamera.enabled = false;
 
 			//check buffers are created
-			if (!depthTexture)
+			if (!depthTexture || !depthTexture.IsCreated())
 			{
-				Debug.Log("recreating depth texture");
-				depthTexture = new RenderTexture ( Screen.width, Screen.height,16, RenderTextureFormat.RFloat);
-				depthTexture.name = "scattererDepthTexture";
-				depthTexture.useMipMap  = false;
-				depthTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
-				depthTexture.antiAliasing = 0;
-				depthTexture.Create ();
-			}
-
-			if (!depthTexture.IsCreated ())
-			{
-				depthTexture.Create ();
-			}
-
-			if (!refractionTexture)
-			{
-				Debug.Log("recreating refraction texture");
-				refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
-				refractionTexture.name = "scattererRefractionTexture";
-				refractionTexture.useMipMap=false;
-				refractionTexture.filterMode = FilterMode.Bilinear;
-				refractionTexture.antiAliasing = 0;
-				refractionTexture.Create ();
-			}
-
-			if (!refractionTexture.IsCreated ())
-			{
-				refractionTexture.Create ();
+				Debug.Log("[Scatterer] BufferRenderingManager: Recreating textures");
+				createTextures();
 			}
 
 			//Render depth buffer
 			if( (Core.Instance.fullLensFlareReplacement && Core.Instance.isGlobalPQSEnabled) || Core.Instance.isPQSEnabledOnScattererPlanet) //disable rendering when away from PQS
 			{
-				//Clear depth texture to white
-				RenderTexture rt=RenderTexture.active;
-				RenderTexture.active= depthTexture;			
-				GL.Clear(false,true,Color.white);
-
 				//disable EVE shadow projector
 				disableEVEshadowProjectors();
 
@@ -142,9 +84,6 @@ namespace scatterer
 				//render godrays
 				if (Core.Instance.useGodrays)
 				{
-					RenderTexture.active= godrayDepthTexture;			
-					GL.Clear(false,true,Color.white);
-					
 					replacementCamera.targetTexture =  godrayDepthTexture;
 					replacementCamera.cullingMask=32768; //ignore ships, parts, to avoid black godrays casting from ship
 					replacementCamera.RenderWithShader (GodrayDepthShader, "RenderType");
@@ -153,9 +92,6 @@ namespace scatterer
 				
 				//re-enable EVE shadow projector
 				enableEVEshadowProjectors();
-				
-				//restore active rendertexture
-				RenderTexture.active=rt;
 			}
 		}
 		
@@ -219,6 +155,42 @@ namespace scatterer
 			}
 			if (bufferRenderingManagerGO)
 				UnityEngine.Object.Destroy (bufferRenderingManagerGO);
+		}
+
+		public void createTextures()
+		{
+			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+			{
+				//create textures
+				depthTexture = new RenderTexture ( Screen.width, Screen.height,16, RenderTextureFormat.RFloat);
+				depthTexture.name = "scattererDepthTexture";
+				depthTexture.useMipMap  = false;
+				depthTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
+				//depthTexture.antiAliasing = GameSettings.ANTI_ALIASING; //fixes some issue with aliased objects in front of water, creates halo on edge of objects however
+				depthTexture.antiAliasing = 0;
+				depthTexture.Create ();
+				
+				//godray stuff
+				if (Core.Instance.useGodrays)
+				{
+					godrayDepthTexture = new RenderTexture (Screen.width, Screen.height, 16, RenderTextureFormat.RFloat);
+					godrayDepthTexture.name = "scattererGodrayDepthTexture";
+					godrayDepthTexture.filterMode = FilterMode.Point;
+					godrayDepthTexture.antiAliasing = 0;
+					godrayDepthTexture.useMipMap = false;
+					godrayDepthTexture.Create ();
+				}
+
+				if (Core.Instance.useOceanShaders && Core.Instance.oceanRefraction)
+				{
+					refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
+					refractionTexture.name = "scattererRefractionTexture";
+					refractionTexture.useMipMap=false;
+					refractionTexture.filterMode = FilterMode.Bilinear;
+					refractionTexture.antiAliasing = 0;
+					refractionTexture.Create ();
+				}
+			}
 		}
 		
 		

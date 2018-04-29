@@ -974,11 +974,13 @@ namespace scatterer
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 			
 			//			if (Core.Instance.render24bitDepthBuffer)
-			if (Core.Instance.bufferRenderingManager)
+			if (Core.Instance.bufferRenderingManager && (HighLogic.LoadedScene != GameScenes.TRACKSTATION) )
+			{
 				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 			
-			if (Core.Instance.useGodrays)
-				mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
+				if (Core.Instance.useGodrays)
+					mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
+			}
 			
 			//Consts, best leave these alone
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
