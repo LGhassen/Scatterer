@@ -96,7 +96,10 @@ namespace scatterer
 		Vector2 inGameWindowLocation=Vector2.zero;
 
 		[Persistent]
-		float nearClipPlane=0.5f;
+		public bool overrideNearClipPlane=false;
+
+		[Persistent]
+		public float nearClipPlane=0.5f;
 
 //		[Persistent]
 //		public bool
@@ -249,7 +252,7 @@ namespace scatterer
 		public bool d3d11 = false;
 		public bool isActive = false;
 		public bool mainMenu=false;
-		string versionNumber = "0.0332dev";
+		string versionNumber = "0.0334dev";
 		
 		//Material originalMaterial;
 		
@@ -350,7 +353,11 @@ namespace scatterer
 						if (cams [i].name == "Camera 00")
 						{
 							nearCamera = cams [i];
-							nearCamera.nearClipPlane = nearClipPlane;
+							if (overrideNearClipPlane)
+							{
+								Debug.Log("[Scatterer] Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
+								nearCamera.nearClipPlane = nearClipPlane;
+							}
 							farCamera.nearClipPlane = nearCamera.farClipPlane-0.2f; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
 						}
 					}
@@ -485,7 +492,7 @@ namespace scatterer
 					}
 					
 					found = true;
-				}
+				}			
 
 				if (ScaledSpace.Instance && scaledSpaceCamera)
 				{
@@ -845,7 +852,7 @@ namespace scatterer
 				//for debugging
 //				if (bufferRenderingManager.depthTexture)
 //				{
-//					GUI.DrawTexture(new Rect(0,0,512, 512), bufferRenderingManager.depthTexture);
+//					GUI.DrawTexture(new Rect(0,0,1280, 720), bufferRenderingManager.depthTexture);
 //				}
 			}
 		}

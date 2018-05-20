@@ -168,7 +168,11 @@ namespace scatterer
 				
 				GUILayout.EndHorizontal ();
 				
-				
+				GUILayout.BeginHorizontal ();
+				Core.Instance.overrideNearClipPlane = GUILayout.Toggle(Core.Instance.overrideNearClipPlane, "Override Near ClipPlane (not recommended - restart on disable)");
+				Core.Instance.nearClipPlane = float.Parse (GUILayout.TextField (Core.Instance.nearClipPlane.ToString ("0.000")));
+				GUILayout.EndHorizontal ();
+
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Menu scroll section height");
 				Core.Instance.scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (Core.Instance.scrollSectionHeight.ToString ())));
