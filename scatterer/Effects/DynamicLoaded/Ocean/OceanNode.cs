@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using UnityEngine.Rendering;
 
 using KSP.IO;
 
@@ -115,7 +116,8 @@ namespace scatterer
 			}
 		}
 
-		CommandBufferModifiedProjectionMatrix cbProjectionMat; 
+		CommandBufferModifiedProjectionMatrix cbProjectionMat;
+		CommandBuffer oceanRefractionCommandBuffer;
 
 		Vector3d2 m_offset;
 		public Vector3d2 offset;
@@ -125,10 +127,7 @@ namespace scatterer
 		//Concrete classes must provide a function that returns the
 		//variance of the waves need for the BRDF rendering of waves
 		public abstract float GetMaxSlopeVariance ();
-
-		//refractions
-		private GameObject _refractionGO;
-		public Camera _refractionCamera;
+	
 
 		// Use this for initialization
 		public virtual void Init ()
@@ -188,7 +187,10 @@ namespace scatterer
 			//if (Core.Instance.oceanRefraction)
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture);
 
-			m_oceanMaterial.renderQueue=2460;
+			//m_oceanMaterial.renderQueue=2460;
+			//m_oceanMaterial.renderQueue=2994;
+			m_oceanMaterial.renderQueue=2501;
+
 
 			m_oldlocalToOcean = Matrix4x4d.Identity ();
 //			m_oldworldToOcean = Matrix4x4d.Identity ();
@@ -287,25 +289,20 @@ namespace scatterer
 			//underwaterGameObject.layer = 15;
 			underwaterGameObject.layer = 23;
 
-			//refraction camera
-			_refractionGO = new GameObject("ScattererRefractionGameObject");
-			_refractionCamera = _refractionGO.AddComponent<Camera>();
+			//refraction command buffer
+			oceanRefractionCommandBuffer = new CommandBuffer();
+			oceanRefractionCommandBuffer.name = "ScattererOceanGrabScreen";
 			
-			_refractionCamera.CopyFrom(Core.Instance.farCamera);
-			_refractionCamera.transform.parent = Core.Instance.farCamera.transform;
+			// copy screen
+			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Core.Instance.bufferRenderingManager.refractionTexture);
 			
-			_refractionCamera.farClipPlane=Core.Instance.farCamera.farClipPlane;
-			_refractionCamera.nearClipPlane=Core.Instance.farCamera.nearClipPlane;
-			_refractionCamera.depthTextureMode=DepthTextureMode.None;
-			_refractionCamera.enabled = false;
-			_refractionCamera.clearFlags = CameraClearFlags.SolidColor;
-			_refractionCamera.backgroundColor = Color.black;
-
+			Core.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+			Core.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 		}
 		
 		public virtual void Cleanup ()
 		{
-			Debug.Log ("ocean node ondestroy");
+			Debug.Log ("ocean node Cleanup");
 
 			if (cbProjectionMat)
 			{
@@ -313,6 +310,12 @@ namespace scatterer
 				cbProjectionMat.OnDestroy ();
 				Component.Destroy (cbProjectionMat);
 				UnityEngine.Object.Destroy (cbProjectionMat);
+			}
+
+			if (!ReferenceEquals(oceanRefractionCommandBuffer,null))
+			{
+				Core.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+				Core.Instance.nearCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 			}
 
 			//			base.OnDestroy();
@@ -330,17 +333,6 @@ namespace scatterer
 				UnityEngine.Object.Destroy(underwaterGameObject);
 				Component.Destroy(underwaterMeshrenderer);
 				Component.Destroy(underwaterMeshFilter);
-			}
-
-			if (_refractionCamera)
-			{
-				Component.Destroy(_refractionCamera);
-				UnityEngine.Object.Destroy(_refractionCamera);
-			}
-
-			if(_refractionGO)
-			{
-				UnityEngine.Object.Destroy(_refractionGO);
 			}
 
 			UnityEngine.Object.Destroy (m_oceanMaterial);
@@ -451,59 +443,7 @@ namespace scatterer
 			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)  //shouldn't this go somewhere in oceannode? //or maybe here to keep update order
 			{
 				updateStuff(m_oceanMaterial, Core.Instance.farCamera);
-
-				//refractions
-				if (isRenderingRefractions)
-				{
-					_refractionCamera.fieldOfView = Core.Instance.farCamera.fieldOfView;
-					//_refractionCamera.enabled = false;
-					
-					_refractionCamera.cullingMask = 9076737; //essentially the same as farcamera except ignoring transparentFX
-					//the idea is to move clouds (and maybe cloud shadow projectors?) and water shaders to transparentFX to improve performance
-					
-					//take a random frustum corner and compute the angle to the camera forward direction
-					//there is probably a simple formula to do this
-					Vector3 topLeft = _refractionCamera.ViewportPointToRay (new Vector3 (0f, 1f, 0f)).direction;
-					topLeft.Normalize ();
-					
-					float angle = Vector3.Dot (topLeft, _refractionCamera.transform.forward);
-					
-					//dybamically change the clipping planes to fit what is visible from the water surface to somewhere around what the water "fog" lets you see
-					_refractionCamera.nearClipPlane = Mathf.Max (m_manager.m_skyNode.trueAlt * angle, Core.Instance.nearCamera.nearClipPlane);
-					_refractionCamera.farClipPlane = Mathf.Max (300f, 200f * _refractionCamera.nearClipPlane);
-
-					//here disable the ocean and the postprocessing stuff
-					//can we disable EVE clouds here as well?
-					bool prev = m_manager.m_skyNode.atmosphereMeshrenderer.enabled;
-					m_manager.m_skyNode.atmosphereMeshrenderer.enabled = false;
-					bool prev2 = false;
-					//if (underwaterMeshrenderer)
-					{
-						prev2 = underwaterMeshrenderer.enabled;
-						underwaterMeshrenderer.enabled = false;
-					}
-					
-					for (int i=0; i < numGrids; i++) {
-						waterMeshRenderers [i].enabled = false;
-					}
-
-					//render
-					_refractionCamera.targetTexture = Core.Instance.bufferRenderingManager.refractionTexture;
-					_refractionCamera.Render ();
-
-
-					//here re-enable the ocean and the postprocessing stuff
-					m_manager.m_skyNode.atmosphereMeshrenderer.enabled = prev;
-					//if (underwaterMeshrenderer)
-					underwaterMeshrenderer.enabled = prev2;
-					
-					for (int i=0; i < numGrids; i++)
-					{
-						waterMeshRenderers [i].enabled = true;
-					}
-				}
 			}
-
 		}
 
 
@@ -762,6 +702,10 @@ namespace scatterer
 			{
 				m_oceanMaterial.EnableKeyword ("REFRACTION_OFF");
 				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
+
+				Core.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+				Core.Instance.nearCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+
 				Debug.Log("[Scatterer] Refractions off: high altitude");
 				
 			}
@@ -769,6 +713,10 @@ namespace scatterer
 			{
 				m_oceanMaterial.EnableKeyword ("REFRACTION_ON");
 				m_oceanMaterial.DisableKeyword ("REFRACTION_OFF");
+
+				Core.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+				Core.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+
 				Debug.Log("[Scatterer] Refractions on: low altitude");
 			}
 			

@@ -21,8 +21,7 @@ namespace scatterer
 
 		//Camera
 		Camera replacementCamera;					//camera that will have shader replacement used on it, will copy it's settings from the farCamera
-
-
+		
 		//Misc
 		public bool depthTextureCleared = false; //clear depth texture when away from PQS, for the sunflare shader/
 
