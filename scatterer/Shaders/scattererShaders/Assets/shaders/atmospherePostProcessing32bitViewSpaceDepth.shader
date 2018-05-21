@@ -190,21 +190,21 @@ Pass {
                     
             struct v2f
             {
-                float4 pos: SV_POSITION;
+                //float4 pos: SV_POSITION;
                 float2 uv: TEXCOORD0;
                 float3 view_dir:TEXCOORD1;
             };
 
-            v2f vert(appdata_base v)
+            v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
             {
                 v2f o;
-                o.pos = float4(v.vertex.xy,1.0,1.0);
+                outpos = float4(v.vertex.xy,1.0,1.0);
 				o.uv=v.texcoord.xy;
 				o.view_dir = scattererFrustumCorners[(int) v.vertex.z]; 	//interpolated from frustum corners world viewdir
                 return o;
             }
 
-            half4 frag(v2f i): COLOR
+            half4 frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
             {
 				float fragDepth = tex2D(_customDepthTexture, i.uv).r;                
 
@@ -306,7 +306,7 @@ Pass {
 //				inscatter*=eclipseShadow;
 //#endif
 
-                return float4(hdr(inscatter)*_global_alpha*returnPixel, 1);                				
+                return float4(dither(hdr(inscatter)*_global_alpha, screenPos)*returnPixel, 1);                				
             }
             ENDCG
         }

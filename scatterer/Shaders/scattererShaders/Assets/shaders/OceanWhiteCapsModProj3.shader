@@ -536,7 +536,8 @@ Shader "Scatterer/OceanWhiteCaps"
 				return float4(dither(finalColor, screenPos),1.0);
 		#else
 				float3 finalColor = lerp(backGrnd, hdr(surfaceColor), outAlpha);  //refraction on and not underwater
-				return float4(finalColor, _GlobalOceanAlpha);
+				return float4(dither(finalColor,screenPos), _GlobalOceanAlpha);
+				//return float4(finalColor, _GlobalOceanAlpha);
 		#endif
 #else
 
@@ -570,7 +571,8 @@ Shader "Scatterer/OceanWhiteCaps"
 				//return float4(finalColor,1.0);
 				return float4(dither(finalColor, screenPos),1.0);
 		#else
-				return float4(hdr(surfaceColor),_GlobalOceanAlpha * outAlpha);
+				//return float4(hdr(surfaceColor),_GlobalOceanAlpha * outAlpha);
+				return float4(dither(hdr(surfaceColor),screenPos),_GlobalOceanAlpha * outAlpha);
 		#endif
 #endif
 
