@@ -515,11 +515,11 @@ namespace scatterer
 						global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
 						foreach(global::SunFlare _flare in stockFlares)
 						{
-
 							if (sunflaresList.Contains(_flare.sun.name))
 							{
 								Debug.Log("[Scatterer] Disabling stock sunflare for "+_flare.sun.name);
 								_flare.sunFlare.enabled=false;
+								_flare.enabled=false;
 							}
 						}
 
