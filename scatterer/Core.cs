@@ -90,9 +90,6 @@ namespace scatterer
 		Cubemap planetShineCookieCubeMap;
 
 		[Persistent]
-		Vector2 mainMenuWindowLocation=Vector2.zero;
-
-		[Persistent]
 		Vector2 inGameWindowLocation=Vector2.zero;
 
 		[Persistent]
@@ -251,8 +248,8 @@ namespace scatterer
 		public bool opengl = false;
 		public bool d3d11 = false;
 		public bool isActive = false;
-		public bool mainMenu=false;
-		string versionNumber = "0.0334dev";
+		public bool mainMenuOptions=false;
+		string versionNumber = "0.0335dev";
 		
 		//Material originalMaterial;
 		
@@ -297,23 +294,19 @@ namespace scatterer
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
 				isActive = true;
+				mainMenuOptions = (HighLogic.LoadedScene == GameScenes.SPACECENTER);
 				windowRect.x=inGameWindowLocation.x;
 				windowRect.y=inGameWindowLocation.y;
 			} 
-
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				mainMenu = true;
-				visible = showMenuOnStart;
-				windowRect.x=mainMenuWindowLocation.x;
-				windowRect.y=mainMenuWindowLocation.y;
-				
+				mainMenuOptions = true;
+
 				//find and remove stock oceans
 				if (useOceanShaders)
 				{
 					removeStockOceans();
 				}
-
 			}
 		}
 
@@ -321,7 +314,17 @@ namespace scatterer
 		{	
 			//toggle whether GUI is visible or not
 			if ((Input.GetKey (guiModifierKey1) || Input.GetKey (guiModifierKey2)) && (Input.GetKeyDown (guiKey1) || (Input.GetKeyDown (guiKey2))))
+			{
+				if (ToolbarButton.Instance.button!= null)
+				{
+					if (visible)
+						ToolbarButton.Instance.button.SetFalse(false);
+					else
+						ToolbarButton.Instance.button.SetTrue(false);
+				}
+
 				visible = !visible;
+			}
 
 			if (isActive && ScaledSpace.Instance) {
 				if (!found)
@@ -820,7 +823,7 @@ namespace scatterer
 				saveSettings();
 			}
 			
-			else if (mainMenu)	
+			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)	
 			{
 				//replace EVE cloud shaders when leaving main menu to game
 				if (integrateWithEVEClouds)
@@ -828,7 +831,6 @@ namespace scatterer
 					ShaderReplacer.Instance.replaceEVEshaders();
 				}
 
-				mainMenuWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				saveSettings();
 			}
 

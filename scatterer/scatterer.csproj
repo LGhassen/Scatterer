@@ -40,22 +40,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
-      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="System">
-      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\System.dll</HintPath>
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\System.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="System.Core">
-      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\System.Core.dll</HintPath>
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\System.Core.dll</HintPath>
     </Reference>
     <Reference Include="KSPAssets">
-      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\KSPAssets.dll</HintPath>
+      <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -80,33 +80,34 @@
     <Compile Include="Utilities\DisableAmbientLight.cs" />
     <Compile Include="Utilities\BufferRenderingManager.cs" />
     <Compile Include="Utilities\EncodeFloat.cs" />
-    <Compile Include="Utilities\GUIhandler.cs" />
     <Compile Include="Utilities\ShaderProperties.cs" />
     <Compile Include="Utilities\RenderTypeFixer.cs" />
-    <Compile Include="Effects\DynamicLoaded\Manager.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\Node.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\OceanNode.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\OceanWhiteCaps.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\FourierGPU.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\FourierCPU.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\OceanFFTcpu.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\OceanFFTgpu.cs" />
-    <Compile Include="Effects\DynamicLoaded\Atmosphere\SkyNode.cs" />
-    <Compile Include="Effects\Global\SunFlare.cs" />
-    <Compile Include="Effects\Global\SunflareCameraHook.cs" />
-    <Compile Include="Effects\Global\PlanetShineLight.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\Utils\CommandBufferModifiedProjectionMatrix.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\Utils\FakeOceanPQS.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\Utils\WriteFloat.cs" />
-    <Compile Include="Effects\DynamicLoaded\Ocean\Utils\RTUtility.cs" />
     <Compile Include="Utilities\ShaderReplacer.cs" />
     <Compile Include="Utilities\SimplePostProcessCube.cs" />
+    <Compile Include="Effects\Manager.cs" />
+    <Compile Include="Effects\Atmosphere\SkyNode.cs" />
+    <Compile Include="Effects\Ocean\Node.cs" />
+    <Compile Include="Effects\Ocean\OceanNode.cs" />
+    <Compile Include="Effects\Ocean\OceanWhiteCaps.cs" />
+    <Compile Include="Effects\Ocean\FourierGPU.cs" />
+    <Compile Include="Effects\Ocean\FourierCPU.cs" />
+    <Compile Include="Effects\Ocean\OceanFFTcpu.cs" />
+    <Compile Include="Effects\Ocean\OceanFFTgpu.cs" />
+    <Compile Include="Effects\Ocean\Utils\CommandBufferModifiedProjectionMatrix.cs" />
+    <Compile Include="Effects\Ocean\Utils\FakeOceanPQS.cs" />
+    <Compile Include="Effects\Ocean\Utils\WriteFloat.cs" />
+    <Compile Include="Effects\Ocean\Utils\RTUtility.cs" />
+    <Compile Include="Effects\PlanetShineLight.cs" />
+    <Compile Include="Effects\SunFlare\SunFlare.cs" />
+    <Compile Include="Effects\SunFlare\SunflareCameraHook.cs" />
+    <Compile Include="GUI\GUIhandler.cs" />
+    <Compile Include="GUI\ToolbarButton.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
     <Folder Include="Utilities\" />
     <Folder Include="Effects\" />
-    <Folder Include="Effects\Global\" />
-    <Folder Include="Effects\DynamicLoaded\Ocean\Utils\" />
+    <Folder Include="Effects\SunFlare\" />
+    <Folder Include="GUI\" />
   </ItemGroup>
 </Project>

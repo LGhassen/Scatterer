@@ -131,9 +131,7 @@ namespace scatterer
 		//		After all it's a basic UI for tweaking settings and it does it's job
 		public void DrawScattererWindow (int windowId)
 		{
-			GUItoggle("Hide",ref Core.Instance.visible);
-			
-			if (Core.Instance.mainMenu)  //MAIN MENU options
+			if (Core.Instance.mainMenuOptions)  //MAIN MENU options
 			{ 
 				GUILayout.Label (String.Format ("Scatterer: features selector"));
 				Core.Instance.useOceanShaders = GUILayout.Toggle(Core.Instance.useOceanShaders, "Ocean shaders (may require game restart on change)");
@@ -179,8 +177,6 @@ namespace scatterer
 				GUILayout.EndHorizontal ();
 				
 				Core.Instance.disableAmbientLight = GUILayout.Toggle(Core.Instance.disableAmbientLight, "Disable scaled space ambient light");
-				
-				Core.Instance.showMenuOnStart = GUILayout.Toggle(Core.Instance.showMenuOnStart, "Show this menu on start-up");
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label (".cfg file used:");
