@@ -384,10 +384,6 @@ namespace scatterer
 			mesh.vertices = vertices;
 			mesh.uv = texcoords;
 			mesh.triangles = indices;
-
-			if (!Core.Instance.opengl && (GameSettings.ANTI_ALIASING != 0))
-				mesh.triangles = mesh.triangles.Reverse ().ToArray (); //flip faces if we don't have OpenGL, we get backfaces because of projection Matrix
-
 			mesh.normals = normals;
 			
 			return mesh;

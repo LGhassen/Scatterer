@@ -60,19 +60,14 @@ namespace scatterer
 				cam.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, buf);
 		}	
 
-		//if OpenGL isn't detected
+		//not needed to be a separate method anymore
+		//TODO: cleanup and refactore
 		public Matrix4x4 ModifiedProjectionMatrix (Camera inCam)
 		{
 			Matrix4x4 p;
 			
 			p = inCam.projectionMatrix;
 			p = GL.GetGPUProjectionMatrix (p, false);
-
-			if (!Core.Instance.opengl && (GameSettings.ANTI_ALIASING > 0))
-			{
-				p = p * Matrix4x4.Scale(new Vector3(1, -1, 1)); //not a perfect fix, flips front and back faces
-																//to fix this faces are flipped in OceanNode when the mesh is created
-			}
 			return p;
 		}
 

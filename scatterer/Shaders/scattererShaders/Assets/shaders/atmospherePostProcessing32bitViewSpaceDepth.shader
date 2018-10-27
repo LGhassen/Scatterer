@@ -62,6 +62,7 @@ Shader "Scatterer/AtmosphericScatter" {
             v2f vert(appdata_base v)
             {
                 v2f o;
+                v.vertex.y = v.vertex.y *_ProjectionParams.x; //flip if flipped projection matrix
                 o.pos = float4(v.vertex.xy,1.0,1.0);
 				o.uv=v.texcoord.xy;
 				o.view_dir = scattererFrustumCorners[(int) v.vertex.z]; 	//interpolated from frustum corners world viewdir
@@ -70,7 +71,7 @@ Shader "Scatterer/AtmosphericScatter" {
             
             half4 frag(v2f i): COLOR
             {
-                float fragDepth = tex2D(_customDepthTexture, i.uv).r;                
+                float fragDepth = tex2D(_customDepthTexture, i.uv).r;         
 
 				float3 rayDir=normalize(i.view_dir);
 
@@ -198,6 +199,7 @@ Pass {
             v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
             {
                 v2f o;
+                v.vertex.y = v.vertex.y *_ProjectionParams.x; //flip if flipped projection matrix
                 outpos = float4(v.vertex.xy,1.0,1.0);
 				o.uv=v.texcoord.xy;
 				o.view_dir = scattererFrustumCorners[(int) v.vertex.z]; 	//interpolated from frustum corners world viewdir

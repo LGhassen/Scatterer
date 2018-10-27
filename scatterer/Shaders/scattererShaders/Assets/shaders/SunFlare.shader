@@ -68,6 +68,7 @@
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
+				v.vertex.y = v.vertex.y *_ProjectionParams.x;
     			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
     			OUT.uv = v.texcoord.xy;
 

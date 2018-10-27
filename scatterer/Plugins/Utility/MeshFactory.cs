@@ -29,11 +29,6 @@ namespace scatterer
 						p.y = (uv.y-0.5f)*2.0f;
 					}
 
-					if (!Core.Instance.opengl && (GameSettings.ANTI_ALIASING != 0)) //flip UVs if we are in Direct3D and have AA
-					{
-						uv.y=1-uv.y;
-					}
-
 					Vector3 pos, norm;
 					
 					switch((int)plane)
@@ -123,11 +118,6 @@ namespace scatterer
 					p.y = (uv.y-0.5f)*2.0f;
 					
 					Vector3 pos = new Vector3(p.x, p.y, (float)(x + 2*y));
-					
-					if (!Core.Instance.opengl && (GameSettings.ANTI_ALIASING != 0)) //flip UVs if we are in Direct3D and have AA
-					{
-						uv.y=1-uv.y;
-					}
 
 					texcoords[x+y*2] = uv;
 					vertices[x+y*2] = pos;

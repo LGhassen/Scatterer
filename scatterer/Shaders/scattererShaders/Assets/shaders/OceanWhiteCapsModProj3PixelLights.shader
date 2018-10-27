@@ -207,6 +207,7 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
     			float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
 				outpos = mul(_Globals_CameraToScreen, screenP);
+				outpos.y = outpos.y *_ProjectionParams.x;
 								
 			    OUT.oceanU = u;
 			    OUT.oceanP = oceanP;
@@ -459,7 +460,11 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 				outAlpha = min(outAlpha, 1.0);
 
 #if defined (REFRACTION_ON)
-				float3 backGrnd = tex2D(_BackgroundTexture, uv);
+		#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
+				float3 backGrnd = tex2D(_BackgroundTexture, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
+		#else
+				float3 backGrnd = tex2D(_BackgroundTexture, uv  );
+		#endif
 
 		#if defined (UNDERWATER_ON)
 
@@ -650,9 +655,9 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
     			float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z); 
     			
 				float4 pos = mul(_Globals_CameraToScreen, screenP);
-				
+				pos = pos.y *_ProjectionParams.x;
 
-				OUT.pos = pos;				
+				OUT.pos = pos;			
 			    OUT.oceanU = u;
 			    OUT.oceanP = oceanP;
 			    

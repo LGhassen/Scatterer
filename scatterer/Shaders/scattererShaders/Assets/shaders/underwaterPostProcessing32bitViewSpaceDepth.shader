@@ -44,6 +44,7 @@ Pass {
             v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
             {
                 v2f o;
+				v.vertex.y = v.vertex.y *_ProjectionParams.x;
                 outpos = float4(v.vertex.xy,1.0,1.0);
 				o.uv=v.texcoord.xy;
 				o.view_dir = scattererFrustumCorners[(int) v.vertex.z]; 	//interpolated from frustum corners world viewdir
