@@ -494,8 +494,10 @@ namespace scatterer
 							{
 								if (_cel.active)
 								{
+									_cel.m_manager.m_skyNode.initiateEVEClouds();
+
 									if (!_cel.m_manager.m_skyNode.inScaledSpace)
-										_cel.m_manager.m_skyNode.mapEVEvolumetrics();
+										_cel.m_manager.m_skyNode.mapEVEVolumetrics();
 								}
 							}
 						}

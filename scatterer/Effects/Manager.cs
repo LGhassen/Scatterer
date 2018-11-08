@@ -25,13 +25,11 @@ namespace scatterer
 
 		
 		public CelestialBody parentCelestialBody;
-		public Transform ParentPlanetTransform;
+		public Transform parentScaledTransform;
+		public Transform parentLocalTransform;
 		
 		public CelestialBody sunCelestialBody;
 		public List<CelestialBody> eclipseCasters;
-
-//		public List<CelestialBody> additionalSuns;
-//		public List<CelestialBody> planetShineLightSources;
 
 		public List<AtmoPlanetShineSource> planetshineSources;
 
@@ -39,13 +37,32 @@ namespace scatterer
 		// Initialization
 		public void Awake()
 		{
-			m_radius = parentCelestialBody.Radius;
+
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				GameObject _go = Core.GetMainMenuObject(parentCelestialBody.name);
+				if (_go)
+				{
+					MeshRenderer _mr = _go.GetComponent<MeshRenderer> ();
+					if (_mr)
+					{
+						var sctBodyTransform = ScaledSpace.Instance.transform.FindChild (parentCelestialBody.name);
+						m_radius = (_go.transform.localScale.x / sctBodyTransform.localScale.x) * parentCelestialBody.Radius;
+					}
+				}
+			}
+			else
+			{
+				m_radius = parentCelestialBody.Radius;
+			}
 
 			m_skyNode = (SkyNode) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SkyNode));
 			m_skyNode.setManager(this);
+			m_skyNode.setCelestialBodyName (parentCelestialBody.name);
+			m_skyNode.setParentScaledTransform (parentScaledTransform);
+			m_skyNode.setParentLocalTransform (parentLocalTransform);
+
 			m_skyNode.usesCloudIntegration = usesCloudIntegration;
-			m_skyNode.SetParentCelestialBody(parentCelestialBody);
-			m_skyNode.setParentPlanetTransform(ParentPlanetTransform);
 			
 			if (m_skyNode.loadFromConfigNode())
 			{
@@ -57,10 +74,8 @@ namespace scatterer
 					m_oceanNode.setManager(this);
 					
 					m_oceanNode.loadFromConfigNode();
-					m_oceanNode.Init();
-					
+					m_oceanNode.Init();	
 				}
-				
 			}
 		}
 		
@@ -130,8 +145,12 @@ namespace scatterer
 			parentCelestialBody = parent;
 		}
 		
-		public void setParentPlanetTransform(Transform parentTransform) {
-			ParentPlanetTransform = parentTransform;
+		public void setParentScaledTransform(Transform parentTransform) {
+			parentScaledTransform = parentTransform;
+		}
+
+		public void setParentLocalTransform(Transform parentTransform) {
+			parentLocalTransform = parentTransform;
 		}
 		
 		public void setSunCelestialBody(CelestialBody sun) {
@@ -140,7 +159,12 @@ namespace scatterer
 		
 		public Vector3 getDirectionToSun()
 		{
-			return (sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position);			
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				return (Core.Instance.mainMenuLight.transform.forward*(-1));
+			}
+			else
+				return (sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position);			
 		}
 
 		public Vector3 getDirectionToCelestialBody(CelestialBody target)

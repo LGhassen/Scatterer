@@ -42,12 +42,6 @@ namespace scatterer
 			mainSunCelestialBody = inSun;
 			usesCloudIntegration = inUsesCloudIntegration;
 		}
-
-		public ScattererCelestialBody (CelestialBody inCelestialBody, Transform inTransform)
-		{
-			transform = inTransform;
-			celestialBody = inCelestialBody;
-		}
 		
 		public ScattererCelestialBody ()
 		{

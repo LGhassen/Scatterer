@@ -83,9 +83,7 @@ namespace scatterer
 		//I map them here to facilitate accessing the volumetrics later
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 
-		GameObject sunLight,scaledspaceSunLight;
-//		public GameObject copiedScaledSunLight, copiedScaledSunLight2;
-//		public GameObject copiedSunLight;
+		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
 
 		Cubemap planetShineCookieCubeMap;
 
@@ -233,7 +231,7 @@ namespace scatterer
 		public CelestialBody sunCelestialBody;
 		public CelestialBody munCelestialBody;
 		public string path, gameDataPath;
-		bool found = false;
+		bool coreInitiated = false;
 		public bool extinctionEnabled = true;
 		
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
@@ -249,7 +247,7 @@ namespace scatterer
 		public bool d3d11 = false;
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.0335dev";
+		string versionNumber = "0.0336dev";
 		
 		//Material originalMaterial;
 		
@@ -258,6 +256,11 @@ namespace scatterer
 			return (ScaledSpace.Instance.transform.FindChild (body));	
 		}
 		
+
+		public static GameObject GetMainMenuObject(string name)
+		{
+			return GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
+		}
 
 		void Awake ()
 		{
@@ -300,18 +303,225 @@ namespace scatterer
 			} 
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				mainMenuOptions = true;
+				isActive = true;
 
 				//find and remove stock oceans
 				if (useOceanShaders)
 				{
 					removeStockOceans();
 				}
+
+				//replace EVE cloud shaders if main menu (ie on startup only)
+				if (integrateWithEVEClouds)
+				{
+					ShaderReplacer.Instance.replaceEVEshaders();
+				}
 			}
+
+			if (isActive)
+				StartCoroutine(DelayedInit());
+		}
+
+		IEnumerator DelayedInit()
+		{
+			//wait for 5 frames for EVE and the game to finish setting up
+			for (int i=0; i<5;i++)
+				yield return new WaitForFixedUpdate();
+
+			Init();
+		}
+
+		void Init()
+		{
+			//set shadows
+			setShadows();
+			
+			//find scatterer celestial bodies
+			findScattererCelestialBodies();
+			
+			//find sun
+			sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == mainSunCelestialBodyName);
+			
+			//find main cameras
+			Camera[] cams = Camera.allCameras;
+			for (int i = 0; i < cams.Length; i++)
+			{
+				Debug.Log("Ghassen camera "+cams [i].name);
+				Debug.Log("Ghassen camera cullingmask"+cams [i].cullingMask);
+				Debug.Log("Ghassen camera nearplane"+cams [i].nearClipPlane);
+				Debug.Log("Ghassen camera farplane"+cams [i].farClipPlane);
+			}
+			scaledSpaceCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera ScaledSpace");
+			farCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 01");
+			nearCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 00");
+			
+			if (scaledSpaceCamera && farCamera && nearCamera)
+			{
+				if (overrideNearClipPlane)
+				{
+					Debug.Log("[Scatterer] Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
+					nearCamera.nearClipPlane = nearClipPlane;
+				}
+				farCamera.nearClipPlane = nearCamera.farClipPlane-0.2f; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
+			}
+			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				//else we are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
+				scaledSpaceCamera = Camera.allCameras.Single(_cam  => _cam.name == "Landscape Camera");
+				farCamera = scaledSpaceCamera;
+				nearCamera = scaledSpaceCamera;
+			}
+			
+			//find sunlight and set shadow bias
+			lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+			
+			foreach (Light _light in lights)
+			{
+				Debug.Log("Ghoss light name "+_light.gameObject.name);
+				Debug.Log("intensity " +_light.intensity.ToString());
+				Debug.Log("type " +_light.type.ToString());
+				Debug.Log("layer " +_light.gameObject.layer.ToString());
+				
+				if (_light.gameObject.name == "Scaledspace SunLight")
+				{
+					scaledspaceSunLight=_light.gameObject;
+					Debug.Log("Found scaled sunlight");
+					
+					_light.shadowNormalBias =shadowNormalBias;
+					_light.shadowBias=shadowBias;
+				}
+				
+				if (_light.gameObject.name == "SunLight")
+				{
+					sunLight=_light.gameObject;
+					Debug.Log("Found Sunlight");
+				}	
+				
+				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light"))
+				{
+					mainMenuLight = _light.gameObject;
+					Debug.Log("Found main menu light");
+				}
+			}
+			
+			//load planetshine "cookie" cubemap
+			if(usePlanetShine)
+			{
+				planetShineCookieCubeMap=new Cubemap(512,TextureFormat.ARGB32,true);
+				
+				Texture2D[] cubeMapFaces=new Texture2D[6];
+				for (int i=0;i<6;i++)
+				{
+					cubeMapFaces[i]=new Texture2D(512,512);
+				}
+				
+				cubeMapFaces[0].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeX.png")));
+				cubeMapFaces[1].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveX.png")));
+				cubeMapFaces[2].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeY.png")));
+				cubeMapFaces[3].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveY.png")));
+				cubeMapFaces[4].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeZ.png")));
+				cubeMapFaces[5].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveZ.png")));
+				
+				planetShineCookieCubeMap.SetPixels(cubeMapFaces[0].GetPixels(),CubemapFace.NegativeX);
+				planetShineCookieCubeMap.SetPixels(cubeMapFaces[1].GetPixels(),CubemapFace.PositiveX);
+				planetShineCookieCubeMap.SetPixels(cubeMapFaces[2].GetPixels(),CubemapFace.NegativeY);
+				planetShineCookieCubeMap.SetPixels(cubeMapFaces[3].GetPixels(),CubemapFace.PositiveY);
+				planetShineCookieCubeMap.SetPixels(cubeMapFaces[4].GetPixels(),CubemapFace.NegativeZ);
+				planetShineCookieCubeMap.SetPixels(cubeMapFaces[5].GetPixels(),CubemapFace.PositiveZ);
+				planetShineCookieCubeMap.Apply();
+			}
+			
+			//find and fix renderQueues of kopernicus rings
+			foreach (CelestialBody _cb in CelestialBodies)
+			{
+				GameObject ringObject;
+				ringObject=GameObject.Find(_cb.name+"Ring");
+				if (ringObject)
+				{
+					ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3005;
+					Debug.Log("[Scatterer] Found rings for "+_cb.name);
+				}
+			}
+			
+			//					//find and fix renderqueue of sun corona
+			//					Transform scaledSunTransform=GetScaledTransform(mainSunCelestialBodyName);
+			//					foreach (Transform child in scaledSunTransform)
+			//					{
+			//						MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
+			//						temp.material.renderQueue = 3000;
+			//					}
+			
+			//set up planetshine lights
+			if(usePlanetShine)
+			{
+				foreach (PlanetShineLightSource _aSource in celestialLightSourcesData)
+				{
+					var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
+					if (celBody)
+					{
+						PlanetShineLight aPsLight= new PlanetShineLight();
+						aPsLight.isSun=_aSource.isSun;
+						aPsLight.source=celBody;
+						aPsLight.sunCelestialBody=sunCelestialBody;
+						
+						GameObject ScaledPlanetShineLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
+						GameObject LocalPlanetShineLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
+						
+						ScaledPlanetShineLight.GetComponent<Light>().type=LightType.Point;
+						if (!_aSource.isSun)
+							ScaledPlanetShineLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
+						
+						//ScaledPlanetShineLight.GetComponent<Light>().range=1E9f;
+						ScaledPlanetShineLight.GetComponent<Light>().range=_aSource.scaledRange;
+						ScaledPlanetShineLight.GetComponent<Light>().color=new Color(_aSource.color.x,_aSource.color.y,_aSource.color.z);
+						ScaledPlanetShineLight.name=celBody.name+"PlanetShineLight(ScaledSpace)";
+						
+						
+						LocalPlanetShineLight.GetComponent<Light>().type=LightType.Point;
+						if (!_aSource.isSun)
+							LocalPlanetShineLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
+						//LocalPlanetShineLight.GetComponent<Light>().range=1E9f;
+						LocalPlanetShineLight.GetComponent<Light>().range=_aSource.scaledRange*6000;
+						LocalPlanetShineLight.GetComponent<Light>().color=new Color(_aSource.color.x,_aSource.color.y,_aSource.color.z);
+						LocalPlanetShineLight.GetComponent<Light>().cullingMask=557591;
+						LocalPlanetShineLight.GetComponent<Light>().shadows=LightShadows.Soft;
+						LocalPlanetShineLight.GetComponent<Light>().shadowCustomResolution=2048;
+						LocalPlanetShineLight.name=celBody.name+"PlanetShineLight(LocalSpace)";
+						
+						aPsLight.scaledLight=ScaledPlanetShineLight;
+						aPsLight.localLight=LocalPlanetShineLight;
+						
+						celestialLightSources.Add(aPsLight);
+						Debug.Log ("[Scatterer] Added celestialLightSource "+aPsLight.source.name);
+					}
+				}
+			}
+			
+			//create buffer manager
+			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+			{
+				bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
+				bufferRenderingManager.start();
+			}
+
+			//find EVE clouds
+			if (integrateWithEVEClouds)
+			{
+				mapEVEClouds();
+			}
+
+			//magically fix stupid issues when reverting to space center from map view
+			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			{
+				MapView.MapIsEnabled = false;
+			}
+
+			coreInitiated = true;
+			Debug.Log("[Scatterer] Core setup done");
 		}
 
 		void Update ()
-		{	
+		{
 			//toggle whether GUI is visible or not
 			if ((Input.GetKey (guiModifierKey1) || Input.GetKey (guiModifierKey2)) && (Input.GetKeyDown (guiKey1) || (Input.GetKeyDown (guiKey2))))
 			{
@@ -326,413 +536,246 @@ namespace scatterer
 				visible = !visible;
 			}
 
-			if (isActive && ScaledSpace.Instance) {
-				if (!found)
+			if (coreInitiated)
+			{
+				if (callCollector)
 				{
-					//set shadows
-					setShadows();
-
-					//find scatterer celestial bodies
-					findScattererCelestialBodies();
-
-					//find sun
-					sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == mainSunCelestialBodyName);
-
-					//find main cameras
-					Camera[] cams = Camera.allCameras;
-					for (int i = 0; i < cams.Length; i++)
-					{
-						if (cams [i].name == "Camera ScaledSpace")
-						{
-							scaledSpaceCamera = cams [i];
-						}
-						
-						if (cams [i].name == "Camera 01")
-						{
-							farCamera = cams [i];
-
-						}
-						
-						if (cams [i].name == "Camera 00")
-						{
-							nearCamera = cams [i];
-							if (overrideNearClipPlane)
-							{
-								Debug.Log("[Scatterer] Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
-								nearCamera.nearClipPlane = nearClipPlane;
-							}
-							farCamera.nearClipPlane = nearCamera.farClipPlane-0.2f; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
-						}
-					}
-					
-
-					
-					//find sunlight and set shadow bias
-					lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-
-					foreach (Light _light in lights)
-					{
-						if (_light.gameObject.name == "Scaledspace SunLight")
-						{
-							scaledspaceSunLight=_light.gameObject;
-							Debug.Log("Found scaled sunlight");
-
-							_light.shadowNormalBias =shadowNormalBias;
-							_light.shadowBias=shadowBias;
-						}
-						
-						if (_light.gameObject.name == "SunLight")
-						{
-							sunLight=_light.gameObject;
-							Debug.Log("Found Sunlight");
-						}						
-					}
-
-					//load planetshine "cookie" cubemap
-					if(usePlanetShine)
-					{
-						planetShineCookieCubeMap=new Cubemap(512,TextureFormat.ARGB32,true);
-						
-						Texture2D[] cubeMapFaces=new Texture2D[6];
-						for (int i=0;i<6;i++)
-						{
-							cubeMapFaces[i]=new Texture2D(512,512);
-						}
-						
-						cubeMapFaces[0].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeX.png")));
-						cubeMapFaces[1].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveX.png")));
-						cubeMapFaces[2].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeY.png")));
-						cubeMapFaces[3].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveY.png")));
-						cubeMapFaces[4].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeZ.png")));
-						cubeMapFaces[5].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveZ.png")));
-						
-						planetShineCookieCubeMap.SetPixels(cubeMapFaces[0].GetPixels(),CubemapFace.NegativeX);
-						planetShineCookieCubeMap.SetPixels(cubeMapFaces[1].GetPixels(),CubemapFace.PositiveX);
-						planetShineCookieCubeMap.SetPixels(cubeMapFaces[2].GetPixels(),CubemapFace.NegativeY);
-						planetShineCookieCubeMap.SetPixels(cubeMapFaces[3].GetPixels(),CubemapFace.PositiveY);
-						planetShineCookieCubeMap.SetPixels(cubeMapFaces[4].GetPixels(),CubemapFace.NegativeZ);
-						planetShineCookieCubeMap.SetPixels(cubeMapFaces[5].GetPixels(),CubemapFace.PositiveZ);
-						planetShineCookieCubeMap.Apply();
-					}
-
-					//find and fix renderQueues of kopernicus rings
-					foreach (CelestialBody _cb in CelestialBodies)
-					{
-						GameObject ringObject;
-						ringObject=GameObject.Find(_cb.name+"Ring");
-						if (ringObject)
-						{
-							ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3005;
-							Debug.Log("[Scatterer] Found rings for "+_cb.name);
-						}
-					}
-
-//					//find and fix renderqueue of sun corona
-//					Transform scaledSunTransform=GetScaledTransform(mainSunCelestialBodyName);
-//					foreach (Transform child in scaledSunTransform)
-//					{
-//						MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
-//						temp.material.renderQueue = 3000;
-//					}
-
-					//set up planetshine lights
-					if(usePlanetShine)
-					{
-						foreach (PlanetShineLightSource _aSource in celestialLightSourcesData)
-						{
-							var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
-							if (celBody)
-							{
-								PlanetShineLight aPsLight= new PlanetShineLight();
-								aPsLight.isSun=_aSource.isSun;
-								aPsLight.source=celBody;
-								aPsLight.sunCelestialBody=sunCelestialBody;
-								
-								GameObject ScaledPlanetShineLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
-								GameObject LocalPlanetShineLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
-								
-								ScaledPlanetShineLight.GetComponent<Light>().type=LightType.Point;
-								if (!_aSource.isSun)
-									ScaledPlanetShineLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
-								
-								//ScaledPlanetShineLight.GetComponent<Light>().range=1E9f;
-								ScaledPlanetShineLight.GetComponent<Light>().range=_aSource.scaledRange;
-								ScaledPlanetShineLight.GetComponent<Light>().color=new Color(_aSource.color.x,_aSource.color.y,_aSource.color.z);
-								ScaledPlanetShineLight.name=celBody.name+"PlanetShineLight(ScaledSpace)";
-								
-								
-								LocalPlanetShineLight.GetComponent<Light>().type=LightType.Point;
-								if (!_aSource.isSun)
-									LocalPlanetShineLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
-								//LocalPlanetShineLight.GetComponent<Light>().range=1E9f;
-								LocalPlanetShineLight.GetComponent<Light>().range=_aSource.scaledRange*6000;
-								LocalPlanetShineLight.GetComponent<Light>().color=new Color(_aSource.color.x,_aSource.color.y,_aSource.color.z);
-								LocalPlanetShineLight.GetComponent<Light>().cullingMask=557591;
-								LocalPlanetShineLight.GetComponent<Light>().shadows=LightShadows.Soft;
-								LocalPlanetShineLight.GetComponent<Light>().shadowCustomResolution=2048;
-								LocalPlanetShineLight.name=celBody.name+"PlanetShineLight(LocalSpace)";
-								
-								aPsLight.scaledLight=ScaledPlanetShineLight;
-								aPsLight.localLight=LocalPlanetShineLight;
-								
-								celestialLightSources.Add(aPsLight);
-								Debug.Log ("[Scatterer] Added celestialLightSource "+aPsLight.source.name);
-							}
-						}
-					}
-
-					//create buffer manager
-					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
-					{
-						bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
-						bufferRenderingManager.start();
-					}
-
-					//find EVE clouds
-					if (integrateWithEVEClouds)
-					{
-						mapEVEClouds();
-					}
-					
-					found = true;
-				}			
-
-				if (ScaledSpace.Instance && scaledSpaceCamera)
+					GC.Collect();
+					callCollector=false;
+				}
+				
+				//custom lens flares
+				if ((fullLensFlareReplacement) && !customSunFlareAdded && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 				{
-					if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+					//disable stock sun flares
+					global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
+					foreach(global::SunFlare _flare in stockFlares)
 					{
-						//magically fix stupid issues when reverting to space center from map view
-						MapView.MapIsEnabled = false;
-					}
-
-					if (callCollector)
-					{
-						GC.Collect();
-						callCollector=false;
-					}
-
-					//custom lens flares
-					if ((fullLensFlareReplacement) && !customSunFlareAdded)
-					{
-						//disable stock sun flares
-						global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
-						foreach(global::SunFlare _flare in stockFlares)
+						if (sunflaresList.Contains(_flare.sun.name))
 						{
-							if (sunflaresList.Contains(_flare.sun.name))
-							{
-								Debug.Log("[Scatterer] Disabling stock sunflare for "+_flare.sun.name);
-								_flare.sunFlare.enabled=false;
-								_flare.enabled=false;
-							}
+							Debug.Log("[Scatterer] Disabling stock sunflare for "+_flare.sun.name);
+							_flare.sunFlare.enabled=false;
+							_flare.enabled=false;
 						}
-
-						foreach (string sunflareBody in sunflaresList)
+					}
+					
+					foreach (string sunflareBody in sunflaresList)
+					{
+						SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
+						
+						try
 						{
-							SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
-
-							try
+							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
+							customSunFlare.sourceName=sunflareBody;
+							customSunFlare.start ();
+							customSunFlares.Add(customSunFlare);
+						}
+						catch (Exception stupid)
+						{
+							Debug.Log("[Scatterer] Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
+							
+							Component.Destroy(customSunFlare);
+							UnityEngine.Object.Destroy(customSunFlare);
+							
+							if (customSunFlares.Contains(customSunFlare))
 							{
-								customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
-								customSunFlare.sourceName=sunflareBody;
-								customSunFlare.start ();
-								customSunFlares.Add(customSunFlare);
+								customSunFlares.Remove(customSunFlare);
 							}
-							catch (Exception stupid)
-							{
-								Debug.Log("[Scatterer] Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
-																
-								Component.Destroy(customSunFlare);
-								UnityEngine.Object.Destroy(customSunFlare);
-
-								if (customSunFlares.Contains(customSunFlare))
+							
+							continue;
+						}
+					}
+					customSunFlareAdded=true;
+				}
+				
+				if (disableAmbientLight && !ambientLightScript)
+				{
+					ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
+				}
+				
+				globalPQSEnabled = false;
+				if (FlightGlobals.currentMainBody )
+				{
+					if (FlightGlobals.currentMainBody.pqsController)
+						globalPQSEnabled = FlightGlobals.currentMainBody.pqsController.isActive;
+				}
+				
+				pqsEnabledOnScattererPlanet = false;
+				underwater = false;
+				
+				foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
+				{
+					float dist, shipDist=0f;
+					if (_cur.hasTransform)
+					{
+						dist = Vector3.Distance (ScaledSpace.ScaledToLocalSpace( scaledSpaceCamera.transform.position),
+						                         ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
+						
+						//don't unload planet the player ship is close to if panning away in map view
+						if (FlightGlobals.ActiveVessel)
+						{
+							shipDist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position,
+							                             ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
+						}
+						
+						if (_cur.active)
+						{
+							if (dist > _cur.unloadDistance && (shipDist > _cur.unloadDistance || shipDist == 0f )) {
+								
+								_cur.m_manager.OnDestroy ();
+								UnityEngine.Object.Destroy (_cur.m_manager);
+								_cur.m_manager = null;
+								_cur.active = false;
+								callCollector=true;
+								
+								Debug.Log ("[Scatterer] Effects unloaded for " + _cur.celestialBodyName);
+							} else {
+								
+								_cur.m_manager.Update ();
 								{
-									customSunFlares.Remove(customSunFlare);
-								}
-
-								continue;
-							}
-						}
-						customSunFlareAdded=true;
-					}
-
-					if (disableAmbientLight && !ambientLightScript)
-					{
-						ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
-					}
-
-					globalPQSEnabled = false;
-					if (FlightGlobals.currentMainBody )
-					{
-						if (FlightGlobals.currentMainBody.pqsController)
-							globalPQSEnabled = FlightGlobals.currentMainBody.pqsController.isActive;
-					}
-
-					pqsEnabledOnScattererPlanet = false;
-					underwater = false;
-
-					foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
-					{
-						float dist, shipDist=0f;
-						if (_cur.hasTransform)
-						{
-							dist = Vector3.Distance (ScaledSpace.ScaledToLocalSpace( scaledSpaceCamera.transform.position),
-													 ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
-
-							//don't unload planet the player ship is close to if panning away in map view
-							if (FlightGlobals.ActiveVessel)
-							{
-								shipDist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position,
-							                         ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
-							}
-
-							if (_cur.active)
-							{
-								if (dist > _cur.unloadDistance && (shipDist > _cur.unloadDistance || shipDist == 0f )) {
-
-									_cur.m_manager.OnDestroy ();
-									UnityEngine.Object.Destroy (_cur.m_manager);
-									_cur.m_manager = null;
-									_cur.active = false;
-									callCollector=true;
-
-									Debug.Log ("[Scatterer] Effects unloaded for " + _cur.celestialBodyName);
-								} else {
-
-									_cur.m_manager.Update ();
+									if (!_cur.m_manager.m_skyNode.inScaledSpace)
 									{
-										if (!_cur.m_manager.m_skyNode.inScaledSpace)
-										{
-											pqsEnabledOnScattererPlanet = true;
-										}
-
-										if (_cur.m_manager.hasOcean && useOceanShaders && pqsEnabledOnScattererPlanet)
-										{
-											underwater = _cur.m_manager.GetOceanNode().isUnderwater;
-										}
+										pqsEnabledOnScattererPlanet = true;
+									}
+									
+									if (_cur.m_manager.hasOcean && useOceanShaders && pqsEnabledOnScattererPlanet)
+									{
+										underwater = _cur.m_manager.GetOceanNode().isUnderwater;
 									}
 								}
-							} 
-							else
-							{
+							}
+						} 
+						else
+						{
 							if (dist < _cur.loadDistance && _cur.transform && _cur.celestialBody)
+							{
+								try
 								{
+									_cur.m_manager = new Manager ();
+									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
+									
+									
+									if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+									{
+										_cur.m_manager.setParentScaledTransform (GetMainMenuObject(_cur.celestialBodyName).transform); //doesn't look right but let's see
+										_cur.m_manager.setParentLocalTransform  (GetMainMenuObject(_cur.celestialBodyName).transform);
+									}
+									else
+									{
+										_cur.m_manager.setParentScaledTransform (_cur.transform);
+										_cur.m_manager.setParentLocalTransform (_cur.celestialBody.transform);
+									}
+
+									CelestialBody currentSunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.mainSunCelestialBody);
+									_cur.m_manager.setSunCelestialBody (currentSunCelestialBody);
+									
+									//Find eclipse casters
+									List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
+									
+									if (useEclipses)
+									{
+										for (int k=0; k < _cur.eclipseCasters.Count; k++)
+										{
+											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.eclipseCasters[k]);
+											if (cc==null)
+												Debug.Log("[Scatterer] Eclipse caster "+_cur.eclipseCasters[k]+" not found for "+_cur.celestialBodyName);
+											else
+											{
+												eclipseCasters.Add(cc);
+												Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
+											}
+										}
+										_cur.m_manager.eclipseCasters=eclipseCasters;
+									}
+									
+									List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
+									
+									if (usePlanetShine)
+									{								
+										for (int k=0; k < _cur.planetshineSources.Count; k++)
+										{
+											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.planetshineSources[k].bodyName);
+											if (cc==null)
+												Debug.Log("[Scatterer] planetshine source "+_cur.planetshineSources[k].bodyName+" not found for "+_cur.celestialBodyName);
+											else
+											{
+												AtmoPlanetShineSource src=_cur.planetshineSources[k];
+												src.body=cc;
+												_cur.planetshineSources[k].body=cc;
+												planetshineSources.Add (src);
+												Debug.Log("[Scatterer] Added planetshine source"+_cur.planetshineSources[k].bodyName+" for "+_cur.celestialBodyName);
+											}
+										}
+										_cur.m_manager.planetshineSources = planetshineSources;
+									}
+									
+									if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+										_cur.hasOcean=false;
+									
+									_cur.m_manager.hasOcean = _cur.hasOcean;
+									_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
+									_cur.m_manager.Awake ();
+									_cur.active = true;
+									
+									
+									GUItool.selectedConfigPoint = 0;
+									GUItool.displayOceanSettings = false;
+									GUItool.selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
+									GUItool.getSettingsFromSkynode ();
+									if (_cur.hasOcean && useOceanShaders) {
+										GUItool.getSettingsFromOceanNode ();
+									}
+									
+									callCollector=true;
+									Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
+								}
+								catch(Exception e)
+								{
+									Debug.Log ("[Scatterer] Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
 									try
 									{
-										_cur.m_manager = new Manager ();
-										_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
-										_cur.m_manager.setParentPlanetTransform (_cur.transform);
-										
-										CelestialBody currentSunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.mainSunCelestialBody);
-										_cur.m_manager.setSunCelestialBody (currentSunCelestialBody);
-										
-										//Find eclipse casters
-										List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
-										
-										if (useEclipses)
-										{
-											for (int k=0; k < _cur.eclipseCasters.Count; k++)
-											{
-												var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.eclipseCasters[k]);
-												if (cc==null)
-													Debug.Log("[Scatterer] Eclipse caster "+_cur.eclipseCasters[k]+" not found for "+_cur.celestialBodyName);
-												else
-												{
-													eclipseCasters.Add(cc);
-													Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
-												}
-											}
-											_cur.m_manager.eclipseCasters=eclipseCasters;
-										}
-										
-										List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
-										
-										if (usePlanetShine)
-										{								
-											for (int k=0; k < _cur.planetshineSources.Count; k++)
-											{
-												var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.planetshineSources[k].bodyName);
-												if (cc==null)
-													Debug.Log("[Scatterer] planetshine source "+_cur.planetshineSources[k].bodyName+" not found for "+_cur.celestialBodyName);
-												else
-												{
-													AtmoPlanetShineSource src=_cur.planetshineSources[k];
-													src.body=cc;
-													_cur.planetshineSources[k].body=cc;
-													planetshineSources.Add (src);
-													Debug.Log("[Scatterer] Added planetshine source"+_cur.planetshineSources[k].bodyName+" for "+_cur.celestialBodyName);
-												}
-											}
-											_cur.m_manager.planetshineSources = planetshineSources;
-										}
-										
-										if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
-											_cur.hasOcean=false;
-
-										_cur.m_manager.hasOcean = _cur.hasOcean;
-										_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
-										_cur.m_manager.Awake ();
-										_cur.active = true;
-										
-										
-										GUItool.selectedConfigPoint = 0;
-										GUItool.displayOceanSettings = false;
-										GUItool.selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
-										GUItool.getSettingsFromSkynode ();
-										if (_cur.hasOcean && useOceanShaders) {
-											GUItool.getSettingsFromOceanNode ();
-										}
-										
-										callCollector=true;
-										Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
-									}
-									catch(Exception e)
-									{
-										Debug.Log ("[Scatterer] Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
-										try
-										{
 										_cur.m_manager.OnDestroy();
-										}
-										catch(Exception ee)
-										{
-											Debug.Log ("[Scatterer] manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
-										}
-										scattererCelestialBodies.Remove(_cur);
-										Debug.Log ("[Scatterer] "+ _cur.celestialBodyName +" removed from active planets.");
-										return;
 									}
+									catch(Exception ee)
+									{
+										Debug.Log ("[Scatterer] manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
+									}
+									scattererCelestialBodies.Remove(_cur);
+									Debug.Log ("[Scatterer] "+ _cur.celestialBodyName +" removed from active planets.");
+									return;
 								}
 							}
-						}
-					}
-
-					if (bufferRenderingManager)
-					{
-						if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
-							bufferRenderingManager.clearDepthTexture();
-					}
-
-					//update sun flare
-					if (fullLensFlareReplacement)
-					{
-						foreach (SunFlare customSunFlare in customSunFlares)
-						{
-							customSunFlare.updateNode();
-						}
-					}
-						
-					//update planetshine lights
-					if(usePlanetShine)
-					{
-						foreach (PlanetShineLight _aLight in celestialLightSources)
-						{
-//							Debug.Log("updating "+_aLight.source.name);
-							_aLight.updateLight();
-
 						}
 					}
 				}
-			} 
-		}
+				
+				if (bufferRenderingManager)
+				{
+					if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
+						bufferRenderingManager.clearDepthTexture();
+				}
+				
+				//update sun flare
+				if (fullLensFlareReplacement)
+				{
+					foreach (SunFlare customSunFlare in customSunFlares)
+					{
+						customSunFlare.updateNode();
+					}
+				}
+				
+				//update planetshine lights
+				if(usePlanetShine)
+				{
+					foreach (PlanetShineLight _aLight in celestialLightSources)
+					{
+						//							Debug.Log("updating "+_aLight.source.name);
+						_aLight.updateLight();
+						
+					}
+				}
+			}
+		} 
 		
 
 		void OnDestroy ()
@@ -825,15 +868,8 @@ namespace scatterer
 			
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)	
 			{
-				//replace EVE cloud shaders when leaving main menu to game
-				if (integrateWithEVEClouds)
-				{
-					ShaderReplacer.Instance.replaceEVEshaders();
-				}
-
 				saveSettings();
 			}
-
 
 			UnityEngine.Object.Destroy (GUItool);
 			
@@ -1006,7 +1042,7 @@ namespace scatterer
 
 		void setShadows()
 		{
-			if (terrainShadows)
+			if (terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
 			{
 				foreach (CelestialBody _sc in CelestialBodies)
 				{
@@ -1040,13 +1076,7 @@ namespace scatterer
 		internal static Type getType(string name)
 		{
 			Type type = null;
-			AssemblyLoader.loadedAssemblies.TypeOperation(t =>
-			                                              
-			                                              {
-				if (t.FullName == name)
-					type = t;
-			}
-			);
+			AssemblyLoader.loadedAssemblies.TypeOperation(t =>{if (t.FullName == name)type = t;});
 			
 			if (type != null)
 			{
@@ -1064,8 +1094,6 @@ namespace scatterer
 
 			//find EVE base type
 			Type EVEType = getType("Atmosphere.CloudsManager"); 
-			//Type EVEType = getType("Utils.HalfSphere"); 
-
 
 			if (EVEType == null)
 			{
@@ -1121,12 +1149,29 @@ namespace scatterer
 					EVECloudObjects.Add(body,objectsList);
 				}
 
-				object cloud2dObj = _obj.GetType().GetField("layer2D", flags).GetValue(_obj) as object;
+				object cloud2dObj;
+				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+				{
+					object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags).GetValue(_obj) as object;
+
+					if (cloudsPQS==null)
+					{
+						Debug.Log("[Scatterer] cloudsPQS not found for layer on planet :"+body);
+						continue;
+					}
+					cloud2dObj = cloudsPQS.GetType().GetField("mainMenuLayer", flags).GetValue(cloudsPQS) as object;
+				}
+				else
+				{
+					cloud2dObj = _obj.GetType().GetField("layer2D", flags).GetValue(_obj) as object;
+				}
+
 				if (cloud2dObj==null)
 				{
 					Debug.Log("[Scatterer] layer2d not found for layer on planet :"+body);
 					continue;
 				}
+
 				GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
 				if (cloudmesh==null)
 				{

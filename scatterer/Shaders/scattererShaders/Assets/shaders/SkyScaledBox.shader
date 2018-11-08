@@ -69,7 +69,7 @@ Shader "Scatterer/SkyLocal"
 			{
     			float4 pos : SV_POSITION;
     			float3 worldPos : TEXCOORD0;
-
+				float3 planetOrigin: TEXCOORD1;
 			};
 
 			v2f vert(appdata_base v)
@@ -77,6 +77,12 @@ Shader "Scatterer/SkyLocal"
 				v2f OUT;
     			OUT.pos = UnityObjectToClipPos(v.vertex);
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
+#if defined (localSpaceMode)
+				OUT.planetOrigin = _Scatterer_Origin;
+#else
+				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz * 6000;
+#endif
+
     			return OUT;
 			}
 							
@@ -100,7 +106,7 @@ Shader "Scatterer/SkyLocal"
 //				viewdir.x+=_viewdirOffset;
 				float3 viewdir=normalize(d);
 				
-				float3 camera=WCP - _Scatterer_Origin;
+				float3 camera=WCP - IN.planetOrigin;
 				
 				float r = length(camera);
 				float rMu = dot(camera, viewdir);
@@ -129,9 +135,9 @@ Shader "Scatterer/SkyLocal"
 
 #if defined (useAnalyticSkyTransmittance)
 
-				if (intersectSphere2(WCP,d,_Scatterer_Origin,Rg) > 0)
+				if (intersectSphere2(WCP,d,IN.planetOrigin,Rg) > 0)
 				{
-					float distInAtmo= intersectSphere2(WCP,d,_Scatterer_Origin,Rg)-intersectSphere2(WCP,d,_Scatterer_Origin,Rt);
+					float distInAtmo= intersectSphere2(WCP,d,IN.planetOrigin,Rg)-intersectSphere2(WCP,d,IN.planetOrigin,Rt);
 					extinction = AnalyticTransmittanceNormalized(r, mu, (distInAtmo));
 				}
 				else
@@ -150,7 +156,7 @@ Shader "Scatterer/SkyLocal"
     								_Extinction_Tint*extinction.g + (1-_Extinction_Tint)*average,
     								_Extinction_Tint*extinction.b + (1-_Extinction_Tint)*average);
 
-				float interSectPt= intersectSphere2(WCP,d,_Scatterer_Origin,Rg);
+				float interSectPt= intersectSphere2(WCP,d,IN.planetOrigin,Rg);
 				
 				bool rightDir = (interSectPt > 0) ;
 				if (!rightDir)
@@ -163,7 +169,7 @@ Shader "Scatterer/SkyLocal"
 				//necessary for eclipses, ring shadows and planetshine
 				float3 worldPos;
 
-			    interSectPt= intersectSphere4(WCP,d,_Scatterer_Origin,Rt);//*_rimQuickFixMultiplier
+			    interSectPt= intersectSphere4(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
 			    
 				if (interSectPt != -1)
 				{
@@ -202,10 +208,10 @@ Shader "Scatterer/SkyLocal"
 				if (rightDir&& interSectPt != -1)	//eclipses shouldn't hide celestial objects visible in the sky		
 				{
 					//raycast from atmo to ring plane and find intersection
-					float3 ringIntersectPt = LinePlaneIntersection(worldPos, _Sun_WorldSunDir, ringNormal, _Scatterer_Origin);
+					float3 ringIntersectPt = LinePlaneIntersection(worldPos, _Sun_WorldSunDir, ringNormal, IN.planetOrigin);
 
 					//calculate ring texture position on intersect
-					float distance = length (ringIntersectPt - _Scatterer_Origin);
+					float distance = length (ringIntersectPt - IN.planetOrigin);
 					float ringTexturePosition = (distance - ringInnerRadius) / (ringOuterRadius - ringInnerRadius); //inner and outer radiuses need are converted to local space coords on plugin side
 					ringTexturePosition = 1 - ringTexturePosition; //flip to match UVs
 
@@ -268,7 +274,6 @@ Shader "Scatterer/SkyLocal"
 			uniform float3 _Globals_WorldCameraPos;
 			uniform float3 _Scatterer_Origin;
 			uniform float _RimExposure;
-					
 			uniform float3 _Sun_WorldSunDir;
 
 			//stuff for kopernicus ring shadows
@@ -296,7 +301,8 @@ Shader "Scatterer/SkyLocal"
 			struct v2f 
 			{
     			//float4 pos : SV_POSITION;
-    			float3 worldPos : TEXCOORD0;    			
+    			float3 worldPos : TEXCOORD0;
+				float3 planetOrigin: TEXCOORD1;
 			};
 			
 
@@ -305,6 +311,11 @@ Shader "Scatterer/SkyLocal"
 				v2f OUT;
 			    outpos = UnityObjectToClipPos(v.vertex);
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
+#if defined (localSpaceMode)
+				OUT.planetOrigin = _Scatterer_Origin;
+#else
+				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz * 6000;
+#endif
 				
     			return OUT;
 			}
@@ -322,7 +333,7 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			    
 			    float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);  //viewdir computed in scaledSpace
 			    
-				float interSectPt= intersectSphere2(WCP,d,_Scatterer_Origin,Rg);
+				float interSectPt= intersectSphere2(WCP,d,IN.planetOrigin,Rg);
 
 				bool rightDir = (interSectPt > 0) ;  //rightdir && exists combined
 				if (!rightDir)
@@ -331,13 +342,13 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 				}
 
 			    float3 extinction;
-			    float3 inscatter = SkyRadiance3(WCP - _Scatterer_Origin, d, WSD);
+			    float3 inscatter = SkyRadiance3(WCP - IN.planetOrigin, d, WSD);
 
 				//find worldPos of the point in the atmo we're looking at directly
 				//necessary for eclipses, ring shadows and planetshine
 				float3 worldPos;
 #if defined (PLANETSHINE_ON) || defined (ECLIPSES_ON) || defined (RINGSHADOW_ON)
-			    interSectPt= intersectSphere4(WCP,d,_Scatterer_Origin,Rt);//*_rimQuickFixMultiplier
+			    interSectPt= intersectSphere4(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
 			    
 				if (interSectPt != -1)
 				{
@@ -364,7 +375,7 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - worldPos),WSD)),0);
 					}
 				    				
-    				inscatter2+=SkyRadiance3(WCP - _Scatterer_Origin, d, normalize(planetShineSources[i].xyz))
+    				inscatter2+=SkyRadiance3(WCP - IN.planetOrigin, d, normalize(planetShineSources[i].xyz))
     							*planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
     			}
 			    
@@ -396,10 +407,10 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 /////////////////RING SHADOWS///////////////////////////////			
 #if defined (RINGSHADOW_ON)
 				//raycast from atmo to ring plane and find intersection
-				float3 ringIntersectPt = LinePlaneIntersection(worldPos, _Sun_WorldSunDir, ringNormal, _Scatterer_Origin);
+				float3 ringIntersectPt = LinePlaneIntersection(worldPos, _Sun_WorldSunDir, ringNormal, IN.planetOrigin);
 
 				//calculate ring texture position on intersect
-				float distance = length (ringIntersectPt - _Scatterer_Origin);
+				float distance = length (ringIntersectPt - IN.planetOrigin);
 				float ringTexturePosition = (distance - ringInnerRadius) / (ringOuterRadius - ringInnerRadius); //inner and outer radiuses need are converted to local space coords on plugin side
 				ringTexturePosition = 1 - ringTexturePosition; //flip to match UVs
 

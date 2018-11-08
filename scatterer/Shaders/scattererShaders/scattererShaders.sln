@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "scattererShaders", "Assembly-CSharp-Editor.csproj", "{1BA7E86D-23C1-619A-C471-A2388FCC27DA}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "scattererShaders.Editor", "scattererShaders.Editor.csproj", "{4B643704-9560-729A-0DC5-A662E64E61FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,15 +9,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1BA7E86D-23C1-619A-C471-A2388FCC27DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1BA7E86D-23C1-619A-C471-A2388FCC27DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1BA7E86D-23C1-619A-C471-A2388FCC27DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1BA7E86D-23C1-619A-C471-A2388FCC27DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B643704-9560-729A-0DC5-A662E64E61FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B643704-9560-729A-0DC5-A662E64E61FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B643704-9560-729A-0DC5-A662E64E61FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B643704-9560-729A-0DC5-A662E64E61FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-																																																																																																																																														GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = Assembly-CSharp.csproj
 	EndGlobalSection
 EndGlobal

@@ -73,7 +73,8 @@ namespace scatterer
 
 		void OnDestroy ()
 		{
-			ApplicationLauncher.Instance.RemoveModApplication (button);
+			if (button)
+				ApplicationLauncher.Instance.RemoveModApplication (button);
 		}
 
 		void Dummy()

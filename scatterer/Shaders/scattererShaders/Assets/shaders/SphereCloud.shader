@@ -219,8 +219,7 @@ Shader "Scatterer-EVE/Cloud" {
 
 
 
-
-//SCATTERER_OFF
+////////////////////////////SCATTERER OFF
 #if !defined (SCATTERER_ON)
 					//lighting
 					half transparency = color.a;
@@ -238,8 +237,9 @@ Shader "Scatterer-EVE/Cloud" {
 
 					//scolor.rgb *= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies); //causes artifacts idk why
 					OUT.color = lerp(scolor, color, _MinLight);
-//SCATTERER_ON
-#else 
+
+////////////////////////////SCATTERER ON
+#else
 					float4 texColor = color;
 					float3 extinction = float3(0, 0, 0);
 
@@ -277,8 +277,6 @@ Shader "Scatterer-EVE/Cloud" {
 					//color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction*skyE*cloudSkyIrradianceMultiplier+ inscatter*cloudScatteringMultiplier), color.a); //not bad
 	#else
 					float3 cloudColor = color.rgb*cloudColorMultiplier*extinction*hdrNoExposure(skyE * cloudSkyIrradianceMultiplier);
-					//float3 cloudColor = color.rgb*cloudColorMultiplier*extinction;
-					//float3 otherColors = hdrNoExposure(inscatter * cloudScatteringMultiplier + skyE * cloudSkyIrradianceMultiplier);
 					float3 otherColors = hdrNoExposure(inscatter * cloudScatteringMultiplier);
 					
 					color = float4(cloudColor + (float3(1.0,1.0,1.0)-cloudColor)*otherColors, color.a); //basically soft blend
@@ -306,7 +304,7 @@ Shader "Scatterer-EVE/Cloud" {
 
 					color.rgb*=eclipseShadow;
 	#endif
-
+		
 ///////////////////RING SHADOWS///////////////////////////////			
 //#if defined (RINGSHADOW_ON)
 //				//raycast from atmo to ring plane and find intersection			
@@ -337,8 +335,7 @@ Shader "Scatterer-EVE/Cloud" {
 
 
 					OUT.color = lerp(color, texColor, _MinLight);
-//endif SCATTERER_ON
-#endif
+#endif //endif SCATTERER_ON
 					
 					float depthWithOffset = IN.projPos.z;
 #ifndef WORLD_SPACE_ON
@@ -346,6 +343,7 @@ Shader "Scatterer-EVE/Cloud" {
 					OUT.color.a *= step(0, dot(IN.viewDir, IN.worldNormal));
 #endif
 					OUT.depth = (1.0 - depthWithOffset * _ZBufferParams.w) / (depthWithOffset * _ZBufferParams.z);
+					
 					return OUT;
 				}
 				ENDCG

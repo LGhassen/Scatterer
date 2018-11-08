@@ -127,7 +127,7 @@ namespace scatterer
 			}
 			catch (Exception)
 			{
-				Debug.Log ("[Scatterer] Custom depth buffer: null EVE shadow projectors, remapping...");
+				Debug.Log ("[Scatterer] BufferRenderingManager: null EVE shadow projectors, remapping...");
 				mapEVEshadowProjectors ();   //remap
 			}
 		}

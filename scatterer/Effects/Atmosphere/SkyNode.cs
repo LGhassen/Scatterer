@@ -99,13 +99,10 @@ namespace scatterer
 		float alt;
 		public float trueAlt;
 		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType < SkyNode > (null);
-
-		[Persistent]
-		//public float MapViewScale = 1f;
-
-		CelestialBody parentCelestialBody;
-		Transform ParentPlanetTransform;
 		
+		string celestialBodyName;
+		Transform parentScaledTransform, parentLocalTransform;
+
 		GameObject ringObject;
 		float ringInnerRadius, ringOuterRadius;
 		Texture2D ringTexture;
@@ -136,7 +133,7 @@ namespace scatterer
 
 		public bool inScaledSpace = true;
 
-		bool initiated = false;
+		bool skyNodeInitiated = false;
 
 		public List<Material> EVEvolumetrics = new List<Material>();
 		bool mapVolumetrics=false;
@@ -185,13 +182,9 @@ namespace scatterer
 		Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f);
 		public Material m_atmosphereMaterial;
 		public Material m_skyMaterialScaled, m_skyMaterialLocal;
-		
-		//		public Material sunglareMaterial;
 
 		Material sunflareExtinctionMaterial;
-		
-		Material originalMaterial;
-		Material alteredMaterial;
+
 		[Persistent]
 		Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
 		//Asymmetry factor for the mie phase function
@@ -297,7 +290,7 @@ namespace scatterer
 
 			InitPostprocessMaterial (m_atmosphereMaterial);
 						
-			CurrentPQS = parentCelestialBody.pqsController;
+			CurrentPQS = m_manager.parentCelestialBody.pqsController;
 			if (!ReferenceEquals (CurrentPQS, null))
 			{
 					CurrentPQS.isActive = false; 	//sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
@@ -335,9 +328,14 @@ namespace scatterer
 			localSkyAltitude = 6 * (Rt-Rg) + Rg;
 			skyScaledCube = new SimplePostProcessCube (skySphereSize, m_skyMaterialScaled,true);
 			skyScaledMesh = skyScaledCube.GameObject;
-			skyScaledMesh.layer = 10;
-			skyScaledMesh.transform.position = ParentPlanetTransform.position;
-			skyScaledMesh.transform.parent = ParentPlanetTransform;
+
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+				skyScaledMesh.layer = 15;
+			else
+				skyScaledMesh.layer = 10;
+
+			skyScaledMesh.transform.position = parentScaledTransform.position;
+			skyScaledMesh.transform.parent = parentScaledTransform;
 			skyScaledMeshrenderer = skyScaledCube.GameObject.GetComponent < MeshRenderer > ();
 			skyScaledMeshrenderer.material = m_skyMaterialScaled;
 			
@@ -371,11 +369,11 @@ namespace scatterer
 
 			if (Core.Instance.useRingShadows)
 			{
-				ringObject = GameObject.Find (parentCelestialBody.name + "Ring");
+				ringObject = GameObject.Find (celestialBodyName + "Ring");
 				if (ringObject)
 				{
 					
-					Debug.Log ("[Scatterer] Found ring for " + parentCelestialBody.name);
+					Debug.Log ("[Scatterer] Found ring for " + celestialBodyName);
 
 					Material ringMat = ringObject.GetComponent < MeshRenderer > ().material;
 
@@ -428,7 +426,7 @@ namespace scatterer
 							catch (Exception e)
 							{
 								Debug.Log("[Scatterer] Kopernicus ring exception "+e.ToString());
-								Debug.Log("[Scatterer] Disabling ring shadows for "+parentCelestialBody.name);
+								Debug.Log("[Scatterer] Disabling ring shadows for "+celestialBodyName);
 								hasRingObjectAndShadowActivated=false;
 							}
 						}
@@ -552,9 +550,9 @@ namespace scatterer
 							(m_manager.sunCelestialBody.position-m_manager.planetshineSources[i].body.position).normalized;
 					
 					if (scaledMode)
-						sourcePosRelPlanet = Vector3.Scale(offsetPos - parentCelestialBody.GetTransform().position,new Vector3d(6000f,6000f,6000f));
+						sourcePosRelPlanet = Vector3.Scale(offsetPos - m_manager.parentCelestialBody.GetTransform().position,new Vector3d(6000f,6000f,6000f));
 					else
-						sourcePosRelPlanet = offsetPos - parentCelestialBody.GetTransform().position;
+						sourcePosRelPlanet = offsetPos - m_manager.parentCelestialBody.GetTransform().position;
 					
 					planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y,
 					                                                 sourcePosRelPlanet.z, m_manager.planetshineSources[i].isSun? 1.0f:0.0f ));
@@ -569,76 +567,56 @@ namespace scatterer
 			//maybe refactor?
 			if (Core.Instance.integrateWithEVEClouds && usesCloudIntegration)
 			{
-				try
+				int size;
+				
+				//2d clouds
+				if(Core.Instance.EVEClouds.ContainsKey(celestialBodyName))
 				{
-					int size;
-
-					//2d clouds
-					if(Core.Instance.EVEClouds.ContainsKey(parentCelestialBody.name))
+					size = Core.Instance.EVEClouds[celestialBodyName].Count;
+					for (int i=0;i<size;i++)
 					{
-						size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
-						for (int i=0;i<size;i++)
-						{
-							//keep these for now or something breaks in the extinction
-							//InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-							SetUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-							
-							//InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-							
-							//if (!inScaledSpace)
-							UpdatePostProcessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-							
-							//						Core.Instance.EVEClouds[parentCelestialBody.name][i].SetVector
-							//							("_PlanetOrigin", m_manager.parentCelestialBody.transform.position);
-							
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-								("cloudColorMultiplier", cloudColorMultiplier);
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-								("cloudScatteringMultiplier", cloudScatteringMultiplier);
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].SetFloat
-								("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
-
-
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("SCATTERER_ON");
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("SCATTERER_OFF");
-						}
-					}
-
-					//volumetrics
-					//if in local mode and mapping is done
-					if (!inScaledSpace && !mapVolumetrics)
-					{
-						size = EVEvolumetrics.Count;
-
-						for (int i=0;i<size;i++)
-						{
-							//keep these for now or something breaks in the extinction
-							InitUniforms(EVEvolumetrics[i]);
-							SetUniforms(EVEvolumetrics[i]);
-							
-							InitPostprocessMaterial(EVEvolumetrics[i]);
-							UpdatePostProcessMaterial(EVEvolumetrics[i]);
-							
-							EVEvolumetrics[i].SetVector
-								("_PlanetWorldPos", m_manager.parentCelestialBody.transform.position);
-							
-							EVEvolumetrics[i].SetFloat
-								("cloudColorMultiplier", volumetricsColorMultiplier);
-//							EVEvolumetrics[i].SetFloat
-//								("cloudScatteringMultiplier", volumetricsScatteringMultiplier);
-//							EVEvolumetrics[i].SetFloat
-//								("cloudSkyIrradianceMultiplier", volumetricsSkyIrradianceMultiplier);
-
-							EVEvolumetrics[i].EnableKeyword ("SCATTERER_ON");
-							EVEvolumetrics[i].DisableKeyword ("SCATTERER_OFF");
-						}
+						SetUniforms(Core.Instance.EVEClouds[celestialBodyName][i]);
+						
+						//if (!inScaledSpace)
+						UpdatePostProcessMaterial(Core.Instance.EVEClouds[celestialBodyName][i]);
+						
+						Core.Instance.EVEClouds[celestialBodyName][i].SetFloat
+							("cloudColorMultiplier", cloudColorMultiplier);
+						Core.Instance.EVEClouds[celestialBodyName][i].SetFloat
+							("cloudScatteringMultiplier", cloudScatteringMultiplier);
+						Core.Instance.EVEClouds[celestialBodyName][i].SetFloat
+							("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
+						
+						
+						Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_ON");
+						Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_OFF");
 					}
 				}
-				catch (Exception)
+				
+				//volumetrics
+				//if in local mode and mapping is done
+				if (!inScaledSpace && !mapVolumetrics)
 				{
-					Debug.Log("[Scatterer] Null EVE clouds, remapping...");
-					Core.Instance.mapEVEClouds();
-					mapVolumetrics=true;
+					size = EVEvolumetrics.Count;
+					
+					for (int i=0;i<size;i++)
+					{
+						//keep these for now or something breaks in the extinction
+						InitUniforms(EVEvolumetrics[i]);
+						SetUniforms(EVEvolumetrics[i]);
+						
+						InitPostprocessMaterial(EVEvolumetrics[i]);
+						UpdatePostProcessMaterial(EVEvolumetrics[i]);
+						
+						EVEvolumetrics[i].SetVector
+							("_PlanetWorldPos", parentLocalTransform.position);
+						
+						EVEvolumetrics[i].SetFloat
+							("cloudColorMultiplier", volumetricsColorMultiplier);
+						
+						EVEvolumetrics[i].EnableKeyword ("SCATTERER_ON");
+						EVEvolumetrics[i].DisableKeyword ("SCATTERER_OFF");
+					}
 				}
 			}
 			//update extinction for sunflares
@@ -650,9 +628,9 @@ namespace scatterer
 					sunflareExtinctionMaterial.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
 
 					if (!MapView.MapIsEnabled)
-						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", Core.Instance.farCamera.transform.position - parentCelestialBody.transform.position);
+						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", Core.Instance.farCamera.transform.position - parentLocalTransform.position);
 					else
-						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Core.Instance.scaledSpaceCamera.transform.position) - parentCelestialBody.transform.position);
+						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Core.Instance.scaledSpaceCamera.transform.position) - parentLocalTransform.position);
 
 					Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 0); //pass 0 for sunflare extinction
 
@@ -702,11 +680,11 @@ namespace scatterer
 				{
 					mapVolumetrics=false;
 					waitCounter=0;
-					mapEVEvolumetrics(); //do this last so if it fails we just ignore it
+					mapEVEVolumetrics(); //do this last so if it fails we just ignore it
 				}
 			}
 
-			if (!initiated)
+			if (!skyNodeInitiated)
 			{
 				m_radius = (float) m_manager.GetRadius ();
 				
@@ -716,7 +694,7 @@ namespace scatterer
 				//				sunglareCutoffAlt = experimentalAtmoScale*(Rt - Rg);
 				
 				
-				backupAtmosphereMaterial ();
+				//backupAtmosphereMaterial ();
 				tweakStockAtmosphere ();
 
 				//disable postprocessing and ocean effects for Texture Replacer reflections
@@ -727,68 +705,18 @@ namespace scatterer
 				//call EVE clouds2D.reassign() method to set the shader properties
 				if (Core.Instance.integrateWithEVEClouds)
 				{
-					try
-					{
-						const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
-							BindingFlags.Instance | BindingFlags.Static;
-
-						foreach (object _obj in Core.Instance.EVECloudObjects[parentCelestialBody.name]) 
-						{
-							object cloud2dObj = _obj.GetType().GetField("layer2D", flags).GetValue(_obj) as object;
-							if (cloud2dObj==null)
-							{
-								Debug.Log("[Scatterer] layer2d not found for layer on planet: "+parentCelestialBody.name);
-								continue;
-							}
-
-							bool cloud2dScaled = (bool) cloud2dObj.GetType().GetField("isScaled", flags).GetValue(cloud2dObj);
-
-							MethodInfo scaledGetter = cloud2dObj.GetType().GetProperty("Scaled").GetGetMethod();
-							MethodInfo scaledSetter = cloud2dObj.GetType().GetProperty("Scaled").GetSetMethod();
-
-							//if in scaled mode, switch it to local then back to scaled, to set all the properties
-							if (cloud2dScaled)
-								scaledSetter.Invoke(cloud2dObj,new object[] { !cloud2dScaled });
-
-							scaledSetter.Invoke(cloud2dObj,new object[] { cloud2dScaled });
-						}
-
-						//initialize other params here
-						int size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
-						for (int i=0;i<size;i++)
-						{
-							InitUniforms(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-							InitPostprocessMaterial(Core.Instance.EVEClouds[parentCelestialBody.name][i]);
-							
-							if (EVEIntegration_preserveCloudColors)
-							{
-								Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
-								Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
-							}
-							else
-							{
-								Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
-								Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
-							}
-							
-						}
-					}
-
-					catch (Exception stupid)
-					{
-						Debug.Log ("[Scatterer] Error calling clouds2d.reassign() on planet: " + parentCelestialBody.name +" Exception returned: "+stupid.ToString ());
-					}
+					initiateEVEClouds();
 				}
 
 
-				initiated = true;
-				
+				skyNodeInitiated = true;
+				Debug.Log("[Scatterer] Skynode initiated for "+celestialBodyName);
 			}
 			else
 			{
 				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 				{
-					alt = Vector3.Distance (Core.Instance.farCamera.transform.position, parentCelestialBody.transform.position);
+					alt = Vector3.Distance (Core.Instance.farCamera.transform.position, parentLocalTransform.position);
 					
 					trueAlt = alt - m_radius;
 					
@@ -803,7 +731,8 @@ namespace scatterer
 					atmosphereMeshrenderer.enabled = atmosphereMeshrenderer.enabled && (trueAlt >= 0);
 				}
 
-				bool scaledSkyCondition = MapView.MapIsEnabled || (ReferenceEquals(CurrentPQS,null)); //scaledSkyCondition true -> scaledmode
+				bool scaledSkyCondition = MapView.MapIsEnabled || (ReferenceEquals(CurrentPQS,null))  || (HighLogic.LoadedScene == GameScenes.MAINMENU); //scaledSkyCondition true -> scaledmode
+//				Debug.Log("scaledSkyCondition "+scaledSkyCondition.ToString());
 
 				if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && !ReferenceEquals(CurrentPQS,null))
 				{
@@ -889,7 +818,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties._Sun_Intensity_PROPERTY, 100f);
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 			Shader.SetGlobalVector (ShaderProperties._Godray_WorldSunDir_PROPERTY, m_manager.sunCelestialBody.transform.position
-			                        - parentCelestialBody.transform.position);
+			                        - parentLocalTransform.position);
 			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION)) 
 			{
 				p = Core.Instance.farCamera.projectionMatrix;
@@ -902,18 +831,14 @@ namespace scatterer
 			m_cameraToScreenMatrix = new Matrix4x4d (p);
 			mat.SetMatrix (ShaderProperties._Globals_CameraToScreen_PROPERTY, m_cameraToScreenMatrix.ToMatrix4x4 ());
 			mat.SetMatrix (ShaderProperties._Globals_ScreenToCamera_PROPERTY, m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
-			
 			Vector3 temp = ScaledSpace.ScaledToLocalSpace (Core.Instance.scaledSpaceCamera.transform.position);
-			mat.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, temp);
+			mat.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, temp); //possibly not used anymore
 			#if skyScaledBox
-			if (scaledMode)
-				mat.SetVector (ShaderProperties._Scatterer_Origin_PROPERTY, Vector3.Scale(ParentPlanetTransform.transform.position, new Vector3(6000f,6000f,6000f)));
-			else
-				mat.SetVector (ShaderProperties._Scatterer_Origin_PROPERTY, parentCelestialBody.transform.position);
-			#else
-			mat.SetVector (ShaderProperties._Scatterer_Origin_PROPERTY, parentCelestialBody.transform.position);
+
+			if (!scaledMode)
+				mat.SetVector (ShaderProperties._Scatterer_Origin_PROPERTY, parentLocalTransform.position);
+
 			#endif
-			
 			if (!MapView.MapIsEnabled) {
 				mat.SetFloat (ShaderProperties._Exposure_PROPERTY, interpolatedSettings.skyExposure);
 				mat.SetFloat (ShaderProperties._RimExposure_PROPERTY, interpolatedSettings.skyRimExposure);
@@ -1048,11 +973,11 @@ namespace scatterer
 			if (Core.Instance.farCamera)
 			{
 				mat.SetMatrix ("_Globals_CameraToWorld", Core.Instance.farCamera.worldToCameraMatrix.inverse);
-				mat.SetVector ("_camPos", Core.Instance.farCamera.transform.position - parentCelestialBody.transform.position);  //better do this small calculation here
+				mat.SetVector ("_camPos", Core.Instance.farCamera.transform.position - parentLocalTransform.position);  //better do this small calculation here
 
 				mat.SetVector("_camForward", Core.Instance.farCamera.transform.forward);
 
-				Vector3d tmp = (Core.Instance.farCamera.transform.position) - m_manager.parentCelestialBody.transform.position;
+				Vector3d tmp = (Core.Instance.farCamera.transform.position) - parentLocalTransform.position;
 
 				Matrix4x4 ctol1 = Core.Instance.farCamera.cameraToWorldMatrix;
 				Matrix4x4 projMat = GL.GetGPUProjectionMatrix (Core.Instance.farCamera.projectionMatrix, false);
@@ -1190,20 +1115,8 @@ namespace scatterer
 			postprocessingEnabled = !postprocessingEnabled;
 		}
 		
-		public void SetParentCelestialBody (CelestialBody inPlanet)
-		{
-			parentCelestialBody = inPlanet;
-		}
-		
-		public void setParentPlanetTransform (Transform parentTransform)
-		{
-			ParentPlanetTransform = parentTransform;
-		}
-		
-		
 		void loadPrecomputedTables ()
 		{
-			
 			//load from .half, probably an 8 mb leak every scene change
 			//if no .half file exists, load from .raw file and create .half file
 			string _file = Core.Instance.gameDataPath + assetPath + "/inscatter.half";
@@ -1247,7 +1160,7 @@ namespace scatterer
 			if (!System.IO.File.Exists(_file))
 			{
 				Debug.Log("[Scatterer] no "+textureName+".raw or "+textureName+".half file found for "
-				          +parentCelestialBody.name);
+				          +celestialBodyName);
 				return;
 			}
 			
@@ -1311,10 +1224,6 @@ namespace scatterer
 			Component.Destroy (skyLocalMeshrenderer);
 			UnityEngine.Object.Destroy (skyLocalMesh);
 
-			RestoreStockAtmosphere ();
-
-			UnityEngine.Object.Destroy (alteredMaterial);
-			UnityEngine.Object.Destroy (originalMaterial);
 			//disable eve integration scatterer flag
 			if (Core.Instance.integrateWithEVEClouds && usesCloudIntegration)
 			{
@@ -1323,13 +1232,13 @@ namespace scatterer
 					int size;
 					
 					//2d clouds
-					if(Core.Instance.EVEClouds.ContainsKey(parentCelestialBody.name))
+					if(Core.Instance.EVEClouds.ContainsKey(celestialBodyName))
 					{
-						size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
+						size = Core.Instance.EVEClouds[celestialBodyName].Count;
 						for (int i=0;i<size;i++)
 						{
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("SCATTERER_ON");
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("SCATTERER_OFF");
+							Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_ON");
+							Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_OFF");
 						}
 					}
 					
@@ -1361,7 +1270,7 @@ namespace scatterer
 				skyLocalMeshrenderer.enabled=true;
 				
 				scaledMode=false;
-				Debug.Log("[Scatterer] Sky switched to local mode: "+parentCelestialBody.name);
+				Debug.Log("[Scatterer] Sky switched to local mode: "+celestialBodyName);
 			}
 			else   //switch to scaledMode
 			{
@@ -1369,7 +1278,7 @@ namespace scatterer
 				skyLocalMeshrenderer.enabled=false;
 				
 				scaledMode=true;
-				Debug.Log("[Scatterer] Sky switched to scaled mode: "+parentCelestialBody.name);
+				Debug.Log("[Scatterer] Sky switched to scaled mode: "+celestialBodyName);
 			}
 		}
 
@@ -1386,7 +1295,7 @@ namespace scatterer
 
 				foreach(ConfigNode _cn in configNodeArray)
 				{
-					if (_cn.HasValue("name") && _cn.GetValue("name") == parentCelestialBody.name)
+					if (_cn.HasValue("name") && _cn.GetValue("name") == celestialBodyName)
 					{
 						cnToLoad = _cn;
 						configUrl = _url;
@@ -1398,7 +1307,7 @@ namespace scatterer
 
 			if (found)
 			{
-				Debug.Log("[Scatterer] Atmosphere config found for: "+parentCelestialBody.name);
+				Debug.Log("[Scatterer] Atmosphere config found for: "+celestialBodyName);
 
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			
@@ -1410,10 +1319,10 @@ namespace scatterer
 			}
 			else
 			{
-				Debug.Log("[Scatterer] Atmosphere config not found for: "+parentCelestialBody.name);
-				Debug.Log("[Scatterer] Removing "+parentCelestialBody.name +" from planets list");
+				Debug.Log("[Scatterer] Atmosphere config not found for: "+celestialBodyName);
+				Debug.Log("[Scatterer] Removing "+celestialBodyName +" from planets list");
 
-				Core.Instance.scattererCelestialBodies.Remove(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == parentCelestialBody.name));
+				Core.Instance.scattererCelestialBodies.Remove(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == celestialBodyName));
 
 				m_manager.OnDestroy();
 				UnityEngine.Object.Destroy (m_manager);
@@ -1432,13 +1341,13 @@ namespace scatterer
 			
 			foreach(ConfigNode _cn in configNodeArray)
 			{
-				if (_cn.HasValue("name") && _cn.GetValue("name") == parentCelestialBody.name)
+				if (_cn.HasValue("name") && _cn.GetValue("name") == celestialBodyName)
 				{
 					ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
 					_cn.ClearData();
 					ConfigNode.Merge (_cn, cnTemp);
 					_cn.name="Atmo";
-					Debug.Log("[Scatterer] saving "+parentCelestialBody.name+" atmo config to: "+configUrl.parent.url);
+					Debug.Log("[Scatterer] saving "+celestialBodyName+" atmo config to: "+configUrl.parent.url);
 					configUrl.parent.SaveConfigs ();
 					found=true;
 					break;
@@ -1451,68 +1360,35 @@ namespace scatterer
 			}
 		}
 		
-		public void backupAtmosphereMaterial ()
-		{
-			Transform t = ScaledSpace.Instance.transform.FindChild (ParentPlanetTransform.name);
-			
-			for (int i = 0; i < t.childCount; i++) {
-				if (t.GetChild (i).gameObject.layer == 9) {
-					t.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (true);
-					//					originalMaterial = (Material)Material.Instantiate (t.renderer.sharedMaterial);
-					Renderer tRenderer=(Renderer) t.GetComponent(typeof(Renderer));
-					originalMaterial = (Material)Material.Instantiate (tRenderer.sharedMaterial);
-					
-					//					alteredMaterial = (Material)Material.Instantiate (t.renderer.sharedMaterial);
-					alteredMaterial = (Material)Material.Instantiate (tRenderer.sharedMaterial);
-					//					t.renderer.sharedMaterial = alteredMaterial;
-					tRenderer.sharedMaterial = alteredMaterial;
-					i = t.childCount + 10;
-				}
-			}
-		}
-
-		//surely there is a simpler way to do this
-		public void RestoreStockAtmosphere ()
-		{
-			Transform t = ScaledSpace.Instance.transform.FindChild (ParentPlanetTransform.name);
-			for (int i = 0; i < t.childCount; i++) {
-				if (t.GetChild (i).gameObject.layer == 9) {
-					t.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (true);
-					if (originalMaterial)
-					{
-						Renderer tRenderer=(Renderer) t.GetComponent(typeof(Renderer));
-						//						t.renderer.sharedMaterial = (Material)Material.Instantiate (originalMaterial);
-						tRenderer.sharedMaterial = (Material)Material.Instantiate (originalMaterial);
-					}
-					i = t.childCount + 10;
-				}
-			}
-		}
-		
-		
 		public void tweakStockAtmosphere ()
 		{
-			Transform t = ScaledSpace.Instance.transform.FindChild (ParentPlanetTransform.name);
-			
-			for (int i = 0; i < t.childCount; i++) {
-				if (t.GetChild (i).gameObject.layer == 9) {
-					t.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (false);
-					Renderer tRenderer=(Renderer) t.GetComponent(typeof(Renderer));
-					//					Material sharedMaterial = t.renderer.sharedMaterial;
-					Material sharedMaterial = tRenderer.sharedMaterial;
-					
-					sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
-					sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);
-					sharedMaterial.SetColor ("_SpecColor", new Color (specR / 100f, specG / 100f, specB / 100f));
-					sharedMaterial.SetFloat ("_Shininess", shininess / 100);
-					
-					i = t.childCount + 10;
+			for (int i = 0; i < parentScaledTransform.childCount; i++)
+			{
+				if (parentScaledTransform.GetChild (i).gameObject.layer == 9)
+				{
+					parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (false);
+					break;
 				}
 			}
+
+			Renderer tRenderer=(Renderer) parentScaledTransform.GetComponent(typeof(Renderer));
+			Material sharedMaterial = tRenderer.sharedMaterial;
+			
+			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
+			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);
+			sharedMaterial.SetColor ("_SpecColor", new Color (specR / 100f, specG / 100f, specB / 100f));
+			sharedMaterial.SetFloat ("_Shininess", shininess / 100);
 		}
 
 		public void interpolateVariables ()
 		{
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				interpolatedSettings.getValuesFrom(configPoints [configPoints.Count - 1]);
+				currentConfigPoint = configPoints.Count;
+				return;
+			}
+
 			if (trueAlt <= configPoints [0].altitude)
 			{
 				interpolatedSettings.getValuesFrom(configPoints [0]);
@@ -1537,18 +1413,74 @@ namespace scatterer
 			}
 		}
 
-		public void mapEVEvolumetrics()
+
+		public void initiateEVEClouds()
 		{
-			Debug.Log ("[Scatterer] Mapping EVE volumetrics for planet: "+parentCelestialBody.name);
+			try
+			{
+				const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
+					BindingFlags.Instance | BindingFlags.Static;
+				
+				foreach (object _obj in Core.Instance.EVECloudObjects[celestialBodyName]) 
+				{
+					object cloud2dObj = _obj.GetType().GetField("layer2D", flags).GetValue(_obj) as object;
+					if (cloud2dObj==null)
+					{
+						Debug.Log("[Scatterer] layer2d not found for layer on planet: "+celestialBodyName);
+						continue;
+					}
+					
+					bool cloud2dScaled = (bool) cloud2dObj.GetType().GetField("isScaled", flags).GetValue(cloud2dObj);
+					
+					MethodInfo scaledGetter = cloud2dObj.GetType().GetProperty("Scaled").GetGetMethod();
+					MethodInfo scaledSetter = cloud2dObj.GetType().GetProperty("Scaled").GetSetMethod();
+					
+					//if in scaled mode, switch it to local then back to scaled, to set all the properties
+					if (cloud2dScaled)
+						scaledSetter.Invoke(cloud2dObj,new object[] { !cloud2dScaled });
+					
+					scaledSetter.Invoke(cloud2dObj,new object[] { cloud2dScaled });
+				}
+				
+				//initialize other params here
+				int size = Core.Instance.EVEClouds[celestialBodyName].Count;
+				for (int i=0;i<size;i++)
+				{
+					InitUniforms(Core.Instance.EVEClouds[celestialBodyName][i]);
+					InitPostprocessMaterial(Core.Instance.EVEClouds[celestialBodyName][i]);
+					
+					if (EVEIntegration_preserveCloudColors)
+					{
+						Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
+						Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
+					}
+					else
+					{
+						Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
+						Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
+					}
+					
+				}
+			}
+			
+			catch (Exception stupid)
+			{
+				Debug.Log ("[Scatterer] Error calling clouds2d.reassign() on planet: " + celestialBodyName +" Exception returned: "+stupid.ToString ());
+			}
+		}
+
+		public void mapEVEVolumetrics()
+		{
+			Debug.Log ("[Scatterer] Mapping EVE volumetrics for planet: "+celestialBodyName);
 
 			EVEvolumetrics.Clear ();
 
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
 
-			if (Core.Instance.EVECloudObjects.ContainsKey (parentCelestialBody.name)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
+			if (Core.Instance.EVECloudObjects.ContainsKey (celestialBodyName)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
 			{
-				List<object> cloudObjs = Core.Instance.EVECloudObjects [parentCelestialBody.name];
+				List<object> cloudObjs = Core.Instance.EVECloudObjects [celestialBodyName];
 				
 				foreach (object _obj in cloudObjs)
 				{
@@ -1569,14 +1501,14 @@ namespace scatterer
 					}
 					catch (Exception stupid)
 					{
-						Debug.Log ("[Scatterer] Volumetric clouds error on planet: " + parentCelestialBody.name + stupid.ToString ());
+						Debug.Log ("[Scatterer] Volumetric clouds error on planet: " + celestialBodyName + stupid.ToString ());
 					}
 				}				
-				Debug.Log ("[Scatterer] Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + parentCelestialBody.name);
+				Debug.Log ("[Scatterer] Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + celestialBodyName);
 			}
 			else
 			{
-				Debug.Log ("[Scatterer] No cloud objects for planet: " + parentCelestialBody.name);
+				Debug.Log ("[Scatterer] No cloud objects for planet: " + celestialBodyName);
 			}
 		}
 
@@ -1584,25 +1516,37 @@ namespace scatterer
 		{
 			if (Core.Instance.integrateWithEVEClouds)
 			{
-				if(Core.Instance.EVEClouds.ContainsKey(parentCelestialBody.name)) //change to a bool hasclouds
+				if(Core.Instance.EVEClouds.ContainsKey(celestialBodyName)) //change to a bool hasclouds
 				{
-					int size = Core.Instance.EVEClouds[parentCelestialBody.name].Count;
+					int size = Core.Instance.EVEClouds[celestialBodyName].Count;
 					for (int i=0;i<size;i++)
 					{
 						if (EVEIntegration_preserveCloudColors)
 						{
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
 						}
 						else
 						{
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
-							Core.Instance.EVEClouds[parentCelestialBody.name][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
 						}
 					}
 				}
 				EVEIntegration_preserveCloudColors =!EVEIntegration_preserveCloudColors;
 			}
+		}
+
+		public void setCelestialBodyName(string name) {
+			celestialBodyName = name;
+		}
+		
+		public void setParentScaledTransform(Transform parentTransform) {
+			parentScaledTransform = parentTransform;
+		}
+		
+		public void setParentLocalTransform(Transform parentTransform) {
+			parentLocalTransform = parentTransform;
 		}
 
 	}
