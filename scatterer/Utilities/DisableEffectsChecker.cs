@@ -18,7 +18,7 @@ namespace scatterer
 {
 	public class DisableEffectsChecker : MonoBehaviour
 	{
-		DisableEffectsForTextureReplacer effectsDisabler;
+		Dictionary<Camera,DisableEffectsForTextureReplacer> camToEffectsDisablerDictionary =  new Dictionary<Camera,DisableEffectsForTextureReplacer>() ;
 		public SkyNode skynode;
 
 		public DisableEffectsChecker ()
@@ -31,19 +31,18 @@ namespace scatterer
 			if (!cam)
 				return;
 
-			if (cam.name == "TRReflectionCamera" && !effectsDisabler)
+			if (cam.name == "TRReflectionCamera" && !camToEffectsDisablerDictionary.ContainsKey(cam))
 			{
-				effectsDisabler = (DisableEffectsForTextureReplacer) cam.gameObject.AddComponent(typeof(DisableEffectsForTextureReplacer));
-
+				camToEffectsDisablerDictionary[cam] = (DisableEffectsForTextureReplacer) cam.gameObject.AddComponent(typeof(DisableEffectsForTextureReplacer));
 				Debug.Log("adding postprocesscube");
-				effectsDisabler.postProcessingCube=skynode.atmosphereMesh.GetComponent<MeshRenderer>();
+				camToEffectsDisablerDictionary[cam].postProcessingCube=skynode.atmosphereMesh.GetComponent<MeshRenderer>();
 
 				if (skynode.m_manager.hasOcean && Core.Instance.useOceanShaders)
 				{
 					Debug.Log("adding watermeshrenderers");
-					effectsDisabler.waterMeshRenderers = skynode.m_manager.GetOceanNode().waterMeshRenderers;
+					camToEffectsDisablerDictionary[cam].waterMeshRenderers = skynode.m_manager.GetOceanNode().waterMeshRenderers;
 					Debug.Log("adding numgrid");
-					effectsDisabler.numGrids = skynode.m_manager.GetOceanNode().numGrids;
+					camToEffectsDisablerDictionary[cam].numGrids = skynode.m_manager.GetOceanNode().numGrids;
 				}
 				Debug.Log("[Scatterer] Post-processing and ocean effects disabled from Texture Replacer reflections");
 			}
@@ -52,10 +51,14 @@ namespace scatterer
 
 		public void OnDestroy()
 		{
-			if (effectsDisabler) 
+			if (camToEffectsDisablerDictionary.Count != 0) 
 			{
-				Component.Destroy (effectsDisabler);
-				UnityEngine.Object.Destroy (effectsDisabler);
+				foreach (var _val in camToEffectsDisablerDictionary.Values)
+				{
+					Component.Destroy (_val);
+					UnityEngine.Object.Destroy (_val);
+				}
+				camToEffectsDisablerDictionary.Clear();
 			}
 		}
 	}
