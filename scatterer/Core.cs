@@ -247,7 +247,7 @@ namespace scatterer
 		public bool d3d11 = false;
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.0336dev";
+		string versionNumber = "0.0336";
 		
 		//Material originalMaterial;
 		

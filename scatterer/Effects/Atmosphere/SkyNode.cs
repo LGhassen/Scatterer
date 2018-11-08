@@ -319,9 +319,7 @@ namespace scatterer
 			atmosphereMeshrenderer.receiveShadows = false;
 			atmosphereMeshrenderer.enabled = true;
 
-			//atmosphereMesh.layer = 15;
-			atmosphereMesh.layer = 23;
-
+			atmosphereMesh.layer = 15;
 			
 			#if skyScaledBox
 			float skySphereSize = 2*(4 * (Rt-Rg) + Rg) / ScaledSpace.ScaleFactor;
@@ -332,7 +330,7 @@ namespace scatterer
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 				skyScaledMesh.layer = 15;
 			else
-				skyScaledMesh.layer = 10;
+				skyScaledMesh.layer = 9;
 
 			skyScaledMesh.transform.position = parentScaledTransform.position;
 			skyScaledMesh.transform.parent = parentScaledTransform;
@@ -350,8 +348,7 @@ namespace scatterer
 			
 			skyLocalCube = new SimplePostProcessCube (40000, m_skyMaterialLocal,false);
 			skyLocalMesh = skyLocalCube.GameObject;
-			//skyLocalMesh.layer = 15;
-			skyLocalMesh.layer = 23;
+			skyLocalMesh.layer = 15;
 			skyLocalMeshrenderer = skyLocalCube.GameObject.GetComponent < MeshRenderer > ();
 			skyLocalMeshrenderer.material = m_skyMaterialLocal;
 			
