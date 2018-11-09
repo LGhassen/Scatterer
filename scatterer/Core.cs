@@ -344,13 +344,7 @@ namespace scatterer
 			
 			//find main cameras
 			Camera[] cams = Camera.allCameras;
-			for (int i = 0; i < cams.Length; i++)
-			{
-				Debug.Log("Ghassen camera "+cams [i].name);
-				Debug.Log("Ghassen camera cullingmask"+cams [i].cullingMask);
-				Debug.Log("Ghassen camera nearplane"+cams [i].nearClipPlane);
-				Debug.Log("Ghassen camera farplane"+cams [i].farClipPlane);
-			}
+
 			scaledSpaceCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera ScaledSpace");
 			farCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 01");
 			nearCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 00");
