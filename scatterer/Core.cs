@@ -561,6 +561,7 @@ namespace scatterer
 						{
 							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
 							customSunFlare.sourceName=sunflareBody;
+							customSunFlare.sourceScaledTransform = GetScaledTransform(customSunFlare.source.name);
 							customSunFlare.start ();
 							customSunFlares.Add(customSunFlare);
 						}

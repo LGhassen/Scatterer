@@ -29,6 +29,7 @@ namespace scatterer
 
 		public CelestialBody source;
 		public string sourceName;
+		public Transform sourceScaledTransform;
 
 		Texture2D sunSpikes;
 		Texture2D sunFlare;
@@ -240,7 +241,7 @@ namespace scatterer
 			if(hitStatus)
 			{
 				//if sun visible, draw sunflare
-				if(hit.transform.gameObject.name == sourceName)
+				if(hit.transform == sourceScaledTransform)
 					hitStatus=false;
 			}
 
