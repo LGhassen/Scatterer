@@ -22,7 +22,7 @@ Shader "Scatterer/AtmosphericScatter" {
             #pragma fragment frag
             #pragma target 3.0
             #include "UnityCG.cginc"
-            #include "AtmosphereScatterer.cginc"
+            #include "CommonAtmosphere.cginc"
             
 //           	#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
             
@@ -149,7 +149,7 @@ Pass {
             #pragma fragment frag
             #pragma target 3.0
             #include "UnityCG.cginc"
-            #include "AtmosphereScatterer.cginc"
+            #include "CommonAtmosphere.cginc"
 
             #pragma multi_compile GODRAYS_OFF GODRAYS_ON
 //			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON

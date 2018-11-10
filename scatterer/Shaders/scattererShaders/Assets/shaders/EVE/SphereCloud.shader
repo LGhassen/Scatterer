@@ -69,7 +69,7 @@ Shader "Scatterer-EVE/Cloud" {
 				#include "cubeMap.cginc"
 				
 #ifdef SCATTERER_ON
-				#include "AtmosphereScatterer.cginc"
+				#include "../CommonAtmosphere.cginc"
 #endif
 
 				CUBEMAP_DEF_1(_MainTex)

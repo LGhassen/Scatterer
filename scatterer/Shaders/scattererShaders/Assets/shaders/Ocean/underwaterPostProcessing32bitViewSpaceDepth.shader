@@ -19,7 +19,7 @@ Pass {
             #pragma fragment frag
             #pragma target 3.0
             #include "UnityCG.cginc"
-            #include "AtmosphereScatterer.cginc"
+            #include "../CommonAtmosphere.cginc"
 
             uniform float3 _camPos; // camera position relative to planet's origin
             uniform float3 _camForward; //camera's viewing direction, in world space

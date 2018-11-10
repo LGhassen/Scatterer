@@ -28,7 +28,7 @@ Shader "Scatterer/SkyScaled"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#include "AtmosphereScatterer.cginc"			
+			#include "../CommonAtmosphere.cginc"			
 			
 			#define useAnalyticSkyTransmittance
 			
@@ -259,7 +259,7 @@ Shader "Scatterer/SkyScaled"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#include "AtmosphereScatterer.cginc"
+			#include "../CommonAtmosphere.cginc"
 			
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			//#pragma multi_compile DEFAULT_SQRT_OFF DEFAULT_SQRT_ON
