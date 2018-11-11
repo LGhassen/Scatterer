@@ -85,8 +85,7 @@ namespace scatterer
 		[Persistent]
 		public float
 			_mapExtinctionScatterIntensity = 1f;
-		
-		
+
 		[Persistent]
 		public bool drawSkyOverClouds = true;
 		
@@ -140,8 +139,6 @@ namespace scatterer
 		int waitCounter=0;
 		
 		public bool postprocessingEnabled = true;
-
-		
 
 		[Persistent]
 		public float mapAlphaGlobal = 1f;
@@ -380,8 +377,6 @@ namespace scatterer
 					
 					foreach( MonoBehaviour _script in scripts)
 					{						
-						//Debug.Log("script.GetType().ToString() "+_script.GetType().ToString());
-
 						if (_script.GetType().ToString().Contains("Ring")) //production-quality code
 						{
 							const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
@@ -401,15 +396,8 @@ namespace scatterer
 								Debug.Log("[Scatterer] ringTexture.width "+ringTexture.width.ToString());
 								Debug.Log("[Scatterer] ringTexture.height "+ringTexture.height.ToString());
 
-//								ringInnerRadius = (float) _script.GetType().GetField("innerRadius", flags).GetValue(_script);
-//								Debug.Log ("[Scatterer] ring innerRadius (scaled) " + ringInnerRadius.ToString ());
-//
-//								ringOuterRadius = (float) _script.GetType().GetField("outerRadius", flags).GetValue(_script);
-//								Debug.Log ("[Scatterer] ring outerRadius (scaled) " + ringOuterRadius.ToString ());
-
-								//ringMR
 								MeshRenderer ringMR = _script.GetType().GetField("ringMR", flags).GetValue(_script) as MeshRenderer;
-								Debug.Log("[Scatterer] ringMR fetch successful");
+								Debug.Log("[Scatterer] ring MeshRenderer fetch successful");
 
 								ringInnerRadius = ringMR.material.GetFloat("innerRadius");
 								ringOuterRadius = ringMR.material.GetFloat("outerRadius");
@@ -460,14 +448,10 @@ namespace scatterer
 				{
 					sunflareExtinctionMaterial.SetFloat ("ringInnerRadius", ringInnerRadius);
 					sunflareExtinctionMaterial.SetFloat ("ringOuterRadius", ringOuterRadius);
-					
 					sunflareExtinctionMaterial.SetVector ("ringNormal", ringObject.transform.up);
-					
 					sunflareExtinctionMaterial.SetTexture ("ringTexture", ringTexture);
 				}
-
 			}
-			
 		}
 
 		public void OnPreCull()
@@ -490,7 +474,6 @@ namespace scatterer
 
 				if (!MapView.MapIsEnabled) {
 					if (postprocessingEnabled) {
-						InitPostprocessMaterial (m_atmosphereMaterial);
 						UpdatePostProcessMaterial (m_atmosphereMaterial);
 					}
 				}
@@ -598,11 +581,8 @@ namespace scatterer
 					
 					for (int i=0;i<size;i++)
 					{
-						//keep these for now or something breaks in the extinction
-						InitUniforms(EVEvolumetrics[i]);
+						//TODO: simplify, take one or the other
 						SetUniforms(EVEvolumetrics[i]);
-						
-						InitPostprocessMaterial(EVEvolumetrics[i]);
 						UpdatePostProcessMaterial(EVEvolumetrics[i]);
 						
 						EVEvolumetrics[i].SetVector
@@ -651,7 +631,7 @@ namespace scatterer
 				if (!inScaledSpace && prevState)
 				{
 					//set flag to map EVE volumetrics after a few frames
-					if (Core.Instance.integrateWithEVEClouds)
+					if (Core.Instance.integrateWithEVEClouds && usesCloudIntegration)
 						mapVolumetrics=true;
 				}
 
@@ -688,23 +668,19 @@ namespace scatterer
 				Rt = (Rt / Rg) * m_radius;
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
-				//				sunglareCutoffAlt = experimentalAtmoScale*(Rt - Rg);
-				
-				
-				//backupAtmosphereMaterial ();
+
 				tweakStockAtmosphere ();
 
 				//disable postprocessing and ocean effects for Texture Replacer reflections
 				DisableEffectsChecker effectsDisabler = atmosphereMesh.AddComponent<DisableEffectsChecker>();
-				effectsDisabler.skynode = this;
+				effectsDisabler.manager = m_manager;
 
 				//after the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
 				//call EVE clouds2D.reassign() method to set the shader properties
-				if (Core.Instance.integrateWithEVEClouds)
+				if (Core.Instance.integrateWithEVEClouds && usesCloudIntegration)
 				{
 					initiateEVEClouds();
 				}
-
 
 				skyNodeInitiated = true;
 				Debug.Log("[Scatterer] Skynode initiated for "+celestialBodyName);
@@ -1054,7 +1030,6 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
 			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
 			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
-			//			mat.SetFloat (ShaderProperties._sunglareScale_PROPERTY, sunglareScale);	
 
 			//ring shadow parameters
 			if (hasRingObjectAndShadowActivated)
@@ -1485,14 +1460,28 @@ namespace scatterer
 					{
 						object cloudsPQS = _obj.GetType ().GetField ("cloudsPQS", flags).GetValue (_obj) as object;
 						object layerVolume = cloudsPQS.GetType ().GetField ("layerVolume", flags).GetValue (cloudsPQS) as object;
+						if (ReferenceEquals(layerVolume, null))
+						{
+							Debug.Log ("[Scatterer] No volumetric cloud for layer on planet: " + celestialBodyName);
+							continue;
+						}
 
 						//TODO take this snippet and use it somewhere else to disable volumetrics when rendering
 						//GameObject volumeHolder = layerVolume.GetType ().GetField ("VolumeHolder", flags).GetValue (layerVolume) as GameObject;
 
 						Material ParticleMaterial = layerVolume.GetType ().GetField ("ParticleMaterial", flags).GetValue (layerVolume) as Material;
-											
+
+						if (ReferenceEquals(layerVolume, null))
+						{
+							Debug.Log ("[Scatterer] Volumetric cloud has no material on planet: " + celestialBodyName);
+							continue;
+						}
+
 						ParticleMaterial.EnableKeyword ("SCATTERER_ON");
 						ParticleMaterial.DisableKeyword ("SCATTERER_OFF");
+
+						InitUniforms(ParticleMaterial);
+						InitPostprocessMaterial(ParticleMaterial);
 
 						EVEvolumetrics.Add (ParticleMaterial);
 					}
@@ -1546,5 +1535,10 @@ namespace scatterer
 			parentLocalTransform = parentTransform;
 		}
 
+		//to be called on loss of rendertextures, ie alt-enter
+		public void reInitMaterialUniformsOnRenderTexturesLoss()
+		{
+			InitPostprocessMaterial (m_atmosphereMaterial);
+		}
 	}
 }

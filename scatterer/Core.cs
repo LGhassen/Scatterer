@@ -1183,6 +1183,22 @@ namespace scatterer
 				}
 				Debug.Log("[Scatterer] Detected EVE 2d cloud layer for planet: "+body);
 			}
-		}		
+		}
+
+		public void onRenderTexturesLost()
+		{
+			foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
+			{
+				if (_cur.active)
+				{
+					_cur.m_manager.m_skyNode.reInitMaterialUniformsOnRenderTexturesLoss ();
+					if (_cur.m_manager.hasOcean && useOceanShaders && !_cur.m_manager.m_skyNode.inScaledSpace)
+					{
+						_cur.m_manager.reBuildOcean ();
+					}
+				} 
+			}
+
+		}
 	}
 }

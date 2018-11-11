@@ -615,8 +615,9 @@ namespace scatterer
 			//1)for double precision
 			//2)for speed
 
-			Vector3d2 sphereDir=(localToCam * Vector3d2.Zero ()).Normalized();  //direction to center of planet			
-			double OHL = (localToCam * Vector3d2.Zero ()).Magnitude ();         //distance to center of planet
+			Vector3d2 sphereDir=localToCam * Vector3d2.Zero ();  //vector to center of planet			
+			double OHL = sphereDir.Magnitude ();         		 //distance to center of planet
+			sphereDir = sphereDir.Normalized ();		 		 //direction to center of planet
 
 			double rHorizon = Math.Sqrt( (OHL)*(OHL) - (radius * radius));  //distance to the horizon, i.e distance to ocean sphere tangent
 																			//basic geometry yo
@@ -790,6 +791,14 @@ namespace scatterer
 				
 				this.Cleanup();
 				UnityEngine.Object.Destroy (this);
+			}
+		}
+
+		public void setWaterMeshrenderersEnabled (bool enabled)
+		{
+			for (int i=0; i < numGrids; i++)
+			{
+				waterMeshRenderers[i].enabled=enabled;
 			}
 		}
 	}

@@ -17,8 +17,6 @@ namespace scatterer
 		public bool usesCloudIntegration = true;
 		
 		public double m_radius = 600000.0f;
-		int waitBeforeReloadCnt=0;
-		
 		
 		OceanWhiteCaps m_oceanNode;
 		public SkyNode m_skyNode;
@@ -33,11 +31,8 @@ namespace scatterer
 
 		public List<AtmoPlanetShineSource> planetshineSources;
 
-		
-		// Initialization
 		public void Awake()
 		{
-
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
 				GameObject _go = Core.GetMainMenuObject(parentCelestialBody.name);
@@ -82,22 +77,11 @@ namespace scatterer
 		
 		public void Update()
 		{	
-			
 			m_skyNode.UpdateNode();
 			
 			if (hasOcean && Core.Instance.useOceanShaders)
 			{
 				m_oceanNode.UpdateNode();
-
-				if (!m_oceanNode.rendertexturesCreated)
-				{
-					waitBeforeReloadCnt++;
-					if (waitBeforeReloadCnt >= 2)
-					{
-						reBuildOcean ();
-						waitBeforeReloadCnt = 0;
-					}
-				}
 			}
 		}
 		

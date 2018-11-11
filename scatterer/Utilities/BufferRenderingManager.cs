@@ -67,6 +67,7 @@ namespace scatterer
 			{
 				Debug.Log("[Scatterer] BufferRenderingManager: Recreating textures");
 				createTextures();
+				Core.Instance.onRenderTexturesLost();
 			}
 
 			//Render depth buffer
