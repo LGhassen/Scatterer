@@ -59,16 +59,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Plugins\Math\MathUtility.cs" />
-    <Compile Include="Plugins\Math\Matrix3x3.cs" />
-    <Compile Include="Plugins\Math\Matrix3x3d.cs" />
-    <Compile Include="Plugins\Math\Matrix4x4d.cs" />
-    <Compile Include="Plugins\Math\Quat.cs" />
-    <Compile Include="Plugins\Math\Vector2d.cs" />
-    <Compile Include="Plugins\Math\Vector2i.cs" />
-    <Compile Include="Plugins\Math\Vector3d2.cs" />
-    <Compile Include="Plugins\Math\Vector4d.cs" />
-    <Compile Include="Plugins\Utility\MeshFactory.cs" />
     <Compile Include="DataSerialization\ConfigPoint.cs" />
     <Compile Include="DataSerialization\PlanetshineSource.cs" />
     <Compile Include="DataSerialization\ScattererCelestialBody.cs" />
@@ -83,7 +73,6 @@
     <Compile Include="Utilities\ShaderProperties.cs" />
     <Compile Include="Utilities\RenderTypeFixer.cs" />
     <Compile Include="Utilities\ShaderReplacer.cs" />
-    <Compile Include="Utilities\SimplePostProcessCube.cs" />
     <Compile Include="Effects\Manager.cs" />
     <Compile Include="Effects\Atmosphere\SkyNode.cs" />
     <Compile Include="Effects\Ocean\Node.cs" />
@@ -102,6 +91,18 @@
     <Compile Include="Effects\SunFlare\SunflareCameraHook.cs" />
     <Compile Include="GUI\GUIhandler.cs" />
     <Compile Include="GUI\ToolbarButton.cs" />
+    <Compile Include="Utilities\TweakFarCameraShadowCascades.cs" />
+    <Compile Include="Utilities\MeshFactory.cs" />
+    <Compile Include="Utilities\Math\MathUtility.cs" />
+    <Compile Include="Utilities\Math\Matrix3x3.cs" />
+    <Compile Include="Utilities\Math\Matrix3x3d.cs" />
+    <Compile Include="Utilities\Math\Matrix4x4d.cs" />
+    <Compile Include="Utilities\Math\Quat.cs" />
+    <Compile Include="Utilities\Math\Vector2d.cs" />
+    <Compile Include="Utilities\Math\Vector2i.cs" />
+    <Compile Include="Utilities\Math\Vector3d2.cs" />
+    <Compile Include="Utilities\Math\Vector4d.cs" />
+    <Compile Include="Utilities\SimpleRenderingShape.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -109,5 +110,6 @@
     <Folder Include="Effects\" />
     <Folder Include="Effects\SunFlare\" />
     <Folder Include="GUI\" />
+    <Folder Include="Utilities\Math\" />
   </ItemGroup>
 </Project>
