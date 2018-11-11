@@ -17,9 +17,7 @@ namespace scatterer
 {
 	public class DisableEffectsForTextureReplacer : MonoBehaviour
 	{
-		public MeshRenderer[] waterMeshRenderers;
-		public MeshRenderer postProcessingCube;
-		public int numGrids=0;
+		public Manager manager;
 
 		public DisableEffectsForTextureReplacer ()
 		{
@@ -27,24 +25,17 @@ namespace scatterer
 
 		public void OnPreCull()
 		{
-			postProcessingCube.enabled = false;
-
-			for (int i=0; i < numGrids; i++)
-			{
-				waterMeshRenderers[i].enabled=false;
-			}
+			manager.GetSkyNode().atmosphereMeshrenderer.enabled = false;
+			if (manager.hasOcean && Core.Instance.useOceanShaders)
+				manager.GetOceanNode ().setWaterMeshrenderersEnabled (false);
 
 		}
 
 		public void OnPostRender()
 		{
-			postProcessingCube.enabled = true;
-
-			for (int i=0; i < numGrids; i++)
-			{
-				waterMeshRenderers[i].enabled=true;
-			}
-			
+			manager.GetSkyNode().atmosphereMeshrenderer.enabled = true;
+			if (manager.hasOcean && Core.Instance.useOceanShaders)
+				manager.GetOceanNode ().setWaterMeshrenderersEnabled (true);
 		}
 	}
 }
