@@ -357,6 +357,7 @@ namespace scatterer
 					nearCamera.nearClipPlane = nearClipPlane;
 				}
 				farCamera.nearClipPlane = nearCamera.farClipPlane-0.2f; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
+				farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -371,15 +372,9 @@ namespace scatterer
 			
 			foreach (Light _light in lights)
 			{
-				Debug.Log("Ghoss light name "+_light.gameObject.name);
-				Debug.Log("intensity " +_light.intensity.ToString());
-				Debug.Log("type " +_light.type.ToString());
-				Debug.Log("layer " +_light.gameObject.layer.ToString());
-				
 				if (_light.gameObject.name == "Scaledspace SunLight")
 				{
 					scaledspaceSunLight=_light.gameObject;
-					Debug.Log("Found scaled sunlight");
 					
 					_light.shadowNormalBias =shadowNormalBias;
 					_light.shadowBias=shadowBias;
@@ -388,13 +383,12 @@ namespace scatterer
 				if (_light.gameObject.name == "SunLight")
 				{
 					sunLight=_light.gameObject;
-					Debug.Log("Found Sunlight");
 				}	
 				
 				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light"))
 				{
 					mainMenuLight = _light.gameObject;
-					Debug.Log("Found main menu light");
+					Debug.Log("[Scatterer] Found main menu light");
 				}
 			}
 			
@@ -1039,30 +1033,33 @@ namespace scatterer
 		{
 			if (terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
 			{
+				QualitySettings.shadowDistance = shadowsDistance;
+				Debug.Log("[Scatterer] Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
+				QualitySettings.shadowProjection = ShadowProjection.StableFit;
+
+				//set shadow bias
+				//fixes checkerboard artifacts aka shadow acne
+				lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+				foreach (Light _light in lights)
+				{
+					if ((_light.gameObject.name == "Scaledspace SunLight") 
+					    || (_light.gameObject.name == "SunLight"))
+					{
+						_light.shadowNormalBias =shadowNormalBias;
+						_light.shadowBias=shadowBias;
+
+						//_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.VeryHigh;
+						//_light.shadows=LightShadows.Soft;
+						//_light.shadowCustomResolution=8192;
+					}
+				}
+
 				foreach (CelestialBody _sc in CelestialBodies)
 				{
 					if (_sc.pqsController)
 					{
 						_sc.pqsController.meshCastShadows = true;
 						_sc.pqsController.meshRecieveShadows = true;
-
-//						Debug.Log("[Scatterer] PQS material of "+_sc.name+": "
-//						          +_sc.pqsController.surfaceMaterial.shader.name);
-
-						QualitySettings.shadowDistance = shadowsDistance;
-
-						//set shadow bias
-						//fixes checkerboard artifacts aka shadow acne
-						lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-						foreach (Light _light in lights)
-						{
-							if ((_light.gameObject.name == "Scaledspace SunLight") 
-							    || (_light.gameObject.name == "SunLight"))
-							{
-								_light.shadowNormalBias =shadowNormalBias;
-								_light.shadowBias=shadowBias;
-							}
-						}
 					}
 				}
 			}
