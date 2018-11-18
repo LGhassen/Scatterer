@@ -162,32 +162,32 @@ namespace scatterer
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
 				//create textures
-				depthTexture = new RenderTexture ( Screen.width, Screen.height,16, RenderTextureFormat.RFloat);
+				depthTexture = new RenderTexture ( Screen.width, Screen.height,24, RenderTextureFormat.RFloat);
 				depthTexture.name = "scattererDepthTexture";
 				depthTexture.useMipMap  = false;
 				depthTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
 				//depthTexture.antiAliasing = GameSettings.ANTI_ALIASING; //fixes some issue with aliased objects in front of water, creates halo on edge of objects however
-				depthTexture.antiAliasing = 0;
+				depthTexture.antiAliasing = 1;
 				depthTexture.Create ();
 				
 				//godray stuff
 				if (Core.Instance.useGodrays)
 				{
-					godrayDepthTexture = new RenderTexture (Screen.width, Screen.height, 16, RenderTextureFormat.RFloat);
+					godrayDepthTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.RFloat);
 					godrayDepthTexture.name = "scattererGodrayDepthTexture";
 					godrayDepthTexture.filterMode = FilterMode.Point;
-					godrayDepthTexture.antiAliasing = 0;
+					godrayDepthTexture.antiAliasing = 1;
 					godrayDepthTexture.useMipMap = false;
 					godrayDepthTexture.Create ();
 				}
 
 				if (Core.Instance.useOceanShaders && Core.Instance.oceanRefraction)
 				{
-					refractionTexture = new RenderTexture ( Screen.width,Screen.height,16, RenderTextureFormat.ARGB32);
+					refractionTexture = new RenderTexture ( Screen.width,Screen.height,0, RenderTextureFormat.ARGB32);
 					refractionTexture.name = "scattererRefractionTexture";
 					refractionTexture.useMipMap=false;
 					refractionTexture.filterMode = FilterMode.Bilinear;
-					refractionTexture.antiAliasing = 0;
+					refractionTexture.antiAliasing = 1;
 					refractionTexture.Create ();
 				}
 			}
