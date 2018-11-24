@@ -515,7 +515,8 @@ namespace scatterer {
 						                                        0f),0.25f);
 						if (newheight!= (-255f))
 						{
-							_part.waterLevel=m_oceanLevel+newheight;
+							//_part.waterLevel=m_oceanLevel+newheight;
+							_part.waterLevel=newheight;
 						}
 						//						_part.waterLevel=m_oceanLevel;
 

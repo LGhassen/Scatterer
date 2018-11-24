@@ -82,7 +82,7 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 			#pragma vertex vert
 			#pragma fragment frag
 			
-			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
+			//#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile REFRACTION_OFF REFRACTION_ON
 			#pragma multi_compile SKY_REFLECTIONS_OFF SKY_REFLECTIONS_ON
 			#pragma multi_compile UNDERWATER_OFF UNDERWATER_ON
@@ -104,7 +104,7 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 			uniform float4x4 _Globals_WorldToOcean;
 			uniform float4x4 _Globals_OceanToWorld;
 			
-			uniform float3 _Scatterer_Origin;
+			//uniform float3 _Scatterer_Origin;
 			uniform float3 _Sun_WorldSunDir;
 			
 			uniform float2 _Ocean_MapSize;
@@ -129,8 +129,9 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 			uniform sampler2D _Ocean_Foam1;
 			
 			uniform float _OceanAlpha;
-			uniform float _GlobalOceanAlpha;
 			uniform float alphaRadius;
+			uniform float _PlanetOpacity;  //to fade out the ocean when PQS is fading out
+			uniform float _ScatteringExposure;
 			
 			uniform float2 _VarianceMax;
 
@@ -208,7 +209,7 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 
 				outpos = mul(_Globals_CameraToScreen, screenP);
 				outpos.y = outpos.y *_ProjectionParams.x;
-								
+				
 			    OUT.oceanU = u;
 			    OUT.oceanP = oceanP;
 			    OUT.viewSpaceDirDist = float4(cameraDir,t); //xyz camera space viewDir, w length
@@ -371,8 +372,6 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 				float3 Lsea =   0.98 * (1.0 - fresnel) * _Ocean_Color * (skyE / M_PI);
 
 #if defined (UNDERWATER_ON)
-				//Lsea = 0.98 * _Ocean_Color * (skyE / M_PI);   //find a fix for this
-
 				float3 ocColor = oceanColor(reflect(-V,N),L,float3(0.0,0.0,0.0));
 				float waterLightExtinction = length(getSkyExtinction(earthP, L));
 				Lsea = hdrNoExposure(waterLightExtinction * ocColor);
@@ -386,22 +385,28 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 				float2 jm  = jm1+jm2+jm3+jm4;
 				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
 
-
 				//depth stuff
-#if defined (UNDERWATER_ON)
+#if defined (REFRACTION_ON)
+		#if defined (UNDERWATER_ON)
 				float2 uv = IN.depthUV.xy + (N.xy)*0.025 * float2(1.0,10.0);
-#else
+		#else
 				float2 uv = IN.depthUV.xy + N.xy*0.025;
+		#endif				
+#else
+				float2 uv = IN.depthUV.xy;
 #endif
-				float fragDepth = tex2D(_customDepthTexture, uv).r * 750000;
-				//float fragDistance = fragDepth /angleToCameraAxis;
+
+
+				float fragDepth = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000;
 				float angleToCameraAxis = dot(IN.viewSpaceDirDist.xyz, float3(0.0,0.0,-1.0));
 				float ocDepth = IN.viewSpaceDirDist.w * angleToCameraAxis;
 				float depth= fragDepth - ocDepth;
 
-				uv = (depth < 0) ? IN.depthUV.xy : uv;
-				fragDepth = tex2D(_customDepthTexture, uv).r * 750000;
+#if defined (REFRACTION_ON)
+				uv = (depth < 0) ? IN.depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
+				fragDepth = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000;
 				depth= fragDepth - ocDepth;
+#endif
 
 				depth = depth / angleToCameraAxis; //distance from depth (approx, doesn't take in consideration refraction angle but whatever, should be small enough)
 
@@ -409,6 +414,8 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 
 				float outAlpha=lerp(0.0,1.0,depth/transparencyDepth);
 				_Ocean_WhiteCapStr=lerp(shoreFoam,_Ocean_WhiteCapStr, depth*0.2);
+				_Ocean_WhiteCapStr= (depth <= 0.0) ? 0.0 : _Ocean_WhiteCapStr; //fixes white outline around objects in front of the ocean
+
 				float outWhiteCapStr=lerp(_Ocean_WhiteCapStr,farWhiteCapStr,clampFactor);
 
 				// get coverage
@@ -419,44 +426,51 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 				float3 R_ftot = float3(W * l * 0.4);
 
 #if defined (UNDERWATER_ON)
-				float3 surfaceColor = Lsky + Lsea + R_ftot;
+				float3 surfaceColor = abs(Lsky + Lsea + R_ftot);
 #else
-				float3 surfaceColor = Lsun + Lsky + Lsea + R_ftot;
+				float3 surfaceColor = abs(Lsun + Lsky + Lsea + R_ftot);
+#endif
+				float LsunTotal   = Lsun;
+				float R_ftotTotal = R_ftot;
+				float LseaTotal   = Lsea;
+				float LskyTotal   = Lsky;
+
+#if defined (PLANETSHINE_ON)
+			    for (int i=0; i<4; ++i)
+    			{
+    				if (planetShineRGB[i].w == 0) break;
+    				
+    				L=normalize(planetShineSources[i].xyz);
+					SunRadianceAndSkyIrradiance(earthP, N, L, sunL, skyE);
+					
+					#if defined (SKY_REFLECTIONS_ON)
+						Lsky = fresnel * ReflectedSky(V, N, L, earthP);   //planet, accurate sky reflections
+					#else
+						Lsky = fresnel * skyE / M_PI; 		   //planet, sky irradiance only
+					#endif				
+					
+					Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
+					Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * skyE / M_PI;
+					l = (sunL * (max(dot(N, L), 0.0)) + skyE) / M_PI;
+					R_ftot = float3(W * l * 0.4);
+					
+					//if source is not a sun compute intensity of light from angle to light source
+			   		float intensity=1;  
+			   		if (planetShineSources[i].w != 1.0f)
+					{
+						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - earthP),_Ocean_SunDir)),0);
+					}
+					
+					surfaceColor+= abs((Lsun + Lsky + Lsea + R_ftot)*planetShineRGB[i].xyz*planetShineRGB[i].w*intensity);
+					LsunTotal   += Lsun;
+					R_ftotTotal += R_ftot;
+					LseaTotal   += Lsea;
+					LskyTotal   += Lsky;
+				}
+	
 #endif
 
-//#if defined (PLANETSHINE_ON)
-//			    for (int i=0; i<4; ++i)
-//    			{
-//    				if (planetShineRGB[i].w == 0) break;
-//    				
-//    				L=normalize(planetShineSources[i].xyz);
-//					SunRadianceAndSkyIrradiance(earthP, N, L, sunL, skyE);
-//					
-//					#if defined (SKY_REFLECTIONS_ON)
-//						Lsky = fresnel * ReflectedSky(V, N, L, earthP);   //planet, accurate sky reflections
-//					#else
-//						Lsky = fresnel * skyE / M_PI; 		   //planet, sky irradiance only
-//					#endif
-//				
-//					
-//					Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
-//					Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * skyE / M_PI;
-//					l = (sunL * (max(dot(N, L), 0.0)) + skyE) / M_PI;
-//					R_ftot = float3(W * l * 0.4);
-//					
-//					//if source is not a sun compute intensity of light from angle to light source
-//			   		float intensity=1;  
-//			   		if (planetShineSources[i].w != 1.0f)
-//					{
-//						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - earthP),_Sun_WorldSunDir)),0);
-//					}
-//					
-//					surfaceColor+= (Lsun + Lsky + Lsea + R_ftot)*planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
-//				}
-//	
-//#endif
-
-				outAlpha = max(hdr(Lsun + R_ftot), fresnel+outAlpha) ; //seems about perfect
+				outAlpha = max(hdr(LsunTotal + R_ftotTotal,_ScatteringExposure), fresnel+outAlpha) ; //seems about perfect
 				outAlpha = min(outAlpha, 1.0);
 
 #if defined (REFRACTION_ON)
@@ -469,47 +483,63 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 		#if defined (UNDERWATER_ON)
 
 				float3 transmittance =  Lsky+R_ftot;
-				//float3 transmittance =  Lsky+R_ftot+Lsun;
-				float3 reflectance 	 =  Lsea;
-
+				//float3 transmittance =  LskyTotal+R_ftotTotal; //causes gray sky idk why
+				backGrnd+=hdr(R_ftotTotal,_ScatteringExposure)*(1-backGrnd); //make foam visible from below as well
 				fresnel= clamp(fresnel,0.0,1.0);
-				float3 finalColor = lerp(clamp(hdr(transmittance),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel); ;   //+distance fog
+				float3 finalColor = lerp(clamp(hdr(transmittance,_ScatteringExposure),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel); ;   //+distance fog
+				//float3 finalColor = lerp(clamp(hdr(transmittance),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),LseaTotal, 1-fresnel); ;   //+distance fog
 				finalColor = ((fragDepth < 750000.0) && (backGrnd.r != 0.0)) ? backGrnd : finalColor;
 
 				float3 Vworld = mul ( _Globals_OceanToWorld, float4(V,0.0));
 				float3 Lworld = mul ( _Globals_OceanToWorld, float4(L,0.0));
+				//float3 Lworld = mul ( _Globals_OceanToWorld, float4(_Ocean_SunDir,0.0));
 
 				float3 earthCamPos = normalize(float3(_Ocean_CameraPos.xy,0.0) + float3(0.0, 0.0, radius)) * (radius + 10.0);
 
 				float underwaterDepth = lerp(1.0,0.0,-_Ocean_CameraPos.z / darknessDepth);
 
 				waterLightExtinction = length(getSkyExtinction(earthCamPos, L));
-				float3 oceanCol = underwaterDepth * hdrNoExposure(waterLightExtinction * oceanColor(-Vworld,Lworld,float3(0.0,0.0,0.0)));
+				//waterLightExtinction = length(getSkyExtinction(earthCamPos, _Ocean_SunDir));
+				float3 oceanCol = underwaterDepth * hdrNoExposure(waterLightExtinction * oceanColor(-Vworld,Lworld,float3(0.0,0.0,0.0))); //add planetshine loop here over Ls
+
+//				#if defined (PLANETSHINE_ON)
+//			    for (int j=0; j<4; ++j)
+//    			{
+//    				if (planetShineRGB[j].w == 0) break;
+//    				
+//    				L=normalize(planetShineSources[j].xyz);
+//					waterLightExtinction = length(getSkyExtinction(earthCamPos, L));
+//					Lworld = mul ( _Globals_OceanToWorld, float4(L,0.0));
+//
+//					//if source is not a sun compute intensity of light from angle to light source
+//			   		float lintensity=1;  
+//			   		if (planetShineSources[j].w != 1.0f)
+//					{
+//						lintensity = 0.57f*max((0.75-dot(normalize(planetShineSources[j].xyz - earthP),_Ocean_SunDir)),0);
+//					}
+//
+//					oceanCol+= underwaterDepth * hdrNoExposure(planetShineRGB[j].xyz * planetShineRGB[j].w * lintensity * waterLightExtinction * oceanColor(-Vworld,Lworld,float3(0.0,0.0,0.0)));
+//				}	
+//				#endif
 
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
-
 				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
-				//return float4(finalColor,1.0);
 				return float4(dither(finalColor, screenPos),1.0);
 		#else
-				float3 finalColor = lerp(backGrnd, hdr(surfaceColor), outAlpha);  //refraction on and not underwater
-				//return float4(finalColor, _GlobalOceanAlpha);
-				return float4(dither(finalColor,screenPos), _GlobalOceanAlpha);
+				float3 finalColor = lerp(backGrnd, hdr(surfaceColor,_ScatteringExposure), outAlpha);  //refraction on and not underwater
+				return float4(dither(finalColor,screenPos), _PlanetOpacity);
 		#endif
 #else
 
-
-				#if defined (UNDERWATER_ON)
+#if defined (UNDERWATER_ON)
 					//return float4(hdr(surfaceColor),_GlobalOceanAlpha * outAlpha);   //refraction OFF and underwater ON //TODO:FIX THIS
 					
-				float3 transmittance =  Lsky+R_ftot;
-				//float3 transmittance =  Lsky+R_ftot+Lsun;
-				float3 reflectance 	 =  Lsea;
+				//float3 transmittance =  Lsky+R_ftot;
+				float3 transmittance =  Lsky;
 
 				fresnel= clamp(fresnel,0.0,1.0);
-				float3 finalColor = lerp(clamp(hdr(transmittance),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel); ;   //+distance fog
-				//finalColor = ((fragDepth < 750000.0) && (backGrnd.r != 0.0)) ? backGrnd : finalColor;
+				float3 finalColor = lerp(clamp(hdr(transmittance,_ScatteringExposure),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel);   //+distance fog
 
 				float3 Vworld = mul ( _Globals_OceanToWorld, float4(V,0.0));
 				float3 Lworld = mul ( _Globals_OceanToWorld, float4(L,0.0));
@@ -525,13 +555,10 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 
 				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
-				//return float4(finalColor,1.0);
 				return float4(dither(finalColor, screenPos),1.0);
-					
-				#else
-					//return float4(hdr(surfaceColor),_GlobalOceanAlpha * outAlpha);
-					return float4(dither(hdr(surfaceColor),screenPos),_GlobalOceanAlpha * outAlpha);
-				#endif
+		#else
+				return float4(dither(hdr(surfaceColor,_ScatteringExposure),screenPos),outAlpha * _PlanetOpacity);
+		#endif
 #endif
 
 				}
@@ -547,6 +574,7 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
     	
 //    		Blend One One
 			Blend One OneMinusSrcColor //"reverse" soft-additive
+//			Blend SrcAlpha OneMinusSrcAlpha
     	
 			CGPROGRAM
 			#include "UnityCG.cginc"
@@ -592,8 +620,8 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 			uniform sampler2D _Ocean_Foam1;
 			
 			uniform float _OceanAlpha;
-			uniform float _GlobalOceanAlpha;
 			uniform float alphaRadius;
+			uniform float _ScatteringExposure;
 			
 			uniform float2 _VarianceMax;
 			
@@ -604,22 +632,19 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
     			float4  pos : SV_POSITION;
     			float2  oceanU : TEXCOORD0;
     			float3  oceanP : TEXCOORD1;
-    			float3  vertexPos : TEXCOORD2;
-    			LIGHTING_COORDS(3,4)
+    			LIGHTING_COORDS(2,3)
 			};
 		
 			v2f vert(appdata_base v)
 			{
 				float t;
 				float3 cameraDir, oceanDir;
-				
 				float4 vert = v.vertex;
 				vert.xy *= 1.25;
 
-				float2 u = OceanPos(vert, _Globals_ScreenToCamera, t, cameraDir, oceanDir);
+				float2 u = OceanPos(vert, _Globals_ScreenToCamera, t, cameraDir, oceanDir);		//camera dir is viewing direction in camera space
 			    float2 dux = OceanPos(vert + float4(_Ocean_ScreenGridSize.x, 0.0, 0.0, 0.0), _Globals_ScreenToCamera) - u;
 			    float2 duy = OceanPos(vert + float4(0.0, _Ocean_ScreenGridSize.y, 0.0, 0.0), _Globals_ScreenToCamera) - u;
-
 
 			    float3 dP = float3(0, 0, _Ocean_HeightOffset);
 			    
@@ -632,40 +657,31 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 			        dP.z += Tex2DGrad(_Ocean_Map0, u / GRID_SIZES.y, dux / GRID_SIZES.y, duy / GRID_SIZES.y, _Ocean_MapSize).y;
 			        dP.z += Tex2DGrad(_Ocean_Map0, u / GRID_SIZES.z, dux / GRID_SIZES.z, duy / GRID_SIZES.z, _Ocean_MapSize).z;
 			        dP.z += Tex2DGrad(_Ocean_Map0, u / GRID_SIZES.w, dux / GRID_SIZES.w, duy / GRID_SIZES.w, _Ocean_MapSize).w;
-
+			        
 			        dP.xy += CHOPPYNESS.x * Tex2DGrad(_Ocean_Map3, u / GRID_SIZES.x, dux / GRID_SIZES.x, duy / GRID_SIZES.x, _Ocean_MapSize).xy;
 			        dP.xy += CHOPPYNESS.y * Tex2DGrad(_Ocean_Map3, u / GRID_SIZES.y, dux / GRID_SIZES.y, duy / GRID_SIZES.y, _Ocean_MapSize).zw;
 			        dP.xy += CHOPPYNESS.z * Tex2DGrad(_Ocean_Map4, u / GRID_SIZES.z, dux / GRID_SIZES.z, duy / GRID_SIZES.z, _Ocean_MapSize).xy;
 			        dP.xy += CHOPPYNESS.w * Tex2DGrad(_Ocean_Map4, u / GRID_SIZES.w, dux / GRID_SIZES.w, duy / GRID_SIZES.w, _Ocean_MapSize).zw;
-
 			    }
 
 				v2f OUT;
 				
     			float3x3 otoc = _Ocean_OceanToCamera;
-				float tClamped = clamp(t*0.25, 0.0, 1.0);
+    			float tClamped = clamp(t*0.25, 0.0, 1.0);
 
-#if defined (UNDERWATER_ON)
-				dP = lerp(float3(0.0,0.0,0.1),dP,tClamped);  //prevents projected grid intersecting near plane
-#else
 				dP = lerp(float3(0.0,0.0,-0.1),dP,tClamped);  //prevents projected grid intersecting near plane
-#endif
 
-    			float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);
-    			float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z); 
-    			
-				float4 pos = mul(_Globals_CameraToScreen, screenP);
-				pos = pos.y *_ProjectionParams.x;
+    			float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);   //position in camera space?
+    			float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
-				OUT.pos = pos;			
+				OUT.pos = mul(_Globals_CameraToScreen, screenP);
+				OUT.pos.y = OUT.pos.y *_ProjectionParams.x;
+				
 			    OUT.oceanU = u;
 			    OUT.oceanP = oceanP;
-			    
+
 			    float4 worldPos=mul(_Globals_CameraToWorld , screenP);
-			    
 			    OCEAN_TRANSFER_VERTEX_TO_FRAGMENT(OUT);
-			    
-			    OUT.vertexPos=worldPos.xyz;
 			    
     			return OUT;
 			}
@@ -673,7 +689,6 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 			
 			float4 frag(v2f IN) : COLOR
 			{
-
     			float radius = _Ocean_Radius;
 				float2 u = IN.oceanU;
 				float3 oceanP = IN.oceanP;
@@ -697,11 +712,9 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
     			slopes += tex2D(_Ocean_Map1, u / _Ocean_GridSizes.y).zw;
     			slopes += tex2D(_Ocean_Map2, u / _Ocean_GridSizes.z).xy;
     			slopes += tex2D(_Ocean_Map2, u / _Ocean_GridSizes.w).zw;
-    			
 
 			    slopes -= oceanP.xy / (radius + oceanP.z);
 
-			    
 			    float3 N = normalize(float3(-slopes.x, -slopes.y, 1.0));
 			    
 			    if (dot(V, N) < 0.0) {
@@ -723,31 +736,16 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 			    float2 sigmaSq = tex3D(_Ocean_Variance, float3(ua, ub, uc)).xy * _VarianceMax;
 
 			    sigmaSq = max(sigmaSq, 2e-5);
-			    
-
-
-
-
-//				float3 sunL;
-//				float3 skyE;
-//				SunRadianceAndSkyIrradiance(earthP, N, L, sunL, skyE);
 				
 				float atten=LIGHT_ATTENUATION(IN)*15;
 				
 				float3 Lsky;
-				
-//				Lsky = MeanFresnel(V, N, sigmaSq) * skyE / M_PI;
-
 				Lsky = MeanFresnel(V, N, sigmaSq) * atten / M_PI;
-				 
-				
-				
+
 				float3 oceanL= mul(_Globals_WorldToOcean, _WorldSpaceLightPos0);
 				float3 L = normalize(oceanL - oceanP); //light dir in ocean space, find it
-//				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
 				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * atten;
 
-//				float3 Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * skyE / M_PI;
 				float3 Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * atten;
 				
 				// extract mean and variance of the jacobian matrix determinant
@@ -762,25 +760,15 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 				float W = WhitecapCoverage(outWhiteCapStr,jm.x,jSigma2);
 				
 				// compute and add whitecap radiance
-//				float3 l = (sunL * (max(dot(N, L), 0.0)) + skyE) / M_PI;
-				float3 l = (atten * (max(dot(N, L), 0.0))) / M_PI;
-				float3 R_ftot = float3(W * l * 0.4);
+//				float3 l = (atten * (max(dot(N, L), 0.0))) / M_PI;
+//				float3 R_ftot = float3(W * l * 0.4);
 				
-				float3 surfaceColor = (Lsun + Lsky + Lsea + R_ftot) * _LightColor0.rgb;
-//				float3 surfaceColor = Lsea + R_ftot + Lsky;
-								
-//				 aerial perspective
-//			    float3 inscatter = InScattering(earthCamera, earthP, L, extinction, 0.0);
-//			    float3 finalColor = surfaceColor;// + inscatter;
-//			    
-//			    float3 lightDir=normalize(IN.vertexPos-_WorldSpaceLightPos0.xyz);
+				//float3 surfaceColor = (Lsun + Lsky + Lsea + R_ftot) * _LightColor0.rgb;
+				float3 surfaceColor = (Lsun + Lsky + Lsea) * _LightColor0.rgb;
 			    
 			    float3 finalColor= surfaceColor;
 			    
-
-//			    finalColor*=*atten;
-			    
-				return float4(hdr(finalColor), outAlpha*_GlobalOceanAlpha);
+				return float4(hdr(finalColor,_ScatteringExposure), 1.0);
 			}
 			
 			ENDCG

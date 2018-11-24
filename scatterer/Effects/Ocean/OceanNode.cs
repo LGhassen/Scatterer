@@ -55,18 +55,10 @@ namespace scatterer
 
 		[Persistent]
 		public Vector3 m_UnderwaterColor = new Vector3 (0.1f, 0.75f, 0.8f);
-		
-		//Sea level in meters
-		[Persistent]
-		public float m_oceanLevel = 0.0f;
 
 		double h = 0;
-		//The maximum altitude at which the ocean must be displayed.
-		[Persistent]
-		protected float m_zmin = 20000.0f;
 		
-		//Size of each grid in the projected grid. (number of pixels on screen)
-		
+		//Size of each grid in the projected grid. (number of pixels on screen)		
 		[Persistent]
 		public int m_resolution = 4;
 		[Persistent]
@@ -123,7 +115,9 @@ namespace scatterer
 		public Vector3d2 offset;
 
 		public Vector3d2 ux, uy, uz, oo;
-		
+
+		public float planetOpacity=1f; //planetOpacity to fade out the ocean when PQS is fading out
+
 		//Concrete classes must provide a function that returns the
 		//variance of the waves need for the BRDF rendering of waves
 		public abstract float GetMaxSlopeVariance ();
@@ -132,11 +126,6 @@ namespace scatterer
 		// Use this for initialization
 		public virtual void Init ()
 		{
-//			m_cameraToWorldMatrix = Matrix4x4d.Identity ();
-//			
-			//using different materials for both the far and near cameras because they have different projection matrixes
-			//the projection matrix in the shader has to match that of the camera or the projection will be wrong and the ocean will
-			//appear to "shift around"
 
 			if (Core.Instance.oceanPixelLights)
 				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCapsPixelLights")]);
@@ -176,24 +165,16 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
 			}
 
-
-//			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterialNear);
-
-
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterial);
 
 			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 
 			//if (Core.Instance.oceanRefraction)
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture);
-
-			//m_oceanMaterial.renderQueue=2460;
-			//m_oceanMaterial.renderQueue=2994;
 			m_oceanMaterial.renderQueue=2501;
 
-
 			m_oldlocalToOcean = Matrix4x4d.Identity ();
-//			m_oldworldToOcean = Matrix4x4d.Identity ();
+
 			m_offset = Vector3d2.Zero ();
 			
 			//Create the projected grid. The resolution is the size in pixels
@@ -236,21 +217,15 @@ namespace scatterer
 				waterMeshFilters[i].mesh.Clear ();
 				waterMeshFilters[i].mesh = m_screenGrids[i];
 
-				//waterGameObjects[i].layer = 15;
-				waterGameObjects[i].layer = 23;
+				waterGameObjects[i].layer = 15;
+				//waterGameObjects[i].layer = 23;
 				waterMeshRenderers[i] = waterGameObjects[i].AddComponent<MeshRenderer>();
 
-				
 				waterMeshRenderers[i].sharedMaterial = m_oceanMaterial;
 				waterMeshRenderers[i].material =m_oceanMaterial;
-				
 
 				waterMeshRenderers[i].receiveShadows = false;
 				waterMeshRenderers[i].shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
-
-
-//				CommandBufferModifiedProjectionMatrix tmp = waterGameObjects[i].AddComponent<CommandBufferModifiedProjectionMatrix>();
-//				tmp.Core.Instance=Core.Instance;
 
 				waterMeshRenderers[i].enabled=true;
 			}
@@ -278,6 +253,8 @@ namespace scatterer
 			underwaterPostProcessingMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterPostProcessingMaterial);
 			underwaterPostProcessingMaterial.renderQueue=2459; //draw over fairings which is 2450
+
+			initUniforms ();
 
 			underwaterMeshrenderer.sharedMaterial = underwaterPostProcessingMaterial;
 			underwaterMeshrenderer.material = underwaterPostProcessingMaterial;
@@ -391,34 +368,16 @@ namespace scatterer
 
 		public virtual void UpdateNode ()
 		{
-//			if (!MapView.MapIsEnabled && !Core.Instance.stockOcean && !m_manager.m_skyNode.inScaledSpace && m_drawOcean)
+			bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace && (planetOpacity > 0f);
+			
+			foreach (MeshRenderer _mr in waterMeshRenderers)
 			{
-
-				bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace;
-
-				foreach (MeshRenderer _mr in waterMeshRenderers)
-				{
-					_mr.enabled= oceanDraw;
-				}
-
-//				foreach (Mesh mesh in m_screenGrids)
-//				{
-//
-//					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterial, 15,
-//					                  m_manager.m_skyNode.farCamera, 0, null, false, false);
-//					
-//					Graphics.DrawMesh (mesh, Vector3.zero, Quaternion.identity, m_oceanMaterialNear, 15,
-//					                  m_manager.m_skyNode.nearCamera, 0, null, false, false);
-//
-//				}
+				_mr.enabled= oceanDraw;
 			}
 
-
-//			m_oceanMaterialNear.renderQueue = m_manager.Core.Instance.oceanRenderQueue;
 			//m_oceanMaterial.renderQueue=Core.Instance.oceanRenderQueue;
 			//m_oceanMaterial.renderQueue=2050;
 
-			//underwaterMeshrenderer.enabled = (h < 0);
 			isUnderwater = h < 0;
 
 			if (underwaterMode ^ isUnderwater)
@@ -426,27 +385,46 @@ namespace scatterer
 				toggleUnderwaterMode();
 			}
 
-			//renderRefractions = Mathf.Abs (h) <= 1000f;
-			renderRefractions = (Mathf.Abs ((float) h ) <= 200);
+			renderRefractions = (Mathf.Abs ((float) h ) <= 200f);
 			if ((renderRefractions ^ isRenderingRefractions) && Core.Instance.oceanRefraction)
 			{
 				toggleRefractions();
 			}
 		}
 
-		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPrecull of SkyNode (added to ScaledSpaceCamera, executes first)
+		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
 		{
-			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)  //shouldn't this go somewhere in oceannode? //or maybe here to keep update order
+			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
 			{
 				updateStuff(m_oceanMaterial, Core.Instance.farCamera);
 			}
 		}
 
+		public void initUniforms()
+		{
+			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
+			m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
+			m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
+			//oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
+			m_oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(m_manager.GetRadius()));
+			
+			m_oceanMaterial.SetFloat (ShaderProperties._OceanAlpha_PROPERTY, oceanAlpha);
+			m_oceanMaterial.SetFloat (ShaderProperties.alphaRadius_PROPERTY, alphaRadius);
+			
+			m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex); //these don't need to be updated every frame
+			m_oceanMaterial.SetFloat ("transparencyDepth", transparencyDepth);
+			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);					
+			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
+			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture); //these don't need to be updated every frame
+
+			underwaterPostProcessingMaterial.SetFloat ("transparencyDepth", transparencyDepth);
+			underwaterPostProcessingMaterial.SetFloat ("darknessDepth", darknessDepth);
+			underwaterPostProcessingMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
+		}
+
 
 		public void updateStuff (Material oceanMaterial, Camera inCamera)
 		{
-//			m_manager.GetSkyNode ().SetOceanUniforms (m_oceanMaterial);
-
 			//Calculates the required data for the projected grid
 			
 			// compute ltoo = localToOcean transform, where ocean frame = tangent space at
@@ -458,10 +436,6 @@ namespace scatterer
 			                                          ctol1.m10, ctol1.m11, ctol1.m12, ctol1.m13,
 			                                          ctol1.m20, ctol1.m21, ctol1.m22, ctol1.m23,
 			                                          ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
-			
-			
-			//Looking back, I have no idea how I figured this crap out
-			//I probably did the math wrong anyway and it worked by sheer luck and incessant tries
 
 //			Vector4 translation = m_manager.parentCelestialBody.transform.localToWorldMatrix.GetColumn (3);
 			Vector3d translation = m_manager.parentCelestialBody.position;
@@ -471,22 +445,22 @@ namespace scatterer
 			                                         0, 0, 1, -translation.z,
 			                                         0, 0, 0, 1);
 
-
 			Matrix4x4d camToLocal = worldToLocal * cameraToWorld;
 			Matrix4x4d localToCam = camToLocal.Inverse ();
-
 
 			// camera in local space relative to planet's origin
 			Vector3d2 cl = new Vector3d2 ();
 			cl = camToLocal * Vector3d2.Zero ();
 
-			double radius = m_manager.GetRadius ()+m_oceanLevel;
+			double radius = m_manager.GetRadius ();
 
 			uz = cl.Normalized (); // unit z vector of ocean frame, in local space
 			
-			if (m_oldlocalToOcean != Matrix4x4d.Identity ()) {
+			if (m_oldlocalToOcean != Matrix4x4d.Identity ())
+			{
 				ux = (new Vector3d2 (m_oldlocalToOcean.m [1, 0], m_oldlocalToOcean.m [1, 1], m_oldlocalToOcean.m [1, 2])).Cross (uz).Normalized ();
-			} else 
+			}
+			else 
 			{
 				ux = Vector3d2.UnitZ ().Cross (uz).Normalized ();
 			}
@@ -494,8 +468,7 @@ namespace scatterer
 			uy = uz.Cross (ux); // unit y vector
 			
 			oo = uz * (radius); // origin of ocean frame, in local space
-			
-			
+
 			//local to ocean transform
 			//computed from oo and ux, uy, uz should be correct
 			Matrix4x4d localToOcean = new Matrix4x4d (
@@ -504,13 +477,13 @@ namespace scatterer
 				uz.x, uz.y, uz.z, -uz.Dot (oo),
 				0.0, 0.0, 0.0, 1.0);
 
-
 			Matrix4x4d cameraToOcean = localToOcean * camToLocal;
 			Matrix4x4d worldToOcean = localToOcean * worldToLocal;
 
 			Vector3d2 delta = new Vector3d2 (0, 0, 0);
 			
-			if (m_oldlocalToOcean != Matrix4x4d.Identity ()) {
+			if (m_oldlocalToOcean != Matrix4x4d.Identity ())
+			{
 				delta = localToOcean * (m_oldlocalToOcean.Inverse () * Vector3d2.Zero ());
 				m_offset += delta;
 			}
@@ -528,11 +501,7 @@ namespace scatterer
 //			Matrix4x4d stoc = ctos.Inverse ();
 			
 			Vector3d2 oc = cameraToOcean * Vector3d2.Zero ();
-			
 			h = oc.z;					
-
-			//				m_skyMaterialLocal.EnableKeyword ("ECLIPSES_ON");
-			//				m_skyMaterialLocal.DisableKeyword ("ECLIPSES_OFF");
 
 			offset = new Vector3d2 (-m_offset.x, -m_offset.y, h);
 
@@ -569,7 +538,6 @@ namespace scatterer
 
 			oceanMaterial.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, cameraToWorld .ToMatrix4x4());
 
-
 			oceanMaterial.SetVector (ShaderProperties._Ocean_SunDir_PROPERTY, oceanSunDir.ToVector3 ());
 			
 			oceanMaterial.SetMatrix (ShaderProperties._Ocean_CameraToOcean_PROPERTY, cameraToOcean.ToMatrix4x4 ());
@@ -578,30 +546,12 @@ namespace scatterer
 //			oceanMaterial.SetMatrix (ShaderProperties._Globals_CameraToScreen_PROPERTY, ctos.ToMatrix4x4 ());
 //			oceanMaterial.SetMatrix (ShaderProperties._Globals_ScreenToCamera_PROPERTY, stoc.ToMatrix4x4 ());
 
-
 			oceanMaterial.SetMatrix (ShaderProperties._Globals_WorldToOcean_PROPERTY, worldToOcean.ToMatrix4x4 ());
 			oceanMaterial.SetMatrix (ShaderProperties._Globals_OceanToWorld_PROPERTY, worldToOcean.Inverse ().ToMatrix4x4 ());
 
-
 			oceanMaterial.SetVector (ShaderProperties._Ocean_CameraPos_PROPERTY, offset.ToVector3 ());
-			
-			//oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, new Color (m_oceanUpwellingColor.x, m_oceanUpwellingColor.y, m_oceanUpwellingColor.z));
-			oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
-			oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
-			oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
-			oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
-			
-			//			oceanMaterial.SetFloat("scale_PROPERTY, 1);
-			oceanMaterial.SetFloat (ShaderProperties.scale_PROPERTY, oceanScale);
-
-			oceanMaterial.SetFloat (ShaderProperties._OceanAlpha_PROPERTY, oceanAlpha);
-			oceanMaterial.SetFloat (ShaderProperties.alphaRadius_PROPERTY, alphaRadius);
-
-			oceanMaterial.SetFloat (ShaderProperties._GlobalOceanAlpha_PROPERTY, m_manager.m_skyNode.interpolatedSettings._GlobalOceanAlpha);
-			
 
 			m_manager.GetSkyNode ().SetOceanUniforms (oceanMaterial);
-
 
 			//horizon calculations
 			//these are used to find where the horizon line is on screen
@@ -630,6 +580,7 @@ namespace scatterer
 			oceanMaterial.SetFloat (ShaderProperties.cosTheta_PROPERTY, (float) cosTheta);
 			oceanMaterial.SetFloat (ShaderProperties.sinTheta_PROPERTY, (float) sinTheta);
 
+			//planetshine properties
 			if (Core.Instance.usePlanetShine)
 			{
 				Matrix4x4 planetShineSourcesMatrix=m_manager.m_skyNode.planetShineSourcesMatrix;
@@ -641,37 +592,16 @@ namespace scatterer
 					oceanSunDir2=localToOcean.ToMatrix3x3d () * new Vector3d2(row.x,row.y,row.z);
 					planetShineSourcesMatrix.SetRow(i,new Vector4((float)oceanSunDir2.x,(float)oceanSunDir2.y,(float)oceanSunDir2.z,row.w));
 				}
-				oceanMaterial.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
+				oceanMaterial.SetMatrix ("planetShineSources", planetShineSourcesMatrix); //this can become shared code to not recompute
 
 				oceanMaterial.SetMatrix ("planetShineRGB", m_manager.m_skyNode.planetShineRGBMatrix);
 			}
 
 			m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterPostProcessingMaterial);
-			underwaterPostProcessingMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
 
-			m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex);
-			m_oceanMaterial.SetFloat ("transparencyDepth", transparencyDepth);
-			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);
-
-			underwaterPostProcessingMaterial.SetFloat ("transparencyDepth", transparencyDepth);
-			underwaterPostProcessingMaterial.SetFloat ("darknessDepth", darknessDepth);
-			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
-			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture);
+			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity");
+			m_oceanMaterial.SetFloat ("_PlanetOpacity", planetOpacity);
 		}
-		
-//		public void SetUniforms (Material mat)
-//		{
-//			//Sets uniforms that this or other gameobjects may need
-//			if (mat == null)
-//				return;
-//			
-//			mat.SetFloat ("_Ocean_Sigma", GetMaxSlopeVariance ());
-//			mat.SetVector ("_Ocean_Color", new Color(m_oceanUpwellingColor.x,m_oceanUpwellingColor.y,m_oceanUpwellingColor.z) * 0.1f);
-//			mat.SetFloat ("fakeOcean", (m_drawOcean) ? 0.0f : 1.0f);
-//			
-//			
-//			mat.SetFloat ("_Ocean_Level", m_oceanLevel);
-//		}
 
 		void toggleUnderwaterMode()
 		{

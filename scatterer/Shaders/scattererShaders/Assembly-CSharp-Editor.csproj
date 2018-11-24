@@ -54,6 +54,7 @@
      <Compile Include="Assets\Editor\ExportAssetBundle.cs" />
      <None Include="Assets\shaders\DecodeEncode\DecodedToFloat.shader" />
      <None Include="Assets\shaders\DepthTexture\customDepthTexture.shader" />
+     <None Include="Assets\shaders\Atmo\ScaledPlanetScattering.shader" />
      <None Include="Assets\shaders\OldOrUnused\SphereCloud - Copy.shader" />
      <None Include="Assets\shaders\EVE\noiseSimplex.cginc" />
      <None Include="Assets\shaders\EVE\cubeMap.cginc" />
@@ -65,11 +66,12 @@
      <None Include="Assets\shaders\EVE\old\cubeMap.cginc" />
      <None Include="Assets\shaders\Ocean\OceanLight.cginc" />
      <None Include="Assets\shaders\OldOrUnused\SimpleBlit.shader" />
+     <None Include="Assets\shaders\DepthTexture\ShadowVolumeDepthGEOM.shader" />
      <None Include="Assets\shaders\OldOrUnused\SunGlare - Copy.shader" />
      <None Include="Assets\shaders\EVE\old\noiseSimplex.cginc" />
      <None Include="Assets\shaders\EVE\old\CloudVolumeParticle.shader" />
      <None Include="Assets\shaders\Ocean\Fourier.shader" />
-     <None Include="Assets\shaders\Sky\SkyScaledBoxScaled.shader" />
+     <None Include="Assets\shaders\OldOrUnused\SkyScaledBoxScaled.shader" />
      <None Include="Assets\shaders\DecodeEncode\WriteToFloat.shader" />
      <None Include="Assets\shaders\OldOrUnused\SphereCloudOld.shader" />
      <None Include="Assets\shaders\EVE\old\SphereCloud.shader" />
@@ -81,6 +83,7 @@
      <None Include="Assets\shaders\OldOrUnused\SphereCloud - Copy (3).shader" />
      <None Include="Assets\shaders\Ocean\OceanDisplacement3.cginc" />
      <None Include="Assets\shaders\Ocean\OceanWhiteCapsModProj3PixelLights.shader" />
+     <None Include="Assets\shaders\Atmo\SkySphere.shader" />
      <None Include="Assets\shaders\ScatteringReplacementShader.shader" />
      <None Include="Assets\shaders\EVE\old\alphaMap.cginc" />
      <None Include="Assets\shaders\Ocean\OceanBRDF.cginc" />
@@ -92,9 +95,10 @@
      <None Include="Assets\shaders\OldOrUnused\atmosphereGhoss 24 bit depth buffer AdditiveGodrays.shader" />
      <None Include="Assets\shaders\SunFlare\SunFlareExtinction.shader" />
      <None Include="Assets\shaders\OldOrUnused\atmosphereScatterNew.shader" />
-     <None Include="Assets\shaders\Sky\SkyScaledBox.shader" />
+     <None Include="Assets\shaders\OldOrUnused\SkyScaledBox.shader" />
      <None Include="Assets\shaders\DepthTexture\ShadowVolumeDepth - Copy.shader" />
      <None Include="Assets\shaders\DepthTexture\customDepthTextureGEOM.shader" />
+     <None Include="Assets\shaders\EclipseCommon.cginc" />
      <None Include="Assets\shaders\DepthTexture\customDepthTextureBak.shader" />
      <None Include="Assets\shaders\Grass\Grass.shader" />
      <None Include="Assets\shaders\EVE\alphaMap.cginc" />
@@ -104,10 +108,11 @@
      <None Include="Assets\shaders\OldOrUnused\AccumulateExposure.shader" />
      <None Include="Assets\shaders\Grass\GrassBak.shader" />
      <None Include="Assets\shaders\EVE\CloudVolumeParticleBAKKK.shader" />
+     <None Include="Assets\shaders\RingCommon.cginc" />
      <None Include="Assets\shaders\EVE\SphereCloud.shader" />
      <None Include="Assets\shaders\Ocean\InitJacobians.shader" />
      <None Include="Assets\shaders\EVE\CloudVolumeParticle.shader" />
-     <None Include="Assets\shaders\atmospherePostProcessing32bitViewSpaceDepth.shader" />
+     <None Include="Assets\shaders\Atmo\atmospherePostProcessing32bitViewSpaceDepth.shader" />
      <None Include="Assets\shaders\Utility.cginc" />
  <Reference Include="UnityEditor.Advertisements">
  <HintPath>E:/UnityLast/201713p1/Editor/Data/UnityExtensions/Unity/Advertisements/Editor/UnityEditor.Advertisements.dll</HintPath>
@@ -171,9 +176,6 @@
  </Reference>
  <Reference Include="UnityEditor.OSXStandalone.Extensions">
  <HintPath>E:/UnityLast/201713p1/Editor/Data/PlaybackEngines/MacStandaloneSupport/UnityEditor.OSXStandalone.Extensions.dll</HintPath>
- </Reference>
- <Reference Include="SyntaxTree.VisualStudio.Unity.Bridge">
- <HintPath>C:/Program Files (x86)/Microsoft Visual Studio Tools for Unity/15.0/Editor/SyntaxTree.VisualStudio.Unity.Bridge.dll</HintPath>
  </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

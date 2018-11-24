@@ -7,7 +7,7 @@ SubShader {
       
     Pass {
         Fog { Mode Off }
-//        Cull front
+        Cull back
 //        ztest off
 			Cull Off
         
@@ -19,9 +19,8 @@ CGPROGRAM
 #pragma glsl
 
 #include "UnityCG.cginc"
- 
 
-float3 _Godray_WorldSunDir;
+uniform float3 _Godray_WorldSunDir;
 
 struct appdata {
     float4 vertex : POSITION;
@@ -84,33 +83,26 @@ v2f vert (appdata v)
 {
     v2f o;
     
-	float4 _LightDirWorldSpace = float4(_Godray_WorldSunDir,0.0);
-	float3 _LightDirObjectSpace = mul(unity_WorldToObject,_LightDirWorldSpace);
-	
-	float3 _LightDirViewSpace = mul(UNITY_MATRIX_MV, float4(_LightDirObjectSpace,0.0)); 
-	v.vertex = mul(UNITY_MATRIX_MV, v.vertex);  //both in view space
+	float3 _LightDirViewSpace = mul(UNITY_MATRIX_V, float4(_Godray_WorldSunDir,0.0)); 
+	_LightDirViewSpace=normalize(_LightDirViewSpace);
 
-    float3 toLight=normalize(_LightDirViewSpace); //why isn't lightDirWorldSpace already normalized?
+	v.vertex = mul(UNITY_MATRIX_MV, v.vertex);  //both in view space
     
-    float backFactor = dot( toLight, mul(UNITY_MATRIX_MV,float4(v.normal,0.0)) );
-   	float backfaceFactor = dot(float3(0,0,1),    mul(UNITY_MATRIX_MV,float4(v.normal,0.0)));
-   	backfaceFactor = (backfaceFactor < 0.0) ? 1.0 : 0.0;
-   
-    float extrude = (backFactor < 0.0) ? 1.0 : 0.0;
+    float backFactor = dot( _LightDirViewSpace, mul(UNITY_MATRIX_MV,float4(v.normal,0.0)) );  //is the normal towards the light or against it?
+    float extrude = (backFactor < 0.0) ? 1.0 : 0.0;											  //do we extrude this vertex based it's direction to the light?
     
-    float towardsSunFactor=dot(toLight,float3(0,0,1));
-   	float projectOnNearPlane = (towardsSunFactor < 0.0) ? 1.0 : 0.0;
+    float towardsSunFactor=dot(_LightDirViewSpace,float3(0,0,1));  							  //are we looking towards the light?
+   	float projectOnNearPlane = (towardsSunFactor < 0.0) ? 1.0 : 0.0;						  //if we are, project on near plane
 	
 	v.vertex.xyz=  (projectOnNearPlane * extrude > 0.0) ? 
-		LinePlaneIntersection(v.vertex.xyz, -toLight,float3(0,0,1), 0) 
-		: (v.vertex.xyz = v.vertex.xyz - toLight * (extrude  *  1000000));
+		LinePlaneIntersection(v.vertex.xyz, -_LightDirViewSpace,float3(0,0,1), 0) 
+		: (v.vertex.xyz = v.vertex.xyz - _LightDirViewSpace * (extrude  *  1000000));
 
     
     o.pos = mul (UNITY_MATRIX_P, v.vertex);
     o.vertexPosView = v.vertex.xyz;
     o.vertexPosClip = o.pos;
     return o;
-
 }
 
 struct fout {

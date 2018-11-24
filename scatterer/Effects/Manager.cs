@@ -15,6 +15,7 @@ namespace scatterer
 		
 		public bool hasOcean = false;
 		public bool usesCloudIntegration = true;
+		public bool flatScaledSpaceModel = false;
 		
 		public double m_radius = 600000.0f;
 		
@@ -93,7 +94,7 @@ namespace scatterer
 
 			UnityEngine.Object.Destroy(m_skyNode);
 			
-			if (hasOcean && Core.Instance.useOceanShaders) {
+			if (hasOcean && !ReferenceEquals(m_oceanNode,null)) {
 				m_oceanNode.Cleanup();
 				UnityEngine.Object.Destroy(m_oceanNode);
 			}

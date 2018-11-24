@@ -56,7 +56,6 @@ uniform float3 betaMSca;
 uniform float3 betaMEx;
 uniform float mieG;
 
-uniform float _Exposure;
 uniform float Rg;
 uniform float Rt;
 uniform float RL;
@@ -66,9 +65,7 @@ uniform float RES_MU_S;
 uniform float RES_NU;
 uniform float3 SUN_DIR;
 
-//uniform float terrain_reflectance;
-uniform float SUN_INTENSITY;
-uniform float _Sun_Intensity;
+#define _Sun_Intensity 100.0;
 
 uniform float _experimentalAtmoScale;
 
@@ -105,8 +102,8 @@ float4 dither (float4 iColor, float2 iScreenPos)
 }
 
 
-float3 hdr(float3 L) {
-    L = L * _Exposure;
+float3 hdr(float3 L, float exposure) {
+    L = L * exposure;
     L.r = L.r < 1.413 ? pow(L.r * 0.38317, 1.0 / 2.2) : 1.0 - exp(-L.r);
     L.g = L.g < 1.413 ? pow(L.g * 0.38317, 1.0 / 2.2) : 1.0 - exp(-L.g);
     L.b = L.b < 1.413 ? pow(L.b * 0.38317, 1.0 / 2.2) : 1.0 - exp(-L.b);
@@ -194,28 +191,6 @@ float3 Transmittance(float r, float mu, float Rt0)
     //#endif
 }
 
-//Source:   wikibooks.org/wiki/GLSL_Programming/Unity/Soft_Shadows_of_Spheres
-//I believe space engine also uses the same approach because the eclipses look the same ;)
-float getEclipseShadow(float3 worldPos, float3 worldLightPos,float3 occluderSpherePosition,
-					   float3 occluderSphereRadius, float3 lightSourceRadius)		
-{											
-	float3 lightDirection = float3(worldLightPos - worldPos);
-	float3 lightDistance = length(lightDirection);
-	lightDirection = lightDirection / lightDistance;
-               
-	// computation of level of shadowing w  
-	float3 sphereDirection = float3(occluderSpherePosition - worldPos);  //occluder planet
-	float sphereDistance = length(sphereDirection);
-	sphereDirection = sphereDirection / sphereDistance;
-            		
-	float dd = lightDistance * (asin(min(1.0, length(cross(lightDirection, sphereDirection)))) 
-			   - asin(min(1.0, occluderSphereRadius / sphereDistance)));
-            
-	float w = smoothstep(-1.0, 1.0, -dd / lightSourceRadius);
-	w = w * smoothstep(0.0, 0.2, dot(lightDirection, sphereDirection));
-            		
-	return (1-w);
-}
 
 //stole this from basic GLSL raytracing shader somewhere on the net
 //a quick google search and you'll find it
@@ -808,6 +783,7 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 	} 
 	
 	return result * _Sun_Intensity;
+
 }
 
 //same as 2 but with no extinction
@@ -956,16 +932,16 @@ float3 SimpleSkyirradiance(float3 worldP, float3 worldN, float3 worldS)
 
 
 //InScattering with modified atmo heights
-float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float3 sunDir, float shaftWidth, float scaleCoeff, float irradianceFactor) {
+float3 InScattering2(float3 camera, float3 _point, float3 sunDir) {
     // single scattered sunlight between two points
     // camera=observer
     // point=point on the ground
     // sundir=unit vector towards the sun
     // return scattered light and extinction coefficient
     float3 result = float3(0, 0, 0);
-    extinction = float3(1, 1, 1);
+    float3 extinction = float3(1, 1, 1);
     float3 viewdir = _point - camera;
-    float d = length(viewdir) * scaleCoeff;
+    float d = length(viewdir);
     viewdir = viewdir / d;
     /////////////////////experimental block begin
     float Rt0=Rt;
@@ -973,18 +949,23 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float3
     //                viewdir.x += _viewdirOffset;
     viewdir = normalize(viewdir);
     /////////////////////experimental block end
-    float r = length(camera) * scaleCoeff;
-    if (r < 0.9 * Rg) {
-        camera.y += Rg;
-        _point.y += Rg;
-        r = length(camera) * scaleCoeff;
-    }
+    float r = length(camera);
+//    if (r < 0.9 * Rg) {
+//        camera.y += Rg;
+//        _point.y += Rg;
+//        r = length(camera);
+//    }
+
+    camera.y += (r < 0.9 * Rg) ? Rg : 0.0;
+    _point.y += (r < 0.9 * Rg) ? Rg : 0.0;
+    r = (r < 0.9 * Rg) ? length(camera) : r;
+
     float rMu = dot(camera, viewdir);
     float mu = rMu / r;
     float r0 = r;
     float mu0 = mu;
     float muExtinction=mu;
-    _point -= viewdir * clamp(shaftWidth, 0.0, d);
+    _point -= viewdir * clamp(1.0, 0.0, d);
     float dSq = rMu * rMu - r * r + Rt*Rt;
     float deltaSq = sqrt(dSq);
     float din = max(-rMu - deltaSq, 0.0);
@@ -1069,5 +1050,5 @@ float3 InScattering2(float3 camera, float3 _point, out float3 extinction, float3
         result = float3(0,0,0);
 //        extinction = float3(1,1,1);
     }
-    return result * SUN_INTENSITY;
+    return result * _Sun_Intensity;
 }

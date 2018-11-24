@@ -122,10 +122,6 @@ namespace scatterer
 		
 		[Persistent]
 		public bool
-			drawAtmoOnTopOfClouds = true;
-		
-		[Persistent]
-		public bool
 			oceanCloudShadows = false;
 		
 		[Persistent]
@@ -247,9 +243,9 @@ namespace scatterer
 		public bool d3d11 = false;
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.0336";
-		
-		//Material originalMaterial;
+		string versionNumber = "0.04";
+
+		public object EVEinstance;
 		
 		public Transform GetScaledTransform (string body)
 		{
@@ -348,7 +344,7 @@ namespace scatterer
 			scaledSpaceCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera ScaledSpace");
 			farCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 01");
 			nearCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 00");
-			
+
 			if (scaledSpaceCamera && farCamera && nearCamera)
 			{
 				if (overrideNearClipPlane)
@@ -366,6 +362,8 @@ namespace scatterer
 				farCamera = scaledSpaceCamera;
 				nearCamera = scaledSpaceCamera;
 			}
+
+
 			
 			//find sunlight and set shadow bias
 			lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
@@ -431,13 +429,13 @@ namespace scatterer
 				}
 			}
 			
-			//					//find and fix renderqueue of sun corona
-			//					Transform scaledSunTransform=GetScaledTransform(mainSunCelestialBodyName);
-			//					foreach (Transform child in scaledSunTransform)
-			//					{
-			//						MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
-			//						temp.material.renderQueue = 3000;
-			//					}
+			//find and fix renderqueue of sun corona
+			Transform scaledSunTransform=GetScaledTransform(mainSunCelestialBodyName);
+			foreach (Transform child in scaledSunTransform)
+			{
+				MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
+				temp.material.renderQueue = 2998;
+			}
 			
 			//set up planetshine lights
 			if(usePlanetShine)
@@ -702,6 +700,7 @@ namespace scatterer
 										_cur.hasOcean=false;
 									
 									_cur.m_manager.hasOcean = _cur.hasOcean;
+									_cur.m_manager.flatScaledSpaceModel = _cur.flatScaledSpaceModel;
 									_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
 									_cur.m_manager.Awake ();
 									_cur.active = true;
@@ -737,7 +736,8 @@ namespace scatterer
 						}
 					}
 				}
-				
+
+				//move this out of this update, let it be a one time thing
 				if (bufferRenderingManager)
 				{
 					if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
@@ -787,7 +787,6 @@ namespace scatterer
 						cur.m_manager.OnDestroy ();
 						UnityEngine.Object.Destroy (cur.m_manager);
 						cur.m_manager = null;
-//						ReactivateAtmosphere(cur.transformName,cur.originalPlanetMaterialBackup);
 						cur.active = false;
 					}
 					
@@ -805,16 +804,6 @@ namespace scatterer
 					bufferRenderingManager.OnDestroy();
 					Component.Destroy (bufferRenderingManager);
 				}
-
-//				if(useGodrays)
-//				{
-//					if (godrayDepthTexture)
-//					{
-//						if (godrayDepthTexture.IsCreated())
-//							godrayDepthTexture.Release();
-//						UnityEngine.Object.Destroy (godrayDepthTexture);
-//					}
-//				}
 				
 
 				if (farCamera)
@@ -852,11 +841,6 @@ namespace scatterer
 				}
 
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
-				saveSettings();
-			}
-			
-			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)	
-			{
 				saveSettings();
 			}
 
@@ -1099,8 +1083,6 @@ namespace scatterer
 
 			Debug.Log("[Scatterer] Eve assembly version: " + EVEType.Assembly.GetName().ToString());
 
-			object EVEinstance;
-
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
 
@@ -1198,7 +1180,7 @@ namespace scatterer
 					}
 				} 
 			}
-
 		}
+	
 	}
 }

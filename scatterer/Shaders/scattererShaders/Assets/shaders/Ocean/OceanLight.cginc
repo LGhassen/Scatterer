@@ -1,6 +1,3 @@
-// Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
-
-
 //  Modified Light helpers for the ocean
 //  unlike in autolight.cginc, object2world can't be used in the case of the ocean
 //  the projection is instead done via other means
@@ -36,6 +33,3 @@
 #define OCEAN_TRANSFER_VERTEX_TO_FRAGMENT(a) a._LightCoord = mul(unity_WorldToLight, worldPos).xy; TRANSFER_SHADOW(a)
 //#define LIGHT_ATTENUATION(a)	(tex2D(_LightTexture0, a._LightCoord).w * SHADOW_ATTENUATION(a))
 #endif
-
-
-

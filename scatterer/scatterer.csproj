@@ -34,7 +34,7 @@
     <CustomCommands>
       <CustomCommands>
         <Command type="AfterBuild" command="xcopy &quot;${ProjectDir}\bin\release\scatterer.dll&quot; &quot;D:\gh\Steam\steamapps\common\Kerbal Space Program\GameData\scatterer&quot; /Y" />
-        <Command type="AfterBuild" command="&quot;D:\gh\Steam\steamapps\common\Kerbal Space Program\dx9.bat&quot;" externalConsole="True" />
+        <Command type="AfterBuild" command="&quot;D:\gh\Steam\steamapps\common\Kerbal Space Program\dx11.bat&quot;" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
