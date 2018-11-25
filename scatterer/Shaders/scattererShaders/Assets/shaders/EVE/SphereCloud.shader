@@ -70,6 +70,7 @@ Shader "Scatterer-EVE/Cloud" {
 				
 #ifdef SCATTERER_ON
 				#include "../CommonAtmosphere.cginc"
+				#include "../EclipseCommon.cginc"
 #endif
 
 				CUBEMAP_DEF_1(_MainTex)
@@ -103,14 +104,6 @@ Shader "Scatterer-EVE/Cloud" {
 				uniform float cloudSkyIrradianceMultiplier;
 				uniform float3 _Sun_WorldSunDir;
 				uniform float3 _Scatterer_Origin;
-#endif
-
-				//scatterer eclipse uniforms
-#if defined (SCATTERER_ON) && defined (ECLIPSES_ON)
-				uniform float4 sunPosAndRadius; //xyz sun pos w radius
-				uniform float4x4 lightOccluders1; //array of light occluders
-											 //for each float4 xyz pos w radius
-				uniform float4x4 lightOccluders2;
 #endif
 
 //			//stuff for kopernicus ring shadows
@@ -262,7 +255,7 @@ Shader "Scatterer-EVE/Cloud" {
 					float3 relCameraPos=WCP-worldOrigin;
 
                 	//inScattering from cloud to observer
-					float3 inscatter = InScattering2(relCameraPos, relWorldPos, extinction, _Sun_WorldSunDir, 1.0, 1.0, 1.0);
+					float3 inscatter = InScattering2(relCameraPos, relWorldPos, _Sun_WorldSunDir);
 					      	
                 	//extinction from cloud to observer
 					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);
@@ -282,27 +275,9 @@ Shader "Scatterer-EVE/Cloud" {
 					color = float4(cloudColor + (float3(1.0,1.0,1.0)-cloudColor)*otherColors, color.a); //basically soft blend
 	#endif					
 
-/////////////////ECLIPSES///////////////////////////////		
+
 	#if defined (ECLIPSES_ON)				
- 					float eclipseShadow = 1; 						
-
-					for (int i=0; i<4; ++i)
-    				{
-        				if (lightOccluders1[i].w <= 0)	break;
-						eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders1[i].xyz,
-//						eclipseShadow*=getEclipseShadow(normalize(relWorldPos)*Rt+_Scatterer_Origin, sunPosAndRadius.xyz,lightOccluders1[i].xyz,
-							lightOccluders1[i].w, sunPosAndRadius.w)	;
-					}
-						
-					for (int j=0; j<4; ++j)
-    				{
-        				if (lightOccluders2[j].w <= 0)	break;
-						eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[j].xyz,
-//						eclipseShadow*=getEclipseShadow(normalize(relWorldPos)*Rt+_Scatterer_Origin, sunPosAndRadius.xyz,lightOccluders2[j].xyz,
-							lightOccluders2[j].w, sunPosAndRadius.w)	;
-					}
-
-					color.rgb*=eclipseShadow;
+					color.rgb*=getEclipseShadows(worldPos);
 	#endif
 		
 ///////////////////RING SHADOWS///////////////////////////////			
