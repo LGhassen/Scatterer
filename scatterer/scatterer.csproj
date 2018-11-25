@@ -103,6 +103,10 @@
     <Compile Include="Utilities\Math\Vector3d2.cs" />
     <Compile Include="Utilities\Math\Vector4d.cs" />
     <Compile Include="Utilities\SimpleRenderingShape.cs" />
+    <Compile Include="Effects\Occlusion\ShadowMapCopyCommandBuffer.cs" />
+    <Compile Include="Effects\Occlusion\ShadowMaskCopyCommandBuffer.cs" />
+    <Compile Include="Effects\Occlusion\ShadowRemoveFadeCommandBuffer.cs" />
+    <Compile Include="Effects\Occlusion\ShadowMaskModulateCommandBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -111,5 +115,6 @@
     <Folder Include="Effects\SunFlare\" />
     <Folder Include="GUI\" />
     <Folder Include="Utilities\Math\" />
+    <Folder Include="Effects\Occlusion\" />
   </ItemGroup>
 </Project>

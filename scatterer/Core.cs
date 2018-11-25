@@ -246,6 +246,9 @@ namespace scatterer
 		string versionNumber = "0.04";
 
 		public object EVEinstance;
+
+//		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
+//		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		
 		public Transform GetScaledTransform (string body)
 		{
@@ -353,6 +356,7 @@ namespace scatterer
 					nearCamera.nearClipPlane = nearClipPlane;
 				}
 				farCamera.nearClipPlane = nearCamera.farClipPlane-0.2f; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
+																		// TODO check if can improve this
 				farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
@@ -382,6 +386,7 @@ namespace scatterer
 				{
 					sunLight=_light.gameObject;
 				}	
+
 				
 				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light"))
 				{
@@ -489,6 +494,12 @@ namespace scatterer
 				bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
 				bufferRenderingManager.start();
 			}
+
+//			//add shadowmask modulator (adds occlusion to shadows)
+//			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
+//
+//			//add shadow far plane fixer
+//			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
 
 			//find EVE clouds
 			if (integrateWithEVEClouds)
@@ -840,6 +851,18 @@ namespace scatterer
 					}
 				}
 
+//				if (shadowMaskModulate)
+//				{
+//					shadowMaskModulate.OnDestroy();
+//					Component.Destroy(shadowMaskModulate);
+//				}
+//
+//				if (shadowFadeRemover)
+//				{
+//					shadowFadeRemover.OnDestroy();
+//					Component.Destroy(shadowFadeRemover);
+//				}
+
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				saveSettings();
 			}
@@ -1031,7 +1054,6 @@ namespace scatterer
 					{
 						_light.shadowNormalBias =shadowNormalBias;
 						_light.shadowBias=shadowBias;
-
 						//_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.VeryHigh;
 						//_light.shadows=LightShadows.Soft;
 						//_light.shadowCustomResolution=8192;

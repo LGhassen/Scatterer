@@ -14,6 +14,10 @@ namespace scatterer
 		public RenderTexture depthTexture; 			//custom depth buffer texture
 		public RenderTexture godrayDepthTexture; 			//custom depth buffer texture
 		public RenderTexture refractionTexture; 	//textures for the refractions, created once and accessed from here, but rendered to from oceanNode
+
+		public RenderTexture scatteringTexture; //will contain scattering and extinction values, packed, and maybe more? maybe 
+
+		public RenderTexture occlusionTexture; //for SSAO and eclipses, for now will just contain a copy of the screenspace shadowmask
 				
 		//Shaders
 		Shader depthShader;
@@ -78,7 +82,8 @@ namespace scatterer
 
 				//render
 				replacementCamera.targetTexture = depthTexture;
-				replacementCamera.RenderWithShader (depthShader, "RenderType");				
+				replacementCamera.RenderWithShader (depthShader, "RenderType");
+
 				depthTextureCleared = false;
 
 				//render godrays
@@ -169,7 +174,21 @@ namespace scatterer
 				//depthTexture.antiAliasing = GameSettings.ANTI_ALIASING; //fixes some issue with aliased objects in front of water, creates halo on edge of objects however
 				depthTexture.antiAliasing = 1;
 				depthTexture.Create ();
-				
+
+//				scatteringTexture = new RenderTexture ( Screen.width, Screen.height,24, RenderTextureFormat.RGFloat);
+//				scatteringTexture.name = "scattererScatteringTexture";
+//				scatteringTexture.useMipMap  = false;
+//				scatteringTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
+//				scatteringTexture.antiAliasing = GameSettings.ANTI_ALIASING;
+//				scatteringTexture.Create ();
+//
+//				occlusionTexture = new RenderTexture ( Screen.width, Screen.height,0, RenderTextureFormat.ARGB32);
+//				occlusionTexture.name = "scattererOcclusionTexture";
+//				occlusionTexture.useMipMap  = false;
+//				occlusionTexture.filterMode = FilterMode.Point; // if this isn't in point filtering artifacts appear
+//				occlusionTexture.antiAliasing = 1;
+//				occlusionTexture.Create ();
+
 				//godray stuff
 				if (Core.Instance.useGodrays)
 				{
