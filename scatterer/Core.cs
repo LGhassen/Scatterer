@@ -237,10 +237,7 @@ namespace scatterer
 
 		[Persistent]
 		public int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
-		
-		public bool d3d9 = false;
-		public bool opengl = false;
-		public bool d3d11 = false;
+
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
 		string versionNumber = "0.04";
@@ -258,6 +255,12 @@ namespace scatterer
 
 		public static GameObject GetMainMenuObject(string name)
 		{
+			GameObject kopernicusMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault
+					(b => b.name == (name+"(Clone)") && b.transform.parent.name.Contains("Scene"));
+
+			if (kopernicusMainMenuObject != null)
+				return kopernicusMainMenuObject;
+
 			return GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
 		}
 
@@ -268,6 +271,7 @@ namespace scatterer
 			path = Uri.UnescapeDataString (uri.Path);
 			path = Path.GetDirectoryName (path);
 
+			//this doesn't look nice, do it properly
 			int index = path.LastIndexOf ("GameData");
 			gameDataPath= path.Remove(index+9, path.Length-index-9);
 
@@ -276,22 +280,9 @@ namespace scatterer
 
 			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
-			
-			if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 9"))
-			{
-				d3d9 = true;
-			}
-			else if (SystemInfo.graphicsDeviceVersion.StartsWith ("OpenGL"))
-			{
-				opengl = true;
-			}
-			else if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 11"))
-			{
-				d3d11 = true;
-			}
 
 			Debug.Log ("[Scatterer] Version:"+versionNumber);
-			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
+			Debug.Log ("[Scatterer] Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
 			
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
@@ -361,8 +352,14 @@ namespace scatterer
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				//else we are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
+				//if are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
 				scaledSpaceCamera = Camera.allCameras.Single(_cam  => _cam.name == "Landscape Camera");
+				farCamera = scaledSpaceCamera;
+				nearCamera = scaledSpaceCamera;
+			}
+			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+			{
+				//if in trackstation, just to get rid of some nullrefs
 				farCamera = scaledSpaceCamera;
 				nearCamera = scaledSpaceCamera;
 			}
@@ -439,7 +436,8 @@ namespace scatterer
 			foreach (Transform child in scaledSunTransform)
 			{
 				MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
-				temp.material.renderQueue = 2998;
+				if (temp!=null)
+					temp.material.renderQueue = 2998;
 			}
 			
 			//set up planetshine lights
@@ -600,7 +598,8 @@ namespace scatterer
 				
 				pqsEnabledOnScattererPlanet = false;
 				underwater = false;
-				
+
+				//TODO: make into it's own function
 				foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
 				{
 					float dist, shipDist=0f;
@@ -615,7 +614,7 @@ namespace scatterer
 							shipDist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position,
 							                             ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
 						}
-						
+
 						if (_cur.active)
 						{
 							if (dist > _cur.unloadDistance && (shipDist > _cur.unloadDistance || shipDist == 0f )) {
@@ -636,7 +635,7 @@ namespace scatterer
 										pqsEnabledOnScattererPlanet = true;
 									}
 									
-									if (_cur.m_manager.hasOcean && useOceanShaders && pqsEnabledOnScattererPlanet)
+									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null) && pqsEnabledOnScattererPlanet) 
 									{
 										underwater = _cur.m_manager.GetOceanNode().isUnderwater;
 									}
@@ -651,7 +650,6 @@ namespace scatterer
 								{
 									_cur.m_manager = new Manager ();
 									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
-									
 									
 									if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 									{
@@ -669,7 +667,7 @@ namespace scatterer
 									
 									//Find eclipse casters
 									List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
-									
+
 									if (useEclipses)
 									{
 										for (int k=0; k < _cur.eclipseCasters.Count; k++)
@@ -687,7 +685,7 @@ namespace scatterer
 									}
 									
 									List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
-									
+
 									if (usePlanetShine)
 									{								
 										for (int k=0; k < _cur.planetshineSources.Count; k++)
@@ -706,7 +704,7 @@ namespace scatterer
 										}
 										_cur.m_manager.planetshineSources = planetshineSources;
 									}
-									
+
 									if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 										_cur.hasOcean=false;
 									
@@ -721,10 +719,9 @@ namespace scatterer
 									GUItool.displayOceanSettings = false;
 									GUItool.selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
 									GUItool.getSettingsFromSkynode ();
-									if (_cur.hasOcean && useOceanShaders) {
+									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null)) {
 										GUItool.getSettingsFromOceanNode ();
 									}
-									
 									callCollector=true;
 									Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
 								}
@@ -754,7 +751,6 @@ namespace scatterer
 					if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
 						bufferRenderingManager.clearDepthTexture();
 				}
-				
 				//update sun flare
 				if (fullLensFlareReplacement)
 				{
@@ -763,13 +759,11 @@ namespace scatterer
 						customSunFlare.updateNode();
 					}
 				}
-				
 				//update planetshine lights
 				if(usePlanetShine)
 				{
 					foreach (PlanetShineLight _aLight in celestialLightSources)
 					{
-						//							Debug.Log("updating "+_aLight.source.name);
 						_aLight.updateLight();
 						
 					}

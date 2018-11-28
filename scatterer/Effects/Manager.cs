@@ -64,7 +64,7 @@ namespace scatterer
 			{
 				m_skyNode.Init();		
 				
-				if (hasOcean && Core.Instance.useOceanShaders)
+				if (hasOcean && Core.Instance.useOceanShaders && (HighLogic.LoadedScene !=GameScenes.MAINMENU))
 				{
 					m_oceanNode = (OceanWhiteCaps) Core.Instance.farCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
 					m_oceanNode.setManager(this);
@@ -80,7 +80,7 @@ namespace scatterer
 		{	
 			m_skyNode.UpdateNode();
 			
-			if (hasOcean && Core.Instance.useOceanShaders)
+			if (!ReferenceEquals(m_oceanNode,null))
 			{
 				m_oceanNode.UpdateNode();
 			}
@@ -94,7 +94,7 @@ namespace scatterer
 
 			UnityEngine.Object.Destroy(m_skyNode);
 			
-			if (hasOcean && !ReferenceEquals(m_oceanNode,null)) {
+			if (!ReferenceEquals(m_oceanNode,null)) {
 				m_oceanNode.Cleanup();
 				UnityEngine.Object.Destroy(m_oceanNode);
 			}
@@ -104,7 +104,7 @@ namespace scatterer
 		//this fixes the alt-enter bug the really stupid way but it's fast and simple so it'll do
 		public void reBuildOcean()
 		{
-			if (hasOcean && Core.Instance.useOceanShaders)
+			if (!ReferenceEquals(m_oceanNode,null))
 			{
 				m_oceanNode.Cleanup();
 				Component.Destroy(m_oceanNode);

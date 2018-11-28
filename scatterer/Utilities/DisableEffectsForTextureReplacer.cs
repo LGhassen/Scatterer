@@ -26,7 +26,7 @@ namespace scatterer
 		public void OnPreCull()
 		{
 			manager.GetSkyNode().atmosphereMeshrenderer.enabled = false;
-			if (manager.hasOcean && Core.Instance.useOceanShaders)
+			if (!ReferenceEquals(manager.GetOceanNode (),null))
 				manager.GetOceanNode ().setWaterMeshrenderersEnabled (false);
 
 		}
@@ -34,7 +34,7 @@ namespace scatterer
 		public void OnPostRender()
 		{
 			manager.GetSkyNode().atmosphereMeshrenderer.enabled = true;
-			if (manager.hasOcean && Core.Instance.useOceanShaders)
+			if (!ReferenceEquals(manager.GetOceanNode (),null))
 				manager.GetOceanNode ().setWaterMeshrenderersEnabled (true);
 		}
 	}
