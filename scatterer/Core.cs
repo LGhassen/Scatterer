@@ -240,7 +240,7 @@ namespace scatterer
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.04";
+		string versionNumber = "0.041";
 
 		public object EVEinstance;
 
@@ -551,6 +551,7 @@ namespace scatterer
 							Debug.Log("[Scatterer] Disabling stock sunflare for "+_flare.sun.name);
 							_flare.sunFlare.enabled=false;
 							_flare.enabled=false;
+							_flare.gameObject.SetActive(false);
 						}
 					}
 					
