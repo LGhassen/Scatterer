@@ -540,6 +540,7 @@ namespace scatterer
 				}
 				
 				//custom lens flares
+				//TODO: move to init
 				if ((fullLensFlareReplacement) && !customSunFlareAdded && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 				{
 					//disable stock sun flares
@@ -584,7 +585,8 @@ namespace scatterer
 					}
 					customSunFlareAdded=true;
 				}
-				
+
+				//TODO: move to init
 				if (disableAmbientLight && !ambientLightScript)
 				{
 					ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));

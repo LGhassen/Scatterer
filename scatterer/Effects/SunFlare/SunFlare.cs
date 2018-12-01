@@ -204,7 +204,7 @@ namespace scatterer
 			float dist = (float) (Core.Instance.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
 				.magnitude;
 
-			sunGlareScale = dist / 2266660f;
+			sunGlareScale = dist / 2266660f * Core.Instance.scaledSpaceCamera.fieldOfView / 60f;
 
 			//if dist > 1.25*sunglareFadeDistance -->1
 			//if dist < 0.25*sunglareFadeDistance -->0
