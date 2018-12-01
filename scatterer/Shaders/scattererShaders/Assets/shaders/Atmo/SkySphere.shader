@@ -161,8 +161,6 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			    float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
 
 			    float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);  //viewdir computed from scaledSpace
-			    
-				float interSectPt= intersectSphere2(WCP,d,IN.planetOrigin,Rg);
 
 			    float3 inscatter = SkyRadiance3(WCP - IN.planetOrigin, d, WSD);
 			    float3 finalColor = inscatter;
@@ -172,7 +170,7 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 				//necessary for eclipses, ring shadows and planetshine
 				float3 worldPos;
 #if defined (PLANETSHINE_ON) || defined (ECLIPSES_ON) || defined (RINGSHADOW_ON)
-			    interSectPt= intersectSphere4(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
+			    float interSectPt= intersectSphere4(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
 			    
 				if (interSectPt != -1)
 				{

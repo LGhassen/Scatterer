@@ -3,8 +3,6 @@ Shader "Scatterer/UnderwaterScatter" {
     SubShader {
           Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 	
-
-
 Pass {
 			//Cull Front
 			Cull Off
@@ -51,13 +49,10 @@ Pass {
                 return o;
             }
 
-			float3 oceanColor(float3 viewDir, float3 lightDir, float3 worldPos)
+			float3 oceanColor(float3 viewDir, float3 lightDir, float3 surfaceDir)
 			{
-				float angleToLightDir = (dot(viewDir, normalize(lightDir)) + 1 )* 0.5;
-
-				//float3 waterColor = pow(float3(0.1, 0.75, 0.8), 4.0 *(-1.0 * angleToLightDir + 1.0));
+				float angleToLightDir = (dot(viewDir, surfaceDir) + 1 )* 0.5;
 				float3 waterColor = pow(_Underwater_Color, 4.0 *(-1.0 * angleToLightDir + 1.0));
-
 				return waterColor;
 			}
 
@@ -75,26 +70,26 @@ Pass {
 																			//for other effects like SSAO as well
 				float fragDistance = fragDepth /aa;
 
-                //bool infinite = (fragDepth == 1.0); //basically viewer ray isn't hitting any terrain
+				float waterSurfaceDistance = intersectSphere4(_camPos,rayDir,float3(0,0,0),Rg); //ocean surface check
+
+				fragDistance = (waterSurfaceDistance != -1) && ((waterSurfaceDistance<fragDistance) || (fragDepth == 1.0)) ? waterSurfaceDistance : fragDistance;
+				fragDepth=fragDistance*aa;
 
                 bool fragmentInsideOfClippingRange = ((fragDepth  >= _ProjectionParams.y)  && (fragDepth <= _ProjectionParams.z)); //if fragment depth outside of current camera clipping range, return empty pixel
-				//bool returnPixel = fragmentInsideOfClippingRange && (!infinite);
+
 				bool returnPixel = fragmentInsideOfClippingRange;
 
 				float waterLigthExtinction = length(getSkyExtinction(normalize(_camPos + 10.0) * Rg , SUN_DIR));
 
-
 				float underwaterDepth = Rg - length(_camPos);
 
 				underwaterDepth = lerp(1.0,0.0,underwaterDepth / darknessDepth);
-				//underwaterDepth = max (underwaterDepth, 0.0);
 
-				float3 waterColor= underwaterDepth * hdrNoExposure( waterLigthExtinction * oceanColor(rayDir,SUN_DIR,float3(0.0,0.0,0.0)));
+				float3 waterColor= underwaterDepth * hdrNoExposure( waterLigthExtinction * oceanColor(rayDir,SUN_DIR,normalize(_camPos)));
 				float alpha = min(fragDistance/transparencyDepth,1.0);
-				//return float4(waterColor, alpha*returnPixel);
 				return float4(dither(waterColor, screenPos), alpha*returnPixel);
 			}
-//
+
             ENDCG
         }
     }

@@ -252,7 +252,7 @@ namespace scatterer
 			underwaterPostProcessingMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/UnderwaterScatter")]);			
 			underwaterPostProcessingMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterPostProcessingMaterial);
-			underwaterPostProcessingMaterial.renderQueue=2459; //draw over fairings which is 2450
+			underwaterPostProcessingMaterial.renderQueue=2502; //draw over fairings which is 2450 and over ocean which is 2501
 
 			initUniforms ();
 
@@ -420,6 +420,7 @@ namespace scatterer
 			underwaterPostProcessingMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			underwaterPostProcessingMaterial.SetFloat ("darknessDepth", darknessDepth);
 			underwaterPostProcessingMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
+			underwaterPostProcessingMaterial.SetFloat ("Rg",(float)m_manager.m_radius);
 		}
 
 
