@@ -155,7 +155,7 @@ Shader "Scatterer/OceanWhiteCaps"
     			float2  oceanU : TEXCOORD0;
     			float3  oceanP : TEXCOORD1;
     			float4	viewSpaceDirDist : TEXCOORD2;
-				float2 	depthUV : TEXCOORD3;
+				float4 	screenPos : TEXCOORD3;
 //    			LIGHTING_COORDS(3,4)
 			};
 		
@@ -214,8 +214,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			    OUT.oceanP = oceanP;
 			    OUT.viewSpaceDirDist = float4(cameraDir,t); //xyz camera space viewDir, w length
 
-			    float4 screenPos = ComputeScreenPos(outpos);
-			    OUT.depthUV.xy = screenPos.xy / screenPos.w;
+			    OUT.screenPos = ComputeScreenPos(outpos);
 
 //			    float4 worldPos=mul(_Globals_CameraToWorld , screenP);
 //			    OCEAN_TRANSFER_VERTEX_TO_FRAGMENT(OUT);
@@ -386,15 +385,17 @@ Shader "Scatterer/OceanWhiteCaps"
 				float2 jm  = jm1+jm2+jm3+jm4;
 				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
 
+				float2 depthUV = IN.screenPos.xy / IN.screenPos.w;
+
 				//depth stuff
 #if defined (REFRACTION_ON)
 		#if defined (UNDERWATER_ON)
-				float2 uv = IN.depthUV.xy + (N.xy)*0.025 * float2(1.0,10.0);
+				float2 uv = depthUV.xy + (N.xy)*0.025 * float2(1.0,10.0);
 		#else
-				float2 uv = IN.depthUV.xy + N.xy*0.025;
+				float2 uv = depthUV.xy + N.xy*0.025;
 		#endif				
 #else
-				float2 uv = IN.depthUV.xy;
+				float2 uv = depthUV.xy;
 #endif
 
 
@@ -404,7 +405,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				float depth= fragDepth - ocDepth;
 
 #if defined (REFRACTION_ON)
-				uv = (depth < 0) ? IN.depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
+				uv = (depth < 0) ? depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
 				fragDepth = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000;
 				depth= fragDepth - ocDepth;
 #endif
