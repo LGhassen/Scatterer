@@ -50,7 +50,7 @@
                 OUT.pos = UnityObjectToClipPos(v.vertex);
                 OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz;
-                OUT.pos = (renderScattering == 1.0) ? OUT.pos : 0.0;
+                OUT.pos.z = (renderScattering == 1.0) ? OUT.pos.z : -OUT.pos.w; //cull vertex: z/w = -1, behind far plane. Source: Siggraph 2012, Creating vast game worlds (just cause 2)
                 return OUT;
             }
             
@@ -135,7 +135,7 @@
                 OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz;
 
-                OUT.pos = (renderScattering == 1.0) ? OUT.pos : 0.0;
+                OUT.pos.z = (renderScattering == 1.0) ? OUT.pos.z : -OUT.pos.w; //cull vertex: z/w = -1, behind far plane. Source: Siggraph 2012, Creating vast game worlds (just cause 2)
                 return OUT;
             }
             
