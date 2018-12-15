@@ -76,11 +76,10 @@ uniform float _viewdirOffset;
 
 uniform float cloudTerminatorSmooth;
 
-/** returns the matrix {{0,3},{2,1}} */
-uint bayer2(const uint2 xy)
+/** returns the matrix {{0.0,3.0},{2.0,1.0}} */
+float bayer2(const float2 xy)
 {
-    //return (3*xy.x+2*xy.y) & 3;
-    return xy.x | ((xy.x^xy.y)<<1);    
+    return fmod(3.0*xy.x+2.0*xy.y,4.0);
 }
 
 /** 
@@ -88,20 +87,20 @@ uint bayer2(const uint2 xy)
  * sizeExpOfTwo determines the dimension of the matrix to generate. For instance having sizeExpOfTwo == 3 yields an 8x8 matrix, sizeExpOfTwo == 4 yields 16x16.
  * The needed normalization factor is (2**(sizeExpOfTwo))**2, so for sizeExpOfTwo == 3 the normalization would be 64.
  * xy: Indices inside the matrix. For performance reasons they are not sanitized, so make sure you use valid indices.
+ * Floating point variant. Known to be exact up to sizeExpOfTwo == 12 (might be better, just not tested)
  */
-uint bayerPattern(const uint sizeExpOfTwo, uint2 xy)
+float bayerPattern(const int sizeExpOfTwo, float2 xy)
 {
-    uint factor = 1;
-    uint summand = 0;
+    float factor = 1.0;
+    float summand = 0.0;
     //The code would get easier to read if a while-loop were used, but then the compiler would have a harder time unrolling it.
-    for(uint i=1;i<sizeExpOfTwo;++i)
+    for(int i=1;i<sizeExpOfTwo;++i)
     {
-        uint shift = (sizeExpOfTwo-i);
-        uint summ = bayer2(xy >> shift);
-        uint mask = (1 << shift)-1;
-        xy=xy & mask;
+        float matrixSize = exp2(sizeExpOfTwo-i);
+        float summ = bayer2(floor(xy/matrixSize));
+        xy=fmod(xy,matrixSize);
         summand = summand+factor*summ;
-        factor = factor << 2;
+        factor = factor*4.0;
     }
     return factor * bayer2(xy) + summand;
 }
@@ -114,7 +113,7 @@ uint bayer8inl(const uint2 xy)
 
 float3 dither (float3 iColor, float2 iScreenPos)
 {
-	float bayer=bayerPattern(3,uint2(iScreenPos)%8);
+	float bayer=bayerPattern(3,fmod(int2(iScreenPos),8));
 
     const float rgbByteMax=255.;
 
