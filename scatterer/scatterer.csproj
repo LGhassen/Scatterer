@@ -86,7 +86,6 @@
     <Compile Include="Effects\Ocean\Utils\FakeOceanPQS.cs" />
     <Compile Include="Effects\Ocean\Utils\WriteFloat.cs" />
     <Compile Include="Effects\Ocean\Utils\RTUtility.cs" />
-    <Compile Include="Effects\PlanetShineLight.cs" />
     <Compile Include="Effects\SunFlare\SunFlare.cs" />
     <Compile Include="Effects\SunFlare\SunflareCameraHook.cs" />
     <Compile Include="GUI\GUIhandler.cs" />
@@ -107,6 +106,12 @@
     <Compile Include="Effects\Occlusion\ShadowMaskCopyCommandBuffer.cs" />
     <Compile Include="Effects\Occlusion\ShadowRemoveFadeCommandBuffer.cs" />
     <Compile Include="Effects\Occlusion\ShadowMaskModulateCommandBuffer.cs" />
+    <Compile Include="Effects\SunlightModulator\SunlightModulator.cs" />
+    <Compile Include="Effects\SunlightModulator\SunlightModulatorPostRenderHook.cs" />
+    <Compile Include="Effects\SunlightModulator\SunlightModulatorPreRenderHook.cs" />
+    <Compile Include="Utilities\AtmosphereUtils.cs" />
+    <Compile Include="Effects\PlanetShine\PlanetShineLight.cs" />
+    <Compile Include="Effects\Ocean\UnderwaterDimmingHook.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -116,5 +121,7 @@
     <Folder Include="GUI\" />
     <Folder Include="Utilities\Math\" />
     <Folder Include="Effects\Occlusion\" />
+    <Folder Include="Effects\SunlightModulator\" />
+    <Folder Include="Effects\PlanetShine\" />
   </ItemGroup>
 </Project>

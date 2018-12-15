@@ -121,7 +121,7 @@ namespace scatterer
 		//Concrete classes must provide a function that returns the
 		//variance of the waves need for the BRDF rendering of waves
 		public abstract float GetMaxSlopeVariance ();
-	
+		UnderwaterDimmingHook underwaterDimmingHook;
 
 		// Use this for initialization
 		public virtual void Init ()
@@ -275,6 +275,13 @@ namespace scatterer
 			
 			Core.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 			Core.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+
+			//dimming
+			if (Core.Instance.underwaterLightDimming && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+			{
+				underwaterDimmingHook = (UnderwaterDimmingHook) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(UnderwaterDimmingHook));
+				underwaterDimmingHook.oceanNode = this;
+			}
 		}
 		
 		public virtual void Cleanup ()
@@ -314,6 +321,9 @@ namespace scatterer
 
 			UnityEngine.Object.Destroy (m_oceanMaterial);
 			UnityEngine.Object.Destroy (underwaterPostProcessingMaterial);
+
+			if (underwaterDimmingHook)
+				Component.Destroy (underwaterDimmingHook);
 		}
 		
 		Mesh MakePlane (int w, int h, float offset, float scale)
@@ -391,7 +401,7 @@ namespace scatterer
 				toggleRefractions();
 			}
 		}
-
+		
 		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
 		{
 			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
@@ -602,6 +612,8 @@ namespace scatterer
 
 			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity");
 			m_oceanMaterial.SetFloat ("_PlanetOpacity", planetOpacity);
+
+
 		}
 
 		void toggleUnderwaterMode()
@@ -622,6 +634,16 @@ namespace scatterer
 			}
 
 			underwaterMode = !underwaterMode;
+		}
+
+		public void applyUnderwaterDimming () //called OnPostRender of scaledSpace Camera by hook, needs to be done before farCamera onPreCull where the color is set
+		{
+			if (!MapView.MapIsEnabled && isUnderwater)
+			{
+				float underwaterDim = Mathf.Abs(Vector3.Distance (Core.Instance.farCamera.transform.position, m_manager.parentLocalTransform.position)-(float)m_manager.m_radius);
+				underwaterDim = Mathf.Lerp(1.0f,0.0f,underwaterDim / darknessDepth);
+				Core.Instance.sunlightModulatorInstance.modulateByAttenuation(underwaterDim);
+			}	
 		}
 
 		void toggleRefractions()

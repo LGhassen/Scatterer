@@ -110,7 +110,7 @@ namespace scatterer
 		//		After all it's a basic UI for tweaking settings and it does it's job
 		public void DrawScattererWindow (int windowId)
 		{
-			if (Core.Instance.mainMenuOptions)  //MAIN MENU options
+			if (Core.Instance.mainMenuOptions)  //KSC screen options
 			{ 
 				GUILayout.Label (String.Format ("Scatterer: features selector"));
 				Core.Instance.useOceanShaders = GUILayout.Toggle(Core.Instance.useOceanShaders, "Ocean shaders (may require game restart on change)");
@@ -154,6 +154,8 @@ namespace scatterer
 				GUILayout.EndHorizontal ();
 				
 				Core.Instance.disableAmbientLight = GUILayout.Toggle(Core.Instance.disableAmbientLight, "Disable scaled space ambient light");
+				Core.Instance.sunlightExtinction = GUILayout.Toggle(Core.Instance.sunlightExtinction, "Sunlight extinction (direct sun light changes color with sunset/dusk)");
+				Core.Instance.underwaterLightDimming = GUILayout.Toggle(Core.Instance.underwaterLightDimming, "Dim light underwater");
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label (".cfg file used:");

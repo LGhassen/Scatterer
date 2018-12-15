@@ -122,12 +122,14 @@ namespace scatterer
 		
 		[Persistent]
 		public bool
-			oceanCloudShadows = false;
-		
-		[Persistent]
-		public bool
 			fullLensFlareReplacement = true;
-		
+
+		[Persistent]
+		public bool sunlightExtinction = true;
+
+		[Persistent]
+		public bool underwaterLightDimming = true;
+
 		[Persistent]
 		public bool
 			showMenuOnStart = true;
@@ -243,6 +245,7 @@ namespace scatterer
 		string versionNumber = "0.041";
 
 		public object EVEinstance;
+		public SunlightModulator sunlightModulatorInstance;
 
 //		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
 //		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
@@ -509,6 +512,12 @@ namespace scatterer
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
 			{
 				MapView.MapIsEnabled = false;
+			}
+
+			//create sunlightModulator
+			if (sunlightExtinction || (underwaterLightDimming && useOceanShaders))
+			{
+				sunlightModulatorInstance = (SunlightModulator) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
 			}
 
 			coreInitiated = true;
@@ -846,6 +855,12 @@ namespace scatterer
 							_flare.sunFlare.enabled=true;
 						}
 					}
+				}
+
+				if (!ReferenceEquals(sunlightModulatorInstance,null))
+				{
+					sunlightModulatorInstance.OnDestroy();
+					Component.Destroy(sunlightModulatorInstance);
 				}
 
 //				if (shadowMaskModulate)

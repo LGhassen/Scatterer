@@ -359,12 +359,19 @@ namespace scatterer
 				}
 			}
 		}
-
-		public void OnPreCull()
+		
+		public void OnPreRender() //changed from onPrecull sunlightModulator can be called on camera PreCull, seems to not break anything
 		{
 			UpdateStuff ();	
 			SetUniforms (m_skyMaterial);
 			SetUniforms (scaledPlanetScatteringMaterial);
+
+			if (!MapView.MapIsEnabled && Core.Instance.sunlightExtinction)
+			{
+				Core.Instance.sunlightModulatorInstance.modulateByColor(
+					AtmosphereUtils.getExtinction(Core.Instance.farCamera.transform.position - parentLocalTransform.position, m_manager.getDirectionToSun ().normalized,
+				                              Rt, Rg, m_transmit));
+			}
 		}
 
 		public void UpdateStuff () //to be called by onPrerender for some graphical stuff
@@ -1342,6 +1349,6 @@ namespace scatterer
 		public void reInitMaterialUniformsOnRenderTexturesLoss()
 		{
 			InitPostprocessMaterial (m_atmosphereMaterial);
-		}
+		}	
 	}
 }
