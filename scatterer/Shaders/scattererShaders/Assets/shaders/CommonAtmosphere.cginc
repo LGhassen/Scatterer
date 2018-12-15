@@ -73,19 +73,44 @@ uniform float _viewdirOffset;
 
 uniform float cloudTerminatorSmooth;
 
+/** returns the matrix {{0.0,3.0},{2.0,1.0}} */
+float bayer2(const float2 xy)
+{
+    return fmod(3.0*xy.x+2.0*xy.y,4.0);
+}
+
+/** 
+ * Non-normalized Bayer-Pattern for power-of-two sized matrices (see https://en.wikipedia.org/wiki/Ordered_dithering for the formula).
+ * sizeExpOfTwo determines the dimension of the matrix to generate. For instance having sizeExpOfTwo == 3 yields an 8x8 matrix, sizeExpOfTwo == 4 yields 16x16.
+ * The needed normalization factor is (2**(sizeExpOfTwo))**2, so for sizeExpOfTwo == 3 the normalization would be 64.
+ * xy: Indices inside the matrix. For performance reasons they are not sanitized, so make sure you use valid indices.
+ * Floating point variant. Known to be exact up to sizeExpOfTwo == 12 (might be better, just not tested)
+ */
+float bayerPattern(const int sizeExpOfTwo, float2 xy)
+{
+    float factor = 1.0;
+    float summand = 0.0;
+    //The code would get easier to read if a while-loop were used, but then the compiler would have a harder time unrolling it.
+    for(int i=1;i<sizeExpOfTwo;++i)
+    {
+        float matrixSize = exp2(sizeExpOfTwo-i);
+        float summ = bayer2(floor(xy/matrixSize));
+        xy=fmod(xy,matrixSize);
+        summand = summand+factor*summ;
+        factor = factor*4.0;
+    }
+    return factor * bayer2(xy) + summand;
+}
+
+//test version without a loop and for fixed 8x8 matrix size - not really any faster than the generic function above. Only left in for reference.
+uint bayer8inl(const uint2 xy)
+{
+    return 4*(4*bayer2(xy%2) + bayer2(xy%4/2)) + bayer2(xy/4);
+}
+
 float3 dither (float3 iColor, float2 iScreenPos)
 {
-	const float bayerPattern[64] = {
-        		0,  32,  8, 40,  2, 34, 10, 42,
-        		48, 16, 56, 24, 50, 18, 58, 26,
-        		12, 44,  4, 36, 14, 46,  6, 38,
-        		60, 28, 52, 20, 62, 30, 54, 22,
-        		3,  35, 11, 43,  1, 33,  9, 41,
-        		51, 19, 59, 27, 49, 17, 57, 25,
-        		15, 47,  7, 39, 13, 45,  5, 37,
-        		63, 31, 55, 23, 61, 29, 53, 21};
-
-    float bayer=bayerPattern[int(fmod(int(iScreenPos.x),8)+8 * fmod(int(iScreenPos.y),8))]/64;
+	float bayer=bayerPattern(3,fmod(int2(iScreenPos),8));
 
     const float rgbByteMax=255.;
 
@@ -93,7 +118,7 @@ float3 dither (float3 iColor, float2 iScreenPos)
     float3 head=floor(rgb);
     float3 tail=frac(rgb);
 
-    return (head + step(bayer,tail)) / rgbByteMax;
+    return (head + step(bayer,64.f*tail)) / rgbByteMax;
 }
 
 float4 dither (float4 iColor, float2 iScreenPos)
