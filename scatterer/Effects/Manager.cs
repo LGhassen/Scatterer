@@ -15,10 +15,9 @@ namespace scatterer
 		
 		public bool hasOcean = false;
 		public bool usesCloudIntegration = true;
+		public bool flatScaledSpaceModel = false;
 		
 		public double m_radius = 600000.0f;
-		int waitBeforeReloadCnt=0;
-		
 		
 		OceanWhiteCaps m_oceanNode;
 		public SkyNode m_skyNode;
@@ -33,11 +32,8 @@ namespace scatterer
 
 		public List<AtmoPlanetShineSource> planetshineSources;
 
-		
-		// Initialization
 		public void Awake()
 		{
-
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
 				GameObject _go = Core.GetMainMenuObject(parentCelestialBody.name);
@@ -68,7 +64,7 @@ namespace scatterer
 			{
 				m_skyNode.Init();		
 				
-				if (hasOcean && Core.Instance.useOceanShaders)
+				if (hasOcean && Core.Instance.useOceanShaders && (HighLogic.LoadedScene !=GameScenes.MAINMENU))
 				{
 					m_oceanNode = (OceanWhiteCaps) Core.Instance.farCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
 					m_oceanNode.setManager(this);
@@ -82,22 +78,11 @@ namespace scatterer
 		
 		public void Update()
 		{	
-			
 			m_skyNode.UpdateNode();
 			
-			if (hasOcean && Core.Instance.useOceanShaders)
+			if (!ReferenceEquals(m_oceanNode,null))
 			{
 				m_oceanNode.UpdateNode();
-
-				if (!m_oceanNode.rendertexturesCreated)
-				{
-					waitBeforeReloadCnt++;
-					if (waitBeforeReloadCnt >= 2)
-					{
-						reBuildOcean ();
-						waitBeforeReloadCnt = 0;
-					}
-				}
 			}
 		}
 		
@@ -109,7 +94,7 @@ namespace scatterer
 
 			UnityEngine.Object.Destroy(m_skyNode);
 			
-			if (hasOcean && Core.Instance.useOceanShaders) {
+			if (!ReferenceEquals(m_oceanNode,null)) {
 				m_oceanNode.Cleanup();
 				UnityEngine.Object.Destroy(m_oceanNode);
 			}
@@ -119,7 +104,7 @@ namespace scatterer
 		//this fixes the alt-enter bug the really stupid way but it's fast and simple so it'll do
 		public void reBuildOcean()
 		{
-			if (hasOcean && Core.Instance.useOceanShaders)
+			if (!ReferenceEquals(m_oceanNode,null))
 			{
 				m_oceanNode.Cleanup();
 				Component.Destroy(m_oceanNode);

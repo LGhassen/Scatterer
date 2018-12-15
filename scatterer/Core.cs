@@ -122,10 +122,6 @@ namespace scatterer
 		
 		[Persistent]
 		public bool
-			drawAtmoOnTopOfClouds = true;
-		
-		[Persistent]
-		public bool
 			oceanCloudShadows = false;
 		
 		[Persistent]
@@ -241,15 +237,15 @@ namespace scatterer
 
 		[Persistent]
 		public int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
-		
-		public bool d3d9 = false;
-		public bool opengl = false;
-		public bool d3d11 = false;
+
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.0336";
-		
-		//Material originalMaterial;
+		string versionNumber = "0.041";
+
+		public object EVEinstance;
+
+//		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
+//		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		
 		public Transform GetScaledTransform (string body)
 		{
@@ -259,6 +255,12 @@ namespace scatterer
 
 		public static GameObject GetMainMenuObject(string name)
 		{
+			GameObject kopernicusMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault
+					(b => b.name == (name+"(Clone)") && b.transform.parent.name.Contains("Scene"));
+
+			if (kopernicusMainMenuObject != null)
+				return kopernicusMainMenuObject;
+
 			return GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
 		}
 
@@ -269,6 +271,7 @@ namespace scatterer
 			path = Uri.UnescapeDataString (uri.Path);
 			path = Path.GetDirectoryName (path);
 
+			//this doesn't look nice, do it properly
 			int index = path.LastIndexOf ("GameData");
 			gameDataPath= path.Remove(index+9, path.Length-index-9);
 
@@ -277,22 +280,9 @@ namespace scatterer
 
 			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
-			
-			if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 9"))
-			{
-				d3d9 = true;
-			}
-			else if (SystemInfo.graphicsDeviceVersion.StartsWith ("OpenGL"))
-			{
-				opengl = true;
-			}
-			else if (SystemInfo.graphicsDeviceVersion.StartsWith ("Direct3D 11"))
-			{
-				d3d11 = true;
-			}
 
 			Debug.Log ("[Scatterer] Version:"+versionNumber);
-			Debug.Log ("[Scatterer] Detected " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
+			Debug.Log ("[Scatterer] Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
 			
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
@@ -344,17 +334,11 @@ namespace scatterer
 			
 			//find main cameras
 			Camera[] cams = Camera.allCameras;
-			for (int i = 0; i < cams.Length; i++)
-			{
-				Debug.Log("Ghassen camera "+cams [i].name);
-				Debug.Log("Ghassen camera cullingmask"+cams [i].cullingMask);
-				Debug.Log("Ghassen camera nearplane"+cams [i].nearClipPlane);
-				Debug.Log("Ghassen camera farplane"+cams [i].farClipPlane);
-			}
+
 			scaledSpaceCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera ScaledSpace");
 			farCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 01");
 			nearCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 00");
-			
+
 			if (scaledSpaceCamera && farCamera && nearCamera)
 			{
 				if (overrideNearClipPlane)
@@ -363,29 +347,33 @@ namespace scatterer
 					nearCamera.nearClipPlane = nearClipPlane;
 				}
 				farCamera.nearClipPlane = nearCamera.farClipPlane-0.2f; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
+																		// TODO check if can improve this
+				farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				//else we are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
+				//if are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
 				scaledSpaceCamera = Camera.allCameras.Single(_cam  => _cam.name == "Landscape Camera");
 				farCamera = scaledSpaceCamera;
 				nearCamera = scaledSpaceCamera;
 			}
+			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+			{
+				//if in trackstation, just to get rid of some nullrefs
+				farCamera = scaledSpaceCamera;
+				nearCamera = scaledSpaceCamera;
+			}
+
+
 			
 			//find sunlight and set shadow bias
 			lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
 			
 			foreach (Light _light in lights)
 			{
-				Debug.Log("Ghoss light name "+_light.gameObject.name);
-				Debug.Log("intensity " +_light.intensity.ToString());
-				Debug.Log("type " +_light.type.ToString());
-				Debug.Log("layer " +_light.gameObject.layer.ToString());
-				
 				if (_light.gameObject.name == "Scaledspace SunLight")
 				{
 					scaledspaceSunLight=_light.gameObject;
-					Debug.Log("Found scaled sunlight");
 					
 					_light.shadowNormalBias =shadowNormalBias;
 					_light.shadowBias=shadowBias;
@@ -394,13 +382,13 @@ namespace scatterer
 				if (_light.gameObject.name == "SunLight")
 				{
 					sunLight=_light.gameObject;
-					Debug.Log("Found Sunlight");
 				}	
+
 				
 				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light"))
 				{
 					mainMenuLight = _light.gameObject;
-					Debug.Log("Found main menu light");
+					Debug.Log("[Scatterer] Found main menu light");
 				}
 			}
 			
@@ -443,13 +431,14 @@ namespace scatterer
 				}
 			}
 			
-			//					//find and fix renderqueue of sun corona
-			//					Transform scaledSunTransform=GetScaledTransform(mainSunCelestialBodyName);
-			//					foreach (Transform child in scaledSunTransform)
-			//					{
-			//						MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
-			//						temp.material.renderQueue = 3000;
-			//					}
+			//find and fix renderqueue of sun corona
+			Transform scaledSunTransform=GetScaledTransform(mainSunCelestialBodyName);
+			foreach (Transform child in scaledSunTransform)
+			{
+				MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
+				if (temp!=null)
+					temp.material.renderQueue = 2998;
+			}
 			
 			//set up planetshine lights
 			if(usePlanetShine)
@@ -504,6 +493,12 @@ namespace scatterer
 				bufferRenderingManager.start();
 			}
 
+//			//add shadowmask modulator (adds occlusion to shadows)
+//			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
+//
+//			//add shadow far plane fixer
+//			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
+
 			//find EVE clouds
 			if (integrateWithEVEClouds)
 			{
@@ -545,6 +540,7 @@ namespace scatterer
 				}
 				
 				//custom lens flares
+				//TODO: move to init
 				if ((fullLensFlareReplacement) && !customSunFlareAdded && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 				{
 					//disable stock sun flares
@@ -556,6 +552,7 @@ namespace scatterer
 							Debug.Log("[Scatterer] Disabling stock sunflare for "+_flare.sun.name);
 							_flare.sunFlare.enabled=false;
 							_flare.enabled=false;
+							_flare.gameObject.SetActive(false);
 						}
 					}
 					
@@ -567,6 +564,7 @@ namespace scatterer
 						{
 							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
 							customSunFlare.sourceName=sunflareBody;
+							customSunFlare.sourceScaledTransform = GetScaledTransform(customSunFlare.source.name);
 							customSunFlare.start ();
 							customSunFlares.Add(customSunFlare);
 						}
@@ -587,7 +585,8 @@ namespace scatterer
 					}
 					customSunFlareAdded=true;
 				}
-				
+
+				//TODO: move to init
 				if (disableAmbientLight && !ambientLightScript)
 				{
 					ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
@@ -602,7 +601,8 @@ namespace scatterer
 				
 				pqsEnabledOnScattererPlanet = false;
 				underwater = false;
-				
+
+				//TODO: make into it's own function
 				foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
 				{
 					float dist, shipDist=0f;
@@ -617,7 +617,7 @@ namespace scatterer
 							shipDist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position,
 							                             ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
 						}
-						
+
 						if (_cur.active)
 						{
 							if (dist > _cur.unloadDistance && (shipDist > _cur.unloadDistance || shipDist == 0f )) {
@@ -638,7 +638,7 @@ namespace scatterer
 										pqsEnabledOnScattererPlanet = true;
 									}
 									
-									if (_cur.m_manager.hasOcean && useOceanShaders && pqsEnabledOnScattererPlanet)
+									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null) && pqsEnabledOnScattererPlanet) 
 									{
 										underwater = _cur.m_manager.GetOceanNode().isUnderwater;
 									}
@@ -653,7 +653,6 @@ namespace scatterer
 								{
 									_cur.m_manager = new Manager ();
 									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
-									
 									
 									if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 									{
@@ -671,7 +670,7 @@ namespace scatterer
 									
 									//Find eclipse casters
 									List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
-									
+
 									if (useEclipses)
 									{
 										for (int k=0; k < _cur.eclipseCasters.Count; k++)
@@ -689,7 +688,7 @@ namespace scatterer
 									}
 									
 									List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
-									
+
 									if (usePlanetShine)
 									{								
 										for (int k=0; k < _cur.planetshineSources.Count; k++)
@@ -708,11 +707,12 @@ namespace scatterer
 										}
 										_cur.m_manager.planetshineSources = planetshineSources;
 									}
-									
+
 									if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 										_cur.hasOcean=false;
 									
 									_cur.m_manager.hasOcean = _cur.hasOcean;
+									_cur.m_manager.flatScaledSpaceModel = _cur.flatScaledSpaceModel;
 									_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
 									_cur.m_manager.Awake ();
 									_cur.active = true;
@@ -722,10 +722,9 @@ namespace scatterer
 									GUItool.displayOceanSettings = false;
 									GUItool.selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
 									GUItool.getSettingsFromSkynode ();
-									if (_cur.hasOcean && useOceanShaders) {
+									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null)) {
 										GUItool.getSettingsFromOceanNode ();
 									}
-									
 									callCollector=true;
 									Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
 								}
@@ -748,13 +747,13 @@ namespace scatterer
 						}
 					}
 				}
-				
+
+				//move this out of this update, let it be a one time thing
 				if (bufferRenderingManager)
 				{
 					if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
 						bufferRenderingManager.clearDepthTexture();
 				}
-				
 				//update sun flare
 				if (fullLensFlareReplacement)
 				{
@@ -763,13 +762,11 @@ namespace scatterer
 						customSunFlare.updateNode();
 					}
 				}
-				
 				//update planetshine lights
 				if(usePlanetShine)
 				{
 					foreach (PlanetShineLight _aLight in celestialLightSources)
 					{
-						//							Debug.Log("updating "+_aLight.source.name);
 						_aLight.updateLight();
 						
 					}
@@ -798,7 +795,6 @@ namespace scatterer
 						cur.m_manager.OnDestroy ();
 						UnityEngine.Object.Destroy (cur.m_manager);
 						cur.m_manager = null;
-//						ReactivateAtmosphere(cur.transformName,cur.originalPlanetMaterialBackup);
 						cur.active = false;
 					}
 					
@@ -816,16 +812,6 @@ namespace scatterer
 					bufferRenderingManager.OnDestroy();
 					Component.Destroy (bufferRenderingManager);
 				}
-
-//				if(useGodrays)
-//				{
-//					if (godrayDepthTexture)
-//					{
-//						if (godrayDepthTexture.IsCreated())
-//							godrayDepthTexture.Release();
-//						UnityEngine.Object.Destroy (godrayDepthTexture);
-//					}
-//				}
 				
 
 				if (farCamera)
@@ -862,12 +848,19 @@ namespace scatterer
 					}
 				}
 
+//				if (shadowMaskModulate)
+//				{
+//					shadowMaskModulate.OnDestroy();
+//					Component.Destroy(shadowMaskModulate);
+//				}
+//
+//				if (shadowFadeRemover)
+//				{
+//					shadowFadeRemover.OnDestroy();
+//					Component.Destroy(shadowFadeRemover);
+//				}
+
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
-				saveSettings();
-			}
-			
-			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)	
-			{
 				saveSettings();
 			}
 
@@ -1044,30 +1037,32 @@ namespace scatterer
 		{
 			if (terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
 			{
+				QualitySettings.shadowDistance = shadowsDistance;
+				Debug.Log("[Scatterer] Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
+				QualitySettings.shadowProjection = ShadowProjection.StableFit;
+
+				//set shadow bias
+				//fixes checkerboard artifacts aka shadow acne
+				lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+				foreach (Light _light in lights)
+				{
+					if ((_light.gameObject.name == "Scaledspace SunLight") 
+					    || (_light.gameObject.name == "SunLight"))
+					{
+						_light.shadowNormalBias =shadowNormalBias;
+						_light.shadowBias=shadowBias;
+						//_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.VeryHigh;
+						//_light.shadows=LightShadows.Soft;
+						//_light.shadowCustomResolution=8192;
+					}
+				}
+
 				foreach (CelestialBody _sc in CelestialBodies)
 				{
 					if (_sc.pqsController)
 					{
 						_sc.pqsController.meshCastShadows = true;
 						_sc.pqsController.meshRecieveShadows = true;
-
-//						Debug.Log("[Scatterer] PQS material of "+_sc.name+": "
-//						          +_sc.pqsController.surfaceMaterial.shader.name);
-
-						QualitySettings.shadowDistance = shadowsDistance;
-
-						//set shadow bias
-						//fixes checkerboard artifacts aka shadow acne
-						lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-						foreach (Light _light in lights)
-						{
-							if ((_light.gameObject.name == "Scaledspace SunLight") 
-							    || (_light.gameObject.name == "SunLight"))
-							{
-								_light.shadowNormalBias =shadowNormalBias;
-								_light.shadowBias=shadowBias;
-							}
-						}
 					}
 				}
 			}
@@ -1106,8 +1101,6 @@ namespace scatterer
 			}
 
 			Debug.Log("[Scatterer] Eve assembly version: " + EVEType.Assembly.GetName().ToString());
-
-			object EVEinstance;
 
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
@@ -1191,6 +1184,22 @@ namespace scatterer
 				}
 				Debug.Log("[Scatterer] Detected EVE 2d cloud layer for planet: "+body);
 			}
-		}		
+		}
+
+		public void onRenderTexturesLost()
+		{
+			foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
+			{
+				if (_cur.active)
+				{
+					_cur.m_manager.m_skyNode.reInitMaterialUniformsOnRenderTexturesLoss ();
+					if (_cur.m_manager.hasOcean && useOceanShaders && !_cur.m_manager.m_skyNode.inScaledSpace)
+					{
+						_cur.m_manager.reBuildOcean ();
+					}
+				} 
+			}
+		}
+	
 	}
 }

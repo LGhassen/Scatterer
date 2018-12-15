@@ -19,7 +19,7 @@ namespace scatterer
 	public class DisableEffectsChecker : MonoBehaviour
 	{
 		Dictionary<Camera,DisableEffectsForTextureReplacer> camToEffectsDisablerDictionary =  new Dictionary<Camera,DisableEffectsForTextureReplacer>() ;
-		public SkyNode skynode;
+		public Manager manager;
 
 		public DisableEffectsChecker ()
 		{
@@ -34,16 +34,8 @@ namespace scatterer
 			if (cam.name == "TRReflectionCamera" && !camToEffectsDisablerDictionary.ContainsKey(cam))
 			{
 				camToEffectsDisablerDictionary[cam] = (DisableEffectsForTextureReplacer) cam.gameObject.AddComponent(typeof(DisableEffectsForTextureReplacer));
-				Debug.Log("adding postprocesscube");
-				camToEffectsDisablerDictionary[cam].postProcessingCube=skynode.atmosphereMesh.GetComponent<MeshRenderer>();
+				camToEffectsDisablerDictionary[cam].manager = manager;
 
-				if (skynode.m_manager.hasOcean && Core.Instance.useOceanShaders)
-				{
-					Debug.Log("adding watermeshrenderers");
-					camToEffectsDisablerDictionary[cam].waterMeshRenderers = skynode.m_manager.GetOceanNode().waterMeshRenderers;
-					Debug.Log("adding numgrid");
-					camToEffectsDisablerDictionary[cam].numGrids = skynode.m_manager.GetOceanNode().numGrids;
-				}
 				Debug.Log("[Scatterer] Post-processing and ocean effects disabled from Texture Replacer reflections");
 			}
 

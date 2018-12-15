@@ -23,8 +23,6 @@ namespace scatterer {
 		[Persistent] public float shoreFoam = 1.0f;
 
 		[Persistent] public float m_farWhiteCapStr = 0.1f;
-
-		[Persistent] public float choppynessMultiplier = 1f;
 		
 		RenderTexture[] m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7;
 		

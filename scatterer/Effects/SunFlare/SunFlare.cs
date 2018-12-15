@@ -29,6 +29,7 @@ namespace scatterer
 
 		public CelestialBody source;
 		public string sourceName;
+		public Transform sourceScaledTransform;
 
 		Texture2D sunSpikes;
 		Texture2D sunFlare;
@@ -203,7 +204,7 @@ namespace scatterer
 			float dist = (float) (Core.Instance.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
 				.magnitude;
 
-			sunGlareScale = dist / 2266660f;
+			sunGlareScale = dist / 2266660f * Core.Instance.scaledSpaceCamera.fieldOfView / 60f;
 
 			//if dist > 1.25*sunglareFadeDistance -->1
 			//if dist < 0.25*sunglareFadeDistance -->0
@@ -240,7 +241,7 @@ namespace scatterer
 			if(hitStatus)
 			{
 				//if sun visible, draw sunflare
-				if(hit.transform.gameObject.name == sourceName)
+				if(hit.transform == sourceScaledTransform)
 					hitStatus=false;
 			}
 
