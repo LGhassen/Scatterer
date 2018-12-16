@@ -483,10 +483,7 @@ namespace scatterer
 							("_PlanetWorldPos", parentLocalTransform.position);
 						
 						EVEvolumetrics[i].SetFloat
-							("cloudColorMultiplier", volumetricsColorMultiplier);
-						
-						EVEvolumetrics[i].EnableKeyword ("SCATTERER_ON");
-						EVEvolumetrics[i].DisableKeyword ("SCATTERER_OFF");
+							("cloudColorMultiplier", volumetricsColorMultiplier); //doesn't need to be done very frame
 					}
 				}
 			}
@@ -1292,6 +1289,17 @@ namespace scatterer
 
 						InitUniforms(ParticleMaterial);
 						InitPostprocessMaterial(ParticleMaterial);
+
+						if (Core.Instance.sunlightModulatorInstance)
+						{
+							ParticleMaterial.EnableKeyword ("SCATTERER_USE_ORIG_DIR_COLOR_ON");
+							ParticleMaterial.DisableKeyword("SCATTERER_USE_ORIG_DIR_COLOR_OFF");
+						}
+						else
+						{
+							ParticleMaterial.DisableKeyword ("SCATTERER_USE_ORIG_DIR_COLOR_ON");
+							ParticleMaterial.EnableKeyword("SCATTERER_USE_ORIG_DIR_COLOR_OFF");
+						}
 
 						EVEvolumetrics.Add (ParticleMaterial);
 					}

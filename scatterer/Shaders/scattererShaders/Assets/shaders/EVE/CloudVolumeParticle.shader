@@ -56,6 +56,7 @@ Shader "Scatterer-EVE/CloudVolumeParticle" {
 				#include "cubeMap.cginc"
 
 #pragma multi_compile SCATTERER_OFF SCATTERER_ON
+#pragma multi_compile SCATTERER_USE_ORIG_DIR_COLOR_OFF SCATTERER_USE_ORIG_DIR_COLOR_ON
 
 #ifdef SCATTERER_ON
 				#include "../CommonAtmosphere.cginc"
@@ -93,6 +94,7 @@ Shader "Scatterer-EVE/CloudVolumeParticle" {
 				uniform float cloudSkyIrradianceMultiplier;
 				uniform float3 _Sun_WorldSunDir;
 				uniform float3 _PlanetWorldPos;
+				uniform float3 scattererOrigDirectionalColor;
 #endif
 
 				struct appdata_t {
@@ -323,6 +325,11 @@ Shader "Scatterer-EVE/CloudVolumeParticle" {
 
 					color.a *= tex.a;
 					tex.a = IN.viewDir.w*tex.a;
+
+#if (defined(SCATTERER_ON) && defined(SCATTERER_USE_ORIG_DIR_COLOR_ON))
+					_LightColor0.rgb = scattererOrigDirectionalColor;
+#endif
+
 					color.rgb *= ScatterColorLight(IN.lightDirT, IN.viewDirT, normT, tex, _MinScatter, _Opacity, 1).rgb;
 //#ifdef SCATTERER_ON
 //
