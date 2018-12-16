@@ -356,9 +356,9 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 				float fresnel = MeanFresnel(V, N, sigmaSq);
 		#if defined (SKY_REFLECTIONS_ON)
 				float3 camOceanP = normalize(float3(0.0, 0.0, radius)) * (radius + 10.0);
-				Lsky = fresnel * ReflectedSky(V, N, L, earthP);   		   //accurate sky reflection
+				Lsky = fresnel * (ReflectedSky(V, N, L, earthP) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07));   		   //accurate sky reflection
 		#else
-				Lsky = fresnel * skyE / M_PI; 		   					   //sky irradiance only
+				Lsky = fresnel * (skyE / M_PI + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07)); 		   					   //sky irradiance only
 		#endif
 #endif
 																
