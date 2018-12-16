@@ -16,6 +16,7 @@
 
 			CGPROGRAM
 			#include "UnityCG.cginc"
+			#include "../CommonAtmosphere.cginc"
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
@@ -61,15 +62,14 @@
 			
 			struct v2f 
 			{
-    			float4 pos : SV_POSITION;
     			float2 uv : TEXCOORD0;
 			};
 
-			v2f vert(appdata_base v)
+			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
 			{
 				v2f OUT;
 				v.vertex.y = v.vertex.y *_ProjectionParams.x;
-    			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
+    			outpos = float4(v.vertex.xy, 1.0, 1.0);
     			OUT.uv = v.texcoord.xy;
 
 //#if UNITY_UV_STARTS_AT_TOP
@@ -79,7 +79,7 @@
 			}
 
 
-			float4 frag(v2f IN) : COLOR
+			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
 //
 //			    float3 WSD = _Sun_WorldSunDir;
@@ -142,8 +142,7 @@
 
 				sunColor*=sunGlareFade;
 
-				return float4(sunColor,1.0);
-				
+				return float4(dither(sunColor, screenPos),1.0);
 			}
 			
 			ENDCG
