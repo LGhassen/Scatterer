@@ -165,6 +165,8 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
 			}
 
+			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
+
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterial);
 
 			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
