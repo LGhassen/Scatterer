@@ -360,7 +360,7 @@ namespace scatterer
 			}
 		}
 		
-		public void OnPreRender() //changed from onPrecull sunlightModulator can be called on camera PreCull, seems to not break anything
+		public void OnPreRender() //changed from onPrecull so sunlightModulator can be called before it on camera PreCull, seems to not break anything
 		{
 			UpdateStuff ();	
 			SetUniforms (m_skyMaterial);
@@ -368,9 +368,13 @@ namespace scatterer
 
 			if (!MapView.MapIsEnabled && Core.Instance.sunlightExtinction)
 			{
+				Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Core.Instance.farCamera.transform.position)- parentLocalTransform.position;
+
+				float lerpedScale = Mathf.Lerp(1f,experimentalAtmoScale,(extinctionPosition.magnitude-m_radius)/2000f); //hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
+
 				Core.Instance.sunlightModulatorInstance.modulateByColor(
-					AtmosphereUtils.getExtinction(Core.Instance.farCamera.transform.position - parentLocalTransform.position, m_manager.getDirectionToSun ().normalized,
-				                              Rt, Rg, m_transmit));
+					AtmosphereUtils.getExtinction(extinctionPosition, m_manager.getDirectionToSun ().normalized,
+				                              Rt, Rg, m_transmit,lerpedScale));
 			}
 		}
 
@@ -494,6 +498,7 @@ namespace scatterer
 				{
 					//render extinction to texture
 					sunflareExtinctionMaterial.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
+					sunflareExtinctionMaterial.SetFloat("_experimentalAtmoScale",experimentalAtmoScale);
 
 					if (!MapView.MapIsEnabled)
 						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", Core.Instance.farCamera.transform.position - parentLocalTransform.position);

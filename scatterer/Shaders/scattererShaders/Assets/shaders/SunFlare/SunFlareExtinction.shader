@@ -24,6 +24,7 @@ Shader "Scatterer/sunFlareExtinction"
 
 			uniform float3 _Sun_WorldSunDir;
 			uniform float3 _Globals_WorldCameraPos;
+			uniform float _experimentalAtmoScale;
 
 			struct v2f 
 			{
@@ -67,7 +68,7 @@ Shader "Scatterer/sunFlareExtinction"
 			{
 				float3 extinction = float3(1,1,1);
 
-//				Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;		//not really noticeable
+				Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
 
 				float r = length(camera);
 				float rMu = dot(camera, viewdir);

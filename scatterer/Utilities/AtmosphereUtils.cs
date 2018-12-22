@@ -14,8 +14,9 @@ namespace scatterer
 {
 	public static class AtmosphereUtils
 	{
-		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, Texture2D m_transmit)
+		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, Texture2D m_transmit, float experimentalAtmoScale)
 		{
+			Rt=Rg+(Rt-Rg)*experimentalAtmoScale;
 			float r = camera.magnitude;
 			float rMu = Vector3.Dot(camera, viewdir);
 			float mu = rMu / r;
