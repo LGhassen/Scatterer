@@ -90,6 +90,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			#include "../CommonAtmosphere.cginc"
 			#include "OceanBRDF.cginc"
 			#include "OceanDisplacement3.cginc"
+			#include "../ClippingUtils.cginc"
 			
 //			#include "Lighting.cginc"
 //			#include "AutoLight.cginc"
@@ -154,8 +155,9 @@ Shader "Scatterer/OceanWhiteCaps"
     			//float4  pos : SV_POSITION;
     			float2  oceanU : TEXCOORD0;
     			float3  oceanP : TEXCOORD1;
-    			float4	viewSpaceDirDist : TEXCOORD2;
-				float4 	screenPos : TEXCOORD3;
+				float4 	screenPos : TEXCOORD2;
+				float4 	worldPos : TEXCOORD3;
+				float4  viewPos  :TEXCOORD4;
 			};
 		
 			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
@@ -200,14 +202,14 @@ Shader "Scatterer/OceanWhiteCaps"
     			float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);   //position in camera space?
     			float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
-				outpos = mul(_Globals_CameraToScreen, screenP);
-				outpos.y = outpos.y *_ProjectionParams.x;
+				outpos = mul(UNITY_MATRIX_P, screenP);
 				
 			    OUT.oceanU = u;
 			    OUT.oceanP = oceanP;
-			    OUT.viewSpaceDirDist = float4(cameraDir,t); //xyz camera space viewDir, w length
 
 			    OUT.screenPos = ComputeScreenPos(outpos);
+			    OUT.worldPos=mul(_Globals_CameraToWorld , screenP);
+			    OUT.viewPos = screenP;
 			    
     			return OUT;
 			}
@@ -365,14 +367,6 @@ Shader "Scatterer/OceanWhiteCaps"
 				float waterLightExtinction = length(getSkyExtinction(earthP, L));
 				Lsea = hdrNoExposure(waterLightExtinction * ocColor);
 #endif
-																								
-				// extract mean and variance of the jacobian matrix determinant
-				float2 jm1 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.x).xy;
-				float2 jm2 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.y).zw;
-				float2 jm3 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.z).xy;
-				float2 jm4 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.w).zw;
-				float2 jm  = jm1+jm2+jm3+jm4;
-				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
 
 				float2 depthUV = IN.screenPos.xy / IN.screenPos.w;
 
@@ -388,26 +382,33 @@ Shader "Scatterer/OceanWhiteCaps"
 #endif
 
 
-				float fragDepth = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000;
-				float angleToCameraAxis = dot(IN.viewSpaceDirDist.xyz, float3(0.0,0.0,-1.0));
-				float ocDepth = IN.viewSpaceDirDist.w * angleToCameraAxis;
-				float depth= fragDepth - ocDepth;
+				float oceanDistance = length(IN.viewPos);
+				float3 cameraSpaceViewDir = IN.viewPos / oceanDistance;
+				float angleToCameraAxis = dot(cameraSpaceViewDir, float3(0.0,0.0,-1.0));
+				float fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000 / angleToCameraAxis;
+
+				float depth= fragDistance - oceanDistance; //water depth, ie viewing ray distance in water
 
 #if defined (REFRACTION_ON)
 				uv = (depth < 0) ? depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
-				fragDepth = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000;
-				depth= fragDepth - ocDepth;
+				fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000 / angleToCameraAxis;
+				depth= fragDistance - oceanDistance;
 #endif
 
-				depth = depth / angleToCameraAxis; //distance from depth (approx, doesn't take in consideration refraction angle but whatever, should be small enough)
-
-				float clampFactor= clamp(IN.viewSpaceDirDist.w/alphaRadius,0.0,1.0);			
+				float clampFactor= clamp(oceanDistance/alphaRadius,0.0,1.0); //factor to clamp whitecaps
 
 				float outAlpha=lerp(0.0,1.0,depth/transparencyDepth);
 				_Ocean_WhiteCapStr=lerp(shoreFoam,_Ocean_WhiteCapStr, depth*0.2);
 				_Ocean_WhiteCapStr= (depth <= 0.0) ? 0.0 : _Ocean_WhiteCapStr; //fixes white outline around objects in front of the ocean
-
 				float outWhiteCapStr=lerp(_Ocean_WhiteCapStr,farWhiteCapStr,clampFactor);
+
+				// extract mean and variance of the jacobian matrix determinant
+				float2 jm1 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.x).xy;
+				float2 jm2 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.y).zw;
+				float2 jm3 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.z).xy;
+				float2 jm4 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.w).zw;
+				float2 jm  = jm1+jm2+jm3+jm4;
+				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
 
 				// get coverage
 				float W = WhitecapCoverage(outWhiteCapStr,jm.x,jSigma2);
@@ -464,6 +465,8 @@ Shader "Scatterer/OceanWhiteCaps"
 				outAlpha = max(hdr(LsunTotal + R_ftotTotal,_ScatteringExposure), fresnel+outAlpha) ; //seems about perfect
 				outAlpha = min(outAlpha, 1.0);
 
+				bool insideClippingRange = oceanFragmentInsideOfClippingRange(-IN.viewPos.z/IN.viewPos.w);
+
 #if defined (REFRACTION_ON)
 		#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
 				float3 backGrnd = tex2D(_BackgroundTexture, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
@@ -479,14 +482,16 @@ Shader "Scatterer/OceanWhiteCaps"
 				fresnel= clamp(fresnel,0.0,1.0);
 				float3 finalColor = lerp(clamp(hdr(transmittance,_ScatteringExposure),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel);
 
-				finalColor = ((fragDepth < 750000.0) && (backGrnd.r != 0.0)) ? backGrnd : finalColor;
+				finalColor = ((fragDistance < 750000.0) && (backGrnd.r != 0.0)) ? backGrnd : finalColor;
 
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
 
-				return float4(dither(finalColor, screenPos),1.0);
+				return float4(dither(finalColor, screenPos),insideClippingRange);
 		#else
 				float3 finalColor = lerp(backGrnd, hdr(surfaceColor,_ScatteringExposure), outAlpha);  //refraction on and not underwater
-				return float4(dither(finalColor,screenPos), _PlanetOpacity);
+
+
+				return float4(dither(finalColor,screenPos), _PlanetOpacity*insideClippingRange);
 		#endif
 #else
 
@@ -500,10 +505,10 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 finalColor = lerp(clamp(hdr(transmittance,_ScatteringExposure),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel);   //+distance fog
 
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
-				return float4(dither(finalColor, screenPos),1.0);
+				return float4(dither(finalColor, screenPos),insideClippingRange);
 		#else
 
-				return float4(dither(hdr(surfaceColor,_ScatteringExposure),screenPos),outAlpha * _PlanetOpacity);
+				return float4(dither(hdr(surfaceColor,_ScatteringExposure),screenPos),outAlpha * _PlanetOpacity*insideClippingRange);
 		#endif
 #endif
 

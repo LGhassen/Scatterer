@@ -18,6 +18,7 @@ Pass {
             #pragma target 3.0
             #include "UnityCG.cginc"
             #include "../CommonAtmosphere.cginc"
+            #include "../ClippingUtils.cginc"
 
             uniform float3 _camPos; // camera position relative to planet's origin
             uniform float3 _camForward; //camera's viewing direction, in world space
@@ -75,9 +76,7 @@ Pass {
 				fragDistance = (waterSurfaceDistance != -1) && ((waterSurfaceDistance<fragDistance) || (fragDepth == 1.0)) ? waterSurfaceDistance : fragDistance;
 				fragDepth=fragDistance*aa;
 
-                bool fragmentInsideOfClippingRange = ((fragDepth  >= _ProjectionParams.y)  && (fragDepth <= _ProjectionParams.z)); //if fragment depth outside of current camera clipping range, return empty pixel
-
-				bool returnPixel = fragmentInsideOfClippingRange;
+                bool returnPixel = fragmentInsideOfClippingRange(fragDepth); //if fragment depth outside of current camera clipping range, return empty pixel
 
 				float waterLigthExtinction = length(getSkyExtinction(normalize(_camPos + 10.0) * Rg , SUN_DIR));
 

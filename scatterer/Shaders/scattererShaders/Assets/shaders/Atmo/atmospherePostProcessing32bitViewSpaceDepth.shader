@@ -23,6 +23,7 @@ Shader "Scatterer/AtmosphericScatter" {
             #pragma target 3.0
             #include "UnityCG.cginc"
             #include "../CommonAtmosphere.cginc"
+            #include "../ClippingUtils.cginc"
             
 //           	#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
             
@@ -92,9 +93,10 @@ Shader "Scatterer/AtmosphericScatter" {
 				                
                 bool infinite = (fragDepth == 1.0); //basically viewer ray isn't hitting any terrain
                 float minDepth = minDistance * aa;
-                bool fragmentInsideOfClippingRange = (minDepth <= _ProjectionParams.z) && (minDepth  >= _ProjectionParams.y); //if fragment depth outside of current camera clipping range, return empty pixel
 
-				bool returnPixel = fragmentInsideOfClippingRange && (rightDir || (!infinite));
+				bool insideClippingRange = fragmentInsideOfClippingRange(minDepth);
+
+				bool returnPixel = insideClippingRange && (rightDir || (!infinite));
 
                 float3 worldPos = minDistance*rayDir + _camPos;
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
@@ -153,6 +155,7 @@ Pass {
             #pragma target 3.0
             #include "UnityCG.cginc"
             #include "../CommonAtmosphere.cginc"
+            #include "../ClippingUtils.cginc"
 
             #pragma multi_compile GODRAYS_OFF GODRAYS_ON
 //			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
@@ -227,8 +230,10 @@ Pass {
 
                 bool infinite = (fragDepth == 1.0); //basically viewer ray isn't hitting any terrain
                 float minDepth = minDistance * aa;
-                bool fragmentInsideOfClippingRange = ((minDepth  >= _ProjectionParams.y)  && (minDepth <= _ProjectionParams.z)); //if fragment depth outside of current camera clipping range, return empty pixel
-				bool returnPixel = fragmentInsideOfClippingRange && (rightDir || (!infinite));
+
+                bool insideClippingRange = fragmentInsideOfClippingRange(minDepth);
+
+				bool returnPixel = insideClippingRange && (rightDir || (!infinite));
 
                 float3 worldPos = minDistance*rayDir + _camPos;
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix

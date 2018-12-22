@@ -205,7 +205,7 @@ namespace scatterer
 					refractionTexture = new RenderTexture ( Screen.width,Screen.height,0, RenderTextureFormat.ARGB32);
 					refractionTexture.name = "scattererRefractionTexture";
 					refractionTexture.useMipMap=false;
-					refractionTexture.filterMode = FilterMode.Bilinear;
+					refractionTexture.filterMode = FilterMode.Point;
 					refractionTexture.antiAliasing = 1;
 					refractionTexture.Create ();
 				}

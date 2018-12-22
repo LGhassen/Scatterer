@@ -738,6 +738,10 @@ namespace scatterer
 			}
 
 			mat.SetFloat ("_PlanetOpacity", 1f);
+
+			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
+			Debug.Log("[Scatterer] Camera overlap: "+camerasOverlap.ToString());
+			mat.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
 		
 		

@@ -349,9 +349,6 @@ namespace scatterer
 					Debug.Log("[Scatterer] Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
 					nearCamera.nearClipPlane = nearClipPlane;
 				}
-				farCamera.nearClipPlane = nearCamera.farClipPlane-0.2f; //fixes small band in the ocean where the two cameras overlap and the transparent ocean is rendered twice
-																		// TODO check if can improve this
-				farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{

@@ -397,7 +397,7 @@ namespace scatterer
 				toggleUnderwaterMode();
 			}
 
-			renderRefractions = (Mathf.Abs ((float) h ) <= 200f);
+			renderRefractions = (Mathf.Abs ((float) h ) <= 500f);
 			if ((renderRefractions ^ isRenderingRefractions) && Core.Instance.oceanRefraction)
 			{
 				toggleRefractions();
@@ -433,6 +433,9 @@ namespace scatterer
 			underwaterPostProcessingMaterial.SetFloat ("darknessDepth", darknessDepth);
 			underwaterPostProcessingMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
 			underwaterPostProcessingMaterial.SetFloat ("Rg",(float)m_manager.m_radius);
+
+			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
+			m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
 
 
