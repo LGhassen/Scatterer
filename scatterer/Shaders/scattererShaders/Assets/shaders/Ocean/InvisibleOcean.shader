@@ -28,7 +28,8 @@
 			{
 				v2f OUT;
     			//OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
-    			OUT.pos = 0;
+    			OUT.pos = 1;
+    			OUT.pos.z = -OUT.pos.w; //cull vertex z/w = -1 behind far plane. source: Siggraph 2012, Creating vast game worlds (just cause 2)
     			return OUT;
 			}
 

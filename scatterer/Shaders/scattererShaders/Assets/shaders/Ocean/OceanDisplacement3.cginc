@@ -46,7 +46,8 @@ float2 OceanPos(float4 vert, float4x4 stoc, out float t, out float3 cameraDir, o
 	float h = _Ocean_CameraPos.z;
 	float4 v = float4(vert.x, vert.y, 0.0, 1.0);
     cameraDir = normalize(mul(stoc, v).xyz); 		//Dir in camera space
-    
+
+#if !defined (UNDERWATER_ON)
     float3 n1= cross (sphereDir, cameraDir);				//Normal to plane containing dir to planet and vertex viewdir
 	float3 n2= normalize(cross (n1, sphereDir)); 			//upwards vector in plane space, plane containing CamO and cameraDir
 
@@ -54,7 +55,7 @@ float2 OceanPos(float4 vert, float4x4 stoc, out float t, out float3 cameraDir, o
  
     cameraDir= ( (dot(n1,cross(hor,cameraDir)) >0) && (h>0)) ? hor : cameraDir ; //checking if viewdir is above horizon
     																			 //This could probably be optimized
-
+#endif
 
     oceanDir = mul(_Ocean_CameraToOcean, float4(cameraDir, 0.0)).xyz;    
     float cz = _Ocean_CameraPos.z;
@@ -64,7 +65,11 @@ float2 OceanPos(float4 vert, float4x4 stoc, out float t, out float3 cameraDir, o
     
     float b = dz * (cz + radius);
     float c = cz * (cz + 2.0 * radius);
+#if !defined (UNDERWATER_ON)
     float tSphere = - b - sqrt(max(b * b - c, 0.0));
+#else
+	float tSphere = - b + sqrt(max(b * b - c, 0.0));
+#endif
     float tApprox = - cz / dz * (1.0 + cz / (2.0 * radius) * (1.0 - dz * dz));
     t = abs((tApprox - tSphere) * dz) < 1.0 ? tApprox : tSphere;
 
@@ -79,42 +84,6 @@ float2 OceanPos(float4 vert, float4x4 stoc)
     float3 oceanDir;
     return OceanPos(vert, stoc, t, cameraDir, oceanDir);
 }
-
-//from underwater
-float2 OceanPos2(float4 vert, float4x4 stoc, out float t, out float3 cameraDir, out float3 oceanDir) 
-{
-
-	float h = _Ocean_CameraPos.z;
-	float4 v = float4(vert.x, vert.y, 0.0, 1.0);
-    cameraDir = normalize(mul(stoc, v).xyz); 		//Dir in camera space
-
-    oceanDir = mul(_Ocean_CameraToOcean, float4(cameraDir, 0.0)).xyz;    
-    float cz = _Ocean_CameraPos.z;
-    float dz = oceanDir.z;
-    float radius = _Ocean_Radius;
-    
-    
-    float b = dz * (cz + radius);
-    float c = cz * (cz + 2.0 * radius);
-    //float tSphere = - b - sqrt(max(b * b - c, 0.0));
-    //float discriminant = b*b - 4* a * c
-    float tSphere = - b + sqrt(max(b * b - c, 0.0));
-//    float tApprox = - cz / dz * (1.0 + cz / (2.0 * radius) * (1.0 - dz * dz));
-//    t = abs((tApprox - tSphere) * dz) < 1.0 ? tApprox : tSphere;
-
-    t = tSphere;
-
-    return _Ocean_CameraPos.xy + t * oceanDir.xy;
-}
-
-float2 OceanPos2(float4 vert, float4x4 stoc) 
-{
-    float t;
-    float3 cameraDir;
-    float3 oceanDir;
-    return OceanPos2(vert, stoc, t, cameraDir, oceanDir);
-}
-
 
 float4 Tex2DGrad(sampler2D tex, float2 uv, float2 dx, float2 dy, float2 texSize)
 {

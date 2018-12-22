@@ -165,15 +165,9 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 				float4 vert = v.vertex;
 				vert.xy *= 1.25;
 
-#if defined (UNDERWATER_ON)
-				float2 u = OceanPos2(vert, _Globals_ScreenToCamera, t, cameraDir, oceanDir);		//camera dir is viewing direction in camera space
-			    float2 dux = OceanPos2(vert + float4(_Ocean_ScreenGridSize.x, 0.0, 0.0, 0.0), _Globals_ScreenToCamera) - u;
-			    float2 duy = OceanPos2(vert + float4(0.0, _Ocean_ScreenGridSize.y, 0.0, 0.0), _Globals_ScreenToCamera) - u;
-#else
 				float2 u = OceanPos(vert, _Globals_ScreenToCamera, t, cameraDir, oceanDir);		//camera dir is viewing direction in camera space
 			    float2 dux = OceanPos(vert + float4(_Ocean_ScreenGridSize.x, 0.0, 0.0, 0.0), _Globals_ScreenToCamera) - u;
 			    float2 duy = OceanPos(vert + float4(0.0, _Ocean_ScreenGridSize.y, 0.0, 0.0), _Globals_ScreenToCamera) - u;
-#endif
 
 			    float3 dP = float3(0, 0, _Ocean_HeightOffset);
 			    
