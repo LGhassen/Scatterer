@@ -27,9 +27,7 @@
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
-    			//OUT.pos = mul(UNITY_MATRIX_MVP, v.vertex);
-    			OUT.pos = 1;
-    			OUT.pos.z = -OUT.pos.w; //cull vertex z/w = -1 behind far plane. source: Siggraph 2012, Creating vast game worlds (just cause 2)
+    			OUT.pos = float4(2.0, 2.0, 2.0, 1.0); //outside clip space => cull vertex
     			return OUT;
 			}
 

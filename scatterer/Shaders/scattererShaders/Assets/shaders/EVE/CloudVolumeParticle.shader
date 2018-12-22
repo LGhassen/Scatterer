@@ -169,11 +169,10 @@ Shader "Scatterer-EVE/CloudVolumeParticle" {
 					float3 viewDir = normalize(mvMatrix[2].xyz);
 					o.viewDir.xyz = abs(viewDir).xyz;
 
-
 					float4 mvCenter = mul(UNITY_MATRIX_MV, localOrigin);
 
 					o.pos = mul(UNITY_MATRIX_P,mvCenter+float4(v.vertex.xyz*localScale,v.vertex.w));
-					o.pos.z = o.color.a > (1.0/255.0) ? o.pos.z : -o.pos.w; //cull vertex if low alpha z/w = -1, behind far plane. source: Siggraph 2012, Creating vast game worlds (just cause 2)
+					o.pos = o.color.a > (1.0/255.0) ? o.pos : float4(2.0, 2.0, 2.0, 1.0); //outside clip space => cull vertex
 
 					float2 texcoodOffsetxy = ((2*v.texcoord)- 1);
 					float4 texcoordOffset = float4(texcoodOffsetxy.x, texcoodOffsetxy.y, 0, v.vertex.w);
