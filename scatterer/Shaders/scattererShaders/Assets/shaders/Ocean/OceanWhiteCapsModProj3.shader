@@ -398,6 +398,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				float clampFactor= clamp(oceanDistance/alphaRadius,0.0,1.0); //factor to clamp whitecaps
 
 				float outAlpha=lerp(0.0,1.0,depth/transparencyDepth);
+				outAlpha = (depth < -0.5) ? 1.0 : outAlpha;   //fix black edge around antialiased terrain in front of ocean
 				_Ocean_WhiteCapStr=lerp(shoreFoam,_Ocean_WhiteCapStr, depth*0.2);
 				_Ocean_WhiteCapStr= (depth <= 0.0) ? 0.0 : _Ocean_WhiteCapStr; //fixes white outline around objects in front of the ocean
 				float outWhiteCapStr=lerp(_Ocean_WhiteCapStr,farWhiteCapStr,clampFactor);
