@@ -53,6 +53,7 @@ namespace scatterer
 		float ghostFade=1;
 
 		Mesh screenMesh;
+		GameObject sunflareGameObject;
 
 		[Persistent]
 		float sunGlareFadeDistance = 250000;
@@ -124,7 +125,32 @@ namespace scatterer
 			screenMesh = MeshFactory.MakePlane (2, 2, MeshFactory.PLANE.XY, false, false);
 			screenMesh.bounds = new Bounds (Vector4.zero, new Vector3 (Mathf.Infinity, Mathf.Infinity, Mathf.Infinity));
 
-			Sun.Instance.sunFlare.enabled = false;
+			sunflareGameObject = new GameObject ();
+			MeshFilter sunflareGameObjectMeshFilter;
+
+			if (sunflareGameObject.GetComponent<MeshFilter> ())
+				sunflareGameObjectMeshFilter = sunflareGameObject.GetComponent<MeshFilter> ();
+			else
+				sunflareGameObjectMeshFilter = sunflareGameObject.AddComponent<MeshFilter>();
+			
+			sunflareGameObjectMeshFilter.mesh.Clear ();
+			sunflareGameObjectMeshFilter.mesh = screenMesh;
+			
+			MeshRenderer sunflareGameObjectMeshRenderer;
+
+			if (sunflareGameObject.GetComponent<MeshRenderer> ())
+				sunflareGameObjectMeshRenderer = sunflareGameObject.GetComponent<MeshRenderer> ();
+			else
+				sunflareGameObjectMeshRenderer = sunflareGameObject.AddComponent<MeshRenderer>();
+			
+			sunflareGameObjectMeshRenderer.sharedMaterial = sunglareMaterial;
+			sunflareGameObjectMeshRenderer.material = sunglareMaterial;
+			
+			sunflareGameObjectMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			sunflareGameObjectMeshRenderer.receiveShadows = false;
+			sunflareGameObjectMeshRenderer.enabled = true;
+			
+			sunflareGameObject.layer = 10; //start in scaledspace
 
 			//didn't want to serialize the matrices directly as the result is pretty unreadable
 			//sorry about the mess, I'll make a cleaner way later
@@ -165,6 +191,8 @@ namespace scatterer
 			}
 
 			extinctionTexture = new RenderTexture (4, 4, 0, RenderTextureFormat.ARGB32);
+			extinctionTexture.antiAliasing = 1;
+			extinctionTexture.filterMode = FilterMode.Point;
 			extinctionTexture.Create ();
 
 			sunglareMaterial.SetVector ("flareSettings", flareSettings);
@@ -190,7 +218,6 @@ namespace scatterer
 				nearCameraHook = (SunflareCameraHook)Core.Instance.nearCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
 				nearCameraHook.flare = this;
 			}
-
 
 			Debug.Log ("[Scatterer] Added custom sun flare for "+sourceName);
 
@@ -246,6 +273,7 @@ namespace scatterer
 			}
 
 			eclipse = hitStatus;
+			sunglareMaterial.SetFloat("renderSunFlare", (!eclipse && (sunViewPortPos.z > 0) && !Core.Instance.underwater ) ? 1.0f : 0.0f);
 
 			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
 			sunglareMaterial.SetFloat ("aspectRatio", Core.Instance.scaledSpaceCamera.aspect);
@@ -258,7 +286,6 @@ namespace scatterer
 		}	
 
 		public void updateNode()
-		//public void Update()
 		{
 			//if rendertexture is lost, wait a bit before re-creating it
 			if (!extinctionTexture.IsCreated())
@@ -276,6 +303,7 @@ namespace scatterer
 			{
 				nearCameraHook.enabled = true;
 				scaledCameraHook.enabled = false;
+				sunflareGameObject.layer = 15;
 			}
 			else
 			{
@@ -283,21 +311,7 @@ namespace scatterer
 					nearCameraHook.enabled=false;
 
 				scaledCameraHook.enabled=true;
-			}
-
-			//drawmesh calls have to be made in update()
-			//if they're done on prerender or anywhere else they don't work as far as I know
-			if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION) && !(Core.Instance.underwater))
-			//if (!MapView.MapIsEnabled && !eclipse && (sunViewPortPos.z > 0))
-			{
-				Graphics.DrawMesh (screenMesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 15,
-				                   Core.Instance.nearCamera, 0, null, false, false);
-			}
-			
-			else if (!eclipse && (sunViewPortPos.z > 0))
-			{
-				Graphics.DrawMesh (screenMesh, Vector3.zero, Quaternion.identity, sunglareMaterial, 10,
-				                   Core.Instance.scaledSpaceCamera, 0, null, false, false);
+				sunflareGameObject.layer = 10;
 			}
 		}
 
