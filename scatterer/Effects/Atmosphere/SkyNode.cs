@@ -272,8 +272,17 @@ namespace scatterer
 			else
 				skySphereGameObject.layer = 9;
 
-			skySphereGameObject.transform.position = parentScaledTransform.position;
-			skySphereGameObject.transform.parent = parentScaledTransform;
+			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			{
+				SkySphereKSCUpdater updater = (SkySphereKSCUpdater) skySphereGameObject.AddComponent(typeof(SkySphereKSCUpdater));
+				updater.parentLocalTransform = parentLocalTransform;
+			}
+			else
+			{
+				skySphereGameObject.transform.position = parentScaledTransform.position;
+				skySphereGameObject.transform.parent = parentScaledTransform;
+			}
+
 			skySphereMeshRenderer = SkySphere.GameObject.GetComponent < MeshRenderer > ();
 			skySphereMeshRenderer.material = m_skyMaterial;
 

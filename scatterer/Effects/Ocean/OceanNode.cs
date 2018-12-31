@@ -453,8 +453,8 @@ namespace scatterer
 			                                          ctol1.m20, ctol1.m21, ctol1.m22, ctol1.m23,
 			                                          ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
 
-//			Vector4 translation = m_manager.parentCelestialBody.transform.localToWorldMatrix.GetColumn (3);
-			Vector3d translation = m_manager.parentCelestialBody.position;
+			Vector3d translation = m_manager.parentLocalTransform.position;
+
 
 			Matrix4x4d worldToLocal = new Matrix4x4d(1, 0, 0, -translation.x,
 			                                         0, 1, 0, -translation.y,
