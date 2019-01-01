@@ -825,7 +825,7 @@ float3 SkyRadiance3(float3 camera, float3 viewdir, float3 sundir)//, out float3 
 
 	//camera *= scale;
 	//camera += viewdir * max(shaftWidth, 0.0);
-	float r = length(camera);
+	float r = max(length(camera),Rg+1.0); //fixes artifacts when camera is crossing water surface
 
 	float rMu = dot(camera, viewdir);
 	rMu+=_viewdirOffset * r;
