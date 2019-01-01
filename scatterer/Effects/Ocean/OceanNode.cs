@@ -165,7 +165,7 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
 			}
 
-			if (Core.Instance.oceanSurfaceShadows && (QualitySettings.shadows != ShadowQuality.Disable))
+			if (Core.Instance.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable))
 			{
 				if (QualitySettings.shadows == ShadowQuality.HardOnly)
 				{
