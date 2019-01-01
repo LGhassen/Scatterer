@@ -17,7 +17,7 @@ namespace scatterer
 			// after light's shadow map is computed, copy it
 			RenderTargetIdentifier shadowmap = BuiltinRenderTextureType.CurrentActive;
 			m_Buffer = new CommandBuffer();
-			m_Buffer.name = "ScattererScreenSpaceShadowMapCopy";
+			m_Buffer.name = "ScattererShadowMapCopy";
 			
 			// Change shadow sampling mode for shadowmap.
 			m_Buffer.SetShadowSamplingMode(shadowmap, ShadowSamplingMode.RawDepth);

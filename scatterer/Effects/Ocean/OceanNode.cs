@@ -165,6 +165,27 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
 			}
 
+			if (Core.Instance.oceanSurfaceShadows && (QualitySettings.shadows != ShadowQuality.Disable))
+			{
+				if (QualitySettings.shadows == ShadowQuality.HardOnly)
+				{
+					m_oceanMaterial.EnableKeyword ("OCEAN_SHADOWS_HARD");
+					m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_SOFT");
+				}
+				else
+				{
+					m_oceanMaterial.EnableKeyword ("OCEAN_SHADOWS_SOFT");
+					m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_HARD");
+				}
+				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_OFF");
+			}
+			else
+			{
+				m_oceanMaterial.EnableKeyword ("OCEAN_SHADOWS_OFF");
+				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_HARD");
+				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_SOFT");
+			}
+
 			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterial);

@@ -9,7 +9,6 @@ Pass {
 			ZTest Off
 			ZWrite Off
     	
-            //Blend OneMinusDstColor One //soft additive
             Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
@@ -73,7 +72,7 @@ Pass {
 
 				float waterSurfaceDistance = intersectSphere4(_camPos,rayDir,float3(0,0,0),Rg); //ocean surface check
 
-				fragDistance = (waterSurfaceDistance != -1) && ((waterSurfaceDistance<fragDistance) || (fragDepth == 1.0)) ? waterSurfaceDistance : fragDistance;
+				fragDistance = (waterSurfaceDistance != -1) && (waterSurfaceDistance<fragDistance) ? waterSurfaceDistance : fragDistance;
 				fragDepth=fragDistance*aa;
 
                 bool returnPixel = fragmentInsideOfClippingRange(fragDepth); //if fragment depth outside of current camera clipping range, return empty pixel

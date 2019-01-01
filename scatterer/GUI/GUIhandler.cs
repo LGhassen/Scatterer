@@ -122,6 +122,7 @@ namespace scatterer
 				
 				Core.Instance.oceanSkyReflections = GUILayout.Toggle(Core.Instance.oceanSkyReflections, "Ocean: accurate sky reflection");
 				Core.Instance.oceanRefraction = GUILayout.Toggle(Core.Instance.oceanRefraction, "Ocean: refraction effects");
+				Core.Instance.shadowsOnOcean = GUILayout.Toggle(Core.Instance.shadowsOnOcean, "Ocean: Craft/Terrain shadows (may have artifacts on Directx11)");
 				Core.Instance.oceanPixelLights = GUILayout.Toggle(Core.Instance.oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
 				
 				//Core.Instance.usePlanetShine = GUILayout.Toggle(Core.Instance.usePlanetShine, "PlanetShine");

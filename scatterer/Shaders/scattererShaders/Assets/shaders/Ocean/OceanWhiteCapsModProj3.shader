@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
  * Proland: a procedural landscape rendering library.
  * Copyright (c) 2008-2011 INRIA
  *
@@ -59,7 +58,7 @@
 /**
  * Author: Eric Bruneton
  * Modified and ported to Unity by Justin Hawkins 2014
- * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015-2017
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015-2019
  */
 
 Shader "Scatterer/OceanWhiteCaps" 
@@ -86,12 +85,16 @@ Shader "Scatterer/OceanWhiteCaps"
 			#pragma multi_compile REFRACTION_OFF REFRACTION_ON
 			#pragma multi_compile SKY_REFLECTIONS_OFF SKY_REFLECTIONS_ON
 			#pragma multi_compile UNDERWATER_OFF UNDERWATER_ON
+			#pragma multi_compile OCEAN_SHADOWS_OFF OCEAN_SHADOWS_HARD OCEAN_SHADOWS_SOFT
 
 			#include "../CommonAtmosphere.cginc"
+#if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
+			#include "OceanShadows.cginc"
+#endif			
 			#include "OceanBRDF.cginc"
 			#include "OceanDisplacement3.cginc"
 			#include "../ClippingUtils.cginc"
-			
+
 //			#include "Lighting.cginc"
 //			#include "AutoLight.cginc"
 //			#include "OceanLight.cginc"
@@ -149,7 +152,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			uniform float4x4 planetShineSources;
 			uniform float4x4 planetShineRGB;
 #endif
-			
+
 			struct v2f 
 			{
     			//float4  pos : SV_POSITION;
@@ -199,7 +202,7 @@ Shader "Scatterer/OceanWhiteCaps"
 #else
 				dP = lerp(float3(0.0,0.0,-0.1),dP,tClamped);  //prevents projected grid intersecting near plane
 #endif
-    			float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);   //position in camera space?
+    			float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);   //position in camera space
     			float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
 				outpos = mul(UNITY_MATRIX_P, screenP);
@@ -209,6 +212,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 			    OUT.screenPos = ComputeScreenPos(outpos);
 			    OUT.worldPos=mul(_Globals_CameraToWorld , screenP);
+
 			    OUT.viewPos = screenP;
 			    
     			return OUT;
@@ -288,7 +292,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				result = SkyRadiance3(earthP,refractedAngle, sunDir);
 
     			return result;
-			}
+				}
 
 			float3 oceanColor(float3 viewDir, float3 lightDir, float3 surfaceDir)
 			{
@@ -335,13 +339,17 @@ Shader "Scatterer/OceanWhiteCaps"
 
 			    sigmaSq = max(sigmaSq, 2e-5);
 
+
+				
 				float3 earthP = normalize(oceanP + float3(0.0, 0.0, radius)) * (radius + 10.0);
 
-				float3 sunL;
-				float3 skyE;
+				float3 sunL, skyE, Lsky;
 				SunRadianceAndSkyIrradiance(earthP, N, L, sunL, skyE);
 
-				float3 Lsky;
+				half shadowTerm = 1.0;
+#if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
+				shadowTerm = getOceanShadow (IN.worldPos, -IN.viewPos.z);
+#endif
 
 #if defined (UNDERWATER_ON)
 				float fresnel = 1-fresnel_dielectric(V, N, 1/refractionIndex);   //1.0/1.33 = 0.75 approx index of air/index of water
@@ -352,20 +360,20 @@ Shader "Scatterer/OceanWhiteCaps"
 				float fresnel = MeanFresnel(V, N, sigmaSq);
 		#if defined (SKY_REFLECTIONS_ON)
 				float3 camOceanP = normalize(float3(0.0, 0.0, radius)) * (radius + 10.0);
-				Lsky = fresnel * (ReflectedSky(V, N, L, earthP) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07));   		   //accurate sky reflection
+				Lsky = fresnel * (ReflectedSky(V, N, L, earthP) * lerp(0.5,1.0,shadowTerm) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07));   		   //accurate sky reflection
 		#else
-				Lsky = fresnel * (skyE / M_PI + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07)); 		   					   //sky irradiance only
+				Lsky = fresnel * (skyE / M_PI * lerp(0.5,1.0,shadowTerm) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07)); 		   					   //sky irradiance only
 		#endif
 #endif
 																
-				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
+				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL * shadowTerm;
 				//float3 Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * (skyE / M_PI);
-				float3 Lsea =   0.98 * (1.0 - fresnel) * _Ocean_Color * (skyE / M_PI);
+				float3 Lsea =   0.98 * (1.0 - fresnel) * _Ocean_Color * (skyE / M_PI) * lerp(0.3,1.0,shadowTerm);
 
 #if defined (UNDERWATER_ON)
 				float3 ocColor = oceanColor(reflect(-V,N),L,float3(0.0,0.0,1.0)); //reflected ocean color from underwater
 				float waterLightExtinction = length(getSkyExtinction(earthP, L));
-				Lsea = hdrNoExposure(waterLightExtinction * ocColor);
+				Lsea = hdrNoExposure(waterLightExtinction * ocColor) * lerp(0.8,1.0,shadowTerm);
 #endif
 
 				float2 depthUV = IN.screenPos.xy / IN.screenPos.w;
@@ -380,7 +388,6 @@ Shader "Scatterer/OceanWhiteCaps"
 #else
 				float2 uv = depthUV.xy;
 #endif
-
 
 				float oceanDistance = length(IN.viewPos);
 				float3 cameraSpaceViewDir = IN.viewPos / oceanDistance;
@@ -416,7 +423,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				
 				// compute and add whitecap radiance
 				float3 l = (sunL * (max(dot(N, L), 0.0)) + skyE + UNITY_LIGHTMODEL_AMBIENT.rgb * 30) / M_PI;
-				float3 R_ftot = float3(W * l * 0.4);
+				float3 R_ftot = float3(W * l * 0.4)* lerp(0.5,1.0,shadowTerm);
 
 #if defined (UNDERWATER_ON)
 				float3 surfaceColor = abs(Lsky + Lsea + R_ftot);

@@ -112,6 +112,8 @@
     <Compile Include="Utilities\AtmosphereUtils.cs" />
     <Compile Include="Effects\PlanetShine\PlanetShineLight.cs" />
     <Compile Include="Effects\Ocean\UnderwaterDimmingHook.cs" />
+    <Compile Include="Effects\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
+    <Compile Include="Effects\Atmosphere\Utils\SkySphereKSCUpdater.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -123,5 +125,6 @@
     <Folder Include="Effects\Occlusion\" />
     <Folder Include="Effects\SunlightModulator\" />
     <Folder Include="Effects\PlanetShine\" />
+    <Folder Include="Effects\Atmosphere\Utils\" />
   </ItemGroup>
 </Project>

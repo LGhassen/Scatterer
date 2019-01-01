@@ -110,6 +110,10 @@ namespace scatterer
 
 		[Persistent]
 		public bool
+			shadowsOnOcean = true;
+
+		[Persistent]
+		public bool
 			oceanSkyReflections = true;
 
 		[Persistent]
@@ -119,7 +123,7 @@ namespace scatterer
 		[Persistent]
 		public bool
 			oceanPixelLights = false;
-		
+
 		[Persistent]
 		public bool
 			fullLensFlareReplacement = true;
@@ -242,7 +246,7 @@ namespace scatterer
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.041";
+		string versionNumber = "0.046 Dev";
 
 		public object EVEinstance;
 		public SunlightModulator sunlightModulatorInstance;
@@ -1051,7 +1055,12 @@ namespace scatterer
 			{
 				QualitySettings.shadowDistance = shadowsDistance;
 				Debug.Log("[Scatterer] Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
-				QualitySettings.shadowProjection = ShadowProjection.StableFit;
+
+
+				if (shadowsOnOcean)
+					QualitySettings.shadowProjection = ShadowProjection.CloseFit; //with ocean shadows
+				else
+					QualitySettings.shadowProjection = ShadowProjection.StableFit; //without ocean shadows
 
 				//set shadow bias
 				//fixes checkerboard artifacts aka shadow acne
