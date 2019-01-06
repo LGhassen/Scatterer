@@ -26,6 +26,7 @@ Shader "Scatterer/AtmosphericScatter" {
             #include "../ClippingUtils.cginc"
             
 //           	#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
+			#pragma multi_compile DISABLE_UNDERWATER_OFF DISABLE_UNDERWATER_ON
             
             uniform float4x4 _ViewProjInv;
             uniform float _Scale;
@@ -69,6 +70,9 @@ Shader "Scatterer/AtmosphericScatter" {
                 o.pos = float4(v.vertex.xy,1.0,1.0);
 				o.uv=v.texcoord.xy;
 				o.view_dir = scattererFrustumCorners[(int) v.vertex.z]; 	//interpolated from frustum corners world viewdir
+#if defined (DISABLE_UNDERWATER_ON) //disables rendering the scattering when underwater
+				o.pos = (length(_camPos) >= Rg ) ? o.pos : float4(2.0,2.0,2.0,1.0);
+#endif
                 return o;
             }
             
@@ -160,6 +164,7 @@ Pass {
             #pragma multi_compile GODRAYS_OFF GODRAYS_ON
 //			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
+			#pragma multi_compile DISABLE_UNDERWATER_OFF DISABLE_UNDERWATER_ON
             
             uniform float _global_alpha;
             uniform float _global_depth;
@@ -206,6 +211,9 @@ Pass {
                 outpos = float4(v.vertex.xy,1.0,1.0);
 				o.uv=v.texcoord.xy;
 				o.view_dir = scattererFrustumCorners[(int) v.vertex.z]; 	//interpolated from frustum corners world viewdir
+#if defined (DISABLE_UNDERWATER_ON) //disables rendering the scattering when underwater
+				outpos = (length(_camPos) >= Rg ) ? outpos : float4(2.0,2.0,2.0,1.0);
+#endif
                 return o;
             }
 

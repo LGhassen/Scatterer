@@ -28,10 +28,7 @@ namespace scatterer
 		
 		SimpleRenderingShape SkySphere;
 		GameObject skySphereGameObject;
-		MeshRenderer skySphereMeshRenderer;
-		
-		[Persistent]
-		public bool displayInterpolatedVariables = false;
+		MeshRenderer skySphereMeshRenderer, stockSkyMeshRenderer;
 
 		public bool usesCloudIntegration = true;
 		
@@ -57,13 +54,6 @@ namespace scatterer
 		public float oceanSigma = 0.04156494f;
 		public float _Ocean_Threshold = 25f;
 
-		[Persistent]
-		public bool drawSkyOverClouds = true;
-		
-		[Persistent]
-		public float drawOverCloudsAltitude = 100000f;
-
-		
 		Vector3 sunViewPortPos=Vector3.zero;
 
 		float alt;
@@ -230,6 +220,16 @@ namespace scatterer
 				m_atmosphereMaterial.DisableKeyword ("ECLIPSES_ON");
 				m_atmosphereMaterial.EnableKeyword ("ECLIPSES_OFF");
 			}
+			if (m_manager.hasOcean)
+			{
+				m_atmosphereMaterial.EnableKeyword ("DISABLE_UNDERWATER_ON");
+				m_atmosphereMaterial.DisableKeyword ("DISABLE_UNDERWATER_OFF");
+			}
+			else
+			{
+				m_atmosphereMaterial.DisableKeyword ("DISABLE_UNDERWATER_ON");
+				m_atmosphereMaterial.EnableKeyword ("DISABLE_UNDERWATER_OFF");
+			}
 
 			InitPostprocessMaterial (m_atmosphereMaterial);
 
@@ -365,6 +365,17 @@ namespace scatterer
 					sunflareExtinctionMaterial.SetFloat ("ringOuterRadius", ringOuterRadius);
 					sunflareExtinctionMaterial.SetVector ("ringNormal", ringObject.transform.up);
 					sunflareExtinctionMaterial.SetTexture ("ringTexture", ringTexture);
+				}
+
+				if (m_manager.hasOcean)
+				{
+					sunflareExtinctionMaterial.EnableKeyword ("DISABLE_UNDERWATER_ON");
+					sunflareExtinctionMaterial.DisableKeyword ("DISABLE_UNDERWATER_OFF");
+				}
+				else
+				{
+					sunflareExtinctionMaterial.DisableKeyword ("DISABLE_UNDERWATER_ON");
+					sunflareExtinctionMaterial.EnableKeyword ("DISABLE_UNDERWATER_OFF");
 				}
 			}
 		}
@@ -603,6 +614,12 @@ namespace scatterer
 				}
 				interpolateVariables ();
 				atmosphereMeshrenderer.enabled = (!inScaledSpace) && (postprocessingEnabled);
+
+				if (m_manager.hasOcean && !Core.Instance.useOceanShaders)
+				{
+					skySphereMeshRenderer.enabled = (trueAlt>=0f);
+					stockSkyMeshRenderer.enabled = (trueAlt<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
+				}
 
 				if(Core.Instance.useOceanShaders && m_manager.hasOcean)
 				{
@@ -1153,7 +1170,8 @@ namespace scatterer
 				{
 					if (parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > () != skySphereMeshRenderer)
 					{
-						parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (false);
+						stockSkyMeshRenderer = parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > ();
+						stockSkyMeshRenderer.enabled=false;
 						break;
 					}
 				}

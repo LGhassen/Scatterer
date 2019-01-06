@@ -49,7 +49,6 @@ namespace scatterer
 		float pointAltitude = 0f;
 		float newCfgPtAlt = 0f;
 		int configPointsCnt;
-		bool showInterpolatedValues = false;
 		float postProcessingalpha = 78f;
 		float postProcessDepth = 200f;
 		
@@ -415,7 +414,6 @@ namespace scatterer
 						GUILayout.BeginHorizontal ();
 						if (GUILayout.Button ("Save atmo"))
 						{
-							Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.displayInterpolatedVariables = showInterpolatedValues;
 							Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.saveToConfigNode ();
 						}
 						
@@ -671,8 +669,6 @@ namespace scatterer
 
 			extinctionMultiplier = selected.skyExtinctionMultiplier;
 			extinctionTint = selected.skyExtinctionTint;
-			
-			showInterpolatedValues = skyNode.displayInterpolatedVariables;
 			
 			mieG = skyNode.m_mieG;
 			

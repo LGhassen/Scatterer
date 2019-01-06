@@ -17,6 +17,7 @@ Shader "Scatterer/sunFlareExtinction"
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
+			#pragma multi_compile DISABLE_UNDERWATER_OFF DISABLE_UNDERWATER_ON
 
 			uniform float Rg;
 			uniform float Rt;
@@ -37,6 +38,7 @@ Shader "Scatterer/sunFlareExtinction"
     			v2f OUT;
     			OUT.pos = UnityObjectToClipPos(v.vertex);
     			OUT.uv = v.texcoord;
+
     			return OUT;
 			}
 
@@ -97,6 +99,10 @@ Shader "Scatterer/sunFlareExtinction"
 			    float3 WCP = _Globals_WorldCameraPos;
 
 				float3 extinction = getExtinction(WCP,WSD);
+
+#if defined (DISABLE_UNDERWATER_ON) //disable when underwater
+				extinction = (length(WCP) >= Rg ) ? extinction : float4(0.0,0.0,0.0,1.0);
+#endif
 
 				return float4(extinction,1.0);
 			}

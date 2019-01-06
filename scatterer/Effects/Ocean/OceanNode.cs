@@ -88,8 +88,6 @@ namespace scatterer
 
 		public int numGrids;
 		Mesh[] m_screenGrids;
-		
-		[Persistent] public float fakeOceanAltitude = 15000;
 
 		GameObject[] waterGameObjects;
 		public MeshRenderer[] waterMeshRenderers;
