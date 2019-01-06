@@ -545,22 +545,28 @@ namespace scatterer
 					{
 						if (wireFrame)
 						{
-							if (Core.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)))
-								Component.Destroy(Core.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)));
-							
-							if (Core.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)))
-								Component.Destroy(Core.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)));
-							
+							if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+							{
+								if (Core.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)))
+									Component.Destroy(Core.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)));
+
+								if (Core.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)))
+									Component.Destroy(Core.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)));
+							}
+
 							if (Core.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
 								Component.Destroy(Core.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
-							
+
 							wireFrame=false;
 						}
 						
 						else
 						{
-							Core.Instance.nearCamera.gameObject.AddComponent (typeof(Wireframe));
-							Core.Instance.farCamera.gameObject.AddComponent (typeof(Wireframe));
+							if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+							{
+								Core.Instance.nearCamera.gameObject.AddComponent (typeof(Wireframe));
+								Core.Instance.farCamera.gameObject.AddComponent (typeof(Wireframe));
+							}
 							Core.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(Wireframe));
 							
 							wireFrame=true;
