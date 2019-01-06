@@ -18,4 +18,4 @@ Shader files borrowed from the EVE mod are under the MIT license:
 -alphaMap.cginc
 -noiseSimplex.cginc
  
-Copyright (c) 2015-2017 Ghassen Lahmar
+Copyright (c) 2015-2019 Ghassen Lahmar
