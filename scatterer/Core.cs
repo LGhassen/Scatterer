@@ -960,63 +960,42 @@ namespace scatterer
 
 		void removeStockOceans()
 		{
-			//FakeOceanPQS[] fakes = (FakeOceanPQS[])FakeOceanPQS.FindObjectsOfType (typeof(FakeOceanPQS));
-
-			//if stock oceans haven't already been replaced
-			//if (fakes.Length == 0) 
-			{ 
-				Material invisibleOcean = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
-				foreach (ScattererCelestialBody sctBody in scattererCelestialBodies)
+			Material invisibleOcean = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
+			foreach (ScattererCelestialBody sctBody in scattererCelestialBodies)
+			{
+				if (sctBody.hasOcean)
 				{
-					if (sctBody.hasOcean)
+					bool removed = false;
+					var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
+					if (celBody == null)
 					{
-						bool removed = false;
-						var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
-						if (celBody == null)
+						celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
+					}
+					
+					if (celBody != null)
+					{
+						//Thanks to rbray89 for this snippet and the FakeOcean class which disable the stock ocean in a clean way
+						PQS pqs = celBody.pqsController;
+						if ((pqs != null) && (pqs.ChildSpheres!= null) && (pqs.ChildSpheres.Count() != 0))
 						{
-							celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
-						}
-						
-						if (celBody != null)
-						{
-							//Thanks to rbray89 for this snippet and the FakeOcean class which disable the stock ocean in a clean way
-							PQS pqs = celBody.pqsController;
-							if (pqs != null) {
-
-								//Debug.Log("Scatterer celbody "+celBody.name);
-//								for (int i=0;i<pqs.ChildSpheres.Count();i++)
-//								{
-//									Debug.Log(i.ToString()+" "+pqs.ChildSpheres[i].name);
-//									Debug.Log(pqs.surfaceMaterial.shader.name);
-//									Debug.Log(pqs.surfaceMaterial.name);
-//								}
-
-								PQS ocean = pqs.ChildSpheres [0];
-								if (ocean != null) {
-
-									//									GameObject go = new GameObject ();
-									//									FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
-									//									fakeOcean.Apply (ocean);
-
-									ocean.surfaceMaterial = invisibleOcean;
-									ocean.surfaceMaterial.SetOverrideTag("IgnoreProjector","True");
-									ocean.surfaceMaterial.SetOverrideTag("ForceNoShadowCasting","True");
-
-									removed = true;
-								}
+							
+							PQS ocean = pqs.ChildSpheres [0];
+							if (ocean != null)
+							{
+								ocean.surfaceMaterial = invisibleOcean;
+								ocean.surfaceMaterial.SetOverrideTag("IgnoreProjector","True");
+								ocean.surfaceMaterial.SetOverrideTag("ForceNoShadowCasting","True");
+								
+								removed = true;
 							}
 						}
-						if (!removed) {
-							Debug.Log ("[Scatterer] Couldn't remove stock ocean for " + sctBody.celestialBodyName);
-						}
+					}
+					if (!removed) {
+						Debug.Log ("[Scatterer] Couldn't remove stock ocean for " + sctBody.celestialBodyName);
 					}
 				}
-				Debug.Log ("[Scatterer] Removed stock oceans");
 			}
-//			else
-//			{
-//				Debug.Log ("[Scatterer] Stock oceans already removed");
-//			}
+			Debug.Log ("[Scatterer] Removed stock oceans");
 		}
 
 
