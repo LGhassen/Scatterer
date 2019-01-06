@@ -268,7 +268,14 @@ namespace scatterer
 			if (kopernicusMainMenuObject != null)
 				return kopernicusMainMenuObject;
 
-			return GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
+			GameObject kspMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
+
+			if (kspMainMenuObject == null)
+			{
+				throw new Exception("No correct main menu object found for "+name);
+			}
+
+			return kspMainMenuObject;
 		}
 
 		void Awake ()
