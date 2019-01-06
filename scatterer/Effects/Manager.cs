@@ -88,15 +88,15 @@ namespace scatterer
 		
 		public void OnDestroy()
 		{
-			m_skyNode.Cleanup();
-
-			Component.Destroy(m_skyNode);
-
-			UnityEngine.Object.Destroy(m_skyNode);
+			if (!ReferenceEquals(m_skyNode,null))
+			{
+				m_skyNode.Cleanup();
+				Component.Destroy(m_skyNode);
+			}
 			
 			if (!ReferenceEquals(m_oceanNode,null)) {
 				m_oceanNode.Cleanup();
-				UnityEngine.Object.Destroy(m_oceanNode);
+				Component.Destroy(m_oceanNode);
 			}
 		}
 		
