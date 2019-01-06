@@ -576,7 +576,7 @@ namespace scatterer
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
 
-				tweakStockAtmosphere ();
+				tweakStockAtmosphere();
 				addScaledScatteringMaterialToPlanet();
 
 				//disable postprocessing and ocean effects for Texture Replacer reflections
@@ -1151,8 +1151,11 @@ namespace scatterer
 			{
 				if (parentScaledTransform.GetChild (i).gameObject.layer == 9)
 				{
-					parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (false);
-					break;
+					if (parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > () != skySphereMeshRenderer)
+					{
+						parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > ().gameObject.SetActive (false);
+						break;
+					}
 				}
 			}
 
