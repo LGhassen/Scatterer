@@ -255,9 +255,9 @@ Shader "Scatterer-EVE/Cloud" {
 					relWorldPos = (alt < threshold) ? normalize(relWorldPos) * (threshold) : relWorldPos;   //artifacts fix (black scattering and overbright skyirradiance) when cloud altitude < Rg *( 1 + 2000/600000)
 
 					float3 relCameraPos=WCP-worldOrigin;
-
+//
 					float3 groundPos = normalize (relWorldPos) * Rg*1.0008;
-					relWorldPos =  lerp(groundPos,worldPos,_PlanetOpacity);
+					relWorldPos =  lerp(groundPos,relWorldPos,_PlanetOpacity);
 
                 	//inScattering from cloud to observer
 					float3 inscatter = InScattering2(relCameraPos, relWorldPos, _Sun_WorldSunDir);
@@ -269,13 +269,10 @@ Shader "Scatterer-EVE/Cloud" {
 					//extinction of light from sun to cloud
 					extinction*=getSkyExtinction(relWorldPos,_Sun_WorldSunDir);
 
-
-
 					//skyLight
 					float3 skyE = SimpleSkyirradiance(relWorldPos, IN.viewDir, _Sun_WorldSunDir);
 	#if defined (PRESERVECLOUDCOLORS_OFF)
 					color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction+ inscatter*cloudScatteringMultiplier+skyE*cloudSkyIrradianceMultiplier), color.a); //not bad
-					//color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction*skyE*cloudSkyIrradianceMultiplier+ inscatter*cloudScatteringMultiplier), color.a); //not bad
 	#else
 					float3 cloudColor = color.rgb*cloudColorMultiplier*extinction*hdrNoExposure(skyE * cloudSkyIrradianceMultiplier);
 					float3 otherColors = hdrNoExposure(inscatter * cloudScatteringMultiplier);

@@ -762,7 +762,10 @@ namespace scatterer
 				mat.EnableKeyword ("PLANETSHINE_OFF");
 			}
 
-			mat.SetFloat ("_PlanetOpacity", 1f);
+			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
+				mat.SetFloat ("_PlanetOpacity", 0f);
+			else
+				mat.SetFloat ("_PlanetOpacity", 1f);
 
 			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
 			Debug.Log("[Scatterer] Camera overlap: "+camerasOverlap.ToString());
@@ -785,7 +788,12 @@ namespace scatterer
 			mat.SetFloat ("_global_depth", interpolatedSettings.postProcessDepth *1000000);
 
 			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
-				mat.SetFloat ("_PlanetOpacity", 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity"));
+			{
+				if (MapView.MapIsEnabled)
+					mat.SetFloat ("_PlanetOpacity", 0f);
+				else
+					mat.SetFloat ("_PlanetOpacity", 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity"));
+			}
 			
 			mat.SetFloat ("_Post_Extinction_Tint", interpolatedSettings.extinctionTint);
 
