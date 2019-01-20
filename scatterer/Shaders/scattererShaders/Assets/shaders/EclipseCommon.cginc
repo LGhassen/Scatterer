@@ -31,10 +31,15 @@ inline float getEclipseShadows(float3 worldPos, float4x4 lightOccludersmatrix)
 	float eclipseShadow = 1.0;
 	for (int i=0; i<4; ++i)
     {
-    	if (lightOccludersmatrix[i].w <= 0)
-    		break;
-
-		eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccludersmatrix[i].xyz,lightOccludersmatrix[i].w, sunPosAndRadius.w);
+    	UNITY_BRANCH
+    	if (lightOccludersmatrix[i].w > 0)
+    	{
+			eclipseShadow*= getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccludersmatrix[i].xyz,lightOccludersmatrix[i].w, sunPosAndRadius.w);
+		}
+		else
+		{
+			break;
+		}
 	}
 	return eclipseShadow;
 }
