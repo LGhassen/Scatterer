@@ -30,8 +30,8 @@
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 
 			uniform float _Alpha_Global;
-			uniform float _Extinction_Tint;
-			uniform float extinctionMultiplier;
+			uniform float extinctionTint;
+			uniform float extinctionThickness;
 			uniform float3 _Sun_WorldSunDir;
 
 			uniform float renderScattering;
@@ -72,6 +72,9 @@
 #if defined (RINGSHADOW_ON)
 				extinction *= getRingShadow(IN.worldPos*6000, _Sun_WorldSunDir, IN.planetOrigin*6000);
 #endif
+				float average=(extinction.r+extinction.g+extinction.b)/3;
+				extinction = extinctionTint * extinction + (1-extinctionTint) * float3(average,average,average);
+				extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
 
                 return float4(extinction,1.0);
             }

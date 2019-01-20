@@ -28,6 +28,8 @@ Shader "Scatterer/SkySphere"
 
 			uniform float _experimentalExtinctionScale;
 			uniform float3 _Sun_WorldSunDir;
+
+			uniform float extinctionThickness;
 			
 			struct v2f 
 			{
@@ -85,12 +87,10 @@ Shader "Scatterer/SkySphere"
     
     			extinction = Transmittance(r, mu);    			
 
-//    			extinction = lerp(average, extinction, _Extinction_Tint); //causes issues in OpenGL somehow so reproduced lerp manually    								
-
     			float average=(extinction.r+extinction.g+extinction.b)/3;
-    			extinction = extinctionMultiplier *  float3(_Extinction_Tint*extinction.r + (1-_Extinction_Tint)*average,
-    								_Extinction_Tint*extinction.g + (1-_Extinction_Tint)*average,
-    								_Extinction_Tint*extinction.b + (1-_Extinction_Tint)*average);
+    			extinction = _Extinction_Tint * extinction + (1-_Extinction_Tint) * float3(average,average,average);
+
+    			extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
 
 				return float4(extinction,1.0);
 			}

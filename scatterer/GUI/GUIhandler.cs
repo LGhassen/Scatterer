@@ -39,9 +39,9 @@ namespace scatterer
 
 		float mieG = 0.85f;
 		float openglThreshold = 10f;
-		
-		float extinctionMultiplier = 1f;
-		float extinctionTint = 1f;
+
+		float extinctionThickness = 1f;
+		float skyExtinctionTint = 1f;
 		
 		float specR = 0f, specG = 0f, specB = 0f, shininess = 0f;
 		
@@ -52,8 +52,7 @@ namespace scatterer
 		float postProcessingalpha = 78f;
 		float postProcessDepth = 200f;
 		
-		float _Post_Extinction_Tint=100f;
-		float postExtinctionMultiplier=100f;
+		float extinctionTint=100f;
 		
 		float postProcessExposure = 18f;
 		
@@ -244,10 +243,9 @@ namespace scatterer
 							{
 								Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1,
 								                                                                                   new ConfigPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100,
-								                 postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100,
-								                 extinctionMultiplier / 100, extinctionTint / 100,
-								                 openglThreshold,viewdirOffset,_Post_Extinction_Tint/100,
-								                 postExtinctionMultiplier/100));
+								                 postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, skyExtinctionTint / 100,
+								                 openglThreshold,viewdirOffset,extinctionTint/100,
+								                 extinctionThickness));
 								selectedConfigPoint += 1;
 								configPointsCnt = Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
 								loadConfigPoint (selectedConfigPoint);
@@ -307,19 +305,17 @@ namespace scatterer
 							GUILayout.Label("Sky");
 							GUIfloat("Sky Exposure", ref exposure, ref _cur.skyExposure);
 							GUIfloat("Sky Alpha", ref alphaGlobal, ref _cur.skyAlpha);
-							GUIfloat("Sky Extinction Multiplier", ref extinctionMultiplier, ref _cur.skyExtinctionMultiplier);
-							GUIfloat("Sky Extinction Tint", ref extinctionTint, ref _cur.skyExtinctionTint);
+							GUIfloat("Sky Extinction Tint", ref skyExtinctionTint, ref _cur.skyExtinctionTint);
 
-							GUILayout.Label("Ground Scattering");
+							GUILayout.Label("Scattering and Extinction");
 							GUIfloat("Scattering Exposure (scaled+local)", ref postProcessExposure ,ref _cur.scatteringExposure);
+							GUIfloat("Extinction Tint (scaled+local)", ref extinctionTint, ref _cur.extinctionTint);
+							GUIfloat("Extinction Thickness (scaled+local)", ref extinctionThickness, ref _cur.extinctionThickness);
 
 							GUILayout.Label("Post Processing");
 							GUIfloat("Post Processing Alpha", ref postProcessingalpha, ref _cur.postProcessAlpha);
 							GUIfloat("Post Processing Depth", ref postProcessDepth,ref _cur.postProcessDepth);
-							GUIfloat("Post Processing Extinction Multiplier", ref postExtinctionMultiplier, ref _cur.postExtinctionMultiplier);
-							GUIfloat("Post Processing Extinction Tint", ref _Post_Extinction_Tint, ref _cur._Post_Extinction_Tint);
 
-							
 							GUILayout.Label("Artifact Fixes");
 							GUIfloat("ViewDirOffset", ref viewdirOffset,ref _cur.viewdirOffset);
 							GUIfloat("Depth buffer Threshold", ref openglThreshold, ref _cur.openglThreshold);
@@ -596,7 +592,7 @@ namespace scatterer
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (label);
 			
-			local = float.Parse (GUILayout.TextField (local.ToString ("00000.0000")));
+			local = float.Parse (GUILayout.TextField (local.ToString ("00000.000000")));
 			if (GUILayout.Button ("Set")) {
 				target = local;
 			}
@@ -648,8 +644,7 @@ namespace scatterer
 			postProcessingalpha = selected.postProcessAlpha;
 			postProcessDepth = selected.postProcessDepth;
 			
-			_Post_Extinction_Tint = selected._Post_Extinction_Tint;
-			postExtinctionMultiplier = selected.postExtinctionMultiplier;
+			extinctionTint = selected.extinctionTint;
 			
 			postProcessExposure = selected.scatteringExposure;
 			exposure = selected.skyExposure;
@@ -667,9 +662,10 @@ namespace scatterer
 			rimBlend = skyNode.rimBlend;
 			rimpower = skyNode.rimpower;
 
-			extinctionMultiplier = selected.skyExtinctionMultiplier;
-			extinctionTint = selected.skyExtinctionTint;
-			
+			skyExtinctionTint = selected.skyExtinctionTint;
+
+			extinctionThickness = selected.extinctionThickness;
+
 			mieG = skyNode.m_mieG;
 			
 			experimentalAtmoScale = skyNode.experimentalAtmoScale;
@@ -730,15 +726,15 @@ namespace scatterer
 			ConfigPoint _cur = Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point];
 			
 			postProcessDepth = _cur.postProcessDepth;
-			_Post_Extinction_Tint = _cur._Post_Extinction_Tint;
-			postExtinctionMultiplier = _cur.postExtinctionMultiplier;
+			extinctionTint = _cur.extinctionTint;
 			postProcessExposure = _cur.scatteringExposure;
 			postProcessingalpha = _cur.postProcessAlpha;
 			
 			alphaGlobal = _cur.skyAlpha;
 			exposure = _cur.skyExposure;
-			extinctionMultiplier = _cur.skyExtinctionMultiplier;
-			extinctionTint = _cur.skyExtinctionTint;
+			skyExtinctionTint = _cur.skyExtinctionTint;
+
+			extinctionThickness = _cur.extinctionThickness;
 			
 			pointAltitude = _cur.altitude;
 			

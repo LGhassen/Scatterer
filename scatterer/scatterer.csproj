@@ -109,11 +109,11 @@
     <Compile Include="Effects\SunlightModulator\SunlightModulator.cs" />
     <Compile Include="Effects\SunlightModulator\SunlightModulatorPostRenderHook.cs" />
     <Compile Include="Effects\SunlightModulator\SunlightModulatorPreRenderHook.cs" />
-    <Compile Include="Utilities\AtmosphereUtils.cs" />
     <Compile Include="Effects\PlanetShine\PlanetShineLight.cs" />
     <Compile Include="Effects\Ocean\UnderwaterDimmingHook.cs" />
     <Compile Include="Effects\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
     <Compile Include="Effects\Atmosphere\Utils\SkySphereKSCUpdater.cs" />
+    <Compile Include="Effects\Atmosphere\Utils\AtmosphereUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

@@ -633,11 +633,10 @@ namespace scatterer
 			//Sets uniforms that this or other gameobjects may need
 			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, interpolatedSettings.viewdirOffset);
-			{
-				mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
-				mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
-				mat.SetFloat (ShaderProperties.extinctionMultiplier_PROPERTY, interpolatedSettings.skyExtinctionMultiplier);
-			}
+			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
+			mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
+			mat.SetFloat ("extinctionTint", interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
+			mat.SetFloat ("extinctionThickness", interpolatedSettings.extinctionThickness);
 
 			mat.SetFloat (ShaderProperties.scale_PROPERTY, 1);
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
@@ -788,8 +787,9 @@ namespace scatterer
 			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
 				mat.SetFloat ("_PlanetOpacity", 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity"));
 			
-			mat.SetFloat ("_Post_Extinction_Tint", interpolatedSettings._Post_Extinction_Tint);
-			mat.SetFloat ("postExtinctionMultiplier", interpolatedSettings.postExtinctionMultiplier);
+			mat.SetFloat ("_Post_Extinction_Tint", interpolatedSettings.extinctionTint);
+
+			mat.SetFloat ("extinctionThickness", interpolatedSettings.extinctionThickness);
 
 			mat.SetFloat ("_openglThreshold", interpolatedSettings.openglThreshold);
 

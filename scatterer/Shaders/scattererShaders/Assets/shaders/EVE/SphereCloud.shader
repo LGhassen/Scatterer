@@ -104,6 +104,8 @@ Shader "Scatterer-EVE/Cloud" {
 				uniform float cloudSkyIrradianceMultiplier;
 				uniform float3 _Sun_WorldSunDir;
 				uniform float3 _Scatterer_Origin;
+				uniform float extinctionThickness;
+				uniform float _PlanetOpacity; //to smooth transition from/to scaledSpace when using flatScaledSpaceModel
 #endif
 
 //			//stuff for kopernicus ring shadows
@@ -254,14 +256,20 @@ Shader "Scatterer-EVE/Cloud" {
 
 					float3 relCameraPos=WCP-worldOrigin;
 
+					float3 groundPos = normalize (relWorldPos) * Rg*1.0008;
+					relWorldPos =  lerp(groundPos,worldPos,_PlanetOpacity);
+
                 	//inScattering from cloud to observer
 					float3 inscatter = InScattering2(relCameraPos, relWorldPos, _Sun_WorldSunDir);
 					      	
                 	//extinction from cloud to observer
 					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);
+					extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );			
 
 					//extinction of light from sun to cloud
-					extinction*=getSkyExtinction(relWorldPos,_Sun_WorldSunDir);					
+					extinction*=getSkyExtinction(relWorldPos,_Sun_WorldSunDir);
+
+
 
 					//skyLight
 					float3 skyE = SimpleSkyirradiance(relWorldPos, IN.viewDir, _Sun_WorldSunDir);

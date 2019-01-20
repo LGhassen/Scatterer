@@ -39,7 +39,7 @@ Shader "Scatterer/AtmosphericScatter" {
             uniform float3 _camPos; // camera position relative to planet's origin
             uniform float3 _camForward;
             uniform float _Post_Extinction_Tint;
-            uniform float postExtinctionMultiplier;
+            uniform float extinctionThickness;
             uniform sampler2D _customDepthTexture;
             uniform float _openglThreshold;
             uniform float _horizonDepth;
@@ -109,12 +109,9 @@ Shader "Scatterer/AtmosphericScatter" {
                 float average=(extinction.r+extinction.g+extinction.b)/3;
 
                 //lerped manually because of an issue with opengl or whatever
-                extinction = float3(_Post_Extinction_Tint*extinction.r + (1-_Post_Extinction_Tint)*average,
-                _Post_Extinction_Tint*extinction.g + (1-_Post_Extinction_Tint)*average,
-                _Post_Extinction_Tint*extinction.b + (1-_Post_Extinction_Tint)*average);
-                //                extinction = lerp(average, extinction, _Post_Extinction_Tint);
-                extinction = lerp (float3(1,1,1), extinction, postExtinctionMultiplier);
-                
+                extinction = _Post_Extinction_Tint * extinction + (1-_Post_Extinction_Tint) * float3(average,average,average);
+
+                extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
                 
 //#if defined (ECLIPSES_ON)				
 // 				float eclipseShadow = 1;
