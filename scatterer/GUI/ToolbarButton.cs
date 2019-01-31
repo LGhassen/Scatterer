@@ -51,7 +51,7 @@ namespace scatterer
 
 		void AddToolbarButton()
 		{
-			if(HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			if(HighLogic.LoadedScene == GameScenes.SPACECENTER)
 			{
 				if(!hasAddedButton)
 				{
