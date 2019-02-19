@@ -96,10 +96,6 @@ namespace scatterer
 		[Persistent]
 		public float nearClipPlane=0.5f;
 
-//		[Persistent]
-//		public bool
-//			render24bitDepthBuffer = true;
-
 		[Persistent]
 		public bool
 			forceDisableDefaultDepthBuffer = false;
@@ -115,8 +111,7 @@ namespace scatterer
 		[Persistent]
 		public bool
 			oceanSkyReflections = true;
-
-		[Persistent]
+		
 		public bool
 			oceanRefraction = true;
 
@@ -246,13 +241,15 @@ namespace scatterer
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.049 Dev";
+		string versionNumber = "0.050 Dev";
 
 		public object EVEinstance;
 		public SunlightModulator sunlightModulatorInstance;
-
+		
 //		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
-//		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
+		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
+
+		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
 		
 		public Transform GetScaledTransform (string body)
 		{
@@ -297,6 +294,7 @@ namespace scatterer
 
 			Debug.Log ("[Scatterer] Version:"+versionNumber);
 			Debug.Log ("[Scatterer] Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
+			Debug.Log ("[Scatterer] Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
 			
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
@@ -355,6 +353,8 @@ namespace scatterer
 
 			if (scaledSpaceCamera && farCamera && nearCamera)
 			{
+				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades) farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
+
 				if (overrideNearClipPlane)
 				{
 					Debug.Log("[Scatterer] Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
@@ -375,8 +375,6 @@ namespace scatterer
 				nearCamera = scaledSpaceCamera;
 			}
 
-
-			
 			//find sunlight and set shadow bias
 			lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
 			
@@ -502,13 +500,20 @@ namespace scatterer
 			{
 				bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
 				bufferRenderingManager.start();
+
+				//copy stock depth buffers and combine into a single depth buffer
+				if (useOceanShaders || fullLensFlareReplacement)
+				{
+					farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
+					nearCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
+				}
 			}
 
 //			//add shadowmask modulator (adds occlusion to shadows)
 //			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
 //
-//			//add shadow far plane fixer
-//			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
+			//add shadow far plane fixer
+			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
 
 			//find EVE clouds
 			if (integrateWithEVEClouds)
@@ -670,7 +675,6 @@ namespace scatterer
 								{
 									_cur.m_manager = new Manager ();
 									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
-									
 									if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 									{
 										_cur.m_manager.setParentScaledTransform (GetMainMenuObject(_cur.celestialBodyName).transform); //doesn't look right but let's see
@@ -681,7 +685,6 @@ namespace scatterer
 										_cur.m_manager.setParentScaledTransform (_cur.transform);
 										_cur.m_manager.setParentLocalTransform (_cur.celestialBody.transform);
 									}
-
 									CelestialBody currentSunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.mainSunCelestialBody);
 									_cur.m_manager.setSunCelestialBody (currentSunCelestialBody);
 									
@@ -703,7 +706,6 @@ namespace scatterer
 										}
 										_cur.m_manager.eclipseCasters=eclipseCasters;
 									}
-									
 									List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
 
 									if (usePlanetShine)
@@ -724,21 +726,20 @@ namespace scatterer
 										}
 										_cur.m_manager.planetshineSources = planetshineSources;
 									}
-
-									if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+									if (HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 										_cur.hasOcean=false;
-									
+
 									_cur.m_manager.hasOcean = _cur.hasOcean;
 									_cur.m_manager.flatScaledSpaceModel = _cur.flatScaledSpaceModel;
 									_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
 									_cur.m_manager.Awake ();
 									_cur.active = true;
 									
-									
 									GUItool.selectedConfigPoint = 0;
 									GUItool.displayOceanSettings = false;
 									GUItool.selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
 									GUItool.getSettingsFromSkynode ();
+
 									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null)) {
 										GUItool.getSettingsFromOceanNode ();
 									}
@@ -790,7 +791,7 @@ namespace scatterer
 				}
 			}
 		} 
-		
+
 
 		void OnDestroy ()
 		{
@@ -876,12 +877,23 @@ namespace scatterer
 //					shadowMaskModulate.OnDestroy();
 //					Component.Destroy(shadowMaskModulate);
 //				}
-//
-//				if (shadowFadeRemover)
-//				{
-//					shadowFadeRemover.OnDestroy();
-//					Component.Destroy(shadowFadeRemover);
-//				}
+
+				if (shadowFadeRemover)
+				{
+					shadowFadeRemover.OnDestroy();
+					Component.Destroy(shadowFadeRemover);
+				}
+
+				if (farCameraShadowCascadeTweaker)
+				{
+					Component.Destroy(farCameraShadowCascadeTweaker);
+				}
+
+				if (farCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)))
+					Component.Destroy (farCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)));
+
+				if (nearCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)))
+					Component.Destroy (nearCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)));
 
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				saveSettings();
@@ -978,14 +990,14 @@ namespace scatterer
 						PQS pqs = celBody.pqsController;
 						if ((pqs != null) && (pqs.ChildSpheres!= null) && (pqs.ChildSpheres.Count() != 0))
 						{
-							
+
 							PQS ocean = pqs.ChildSpheres [0];
 							if (ocean != null)
 							{
 								ocean.surfaceMaterial = invisibleOcean;
 								ocean.surfaceMaterial.SetOverrideTag("IgnoreProjector","True");
 								ocean.surfaceMaterial.SetOverrideTag("ForceNoShadowCasting","True");
-								
+
 								removed = true;
 							}
 						}

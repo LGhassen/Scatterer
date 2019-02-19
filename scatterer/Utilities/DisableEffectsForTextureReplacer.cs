@@ -25,7 +25,8 @@ namespace scatterer
 
 		public void OnPreCull()
 		{
-			manager.GetSkyNode().atmosphereMeshrenderer.enabled = false;
+			if (!ReferenceEquals(null,manager.GetSkyNode ().localScatteringProjector))
+				manager.GetSkyNode ().localScatteringProjector.setEnabled(false);
 			if (!ReferenceEquals(manager.GetOceanNode (),null))
 				manager.GetOceanNode ().setWaterMeshrenderersEnabled (false);
 
@@ -33,7 +34,8 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
-			manager.GetSkyNode().atmosphereMeshrenderer.enabled = true;
+			if (!ReferenceEquals (null, manager.GetSkyNode ().localScatteringProjector))
+				manager.GetSkyNode ().localScatteringProjector.setEnabled (true);
 			if (!ReferenceEquals(manager.GetOceanNode (),null))
 				manager.GetOceanNode ().setWaterMeshrenderersEnabled (true);
 		}

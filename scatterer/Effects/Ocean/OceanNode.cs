@@ -83,9 +83,6 @@ namespace scatterer
 		public bool isUnderwater = false;
 		bool underwaterMode = false;
 
-		bool renderRefractions = false;
-		bool isRenderingRefractions = false;
-
 		public int numGrids;
 		Mesh[] m_screenGrids;
 
@@ -93,10 +90,8 @@ namespace scatterer
 		public MeshRenderer[] waterMeshRenderers;
 		MeshFilter[] waterMeshFilters;
 
-		public GameObject underwaterGameObject; //contains the underwater postprocessing mesh
-		MeshRenderer underwaterMeshrenderer;
-		MeshFilter underwaterMeshFilter;
-		Material underwaterPostProcessingMaterial;
+		public AtmosphereProjector underwaterProjector;
+		Material underwaterMaterial;
 
 		Matrix4x4d m_oldlocalToOcean;
 
@@ -238,7 +233,8 @@ namespace scatterer
 				waterMeshFilters[i].mesh.Clear ();
 				waterMeshFilters[i].mesh = m_screenGrids[i];
 
-				waterGameObjects[i].layer = 15;
+				//waterGameObjects[i].layer = 15;
+				waterGameObjects[i].layer = 4;
 				//waterGameObjects[i].layer = 23;
 				waterMeshRenderers[i] = waterGameObjects[i].AddComponent<MeshRenderer>();
 
@@ -254,38 +250,17 @@ namespace scatterer
 			cbProjectionMat = waterGameObjects[0].AddComponent<CommandBufferModifiedProjectionMatrix>();
 			cbProjectionMat.oceanNode = this;
 
-			underwaterGameObject = new GameObject ();
-			
-			if (underwaterGameObject.GetComponent<MeshFilter> ())
-				underwaterMeshFilter = underwaterGameObject.GetComponent<MeshFilter> ();
-			else
-				underwaterMeshFilter = underwaterGameObject.AddComponent<MeshFilter>();
-			
-			underwaterMeshFilter.mesh.Clear ();
-			underwaterMeshFilter.mesh = MeshFactory.MakePlaneWithFrustumIndexes();
-			underwaterMeshFilter.mesh.bounds = new Bounds(Vector3.zero, new Vector3(1e8f,1e8f, 1e8f));
+			underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/UnderwaterScatterProjector")]);
+			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterMaterial);
 
-			if (underwaterGameObject.GetComponent<MeshRenderer> ())
-				underwaterMeshrenderer = underwaterGameObject.GetComponent<MeshRenderer> ();
-			else
-				underwaterMeshrenderer = underwaterGameObject.AddComponent<MeshRenderer>();
+			underwaterMaterial.renderQueue=2502; //draw over fairings which is 2450 and over ocean which is 2501
 
-			underwaterPostProcessingMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/UnderwaterScatter")]);			
-			underwaterPostProcessingMaterial.SetOverrideTag ("IgnoreProjector", "True");
-			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterPostProcessingMaterial);
-			underwaterPostProcessingMaterial.renderQueue=2502; //draw over fairings which is 2450 and over ocean which is 2501
+			underwaterProjector = new AtmosphereProjector(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius);
+			underwaterProjector.setEnabled(false);
 
 			initUniforms ();
 
-			underwaterMeshrenderer.sharedMaterial = underwaterPostProcessingMaterial;
-			underwaterMeshrenderer.material = underwaterPostProcessingMaterial;
-			
-			underwaterMeshrenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			underwaterMeshrenderer.receiveShadows = false;
-			underwaterMeshrenderer.enabled = false;
-			
-			//underwaterGameObject.layer = 15;
-			underwaterGameObject.layer = 23;
+			//move this to separate class and make it work on every camera
 
 			//refraction command buffer
 			oceanRefractionCommandBuffer = new CommandBuffer();
@@ -333,18 +308,17 @@ namespace scatterer
 				UnityEngine.Object.Destroy (m_screenGrids [i]);
 			}
 
-			if (underwaterMeshrenderer)
-			{
-				UnityEngine.Object.Destroy(underwaterGameObject);
-				Component.Destroy(underwaterMeshrenderer);
-				Component.Destroy(underwaterMeshFilter);
-			}
 
 			UnityEngine.Object.Destroy (m_oceanMaterial);
-			UnityEngine.Object.Destroy (underwaterPostProcessingMaterial);
+			UnityEngine.Object.Destroy (underwaterMaterial);
 
 			if (underwaterDimmingHook)
 				Component.Destroy (underwaterDimmingHook);
+
+			if (!ReferenceEquals(null,underwaterProjector))
+			{
+				UnityEngine.Object.Destroy (underwaterProjector);
+			}
 		}
 		
 		Mesh MakePlane (int w, int h, float offset, float scale)
@@ -400,26 +374,18 @@ namespace scatterer
 		public virtual void UpdateNode ()
 		{
 			bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace && (planetOpacity > 0f);
-			
+			//bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace;
+
 			foreach (MeshRenderer _mr in waterMeshRenderers)
 			{
 				_mr.enabled= oceanDraw;
 			}
-
-			//m_oceanMaterial.renderQueue=Core.Instance.oceanRenderQueue;
-			//m_oceanMaterial.renderQueue=2050;
 
 			isUnderwater = h < 0;
 
 			if (underwaterMode ^ isUnderwater)
 			{
 				toggleUnderwaterMode();
-			}
-
-			renderRefractions = (Mathf.Abs ((float) h ) <= 500f);
-			if ((renderRefractions ^ isRenderingRefractions) && Core.Instance.oceanRefraction)
-			{
-				toggleRefractions();
 			}
 		}
 		
@@ -448,10 +414,10 @@ namespace scatterer
 			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture); //these don't need to be updated every frame
 
-			underwaterPostProcessingMaterial.SetFloat ("transparencyDepth", transparencyDepth);
-			underwaterPostProcessingMaterial.SetFloat ("darknessDepth", darknessDepth);
-			underwaterPostProcessingMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
-			underwaterPostProcessingMaterial.SetFloat ("Rg",(float)m_manager.m_radius);
+			underwaterMaterial.SetFloat ("transparencyDepth", transparencyDepth);
+			underwaterMaterial.SetFloat ("darknessDepth", darknessDepth);
+			underwaterMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
+			underwaterMaterial.SetFloat ("Rg",(float)m_manager.m_radius);
 
 			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
 			m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
@@ -632,27 +598,28 @@ namespace scatterer
 				oceanMaterial.SetMatrix ("planetShineRGB", m_manager.m_skyNode.planetShineRGBMatrix);
 			}
 
-			m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterPostProcessingMaterial);
+			m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterMaterial);
 
 			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity");
 			m_oceanMaterial.SetFloat ("_PlanetOpacity", planetOpacity);
 
-
+			m_oceanMaterial.SetInt ("_ZwriteVariable", (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
 		}
 
 		void toggleUnderwaterMode()
 		{
 			if (underwaterMode) //switch to over water
 			{
-				underwaterMeshrenderer.enabled = false;
-
+				underwaterProjector.setEnabled(false);
+				m_manager.GetSkyNode().localScatteringProjector.setEnabled(true);
 				m_oceanMaterial.EnableKeyword("UNDERWATER_OFF");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_ON");
 
 			}
 			else   //switch to underwater 
 			{
-				underwaterMeshrenderer.enabled = true;
+				underwaterProjector.setEnabled(true);
+				m_manager.GetSkyNode().localScatteringProjector.setEnabled(false);
 				m_oceanMaterial.EnableKeyword("UNDERWATER_ON");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_OFF");
 			}
@@ -668,33 +635,6 @@ namespace scatterer
 				underwaterDim = Mathf.Lerp(1.0f,0.0f,underwaterDim / darknessDepth);
 				Core.Instance.sunlightModulatorInstance.modulateByAttenuation(underwaterDim);
 			}	
-		}
-
-		void toggleRefractions()
-		{
-			if (isRenderingRefractions) //switch to refractions off
-			{
-				m_oceanMaterial.EnableKeyword ("REFRACTION_OFF");
-				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
-
-				Core.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-				Core.Instance.nearCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-
-				Debug.Log("[Scatterer] Refractions off: high altitude");
-				
-			}
-			else   //switch to refractions on
-			{
-				m_oceanMaterial.EnableKeyword ("REFRACTION_ON");
-				m_oceanMaterial.DisableKeyword ("REFRACTION_OFF");
-
-				Core.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-				Core.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-
-				Debug.Log("[Scatterer] Refractions on: low altitude");
-			}
-			
-			isRenderingRefractions = !isRenderingRefractions;
 		}
 
 		public void setManager (Manager manager)

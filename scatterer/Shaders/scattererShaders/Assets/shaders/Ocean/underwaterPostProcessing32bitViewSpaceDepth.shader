@@ -58,22 +58,22 @@ Pass {
 
             half4 frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
             {
-				float fragDepth = tex2D(_customDepthTexture, i.uv).r * 750000;                
+				float fragDistance = tex2D(_customDepthTexture, i.uv).r * 750000;                
 
 				float3 rayDir=normalize(i.view_dir);
 
-				//using view-space z
+				float waterSurfaceDistance = intersectSphere4(_camPos,rayDir,float3(0,0,0),Rg); //ocean surface check
+
+				fragDistance = (waterSurfaceDistance != -1) && (waterSurfaceDistance<fragDistance) ? waterSurfaceDistance : fragDistance;
+
+								//using view-space z
 				float aa = dot(rayDir, normalize (_camForward)); //here I basically take the angle between the camera direction and the fragment direction
 																			//and multiply the depth value by it to get the true fragment distance
 																			//I'm using view-space z value as depth and basically the z depth value is the projection of the fragment on the near plane
 																			//As far as I can tell view-space z offers better, linear precision so it covers the whole scene and it's easy to work with
 																			//for other effects like SSAO as well
-				float fragDistance = fragDepth /aa;
 
-				float waterSurfaceDistance = intersectSphere4(_camPos,rayDir,float3(0,0,0),Rg); //ocean surface check
-
-				fragDistance = (waterSurfaceDistance != -1) && (waterSurfaceDistance<fragDistance) ? waterSurfaceDistance : fragDistance;
-				fragDepth=fragDistance*aa;
+				float fragDepth=fragDistance*aa;
 
                 bool returnPixel = fragmentInsideOfClippingRange(fragDepth); //if fragment depth outside of current camera clipping range, return empty pixel
 

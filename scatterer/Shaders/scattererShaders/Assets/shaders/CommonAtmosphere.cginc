@@ -957,14 +957,14 @@ float3 SimpleSkyirradiance(float3 worldP, float3 worldN, float3 worldS)
 
 
 //InScattering with modified atmo heights
-float3 InScattering2(float3 camera, float3 _point, float3 sunDir) {
+float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 extinction) {
     // single scattered sunlight between two points
     // camera=observer
     // point=point on the ground
     // sundir=unit vector towards the sun
     // return scattered light and extinction coefficient
     float3 result = float3(0, 0, 0);
-    float3 extinction = float3(1, 1, 1);
+    extinction=1.0;
     float3 viewdir = _point - camera;
     float d = length(viewdir);
     viewdir = viewdir / d;
@@ -1019,21 +1019,19 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir) {
         float rMu1 = dot(_point, viewdir);
         float mu1 = rMu1 / r1;
         float muS1 = dot(_point, sunDir) / r1;
-        #if defined (useAnalyticTransmittance)
+//        #if defined (useAnalyticTransmittance)
         extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
         //#else
-        ////                                        float Rt1=lerp(Rt0, Rt, clamp((r-Rg-2000)/2000,0.0,1.0));    //fix line in the horizon, the dumb way but IDK it works
-        //                    float Rt1=lerp(Rt0, Rt, clamp((r-Rg-2000)/1000,0.0,1.0));
-        //                    if (mu > 0.0)
-        //                    {
-            //                        extinction = min(Transmittance(r, mu, Rt1) / Transmittance(r1, mu1, Rt1), 1.0);
-        //                    }
-        //                        else
-        //                    {
-            //                        extinction = min(Transmittance(r1, -mu1, Rt1) / Transmittance(r, -mu, Rt1), 1.0);
-        //                    }
-        //
-        #endif
+//                            if (mu > 0.0)
+//                            {
+//                                    extinction = min(Transmittance(r, mu, Rt) / Transmittance(r1, mu1, Rt), 1.0);
+//                            }
+//                                else
+//                            {
+//                                    extinction = min(Transmittance(r1, -mu1, Rt) / Transmittance(r, -mu, Rt), 1.0);
+//                            }
+        
+//        #endif
 //        #ifdef useHorizonHack
 //        const float EPS = 0.004;
 //        //                    float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));

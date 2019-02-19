@@ -61,7 +61,6 @@
      <None Include="Assets\shaders\EVE\noiseSimplex.cginc" />
      <None Include="Assets\shaders\EVE\cubeMap.cginc" />
      <None Include="Assets\shaders\EVE\old\EVEUtils.cginc" />
-     <None Include="Assets\shaders\PQStests\PQSScattererLightTest.shader" />
      <None Include="Assets\shaders\DepthTexture\ShadowVolumeDepth.shader" />
      <None Include="Assets\shaders\OldOrUnused\SphereCloud - Copy (2).shader" />
      <None Include="Assets\shaders\Ocean\InitDisplacement.shader" />
@@ -70,6 +69,7 @@
      <None Include="Assets\shaders\OldOrUnused\SimpleBlit.shader" />
      <None Include="Assets\shaders\DepthTexture\ShadowVolumeDepthGEOM.shader" />
      <None Include="Assets\shaders\OldOrUnused\SunGlare - Copy.shader" />
+     <None Include="Assets\shaders\DepthTexture\DepthToDistance.shader" />
      <None Include="Assets\shaders\EVE\old\noiseSimplex.cginc" />
      <None Include="Assets\shaders\EVE\old\CloudVolumeParticle.shader" />
      <None Include="Assets\shaders\Ocean\Fourier.shader" />
@@ -77,7 +77,6 @@
      <None Include="Assets\shaders\DecodeEncode\WriteToFloat.shader" />
      <None Include="Assets\shaders\OldOrUnused\SphereCloudOld.shader" />
      <None Include="Assets\shaders\EVE\old\SphereCloud.shader" />
-     <None Include="Assets\shaders\PQStests\SnowShader.shader" />
      <None Include="Assets\shaders\Ocean\InitSpectrum.shader" />
      <None Include="Assets\shaders\EVE\EVEUtils.cginc" />
      <None Include="Assets\shaders\DepthTexture\ShadowVolumeDepthAdditive.shader" />
@@ -85,10 +84,9 @@
      <None Include="Assets\shaders\OldOrUnused\atmosphereGhoss 24 bit depth buffer.shader" />
      <None Include="Assets\shaders\OldOrUnused\SphereCloud - Copy (3).shader" />
      <None Include="Assets\shaders\Ocean\OceanDisplacement3.cginc" />
-     <None Include="Assets\shaders\Shadows\ScreenspaceShadows.shader" />
      <None Include="Assets\shaders\Ocean\OceanWhiteCapsModProj3PixelLights.shader" />
+     <None Include="Assets\shaders\Atmo\atmosphereLocalScattering.shader" />
      <None Include="Assets\shaders\Atmo\SkySphere.shader" />
-     <None Include="Assets\shaders\DepthTexture\customDepthTextureAndScattering.shader" />
      <None Include="Assets\shaders\EVE\old\alphaMap.cginc" />
      <None Include="Assets\shaders\OldOrUnused\PQSScattererLightTest.shader" />
      <None Include="Assets\shaders\Ocean\OceanBRDF.cginc" />
@@ -106,7 +104,6 @@
      <None Include="Assets\shaders\DepthTexture\customDepthTextureGEOM.shader" />
      <None Include="Assets\shaders\EclipseCommon.cginc" />
      <None Include="Assets\shaders\DepthTexture\customDepthTextureBak.shader" />
-     <None Include="Assets\shaders\Atmo\atmospherePostProcessingBuiltInDepth.shader" />
      <None Include="Assets\shaders\Grass\Grass.shader" />
      <None Include="Assets\shaders\EVE\alphaMap.cginc" />
      <None Include="Assets\shaders\Ocean\underwaterPostProcessing32bitViewSpaceDepth.shader" />
@@ -114,7 +111,7 @@
      <None Include="Assets\shaders\Ocean\OceanWhiteCapsModProj3.shader" />
      <None Include="Assets\shaders\OldOrUnused\AccumulateExposure.shader" />
      <None Include="Assets\shaders\Grass\GrassBak.shader" />
-     <None Include="Assets\shaders\Atmo\atmosphereReplacementShader.shader" />
+     <None Include="Assets\shaders\Ocean\UnderwaterProjector.shader" />
      <None Include="Assets\shaders\EVE\CloudVolumeParticleBAKKK.shader" />
      <None Include="Assets\shaders\RingCommon.cginc" />
      <None Include="Assets\shaders\EVE\SphereCloud.shader" />

@@ -2,7 +2,7 @@
 {
 	SubShader 
 	{
-		Tags {"Queue" = "Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
+		Tags {"Queue" = "Transparent" "IgnoreProjector"="True" "RenderType"="InvOcean"}
 	
     	Pass 
     	{
@@ -34,7 +34,6 @@
 
 			float4 frag(v2f IN) : COLOR
 			{
-				discard;
 				return float4(0.0,0.0,0.0,0.0);			
 			}
 			

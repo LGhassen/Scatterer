@@ -65,14 +65,16 @@ Shader "Scatterer/OceanWhiteCaps"
 {
 	SubShader 
 	{
-		Tags { "Queue" = "Geometry+100" "RenderType"="Transparent" }
+		Tags { "Queue" = "Geometry+100" "RenderType"="Transparent" "IgnoreProjector"="True"}
 
     	Pass   
     	{
     	
     		Blend SrcAlpha OneMinusSrcAlpha
 
-    		//cull Front
+			Cull Back
+
+			ZWrite [_ZwriteVariable]
 
 			CGPROGRAM
 			#include "UnityCG.cginc"
@@ -82,10 +84,10 @@ Shader "Scatterer/OceanWhiteCaps"
 			#pragma fragment frag
 			
 			//#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
-			#pragma multi_compile REFRACTION_OFF REFRACTION_ON
 			#pragma multi_compile SKY_REFLECTIONS_OFF SKY_REFLECTIONS_ON
 			#pragma multi_compile UNDERWATER_OFF UNDERWATER_ON
 			#pragma multi_compile OCEAN_SHADOWS_OFF OCEAN_SHADOWS_HARD OCEAN_SHADOWS_SOFT
+			//#pragma multi_compile SCATTERING_ON SCATTERING_OFF
 
 			#include "../CommonAtmosphere.cginc"
 #if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
@@ -140,13 +142,21 @@ Shader "Scatterer/OceanWhiteCaps"
 			uniform float2 _VarianceMax;
 
 			uniform sampler2D _customDepthTexture;
+			uniform sampler2D _CameraDepthTexture;
 
 			uniform float transparencyDepth;
 			uniform float darknessDepth;
 
-#if defined (REFRACTION_ON)
+			uniform float3 _planetPos;
+			uniform float _openglThreshold;
+			uniform float _global_depth;
+			uniform float _global_alpha;
+			uniform float _Post_Extinction_Tint;
+            uniform float extinctionThickness;
+
+//#if defined (REFRACTION_ON)
 			uniform sampler2D _BackgroundTexture;   //background texture used for refraction
-#endif
+//#endif
 			
 #if defined (PLANETSHINE_ON)
 			uniform float4x4 planetShineSources;
@@ -379,28 +389,28 @@ Shader "Scatterer/OceanWhiteCaps"
 				float2 depthUV = IN.screenPos.xy / IN.screenPos.w;
 
 				//depth stuff
-#if defined (REFRACTION_ON)
+//#if defined (REFRACTION_ON)
 		#if defined (UNDERWATER_ON)
 				float2 uv = depthUV.xy + (N.xy)*0.025 * float2(1.0,10.0);
 		#else
 				float2 uv = depthUV.xy + N.xy*0.025;
 		#endif				
-#else
-				float2 uv = depthUV.xy;
-#endif
+//#else
+//				float2 uv = depthUV.xy;
+//#endif
 
 				float oceanDistance = length(IN.viewPos);
 				float3 cameraSpaceViewDir = IN.viewPos / oceanDistance;
 				float angleToCameraAxis = dot(cameraSpaceViewDir, float3(0.0,0.0,-1.0));
-				float fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000 / angleToCameraAxis;
+				float fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r* 750000;
 
 				float depth= fragDistance - oceanDistance; //water depth, ie viewing ray distance in water
 
-#if defined (REFRACTION_ON)
+//#if defined (REFRACTION_ON)
 				uv = (depth < 0) ? depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
-				fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r * 750000 / angleToCameraAxis;
+				fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r* 750000.0;
 				depth= fragDistance - oceanDistance;
-#endif
+//#endif
 
 				float clampFactor= clamp(oceanDistance/alphaRadius,0.0,1.0); //factor to clamp whitecaps
 
@@ -475,11 +485,11 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				bool insideClippingRange = oceanFragmentInsideOfClippingRange(-IN.viewPos.z/IN.viewPos.w);
 
-#if defined (REFRACTION_ON)
+//#if defined (REFRACTION_ON)
 		#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
 				float3 backGrnd = tex2D(_BackgroundTexture, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
 		#else
-				float3 backGrnd = tex2D(_BackgroundTexture, uv  );
+				float3 backGrnd = tex2D(_BackgroundTexture, uv );
 		#endif
 
 		#if defined (UNDERWATER_ON)
@@ -490,36 +500,59 @@ Shader "Scatterer/OceanWhiteCaps"
 				fresnel= clamp(fresnel,0.0,1.0);
 				float3 finalColor = lerp(clamp(hdr(transmittance,_ScatteringExposure),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel);
 
-				finalColor = ((fragDistance < 750000.0) && (backGrnd.r != 0.0)) ? backGrnd : finalColor;
+				//consider not using transmittance but instead background texture, change the refraction angle to have something matching what you would see from underwater
+
+				finalColor = (fragDistance < 750000.0) ? backGrnd : finalColor;
+
+				float3 Vworld = mul ( _Globals_OceanToWorld, float4(V,0.0));
+				float3 Lworld = mul ( _Globals_OceanToWorld, float4(L,0.0));
+
+				float3 earthCamPos = normalize(float3(_Ocean_CameraPos.xy,0.0) + float3(0.0, 0.0, radius)) * (radius + 10.0);
+
+				float underwaterDepth = lerp(1.0,0.0,-_Ocean_CameraPos.z / darknessDepth);
+
+				waterLightExtinction = length(getSkyExtinction(earthCamPos, L));
+				float3 _camPos = _WorldSpaceCameraPos - _planetPos;
+
+				float3 oceanCol = underwaterDepth * hdrNoExposure(waterLightExtinction * oceanColor(-Vworld,Lworld,normalize(_camPos))); //add planetshine loop here over Ls
 
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
+				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
 				return float4(dither(finalColor, screenPos),insideClippingRange);
 		#else
 				float3 finalColor = lerp(backGrnd, hdr(surfaceColor,_ScatteringExposure), outAlpha);  //refraction on and not underwater
 
+				if (_PlanetOpacity == 1.0)
+				{
+					float3 worldPos= IN.worldPos - _planetPos;
+					worldPos = (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
+					float3 _camPos = _WorldSpaceCameraPos - _planetPos;
 
+					float minDistance = length(worldPos-_camPos);
+            	    float3 inscatter=0.0;float3 extinction=1.0;
+					inscatter = InScattering2(_camPos, worldPos,SUN_DIR,extinction);
+
+					inscatter*= (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ; //somehow the shader compiler for OpenGL behaves differently around braces            				
+					inscatter = hdr(inscatter,_ScatteringExposure) *_global_alpha;
+
+					float average=(extinction.r+extinction.g+extinction.b)/3;
+
+                	//lerped manually because of an issue with opengl or whatever
+                	extinction = _Post_Extinction_Tint * extinction + (1-_Post_Extinction_Tint) * float3(average,average,average);
+
+                	extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
+
+					finalColor*= extinction;
+					finalColor = inscatter*(1-finalColor) + finalColor;
+				}
+
+
+				insideClippingRange = (outAlpha == 1.0) ? 1.0 : insideClippingRange;     //if no transparency -> render normally, if transparency play with the overlap to hide seams between cameras
 				return float4(dither(finalColor,screenPos), _PlanetOpacity*insideClippingRange);
 		#endif
-#else
-
-#if defined (UNDERWATER_ON)
-					//return float4(hdr(surfaceColor),_GlobalOceanAlpha * outAlpha);   //refraction OFF and underwater ON //TODO:FIX THIS
-					
-				//float3 transmittance =  Lsky+R_ftot;
-				float3 transmittance =  Lsky;
-
-				fresnel= clamp(fresnel,0.0,1.0);
-				float3 finalColor = lerp(clamp(hdr(transmittance,_ScatteringExposure),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel);   //+distance fog
-
-				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
-				return float4(dither(finalColor, screenPos),insideClippingRange);
-		#else
-
-				return float4(dither(hdr(surfaceColor,_ScatteringExposure),screenPos),outAlpha * _PlanetOpacity*insideClippingRange);
-		#endif
-#endif
-
+//#else
+//#endif
 				}
 			
 			ENDCG

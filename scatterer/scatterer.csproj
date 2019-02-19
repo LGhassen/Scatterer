@@ -114,6 +114,10 @@
     <Compile Include="Effects\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
     <Compile Include="Effects\Atmosphere\Utils\SkySphereKSCUpdater.cs" />
     <Compile Include="Effects\Atmosphere\Utils\AtmosphereUtils.cs" />
+    <Compile Include="Utilities\EVEUtils.cs" />
+    <Compile Include="Effects\Atmosphere\Utils\AtmospherePQS.cs" />
+    <Compile Include="Effects\Atmosphere\Utils\AtmosphereProjector.cs" />
+    <Compile Include="Utilities\DepthToDistanceCommandBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
