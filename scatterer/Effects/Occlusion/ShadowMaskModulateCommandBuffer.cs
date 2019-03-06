@@ -20,10 +20,10 @@ namespace scatterer
 			m_Buffer.name = "ScattererScreenspaceShadowMaskmodulate";
 
 			m_ShadowMaskModulateMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ModulateShadowMaskWithOcclusion")]);
-			m_ShadowMaskModulateMaterial.SetTexture ("OcclusionTexture", Core.Instance.bufferRenderingManager.occlusionTexture);
+//			m_ShadowMaskModulateMaterial.SetTexture ("OcclusionTexture", Core.Instance.bufferRenderingManager.occlusionTexture);
 
 			//after light's screenspace shadow mask is computed, modulate it by occlusion texture
-			m_Buffer.Blit (Core.Instance.bufferRenderingManager.occlusionTexture, BuiltinRenderTextureType.CurrentActive, m_ShadowMaskModulateMaterial);
+//			m_Buffer.Blit (Core.Instance.bufferRenderingManager.occlusionTexture, BuiltinRenderTextureType.CurrentActive, m_ShadowMaskModulateMaterial);
 
 			m_Light = GetComponent<Light>();
 			m_Light.AddCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);

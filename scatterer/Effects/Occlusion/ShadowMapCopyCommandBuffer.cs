@@ -23,7 +23,7 @@ namespace scatterer
 			m_Buffer.SetShadowSamplingMode(shadowmap, ShadowSamplingMode.RawDepth);
 
 			//copy shadowmap
-			m_Buffer.Blit (shadowmap, Core.Instance.bufferRenderingManager.occlusionTexture); //change to shadowmap texture
+//			m_Buffer.Blit (shadowmap, Core.Instance.bufferRenderingManager.occlusionTexture); //change to shadowmap texture
 			
 			m_Light = GetComponent<Light>();
 			m_Light.AddCommandBuffer (LightEvent.AfterShadowMap, m_Buffer);

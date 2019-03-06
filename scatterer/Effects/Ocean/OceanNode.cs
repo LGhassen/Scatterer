@@ -101,7 +101,7 @@ namespace scatterer
 			}
 		}
 
-		CommandBufferModifiedProjectionMatrix cbProjectionMat;
+		OceanModifiedProjectionMatrix oceanCameraProjectionMatModifier;
 		CommandBuffer oceanRefractionCommandBuffer;
 
 		Vector3d2 m_offset;
@@ -247,8 +247,8 @@ namespace scatterer
 				waterMeshRenderers[i].enabled=true;
 			}
 
-			cbProjectionMat = waterGameObjects[0].AddComponent<CommandBufferModifiedProjectionMatrix>();
-			cbProjectionMat.oceanNode = this;
+			oceanCameraProjectionMatModifier = waterGameObjects[0].AddComponent<OceanModifiedProjectionMatrix>();
+			oceanCameraProjectionMatModifier.oceanNode = this;
 
 			underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/UnderwaterScatterProjector")]);
 			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterMaterial);
@@ -284,12 +284,11 @@ namespace scatterer
 		{
 			Debug.Log ("ocean node Cleanup");
 
-			if (cbProjectionMat)
+			if (oceanCameraProjectionMatModifier)
 			{
-				cbProjectionMat.Cleanup ();
-				cbProjectionMat.OnDestroy ();
-				Component.Destroy (cbProjectionMat);
-				UnityEngine.Object.Destroy (cbProjectionMat);
+				oceanCameraProjectionMatModifier.OnDestroy ();
+				Component.Destroy (oceanCameraProjectionMatModifier);
+				UnityEngine.Object.Destroy (oceanCameraProjectionMatModifier);
 			}
 
 			if (!ReferenceEquals(oceanRefractionCommandBuffer,null))

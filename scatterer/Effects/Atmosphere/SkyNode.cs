@@ -699,8 +699,8 @@ namespace scatterer
 			{
 				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 			
-				if (Core.Instance.useGodrays)
-					mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
+//				if (Core.Instance.useGodrays)
+//					mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
 			}
 			
 			//Consts, best leave these alone
@@ -758,8 +758,8 @@ namespace scatterer
 			{
 				Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 				
-				if (Core.Instance.useGodrays)
-					Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
+//				if (Core.Instance.useGodrays)
+//					Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
 			}
 			
 			//Consts, best leave these alone
