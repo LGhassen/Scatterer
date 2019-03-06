@@ -101,13 +101,16 @@ namespace scatterer
 			}
 		}
 
-		OceanModifiedProjectionMatrix oceanCameraProjectionMatModifier;
+		OceanCameraUpdateHook oceanCameraProjectionMatModifier;
 		CommandBuffer oceanRefractionCommandBuffer;
 
 		Vector3d2 m_offset;
 		public Vector3d2 offset;
 
 		public Vector3d2 ux, uy, uz, oo;
+
+		Matrix4x4 ctos;
+		Matrix4x4 stoc;
 
 		public float planetOpacity=1f; //planetOpacity to fade out the ocean when PQS is fading out
 
@@ -247,7 +250,7 @@ namespace scatterer
 				waterMeshRenderers[i].enabled=true;
 			}
 
-			oceanCameraProjectionMatModifier = waterGameObjects[0].AddComponent<OceanModifiedProjectionMatrix>();
+			oceanCameraProjectionMatModifier = waterGameObjects[0].AddComponent<OceanCameraUpdateHook>();
 			oceanCameraProjectionMatModifier.oceanNode = this;
 
 			underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/UnderwaterScatterProjector")]);
@@ -387,14 +390,6 @@ namespace scatterer
 				toggleUnderwaterMode();
 			}
 		}
-		
-		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
-		{
-			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
-			{
-				updateStuff(m_oceanMaterial, Core.Instance.farCamera);
-			}
-		}
 
 		public void initUniforms()
 		{
@@ -412,19 +407,50 @@ namespace scatterer
 			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);					
 			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture); //these don't need to be updated every frame
-
+			
 			underwaterMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			underwaterMaterial.SetFloat ("darknessDepth", darknessDepth);
 			underwaterMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
 			underwaterMaterial.SetFloat ("Rg",(float)m_manager.m_radius);
-
+			
 			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
 			m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
 
-
-		public void updateStuff (Material oceanMaterial, Camera inCamera)
+		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
 		{
+			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
+			{
+
+				//make into update global properties and camera specific ones
+				updateNonCameraSpecificUniforms(m_oceanMaterial);
+			}
+		}
+
+		public void updateNonCameraSpecificUniforms (Material oceanMaterial)
+		{
+			m_manager.GetSkyNode ().SetOceanUniforms (oceanMaterial);
+
+			if (underwaterMode)
+			{
+				m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterMaterial);
+			}
+			
+			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity");
+			m_oceanMaterial.SetFloat ("_PlanetOpacity", planetOpacity);
+			
+			m_oceanMaterial.SetInt ("_ZwriteVariable", (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
+		}
+
+		public void updateCameraSpecificUniforms (Material oceanMaterial, Camera inCamera)
+		{
+			ctos = GL.GetGPUProjectionMatrix (inCamera.projectionMatrix,false);
+			stoc = ctos.inverse;
+			
+			m_oceanMaterial.SetMatrix ("_Globals_CameraToScreen", ctos);
+			m_oceanMaterial.SetMatrix ("_Globals_ScreenToCamera", stoc);
+
+
 			//Calculates the required data for the projected grid
 			
 			// compute ltoo = localToOcean transform, where ocean frame = tangent space at
@@ -551,8 +577,6 @@ namespace scatterer
 
 			oceanMaterial.SetVector (ShaderProperties._Ocean_CameraPos_PROPERTY, offset.ToVector3 ());
 
-			m_manager.GetSkyNode ().SetOceanUniforms (oceanMaterial);
-
 			//horizon calculations
 			//these are used to find where the horizon line is on screen
 			//and "clamp" vertexes that are above it back to it
@@ -596,13 +620,6 @@ namespace scatterer
 
 				oceanMaterial.SetMatrix ("planetShineRGB", m_manager.m_skyNode.planetShineRGBMatrix);
 			}
-
-			m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterMaterial);
-
-			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity");
-			m_oceanMaterial.SetFloat ("_PlanetOpacity", planetOpacity);
-
-			m_oceanMaterial.SetInt ("_ZwriteVariable", (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
 		}
 
 		void toggleUnderwaterMode()
