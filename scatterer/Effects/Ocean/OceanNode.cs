@@ -421,8 +421,6 @@ namespace scatterer
 		{
 			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
 			{
-
-				//make into update global properties and camera specific ones
 				updateNonCameraSpecificUniforms(m_oceanMaterial);
 			}
 		}
