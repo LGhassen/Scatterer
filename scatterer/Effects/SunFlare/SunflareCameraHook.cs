@@ -24,11 +24,13 @@ namespace scatterer
 		public void OnPreRender()
 		{
 			flare.updateProperties ();
+			flare.sunglareMaterial.SetFloat("renderOnCurrentCamera",1.0f);
 		}
 
 		public void OnPostRender()
 		{
-			flare.clearExtinction ();	
+			flare.clearExtinction ();
+			flare.sunglareMaterial.SetFloat("renderOnCurrentCamera",0.0f);
 		}
 	}
 }

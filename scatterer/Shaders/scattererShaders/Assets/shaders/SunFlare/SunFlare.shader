@@ -56,6 +56,7 @@
 			uniform float aspectRatio;
 
 			uniform float renderSunFlare;
+			uniform float renderOnCurrentCamera;
 			
 			struct v2f 
 			{
@@ -67,7 +68,7 @@
 				v2f OUT;
 				v.vertex.y = v.vertex.y *_ProjectionParams.x;
     			outpos = float4(v.vertex.xy, 1.0, 1.0);
-    			outpos = (renderSunFlare == 1.0) && (_ProjectionParams.y < 200.0) ? outpos : float4(2.0,2.0,2.0,1.0); //if we don't need to render the sunflare, cull vertexes by placing them outside clip space
+    			outpos = (renderSunFlare == 1.0) && (_ProjectionParams.y < 200.0) && (renderOnCurrentCamera == 1.0) ? outpos : float4(2.0,2.0,2.0,1.0); //if we don't need to render the sunflare, cull vertexes by placing them outside clip space
     																												  //also use near plane to not render on far camera
     			OUT.uv = v.texcoord.xy;
 
