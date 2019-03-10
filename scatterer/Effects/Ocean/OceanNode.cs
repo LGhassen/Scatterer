@@ -236,9 +236,7 @@ namespace scatterer
 				waterMeshFilters[i].mesh.Clear ();
 				waterMeshFilters[i].mesh = m_screenGrids[i];
 
-				//waterGameObjects[i].layer = 15;
-				waterGameObjects[i].layer = 4;
-				//waterGameObjects[i].layer = 23;
+				waterGameObjects[i].layer = 15;
 				waterMeshRenderers[i] = waterGameObjects[i].AddComponent<MeshRenderer>();
 
 				waterMeshRenderers[i].sharedMaterial = m_oceanMaterial;

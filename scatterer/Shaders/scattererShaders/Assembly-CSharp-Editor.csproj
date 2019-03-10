@@ -61,10 +61,12 @@
      <None Include="Assets\shaders\EVE\noiseSimplex.cginc" />
      <None Include="Assets\shaders\EVE\cubeMap.cginc" />
      <None Include="Assets\shaders\EVE\old\EVEUtils.cginc" />
+     <None Include="Assets\shaders\OldOrUnused\PQSScattererLightTest.shader" />
      <None Include="Assets\shaders\DepthTexture\ShadowVolumeDepth.shader" />
      <None Include="Assets\shaders\OldOrUnused\SphereCloud - Copy (2).shader" />
      <None Include="Assets\shaders\Ocean\InitDisplacement.shader" />
      <None Include="Assets\shaders\EVE\old\cubeMap.cginc" />
+     <None Include="Assets\shaders\EclipseCommon.cginc" />
      <None Include="Assets\shaders\Ocean\OceanLight.cginc" />
      <None Include="Assets\shaders\OldOrUnused\SimpleBlit.shader" />
      <None Include="Assets\shaders\DepthTexture\ShadowVolumeDepthGEOM.shader" />
@@ -88,7 +90,6 @@
      <None Include="Assets\shaders\Atmo\atmosphereLocalScattering.shader" />
      <None Include="Assets\shaders\Atmo\SkySphere.shader" />
      <None Include="Assets\shaders\EVE\old\alphaMap.cginc" />
-     <None Include="Assets\shaders\OldOrUnused\PQSScattererLightTest.shader" />
      <None Include="Assets\shaders\Ocean\OceanBRDF.cginc" />
      <None Include="Assets\shaders\Ocean\WhiteCapsPrecompute0.shader" />
      <None Include="Assets\shaders\CommonAtmosphere.cginc" />
@@ -102,7 +103,6 @@
      <None Include="Assets\shaders\OldOrUnused\SkyScaledBox.shader" />
      <None Include="Assets\shaders\DepthTexture\ShadowVolumeDepth - Copy.shader" />
      <None Include="Assets\shaders\DepthTexture\customDepthTextureGEOM.shader" />
-     <None Include="Assets\shaders\EclipseCommon.cginc" />
      <None Include="Assets\shaders\DepthTexture\customDepthTextureBak.shader" />
      <None Include="Assets\shaders\Grass\Grass.shader" />
      <None Include="Assets\shaders\EVE\alphaMap.cginc" />
@@ -116,9 +116,9 @@
      <None Include="Assets\shaders\RingCommon.cginc" />
      <None Include="Assets\shaders\EVE\SphereCloud.shader" />
      <None Include="Assets\shaders\Ocean\InitJacobians.shader" />
+     <None Include="Assets\shaders\Occlusion\ModulateShadowMaskWithOcclusion.shader" />
      <None Include="Assets\shaders\EVE\CloudVolumeParticle.shader" />
      <None Include="Assets\shaders\Atmo\atmospherePostProcessing32bitViewSpaceDepth.shader" />
-     <None Include="Assets\shaders\Occlusion\ModulateShadowMaskWithOcclusion.shader" />
      <None Include="Assets\shaders\Utility.cginc" />
  <Reference Include="UnityEditor.Advertisements">
  <HintPath>E:/UnityLast/201713p1/Editor/Data/UnityExtensions/Unity/Advertisements/Editor/UnityEditor.Advertisements.dll</HintPath>
