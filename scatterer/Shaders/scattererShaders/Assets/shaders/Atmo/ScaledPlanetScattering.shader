@@ -152,7 +152,7 @@
                 float3 planetSurfacePosition = IN.worldPos-IN.planetOrigin;
                 float3 planetSurfaceScatteringPosition = (flatScaledSpaceModel == 1.0) ? normalize(planetSurfacePosition) * Rg * 1.0001 : planetSurfacePosition * 6005; //transform to scaledspace here,
                 																																						//6005 instead of 6000 due to precision issues, same with 1.0008
-                inscatter= InScattering2((WCP-IN.planetOrigin)*6000, planetSurfaceScatteringPosition, _Sun_WorldSunDir);
+                inscatter= InScattering2((WCP-IN.planetOrigin)*6000, planetSurfaceScatteringPosition, _Sun_WorldSunDir,extinction);
 
 #if defined (ECLIPSES_ON)
 				inscatter *= getEclipseShadows(IN.worldPos*6000);

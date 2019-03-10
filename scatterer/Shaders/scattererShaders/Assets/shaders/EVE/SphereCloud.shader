@@ -260,7 +260,7 @@ Shader "Scatterer-EVE/Cloud" {
 					relWorldPos =  lerp(groundPos,relWorldPos,_PlanetOpacity);
 
                 	//inScattering from cloud to observer
-					float3 inscatter = InScattering2(relCameraPos, relWorldPos, _Sun_WorldSunDir);
+					float3 inscatter = InScattering2(relCameraPos, relWorldPos, _Sun_WorldSunDir,extinction);
 					      	
                 	//extinction from cloud to observer
 					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);

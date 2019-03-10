@@ -246,6 +246,7 @@ Pass {
                 float3 groundPos = normalize (worldPos) * Rg*1.0008;
 
                 float3 inscatter=0.0;
+                float3 extinction=0.0;
 
 #if defined (PLANETSHINE_ON)
 			    float3 inscatter2=0;
@@ -260,7 +261,7 @@ Pass {
 																													  //totally made up formula by eyeballing it
 					}
     				
-    				inscatter2+=InScattering2(_camPos, worldPos, normalize(planetShineSources[j].xyz))
+    				inscatter2+=InScattering2(_camPos, worldPos, normalize(planetShineSources[j].xyz),extinction)
     							*planetShineRGB[j].xyz*planetShineRGB[j].w*intensity;
     			}
 
@@ -292,12 +293,12 @@ Pass {
 
 				godrayWorldPos =  lerp(groundPos,godrayWorldPos,_PlanetOpacity);
 
-				inscatter+= InScattering2(_camPos,godrayWorldPos, SUN_DIR)*
+				inscatter+= InScattering2(_camPos,godrayWorldPos, SUN_DIR,extinction)*
 							( (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ); //somehow the shader compiler for OpenGL behaves differently around braces;
 
 #else
 				worldPos =  lerp(groundPos,worldPos,_PlanetOpacity);
-				inscatter+= InScattering2(_camPos, worldPos,SUN_DIR) * 
+				inscatter+= InScattering2(_camPos, worldPos,SUN_DIR,extinction) * 
 							( (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ); //somehow the shader compiler for OpenGL behaves differently around braces
 #endif
 
