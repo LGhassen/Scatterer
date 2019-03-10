@@ -384,6 +384,8 @@ namespace scatterer
 
 			isUnderwater = ((Core.Instance.farCamera.transform.position - m_manager.parentLocalTransform.position).magnitude -(float)m_manager.m_radius) < 0f;
 
+			underwaterProjector.projector.enabled = isUnderwater;
+
 			if (underwaterMode ^ isUnderwater)
 			{
 				toggleUnderwaterMode();
