@@ -806,10 +806,10 @@ namespace scatterer
 					Component.Destroy(farCameraShadowCascadeTweaker);
 				}
 
-				if (farCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)))
+				if (farCamera && farCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)))
 					Component.Destroy (farCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)));
 
-				if (nearCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)))
+				if (nearCamera && nearCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)))
 					Component.Destroy (nearCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)));
 
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
