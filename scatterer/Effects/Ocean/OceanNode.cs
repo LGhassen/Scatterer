@@ -376,14 +376,13 @@ namespace scatterer
 		public virtual void UpdateNode ()
 		{
 			bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace && (planetOpacity > 0f);
-			//bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace;
 
 			foreach (MeshRenderer _mr in waterMeshRenderers)
 			{
 				_mr.enabled= oceanDraw;
 			}
 
-			isUnderwater = h < 0;
+			isUnderwater = ((Core.Instance.farCamera.transform.position - m_manager.parentLocalTransform.position).magnitude -(float)m_manager.m_radius) < 0f;
 
 			if (underwaterMode ^ isUnderwater)
 			{
