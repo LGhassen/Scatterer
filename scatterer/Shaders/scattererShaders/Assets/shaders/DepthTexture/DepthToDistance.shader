@@ -38,9 +38,9 @@ Shader "Scatterer/DepthToDistance" {
             {
 				float zdepth = tex2Dlod(_CameraDepthTexture, float4(i.uv,0,0));
 
-    			//#if defined(UNITY_REVERSED_Z)
+#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
         			zdepth = 1 - zdepth;
-    			//#endif
+#endif
 
     			float4 clipPos = float4(i.uv, zdepth, 1.0);
     			clipPos.xyz = 2.0f * clipPos.xyz - 1.0f;
