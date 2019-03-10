@@ -13,7 +13,7 @@ using UnityEngine;
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	public class Core: MonoBehaviour
+	public partial class Core: MonoBehaviour
 	{	
 		private static Core instance;
 		
@@ -45,22 +45,18 @@ namespace scatterer
 
 		GUIhandler GUItool= new GUIhandler();
 
-		PlanetsListReader scattererPlanetsListReader = new PlanetsListReader ();
+
 		public List<SunFlare> customSunFlares = new List<SunFlare>();
 		bool customSunFlareAdded=false;
 		
 		public bool visible = false;
-
-		[Persistent]
+		
 		public bool autosavePlanetSettingsOnSceneChange=true;
-
-		[Persistent]
+		
 		public bool disableAmbientLight=false;
-		
-//		[Persistent]
+
 		public string mainSunCelestialBodyName="Sun";
-		
-		[Persistent]
+
 		public bool integrateWithEVEClouds=false;
 
 		DisableAmbientLight ambientLightScript;
@@ -85,118 +81,43 @@ namespace scatterer
 
 		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
 
-		Cubemap planetShineCookieCubeMap;
-
-		[Persistent]
-		Vector2 inGameWindowLocation=Vector2.zero;
-
-		[Persistent]
 		public bool overrideNearClipPlane=false;
-
-		[Persistent]
 		public float nearClipPlane=0.5f;
-
-		[Persistent]
-		public bool
-			forceDisableDefaultDepthBuffer = false;
-
-		[Persistent]
-		public bool
-			useOceanShaders = true;
-
-		[Persistent]
-		public bool
-			shadowsOnOcean = true;
-
-		[Persistent]
-		public bool
-			oceanSkyReflections = true;
 		
-		public bool
-			oceanRefraction = true;
-
-		[Persistent]
-		public bool
-			oceanPixelLights = false;
-
-		[Persistent]
-		public bool
-			fullLensFlareReplacement = true;
-
-		[Persistent]
+		public bool useOceanShaders = true;
+		public bool shadowsOnOcean = true;
+		public bool oceanSkyReflections = true;
+		public bool oceanRefraction = true;
+		public bool oceanPixelLights = false;
+		public bool fullLensFlareReplacement = true;
 		public bool sunlightExtinction = true;
-
-		[Persistent]
 		public bool underwaterLightDimming = true;
-
-		[Persistent]
-		public bool
-			showMenuOnStart = true;
-
-		[Persistent]
-		public int scrollSectionHeight = 500;
 		
 		bool callCollector=false;
-		
 
-//		[Persistent]
 		public bool craft_WaveInteractions = false;
-		
-		[Persistent]
-		public bool
-			useGodrays = true;
-		
-		[Persistent]
-		public bool
-			useEclipses = true;
+		public bool useEclipses = true;		
+		public bool useRingShadows = true;		
+		public bool usePlanetShine = false;
 
-		[Persistent]
-		public bool
-			useRingShadows = true;
-
-		//[Persistent]
-		public bool
-			usePlanetShine = false;
-
-		List<PlanetShineLightSource> celestialLightSourcesData=new List<PlanetShineLightSource> {};
-		
+		public List<PlanetShineLightSource> celestialLightSourcesData=new List<PlanetShineLightSource> {};	
 		List<PlanetShineLight> celestialLightSources=new List<PlanetShineLight> {};
-
-		public UrlDir.UrlConfig[] baseConfigs;
-		public UrlDir.UrlConfig[] atmoConfigs;
-		public UrlDir.UrlConfig[] oceanConfigs;
-
+		Cubemap planetShineCookieCubeMap;
+		public UrlDir.UrlConfig[] baseConfigs,atmoConfigs,oceanConfigs;
 		public ConfigNode[] sunflareConfigs;
-
-		[Persistent]
-		public bool
-			terrainShadows = true;
-
-		[Persistent]
+		
+		public bool terrainShadows = true;
 		public float shadowNormalBias=0.4f;
-		
-		[Persistent]
 		public float shadowBias=0.125f;
-		
-		[Persistent]
-		public float
-			shadowsDistance=100000;
-		
-		//[Persistent]
-		//float godrayResolution = 1f;
+		public float shadowsDistance=100000;
 
-		[Persistent]
+		public bool showMenuOnStart = true;
+		public int scrollSectionHeight = 500;
+		Vector2 inGameWindowLocation=Vector2.zero;
 		string guiModifierKey1String=KeyCode.LeftAlt.ToString();
-
-		[Persistent]
 		string guiModifierKey2String=KeyCode.RightAlt.ToString();
-
-		[Persistent]
 		string guiKey1String=KeyCode.F10.ToString();
-		
-		[Persistent]
 		string guiKey2String=KeyCode.F11.ToString();
-
 		KeyCode guiKey1, guiKey2, guiModifierKey1, guiModifierKey2 ;
 
 		//means a PQS enabled for the closest celestial body, regardless of whether it uses scatterer effects or not
@@ -232,11 +153,7 @@ namespace scatterer
 		public bool extinctionEnabled = true;
 		
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
-	
-		public Camera chosenCamera;
-		public int layer = 15;
-
-		[Persistent]
+		
 		public int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
 		public bool isActive = false;
@@ -925,21 +842,16 @@ namespace scatterer
 		
 		public void loadSettings ()
 		{
-			//load scatterer config
+			//only used for displaying filepath
 			baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
-			if (baseConfigs.Length == 0)
-			{
-				Debug.Log ("[Scatterer] No config file found, check your install");
-				return;
-			}
 
-			if (baseConfigs.Length > 1)
-			{
-				Debug.Log ("[Scatterer] Multiple config files detected, check your install");
-			}
+			//load mod settings
+			MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
+			mainSettings.loadPluginMainSettingsToCore ();
 
-			ConfigNode.LoadObjectFromConfig (this, (baseConfigs [0]).config);
-
+			//load pluginData
+			PluginDataReadWrite pluginData = new PluginDataReadWrite();
+			pluginData.loadPluginDataToCore ();
 
 			guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
 			guiKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey2String);
@@ -948,11 +860,8 @@ namespace scatterer
 			guiModifierKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey2String);
 
 			//load planetsList, light sources list and sunflares list
-			scattererPlanetsListReader.loadPlanetsList ();
-			scattererCelestialBodies = scattererPlanetsListReader.scattererCelestialBodies;
-			celestialLightSourcesData = scattererPlanetsListReader.celestialLightSourcesData;
-			sunflaresList = scattererPlanetsListReader.sunflares;
-			//mainSunCelestialBodyName = scattererPlanetsListReader.mainSunCelestialBodyName;
+			PlanetsListReader scattererPlanetsListReader = new PlanetsListReader ();
+			scattererPlanetsListReader.loadPlanetsListToCore ();
 
 			//load atmo and ocean configs
 			atmoConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_atmosphere");
@@ -964,10 +873,13 @@ namespace scatterer
 		
 		public void saveSettings ()
 		{
-			baseConfigs [0].config = ConfigNode.CreateConfigFromObject (this);
-			baseConfigs [0].config.name = "Scatterer_config";
-			Debug.Log ("[Scatterer] Saving settings to: " + baseConfigs [0].parent.url+".cfg");
-			baseConfigs [0].parent.SaveConfigs ();
+			//save pluginData
+			PluginDataReadWrite pluginData = new PluginDataReadWrite();
+			pluginData.saveCorePluginData ();
+
+			//save mod settings
+			MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
+			mainSettings.saveCoreMainSettingsIfChanged ();
 		}
 
 		void removeStockOceans()

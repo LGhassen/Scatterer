@@ -14,9 +14,6 @@ namespace scatterer
 {
 	public class PlanetsListReader
 	{
-//		[Persistent]
-//		public string mainSunCelestialBodyName="Sun";
-
 		[Persistent]
 		public List <ScattererCelestialBody> scattererCelestialBodies = new List <ScattererCelestialBody> {};
 
@@ -26,7 +23,7 @@ namespace scatterer
 		[Persistent]
 		public List<string> sunflares=new List<string> {};
 
-		public void loadPlanetsList ()
+		public void loadPlanetsListToCore ()
 		{
 			ConfigNode[] confNodes = GameDatabase.Instance.GetConfigNodes ("Scatterer_planetsList");
 			if (confNodes.Length == 0) {
@@ -39,6 +36,10 @@ namespace scatterer
 			}
 
 			ConfigNode.LoadObjectFromConfig (this, confNodes [0]);
+
+			Core.Instance.scattererCelestialBodies = scattererCelestialBodies;
+			Core.Instance.celestialLightSourcesData = celestialLightSourcesData;
+			Core.Instance.sunflaresList = sunflares;
 		}
 	}
 }

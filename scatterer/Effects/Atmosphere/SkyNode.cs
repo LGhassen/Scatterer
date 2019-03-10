@@ -200,16 +200,16 @@ namespace scatterer
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			localScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			
-			if (Core.Instance.useGodrays)
-			{
-				localScatteringMaterial.EnableKeyword("GODRAYS_ON");
-				localScatteringMaterial.DisableKeyword("GODRAYS_OFF");
-			}
-			else
-			{
+//			if (Core.Instance.useGodrays)
+//			{
+//				localScatteringMaterial.EnableKeyword("GODRAYS_ON");
+//				localScatteringMaterial.DisableKeyword("GODRAYS_OFF");
+//			}
+//			else
+//			{
 				localScatteringMaterial.DisableKeyword("GODRAYS_ON");
 				localScatteringMaterial.EnableKeyword("GODRAYS_OFF");
-			}
+//			}
 			if (Core.Instance.useEclipses)
 			{
 				localScatteringMaterial.EnableKeyword ("ECLIPSES_ON");

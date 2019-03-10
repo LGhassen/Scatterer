@@ -132,10 +132,6 @@
 				
 				if (depth < 1.0)
 					return float4(0.0,0.0,0.0,0.0);
-					
-//				float3 extinction = getExtinction(WCP,WSD);
-//				if(useTransmittance > 0.0)
-//					sunColor*=extinction;
 
 				float3 extinction = tex2D(extinctionTexture,float2(0,0)); //precomputed extinction through multiple atmospheres and rings
 				sunColor*=extinction;

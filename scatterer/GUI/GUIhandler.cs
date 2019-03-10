@@ -128,7 +128,7 @@ namespace scatterer
 				Core.Instance.fullLensFlareReplacement=GUILayout.Toggle(Core.Instance.fullLensFlareReplacement, "Lens flare shader");
 				Core.Instance.useEclipses = GUILayout.Toggle(Core.Instance.useEclipses, "Eclipses (WIP, sky/orbit only for now)");
 				Core.Instance.useRingShadows = GUILayout.Toggle(Core.Instance.useRingShadows, "Kopernicus ring shadows");
-				Core.Instance.useGodrays = GUILayout.Toggle(Core.Instance.useGodrays, "Godrays (early WIP)");
+//				Core.Instance.useGodrays = GUILayout.Toggle(Core.Instance.useGodrays, "Godrays (early WIP)");
 				
 				Core.Instance.terrainShadows = GUILayout.Toggle(Core.Instance.terrainShadows, "Terrain shadows");
 				GUILayout.BeginHorizontal ();
