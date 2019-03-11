@@ -212,11 +212,13 @@ namespace scatterer
 
 			scaledCameraHook = (SunflareCameraHook) Core.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
 			scaledCameraHook.flare = this;
+			scaledCameraHook.useDbufferOnCamera = 0f;
 
 			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
 				nearCameraHook = (SunflareCameraHook)Core.Instance.nearCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
 				nearCameraHook.flare = this;
+				nearCameraHook.useDbufferOnCamera = 1f;
 			}
 
 			Debug.Log ("[Scatterer] Added custom sun flare for "+sourceName);

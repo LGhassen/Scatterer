@@ -16,6 +16,7 @@ namespace scatterer
 	public class SunflareCameraHook : MonoBehaviour
 	{
 		public SunFlare flare;
+		public float useDbufferOnCamera;
 
 		public SunflareCameraHook ()
 		{
@@ -25,12 +26,14 @@ namespace scatterer
 		{
 			flare.updateProperties ();
 			flare.sunglareMaterial.SetFloat("renderOnCurrentCamera",1.0f);
+			flare.sunglareMaterial.SetFloat("useDbufferOnCamera",useDbufferOnCamera);
 		}
 
 		public void OnPostRender()
 		{
 			flare.clearExtinction ();
 			flare.sunglareMaterial.SetFloat("renderOnCurrentCamera",0.0f);
+			flare.sunglareMaterial.SetFloat("useDbufferOnCamera",useDbufferOnCamera);
 		}
 	}
 }

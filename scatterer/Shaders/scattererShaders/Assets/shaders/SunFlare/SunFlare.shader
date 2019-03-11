@@ -57,6 +57,7 @@
 
 			uniform float renderSunFlare;
 			uniform float renderOnCurrentCamera;
+			uniform float useDbufferOnCamera;
 			
 			struct v2f 
 			{
@@ -129,16 +130,15 @@
 			   	sunColor+=ghosts;
 			    
 				float depth =  tex2D(_customDepthTexture,sunViewPortPos.xy);  //if there's something in the way don't render the flare	
-				
-				if (depth < 1.0)
-					return float4(0.0,0.0,0.0,0.0);
+
+				float returnPixel = (useDbufferOnCamera < 1.0) ? 1.0 : ((depth < 1.0) ? 0.0 : 1.0);
 
 				float3 extinction = tex2D(extinctionTexture,float2(0,0)); //precomputed extinction through multiple atmospheres and rings
 				sunColor*=extinction;
 
 				sunColor*=sunGlareFade;
 
-				return float4(dither(sunColor, screenPos),1.0);
+				return float4(dither(sunColor, screenPos)*returnPixel,1.0);
 			}
 			
 			ENDCG
