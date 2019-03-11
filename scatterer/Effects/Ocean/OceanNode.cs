@@ -253,6 +253,7 @@ namespace scatterer
 
 			underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/UnderwaterScatterProjector")]);
 			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterMaterial);
+			m_manager.GetSkyNode ().InitPostprocessMaterial (m_oceanMaterial);
 
 			underwaterMaterial.renderQueue=2502; //draw over fairings which is 2450 and over ocean which is 2501
 

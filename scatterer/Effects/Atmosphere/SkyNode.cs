@@ -48,8 +48,6 @@ namespace scatterer
 		[Persistent]
 		public float experimentalAtmoScale=1f;
 		
-		Matrix4x4 p;
-		
 		public float oceanSigma = 0.04156494f;
 		public float _Ocean_Threshold = 25f;
 
@@ -231,8 +229,7 @@ namespace scatterer
 				localScatteringMaterial.EnableKeyword ("DISABLE_UNDERWATER_OFF");
 			}
 
-			//InitPostprocessMaterial (localScatteringMaterial);
-			InitGlobalPostprocessMaterial ();
+			InitPostprocessMaterial (localScatteringMaterial);
 
 			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
 			{
@@ -385,8 +382,7 @@ namespace scatterer
 			{
 				if (!MapView.MapIsEnabled) {
 					if (postprocessingEnabled) {
-						//UpdatePostProcessMaterial (localScatteringMaterial);
-						UpdateGlobalPostProcessMaterial();
+						UpdatePostProcessMaterial (localScatteringProjector.projector.material);
 					}
 				}
 			}
@@ -618,28 +614,12 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
-			//used to determine the view ray direction in the sky shader
-			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-			{				
-				mat.SetMatrix (ShaderProperties._Globals_WorldToCamera_PROPERTY, Core.Instance.farCamera.worldToCameraMatrix);
-				mat.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, Core.Instance.farCamera.worldToCameraMatrix.inverse);
-			}
 
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
-			Shader.SetGlobalVector (ShaderProperties._Godray_WorldSunDir_PROPERTY, m_manager.sunCelestialBody.transform.position
-			                        - parentLocalTransform.position);
-			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION)) 
-			{
-				p = Core.Instance.farCamera.projectionMatrix;
-				m_cameraToScreenMatrix = new Matrix4x4d (p);
-				mat.SetMatrix (ShaderProperties._Globals_CameraToScreen_PROPERTY, m_cameraToScreenMatrix.ToMatrix4x4 ());
-				mat.SetMatrix (ShaderProperties._Globals_ScreenToCamera_PROPERTY, m_cameraToScreenMatrix.Inverse ().ToMatrix4x4 ());
-			}
 
 			Vector3 temp = ScaledSpace.ScaledToLocalSpace (Core.Instance.scaledSpaceCamera.transform.position);
-			mat.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, temp); //possibly not used anymore
 
 			mat.SetFloat ("_SkyExposure", interpolatedSettings.skyExposure);
 			mat.SetFloat ("_ScatteringExposure", interpolatedSettings.scatteringExposure);
@@ -684,13 +664,15 @@ namespace scatterer
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 
 			mat.SetVector("_camForward", Core.Instance.farCamera.transform.forward);
+
+			UpdatePostProcessMaterial (mat);
 		}
 		
-		
-		
-		
+
 		public void InitPostprocessMaterial (Material mat)
 		{
+			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+
 			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
@@ -698,9 +680,6 @@ namespace scatterer
 			if (Core.Instance.bufferRenderingManager && (HighLogic.LoadedScene != GameScenes.TRACKSTATION) )
 			{
 				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
-			
-//				if (Core.Instance.useGodrays)
-//					mat.SetTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
 			}
 			
 			//Consts, best leave these alone
@@ -748,76 +727,15 @@ namespace scatterer
 			mat.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
 
-		public void InitGlobalPostprocessMaterial ()
-		{
-			Shader.SetGlobalTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
-			Shader.SetGlobalTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
-			Shader.SetGlobalTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-			
-			if (Core.Instance.bufferRenderingManager && (HighLogic.LoadedScene != GameScenes.TRACKSTATION) )
-			{
-				Shader.SetGlobalTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
-				
-//				if (Core.Instance.useGodrays)
-//					Shader.SetGlobalTexture (ShaderProperties._godrayDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.godrayDepthTexture);
-			}
-			
-			//Consts, best leave these alone
-			Shader.SetGlobalFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
-			Shader.SetGlobalFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
-			Shader.SetGlobalFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
-			Shader.SetGlobalFloat (ShaderProperties.Rl_PROPERTY, RL * atmosphereGlobalScale);
-			Shader.SetGlobalFloat (ShaderProperties.RES_R_PROPERTY, RES_R);
-			Shader.SetGlobalFloat (ShaderProperties.RES_MU_PROPERTY, RES_MU);
-			Shader.SetGlobalFloat (ShaderProperties.RES_MU_S_PROPERTY, RES_MU_S);
-			Shader.SetGlobalFloat (ShaderProperties.RES_NU_PROPERTY, RES_NU);
-			Shader.SetGlobalFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
-			Shader.SetGlobalFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
-			
-			Shader.SetGlobalVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
-			Shader.SetGlobalFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
-			Shader.SetGlobalVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
-			Shader.SetGlobalVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
-			
-			Shader.SetGlobalFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
-			Shader.SetGlobalFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
-			
-			
-			Shader.SetGlobalVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun().normalized);
-			
-			if (Core.Instance.usePlanetShine)
-			{
-				Shader.EnableKeyword ("PLANETSHINE_ON");
-				Shader.DisableKeyword ("PLANETSHINE_OFF");	
-			}
-			else
-			{
-				Shader.DisableKeyword ("PLANETSHINE_ON");
-				Shader.EnableKeyword ("PLANETSHINE_OFF");
-			}
-			
-			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
-				Shader.SetGlobalFloat ("_PlanetOpacity", 0f);
-			else
-				Shader.SetGlobalFloat ("_PlanetOpacity", 1f);
-			
-			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
-			Debug.Log("[Scatterer] Camera overlap: "+camerasOverlap.ToString());
-			Shader.SetGlobalFloat("_ScattererCameraOverlap",camerasOverlap);
-		}
-		
 		
 		public void UpdatePostProcessMaterial (Material mat)
 		{
 			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
 			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
 			mat.SetFloat ("Rl", RL * atmosphereGlobalScale);
-			
-			
+
 			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
-			
-			
+
 			mat.SetFloat ("_global_alpha", interpolatedSettings.postProcessAlpha);
 			mat.SetFloat ("_ScatteringExposure", interpolatedSettings.scatteringExposure);
 			mat.SetFloat ("_global_depth", interpolatedSettings.postProcessDepth *1000000);
@@ -831,61 +749,13 @@ namespace scatterer
 			}
 			
 			mat.SetFloat ("_Post_Extinction_Tint", interpolatedSettings.extinctionTint);
-
 			mat.SetFloat ("extinctionThickness", interpolatedSettings.extinctionThickness);
 
 			mat.SetFloat ("_openglThreshold", interpolatedSettings.openglThreshold);
 
 			mat.SetVector ("SUN_DIR", m_manager.getDirectionToSun ().normalized);
-			
-			if (Core.Instance.farCamera) //redundant?
-			{
-				mat.SetMatrix ("_Globals_CameraToWorld", Core.Instance.farCamera.worldToCameraMatrix.inverse);
-				mat.SetVector ("_camPos", Core.Instance.farCamera.transform.position - parentLocalTransform.position);  //better do this small calculation here
+			mat.SetVector ("_planetPos", parentLocalTransform.position);  //better do this small calculation here
 
-				mat.SetVector("_camForward", Core.Instance.farCamera.transform.forward);
-
-				Vector3d tmp = (Core.Instance.farCamera.transform.position) - parentLocalTransform.position;
-
-				Matrix4x4 ctol1 = Core.Instance.farCamera.cameraToWorldMatrix;
-				Matrix4x4 projMat = GL.GetGPUProjectionMatrix (Core.Instance.farCamera.projectionMatrix, false);
-
-				Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
-				                                     ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
-				                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
-				                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
-				
-				viewMat = viewMat.Inverse ();				
-				Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
-				mat.SetMatrix ("_ViewProjInv", viewProjMat.inverse);
-			
-				//set directions of frustum corners in world space
-				//used to reconstruct world pos from view-space depth
-
-				Vector3 topLeft = Core.Instance.farCamera.ViewportPointToRay(new Vector3(0f,1f,0f)).direction;
-				topLeft.Normalize();
-				
-				Vector3 topRight = Core.Instance.farCamera.ViewportPointToRay(new Vector3(1f,1f,0f)).direction;
-				topRight.Normalize();
-				
-				Vector3 bottomRight = Core.Instance.farCamera.ViewportPointToRay(new Vector3(1f,0f,0f)).direction;
-				bottomRight.Normalize();
-				
-				Vector3 bottomLeft = Core.Instance.farCamera.ViewportPointToRay(new Vector3(0f,0f,0f)).direction;
-				bottomRight.Normalize();
-
-				Matrix4x4 _frustumCorners = Matrix4x4.identity;
-
-				{
-					_frustumCorners.SetRow (0, bottomLeft); 
-					_frustumCorners.SetRow (1, bottomRight);		
-					_frustumCorners.SetRow (2, topLeft);
-					_frustumCorners.SetRow (3, topRight);	
-				}
-				
-				mat.SetMatrix ("scattererFrustumCorners", _frustumCorners);
-			}
-			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
 			if (Core.Instance.usePlanetShine)
 			{
@@ -894,91 +764,6 @@ namespace scatterer
 			}
 		}
 
-		public void UpdateGlobalPostProcessMaterial ()
-		{
-			Shader.SetGlobalFloat ("Rg", Rg * atmosphereGlobalScale);
-			Shader.SetGlobalFloat ("Rt", Rt * atmosphereGlobalScale);
-			Shader.SetGlobalFloat ("Rl", RL * atmosphereGlobalScale);			
-			
-			Shader.SetGlobalFloat ("_experimentalAtmoScale", experimentalAtmoScale);			
-			
-			Shader.SetGlobalFloat ("_global_alpha", interpolatedSettings.postProcessAlpha);
-			Shader.SetGlobalFloat ("_ScatteringExposure", interpolatedSettings.scatteringExposure);
-			Shader.SetGlobalFloat ("_global_depth", interpolatedSettings.postProcessDepth *1000000);
-			
-			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
-			{
-				if (MapView.MapIsEnabled)
-					Shader.SetGlobalFloat ("_PlanetOpacity", 0f);
-				else
-					Shader.SetGlobalFloat ("_PlanetOpacity", 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity"));
-			}
-			
-			Shader.SetGlobalFloat ("_Post_Extinction_Tint", interpolatedSettings.extinctionTint);
-			
-			Shader.SetGlobalFloat ("extinctionThickness", interpolatedSettings.extinctionThickness);
-			
-			Shader.SetGlobalFloat ("_openglThreshold", interpolatedSettings.openglThreshold);
-			
-			Shader.SetGlobalVector ("SUN_DIR", m_manager.getDirectionToSun ().normalized);
-			
-			if (Core.Instance.farCamera) //redundant?
-			{
-				Shader.SetGlobalMatrix ("_Globals_CameraToWorld", Core.Instance.farCamera.worldToCameraMatrix.inverse);
-				Shader.SetGlobalVector ("_camPos", Core.Instance.farCamera.transform.position - parentLocalTransform.position);  //better do this small calculation here
-				Shader.SetGlobalVector ("_planetPos", parentLocalTransform.position);  //better do this small calculation here
-				
-				Shader.SetGlobalVector("_camForward", Core.Instance.farCamera.transform.forward);
-				
-				Vector3d tmp = (Core.Instance.farCamera.transform.position) - parentLocalTransform.position;
-				
-				Matrix4x4 ctol1 = Core.Instance.farCamera.cameraToWorldMatrix;
-				Matrix4x4 projMat = GL.GetGPUProjectionMatrix (Core.Instance.farCamera.projectionMatrix, false);
-				
-				Matrix4x4d viewMat = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, tmp.x,
-				                                     ctol1.m10, ctol1.m11, ctol1.m12, tmp.y,
-				                                     ctol1.m20, ctol1.m21, ctol1.m22, tmp.z,
-				                                     ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
-				
-				viewMat = viewMat.Inverse ();				
-				Matrix4x4 viewProjMat = (projMat * viewMat.ToMatrix4x4 ());
-				Shader.SetGlobalMatrix ("_ViewProjInv", viewProjMat.inverse);
-				
-				//set directions of frustum corners in world space
-				//used to reconstruct world pos from view-space depth
-				
-				Vector3 topLeft = Core.Instance.farCamera.ViewportPointToRay(new Vector3(0f,1f,0f)).direction;
-				topLeft.Normalize();
-				
-				Vector3 topRight = Core.Instance.farCamera.ViewportPointToRay(new Vector3(1f,1f,0f)).direction;
-				topRight.Normalize();
-				
-				Vector3 bottomRight = Core.Instance.farCamera.ViewportPointToRay(new Vector3(1f,0f,0f)).direction;
-				bottomRight.Normalize();
-				
-				Vector3 bottomLeft = Core.Instance.farCamera.ViewportPointToRay(new Vector3(0f,0f,0f)).direction;
-				bottomRight.Normalize();
-				
-				Matrix4x4 _frustumCorners = Matrix4x4.identity;
-				
-				{
-					_frustumCorners.SetRow (0, bottomLeft); 
-					_frustumCorners.SetRow (1, bottomRight);		
-					_frustumCorners.SetRow (2, topLeft);
-					_frustumCorners.SetRow (3, topRight);	
-				}
-				
-				Shader.SetGlobalMatrix ("scattererFrustumCorners", _frustumCorners);
-			}
-			Shader.SetGlobalFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
-			if (Core.Instance.usePlanetShine)
-			{
-				Shader.SetGlobalMatrix ("planetShineSources", planetShineSourcesMatrix);
-				Shader.SetGlobalMatrix ("planetShineRGB", planetShineRGBMatrix);
-			}
-		}
-		
 		public void InitUniforms (Material mat)
 		{
 			//Init uniforms that this or other gameobjects may need
@@ -1526,8 +1311,7 @@ namespace scatterer
 		//to be called on loss of rendertextures, ie alt-enter
 		public void reInitMaterialUniformsOnRenderTexturesLoss()
 		{
-			//InitPostprocessMaterial (localScatteringMaterial);
-			InitGlobalPostprocessMaterial ();
+			InitPostprocessMaterial (localScatteringProjector.projector.material);
 		}	
 	}
 }
