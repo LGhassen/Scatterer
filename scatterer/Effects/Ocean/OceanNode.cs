@@ -258,7 +258,7 @@ namespace scatterer
 			underwaterMaterial.renderQueue=2502; //draw over fairings which is 2450 and over ocean which is 2501
 
 			underwaterProjector = new AtmosphereProjector(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius);
-			underwaterProjector.setEnabled(false);
+			underwaterProjector.setActivated(false);
 
 			initUniforms ();
 
@@ -624,16 +624,18 @@ namespace scatterer
 		{
 			if (underwaterMode) //switch to over water
 			{
-				underwaterProjector.setEnabled(false);
-				m_manager.GetSkyNode().localScatteringProjector.setEnabled(true);
+				underwaterProjector.setActivated(false);
+				underwaterProjector.updateProjector ();
+				m_manager.GetSkyNode().localScatteringProjector.setUnderwater(false);
 				m_oceanMaterial.EnableKeyword("UNDERWATER_OFF");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_ON");
 
 			}
 			else   //switch to underwater 
 			{
-				underwaterProjector.setEnabled(true);
-				m_manager.GetSkyNode().localScatteringProjector.setEnabled(false);
+				underwaterProjector.setActivated(true);
+				underwaterProjector.updateProjector ();
+				m_manager.GetSkyNode().localScatteringProjector.setUnderwater(true);
 				m_oceanMaterial.EnableKeyword("UNDERWATER_ON");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_OFF");
 			}

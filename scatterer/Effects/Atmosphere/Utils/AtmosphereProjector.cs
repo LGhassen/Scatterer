@@ -7,7 +7,10 @@ namespace scatterer
 	{
 		public Projector projector = null;
 		GameObject projectorGO = null;
-		
+		bool inScaledSpace = false;
+		bool underwater = false;
+		bool activated = true;
+
 		public AtmosphereProjector (Material atmosphereMaterial, Transform parentTransform, float Rt)
 		{
 			projectorGO =  new GameObject("Scatterer atmosphere projector "+atmosphereMaterial.name);
@@ -31,12 +34,27 @@ namespace scatterer
 			projector.material.CopyKeywordsFrom (atmosphereMaterial);
 		}
 
-		public void setEnabled (bool enabled)
+		public void setActivated (bool pEnabled)
 		{
-			projector.enabled = enabled;
-			projectorGO.SetActive(enabled);
+			activated = pEnabled;
 		}
-		
+
+		public void setInScaledSpace (bool pInScaledSpace)
+		{
+			inScaledSpace = pInScaledSpace;
+		}
+
+		public void setUnderwater (bool pUnderwater)
+		{
+			underwater = pUnderwater;
+		}
+
+		public void updateProjector ()
+		{
+			bool isEnabled = !underwater && !inScaledSpace && activated;
+			projector.enabled = isEnabled;
+			projectorGO.SetActive(isEnabled);
+		}
 
 		//public void OnDestroy()
 		~AtmosphereProjector()

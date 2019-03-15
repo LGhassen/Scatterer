@@ -514,6 +514,8 @@ namespace scatterer
 			}
 
 			scaledScatteringMaterial.SetFloat ("renderScattering", inScaledSpace ? 1f : 0f); //not sure this is a good way to do it
+			localScatteringProjector.setInScaledSpace(inScaledSpace);
+			localScatteringProjector.updateProjector ();
 		}
 		
 		

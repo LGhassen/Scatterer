@@ -170,7 +170,8 @@ Pass {
                 half returnPixel = ((  (length(i._camPos)-Rg) < 1000 )  && (length(worldPos) < (Rg-50))) ? 0.0: 1.0;  //enable in case of ocean and close enough to water surface, works well for kerbin
 
 				float3 groundPos = normalize (worldPos) * Rg*1.0008;
-                worldPos =  lerp(groundPos,worldPos,_PlanetOpacity); //fades to flatScaledSpace planet shading to ease the transition to scaledSpace
+				float Rt2 = Rg + (Rt - Rg) * _experimentalAtmoScale;
+                worldPos = (length(worldPos) < Rt2) ? lerp(groundPos,worldPos,_PlanetOpacity) : worldPos; //fades to flatScaledSpace planet shading to ease the transition to scaledSpace
 
                 worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
