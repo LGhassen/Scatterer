@@ -9,7 +9,7 @@
     		ZTest LEqual
     		Cull Back
 
-    		Offset -1, -1
+			Offset -0.05, -0.05
 
             Blend DstColor Zero //multiplicative
 
@@ -87,7 +87,7 @@
     		ZTest LEqual
     		Cull Back
 
-    		Offset -1, -1
+			Offset -0.05, -0.05
 
             Blend OneMinusDstColor One //soft additive
 
