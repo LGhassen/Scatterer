@@ -158,13 +158,14 @@ namespace scatterer
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.053";
+		string versionNumber = "0.054dev";
 
 		public object EVEinstance;
 		public SunlightModulator sunlightModulatorInstance;
 		
 //		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
+		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
 
 		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
 		
@@ -421,8 +422,8 @@ namespace scatterer
 				//copy stock depth buffers and combine into a single depth buffer
 				if (useOceanShaders || fullLensFlareReplacement)
 				{
-					farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
-					nearCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
+					farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
+					nearDepthCommandbuffer = nearCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
 				}
 			}
 
@@ -740,13 +741,6 @@ namespace scatterer
 					ambientLightScript.restoreLight();
 					Component.Destroy(ambientLightScript);
 				}
-
-
-				if (bufferRenderingManager)
-				{
-					bufferRenderingManager.OnDestroy();
-					Component.Destroy (bufferRenderingManager);
-				}
 				
 
 				if (farCamera)
@@ -806,11 +800,17 @@ namespace scatterer
 					Component.Destroy(farCameraShadowCascadeTweaker);
 				}
 
-				if (farCamera && farCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)))
-					Component.Destroy (farCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)));
+				if (farDepthCommandbuffer)
+					Component.Destroy (farDepthCommandbuffer);
+				
+				if (nearDepthCommandbuffer)
+					Component.Destroy (nearDepthCommandbuffer);
 
-				if (nearCamera && nearCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)))
-					Component.Destroy (nearCamera.gameObject.GetComponent (typeof(DepthToDistanceCommandBuffer)));
+				if (bufferRenderingManager)
+				{
+					bufferRenderingManager.OnDestroy();
+					Component.Destroy (bufferRenderingManager);
+				}
 
 				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				saveSettings();
