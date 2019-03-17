@@ -158,7 +158,7 @@ namespace scatterer
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.054dev";
+		string versionNumber = "0.0540";
 
 		public object EVEinstance;
 		public SunlightModulator sunlightModulatorInstance;
