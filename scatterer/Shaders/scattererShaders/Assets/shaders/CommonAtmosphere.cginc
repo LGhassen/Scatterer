@@ -142,9 +142,9 @@ float3 hdrNoExposure(float3 L) {
 	return L;
 }
 
-float4 Texture4D(sampler2D table, float r, float mu, float muS, float nu)
+float4 Texture4D(sampler2D table, float r, float mu, float muS, float nu, float RtResized)
 {
-    float H = sqrt(Rt * Rt - Rg * Rg);
+    float H = sqrt(RtResized * RtResized - Rg * Rg);
     float rho = sqrt(r * r - Rg * Rg);
     float rmu = r * mu;
     float delta = rmu * rmu - r * r + Rg * Rg;
@@ -401,8 +401,7 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
     float d = length(viewdir) * scaleCoeff;
     viewdir = viewdir / d;
     /////////////////////experimental block begin
-    float Rt0=Rt;
-    Rt = Rg + (Rt - Rg) * _experimentalAtmoScale;
+    float RtResized = Rg + (Rt - Rg) * _experimentalAtmoScale;
     //                viewdir.x += _viewdirOffset;
     viewdir = normalize(viewdir);
     /////////////////////experimental block end
@@ -416,7 +415,7 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
     float rMu = dot(camera, viewdir);
     float mu = rMu / r;
 
-    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float dSq = rMu * rMu - r * r + RtResized*RtResized;
     float deltaSq = sqrt(dSq);
     
     float din = max(-rMu - deltaSq, 0.0);
@@ -424,11 +423,11 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
     if (din > 0.0 && din < d)
     {
         rMu += din;
-        mu = rMu / Rt;
-        r = Rt;
+        mu = rMu / RtResized;
+        r = RtResized;
         d -= din;
     }
-	if (r <= Rt && dSq >= 0.0) 
+	if (r <= RtResized && dSq >= 0.0) 
     { 
 //    	if (r < Rg + 1600.0)
 //    	{
@@ -462,8 +461,7 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
     float d = length(viewdir) * scaleCoeff;
     viewdir = viewdir / d;
     /////////////////////experimental block begin
-    float Rt0=Rt;
-    Rt = Rg + (Rt - Rg) * _experimentalAtmoScale;
+    float RtResized = Rg + (Rt - Rg) * _experimentalAtmoScale;
     //                viewdir.x += _viewdirOffset;
     viewdir = normalize(viewdir);
     /////////////////////experimental block end
@@ -477,7 +475,7 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
     float rMu = dot(camera, viewdir);
     float mu = rMu / r;
 
-    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float dSq = rMu * rMu - r * r + RtResized*RtResized;
     float deltaSq = sqrt(dSq);
     
     float din = max(-rMu - deltaSq, 0.0);
@@ -485,11 +483,11 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
     if (din > 0.0 && din < d)
     {
         rMu += din;
-        mu = rMu / Rt;
-        r = Rt;
+        mu = rMu / RtResized;
+        r = RtResized;
         d -= din;
     }
-	if (r <= Rt && dSq >= 0.0) 
+	if (r <= RtResized && dSq >= 0.0) 
     { 
 //    	if (r < Rg + 1600.0)
 //    	{
@@ -521,13 +519,13 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 			{
 				float3 extinction = float3(1,1,1);
 
-				Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+				float RtResized=Rg+(Rt-Rg)*_experimentalAtmoScale;
 
 				float r = length(camera);
 				float rMu = dot(camera, viewdir);
 				float mu = rMu / r;
 
-			    float dSq = rMu * rMu - r * r + Rt*Rt;
+			    float dSq = rMu * rMu - r * r + RtResized*RtResized;
 			    float deltaSq = sqrt(dSq);
 
     			float din = max(-rMu - deltaSq, 0.0);
@@ -535,13 +533,13 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
     			{
         			camera += din * viewdir;
         			rMu += din;
-        			mu = rMu / Rt;
-        			r = Rt;
+        			mu = rMu / RtResized;
+        			r = RtResized;
     			}
 
     			extinction = Transmittance(r, mu);
 
-    			if (r > Rt || dSq < 0.0) 
+    			if (r > RtResized || dSq < 0.0) 
     			{
     				extinction = float3(1,1,1);
     			} 				
@@ -573,13 +571,13 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 			{
 				float3 extinction = float3(1,1,1);
 
-				Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+				float RtResized=Rg+(Rt-Rg)*_experimentalAtmoScale;
 
 				float r = length(camera);
 				float rMu = dot(camera, viewdir);
 				float mu = rMu / r;
 
-			    float dSq = rMu * rMu - r * r + Rt*Rt;
+			    float dSq = rMu * rMu - r * r + RtResized*RtResized;
 			    float deltaSq = sqrt(dSq);
 
     			float din = max(-rMu - deltaSq, 0.0);
@@ -587,16 +585,16 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
     			{
         			camera += din * viewdir;
         			rMu += din;
-        			mu = rMu / Rt;
-        			r = Rt;
+        			mu = rMu / RtResized;
+        			r = RtResized;
     			}
 
     			//extinction = Transmittance(r, mu);
 
-				float distInAtmo = abs(intersectSphere4(camera,viewdir,float3(0,0,0),Rt));
+				float distInAtmo = abs(intersectSphere4(camera,viewdir,float3(0,0,0),RtResized));
 				extinction = AnalyticTransmittance(r, mu, distInAtmo);
 
-    			if (r > Rt || dSq < 0.0) 
+    			if (r > RtResized || dSq < 0.0) 
     			{
     				extinction = float3(1,1,1);
     			} 				
@@ -629,13 +627,13 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 			{
 				float3 extinction = float3(1,1,1);
 
-				Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+				float RtResized=Rg+(Rt-Rg)*_experimentalAtmoScale;
 
 				float r = length(camera);
 				float rMu = dot(camera, viewdir);
 				float mu = rMu / r;
 
-			    float dSq = rMu * rMu - r * r + Rt*Rt;
+			    float dSq = rMu * rMu - r * r + RtResized*RtResized;
 			    float deltaSq = sqrt(dSq);
 
     			float din = max(-rMu - deltaSq, 0.0);
@@ -643,16 +641,16 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
     			{
         			camera += din * viewdir;
         			rMu += din;
-        			mu = rMu / Rt;
-        			r = Rt;
+        			mu = rMu / RtResized;
+        			r = RtResized;
     			}
 
     			extinction = Transmittance(r, mu);
 
-				float distInAtmo = abs(intersectSphere4(camera,viewdir,float3(0,0,0),Rt));
+				float distInAtmo = abs(intersectSphere4(camera,viewdir,float3(0,0,0),RtResized));
 				float3 analyticExtinction = AnalyticTransmittance(r, mu, distInAtmo);
 
-    			if (r > Rt || dSq < 0.0) 
+    			if (r > RtResized || dSq < 0.0) 
     			{
     				extinction = float3(1,1,1);
     			} 				
@@ -744,9 +742,8 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 {
 	extinction = float3(1,1,1);
 	float3 result = float3(0,0,0);
-	
-	float Rt2=Rt;
-	Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+
+	float RtResized=Rg+(Rt-Rg)*_experimentalAtmoScale;
 	
 	
 	//viewdir.x+=_viewdirOffset;
@@ -764,7 +761,7 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 //	float r0 = r;
 //	float mu0 = mu;
 	
-    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float dSq = rMu * rMu - r * r + RtResized*RtResized;
     float deltaSq = sqrt(dSq);
 
 	float din = max(-rMu - deltaSq, 0.0);
@@ -772,19 +769,19 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 	{
     	camera += din * viewdir;
     	rMu += din;
-    	mu = rMu / Rt;
-    	r = Rt;
+    	mu = rMu / RtResized;
+    	r = RtResized;
 	}
 	
 	float nu = dot(viewdir, sundir);
 	float muS = dot(camera, sundir) / r;
     
 //	float4 inScatter = Texture4D(_Sky_Inscatter, r, rMu / r, muS, nu);
-	float4 inScatter = Texture4D(_Inscatter, r, rMu / r, muS, nu);
+	float4 inScatter = Texture4D(_Inscatter, r, rMu / r, muS, nu,RtResized);
     
 	extinction = Transmittance(r, mu);
     
-	if (r <= Rt && dSq >= 0.0)
+	if (r <= RtResized && dSq >= 0.0)
 	{
             
 //        if (shaftWidth > 0.0) 
@@ -815,9 +812,8 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 float3 SkyRadiance3(float3 camera, float3 viewdir, float3 sundir)//, out float3 extinction)//, float shaftWidth)
 {
 	float3 result = float3(0,0,0);
-	
-	float Rt2=Rt;
-	Rt=Rg+(Rt-Rg)*_experimentalAtmoScale;
+
+	float RtResized=Rg+(Rt-Rg)*_experimentalAtmoScale;
 	
 	
 	//viewdir.x+=_viewdirOffset;
@@ -832,7 +828,7 @@ float3 SkyRadiance3(float3 camera, float3 viewdir, float3 sundir)//, out float3 
 
 	//float mu = rMu / r;
 
-    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float dSq = rMu * rMu - r * r + RtResized*RtResized;
     float deltaSq = sqrt(dSq);
 
 	float din = max(-rMu - deltaSq, 0.0);
@@ -840,18 +836,18 @@ float3 SkyRadiance3(float3 camera, float3 viewdir, float3 sundir)//, out float3 
 	{
     	camera += din * viewdir;
     	rMu += din;
-    	//mu = rMu / Rt;
-    	r = Rt;
+    	//mu = rMu / RtResized;
+    	r = RtResized;
 	}
 	
 	float nu = dot(viewdir, sundir);
 	float muS = dot(camera, sundir) / r;
     
-	float4 inScatter = Texture4D(_Inscatter, r, rMu / r, muS, nu);
+	float4 inScatter = Texture4D(_Inscatter, r, rMu / r, muS, nu,RtResized);
     
 	//extinction = Transmittance(r, mu);
     
-	if (r <= Rt && dSq >= 0.0) 
+	if (r <= RtResized && dSq >= 0.0) 
 	{
             
 //        if (shaftWidth > 0.0) 
@@ -968,12 +964,11 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 ext
     float3 viewdir = _point - camera;
     float d = length(viewdir);
     viewdir = viewdir / d;
-    /////////////////////experimental block begin
-    float Rt0=Rt;
-    Rt = Rg + (Rt - Rg) * _experimentalAtmoScale;
+//    /////////////////////experimental block begin
+    float RtResized = Rg + (Rt - Rg) * _experimentalAtmoScale;
     //                viewdir.x += _viewdirOffset;
     viewdir = normalize(viewdir);
-    /////////////////////experimental block end
+//    /////////////////////experimental block end
     float r = length(camera);
 //    if (r < 0.9 * Rg) {
 //        camera.y += Rg;
@@ -991,19 +986,19 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 ext
     float mu0 = mu;
     float muExtinction=mu;
     _point -= viewdir * clamp(1.0, 0.0, d);
-    float dSq = rMu * rMu - r * r + Rt*Rt;
+    float dSq = rMu * rMu - r * r + RtResized*RtResized;
     float deltaSq = sqrt(dSq);
     float din = max(-rMu - deltaSq, 0.0);
     if (din > 0.0 && din < d)
     {
         camera += din * viewdir;
         rMu += din;
-        mu = rMu / Rt;
-        r = Rt;
+        mu = rMu / RtResized;
+        r = RtResized;
         d -= din;
     }
     
-      if (r <= Rt && dSq >= 0.0) 
+      if (r <= RtResized && dSq >= 0.0) 
       { 
         float nu = dot(viewdir, sunDir);
         float muS = dot(camera, sunDir) / r;
@@ -1057,8 +1052,8 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 ext
 //        else
 //        #endif
         {
-            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
-            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
+            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu,RtResized);
+            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu,RtResized);
             inScatter = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
         }
         // avoids imprecision problems in Mie scattering when sun is below horizon
