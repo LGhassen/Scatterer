@@ -138,7 +138,7 @@
 
 				sunColor*=sunGlareFade;
 
-				return float4(dither(sunColor, screenPos)*returnPixel,1.0);
+				return float4(sunColor*returnPixel,1.0);
 			}
 			
 			ENDCG
