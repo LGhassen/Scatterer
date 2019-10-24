@@ -158,7 +158,7 @@ namespace scatterer
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.0540";
+		string versionNumber = "0.0541";
 
 		public object EVEinstance;
 		public SunlightModulator sunlightModulatorInstance;
@@ -320,6 +320,7 @@ namespace scatterer
 			}
 			
 			//load planetshine "cookie" cubemap
+
 			if(usePlanetShine)
 			{
 				planetShineCookieCubeMap=new Cubemap(512,TextureFormat.ARGB32,true);
@@ -329,7 +330,8 @@ namespace scatterer
 				{
 					cubeMapFaces[i]=new Texture2D(512,512);
 				}
-				
+
+
 				cubeMapFaces[0].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeX.png")));
 				cubeMapFaces[1].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveX.png")));
 				cubeMapFaces[2].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeY.png")));
