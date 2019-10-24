@@ -1,6 +1,6 @@
 How to use:
 
-1) Get Unity version that matches KSP (2017.1.3p1 at this time)
+1) Get Unity version that matches KSP (2019.2.2f1 at this time)
 
 2) Navigate to this project in Unity
 
