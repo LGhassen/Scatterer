@@ -141,7 +141,7 @@
     <Compile Include="Effects\Atmosphere\Utils\AtmospherePQS.cs" />
     <Compile Include="Effects\Atmosphere\Utils\AtmosphereProjector.cs" />
     <Compile Include="Utilities\DepthToDistanceCommandBuffer.cs" />
-    <Compile Include="e:\gh\scattererGithub\Scatterer\scatterer\Effects\Ocean\Utils\OceanCameraUpdateHook.cs" />
+    <Compile Include="Effects\Ocean\Utils\OceanCameraUpdateHook.cs" />
     <Compile Include="DataSerialization\MainSettingsReadWrite.cs" />
     <Compile Include="DataSerialization\PluginDataReadWrite.cs" />
   </ItemGroup>
