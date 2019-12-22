@@ -12,7 +12,7 @@ namespace scatterer
 		private CommandBuffer m_Buffer;
 		private Camera m_Camera;
 
-		public ShadowRemoveFadeCommandBuffer ()
+		private void Awake ()
 		{
 			m_Buffer = new CommandBuffer();
 			m_Buffer.name = "ScattererShadowRemoveFade";
