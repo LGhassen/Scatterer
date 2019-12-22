@@ -41,7 +41,7 @@ namespace scatterer
 		}
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
-		int windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
+		int windowId;
 
 		GUIhandler GUItool= new GUIhandler();
 
@@ -203,6 +203,8 @@ namespace scatterer
 			//this doesn't look nice, do it properly
 			int index = path.LastIndexOf ("GameData");
 			gameDataPath= path.Remove(index+9, path.Length-index-9);
+
+			windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
 			//load the planets list and the settings
 			loadSettings ();
