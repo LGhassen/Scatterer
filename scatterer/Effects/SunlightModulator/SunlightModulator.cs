@@ -21,7 +21,7 @@ namespace scatterer
 		SunlightModulatorPreRenderHook  preRenderHook;
 		SunlightModulatorPostRenderHook postRenderHook;
 		
-		private SunlightModulator()
+		private void Awake()
 		{
 			sunLight = Core.Instance.sunLight.GetComponent < Light > ();
 			preRenderHook = (SunlightModulatorPreRenderHook) Core.Instance.farCamera.gameObject.AddComponent(typeof(SunlightModulatorPreRenderHook));

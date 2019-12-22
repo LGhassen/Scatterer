@@ -26,7 +26,7 @@ namespace scatterer
 
 		Light _scaledspaceSunLight;
 
-		public DisableAmbientLight()
+		private void Awake()
 		{
 			//find sunlight
 			lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
