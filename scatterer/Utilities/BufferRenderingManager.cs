@@ -94,12 +94,16 @@ namespace scatterer
 		
 		void mapEVEshadowProjectors()
 		{
+            if (EVEprojector == null)
+                return;
 			EVEprojector.Clear ();
 			//Material atmosphereMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
 			Projector[] list = (Projector[]) Projector.FindObjectsOfType(typeof(Projector));
+            if (list == null)
+                return;
 			for(int i=0;i<list.Length;i++)
 			{
-				if (list[i].material.name == "EVE/CloudShadow")
+				if (list[i].material != null && list[i].material.name != null && list[i].material.name == "EVE/CloudShadow")
 				{
 					EVEprojector.Add(list[i]);
 					//list[i].material = atmosphereMaterial;

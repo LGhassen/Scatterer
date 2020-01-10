@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -38,6 +37,7 @@
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="UnityEngine">
       <HintPath>D:\gh\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
@@ -141,7 +141,7 @@
     <Compile Include="Effects\Atmosphere\Utils\AtmospherePQS.cs" />
     <Compile Include="Effects\Atmosphere\Utils\AtmosphereProjector.cs" />
     <Compile Include="Utilities\DepthToDistanceCommandBuffer.cs" />
-    <Compile Include="e:\gh\scattererGithub\Scatterer\scatterer\Effects\Ocean\Utils\OceanCameraUpdateHook.cs" />
+    <Compile Include="Effects\Ocean\Utils\OceanCameraUpdateHook.cs" />
     <Compile Include="DataSerialization\MainSettingsReadWrite.cs" />
     <Compile Include="DataSerialization\PluginDataReadWrite.cs" />
   </ItemGroup>

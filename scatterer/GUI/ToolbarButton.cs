@@ -20,7 +20,7 @@ namespace scatterer
 
 		private static ToolbarButton instance;
 
-		private ToolbarButton()
+		private void Awake()
 		{
 			if (instance == null)
 			{

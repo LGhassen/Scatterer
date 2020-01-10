@@ -55,7 +55,6 @@ namespace scatterer
 
 		float alt;
 		public float trueAlt;
-		PluginConfiguration cfg = KSP.IO.PluginConfiguration.CreateForType < SkyNode > (null);
 		
 		string celestialBodyName;
 		Transform parentScaledTransform, parentLocalTransform;

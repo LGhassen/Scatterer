@@ -13,7 +13,7 @@ namespace scatterer
 		public Camera m_Camera;
 		private Material m_Material;
 
-		public DepthToDistanceCommandBuffer ()
+		private void Awake ()
 		{
 			// after depth texture is rendered on far and near cameras, copy it and merge it as a single distance buffer
 			m_Camera = gameObject.GetComponent<Camera>();

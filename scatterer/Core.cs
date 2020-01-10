@@ -19,19 +19,9 @@ namespace scatterer
 		
 		private Core()
 		{
-			if (instance == null)
-			{
-				instance = this;
-				Debug.Log("[Scatterer] Core instance created");
-			}
-			else
-			{
-				//destroy any duplicate instances that may be created by a duplicate install
-				Debug.Log("[Scatterer] Destroying duplicate instance, check your install for duplicate mod folders");
-				UnityEngine.Object.Destroy (this);
-			}
+			
 		}
-		
+
 		public static Core Instance
 		{
 			get 
@@ -41,7 +31,7 @@ namespace scatterer
 		}
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
-		int windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
+		int windowId;
 
 		GUIhandler GUItool= new GUIhandler();
 
@@ -195,7 +185,18 @@ namespace scatterer
 
 		void Awake ()
 		{
-			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
+            if (instance == null)
+            {
+                instance = this;
+                Debug.Log("[Scatterer] Core instance created");
+            }
+            else
+            {
+                //destroy any duplicate instances that may be created by a duplicate install
+                Debug.Log("[Scatterer] Destroying duplicate instance, check your install for duplicate mod folders");
+                UnityEngine.Object.Destroy(this);
+            }
+            string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
 			UriBuilder uri = new UriBuilder (codeBase);
 			path = Uri.UnescapeDataString (uri.Path);
 			path = Path.GetDirectoryName (path);
@@ -203,6 +204,8 @@ namespace scatterer
 			//this doesn't look nice, do it properly
 			int index = path.LastIndexOf ("GameData");
 			gameDataPath= path.Remove(index+9, path.Length-index-9);
+
+			windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
 			//load the planets list and the settings
 			loadSettings ();
