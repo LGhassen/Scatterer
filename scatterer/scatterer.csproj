@@ -144,6 +144,7 @@
     <Compile Include="Effects\Ocean\Utils\OceanCameraUpdateHook.cs" />
     <Compile Include="DataSerialization\MainSettingsReadWrite.cs" />
     <Compile Include="DataSerialization\PluginDataReadWrite.cs" />
+    <Compile Include="Utilities\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

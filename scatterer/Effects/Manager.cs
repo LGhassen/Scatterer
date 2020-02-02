@@ -1,8 +1,14 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Linq;
+using System.Text;
+using System.IO;
+using System.Reflection;
+using System.Runtime;
+using KSP;
 using KSP.IO;
+using UnityEngine;
 
 namespace scatterer
 {
@@ -23,21 +29,42 @@ namespace scatterer
 		public SkyNode m_skyNode;
 
 		public Vector3 sunColor;
-
 		public CelestialBody parentCelestialBody;
 		public Transform parentScaledTransform;
 		public Transform parentLocalTransform;
 		
 		public CelestialBody sunCelestialBody;
-		public List<CelestialBody> eclipseCasters;
+		public List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
+		public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
+		
 
-		public List<AtmoPlanetShineSource> planetshineSources;
-
-		public void Awake()
+		public void Init(ScattererCelestialBody scattererBody)
 		{
+			parentCelestialBody = scattererBody.celestialBody;
+			sunColor=scattererBody.sunColor;
+			flatScaledSpaceModel = scattererBody.flatScaledSpaceModel;
+			usesCloudIntegration = scattererBody.usesCloudIntegration;
+			hasOcean = scattererBody.hasOcean;
+			
+			sunCelestialBody = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
+			
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				GameObject _go = Core.GetMainMenuObject(parentCelestialBody.name);
+				parentScaledTransform = Utils.GetMainMenuObject(scattererBody.celestialBodyName).transform;
+				parentLocalTransform  = Utils.GetMainMenuObject(scattererBody.celestialBodyName).transform;
+			}
+			else
+			{
+				parentScaledTransform = scattererBody.transform;
+				parentLocalTransform  = scattererBody.celestialBody.transform;
+			}
+
+			FindEclipseCasters (scattererBody);
+			FindPlanetShineSources (scattererBody);
+
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				GameObject _go = Utils.GetMainMenuObject(parentCelestialBody.name);
 				if (_go)
 				{
 					MeshRenderer _mr = _go.GetComponent<MeshRenderer> ();
@@ -53,29 +80,60 @@ namespace scatterer
 				m_radius = parentCelestialBody.Radius;
 			}
 
-			m_skyNode = (SkyNode) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SkyNode));
-			m_skyNode.setManager(this);
-			m_skyNode.setCelestialBodyName (parentCelestialBody.name);
-			m_skyNode.setParentScaledTransform (parentScaledTransform);
-			m_skyNode.setParentLocalTransform (parentLocalTransform);
+			InitSkyAndOceanNodes ();
+		}
 
-			m_skyNode.usesCloudIntegration = usesCloudIntegration;
-			
-			if (m_skyNode.loadFromConfigNode())
-			{
-				m_skyNode.Init();		
-				
-				if (hasOcean && Core.Instance.useOceanShaders && (HighLogic.LoadedScene !=GameScenes.MAINMENU))
-				{
-					m_oceanNode = (OceanWhiteCaps) Core.Instance.farCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
-					m_oceanNode.setManager(this);
-					
-					m_oceanNode.loadFromConfigNode();
-					m_oceanNode.Init();	
+		void FindEclipseCasters (ScattererCelestialBody scattererBody)
+		{
+			if (Core.Instance.useEclipses) {
+				for (int k = 0; k < scattererBody.eclipseCasters.Count; k++) {
+					var cc = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.eclipseCasters [k]);
+					if (cc == null)
+						Utils.Log ("Eclipse caster " + scattererBody.eclipseCasters [k] + " not found for " + scattererBody.celestialBodyName);
+					else {
+						eclipseCasters.Add (cc);
+						Utils.Log ("Added eclipse caster " + scattererBody.eclipseCasters [k] + " for " + scattererBody.celestialBodyName);
+					}
 				}
 			}
 		}
-		
+
+		void FindPlanetShineSources (ScattererCelestialBody scattererBody)
+		{
+			if (Core.Instance.usePlanetShine) {
+				for (int k = 0; k < scattererBody.planetshineSources.Count; k++) {
+					var cc = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.planetshineSources [k].bodyName);
+					if (cc == null)
+						Utils.Log ("planetshine source " + scattererBody.planetshineSources [k].bodyName + " not found for " + scattererBody.celestialBodyName);
+					else {
+						AtmoPlanetShineSource src = scattererBody.planetshineSources [k];
+						src.body = cc;
+						scattererBody.planetshineSources [k].body = cc;
+						planetshineSources.Add (src);
+						Utils.Log ("Added planetshine source" + scattererBody.planetshineSources [k].bodyName + " for " + scattererBody.celestialBodyName);
+					}
+				}
+			}
+		}
+
+		void InitSkyAndOceanNodes ()
+		{
+			m_skyNode = (SkyNode)Core.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SkyNode));
+			m_skyNode.setManager (this);
+			m_skyNode.setCelestialBodyName (parentCelestialBody.name);
+			m_skyNode.setParentScaledTransform (parentScaledTransform);
+			m_skyNode.setParentLocalTransform (parentLocalTransform);
+			m_skyNode.usesCloudIntegration = usesCloudIntegration;
+			if (m_skyNode.loadFromConfigNode ()) {
+				m_skyNode.Init ();
+				if (hasOcean && Core.Instance.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU)) {
+					m_oceanNode = (OceanWhiteCaps)Core.Instance.farCamera.gameObject.AddComponent (typeof(OceanWhiteCaps));
+					m_oceanNode.setManager (this);
+					m_oceanNode.loadFromConfigNode ();
+					m_oceanNode.Init ();
+				}
+			}
+		}
 		
 		public void Update()
 		{	
@@ -121,28 +179,11 @@ namespace scatterer
 					Core.Instance.bufferRenderingManager.refractionTexture.Create();
 				}
 
-				Debug.Log("[Scatterer] Rebuilt Ocean");
+				Utils.Log("Rebuilt Ocean");
 			}
 			
 		}
-		
-		
-		public void setParentCelestialBody(CelestialBody parent) {
-			parentCelestialBody = parent;
-		}
-		
-		public void setParentScaledTransform(Transform parentTransform) {
-			parentScaledTransform = parentTransform;
-		}
 
-		public void setParentLocalTransform(Transform parentTransform) {
-			parentLocalTransform = parentTransform;
-		}
-		
-		public void setSunCelestialBody(CelestialBody sun) {
-			sunCelestialBody = sun;
-		}
-		
 		public Vector3 getDirectionToSun()
 		{
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
@@ -161,7 +202,6 @@ namespace scatterer
 		public double GetRadius() {
 			return m_radius;
 		}
-		
 
 		public OceanWhiteCaps GetOceanNode() {
 			return m_oceanNode;

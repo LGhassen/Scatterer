@@ -55,7 +55,7 @@ namespace scatterer
 
 		public List<string> sunflaresList=new List<string> {};
 
-		CelestialBody[] CelestialBodies;
+		public CelestialBody[] CelestialBodies;
 		
 		Light[] lights;
 
@@ -163,37 +163,18 @@ namespace scatterer
 		{
 			return (ScaledSpace.Instance.transform.FindChild (body));	
 		}
-		
-
-		public static GameObject GetMainMenuObject(string name)
-		{
-			GameObject kopernicusMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault
-					(b => b.name == (name+"(Clone)") && b.transform.parent.name.Contains("Scene"));
-
-			if (kopernicusMainMenuObject != null)
-				return kopernicusMainMenuObject;
-
-			GameObject kspMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
-
-			if (kspMainMenuObject == null)
-			{
-				throw new Exception("No correct main menu object found for "+name);
-			}
-
-			return kspMainMenuObject;
-		}
 
 		void Awake ()
 		{
             if (instance == null)
             {
                 instance = this;
-                Debug.Log("[Scatterer] Core instance created");
+                Utils.Log("Core instance created");
             }
             else
             {
                 //destroy any duplicate instances that may be created by a duplicate install
-                Debug.Log("[Scatterer] Destroying duplicate instance, check your install for duplicate mod folders");
+                Utils.Log("Destroying duplicate instance, check your install for duplicate mod folders");
                 UnityEngine.Object.Destroy(this);
             }
             string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
@@ -596,67 +577,13 @@ namespace scatterer
 							{
 								try
 								{
-									_cur.m_manager = new Manager ();
-									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
-									_cur.m_manager.sunColor=_cur.sunColor;
-									if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-									{
-										_cur.m_manager.setParentScaledTransform (GetMainMenuObject(_cur.celestialBodyName).transform); //doesn't look right but let's see
-										_cur.m_manager.setParentLocalTransform  (GetMainMenuObject(_cur.celestialBodyName).transform);
-									}
-									else
-									{
-										_cur.m_manager.setParentScaledTransform (_cur.transform);
-										_cur.m_manager.setParentLocalTransform (_cur.celestialBody.transform);
-									}
-									CelestialBody currentSunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.mainSunCelestialBody);
-									_cur.m_manager.setSunCelestialBody (currentSunCelestialBody);
-									
-									//Find eclipse casters
-									List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
 
-									if (useEclipses)
-									{
-										for (int k=0; k < _cur.eclipseCasters.Count; k++)
-										{
-											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.eclipseCasters[k]);
-											if (cc==null)
-												Debug.Log("[Scatterer] Eclipse caster "+_cur.eclipseCasters[k]+" not found for "+_cur.celestialBodyName);
-											else
-											{
-												eclipseCasters.Add(cc);
-												Debug.Log("[Scatterer] Added eclipse caster "+_cur.eclipseCasters[k]+" for "+_cur.celestialBodyName);
-											}
-										}
-										_cur.m_manager.eclipseCasters=eclipseCasters;
-									}
-									List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
-
-									if (usePlanetShine)
-									{								
-										for (int k=0; k < _cur.planetshineSources.Count; k++)
-										{
-											var cc = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cur.planetshineSources[k].bodyName);
-											if (cc==null)
-												Debug.Log("[Scatterer] planetshine source "+_cur.planetshineSources[k].bodyName+" not found for "+_cur.celestialBodyName);
-											else
-											{
-												AtmoPlanetShineSource src=_cur.planetshineSources[k];
-												src.body=cc;
-												_cur.planetshineSources[k].body=cc;
-												planetshineSources.Add (src);
-												Debug.Log("[Scatterer] Added planetshine source"+_cur.planetshineSources[k].bodyName+" for "+_cur.celestialBodyName);
-											}
-										}
-										_cur.m_manager.planetshineSources = planetshineSources;
-									}
 									if (HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 										_cur.hasOcean=false;
 
-									_cur.m_manager.hasOcean = _cur.hasOcean;
-									_cur.m_manager.flatScaledSpaceModel = _cur.flatScaledSpaceModel;
-									_cur.m_manager.usesCloudIntegration = _cur.usesCloudIntegration;
-									_cur.m_manager.Awake ();
+									_cur.m_manager = new Manager ();
+
+									_cur.m_manager.Init(_cur);
 									_cur.active = true;
 									
 									GUItool.selectedConfigPoint = 0;
