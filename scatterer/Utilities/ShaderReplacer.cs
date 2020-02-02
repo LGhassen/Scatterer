@@ -35,7 +35,7 @@ namespace scatterer
 				if (ReferenceEquals(instance,null))
 				{
 					instance = new ShaderReplacer();
-					Debug.Log("[Scatterer] ShaderReplacer instance created");
+					Utils.Log("ShaderReplacer instance created");
 				}
 				return instance;
 			}
@@ -75,7 +75,7 @@ namespace scatterer
 				
 				foreach (Shader shader in shaders)
 				{
-					//Debug.Log ("[Scatterer]"+shader.name+" loaded. Supported?"+shader.isSupported.ToString());
+					//Utils.Log (""+shader.name+" loaded. Supported?"+shader.isSupported.ToString());
 					LoadedShaders.Add(shader.name, shader);
 				}
 				
@@ -87,20 +87,20 @@ namespace scatterer
 		public void replaceEVEshaders()
 		{
 			//reflection get EVE shader dictionary
-			Debug.Log ("[Scatterer] Replacing EVE shaders");
+			Utils.Log ("Replacing EVE shaders");
 			
 			//find EVE shaderloader
 			Type EVEshaderLoaderType = getType ("ShaderLoader.ShaderLoaderClass");
 
 			if (EVEshaderLoaderType == null)
 			{
-				Debug.Log("[Scatterer] Eve shaderloader type not found");
+				Utils.Log("Eve shaderloader type not found");
 			}
 			else
 			{
-				Debug.Log("[Scatterer] Eve shaderloader type found");
+				Utils.Log("Eve shaderloader type found");
 
-				Debug.Log("[Scatterer] Eve shaderloader version: " + EVEshaderLoaderType.Assembly.GetName().ToString());
+				Utils.Log("Eve shaderloader version: " + EVEshaderLoaderType.Assembly.GetName().ToString());
 				
 				const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 					BindingFlags.Instance | BindingFlags.Static;
@@ -112,16 +112,16 @@ namespace scatterer
 				}
 				catch (Exception)
 				{
-					Debug.Log("[Scatterer] No EVE shader dictionary found");
+					Utils.Log("No EVE shader dictionary found");
 				}
 
 				if (EVEshaderDictionary == null)
 				{
-					Debug.Log("[Scatterer] Failed grabbing EVE shader dictionary");
+					Utils.Log("Failed grabbing EVE shader dictionary");
 				}
 				else
 				{
-					Debug.Log("[Scatterer] Successfully grabbed EVE shader dictionary");
+					Utils.Log("Successfully grabbed EVE shader dictionary");
 
 
 					if (EVEshaderDictionary.ContainsKey("EVE/Cloud"))
@@ -134,7 +134,7 @@ namespace scatterer
 						EVEshaderDictionary.Add("EVE/Cloud",LoadedShaders["Scatterer-EVE/Cloud"]);
 					}
 					
-					Debug.Log("[Scatterer] Replaced EVE/Cloud in EVE shader dictionary");
+					Utils.Log("Replaced EVE/Cloud in EVE shader dictionary");
 					
 					if (EVEshaderDictionary.ContainsKey("EVE/CloudVolumeParticle"))
 					{
@@ -146,7 +146,7 @@ namespace scatterer
 						EVEshaderDictionary.Add("EVE/CloudVolumeParticle",LoadedShaders["Scatterer-EVE/CloudVolumeParticle"]);
 					}
 					
-					Debug.Log("[Scatterer] replaced EVE/CloudVolumeParticle in EVE shader dictionary");
+					Utils.Log("replaced EVE/CloudVolumeParticle in EVE shader dictionary");
 				}
 			}
 			
@@ -168,7 +168,7 @@ namespace scatterer
 
 //			foreach (string key in gameShaders.Keys)
 //			{
-//				Debug.Log(gameShaders[key]);
+//				Utils.Log(gameShaders[key]);
 //			}
 		}
 
@@ -189,9 +189,9 @@ namespace scatterer
 //			switch (name)
 //			{
 //			case "Terrain/PQS/PQS Main - Optimised":
-//				Debug.Log("[Scatterer] replacing PQS main optimised");
+//				Utils.Log("replacing PQS main optimised");
 //				replacementShader = LoadedShaders["Scatterer/PQS/PQS Main - Optimised"];
-//				Debug.Log("[Scatterer] Shader replaced");
+//				Utils.Log("Shader replaced");
 //				break;
 //			default:
 //				return;
@@ -210,19 +210,19 @@ namespace scatterer
 			switch (name)
 			{
 			case "EVE/Cloud":
-				Debug.Log("[Scatterer] replacing EVE/Cloud");
+				Utils.Log("replacing EVE/Cloud");
 				replacementShader = LoadedShaders["Scatterer-EVE/Cloud"];
-				Debug.Log("[Scatterer] Shader replaced");
+				Utils.Log("Shader replaced");
 				break;
 			case "EVE/CloudVolumeParticle":
-				Debug.Log("[Scatterer] replacing EVE/CloudVolumeParticle");
+				Utils.Log("replacing EVE/CloudVolumeParticle");
 				replacementShader = LoadedShaders["Scatterer-EVE/CloudVolumeParticle"];
-				Debug.Log("[Scatterer] Shader replaced");
+				Utils.Log("Shader replaced");
 				break;
 //			case "Terrain/PQS/PQS Main - Optimised":
-//				Debug.Log("[Scatterer] replacing PQS main optimised");
+//				Utils.Log("replacing PQS main optimised");
 //				replacementShader = LoadedShaders["Scatterer/PQS/PQS Main - Optimised"];
-//				Debug.Log("[Scatterer] Shader replaced");
+//				Utils.Log("Shader replaced");
 //				break;
 			default:
 				return;

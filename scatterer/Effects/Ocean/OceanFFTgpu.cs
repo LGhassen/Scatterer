@@ -125,12 +125,12 @@ namespace scatterer {
 			m_fourierGridSize = Core.Instance.m_fourierGridSize;
 			
 			if (m_fourierGridSize > 256) {
-				Debug.Log("Proland::OceanFFT::Start	- fourier grid size must not be greater than 256, changing to 256");
+				Utils.Log("Proland::OceanFFT::Start	- fourier grid size must not be greater than 256, changing to 256");
 				m_fourierGridSize = 256;
 			}
 			
 			if (!Mathf.IsPowerOfTwo(m_fourierGridSize)) {
-				Debug.Log("Proland::OceanFFT::Start	- fourier grid size must be pow2 number, changing to nearest pow2 number");
+				Utils.Log("Proland::OceanFFT::Start	- fourier grid size must be pow2 number, changing to nearest pow2 number");
 				m_fourierGridSize = Mathf.NextPowerOfTwo(m_fourierGridSize);
 			}
 			

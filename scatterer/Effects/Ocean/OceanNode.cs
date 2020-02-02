@@ -284,7 +284,7 @@ namespace scatterer
 		
 		public virtual void Cleanup ()
 		{
-			Debug.Log ("ocean node Cleanup");
+			Utils.Log ("ocean node Cleanup");
 
 			if (oceanCameraProjectionMatModifier)
 			{
@@ -673,7 +673,7 @@ namespace scatterer
 					_cn.ClearData();
 					ConfigNode.Merge (_cn, cnTemp);
 					_cn.name="Ocean";
-					Debug.Log("[Scatterer] saving "+m_manager.parentCelestialBody.name+
+					Utils.Log("saving "+m_manager.parentCelestialBody.name+
 					          " ocean config to: "+configUrl.parent.url);
 					configUrl.parent.SaveConfigs ();
 					found=true;
@@ -683,7 +683,7 @@ namespace scatterer
 			
 			if (!found)
 			{
-				Debug.Log("[Scatterer] couldn't find config file to save to");
+				Utils.Log("couldn't find config file to save to");
 			}
 		}
 		
@@ -711,14 +711,14 @@ namespace scatterer
 			
 			if (found)
 			{
-				Debug.Log("[Scatterer] Ocean config found for: "+m_manager.parentCelestialBody.name);
+				Utils.Log("Ocean config found for: "+m_manager.parentCelestialBody.name);
 				
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			}
 			else
 			{
-				Debug.Log("[Scatterer] Ocean config not found for: "+m_manager.parentCelestialBody.name);
-				Debug.Log("[Scatterer] Removing ocean for "+m_manager.parentCelestialBody.name +" from planets list");
+				Utils.Log("Ocean config not found for: "+m_manager.parentCelestialBody.name);
+				Utils.Log("Removing ocean for "+m_manager.parentCelestialBody.name +" from planets list");
 				
 				(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == m_manager.parentCelestialBody.name)).hasOcean = false;
 				

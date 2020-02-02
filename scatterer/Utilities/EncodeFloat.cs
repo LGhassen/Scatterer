@@ -31,13 +31,13 @@ public class EncodeFloat
 	{
 		if(tex == null)
 		{
-			Debug.Log("EncodeFloat::WriteIntoRenderTexture- RenderTexture is null");
+			Utils.Log("EncodeFloat::WriteIntoRenderTexture- RenderTexture is null");
 			return;
 		}
 		
 		if(channels < 1 || channels > 4)
 		{
-			Debug.Log("EncodeFloat::WriteIntoRenderTexture - Channels must be 1, 2, 3, or 4");
+			Utils.Log("EncodeFloat::WriteIntoRenderTexture - Channels must be 1, 2, 3, or 4");
 			return;
 		}
 
@@ -54,7 +54,7 @@ public class EncodeFloat
 
 		if(!LoadRawFile(path, colorMapMemoryPointer, size, ref min, ref max))
 		{
-			Debug.Log("EncodeFloat::WriteIntoRenderTexture - Error loading raw file " + path);
+			Utils.Log("EncodeFloat::WriteIntoRenderTexture - Error loading raw file " + path);
 			return;
 		}
 		
@@ -68,13 +68,13 @@ public class EncodeFloat
 			
 			if(fi == null)
 			{
-				Debug.Log("EncodeFloat::LoadRawFile - Raw file not found");
+				Utils.Log("EncodeFloat::LoadRawFile - Raw file not found");
 				return false;
 			}
 
 			if(size > fi.Length/4)
 			{
-				Debug.Log("EncodeFloat::LoadRawFile - Raw file is not the required size");
+				Utils.Log("EncodeFloat::LoadRawFile - Raw file is not the required size");
 				return false;
 			}
 
@@ -162,7 +162,7 @@ public class EncodeFloat
 
 				if(m_decodeToFloat == null)
 				{
-					Debug.Log("EncodeFloat::WriteIntoRenderTexture2D - could not find shader EncodeFloat/DecodeToFloat. Did you change the shaders name?");
+					Utils.Log("EncodeFloat::WriteIntoRenderTexture2D - could not find shader EncodeFloat/DecodeToFloat. Did you change the shaders name?");
 					return;
 				}
 			}

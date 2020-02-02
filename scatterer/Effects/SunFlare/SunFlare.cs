@@ -225,7 +225,7 @@ namespace scatterer
 				nearCameraHook.useDbufferOnCamera = 1f;
 			}
 
-			Debug.Log ("[Scatterer] Added custom sun flare for "+sourceName);
+			Utils.Log ("Added custom sun flare for "+sourceName);
 
 		}
 
@@ -365,7 +365,7 @@ namespace scatterer
 			{
 				if (_cn.TryGetNode(sourceName, ref cnToLoad))
 				{
-					Debug.Log("[Scatterer] Sunflare config found for "+sourceName);
+					Utils.Log("Sunflare config found for "+sourceName);
 					break;
 				}
 			}	

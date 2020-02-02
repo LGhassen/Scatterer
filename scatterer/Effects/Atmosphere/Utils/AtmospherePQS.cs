@@ -48,13 +48,13 @@ namespace scatterer
 
 				atmosphereMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
 
-				Debug.Log ("[Scatterer] AtmospherePQS applied");
+				Utils.Log ("AtmospherePQS applied");
 			}
 		}
 
 		public void Cleanup()
 		{
-			Debug.Log ("[Scatterer] AtmospherePQS removed");
+			Utils.Log ("AtmospherePQS removed");
 		}
 		
 	}

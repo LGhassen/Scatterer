@@ -54,7 +54,7 @@ namespace scatterer
 			//check buffers are created
 			if (!depthTexture || !depthTexture.IsCreated())
 			{
-				Debug.Log("[Scatterer] BufferRenderingManager: Recreating textures");
+				Utils.Log("BufferRenderingManager: Recreating textures");
 				createTextures();
 				Core.Instance.onRenderTexturesLost();
 			}
@@ -122,7 +122,7 @@ namespace scatterer
 			}
 			catch (Exception)
 			{
-				Debug.Log ("[Scatterer] BufferRenderingManager: null EVE shadow projectors, remapping...");
+				Utils.Log ("BufferRenderingManager: null EVE shadow projectors, remapping...");
 				mapEVEshadowProjectors ();
 			}
 		}

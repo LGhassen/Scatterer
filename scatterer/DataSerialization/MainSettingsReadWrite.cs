@@ -81,13 +81,13 @@ namespace scatterer
 				UrlDir.UrlConfig[] baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
 				if (baseConfigs.Length == 0)
 				{
-					Debug.Log ("[Scatterer] No config file found, check your install");
+					Utils.Log ("No config file found, check your install");
 					return;
 				}
 				
 				if (baseConfigs.Length > 1)
 				{
-					Debug.Log ("[Scatterer] Multiple config files detected, check your install");
+					Utils.Log ("Multiple config files detected, check your install");
 				}
 
 				ConfigNode.LoadObjectFromConfig (this, (baseConfigs [0]).config);
@@ -121,13 +121,13 @@ namespace scatterer
 
 				if (baseConfigs.Length == 0)
 				{
-					Debug.Log ("[Scatterer] No config file found, check your install");
+					Utils.Log ("No config file found, check your install");
 					return;
 				}
 				
 				if (baseConfigs.Length > 1)
 				{
-					Debug.Log ("[Scatterer] Multiple config files detected, check your install");
+					Utils.Log ("Multiple config files detected, check your install");
 				}
 				
 				ConfigNode.LoadObjectFromConfig (this, (baseConfigs [0]).config);
@@ -177,16 +177,16 @@ namespace scatterer
 					shadowsDistance = Core.Instance.shadowsDistance;
 					m_fourierGridSize = Core.Instance.m_fourierGridSize;
 
-					Debug.Log("[Scatterer] Main config changed");
+					Utils.Log("Main config changed");
 
 					baseConfigs [0].config = ConfigNode.CreateConfigFromObject (this);
 					baseConfigs [0].config.name = "Scatterer_config";
-					Debug.Log ("[Scatterer] Saving settings to: " + baseConfigs [0].parent.url+".cfg");
+					Utils.Log ("Saving settings to: " + baseConfigs [0].parent.url+".cfg");
 					baseConfigs [0].parent.SaveConfigs ();
 				}
 				else
 				{
-					Debug.Log("[Scatterer] No changes to main config, skipping saving.");
+					Utils.Log("No changes to main config, skipping saving.");
 				}
 
 			}

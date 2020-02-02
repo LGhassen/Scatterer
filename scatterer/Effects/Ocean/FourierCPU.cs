@@ -15,7 +15,7 @@ namespace scatterer
         {
             if (!Mathf.IsPowerOfTwo(size))
             {
-                Debug.Log("Fourier grid size must be pow2 number, changing to nearest pow2 number");
+                Utils.Log("Fourier grid size must be pow2 number, changing to nearest pow2 number");
                 size = Mathf.NextPowerOfTwo(size);
             }
 

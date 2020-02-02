@@ -36,7 +36,7 @@ namespace scatterer
 				camToEffectsDisablerDictionary[cam] = (DisableEffectsForTextureReplacer) cam.gameObject.AddComponent(typeof(DisableEffectsForTextureReplacer));
 				camToEffectsDisablerDictionary[cam].manager = manager;
 
-				Debug.Log("[Scatterer] Post-processing and ocean effects disabled from Texture Replacer reflections");
+				Utils.Log("Post-processing and ocean effects disabled from Texture Replacer reflections");
 			}
 
 		}

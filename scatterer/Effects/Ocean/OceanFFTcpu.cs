@@ -153,12 +153,12 @@ namespace scatterer {
 			m_fourierGridSize = Core.Instance.m_fourierGridSize;
 			
 			if (m_fourierGridSize > 256) {
-				Debug.Log("Proland::OceanFFTcpu::Start	- fourier grid size must not be greater than 256, changing to 256");
+				Utils.Log("Proland::OceanFFTcpu::Start	- fourier grid size must not be greater than 256, changing to 256");
 				m_fourierGridSize = 256;
 			}
 			
 			if (!Mathf.IsPowerOfTwo(m_fourierGridSize)) {
-				Debug.Log("Proland::OceanFFTcpu::Start	- fourier grid size must be pow2 number, changing to nearest pow2 number");
+				Utils.Log("Proland::OceanFFTcpu::Start	- fourier grid size must be pow2 number, changing to nearest pow2 number");
 				m_fourierGridSize = Mathf.NextPowerOfTwo(m_fourierGridSize);
 			}
 			
@@ -395,7 +395,7 @@ namespace scatterer {
 			//					GenerateWavesSpectrum();
 			//					CreateWTable();
 			//
-			//					Debug.Log("[Scatterer] Recreated OceanFFTcpu Data");
+			//					Utils.Log("Recreated OceanFFTcpu Data");
 			//					waitBeforeReloadCnt = 0;
 			//				}
 			//			}
@@ -481,7 +481,7 @@ namespace scatterer {
 					done4 = false;
 					done5 = false;
 					
-//					Debug.Log ("[Scatterer] FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
+//					Utils.Log ("FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
 					FFTtimer = Time.realtimeSinceStartup;
 					
 					//				Nullable<float> time = Time.realtimeSinceStartup;
@@ -507,7 +507,7 @@ namespace scatterer {
 						//				_part.transform
 						Vector3 relativePartPos = _part.transform.position-Core.Instance.farCamera.transform.position;
 						
-						//					Debug.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
+						//					Utils.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
 						
 //						_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
 						float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+offsetVector3.x,
@@ -1533,11 +1533,11 @@ namespace scatterer {
 			
 			if (it >= 30)
 			{
-				Debug.Log("[Scatterer] findHeight exceeded 30 iterations and quit");
+				Utils.Log("findHeight exceeded 30 iterations and quit");
 				return (-255f);
 			}
 			
-			//			Debug.Log ("findheight iterations " + it.ToString ());
+			//			Utils.Log ("findheight iterations " + it.ToString ());
 			
 			
 			return (SampleHeight (newPos));

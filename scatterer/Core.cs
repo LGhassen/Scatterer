@@ -194,9 +194,9 @@ namespace scatterer
 			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
 
-			Debug.Log ("[Scatterer] Version:"+versionNumber);
-			Debug.Log ("[Scatterer] Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
-			Debug.Log ("[Scatterer] Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
+			Utils.Log ("Version:"+versionNumber);
+			Utils.Log ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
+			Utils.Log ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
 			
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
@@ -259,7 +259,7 @@ namespace scatterer
 
 				if (overrideNearClipPlane)
 				{
-					Debug.Log("[Scatterer] Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
+					Utils.Log("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
 					nearCamera.nearClipPlane = nearClipPlane;
 				}
 			}
@@ -299,7 +299,7 @@ namespace scatterer
 				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light"))
 				{
 					mainMenuLight = _light.gameObject;
-					Debug.Log("[Scatterer] Found main menu light");
+					Utils.Log("Found main menu light");
 				}
 			}
 			
@@ -340,7 +340,7 @@ namespace scatterer
 				if (ringObject)
 				{
 					ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3005;
-					Debug.Log("[Scatterer] Found rings for "+_cb.name);
+					Utils.Log("Found rings for "+_cb.name);
 				}
 			}
 			
@@ -394,7 +394,7 @@ namespace scatterer
 						aPsLight.localLight=LocalPlanetShineLight;
 						
 						celestialLightSources.Add(aPsLight);
-						Debug.Log ("[Scatterer] Added celestialLightSource "+aPsLight.source.name);
+						Utils.Log ("Added celestialLightSource "+aPsLight.source.name);
 					}
 				}
 			}
@@ -438,7 +438,7 @@ namespace scatterer
 			}
 
 			coreInitiated = true;
-			Debug.Log("[Scatterer] Core setup done");
+			Utils.Log("Core setup done");
 		}
 
 		void Update ()
@@ -475,7 +475,7 @@ namespace scatterer
 					{
 						if (sunflaresList.Contains(_flare.sun.name))
 						{
-							Debug.Log("[Scatterer] Disabling stock sunflare for "+_flare.sun.name);
+							Utils.Log("Disabling stock sunflare for "+_flare.sun.name);
 							_flare.sunFlare.enabled=false;
 							_flare.enabled=false;
 							_flare.gameObject.SetActive(false);
@@ -496,7 +496,7 @@ namespace scatterer
 						}
 						catch (Exception stupid)
 						{
-							Debug.Log("[Scatterer] Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
+							Utils.Log("Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
 							
 							Component.Destroy(customSunFlare);
 							UnityEngine.Object.Destroy(customSunFlare);
@@ -554,7 +554,7 @@ namespace scatterer
 								_cur.active = false;
 								callCollector=true;
 								
-								Debug.Log ("[Scatterer] Effects unloaded for " + _cur.celestialBodyName);
+								Utils.Log ("Effects unloaded for " + _cur.celestialBodyName);
 							} else {
 								
 								_cur.m_manager.Update ();
@@ -595,21 +595,21 @@ namespace scatterer
 										GUItool.getSettingsFromOceanNode ();
 									}
 									callCollector=true;
-									Debug.Log ("[Scatterer] Effects loaded for " + _cur.celestialBodyName);
+									Utils.Log ("Effects loaded for " + _cur.celestialBodyName);
 								}
 								catch(Exception e)
 								{
-									Debug.Log ("[Scatterer] Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
+									Utils.Log ("Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
 									try
 									{
 										_cur.m_manager.OnDestroy();
 									}
 									catch(Exception ee)
 									{
-										Debug.Log ("[Scatterer] manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
+										Utils.Log ("manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
 									}
 									scattererCelestialBodies.Remove(_cur);
-									Debug.Log ("[Scatterer] "+ _cur.celestialBodyName +" removed from active planets.");
+									Utils.Log (""+ _cur.celestialBodyName +" removed from active planets.");
 									return;
 								}
 							}
@@ -848,11 +848,11 @@ namespace scatterer
 						}
 					}
 					if (!removed) {
-						Debug.Log ("[Scatterer] Couldn't remove stock ocean for " + sctBody.celestialBodyName);
+						Utils.Log ("Couldn't remove stock ocean for " + sctBody.celestialBodyName);
 					}
 				}
 			}
-			Debug.Log ("[Scatterer] Removed stock oceans");
+			Utils.Log ("Removed stock oceans");
 		}
 
 
@@ -869,11 +869,11 @@ namespace scatterer
 					celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
 				}
 				
-				Debug.Log ("[Scatterer] Celestial Body: " + celBody);
+				Utils.Log ("Celestial Body: " + celBody);
 				if (celBody != null)
 				{
 					_idx = scattererCelestialBodies.IndexOf (sctBody);
-					Debug.Log ("[Scatterer] Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
+					Utils.Log ("Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
 				};
 				
 				sctBody.celestialBody = celBody;
@@ -897,7 +897,7 @@ namespace scatterer
 			if (terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
 			{
 				QualitySettings.shadowDistance = shadowsDistance;
-				Debug.Log("[Scatterer] Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
+				Utils.Log("Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
 
 
 				if (shadowsOnOcean)
@@ -947,7 +947,7 @@ namespace scatterer
 		//map EVE clouds to planet names
 		public void mapEVEClouds()
 		{
-			Debug.Log ("[Scatterer] mapping EVE clouds");
+			Utils.Log ("mapping EVE clouds");
 			EVEClouds.Clear();
 			EVECloudObjects.Clear ();
 
@@ -956,15 +956,15 @@ namespace scatterer
 
 			if (EVEType == null)
 			{
-				Debug.Log("[Scatterer] Eve assembly type not found");
+				Utils.Log("Eve assembly type not found");
 				return;
 			}
 			else
 			{
-				Debug.Log("[Scatterer] Eve assembly type found");
+				Utils.Log("Eve assembly type found");
 			}
 
-			Debug.Log("[Scatterer] Eve assembly version: " + EVEType.Assembly.GetName().ToString());
+			Utils.Log("Eve assembly version: " + EVEType.Assembly.GetName().ToString());
 
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
@@ -976,17 +976,17 @@ namespace scatterer
 			}
 			catch (Exception)
 			{
-				Debug.Log("[Scatterer] No EVE Instance found");
+				Utils.Log("No EVE Instance found");
 				return;
 			}
 			if (EVEinstance == null)
 			{
-				Debug.Log("[Scatterer] Failed grabbing EVE Instance");
+				Utils.Log("Failed grabbing EVE Instance");
 				return;
 			}
 			else
 			{
-				Debug.Log("[Scatterer] Successfully grabbed EVE Instance");
+				Utils.Log("Successfully grabbed EVE Instance");
 			}
 
 			IList objectList = EVEType.GetField ("ObjectList", flags).GetValue (EVEinstance) as IList;
@@ -1013,7 +1013,7 @@ namespace scatterer
 
 					if (cloudsPQS==null)
 					{
-						Debug.Log("[Scatterer] cloudsPQS not found for layer on planet :"+body);
+						Utils.Log("cloudsPQS not found for layer on planet :"+body);
 						continue;
 					}
 					cloud2dObj = cloudsPQS.GetType().GetField("mainMenuLayer", flags).GetValue(cloudsPQS) as object;
@@ -1025,14 +1025,14 @@ namespace scatterer
 
 				if (cloud2dObj==null)
 				{
-					Debug.Log("[Scatterer] layer2d not found for layer on planet :"+body);
+					Utils.Log("layer2d not found for layer on planet :"+body);
 					continue;
 				}
 
 				GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
 				if (cloudmesh==null)
 				{
-					Debug.Log("[Scatterer] cloudmesh null");
+					Utils.Log("cloudmesh null");
 					return;
 				}
 
@@ -1046,7 +1046,7 @@ namespace scatterer
 					cloudsList.Add(cloudmesh.GetComponent < MeshRenderer > ().material);
 					EVEClouds.Add(body,cloudsList);
 				}
-				Debug.Log("[Scatterer] Detected EVE 2d cloud layer for planet: "+body);
+				Utils.Log("Detected EVE 2d cloud layer for planet: "+body);
 			}
 		}
 

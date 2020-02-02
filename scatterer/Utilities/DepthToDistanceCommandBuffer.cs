@@ -17,7 +17,7 @@ namespace scatterer
 		{
 			// after depth texture is rendered on far and near cameras, copy it and merge it as a single distance buffer
 			m_Camera = gameObject.GetComponent<Camera>();
-			Debug.Log ("[Scatterer] Adding DepthToDistanceCommandBuffer to "+m_Camera.name);
+			Utils.Log ("Adding DepthToDistanceCommandBuffer to "+m_Camera.name);
 			m_Buffer = new CommandBuffer();
 			m_Buffer.name = "ScattererDepthToDistanceCommandBuffer";
 			m_Material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthToDistance")]);
@@ -35,7 +35,7 @@ namespace scatterer
 
 		public void OnDestroy ()
 		{
-			Debug.Log ("[Scatterer] Removing DepthToDistanceCommandBuffer from "+m_Camera.name);
+			Utils.Log ("Removing DepthToDistanceCommandBuffer from "+m_Camera.name);
 			m_Camera.RemoveCommandBuffer (CameraEvent.AfterDepthTexture, m_Buffer);
 		}
 	}
