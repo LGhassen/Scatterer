@@ -723,6 +723,8 @@ namespace scatterer
 			else
 				mat.SetFloat ("_PlanetOpacity", 1f);
 
+			mat.SetVector ("_sunColor", m_manager.sunColor);
+
 			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
 			Debug.Log("[Scatterer] Camera overlap: "+camerasOverlap.ToString());
 			mat.SetFloat("_ScattererCameraOverlap",camerasOverlap);
@@ -841,6 +843,7 @@ namespace scatterer
 			}
 
 			mat.SetFloat ("flatScaledSpaceModel", m_manager.flatScaledSpaceModel ? 1f : 0f );
+			mat.SetVector ("_sunColor", m_manager.sunColor);
 		}
 
 		
@@ -1136,6 +1139,7 @@ namespace scatterer
 			}
 			else 
 			{
+				//TODO, replace this with binary search, implement method directly in configPoints class, which will implement a list of config points
 				for (int j = 1; j < configPoints.Count; j++)
 				{
 					if ((trueAlt > configPoints [j - 1].altitude) && (trueAlt <= configPoints [j].altitude))

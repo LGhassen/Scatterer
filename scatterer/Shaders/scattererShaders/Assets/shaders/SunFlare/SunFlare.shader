@@ -32,7 +32,9 @@
 			uniform sampler2D sunGhost1;
 			uniform sampler2D sunGhost2;
 			uniform sampler2D sunGhost3;
-			
+
+			uniform float3 flareColor;
+
 			uniform sampler2D _customDepthTexture;  //depth buffer, to check if sun is behin terrain
 													//I would love it if this wasn't necessary, unfortunately, mountains far away
 													//don't generate colliders so raycasting alone isn't enough
@@ -57,7 +59,7 @@
 
 			uniform float renderSunFlare;
 			uniform float renderOnCurrentCamera;
-			uniform float useDbufferOnCamera;
+			uniform float useDbufferOnCamera;		
 			
 			struct v2f 
 			{
@@ -137,6 +139,8 @@
 				sunColor*=extinction;
 
 				sunColor*=sunGlareFade;
+
+				sunColor*=flareColor;
 
 				return float4(sunColor*returnPixel,1.0);
 			}

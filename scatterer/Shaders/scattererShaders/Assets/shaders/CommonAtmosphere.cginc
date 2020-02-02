@@ -66,6 +66,7 @@ uniform float RES_NU;
 uniform float3 SUN_DIR;
 
 #define _Sun_Intensity 100.0;
+uniform float3 _sunColor;
 
 uniform float _experimentalAtmoScale;
 
@@ -804,6 +805,7 @@ float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 ext
 		extinction = float3(1,1,1);
 	} 
 	
+	result*=_sunColor;
 	return result * _Sun_Intensity;
 
 }
@@ -870,6 +872,7 @@ float3 SkyRadiance3(float3 camera, float3 viewdir, float3 sundir)//, out float3 
 		//extinction = float3(1,1,1);
 	} 
 	
+	result*=_sunColor;
 	return result * _Sun_Intensity;
 }
 
@@ -890,8 +893,8 @@ float3 Irradiance(sampler2D samp, float r, float muS)
 // r=length(x)
 // muS=dot(x,s) / r
 float3 SkyIrradiance(float r, float muS)
-{
-    return Irradiance(_Irradiance, r, muS) * _Sun_Intensity;
+{	
+    return Irradiance(_Irradiance, r, muS) * _sunColor * _Sun_Intensity;
 }
 
 // transmittance(=transparency) of atmosphere for infinite ray (r,mu)
@@ -907,7 +910,7 @@ float3 TransmittanceWithShadow(float r, float mu)
 // muS=dot(x,s) / r
 float3 SunRadiance(float r, float muS)
 {
-    return TransmittanceWithShadow(r, muS) * _Sun_Intensity;
+    return TransmittanceWithShadow(r, muS) * _sunColor * _Sun_Intensity;
 }
 
 void SunRadianceAndSkyIrradiance(float3 worldP, float3 worldN, float3 worldS, out float3 sunL, out float3 skyE)
@@ -923,7 +926,7 @@ void SunRadianceAndSkyIrradiance(float3 worldP, float3 worldN, float3 worldS, ou
 
     float sunOcclusion = 1.0;// - sunShadow;
     //sunL = SunRadiance(r, muS) * sunOcclusion;
-    sunL = TransmittanceWithShadow(r, muS) *  _Sun_Intensity ;//removed _Sun_Intensity multiplier
+    sunL = TransmittanceWithShadow(r, muS) * _sunColor * _Sun_Intensity;//removed _Sun_Intensity multiplier
 
     // ambient occlusion due only to slope, does not take self shadowing into account
     float skyOcclusion = (1.0 + dot(worldV, worldN)) * 0.5;
@@ -1068,5 +1071,6 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 ext
         result = float3(0,0,0);
 //        extinction = float3(1,1,1);
     }
-    return result * _Sun_Intensity;
+    
+    return result * _sunColor * _Sun_Intensity;
 }

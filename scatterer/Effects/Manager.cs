@@ -22,7 +22,8 @@ namespace scatterer
 		OceanWhiteCaps m_oceanNode;
 		public SkyNode m_skyNode;
 
-		
+		public Vector3 sunColor;
+
 		public CelestialBody parentCelestialBody;
 		public Transform parentScaledTransform;
 		public Transform parentLocalTransform;

@@ -63,7 +63,7 @@ Pass {
 
 				underwaterDepth = lerp(1.0,0.0,underwaterDepth / darknessDepth);
 
-				float3 waterColor= underwaterDepth * hdrNoExposure( waterLightExtinction * oceanColor(rayDir,SUN_DIR,normalize(_camPos)));
+				float3 waterColor= underwaterDepth * hdrNoExposure( waterLightExtinction * _sunColor * oceanColor(rayDir,SUN_DIR,normalize(_camPos)));
 				float alpha = min(fragDistance/transparencyDepth,1.0);
 				return float4(dither(waterColor, screenPos), alpha);
 			}

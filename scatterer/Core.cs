@@ -148,7 +148,7 @@ namespace scatterer
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.0541";
+		string versionNumber = "0.0542dev";
 
 		public object EVEinstance;
 		public SunlightModulator sunlightModulatorInstance;
@@ -598,6 +598,7 @@ namespace scatterer
 								{
 									_cur.m_manager = new Manager ();
 									_cur.m_manager.setParentCelestialBody (_cur.celestialBody);
+									_cur.m_manager.sunColor=_cur.sunColor;
 									if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 									{
 										_cur.m_manager.setParentScaledTransform (GetMainMenuObject(_cur.celestialBodyName).transform); //doesn't look right but let's see

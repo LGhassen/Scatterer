@@ -1,7 +1,9 @@
 fileFormatVersion: 2
 guid: 92c355f182a8c0c44a31e1906dd1a1e2
 ShaderImporter:
+  externalObjects: {}
   defaultTextures: []
+  nonModifiableTextures: []
   userData: 
-  assetBundleName: scatterershaders
+  assetBundleName: 
   assetBundleVariant: 

@@ -382,7 +382,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 Lsea =   0.98 * (1.0 - fresnel) * _Ocean_Color * (skyE / M_PI) * lerp(0.3,1.0,shadowTerm);
 
 #if defined (UNDERWATER_ON)
-				float3 ocColor = oceanColor(reflect(-V,N),L,float3(0.0,0.0,1.0)); //reflected ocean color from underwater
+				float3 ocColor = _sunColor * oceanColor(reflect(-V,N),L,float3(0.0,0.0,1.0)); //reflected ocean color from underwater
 				float waterLightExtinction = length(getSkyExtinction(earthP, L));
 				Lsea = hdrNoExposure(waterLightExtinction * ocColor) * lerp(0.8,1.0,shadowTerm);
 #endif
@@ -526,7 +526,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				waterLightExtinction = length(getSkyExtinction(earthCamPos, L));
 				float3 _camPos = _WorldSpaceCameraPos - _planetPos;
 
-				float3 oceanCol = underwaterDepth * hdrNoExposure(waterLightExtinction * oceanColor(-Vworld,Lworld,normalize(_camPos))); //add planetshine loop here over Ls
+				float3 oceanCol = underwaterDepth * hdrNoExposure(waterLightExtinction * _sunColor * oceanColor(-Vworld,Lworld,normalize(_camPos))); //add planetshine loop here over Ls
 
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
 				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));

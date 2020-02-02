@@ -81,6 +81,9 @@ namespace scatterer
 		[Persistent]
 		List<Vector4> ghost3SettingsList2=new List<Vector4>{};
 
+		[Persistent]
+		public Vector3 flareColor = Vector3.one;
+
 
 		public void start()
 		{
@@ -209,6 +212,7 @@ namespace scatterer
 
 			sunglareMaterial.SetTexture ("extinctionTexture", extinctionTexture);
 
+			sunglareMaterial.SetVector ("flareColor", flareColor);
 
 			scaledCameraHook = (SunflareCameraHook) Core.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
 			scaledCameraHook.flare = this;

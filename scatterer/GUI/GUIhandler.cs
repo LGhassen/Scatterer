@@ -104,7 +104,7 @@ namespace scatterer
 		//		UI BUTTONS
 		//		This isn't the most elegant section due to how many elements are here
 		//		I don't care enough to do it in a cleaner way
-		//		After all it's a basic UI for tweaking settings and it does it's job
+		//		After all it's a basic UI for tweaking settings and it does its job
 		public void DrawScattererWindow (int windowId)
 		{
 			if (Core.Instance.mainMenuOptions)  //KSC screen options
