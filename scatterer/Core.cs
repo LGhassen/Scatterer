@@ -45,8 +45,6 @@ namespace scatterer
 		
 		public bool disableAmbientLight=false;
 
-		public string mainSunCelestialBodyName="Sun";
-
 		public bool integrateWithEVEClouds=false;
 
 		DisableAmbientLight ambientLightScript;
@@ -136,7 +134,6 @@ namespace scatterer
 
 		public BufferRenderingManager bufferRenderingManager;
 
-		public CelestialBody sunCelestialBody;
 		public CelestialBody munCelestialBody;
 		public string path, gameDataPath;
 		bool coreInitiated = false;
@@ -235,169 +232,23 @@ namespace scatterer
 			Init();
 		}
 
+
+
 		void Init()
 		{
-			//set shadows
-			setShadows();
-			
-			//find scatterer celestial bodies
 			findScattererCelestialBodies();
+
+			SetupMainCameras ();
+
+			SetShadows();
+
+			FindSunlights ();
 			
-			//find sun
-			sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == mainSunCelestialBodyName);
+			FixKopernicusRingsRenderQueue ();
 			
-			//find main cameras
-			Camera[] cams = Camera.allCameras;
-
-			scaledSpaceCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera ScaledSpace");
-			farCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 01");
-			nearCamera = Camera.allCameras.FirstOrDefault(_cam  => _cam.name == "Camera 00");
-
-			if (scaledSpaceCamera && farCamera && nearCamera)
-			{
-				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades) farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
-
-				if (overrideNearClipPlane)
-				{
-					Utils.Log("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
-					nearCamera.nearClipPlane = nearClipPlane;
-				}
-			}
-			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-			{
-				//if are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
-				scaledSpaceCamera = Camera.allCameras.Single(_cam  => _cam.name == "Landscape Camera");
-				farCamera = scaledSpaceCamera;
-				nearCamera = scaledSpaceCamera;
-			}
-			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
-			{
-				//if in trackstation, just to get rid of some nullrefs
-				farCamera = scaledSpaceCamera;
-				nearCamera = scaledSpaceCamera;
-			}
-
-			//find sunlight and set shadow bias
-			lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-			
-			foreach (Light _light in lights)
-			{
-				if (_light.gameObject.name == "Scaledspace SunLight")
-				{
-					scaledspaceSunLight=_light.gameObject;
-					
-					_light.shadowNormalBias =shadowNormalBias;
-					_light.shadowBias=shadowBias;
-				}
+			FixSunsCoronaRenderQueue ();
 				
-				if (_light.gameObject.name == "SunLight")
-				{
-					sunLight=_light.gameObject;
-				}	
-
-				
-				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light"))
-				{
-					mainMenuLight = _light.gameObject;
-					Utils.Log("Found main menu light");
-				}
-			}
-			
-			//load planetshine "cookie" cubemap
-
-			if(usePlanetShine)
-			{
-				planetShineCookieCubeMap=new Cubemap(512,TextureFormat.ARGB32,true);
-				
-				Texture2D[] cubeMapFaces=new Texture2D[6];
-				for (int i=0;i<6;i++)
-				{
-					cubeMapFaces[i]=new Texture2D(512,512);
-				}
-
-
-				cubeMapFaces[0].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeX.png")));
-				cubeMapFaces[1].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveX.png")));
-				cubeMapFaces[2].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeY.png")));
-				cubeMapFaces[3].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveY.png")));
-				cubeMapFaces[4].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_NegativeZ.png")));
-				cubeMapFaces[5].LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path+"/planetShineCubemap", "_PositiveZ.png")));
-				
-				planetShineCookieCubeMap.SetPixels(cubeMapFaces[0].GetPixels(),CubemapFace.NegativeX);
-				planetShineCookieCubeMap.SetPixels(cubeMapFaces[1].GetPixels(),CubemapFace.PositiveX);
-				planetShineCookieCubeMap.SetPixels(cubeMapFaces[2].GetPixels(),CubemapFace.NegativeY);
-				planetShineCookieCubeMap.SetPixels(cubeMapFaces[3].GetPixels(),CubemapFace.PositiveY);
-				planetShineCookieCubeMap.SetPixels(cubeMapFaces[4].GetPixels(),CubemapFace.NegativeZ);
-				planetShineCookieCubeMap.SetPixels(cubeMapFaces[5].GetPixels(),CubemapFace.PositiveZ);
-				planetShineCookieCubeMap.Apply();
-			}
-			
-			//find and fix renderQueues of kopernicus rings
-			foreach (CelestialBody _cb in CelestialBodies)
-			{
-				GameObject ringObject;
-				ringObject=GameObject.Find(_cb.name+"Ring");
-				if (ringObject)
-				{
-					ringObject.GetComponent < MeshRenderer > ().material.renderQueue = 3005;
-					Utils.Log("Found rings for "+_cb.name);
-				}
-			}
-			
-			//find and fix renderqueue of sun corona
-			Transform scaledSunTransform=GetScaledTransform(mainSunCelestialBodyName);
-			foreach (Transform child in scaledSunTransform)
-			{
-				MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer>();
-				if (temp!=null)
-					temp.material.renderQueue = 2998;
-			}
-			
-			//set up planetshine lights
-			if(usePlanetShine)
-			{
-				foreach (PlanetShineLightSource _aSource in celestialLightSourcesData)
-				{
-					var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
-					if (celBody)
-					{
-						PlanetShineLight aPsLight= new PlanetShineLight();
-						aPsLight.isSun=_aSource.isSun;
-						aPsLight.source=celBody;
-						aPsLight.sunCelestialBody=sunCelestialBody;
-						
-						GameObject ScaledPlanetShineLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
-						GameObject LocalPlanetShineLight=(UnityEngine.GameObject) Instantiate(scaledspaceSunLight);
-						
-						ScaledPlanetShineLight.GetComponent<Light>().type=LightType.Point;
-						if (!_aSource.isSun)
-							ScaledPlanetShineLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
-						
-						//ScaledPlanetShineLight.GetComponent<Light>().range=1E9f;
-						ScaledPlanetShineLight.GetComponent<Light>().range=_aSource.scaledRange;
-						ScaledPlanetShineLight.GetComponent<Light>().color=new Color(_aSource.color.x,_aSource.color.y,_aSource.color.z);
-						ScaledPlanetShineLight.name=celBody.name+"PlanetShineLight(ScaledSpace)";
-						
-						
-						LocalPlanetShineLight.GetComponent<Light>().type=LightType.Point;
-						if (!_aSource.isSun)
-							LocalPlanetShineLight.GetComponent<Light>().cookie=planetShineCookieCubeMap;
-						//LocalPlanetShineLight.GetComponent<Light>().range=1E9f;
-						LocalPlanetShineLight.GetComponent<Light>().range=_aSource.scaledRange*6000;
-						LocalPlanetShineLight.GetComponent<Light>().color=new Color(_aSource.color.x,_aSource.color.y,_aSource.color.z);
-						LocalPlanetShineLight.GetComponent<Light>().cullingMask=557591;
-						LocalPlanetShineLight.GetComponent<Light>().shadows=LightShadows.Soft;
-						LocalPlanetShineLight.GetComponent<Light>().shadowCustomResolution=2048;
-						LocalPlanetShineLight.name=celBody.name+"PlanetShineLight(LocalSpace)";
-						
-						aPsLight.scaledLight=ScaledPlanetShineLight;
-						aPsLight.localLight=LocalPlanetShineLight;
-						
-						celestialLightSources.Add(aPsLight);
-						Utils.Log ("Added celestialLightSource "+aPsLight.source.name);
-					}
-				}
-			}
+			SetupPlanetshine ();
 			
 			//create buffer manager
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
@@ -815,6 +666,38 @@ namespace scatterer
 			mainSettings.saveCoreMainSettingsIfChanged ();
 		}
 
+		void SetupMainCameras()
+		{
+			Camera[] cams = Camera.allCameras;
+			scaledSpaceCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera ScaledSpace");
+			farCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 01");
+			nearCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 00");
+
+			if (scaledSpaceCamera && farCamera && nearCamera)
+			{
+				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades) farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
+				
+				if (overrideNearClipPlane)
+				{
+					Utils.Log("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
+					nearCamera.nearClipPlane = nearClipPlane;
+				}
+			}
+			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				//if are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
+				scaledSpaceCamera = Camera.allCameras.Single(_cam  => _cam.name == "Landscape Camera");
+				farCamera = scaledSpaceCamera;
+				nearCamera = scaledSpaceCamera;
+			}
+			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+			{
+				//if in trackstation, just to get rid of some nullrefs
+				farCamera = scaledSpaceCamera;
+				nearCamera = scaledSpaceCamera;
+			}
+		}
+
 		void removeStockOceans()
 		{
 			Material invisibleOcean = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
@@ -892,7 +775,7 @@ namespace scatterer
 			}
 		}
 
-		void setShadows()
+		void SetShadows()
 		{
 			if (terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
 			{
@@ -931,7 +814,108 @@ namespace scatterer
 				}
 			}
 		}
-	
+
+		void FindSunlights ()
+		{
+			lights = (Light[])Light.FindObjectsOfType (typeof(Light));
+			foreach (Light _light in lights) {
+				if (_light.gameObject.name == "SunLight") {
+					sunLight = _light.gameObject;
+				}
+				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light")) {
+					mainMenuLight = _light.gameObject;
+					Utils.Log ("Found main menu light");
+				}
+			}
+		}
+
+		//move to its own class
+		void SetupPlanetshine ()
+		{
+			if (usePlanetShine)
+			{
+				//load planetshine "cookie" cubemap
+				planetShineCookieCubeMap = new Cubemap (512, TextureFormat.ARGB32, true);
+				Texture2D[] cubeMapFaces = new Texture2D[6];
+				for (int i = 0; i < 6; i++) {
+					cubeMapFaces [i] = new Texture2D (512, 512);
+				}
+				cubeMapFaces [0].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_NegativeX.png")));
+				cubeMapFaces [1].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_PositiveX.png")));
+				cubeMapFaces [2].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_NegativeY.png")));
+				cubeMapFaces [3].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_PositiveY.png")));
+				cubeMapFaces [4].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_NegativeZ.png")));
+				cubeMapFaces [5].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_PositiveZ.png")));
+				planetShineCookieCubeMap.SetPixels (cubeMapFaces [0].GetPixels (), CubemapFace.NegativeX);
+				planetShineCookieCubeMap.SetPixels (cubeMapFaces [1].GetPixels (), CubemapFace.PositiveX);
+				planetShineCookieCubeMap.SetPixels (cubeMapFaces [2].GetPixels (), CubemapFace.NegativeY);
+				planetShineCookieCubeMap.SetPixels (cubeMapFaces [3].GetPixels (), CubemapFace.PositiveY);
+				planetShineCookieCubeMap.SetPixels (cubeMapFaces [4].GetPixels (), CubemapFace.NegativeZ);
+				planetShineCookieCubeMap.SetPixels (cubeMapFaces [5].GetPixels (), CubemapFace.PositiveZ);
+				planetShineCookieCubeMap.Apply ();
+
+
+				foreach (PlanetShineLightSource _aSource in celestialLightSourcesData) {
+					var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
+					if (celBody) {
+						PlanetShineLight aPsLight = new PlanetShineLight ();
+						aPsLight.isSun = _aSource.isSun;
+						aPsLight.source = celBody;
+						if (!_aSource.isSun)
+							aPsLight.sunCelestialBody = CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _aSource.mainSunCelestialBody);
+						GameObject ScaledPlanetShineLight = (UnityEngine.GameObject)Instantiate (scaledspaceSunLight);
+						GameObject LocalPlanetShineLight = (UnityEngine.GameObject)Instantiate (scaledspaceSunLight);
+						ScaledPlanetShineLight.GetComponent<Light> ().type = LightType.Point;
+						if (!_aSource.isSun)
+							ScaledPlanetShineLight.GetComponent<Light> ().cookie = planetShineCookieCubeMap;
+						//ScaledPlanetShineLight.GetComponent<Light>().range=1E9f;
+						ScaledPlanetShineLight.GetComponent<Light> ().range = _aSource.scaledRange;
+						ScaledPlanetShineLight.GetComponent<Light> ().color = new Color (_aSource.color.x, _aSource.color.y, _aSource.color.z);
+						ScaledPlanetShineLight.name = celBody.name + "PlanetShineLight(ScaledSpace)";
+						LocalPlanetShineLight.GetComponent<Light> ().type = LightType.Point;
+						if (!_aSource.isSun)
+							LocalPlanetShineLight.GetComponent<Light> ().cookie = planetShineCookieCubeMap;
+						//LocalPlanetShineLight.GetComponent<Light>().range=1E9f;
+						LocalPlanetShineLight.GetComponent<Light> ().range = _aSource.scaledRange * 6000;
+						LocalPlanetShineLight.GetComponent<Light> ().color = new Color (_aSource.color.x, _aSource.color.y, _aSource.color.z);
+						LocalPlanetShineLight.GetComponent<Light> ().cullingMask = 557591;
+						LocalPlanetShineLight.GetComponent<Light> ().shadows = LightShadows.Soft;
+						LocalPlanetShineLight.GetComponent<Light> ().shadowCustomResolution = 2048;
+						LocalPlanetShineLight.name = celBody.name + "PlanetShineLight(LocalSpace)";
+						aPsLight.scaledLight = ScaledPlanetShineLight;
+						aPsLight.localLight = LocalPlanetShineLight;
+						celestialLightSources.Add (aPsLight);
+						Utils.Log ("Added celestialLightSource " + aPsLight.source.name);
+					}
+				}
+			}
+		}
+
+		void FixKopernicusRingsRenderQueue ()
+		{
+			foreach (CelestialBody _cb in CelestialBodies) {
+				GameObject ringObject;
+				ringObject = GameObject.Find (_cb.name + "Ring");
+				if (ringObject) {
+					ringObject.GetComponent<MeshRenderer> ().material.renderQueue = 3005;
+					Utils.Log ("Found rings for " + _cb.name);
+				}
+			}
+		}
+
+		void FixSunsCoronaRenderQueue ()
+		{
+			foreach(ScattererCelestialBody _scattererCB in scattererCelestialBodies)
+			{
+				Transform scaledSunTransform = GetScaledTransform (_scattererCB.mainSunCelestialBody);
+				foreach (Transform child in scaledSunTransform) {
+					MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
+					if (temp != null)
+						temp.material.renderQueue = 2998;
+				}
+			}
+		}
+		
 		internal static Type getType(string name)
 		{
 			Type type = null;

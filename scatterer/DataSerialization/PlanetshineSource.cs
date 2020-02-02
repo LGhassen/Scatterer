@@ -19,6 +19,7 @@ namespace scatterer
 		[Persistent] public Vector3 color;
 		[Persistent] public float intensity;
 		[Persistent] public bool isSun;
+		[Persistent] public string mainSunCelestialBody;
 		[Persistent] public float localRange;
 		[Persistent] public float scaledRange;
 		[Persistent] public float fadeRadius;
