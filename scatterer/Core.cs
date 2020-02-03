@@ -141,7 +141,7 @@ namespace scatterer
 				//find and remove stock oceans
 				if (mainSettings.useOceanShaders)
 				{
-					removeStockOceans();
+					OceanUtils.removeStockOceans();
 				}
 
 				//replace EVE cloud shaders if main menu (ie on startup only)
@@ -176,9 +176,8 @@ namespace scatterer
 
 			FindSunlights ();
 			
-			FixKopernicusRingsRenderQueue ();
-			
-			FixSunsCoronaRenderQueue ();
+			Utils.FixKopernicusRingsRenderQueue ();			
+			Utils.FixSunsCoronaRenderQueue ();
 				
 			SetupPlanetshine ();
 			
@@ -611,47 +610,6 @@ namespace scatterer
 			}
 		}
 
-		void removeStockOceans()
-		{
-			Material invisibleOcean = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
-			foreach (ScattererCelestialBody sctBody in scattererCelestialBodies)
-			{
-				if (sctBody.hasOcean)
-				{
-					bool removed = false;
-					var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
-					if (celBody == null)
-					{
-						celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
-					}
-					
-					if (celBody != null)
-					{
-						//Thanks to rbray89 for this snippet and the FakeOcean class which disable the stock ocean in a clean way
-						PQS pqs = celBody.pqsController;
-						if ((pqs != null) && (pqs.ChildSpheres!= null) && (pqs.ChildSpheres.Count() != 0))
-						{
-
-							PQS ocean = pqs.ChildSpheres [0];
-							if (ocean != null)
-							{
-								ocean.surfaceMaterial = invisibleOcean;
-								ocean.surfaceMaterial.SetOverrideTag("IgnoreProjector","True");
-								ocean.surfaceMaterial.SetOverrideTag("ForceNoShadowCasting","True");
-
-								removed = true;
-							}
-						}
-					}
-					if (!removed) {
-						Utils.Log ("Couldn't remove stock ocean for " + sctBody.celestialBodyName);
-					}
-				}
-			}
-			Utils.Log ("Removed stock oceans");
-		}
-
-
 		void findScattererCelestialBodies()
 		{
 			foreach (ScattererCelestialBody sctBody in scattererCelestialBodies)
@@ -803,45 +761,11 @@ namespace scatterer
 				}
 			}
 		}
-
-		void FixKopernicusRingsRenderQueue ()
-		{
-			foreach (CelestialBody _cb in CelestialBodies) {
-				GameObject ringObject;
-				ringObject = GameObject.Find (_cb.name + "Ring");
-				if (ringObject) {
-					ringObject.GetComponent<MeshRenderer> ().material.renderQueue = 3005;
-					Utils.Log ("Found rings for " + _cb.name);
-				}
-			}
-		}
-
-		void FixSunsCoronaRenderQueue ()
-		{
-			foreach(ScattererCelestialBody _scattererCB in scattererCelestialBodies)
-			{
-				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
-				foreach (Transform child in scaledSunTransform) {
-					MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
-					if (temp != null)
-						temp.material.renderQueue = 2998;
-				}
-			}
-		}
 		
-		internal static Type getType(string name)
-		{
-			Type type = null;
-			AssemblyLoader.loadedAssemblies.TypeOperation(t =>{if (t.FullName == name)type = t;});
-			
-			if (type != null)
-			{
-				return type;
-			}
-			return null;
-		}
+
 
 		//map EVE clouds to planet names
+		//move to own class
 		public void mapEVEClouds()
 		{
 			Utils.Log ("mapping EVE clouds");
@@ -849,7 +773,7 @@ namespace scatterer
 			EVECloudObjects.Clear ();
 
 			//find EVE base type
-			Type EVEType = getType("Atmosphere.CloudsManager"); 
+			Type EVEType = EVEReflectionUtils.getType("Atmosphere.CloudsManager"); 
 
 			if (EVEType == null)
 			{

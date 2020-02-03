@@ -145,6 +145,8 @@
     <Compile Include="DataSerialization\MainSettingsReadWrite.cs" />
     <Compile Include="DataSerialization\PluginDataReadWrite.cs" />
     <Compile Include="Utilities\Utils.cs" />
+    <Compile Include="Effects\Ocean\Utils\OceanUtils.cs" />
+    <Compile Include="Utilities\EVEReflectionUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

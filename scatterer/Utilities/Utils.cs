@@ -37,6 +37,31 @@ namespace scatterer
 			return (ScaledSpace.Instance.transform.FindChild (body));	
 		}
 
+		public static void FixKopernicusRingsRenderQueue ()
+		{
+			foreach (CelestialBody _cb in Core.Instance.CelestialBodies) {
+				GameObject ringObject;
+				ringObject = GameObject.Find (_cb.name + "Ring");
+				if (ringObject) {
+					ringObject.GetComponent<MeshRenderer> ().material.renderQueue = 3005;
+					Utils.Log ("Found rings for " + _cb.name);
+				}
+			}
+		}
+		
+		public static void FixSunsCoronaRenderQueue ()
+		{
+			foreach(ScattererCelestialBody _scattererCB in Core.Instance.scattererCelestialBodies)
+			{
+				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
+				foreach (Transform child in scaledSunTransform) {
+					MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
+					if (temp != null)
+						temp.material.renderQueue = 2998;
+				}
+			}
+		}
+
 		//Add debugging levels?
 		public static void Log(string log)
 		{
