@@ -117,7 +117,6 @@ namespace scatterer
 
 			windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
-			//load the planets list and the settings
 			loadSettings ();
 
 			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
@@ -138,13 +137,11 @@ namespace scatterer
 			{
 				isActive = true;
 
-				//find and remove stock oceans
 				if (mainSettings.useOceanShaders)
 				{
 					OceanUtils.removeStockOceans();
 				}
 
-				//replace EVE cloud shaders if main menu (ie on startup only)
 				if (mainSettings.integrateWithEVEClouds)
 				{
 					ShaderReplacer.Instance.replaceEVEshaders();
@@ -152,19 +149,20 @@ namespace scatterer
 			}
 
 			if (isActive)
-				StartCoroutine(DelayedInit());
+			{
+				StartCoroutine (DelayedInit ());
+			}
 		}
 
+		//wait for 5 frames for EVE and the game to finish setting up
 		IEnumerator DelayedInit()
 		{
-			//wait for 5 frames for EVE and the game to finish setting up
-			for (int i=0; i<5;i++)
-				yield return new WaitForFixedUpdate();
+			int delayFrames = (HighLogic.LoadedScene == GameScenes.MAINMENU) ? 5 : 1;
+			for (int i=0; i<delayFrames; i++)
+				yield return new WaitForFixedUpdate ();
 
 			Init();
 		}
-
-
 
 		void Init()
 		{
