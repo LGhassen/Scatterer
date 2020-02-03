@@ -85,7 +85,7 @@ namespace scatterer
 
 		void FindEclipseCasters (ScattererCelestialBody scattererBody)
 		{
-			if (Core.Instance.useEclipses) {
+			if (Core.Instance.mainSettings.useEclipses) {
 				for (int k = 0; k < scattererBody.eclipseCasters.Count; k++) {
 					var cc = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.eclipseCasters [k]);
 					if (cc == null)
@@ -100,7 +100,7 @@ namespace scatterer
 
 		void FindPlanetShineSources (ScattererCelestialBody scattererBody)
 		{
-			if (Core.Instance.usePlanetShine) {
+			if (Core.Instance.mainSettings.usePlanetShine) {
 				for (int k = 0; k < scattererBody.planetshineSources.Count; k++) {
 					var cc = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.planetshineSources [k].bodyName);
 					if (cc == null)
@@ -126,7 +126,7 @@ namespace scatterer
 			m_skyNode.usesCloudIntegration = usesCloudIntegration;
 			if (m_skyNode.loadFromConfigNode ()) {
 				m_skyNode.Init ();
-				if (hasOcean && Core.Instance.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU)) {
+				if (hasOcean && Core.Instance.mainSettings.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU)) {
 					m_oceanNode = (OceanWhiteCaps)Core.Instance.farCamera.gameObject.AddComponent (typeof(OceanWhiteCaps));
 					m_oceanNode.setManager (this);
 					m_oceanNode.loadFromConfigNode ();
@@ -174,7 +174,7 @@ namespace scatterer
 				m_oceanNode.loadFromConfigNode();
 				m_oceanNode.Init();
 
-				if (Core.Instance.oceanRefraction && Core.Instance.bufferRenderingManager.refractionTexture.IsCreated())
+				if (Core.Instance.mainSettings.oceanRefraction && Core.Instance.bufferRenderingManager.refractionTexture.IsCreated())
 				{
 					Core.Instance.bufferRenderingManager.refractionTexture.Create();
 				}

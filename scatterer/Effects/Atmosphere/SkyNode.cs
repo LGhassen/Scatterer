@@ -207,7 +207,7 @@ namespace scatterer
 				localScatteringMaterial.DisableKeyword("GODRAYS_ON");
 				localScatteringMaterial.EnableKeyword("GODRAYS_OFF");
 //			}
-			if (Core.Instance.useEclipses)
+			if (Core.Instance.mainSettings.useEclipses)
 			{
 				localScatteringMaterial.EnableKeyword ("ECLIPSES_ON");
 				localScatteringMaterial.DisableKeyword ("ECLIPSES_OFF");
@@ -268,7 +268,7 @@ namespace scatterer
 
 			skySphereMeshRenderer.enabled = true;
 
-			if (Core.Instance.useRingShadows)
+			if (Core.Instance.mainSettings.useRingShadows)
 			{
 				ringObject = GameObject.Find (celestialBodyName + "Ring");
 				if (ringObject)
@@ -329,7 +329,7 @@ namespace scatterer
 			InitUniforms (m_skyMaterial);
 			InitUniforms (scaledScatteringMaterial);
 
-			if (Core.Instance.fullLensFlareReplacement)
+			if (Core.Instance.mainSettings.fullLensFlareReplacement)
 			{
 				sunflareExtinctionMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer/sunFlareExtinction"]);
 				sunflareExtinctionMaterial.SetFloat ("Rg", Rg);
@@ -363,7 +363,7 @@ namespace scatterer
 			SetUniforms (m_skyMaterial);
 			SetUniforms (scaledScatteringMaterial);
 
-			if (!MapView.MapIsEnabled && Core.Instance.sunlightExtinction)
+			if (!MapView.MapIsEnabled && Core.Instance.mainSettings.sunlightExtinction)
 			{
 				Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Core.Instance.farCamera.transform.position)- parentLocalTransform.position;
 
@@ -385,7 +385,7 @@ namespace scatterer
 					}
 				}
 			}
-			if (Core.Instance.useEclipses)
+			if (Core.Instance.mainSettings.useEclipses)
 			{
 				float scaleFactor=ScaledSpace.ScaleFactor;
 				
@@ -411,7 +411,7 @@ namespace scatterer
 					                                           casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
 				}
 			}
-			if (Core.Instance.usePlanetShine)
+			if (Core.Instance.mainSettings.usePlanetShine)
 			{
 				planetShineRGBMatrix = Matrix4x4.zero;
 				planetShineSourcesMatrix = Matrix4x4.zero;
@@ -440,7 +440,7 @@ namespace scatterer
 			}
 			//update EVE cloud shaders
 			//maybe refactor?
-			if (Core.Instance.integrateWithEVEClouds && usesCloudIntegration)
+			if (Core.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				int size;
 				
@@ -489,7 +489,7 @@ namespace scatterer
 				}
 			}
 			//update extinction for sunflares
-			if (Core.Instance.fullLensFlareReplacement)
+			if (Core.Instance.mainSettings.fullLensFlareReplacement)
 			{
 				foreach (SunFlare customSunFlare in Core.Instance.customSunFlares)
 				{
@@ -528,7 +528,7 @@ namespace scatterer
 				if (!inScaledSpace && prevState)
 				{
 					//set flag to map EVE volumetrics after a few frames
-					if (Core.Instance.integrateWithEVEClouds && usesCloudIntegration)
+					if (Core.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 						mapVolumetrics=true;
 				}
 
@@ -575,7 +575,7 @@ namespace scatterer
 
 				//after the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
 				//call EVE clouds2D.reassign() method to set the shader properties
-				if (Core.Instance.integrateWithEVEClouds && usesCloudIntegration)
+				if (Core.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 				{
 					initiateEVEClouds();
 				}
@@ -593,7 +593,7 @@ namespace scatterer
 				}
 				interpolateVariables ();
 
-				if (m_manager.hasOcean && !Core.Instance.useOceanShaders)
+				if (m_manager.hasOcean && !Core.Instance.mainSettings.useOceanShaders)
 				{
 					skySphereMeshRenderer.enabled = (trueAlt>=0f);
 					stockSkyMeshRenderer.enabled = (trueAlt<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
@@ -625,14 +625,14 @@ namespace scatterer
 			mat.SetFloat ("_SkyExposure", interpolatedSettings.skyExposure);
 			mat.SetFloat ("_ScatteringExposure", interpolatedSettings.scatteringExposure);
 
-			if (Core.Instance.useEclipses)
+			if (Core.Instance.mainSettings.useEclipses)
 			{
 				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
 				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
 				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
 				                                                                       sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
 			}
-			if (Core.Instance.usePlanetShine)
+			if (Core.Instance.mainSettings.usePlanetShine)
 			{
 				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
 				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
@@ -707,7 +707,7 @@ namespace scatterer
 			
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun().normalized);
 
-			if (Core.Instance.usePlanetShine)
+			if (Core.Instance.mainSettings.usePlanetShine)
 			{
 				mat.EnableKeyword ("PLANETSHINE_ON");
 				mat.DisableKeyword ("PLANETSHINE_OFF");	
@@ -760,7 +760,7 @@ namespace scatterer
 			mat.SetVector ("_planetPos", parentLocalTransform.position);  //better do this small calculation here
 
 
-			if (Core.Instance.usePlanetShine)
+			if (Core.Instance.mainSettings.usePlanetShine)
 			{
 				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
 				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
@@ -820,7 +820,7 @@ namespace scatterer
 			}
 
 
-			if (Core.Instance.useEclipses)
+			if (Core.Instance.mainSettings.useEclipses)
 			{
 				mat.EnableKeyword ("ECLIPSES_ON");
 				mat.DisableKeyword ("ECLIPSES_OFF");
@@ -831,7 +831,7 @@ namespace scatterer
 				mat.EnableKeyword ("ECLIPSES_OFF");
 			}
 			
-			if (Core.Instance.usePlanetShine)
+			if (Core.Instance.mainSettings.usePlanetShine)
 			{
 				mat.EnableKeyword ("PLANETSHINE_ON");
 				mat.DisableKeyword ("PLANETSHINE_OFF");	
@@ -936,7 +936,7 @@ namespace scatterer
 		
 		public void Cleanup ()
 		{
-			if (Core.Instance.autosavePlanetSettingsOnSceneChange)
+			if (Core.Instance.mainSettings.autosavePlanetSettingsOnSceneChange)
 			{
 				saveToConfigNode ();
 			}
@@ -962,7 +962,7 @@ namespace scatterer
 			UnityEngine.Object.Destroy (skySphereGameObject);
 
 			//disable eve integration scatterer flag
-			if (Core.Instance.integrateWithEVEClouds && usesCloudIntegration)
+			if (Core.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				try
 				{
@@ -1278,7 +1278,7 @@ namespace scatterer
 
 		public void togglePreserveCloudColors()
 		{
-			if (Core.Instance.integrateWithEVEClouds)
+			if (Core.Instance.mainSettings.integrateWithEVEClouds)
 			{
 				if(Core.Instance.EVEClouds.ContainsKey(celestialBodyName)) //change to a bool hasclouds
 				{

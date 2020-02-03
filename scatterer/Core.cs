@@ -16,50 +16,20 @@ namespace scatterer
 	public partial class Core: MonoBehaviour
 	{	
 		private static Core instance;
-		
-		private Core()
-		{
-			
-		}
+		public static Core Instance {get {return instance;}}
 
-		public static Core Instance
-		{
-			get 
-			{
-				return instance;
-			}
-		}
+		public MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
+		public List <ScattererCelestialBody > scattererCelestialBodies = new List <ScattererCelestialBody> {};
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
 		int windowId;
 
 		GUIhandler GUItool= new GUIhandler();
 
-
-		public List<SunFlare> customSunFlares = new List<SunFlare>();
-		bool customSunFlareAdded=false;
-		
-		public bool visible = false;
-		
-		public bool autosavePlanetSettingsOnSceneChange=true;
-		
-		public bool disableAmbientLight=false;
-
-		public bool integrateWithEVEClouds=false;
-
-		DisableAmbientLight ambientLightScript;
-		
-		public List <ScattererCelestialBody > scattererCelestialBodies = new List <ScattererCelestialBody> {};
-
-		public List<string> sunflaresList=new List<string> {};
-
-		public CelestialBody[] CelestialBodies;
-		
-		Light[] lights;
-
+		//EVE shit
+		//
 		//map EVE 2d cloud materials to planet names
 		public Dictionary<String, List<Material> > EVEClouds = new Dictionary<String, List<Material> >();
-
 		//map EVE CloudObjects to planet names
 		//as far as I understand CloudObjects in EVE contain the 2d clouds and the volumetrics for a given
 		//layer on a given planet, however due to the way they are handled in EVE they don't directly reference
@@ -67,39 +37,17 @@ namespace scatterer
 		//I map them here to facilitate accessing the volumetrics later
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 
-		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
 
-		public bool overrideNearClipPlane=false;
-		public float nearClipPlane=0.5f;
-		
-		public bool useOceanShaders = true;
-		public bool shadowsOnOcean = true;
-		public bool oceanSkyReflections = true;
-		public bool oceanRefraction = true;
-		public bool oceanPixelLights = false;
-		public bool fullLensFlareReplacement = true;
-		public bool sunlightExtinction = true;
-		public bool underwaterLightDimming = true;
-		
-		bool callCollector=false;
-
-		public bool craft_WaveInteractions = false;
-		public bool useEclipses = true;		
-		public bool useRingShadows = true;		
-		public bool usePlanetShine = false;
-
+		//planetsList Stuff
 		public List<PlanetShineLightSource> celestialLightSourcesData=new List<PlanetShineLightSource> {};	
-		List<PlanetShineLight> celestialLightSources=new List<PlanetShineLight> {};
-		Cubemap planetShineCookieCubeMap;
-		public UrlDir.UrlConfig[] baseConfigs,atmoConfigs,oceanConfigs;
-		public ConfigNode[] sunflareConfigs;
-		
-		public bool terrainShadows = true;
-		public float shadowNormalBias=0.4f;
-		public float shadowBias=0.125f;
-		public float shadowsDistance=100000;
 
-		public bool showMenuOnStart = true;
+
+		//sunflares stuff
+		public ConfigNode[] sunflareConfigs;
+		public List<string> sunflaresList=new List<string> {};
+		public List<SunFlare> customSunFlares = new List<SunFlare>();
+
+		//plugin settings?
 		public int scrollSectionHeight = 500;
 		Vector2 inGameWindowLocation=Vector2.zero;
 		string guiModifierKey1String=KeyCode.LeftAlt.ToString();
@@ -108,40 +56,37 @@ namespace scatterer
 		string guiKey2String=KeyCode.F11.ToString();
 		KeyCode guiKey1, guiKey2, guiModifierKey1, guiModifierKey2 ;
 
+		//runtime shit
+		DisableAmbientLight ambientLightScript;
+		public CelestialBody[] CelestialBodies;		
+		Light[] lights;
+		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
+		bool callCollector=false;
+		List<PlanetShineLight> celestialLightSources=new List<PlanetShineLight> {};
+		Cubemap planetShineCookieCubeMap;
+		public UrlDir.UrlConfig[] baseConfigs,atmoConfigs,oceanConfigs;
+		public bool visible = false;
+		bool customSunFlareAdded=false;
+
+
 		//means a PQS enabled for the closest celestial body, regardless of whether it uses scatterer effects or not
 		bool globalPQSEnabled = false;
 
-		public bool isGlobalPQSEnabled
-		{
-			get
-			{
-				return globalPQSEnabled;
-			}
-		}
+		public bool isGlobalPQSEnabled {get{return globalPQSEnabled;}}
 
 		//means a PQS enabled for a celestial body which scatterer effects are active on (is this useless?)
 		bool pqsEnabledOnScattererPlanet = false;
 
-		public bool isPQSEnabledOnScattererPlanet
-		{
-			get
-			{
-				return pqsEnabledOnScattererPlanet;
-			}
-		}
+		public bool isPQSEnabledOnScattererPlanet{get{return pqsEnabledOnScattererPlanet;}}
 
 		public bool underwater = false;
 
 		public BufferRenderingManager bufferRenderingManager;
 
-		public CelestialBody munCelestialBody;
 		public string path, gameDataPath;
 		bool coreInitiated = false;
-		public bool extinctionEnabled = true;
-		
+				
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
-		
-		public int m_fourierGridSize = 128; //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
@@ -155,11 +100,6 @@ namespace scatterer
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
 
 		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
-		
-		public Transform GetScaledTransform (string body)
-		{
-			return (ScaledSpace.Instance.transform.FindChild (body));	
-		}
 
 		void Awake ()
 		{
@@ -207,13 +147,13 @@ namespace scatterer
 				isActive = true;
 
 				//find and remove stock oceans
-				if (useOceanShaders)
+				if (mainSettings.useOceanShaders)
 				{
 					removeStockOceans();
 				}
 
 				//replace EVE cloud shaders if main menu (ie on startup only)
-				if (integrateWithEVEClouds)
+				if (mainSettings.integrateWithEVEClouds)
 				{
 					ShaderReplacer.Instance.replaceEVEshaders();
 				}
@@ -257,7 +197,7 @@ namespace scatterer
 				bufferRenderingManager.start();
 
 				//copy stock depth buffers and combine into a single depth buffer
-				if (useOceanShaders || fullLensFlareReplacement)
+				if (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement)
 				{
 					farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
 					nearDepthCommandbuffer = nearCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
@@ -271,7 +211,7 @@ namespace scatterer
 			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
 
 			//find EVE clouds
-			if (integrateWithEVEClouds)
+			if (mainSettings.integrateWithEVEClouds)
 			{
 				mapEVEClouds();
 			}
@@ -283,7 +223,7 @@ namespace scatterer
 			}
 
 			//create sunlightModulator
-			if (sunlightExtinction || (underwaterLightDimming && useOceanShaders))
+			if (mainSettings.sunlightExtinction || (mainSettings.underwaterLightDimming && mainSettings.useOceanShaders))
 			{
 				sunlightModulatorInstance = (SunlightModulator) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
 			}
@@ -318,7 +258,7 @@ namespace scatterer
 				
 				//custom lens flares
 				//TODO: move to init
-				if ((fullLensFlareReplacement) && !customSunFlareAdded && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+				if ((mainSettings.fullLensFlareReplacement) && !customSunFlareAdded && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 				{
 					//disable stock sun flares
 					global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
@@ -341,7 +281,7 @@ namespace scatterer
 						{
 							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
 							customSunFlare.sourceName=sunflareBody;
-							customSunFlare.sourceScaledTransform = GetScaledTransform(customSunFlare.source.name);
+							customSunFlare.sourceScaledTransform = Utils.GetScaledTransform(customSunFlare.source.name);
 							customSunFlare.start ();
 							customSunFlares.Add(customSunFlare);
 						}
@@ -364,7 +304,7 @@ namespace scatterer
 				}
 
 				//TODO: move to init
-				if (disableAmbientLight && !ambientLightScript)
+				if (mainSettings.disableAmbientLight && !ambientLightScript)
 				{
 					ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
 				}
@@ -475,7 +415,7 @@ namespace scatterer
 						bufferRenderingManager.clearDepthTexture();
 				}
 				//update sun flare
-				if (fullLensFlareReplacement)
+				if (mainSettings.fullLensFlareReplacement)
 				{
 					foreach (SunFlare customSunFlare in customSunFlares)
 					{
@@ -483,7 +423,7 @@ namespace scatterer
 					}
 				}
 				//update planetshine lights
-				if(usePlanetShine)
+				if(mainSettings.usePlanetShine)
 				{
 					foreach (PlanetShineLight _aLight in celestialLightSources)
 					{
@@ -499,7 +439,7 @@ namespace scatterer
 		{
 			if (isActive)
 			{
-				if(usePlanetShine)
+				if(mainSettings.usePlanetShine)
 				{
 					foreach (PlanetShineLight _aLight in celestialLightSources)
 					{
@@ -542,7 +482,7 @@ namespace scatterer
 				}
 
 
-				if (fullLensFlareReplacement && customSunFlareAdded)
+				if (mainSettings.fullLensFlareReplacement && customSunFlareAdded)
 				{
 					foreach (SunFlare customSunFlare in customSunFlares)
 					{
@@ -606,6 +546,8 @@ namespace scatterer
 
 		void OnGUI ()
 		{
+
+			//why not move this shit to guiHandler?
 			if (visible)
 			{
 				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v"+versionNumber+": "
@@ -630,12 +572,11 @@ namespace scatterer
 			baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
 
 			//load mod settings
-			MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
-			mainSettings.loadPluginMainSettingsToCore ();
+			mainSettings.loadMainSettings ();
 
 			//load pluginData
 			PluginDataReadWrite pluginData = new PluginDataReadWrite();
-			pluginData.loadPluginDataToCore ();
+			pluginData.loadPluginDataToCore (); //remove ToCore
 
 			guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
 			guiKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey2String);
@@ -645,7 +586,7 @@ namespace scatterer
 
 			//load planetsList, light sources list and sunflares list
 			PlanetsListReader scattererPlanetsListReader = new PlanetsListReader ();
-			scattererPlanetsListReader.loadPlanetsListToCore ();
+			scattererPlanetsListReader.loadPlanetsListToCore (); //remove ToCore
 
 			//load atmo and ocean configs
 			atmoConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_atmosphere");
@@ -662,8 +603,7 @@ namespace scatterer
 			pluginData.saveCorePluginData ();
 
 			//save mod settings
-			MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
-			mainSettings.saveCoreMainSettingsIfChanged ();
+			mainSettings.saveMainSettingsIfChanged ();
 		}
 
 		void SetupMainCameras()
@@ -677,10 +617,10 @@ namespace scatterer
 			{
 				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades) farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
 				
-				if (overrideNearClipPlane)
+				if (mainSettings.overrideNearClipPlane)
 				{
-					Utils.Log("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+nearClipPlane.ToString());
-					nearCamera.nearClipPlane = nearClipPlane;
+					Utils.Log("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+mainSettings.nearClipPlane.ToString());
+					nearCamera.nearClipPlane = mainSettings.nearClipPlane;
 				}
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
@@ -777,13 +717,13 @@ namespace scatterer
 
 		void SetShadows()
 		{
-			if (terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
+			if (mainSettings.terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
 			{
-				QualitySettings.shadowDistance = shadowsDistance;
+				QualitySettings.shadowDistance = mainSettings.shadowsDistance;
 				Utils.Log("Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
 
 
-				if (shadowsOnOcean)
+				if (mainSettings.shadowsOnOcean)
 					QualitySettings.shadowProjection = ShadowProjection.CloseFit; //with ocean shadows
 				else
 					QualitySettings.shadowProjection = ShadowProjection.StableFit; //without ocean shadows
@@ -796,8 +736,8 @@ namespace scatterer
 					if ((_light.gameObject.name == "Scaledspace SunLight") 
 					    || (_light.gameObject.name == "SunLight"))
 					{
-						_light.shadowNormalBias =shadowNormalBias;
-						_light.shadowBias=shadowBias;
+						_light.shadowNormalBias=mainSettings.shadowNormalBias;
+						_light.shadowBias=mainSettings.shadowBias;
 						//_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.VeryHigh;
 						//_light.shadows=LightShadows.Soft;
 						//_light.shadowCustomResolution=8192;
@@ -832,7 +772,7 @@ namespace scatterer
 		//move to its own class
 		void SetupPlanetshine ()
 		{
-			if (usePlanetShine)
+			if (mainSettings.usePlanetShine)
 			{
 				//load planetshine "cookie" cubemap
 				planetShineCookieCubeMap = new Cubemap (512, TextureFormat.ARGB32, true);
@@ -907,7 +847,7 @@ namespace scatterer
 		{
 			foreach(ScattererCelestialBody _scattererCB in scattererCelestialBodies)
 			{
-				Transform scaledSunTransform = GetScaledTransform (_scattererCB.mainSunCelestialBody);
+				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
 				foreach (Transform child in scaledSunTransform) {
 					MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
 					if (temp != null)
@@ -1041,7 +981,7 @@ namespace scatterer
 				if (_cur.active)
 				{
 					_cur.m_manager.m_skyNode.reInitMaterialUniformsOnRenderTexturesLoss ();
-					if (_cur.m_manager.hasOcean && useOceanShaders && !_cur.m_manager.m_skyNode.inScaledSpace)
+					if (_cur.m_manager.hasOcean && mainSettings.useOceanShaders && !_cur.m_manager.m_skyNode.inScaledSpace)
 					{
 						_cur.m_manager.reBuildOcean ();
 					}

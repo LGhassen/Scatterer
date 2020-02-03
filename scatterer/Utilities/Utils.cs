@@ -32,6 +32,11 @@ namespace scatterer
 			return kspMainMenuObject;
 		}
 
+		public static Transform GetScaledTransform (string body)
+		{
+			return (ScaledSpace.Instance.transform.FindChild (body));	
+		}
+
 		//Add debugging levels?
 		public static void Log(string log)
 		{

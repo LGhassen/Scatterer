@@ -123,12 +123,12 @@ namespace scatterer
 		public virtual void Init ()
 		{
 
-			if (Core.Instance.oceanPixelLights)
+			if (Core.Instance.mainSettings.oceanPixelLights)
 				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCapsPixelLights")]);
 			else
 				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCaps")]);
 
-			if (Core.Instance.oceanSkyReflections)
+			if (Core.Instance.mainSettings.oceanSkyReflections)
 			{
 				m_oceanMaterial.EnableKeyword ("SKY_REFLECTIONS_ON");
 				m_oceanMaterial.DisableKeyword ("SKY_REFLECTIONS_OFF");
@@ -139,7 +139,7 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("SKY_REFLECTIONS_ON");
 			}
 
-			if (Core.Instance.usePlanetShine)
+			if (Core.Instance.mainSettings.usePlanetShine)
 			{
 				m_oceanMaterial.EnableKeyword ("PLANETSHINE_ON");
 				m_oceanMaterial.DisableKeyword ("PLANETSHINE_OFF");
@@ -150,7 +150,7 @@ namespace scatterer
 				m_oceanMaterial.EnableKeyword ("PLANETSHINE_OFF");
 			}
 
-			if (Core.Instance.oceanRefraction)
+			if (Core.Instance.mainSettings.oceanRefraction)
 			{
 				m_oceanMaterial.EnableKeyword ("REFRACTION_ON");
 				m_oceanMaterial.DisableKeyword ("REFRACTION_OFF");
@@ -161,7 +161,7 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
 			}
 
-			if (Core.Instance.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable))
+			if (Core.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable))
 			{
 				if (QualitySettings.shadows == ShadowQuality.HardOnly)
 				{
@@ -275,7 +275,7 @@ namespace scatterer
 			Core.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 
 			//dimming
-			if (Core.Instance.underwaterLightDimming && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+			if (Core.Instance.mainSettings.underwaterLightDimming && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 			{
 				underwaterDimmingHook = (UnderwaterDimmingHook) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(UnderwaterDimmingHook));
 				underwaterDimmingHook.oceanNode = this;
@@ -603,7 +603,7 @@ namespace scatterer
 			oceanMaterial.SetFloat (ShaderProperties.sinTheta_PROPERTY, (float) sinTheta);
 
 			//planetshine properties
-			if (Core.Instance.usePlanetShine)
+			if (Core.Instance.mainSettings.usePlanetShine)
 			{
 				Matrix4x4 planetShineSourcesMatrix=m_manager.m_skyNode.planetShineSourcesMatrix;
 

@@ -122,7 +122,7 @@ namespace scatterer {
 			m_initSpectrumMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
 			m_initDisplacementMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitDisplacement")]);
 
-			m_fourierGridSize = Core.Instance.m_fourierGridSize;
+			m_fourierGridSize = Core.Instance.mainSettings.m_fourierGridSize;
 			
 			if (m_fourierGridSize > 256) {
 				Utils.Log("Proland::OceanFFT::Start	- fourier grid size must not be greater than 256, changing to 256");
