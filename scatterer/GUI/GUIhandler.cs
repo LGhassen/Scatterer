@@ -147,7 +147,7 @@ namespace scatterer
 
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Menu scroll section height");
-				Core.Instance.scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (Core.Instance.scrollSectionHeight.ToString ())));
+				Core.Instance.pluginData.scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (Core.Instance.pluginData.scrollSectionHeight.ToString ())));
 				GUILayout.EndHorizontal ();
 				
 				Core.Instance.mainSettings.disableAmbientLight = GUILayout.Toggle(Core.Instance.mainSettings.disableAmbientLight, "Disable scaled space ambient light");
@@ -292,7 +292,7 @@ namespace scatterer
 														
 							GUIfloat("Point altitude", ref pointAltitude, ref _cur.altitude);
 														
-							_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width (400), GUILayout.Height (Core.Instance.scrollSectionHeight));
+							_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width (400), GUILayout.Height (Core.Instance.pluginData.scrollSectionHeight));
 
 							GUILayout.Label("(settings with a * are global and not cfgPoint dependent)");
 							GUILayout.Label("Atmo");
@@ -446,7 +446,7 @@ namespace scatterer
 					{
 						OceanWhiteCaps oceanNode = Core.Instance.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
 						//GUItoggle("Toggle ocean", ref stockOcean);
-						_scroll2 = GUILayout.BeginScrollView (_scroll2, false, true, GUILayout.Width (400), GUILayout.Height (Core.Instance.scrollSectionHeight+100));
+						_scroll2 = GUILayout.BeginScrollView (_scroll2, false, true, GUILayout.Width (400), GUILayout.Height (Core.Instance.pluginData.scrollSectionHeight+100));
 						{
 							GUIfloat ("Alpha/WhiteCap Radius", ref oceanAlphaRadius, ref oceanNode.alphaRadius);
 							GUIfloat ("ocean Alpha", ref oceanAlpha, ref oceanNode.oceanAlpha);

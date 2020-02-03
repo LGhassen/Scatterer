@@ -8,67 +8,57 @@ using UnityEngine;
 
 namespace scatterer
 {
-	public partial class Core
+	public class PluginDataReadWrite
 	{
-		class PluginDataReadWrite
+		[Persistent]
+		public string guiModifierKey1String=KeyCode.LeftAlt.ToString();
+		
+		[Persistent]
+		public string guiModifierKey2String=KeyCode.RightAlt.ToString();
+		
+		[Persistent]
+		public string guiKey1String=KeyCode.F10.ToString();
+		
+		[Persistent]
+		public string guiKey2String=KeyCode.F11.ToString();
+		
+		[Persistent]
+		public int scrollSectionHeight = 500;
+		
+		[Persistent]
+		public Vector2 inGameWindowLocation=Vector2.zero;
+		
+		public KeyCode guiKey1, guiKey2, guiModifierKey1, guiModifierKey2 ;
+		
+		public void loadPluginData ()
 		{
-			[Persistent]
-			string guiModifierKey1String=KeyCode.LeftAlt.ToString();
-			
-			[Persistent]
-			string guiModifierKey2String=KeyCode.RightAlt.ToString();
-			
-			[Persistent]
-			string guiKey1String=KeyCode.F10.ToString();
-			
-			[Persistent]
-			string guiKey2String=KeyCode.F11.ToString();
-			
-			[Persistent]
-			int scrollSectionHeight = 500;
-			
-			[Persistent]
-			Vector2 inGameWindowLocation=Vector2.zero;
-			
-			
-			public void loadPluginDataToCore ()
+			try
 			{
-				try
-				{
-					ConfigNode confNode = ConfigNode.Load (Core.instance.path + "/config/PluginData/pluginData.cfg");
-					ConfigNode.LoadObjectFromConfig (this, confNode);
-					
-					Core.Instance.inGameWindowLocation=inGameWindowLocation;
-					Core.Instance.scrollSectionHeight=scrollSectionHeight;
-					Core.Instance.guiModifierKey1String=guiModifierKey1String;
-					Core.Instance.guiModifierKey2String=guiModifierKey2String;
-					Core.Instance.guiKey1String=guiKey1String;
-					Core.Instance.guiKey2String=guiKey2String;
-				}
-				catch (Exception stupid)
-				{
-					Utils.Log("Couldn't load pluginData "+stupid.ToString());
-				}
+				ConfigNode confNode = ConfigNode.Load (Core.Instance.path + "/config/PluginData/pluginData.cfg");
+				ConfigNode.LoadObjectFromConfig (this, confNode);
+
+				guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
+				guiKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey2String);
+				
+				guiModifierKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey1String);
+				guiModifierKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey2String);
 			}
-
-			public void saveCorePluginData ()
+			catch (Exception stupid)
 			{
-				try
-				{
-					inGameWindowLocation=Core.Instance.inGameWindowLocation;
-					scrollSectionHeight=Core.Instance.scrollSectionHeight;
-					guiModifierKey1String=Core.Instance.guiModifierKey1String;
-					guiModifierKey2String=Core.Instance.guiModifierKey2String;
-					guiKey1String=Core.Instance.guiKey1String;
-					guiKey2String=Core.Instance.guiKey2String;
-
-					ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-					cnTemp.Save (Core.instance.path + "/config/PluginData/pluginData.cfg");
-				}
-				catch (Exception stupid)
-				{
-					Utils.Log("Couldn't save pluginData "+stupid.ToString());
-				}
+				Utils.Log("Couldn't load pluginData "+stupid.ToString());
+			}
+		}
+		
+		public void savePluginData ()
+		{
+			try
+			{	
+				ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
+				cnTemp.Save (Core.Instance.path + "/config/PluginData/pluginData.cfg");
+			}
+			catch (Exception stupid)
+			{
+				Utils.Log("Couldn't save pluginData "+stupid.ToString());
 			}
 		}
 	}

@@ -19,6 +19,7 @@ namespace scatterer
 		public static Core Instance {get {return instance;}}
 
 		public MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
+		public PluginDataReadWrite pluginData     = new PluginDataReadWrite();
 		public List <ScattererCelestialBody > scattererCelestialBodies = new List <ScattererCelestialBody> {};
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
@@ -46,15 +47,6 @@ namespace scatterer
 		public ConfigNode[] sunflareConfigs;
 		public List<string> sunflaresList=new List<string> {};
 		public List<SunFlare> customSunFlares = new List<SunFlare>();
-
-		//plugin settings?
-		public int scrollSectionHeight = 500;
-		Vector2 inGameWindowLocation=Vector2.zero;
-		string guiModifierKey1String=KeyCode.LeftAlt.ToString();
-		string guiModifierKey2String=KeyCode.RightAlt.ToString();
-		string guiKey1String=KeyCode.F10.ToString();
-		string guiKey2String=KeyCode.F11.ToString();
-		KeyCode guiKey1, guiKey2, guiModifierKey1, guiModifierKey2 ;
 
 		//runtime shit
 		DisableAmbientLight ambientLightScript;
@@ -139,8 +131,8 @@ namespace scatterer
 			{
 				isActive = true;
 				mainMenuOptions = (HighLogic.LoadedScene == GameScenes.SPACECENTER);
-				windowRect.x=inGameWindowLocation.x;
-				windowRect.y=inGameWindowLocation.y;
+				windowRect.x=pluginData.inGameWindowLocation.x;
+				windowRect.y=pluginData.inGameWindowLocation.y;
 			} 
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -235,7 +227,7 @@ namespace scatterer
 		void Update ()
 		{
 			//toggle whether GUI is visible or not
-			if ((Input.GetKey (guiModifierKey1) || Input.GetKey (guiModifierKey2)) && (Input.GetKeyDown (guiKey1) || (Input.GetKeyDown (guiKey2))))
+			if ((Input.GetKey (pluginData.guiModifierKey1) || Input.GetKey (pluginData.guiModifierKey2)) && (Input.GetKeyDown (pluginData.guiKey1) || (Input.GetKeyDown (pluginData.guiKey2))))
 			{
 				if (ToolbarButton.Instance.button!= null)
 				{
@@ -536,7 +528,7 @@ namespace scatterer
 					Component.Destroy (bufferRenderingManager);
 				}
 
-				inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
+				pluginData.inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
 				saveSettings();
 			}
 
@@ -551,8 +543,8 @@ namespace scatterer
 			if (visible)
 			{
 				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v"+versionNumber+": "
-				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
-				                               +"/"+guiKey2String+" toggle");
+				                               + pluginData.guiModifierKey1String+"/"+pluginData.guiModifierKey2String +"+" +pluginData.guiKey1String
+				                               +"/"+pluginData.guiKey2String+" toggle");
 
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -568,41 +560,22 @@ namespace scatterer
 		
 		public void loadSettings ()
 		{
-			//only used for displaying filepath
-			baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
+			baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config"); //only used for displaying filepath
 
-			//load mod settings
 			mainSettings.loadMainSettings ();
+			pluginData.loadPluginData ();
 
-			//load pluginData
-			PluginDataReadWrite pluginData = new PluginDataReadWrite();
-			pluginData.loadPluginDataToCore (); //remove ToCore
-
-			guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
-			guiKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey2String);
-
-			guiModifierKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey1String);
-			guiModifierKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), guiModifierKey2String);
-
-			//load planetsList, light sources list and sunflares list
 			PlanetsListReader scattererPlanetsListReader = new PlanetsListReader ();
 			scattererPlanetsListReader.loadPlanetsListToCore (); //remove ToCore
 
-			//load atmo and ocean configs
 			atmoConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_atmosphere");
 			oceanConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_ocean");
-
-			//load sunflare configs
 			sunflareConfigs = GameDatabase.Instance.GetConfigNodes ("Scatterer_sunflare");
 		}
 		
 		public void saveSettings ()
 		{
-			//save pluginData
-			PluginDataReadWrite pluginData = new PluginDataReadWrite();
-			pluginData.saveCorePluginData ();
-
-			//save mod settings
+			pluginData.savePluginData ();
 			mainSettings.saveMainSettingsIfChanged ();
 		}
 
