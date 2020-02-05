@@ -100,15 +100,15 @@ namespace scatterer
 			sunGhost2 = new Texture2D (1, 1);
 			sunGhost3 = new Texture2D (1, 1);
 			
-			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "sunSpikes.png")));
+			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "sunSpikes.png")));
 			sunSpikes.wrapMode = TextureWrapMode.Clamp;
-			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "sunFlare.png")));
+			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "sunFlare.png")));
 			sunFlare.wrapMode = TextureWrapMode.Clamp;
-			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "Ghost1.png")));
+			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "Ghost1.png")));
 			sunGhost1.wrapMode = TextureWrapMode.Clamp;
-			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "Ghost2.png")));
+			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "Ghost2.png")));
 			sunGhost2.wrapMode = TextureWrapMode.Clamp;
-			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Core.Instance.gameDataPath + assetPath, "Ghost3.png")));
+			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "Ghost3.png")));
 			sunGhost3.wrapMode = TextureWrapMode.Clamp;
 
 //			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
@@ -335,7 +335,7 @@ namespace scatterer
 //		public void saveToConfigNode ()
 //		{
 //			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-//			cnTemp.Save (Core.Instance.path + "/sunflare/sunflare.cfg");
+//			cnTemp.Save (Utils.pluginPath + "/sunflare/sunflare.cfg");
 //		}
 
 		public void cleanUp()

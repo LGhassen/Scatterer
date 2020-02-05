@@ -861,20 +861,20 @@ namespace scatterer
 		{
 			//load from .half, probably an 8 mb leak every scene change
 			//if no .half file exists, load from .raw file and create .half file
-			string _file = Core.Instance.gameDataPath + assetPath + "/inscatter.half";
+			string _file = Utils.GameDataPath + assetPath + "/inscatter.half";
 			if (System.IO.File.Exists(_file))
 				m_inscatter.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
 				loadAndConvertRawFile("inscatter",m_inscatter,4);
 			
-			_file = Core.Instance.gameDataPath + assetPath + "/transmittance.half";
+			_file = Utils.GameDataPath + assetPath + "/transmittance.half";
 			
 			if (System.IO.File.Exists(_file))
 				m_transmit.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
 				loadAndConvertRawFile("transmittance",m_transmit,3);
 			
-			_file = Core.Instance.gameDataPath + assetPath + "/irradiance.half";
+			_file = Utils.GameDataPath + assetPath + "/irradiance.half";
 			
 			if (System.IO.File.Exists(_file))
 				m_irradiance.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
@@ -897,7 +897,7 @@ namespace scatterer
 			if(encode==null)
 				encode = new EncodeFloat ();
 			
-			string _file = Core.Instance.gameDataPath + assetPath + "/"+textureName+".raw";
+			string _file = Utils.GameDataPath + assetPath + "/"+textureName+".raw";
 
 			if (!System.IO.File.Exists(_file))
 			{
@@ -921,7 +921,7 @@ namespace scatterer
 			RenderTexture.active = activeRT;
 			tempRT.Release ();
 			
-			_file = Core.Instance.gameDataPath + assetPath + "/"+textureName+".half";
+			_file = Utils.GameDataPath + assetPath + "/"+textureName+".half";
 			
 			byte[] bytes = targetTexture2D .GetRawTextureData();
 			System.IO.File.WriteAllBytes(_file ,bytes);

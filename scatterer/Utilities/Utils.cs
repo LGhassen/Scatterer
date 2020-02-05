@@ -67,6 +67,35 @@ namespace scatterer
 		{
 			Debug.Log ("[Scatterer] " + log);
 		}
+
+		private static string pluginPath;
+		public static string PluginPath
+		{
+			get
+			{
+				if (ReferenceEquals(null,pluginPath))
+				{
+					string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
+					UriBuilder uri = new UriBuilder (codeBase);
+					pluginPath = Uri.UnescapeDataString (uri.Path);
+					pluginPath = Path.GetDirectoryName (pluginPath);					
+				}
+				return pluginPath;
+			}
+		}
+
+		private static string gameDataPath;
+		public static string GameDataPath
+		{
+			get
+			{
+				if (ReferenceEquals(null,gameDataPath))
+				{
+					gameDataPath= KSPUtil.ApplicationRootPath + "GameData/";				
+				}
+				return gameDataPath;
+			}
+		}
 	}
 }
 

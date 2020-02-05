@@ -34,7 +34,7 @@ namespace scatterer
 		{
 			try
 			{
-				ConfigNode confNode = ConfigNode.Load (Core.Instance.path + "/config/PluginData/pluginData.cfg");
+				ConfigNode confNode = ConfigNode.Load (Utils.PluginPath + "/config/PluginData/pluginData.cfg");
 				ConfigNode.LoadObjectFromConfig (this, confNode);
 
 				guiKey1 = (KeyCode)Enum.Parse(typeof(KeyCode), guiKey1String);
@@ -54,7 +54,7 @@ namespace scatterer
 			try
 			{	
 				ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-				cnTemp.Save (Core.Instance.path + "/config/PluginData/pluginData.cfg");
+				cnTemp.Save (Utils.PluginPath + "/config/PluginData/pluginData.cfg");
 			}
 			catch (Exception stupid)
 			{

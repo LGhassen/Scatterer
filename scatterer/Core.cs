@@ -75,14 +75,13 @@ namespace scatterer
 
 		public BufferRenderingManager bufferRenderingManager;
 
-		public string path, gameDataPath;
 		bool coreInitiated = false;
 				
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
 
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.0542dev";
+		string versionNumber = "0.0543dev";
 
 		public object EVEinstance;
 		public SunlightModulator sunlightModulatorInstance;
@@ -106,14 +105,6 @@ namespace scatterer
                 Utils.Log("Destroying duplicate instance, check your install for duplicate mod folders");
                 UnityEngine.Object.Destroy(this);
             }
-            string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
-			UriBuilder uri = new UriBuilder (codeBase);
-			path = Uri.UnescapeDataString (uri.Path);
-			path = Path.GetDirectoryName (path);
-
-			//this doesn't look nice, do it properly
-			int index = path.LastIndexOf ("GameData");
-			gameDataPath= path.Remove(index+9, path.Length-index-9);
 
 			windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
@@ -709,12 +700,12 @@ namespace scatterer
 				for (int i = 0; i < 6; i++) {
 					cubeMapFaces [i] = new Texture2D (512, 512);
 				}
-				cubeMapFaces [0].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_NegativeX.png")));
-				cubeMapFaces [1].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_PositiveX.png")));
-				cubeMapFaces [2].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_NegativeY.png")));
-				cubeMapFaces [3].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_PositiveY.png")));
-				cubeMapFaces [4].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_NegativeZ.png")));
-				cubeMapFaces [5].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", path + "/planetShineCubemap", "_PositiveZ.png")));
+				cubeMapFaces [0].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.PluginPath + "/planetShineCubemap", "_NegativeX.png")));
+				cubeMapFaces [1].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.PluginPath + "/planetShineCubemap", "_PositiveX.png")));
+				cubeMapFaces [2].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.PluginPath + "/planetShineCubemap", "_NegativeY.png")));
+				cubeMapFaces [3].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.PluginPath + "/planetShineCubemap", "_PositiveY.png")));
+				cubeMapFaces [4].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.PluginPath + "/planetShineCubemap", "_NegativeZ.png")));
+				cubeMapFaces [5].LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.PluginPath + "/planetShineCubemap", "_PositiveZ.png")));
 				planetShineCookieCubeMap.SetPixels (cubeMapFaces [0].GetPixels (), CubemapFace.NegativeX);
 				planetShineCookieCubeMap.SetPixels (cubeMapFaces [1].GetPixels (), CubemapFace.PositiveX);
 				planetShineCookieCubeMap.SetPixels (cubeMapFaces [2].GetPixels (), CubemapFace.NegativeY);
