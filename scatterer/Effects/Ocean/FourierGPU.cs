@@ -20,19 +20,19 @@ public class FourierGPU
 	{	
 		if(size > 256)
 		{
-			Utils.Log("FourierGPU::FourierGPU - fourier grid size must not be greater than 256, changing to 256");
+			Utils.LogDebug("FourierGPU::FourierGPU - fourier grid size must not be greater than 256, changing to 256");
 			size = 256;
 		}
 		
 		if(!Mathf.IsPowerOfTwo(size))
 		{
-			Utils.Log("FourierGPU::FourierGPU - fourier grid size must be pow2 number, changing to nearest pow2 number");
+			Utils.LogDebug("FourierGPU::FourierGPU - fourier grid size must be pow2 number, changing to nearest pow2 number");
 			size = Mathf.NextPowerOfTwo(size);
 		}
 		
 			Shader shader = ShaderReplacer.Instance.LoadedShaders[("Scatterer/Fourier")];
 
-		if(shader == null) Utils.Log("FourierGPU::FourierGPU - Could not find shader Math/Fourier");
+		if(shader == null) Utils.LogDebug("FourierGPU::FourierGPU - Could not find shader Math/Fourier");
 	
 		m_fourier = new Material(shader);
 

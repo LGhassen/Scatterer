@@ -35,7 +35,7 @@ namespace scatterer
 				if (ReferenceEquals(instance,null))
 				{
 					instance = new ShaderReplacer();
-					Utils.Log("ShaderReplacer instance created");
+					Utils.LogDebug("ShaderReplacer instance created");
 				}
 				return instance;
 			}
@@ -87,20 +87,20 @@ namespace scatterer
 		public void replaceEVEshaders()
 		{
 			//reflection get EVE shader dictionary
-			Utils.Log ("Replacing EVE shaders");
+			Utils.LogDebug ("Replacing EVE shaders");
 			
 			//find EVE shaderloader
 			Type EVEshaderLoaderType = getType ("ShaderLoader.ShaderLoaderClass");
 
 			if (EVEshaderLoaderType == null)
 			{
-				Utils.Log("Eve shaderloader type not found");
+				Utils.LogDebug("Eve shaderloader type not found");
 			}
 			else
 			{
-				Utils.Log("Eve shaderloader type found");
+				Utils.LogDebug("Eve shaderloader type found");
 
-				Utils.Log("Eve shaderloader version: " + EVEshaderLoaderType.Assembly.GetName().ToString());
+				Utils.LogDebug("Eve shaderloader version: " + EVEshaderLoaderType.Assembly.GetName().ToString());
 				
 				const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 					BindingFlags.Instance | BindingFlags.Static;
@@ -112,16 +112,16 @@ namespace scatterer
 				}
 				catch (Exception)
 				{
-					Utils.Log("No EVE shader dictionary found");
+					Utils.LogDebug("No EVE shader dictionary found");
 				}
 
 				if (EVEshaderDictionary == null)
 				{
-					Utils.Log("Failed grabbing EVE shader dictionary");
+					Utils.LogDebug("Failed grabbing EVE shader dictionary");
 				}
 				else
 				{
-					Utils.Log("Successfully grabbed EVE shader dictionary");
+					Utils.LogDebug("Successfully grabbed EVE shader dictionary");
 
 
 					if (EVEshaderDictionary.ContainsKey("EVE/Cloud"))
@@ -134,7 +134,7 @@ namespace scatterer
 						EVEshaderDictionary.Add("EVE/Cloud",LoadedShaders["Scatterer-EVE/Cloud"]);
 					}
 					
-					Utils.Log("Replaced EVE/Cloud in EVE shader dictionary");
+					Utils.LogDebug("Replaced EVE/Cloud in EVE shader dictionary");
 					
 					if (EVEshaderDictionary.ContainsKey("EVE/CloudVolumeParticle"))
 					{
@@ -146,7 +146,7 @@ namespace scatterer
 						EVEshaderDictionary.Add("EVE/CloudVolumeParticle",LoadedShaders["Scatterer-EVE/CloudVolumeParticle"]);
 					}
 					
-					Utils.Log("replaced EVE/CloudVolumeParticle in EVE shader dictionary");
+					Utils.LogDebug("replaced EVE/CloudVolumeParticle in EVE shader dictionary");
 				}
 			}
 			
@@ -210,14 +210,14 @@ namespace scatterer
 			switch (name)
 			{
 			case "EVE/Cloud":
-				Utils.Log("replacing EVE/Cloud");
+				Utils.LogDebug("replacing EVE/Cloud");
 				replacementShader = LoadedShaders["Scatterer-EVE/Cloud"];
-				Utils.Log("Shader replaced");
+				Utils.LogDebug("Shader replaced");
 				break;
 			case "EVE/CloudVolumeParticle":
-				Utils.Log("replacing EVE/CloudVolumeParticle");
+				Utils.LogDebug("replacing EVE/CloudVolumeParticle");
 				replacementShader = LoadedShaders["Scatterer-EVE/CloudVolumeParticle"];
-				Utils.Log("Shader replaced");
+				Utils.LogDebug("Shader replaced");
 				break;
 //			case "Terrain/PQS/PQS Main - Optimised":
 //				Utils.Log("replacing PQS main optimised");

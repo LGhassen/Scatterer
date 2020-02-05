@@ -47,11 +47,11 @@ namespace scatterer
 						}
 					}
 					if (!removed) {
-						Utils.Log ("Couldn't remove stock ocean for " + sctBody.celestialBodyName);
+						Utils.LogDebug ("Couldn't remove stock ocean for " + sctBody.celestialBodyName);
 					}
 				}
 			}
-			Utils.Log ("Removed stock oceans");
+			Utils.LogDebug ("Removed stock oceans");
 		}
 	}
 }

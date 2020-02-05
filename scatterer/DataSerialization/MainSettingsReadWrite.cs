@@ -88,13 +88,13 @@ namespace scatterer
 			UrlDir.UrlConfig[] baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
 			if (baseConfigs.Length == 0)
 			{
-				Utils.Log ("No config file found, check your install");
+				Utils.LogDebug ("No config file found, check your install");
 				return;
 			}
 			
 			if (baseConfigs.Length > 1)
 			{
-				Utils.Log ("Multiple config files detected, check your install");
+				Utils.LogDebug ("Multiple config files detected, check your install");
 			}
 			
 			ConfigNode.LoadObjectFromConfig (this, (baseConfigs [0]).config);
@@ -106,13 +106,13 @@ namespace scatterer
 			
 			if (baseConfigs.Length == 0)
 			{
-				Utils.Log ("No config file found, check your install");
+				Utils.LogDebug ("No config file found, check your install");
 				return;
 			}
 			
 			if (baseConfigs.Length > 1)
 			{
-				Utils.Log ("Multiple config files detected, check your install");
+				Utils.LogDebug ("Multiple config files detected, check your install");
 			}
 			
 			MainSettingsReadWrite OldConfig = new MainSettingsReadWrite ();
@@ -143,16 +143,16 @@ namespace scatterer
 			
 			if (configChanged)
 			{
-				Utils.Log("Main config changed");
+				Utils.LogDebug("Main config changed");
 				
 				baseConfigs [0].config = ConfigNode.CreateConfigFromObject (this);
 				baseConfigs [0].config.name = "Scatterer_config";
-				Utils.Log ("Saving settings to: " + baseConfigs [0].parent.url+".cfg");
+				Utils.LogDebug ("Saving settings to: " + baseConfigs [0].parent.url+".cfg");
 				baseConfigs [0].parent.SaveConfigs ();
 			}
 			else
 			{
-				Utils.Log("No changes to main config, skipping saving.");
+				Utils.LogDebug("No changes to main config, skipping saving.");
 			}
 
 		}

@@ -115,7 +115,7 @@ namespace scatterer
 			
 			if(channels < 1 || channels > 4)
 			{
-				Utils.Log("Channels must be 1, 2, 3, or 4");
+				Utils.LogDebug("Channels must be 1, 2, 3, or 4");
 				return;
 			}
 			
@@ -124,7 +124,7 @@ namespace scatterer
 			
 			if(w != m_width || h != m_height)
 			{
-				Utils.Log("Render texture not the correct dimensions");
+				Utils.LogDebug("Render texture not the correct dimensions");
 				return;
 			}
 			
@@ -153,7 +153,7 @@ namespace scatterer
 			
 			if(channels < 1 || channels > 4)
 			{
-				Utils.Log("EncodeFloat::WriteIntoRenderTexture - Channels must be 1, 2, 3, or 4");
+				Utils.LogDebug("EncodeFloat::WriteIntoRenderTexture - Channels must be 1, 2, 3, or 4");
 				return;
 			}
 			
@@ -162,7 +162,7 @@ namespace scatterer
 			
 			if(w != m_width || h != m_height)
 			{
-				Utils.Log("Render texture not the correct dimensions");
+				Utils.LogDebug("Render texture not the correct dimensions");
 				return;
 			}
 			
@@ -175,7 +175,7 @@ namespace scatterer
 			float min = 0.0f;
 			if(!LoadRawFile(path, map, size, ref min, ref max, fdata))
 			{
-				Utils.Log("EncodeFloat::WriteIntoRenderTexture - Error loading raw file " + path);
+				Utils.LogDebug("EncodeFloat::WriteIntoRenderTexture - Error loading raw file " + path);
 				return;
 			}
 			
@@ -197,7 +197,7 @@ namespace scatterer
 			
 			if(channels < 1 || channels > 4)
 			{
-				Utils.Log("Channels must be 1, 2, 3, or 4");
+				Utils.LogDebug("Channels must be 1, 2, 3, or 4");
 				return;
 			}
 			
@@ -206,7 +206,7 @@ namespace scatterer
 			
 			if(w != m_width || h != m_height)
 			{
-				Utils.Log("Render texture not the correct dimensions");
+				Utils.LogDebug("Render texture not the correct dimensions");
 				return;
 			}
 			
@@ -219,7 +219,7 @@ namespace scatterer
 			float min = 0.0f;
 			if(!LoadRawFile16(path, map, size, ref min, ref max, fdata, bigEndian))
 			{
-				Utils.Log("EncodeFloat::WriteIntoRenderTexture16bit - Error loading raw file " + path);
+				Utils.LogDebug("EncodeFloat::WriteIntoRenderTexture16bit - Error loading raw file " + path);
 				return;
 			}
 			
@@ -326,7 +326,7 @@ namespace scatterer
 			
 			if(fi == null)
 			{
-				Utils.Log("Raw file not found");
+				Utils.LogDebug("Raw file not found");
 				return false;
 			}
 			
@@ -339,7 +339,7 @@ namespace scatterer
 			//divide by 4 as there are 4 bytes in a 32 bit float
 			if(size > fi.Length/4)
 			{
-				Utils.Log("Raw file is not the required size");
+				Utils.LogDebug("Raw file is not the required size");
 				return false;
 			}
 			
@@ -373,7 +373,7 @@ namespace scatterer
 			
 			if(fi == null)
 			{
-				Utils.Log("Raw file not found");
+				Utils.LogDebug("Raw file not found");
 				return false;
 			}
 			
@@ -386,7 +386,7 @@ namespace scatterer
 			//divide by 2 as there are 2 bytes in a 16 bit float
 			if(size > fi.Length/2)
 			{
-				Utils.Log("Raw file is not the required size");
+				Utils.LogDebug("Raw file is not the required size");
 				return false;
 			}
 			

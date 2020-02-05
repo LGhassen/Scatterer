@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Proland: a procedural landscape rendering library.
  * Copyright (c) 2008-2011 INRIA
  *
@@ -284,7 +284,7 @@ namespace scatterer
 		
 		public virtual void Cleanup ()
 		{
-			Utils.Log ("ocean node Cleanup");
+			Utils.LogDebug ("ocean node Cleanup");
 
 			if (oceanCameraProjectionMatModifier)
 			{
@@ -673,7 +673,7 @@ namespace scatterer
 					_cn.ClearData();
 					ConfigNode.Merge (_cn, cnTemp);
 					_cn.name="Ocean";
-					Utils.Log("saving "+m_manager.parentCelestialBody.name+
+					Utils.LogDebug("saving "+m_manager.parentCelestialBody.name+
 					          " ocean config to: "+configUrl.parent.url);
 					configUrl.parent.SaveConfigs ();
 					found=true;
@@ -683,7 +683,7 @@ namespace scatterer
 			
 			if (!found)
 			{
-				Utils.Log("couldn't find config file to save to");
+				Utils.LogDebug("couldn't find config file to save to");
 			}
 		}
 		
@@ -711,14 +711,14 @@ namespace scatterer
 			
 			if (found)
 			{
-				Utils.Log("Ocean config found for: "+m_manager.parentCelestialBody.name);
+				Utils.LogDebug("Ocean config found for: "+m_manager.parentCelestialBody.name);
 				
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			}
 			else
 			{
-				Utils.Log("Ocean config not found for: "+m_manager.parentCelestialBody.name);
-				Utils.Log("Removing ocean for "+m_manager.parentCelestialBody.name +" from planets list");
+				Utils.LogDebug("Ocean config not found for: "+m_manager.parentCelestialBody.name);
+				Utils.LogDebug("Removing ocean for "+m_manager.parentCelestialBody.name +" from planets list");
 				
 				(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == m_manager.parentCelestialBody.name)).hasOcean = false;
 				

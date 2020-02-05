@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,12 +97,12 @@ namespace scatterer
             if (instance == null)
             {
                 instance = this;
-                Utils.Log("Core instance created");
+                Utils.LogDebug("Core instance created");
             }
             else
             {
                 //destroy any duplicate instances that may be created by a duplicate install
-                Utils.Log("Destroying duplicate instance, check your install for duplicate mod folders");
+                Utils.LogError("Destroying duplicate instance, check your install for duplicate mod folders");
                 UnityEngine.Object.Destroy(this);
             }
 
@@ -113,9 +113,9 @@ namespace scatterer
 			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
 
-			Utils.Log ("Version:"+versionNumber);
-			Utils.Log ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
-			Utils.Log ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
+			Utils.LogInfo ("Version:"+versionNumber);
+			Utils.LogInfo ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
+			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
 			
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
@@ -209,7 +209,7 @@ namespace scatterer
 			}
 
 			coreInitiated = true;
-			Utils.Log("Core setup done");
+			Utils.LogDebug("Core setup done");
 		}
 
 		void Update ()
@@ -246,7 +246,7 @@ namespace scatterer
 					{
 						if (sunflaresList.Contains(_flare.sun.name))
 						{
-							Utils.Log("Disabling stock sunflare for "+_flare.sun.name);
+							Utils.LogDebug("Disabling stock sunflare for "+_flare.sun.name);
 							_flare.sunFlare.enabled=false;
 							_flare.enabled=false;
 							_flare.gameObject.SetActive(false);
@@ -267,7 +267,7 @@ namespace scatterer
 						}
 						catch (Exception stupid)
 						{
-							Utils.Log("Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
+							Utils.LogDebug("Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
 							
 							Component.Destroy(customSunFlare);
 							UnityEngine.Object.Destroy(customSunFlare);
@@ -325,7 +325,7 @@ namespace scatterer
 								_cur.active = false;
 								callCollector=true;
 								
-								Utils.Log ("Effects unloaded for " + _cur.celestialBodyName);
+								Utils.LogDebug ("Effects unloaded for " + _cur.celestialBodyName);
 							} else {
 								
 								_cur.m_manager.Update ();
@@ -366,21 +366,21 @@ namespace scatterer
 										GUItool.getSettingsFromOceanNode ();
 									}
 									callCollector=true;
-									Utils.Log ("Effects loaded for " + _cur.celestialBodyName);
+									Utils.LogDebug ("Effects loaded for " + _cur.celestialBodyName);
 								}
 								catch(Exception e)
 								{
-									Utils.Log ("Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
+									Utils.LogDebug ("Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
 									try
 									{
 										_cur.m_manager.OnDestroy();
 									}
 									catch(Exception ee)
 									{
-										Utils.Log ("manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
+										Utils.LogDebug ("manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
 									}
 									scattererCelestialBodies.Remove(_cur);
-									Utils.Log (""+ _cur.celestialBodyName +" removed from active planets.");
+									Utils.LogDebug (""+ _cur.celestialBodyName +" removed from active planets.");
 									return;
 								}
 							}
@@ -580,7 +580,7 @@ namespace scatterer
 				
 				if (mainSettings.overrideNearClipPlane)
 				{
-					Utils.Log("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+mainSettings.nearClipPlane.ToString());
+					Utils.LogDebug("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+mainSettings.nearClipPlane.ToString());
 					nearCamera.nearClipPlane = mainSettings.nearClipPlane;
 				}
 			}
@@ -612,11 +612,11 @@ namespace scatterer
 					celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
 				}
 				
-				Utils.Log ("Celestial Body: " + celBody);
+				Utils.LogDebug ("Celestial Body: " + celBody);
 				if (celBody != null)
 				{
 					_idx = scattererCelestialBodies.IndexOf (sctBody);
-					Utils.Log ("Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
+					Utils.LogDebug ("Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
 				};
 				
 				sctBody.celestialBody = celBody;
@@ -640,7 +640,7 @@ namespace scatterer
 			if (mainSettings.terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
 			{
 				QualitySettings.shadowDistance = mainSettings.shadowsDistance;
-				Utils.Log("Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
+				Utils.LogDebug("Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
 
 
 				if (mainSettings.shadowsOnOcean)
@@ -684,7 +684,7 @@ namespace scatterer
 				}
 				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light")) {
 					mainMenuLight = _light.gameObject;
-					Utils.Log ("Found main menu light");
+					Utils.LogDebug ("Found main menu light");
 				}
 			}
 		}
@@ -745,7 +745,7 @@ namespace scatterer
 						aPsLight.scaledLight = ScaledPlanetShineLight;
 						aPsLight.localLight = LocalPlanetShineLight;
 						celestialLightSources.Add (aPsLight);
-						Utils.Log ("Added celestialLightSource " + aPsLight.source.name);
+						Utils.LogDebug ("Added celestialLightSource " + aPsLight.source.name);
 					}
 				}
 			}
@@ -757,7 +757,7 @@ namespace scatterer
 		//move to own class
 		public void mapEVEClouds()
 		{
-			Utils.Log ("mapping EVE clouds");
+			Utils.LogDebug ("mapping EVE clouds");
 			EVEClouds.Clear();
 			EVECloudObjects.Clear ();
 
@@ -766,15 +766,15 @@ namespace scatterer
 
 			if (EVEType == null)
 			{
-				Utils.Log("Eve assembly type not found");
+				Utils.LogDebug("Eve assembly type not found");
 				return;
 			}
 			else
 			{
-				Utils.Log("Eve assembly type found");
+				Utils.LogDebug("Eve assembly type found");
 			}
 
-			Utils.Log("Eve assembly version: " + EVEType.Assembly.GetName().ToString());
+			Utils.LogDebug("Eve assembly version: " + EVEType.Assembly.GetName().ToString());
 
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
@@ -786,17 +786,17 @@ namespace scatterer
 			}
 			catch (Exception)
 			{
-				Utils.Log("No EVE Instance found");
+				Utils.LogDebug("No EVE Instance found");
 				return;
 			}
 			if (EVEinstance == null)
 			{
-				Utils.Log("Failed grabbing EVE Instance");
+				Utils.LogDebug("Failed grabbing EVE Instance");
 				return;
 			}
 			else
 			{
-				Utils.Log("Successfully grabbed EVE Instance");
+				Utils.LogDebug("Successfully grabbed EVE Instance");
 			}
 
 			IList objectList = EVEType.GetField ("ObjectList", flags).GetValue (EVEinstance) as IList;
@@ -823,7 +823,7 @@ namespace scatterer
 
 					if (cloudsPQS==null)
 					{
-						Utils.Log("cloudsPQS not found for layer on planet :"+body);
+						Utils.LogDebug("cloudsPQS not found for layer on planet :"+body);
 						continue;
 					}
 					cloud2dObj = cloudsPQS.GetType().GetField("mainMenuLayer", flags).GetValue(cloudsPQS) as object;
@@ -835,14 +835,14 @@ namespace scatterer
 
 				if (cloud2dObj==null)
 				{
-					Utils.Log("layer2d not found for layer on planet :"+body);
+					Utils.LogDebug("layer2d not found for layer on planet :"+body);
 					continue;
 				}
 
 				GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
 				if (cloudmesh==null)
 				{
-					Utils.Log("cloudmesh null");
+					Utils.LogDebug("cloudmesh null");
 					return;
 				}
 
@@ -856,7 +856,7 @@ namespace scatterer
 					cloudsList.Add(cloudmesh.GetComponent < MeshRenderer > ().material);
 					EVEClouds.Add(body,cloudsList);
 				}
-				Utils.Log("Detected EVE 2d cloud layer for planet: "+body);
+				Utils.LogDebug("Detected EVE 2d cloud layer for planet: "+body);
 			}
 		}
 

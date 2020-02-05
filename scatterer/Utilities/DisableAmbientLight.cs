@@ -35,13 +35,13 @@ namespace scatterer
 				if (_light.gameObject.name == "Scaledspace SunLight")
 				{
 					scaledspaceSunLight=_light.gameObject;
-					Utils.Log("disableAmbientLight: Found scaled sunlight");
+					Utils.LogDebug("disableAmbientLight: Found scaled sunlight");
 				}
 				
 				if (_light.gameObject.name == "SunLight")
 				{
 					sunLight=_light.gameObject;
-					Utils.Log("disableAmbientLight: Found sunlight");
+					Utils.LogDebug("disableAmbientLight: Found sunlight");
 				}				
 			}
 

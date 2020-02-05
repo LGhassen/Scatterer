@@ -274,7 +274,7 @@ namespace scatterer
 				if (ringObject)
 				{
 					
-					Utils.Log (" Found ring for " + celestialBodyName);
+					Utils.LogDebug (" Found ring for " + celestialBodyName);
 
 					Material ringMat = ringObject.GetComponent < MeshRenderer > ().material;
 
@@ -299,26 +299,26 @@ namespace scatterer
 							try
 							{
 								ringTexture = _script.GetType().GetField("texture", flags).GetValue(_script) as Texture2D;
-								Utils.Log(" ring texture fetch successful");
-								Utils.Log(" ringTexture.width "+ringTexture.width.ToString());
-								Utils.Log(" ringTexture.height "+ringTexture.height.ToString());
+								Utils.LogDebug(" ring texture fetch successful");
+								Utils.LogDebug(" ringTexture.width "+ringTexture.width.ToString());
+								Utils.LogDebug(" ringTexture.height "+ringTexture.height.ToString());
 
 								MeshRenderer ringMR = _script.GetType().GetField("ringMR", flags).GetValue(_script) as MeshRenderer;
-								Utils.Log(" ring MeshRenderer fetch successful");
+								Utils.LogDebug(" ring MeshRenderer fetch successful");
 
 								ringInnerRadius = ringMR.material.GetFloat("innerRadius");
 								ringOuterRadius = ringMR.material.GetFloat("outerRadius");
 
-								Utils.Log (" ring innerRadius (with parent scale) " + ringInnerRadius.ToString ());
-								Utils.Log (" ring outerRadius (with parent scale) " + ringOuterRadius.ToString ());
+								Utils.LogDebug (" ring innerRadius (with parent scale) " + ringInnerRadius.ToString ());
+								Utils.LogDebug (" ring outerRadius (with parent scale) " + ringOuterRadius.ToString ());
 
 								ringInnerRadius *= 6000; //*6000 to convert to local space size
 								ringOuterRadius *= 6000;
 							}
 							catch (Exception e)
 							{
-								Utils.Log(" Kopernicus ring exception "+e.ToString());
-								Utils.Log(" Disabling ring shadows for "+celestialBodyName);
+								Utils.LogDebug(" Kopernicus ring exception "+e.ToString());
+								Utils.LogDebug(" Disabling ring shadows for "+celestialBodyName);
 								hasRingObjectAndShadowActivated=false;
 							}
 						}
@@ -581,7 +581,7 @@ namespace scatterer
 				}
 
 				skyNodeInitiated = true;
-				Utils.Log(" Skynode initiated for "+celestialBodyName);
+				Utils.LogDebug(" Skynode initiated for "+celestialBodyName);
 			}
 			else
 			{
@@ -726,7 +726,7 @@ namespace scatterer
 			mat.SetVector ("_sunColor", m_manager.sunColor);
 
 			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
-			Utils.Log(" Camera overlap: "+camerasOverlap.ToString());
+			Utils.LogDebug(" Camera overlap: "+camerasOverlap.ToString());
 			mat.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
 
@@ -901,7 +901,7 @@ namespace scatterer
 
 			if (!System.IO.File.Exists(_file))
 			{
-				Utils.Log(" no "+textureName+".raw or "+textureName+".half file found for "
+				Utils.LogDebug(" no "+textureName+".raw or "+textureName+".half file found for "
 				          +celestialBodyName);
 				return;
 			}
@@ -926,7 +926,7 @@ namespace scatterer
 			byte[] bytes = targetTexture2D .GetRawTextureData();
 			System.IO.File.WriteAllBytes(_file ,bytes);
 			
-			Utils.Log (" Converted "+textureName+".raw to "+textureName+".half");
+			Utils.LogDebug (" Converted "+textureName+".raw to "+textureName+".half");
 			
 			UnityEngine.Object.Destroy (tempRT);
 			bytes = null;
@@ -1029,7 +1029,7 @@ namespace scatterer
 
 			if (found)
 			{
-				Utils.Log(" Atmosphere config found for: "+celestialBodyName);
+				Utils.LogDebug(" Atmosphere config found for: "+celestialBodyName);
 
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			
@@ -1041,8 +1041,8 @@ namespace scatterer
 			}
 			else
 			{
-				Utils.Log(" Atmosphere config not found for: "+celestialBodyName);
-				Utils.Log(" Removing "+celestialBodyName +" from planets list");
+				Utils.LogDebug(" Atmosphere config not found for: "+celestialBodyName);
+				Utils.LogDebug(" Removing "+celestialBodyName +" from planets list");
 
 				Core.Instance.scattererCelestialBodies.Remove(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == celestialBodyName));
 
@@ -1069,7 +1069,7 @@ namespace scatterer
 					_cn.ClearData();
 					ConfigNode.Merge (_cn, cnTemp);
 					_cn.name="Atmo";
-					Utils.Log(" saving "+celestialBodyName+" atmo config to: "+configUrl.parent.url);
+					Utils.LogDebug(" saving "+celestialBodyName+" atmo config to: "+configUrl.parent.url);
 					configUrl.parent.SaveConfigs ();
 					found=true;
 					break;
@@ -1078,7 +1078,7 @@ namespace scatterer
 
 			if (!found)
 			{
-				Utils.Log(" couldn't find config file to save to");
+				Utils.LogDebug(" couldn't find config file to save to");
 			}
 		}
 		
@@ -1167,7 +1167,7 @@ namespace scatterer
 						object cloud2dObj = _obj.GetType ().GetField ("layer2D", flags).GetValue (_obj) as object;
 						if (cloud2dObj == null)
 						{
-							Utils.Log (" layer2d not found for layer on planet: " + celestialBodyName);
+							Utils.LogDebug (" layer2d not found for layer on planet: " + celestialBodyName);
 							continue;
 						}
 						
@@ -1203,14 +1203,14 @@ namespace scatterer
 				}
 				catch (Exception stupid)
 				{
-					Utils.Log (" Error calling clouds2d.reassign() on planet: " + celestialBodyName + " Exception returned: " + stupid.ToString ());
+					Utils.LogDebug (" Error calling clouds2d.reassign() on planet: " + celestialBodyName + " Exception returned: " + stupid.ToString ());
 				}
 			}
 		}
 
 		public void mapEVEVolumetrics()
 		{
-			Utils.Log (" Mapping EVE volumetrics for planet: "+celestialBodyName);
+			Utils.LogDebug (" Mapping EVE volumetrics for planet: "+celestialBodyName);
 
 			EVEvolumetrics.Clear ();
 
@@ -1229,7 +1229,7 @@ namespace scatterer
 						object layerVolume = cloudsPQS.GetType ().GetField ("layerVolume", flags).GetValue (cloudsPQS) as object;
 						if (ReferenceEquals(layerVolume, null))
 						{
-							Utils.Log (" No volumetric cloud for layer on planet: " + celestialBodyName);
+							Utils.LogDebug (" No volumetric cloud for layer on planet: " + celestialBodyName);
 							continue;
 						}
 
@@ -1240,7 +1240,7 @@ namespace scatterer
 
 						if (ReferenceEquals(layerVolume, null))
 						{
-							Utils.Log (" Volumetric cloud has no material on planet: " + celestialBodyName);
+							Utils.LogDebug (" Volumetric cloud has no material on planet: " + celestialBodyName);
 							continue;
 						}
 
@@ -1265,14 +1265,14 @@ namespace scatterer
 					}
 					catch (Exception stupid)
 					{
-						Utils.Log (" Volumetric clouds error on planet: " + celestialBodyName + stupid.ToString ());
+						Utils.LogDebug (" Volumetric clouds error on planet: " + celestialBodyName + stupid.ToString ());
 					}
 				}				
-				Utils.Log (" Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + celestialBodyName);
+				Utils.LogDebug (" Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + celestialBodyName);
 			}
 			else
 			{
-				Utils.Log (" No cloud objects for planet: " + celestialBodyName);
+				Utils.LogDebug (" No cloud objects for planet: " + celestialBodyName);
 			}
 		}
 

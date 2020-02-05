@@ -153,12 +153,12 @@ namespace scatterer {
 			m_fourierGridSize = Core.Instance.mainSettings.m_fourierGridSize;
 			
 			if (m_fourierGridSize > 256) {
-				Utils.Log("Proland::OceanFFTcpu::Start	- fourier grid size must not be greater than 256, changing to 256");
+				Utils.LogDebug("Proland::OceanFFTcpu::Start	- fourier grid size must not be greater than 256, changing to 256");
 				m_fourierGridSize = 256;
 			}
 			
 			if (!Mathf.IsPowerOfTwo(m_fourierGridSize)) {
-				Utils.Log("Proland::OceanFFTcpu::Start	- fourier grid size must be pow2 number, changing to nearest pow2 number");
+				Utils.LogDebug("Proland::OceanFFTcpu::Start	- fourier grid size must be pow2 number, changing to nearest pow2 number");
 				m_fourierGridSize = Mathf.NextPowerOfTwo(m_fourierGridSize);
 			}
 			
@@ -1533,7 +1533,7 @@ namespace scatterer {
 			
 			if (it >= 30)
 			{
-				Utils.Log("findHeight exceeded 30 iterations and quit");
+				Utils.LogDebug("findHeight exceeded 30 iterations and quit");
 				return (-255f);
 			}
 			

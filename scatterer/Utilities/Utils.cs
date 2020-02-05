@@ -44,7 +44,7 @@ namespace scatterer
 				ringObject = GameObject.Find (_cb.name + "Ring");
 				if (ringObject) {
 					ringObject.GetComponent<MeshRenderer> ().material.renderQueue = 3005;
-					Utils.Log ("Found rings for " + _cb.name);
+					Utils.LogDebug ("Found rings for " + _cb.name);
 				}
 			}
 		}
@@ -62,10 +62,19 @@ namespace scatterer
 			}
 		}
 
-		//Add debugging levels?
-		public static void Log(string log)
+		public static void LogDebug(string log)
 		{
-			Debug.Log ("[Scatterer] " + log);
+			Debug.Log ("[Scatterer][Debug] " + log);
+		}
+		
+		public static void LogInfo(string log)
+		{
+			Debug.Log ("[Scatterer][Info] " + log);
+		}
+		
+		public static void LogError(string log)
+		{
+			Debug.Log ("[Scatterer][Error] " + log);
 		}
 
 		private static string pluginPath;

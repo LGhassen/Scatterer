@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,10 +89,10 @@ namespace scatterer
 				for (int k = 0; k < scattererBody.eclipseCasters.Count; k++) {
 					var cc = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.eclipseCasters [k]);
 					if (cc == null)
-						Utils.Log ("Eclipse caster " + scattererBody.eclipseCasters [k] + " not found for " + scattererBody.celestialBodyName);
+						Utils.LogDebug ("Eclipse caster " + scattererBody.eclipseCasters [k] + " not found for " + scattererBody.celestialBodyName);
 					else {
 						eclipseCasters.Add (cc);
-						Utils.Log ("Added eclipse caster " + scattererBody.eclipseCasters [k] + " for " + scattererBody.celestialBodyName);
+						Utils.LogDebug ("Added eclipse caster " + scattererBody.eclipseCasters [k] + " for " + scattererBody.celestialBodyName);
 					}
 				}
 			}
@@ -104,13 +104,13 @@ namespace scatterer
 				for (int k = 0; k < scattererBody.planetshineSources.Count; k++) {
 					var cc = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.planetshineSources [k].bodyName);
 					if (cc == null)
-						Utils.Log ("planetshine source " + scattererBody.planetshineSources [k].bodyName + " not found for " + scattererBody.celestialBodyName);
+						Utils.LogDebug ("planetshine source " + scattererBody.planetshineSources [k].bodyName + " not found for " + scattererBody.celestialBodyName);
 					else {
 						AtmoPlanetShineSource src = scattererBody.planetshineSources [k];
 						src.body = cc;
 						scattererBody.planetshineSources [k].body = cc;
 						planetshineSources.Add (src);
-						Utils.Log ("Added planetshine source" + scattererBody.planetshineSources [k].bodyName + " for " + scattererBody.celestialBodyName);
+						Utils.LogDebug ("Added planetshine source" + scattererBody.planetshineSources [k].bodyName + " for " + scattererBody.celestialBodyName);
 					}
 				}
 			}
@@ -179,7 +179,7 @@ namespace scatterer
 					Core.Instance.bufferRenderingManager.refractionTexture.Create();
 				}
 
-				Utils.Log("Rebuilt Ocean");
+				Utils.LogDebug("Rebuilt Ocean");
 			}
 			
 		}

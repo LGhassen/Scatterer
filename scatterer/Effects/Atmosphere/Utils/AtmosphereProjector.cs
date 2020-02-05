@@ -59,7 +59,7 @@ namespace scatterer
 		//public void OnDestroy()
 		~AtmosphereProjector()
 		{
-			Utils.Log ("AtmosphereProjector destructor called");
+			Utils.LogDebug ("AtmosphereProjector destructor called");
 			if(!ReferenceEquals(projectorGO,null))
 			{
 				if(!ReferenceEquals(projectorGO.transform,null))

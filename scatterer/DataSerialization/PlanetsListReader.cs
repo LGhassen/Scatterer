@@ -27,12 +27,12 @@ namespace scatterer
 		{
 			ConfigNode[] confNodes = GameDatabase.Instance.GetConfigNodes ("Scatterer_planetsList");
 			if (confNodes.Length == 0) {
-				Utils.Log ("No planetsList file found, check your install");
+				Utils.LogDebug ("No planetsList file found, check your install");
 				return;
 			}
 			
 			if (confNodes.Length > 1) {
-				Utils.Log ("Multiple planetsList files detected, check your install");
+				Utils.LogDebug ("Multiple planetsList files detected, check your install");
 			}
 
 			ConfigNode.LoadObjectFromConfig (this, confNodes [0]);
