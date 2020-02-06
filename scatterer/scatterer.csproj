@@ -148,6 +148,7 @@
     <Compile Include="DataSerialization\ConfigReader.cs" />
     <Compile Include="Utilities\ReflectionUtils.cs" />
     <Compile Include="Utilities\EVEReflectionHandler.cs" />
+    <Compile Include="Effects\PlanetShine\PlanetshineManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
