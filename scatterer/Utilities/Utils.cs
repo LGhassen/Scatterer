@@ -13,52 +13,33 @@ using UnityEngine;
 namespace scatterer
 {
 	public static class Utils
-	{
-		public static GameObject GetMainMenuObject(string name)
+	{		
+		private static string pluginPath;
+		public static string PluginPath
 		{
-			GameObject kopernicusMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault
-				(b => b.name == (name+"(Clone)") && b.transform.parent.name.Contains("Scene"));
-			
-			if (kopernicusMainMenuObject != null)
-				return kopernicusMainMenuObject;
-			
-			GameObject kspMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
-			
-			if (kspMainMenuObject == null)
+			get
 			{
-				throw new Exception("No correct main menu object found for "+name);
-			}
-			
-			return kspMainMenuObject;
-		}
-
-		public static Transform GetScaledTransform (string body)
-		{
-			return (ScaledSpace.Instance.transform.FindChild (body));	
-		}
-
-		public static void FixKopernicusRingsRenderQueue ()
-		{
-			foreach (CelestialBody _cb in Core.Instance.CelestialBodies) {
-				GameObject ringObject;
-				ringObject = GameObject.Find (_cb.name + "Ring");
-				if (ringObject) {
-					ringObject.GetComponent<MeshRenderer> ().material.renderQueue = 3005;
-					Utils.LogDebug ("Found rings for " + _cb.name);
+				if (ReferenceEquals(null,pluginPath))
+				{
+					string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
+					UriBuilder uri = new UriBuilder (codeBase);
+					pluginPath = Uri.UnescapeDataString (uri.Path);
+					pluginPath = Path.GetDirectoryName (pluginPath);					
 				}
+				return pluginPath;
 			}
 		}
 		
-		public static void FixSunsCoronaRenderQueue ()
+		private static string gameDataPath;
+		public static string GameDataPath
 		{
-			foreach(ScattererCelestialBody _scattererCB in Core.Instance.scattererCelestialBodies)
+			get
 			{
-				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
-				foreach (Transform child in scaledSunTransform) {
-					MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
-					if (temp != null)
-						temp.material.renderQueue = 2998;
+				if (ReferenceEquals(null,gameDataPath))
+				{
+					gameDataPath= KSPUtil.ApplicationRootPath + "GameData/";				
 				}
+				return gameDataPath;
 			}
 		}
 
@@ -77,32 +58,80 @@ namespace scatterer
 			Debug.Log ("[Scatterer][Error] " + log);
 		}
 
-		private static string pluginPath;
-		public static string PluginPath
+		public static void DisableStockSunflares ()
 		{
-			get
+			//disable stock sun flares
+			global::SunFlare[] stockFlares = (global::SunFlare[])global::SunFlare.FindObjectsOfType (typeof(global::SunFlare));
+			foreach (global::SunFlare _flare in stockFlares)
 			{
-				if (ReferenceEquals(null,pluginPath))
+				if (Core.Instance.planetsConfigsReader.sunflares.Contains (_flare.sun.name))
 				{
-					string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
-					UriBuilder uri = new UriBuilder (codeBase);
-					pluginPath = Uri.UnescapeDataString (uri.Path);
-					pluginPath = Path.GetDirectoryName (pluginPath);					
+					Utils.LogDebug ("Disabling stock sunflare for " + _flare.sun.name);
+					_flare.sunFlare.enabled = false;
+					_flare.enabled = false;
+					_flare.gameObject.SetActive (false);
 				}
-				return pluginPath;
+			}
+		}
+		
+		public static void ReenableStockSunflares ()
+		{
+			//re-enable stock sun flares
+			global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
+			foreach(global::SunFlare _flare in stockFlares)
+			{						
+				if (Core.Instance.planetsConfigsReader.sunflares.Contains(_flare.sun.name))
+				{
+					_flare.sunFlare.enabled=true;
+				}
 			}
 		}
 
-		private static string gameDataPath;
-		public static string GameDataPath
+		public static GameObject GetMainMenuObject(string name)
 		{
-			get
+			GameObject kopernicusMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault
+				(b => b.name == (name+"(Clone)") && b.transform.parent.name.Contains("Scene"));
+			
+			if (kopernicusMainMenuObject != null)
+				return kopernicusMainMenuObject;
+			
+			GameObject kspMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
+			
+			if (kspMainMenuObject == null)
 			{
-				if (ReferenceEquals(null,gameDataPath))
-				{
-					gameDataPath= KSPUtil.ApplicationRootPath + "GameData/";				
+				throw new Exception("No correct main menu object found for "+name);
+			}
+			
+			return kspMainMenuObject;
+		}
+		
+		public static Transform GetScaledTransform (string body)
+		{
+			return (ScaledSpace.Instance.transform.FindChild (body));	
+		}
+		
+		public static void FixKopernicusRingsRenderQueue ()
+		{
+			foreach (CelestialBody _cb in Core.Instance.CelestialBodies) {
+				GameObject ringObject;
+				ringObject = GameObject.Find (_cb.name + "Ring");
+				if (ringObject) {
+					ringObject.GetComponent<MeshRenderer> ().material.renderQueue = 3005;
+					Utils.LogDebug ("Found rings for " + _cb.name);
 				}
-				return gameDataPath;
+			}
+		}
+		
+		public static void FixSunsCoronaRenderQueue ()
+		{
+			foreach(ScattererCelestialBody _scattererCB in Core.Instance.planetsConfigsReader.scattererCelestialBodies)
+			{
+				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
+				foreach (Transform child in scaledSunTransform) {
+					MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
+					if (temp != null)
+						temp.material.renderQueue = 2998;
+				}
 			}
 		}
 	}

@@ -17,7 +17,7 @@ namespace scatterer
 		public static void removeStockOceans()
 		{
 			Material invisibleOcean = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
-			foreach (ScattererCelestialBody sctBody in Core.Instance.scattererCelestialBodies)
+			foreach (ScattererCelestialBody sctBody in Core.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
 				if (sctBody.hasOcean)
 				{

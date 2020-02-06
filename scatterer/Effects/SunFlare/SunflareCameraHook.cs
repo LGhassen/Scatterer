@@ -31,7 +31,7 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
-			flare.clearExtinction ();
+			flare.ClearExtinction ();
 			flare.sunglareMaterial.SetFloat("renderOnCurrentCamera",0.0f);
 			flare.sunglareMaterial.SetFloat("useDbufferOnCamera",useDbufferOnCamera);
 		}

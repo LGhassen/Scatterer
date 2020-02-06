@@ -86,7 +86,6 @@
     <Compile Include="DataSerialization\ConfigPoint.cs" />
     <Compile Include="DataSerialization\PlanetshineSource.cs" />
     <Compile Include="DataSerialization\ScattererCelestialBody.cs" />
-    <Compile Include="DataSerialization\PlanetsListReader.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="Utilities\WireFrame.cs" />
     <Compile Include="Utilities\DisableEffectsForTextureReplacer.cs" />
@@ -147,6 +146,8 @@
     <Compile Include="Utilities\Utils.cs" />
     <Compile Include="Effects\Ocean\Utils\OceanUtils.cs" />
     <Compile Include="Utilities\EVEReflectionUtils.cs" />
+    <Compile Include="Effects\SunFlare\SunflareManager.cs" />
+    <Compile Include="DataSerialization\ConfigReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

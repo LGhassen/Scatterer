@@ -489,9 +489,9 @@ namespace scatterer
 				}
 			}
 			//update extinction for sunflares
-			if (Core.Instance.mainSettings.fullLensFlareReplacement)
+			if (!ReferenceEquals(Core.Instance.sunflareManager,null))
 			{
-				foreach (SunFlare customSunFlare in Core.Instance.customSunFlares)
+				foreach (SunFlare customSunFlare in Core.Instance.sunflareManager.scattererSunFlares)
 				{
 					//render extinction to texture
 					sunflareExtinctionMaterial.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
@@ -1010,7 +1010,7 @@ namespace scatterer
 			ConfigNode[] configNodeArray;
 			bool found = false;
 
-			foreach (UrlDir.UrlConfig _url in Core.Instance.atmoConfigs)
+			foreach (UrlDir.UrlConfig _url in Core.Instance.planetsConfigsReader.atmoConfigs)
 			{
 				configNodeArray = _url.config.GetNodes("Atmo");
 				//if (_url.config.TryGetNode("Atmo",ref cnToLoad))
@@ -1044,7 +1044,7 @@ namespace scatterer
 				Utils.LogDebug(" Atmosphere config not found for: "+celestialBodyName);
 				Utils.LogDebug(" Removing "+celestialBodyName +" from planets list");
 
-				Core.Instance.scattererCelestialBodies.Remove(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == celestialBodyName));
+				Core.Instance.planetsConfigsReader.scattererCelestialBodies.Remove(Core.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == celestialBodyName));
 
 				m_manager.OnDestroy();
 				UnityEngine.Object.Destroy (m_manager);

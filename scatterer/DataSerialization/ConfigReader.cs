@@ -1,18 +1,12 @@
-//using System;
 using System.Collections;
 using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-//using System.IO;
-//using System.Reflection;
-//using System.Runtime;
 using KSP;
 using KSP.IO;
 using UnityEngine;
 
 namespace scatterer
 {
-	public class PlanetsListReader
+	public class ConfigReader
 	{
 		[Persistent]
 		public List <ScattererCelestialBody> scattererCelestialBodies = new List <ScattererCelestialBody> {};
@@ -23,8 +17,13 @@ namespace scatterer
 		[Persistent]
 		public List<string> sunflares=new List<string> {};
 
-		public void loadPlanetsListToCore ()
+		public ConfigNode[] sunflareConfigs;
+		public UrlDir.UrlConfig[] baseConfigs,atmoConfigs,oceanConfigs;
+
+		public void loadConfigs ()
 		{
+			baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config"); //only used for displaying filepath
+
 			ConfigNode[] confNodes = GameDatabase.Instance.GetConfigNodes ("Scatterer_planetsList");
 			if (confNodes.Length == 0) {
 				Utils.LogDebug ("No planetsList file found, check your install");
@@ -37,9 +36,9 @@ namespace scatterer
 
 			ConfigNode.LoadObjectFromConfig (this, confNodes [0]);
 
-			Core.Instance.scattererCelestialBodies = scattererCelestialBodies;
-			Core.Instance.celestialLightSourcesData = celestialLightSourcesData;
-			Core.Instance.sunflaresList = sunflares;
+			atmoConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_atmosphere");
+			oceanConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_ocean");
+			sunflareConfigs = GameDatabase.Instance.GetConfigNodes ("Scatterer_sunflare");
 		}
 	}
 }

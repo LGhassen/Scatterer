@@ -18,10 +18,8 @@ using KSP.IO;
 
 namespace scatterer
 {
-	
 	public class SunFlare : MonoBehaviour
 	{	
-
 		[Persistent]
 		public string assetPath;
 
@@ -31,12 +29,8 @@ namespace scatterer
 		public string sourceName;
 		public Transform sourceScaledTransform;
 
-		Texture2D sunSpikes;
-		Texture2D sunFlare;
-
-		Texture2D sunGhost1;
-		Texture2D sunGhost2;
-		Texture2D sunGhost3;
+		Texture2D sunSpikes, sunFlare;
+		Texture2D sunGhost1,sunGhost2,sunGhost3;
 
 		public RenderTexture extinctionTexture;
 		int waitBeforeReloadCnt = 0;
@@ -87,7 +81,7 @@ namespace scatterer
 
 		public void start()
 		{
-			loadConfigNode ();
+			LoadConfigNode ();
 
 			sunglareMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/sunFlare"]);
 			sunglareMaterial.SetOverrideTag ("IGNOREPROJECTOR", "True");
@@ -291,7 +285,7 @@ namespace scatterer
 				sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.bufferRenderingManager.depthTexture);
 		}	
 
-		public void updateNode()
+		public void Update()
 		{
 			//if rendertexture is lost, wait a bit before re-creating it
 			if (!extinctionTexture.IsCreated())
@@ -321,7 +315,7 @@ namespace scatterer
 			}
 		}
 
-		public void clearExtinction()
+		public void ClearExtinction()
 		{
 			RenderTexture rt=RenderTexture.active;
 			RenderTexture.active= extinctionTexture;			
@@ -332,13 +326,7 @@ namespace scatterer
 			RenderTexture.active=rt;
 		}	
 
-//		public void saveToConfigNode ()
-//		{
-//			ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-//			cnTemp.Save (Utils.pluginPath + "/sunflare/sunflare.cfg");
-//		}
-
-		public void cleanUp()
+		public void CleanUp()
 		{
 			if (nearCameraHook)
 			{
@@ -358,10 +346,10 @@ namespace scatterer
 			}
 		}
 
-		public void loadConfigNode ()
+		public void LoadConfigNode ()
 		{
 			ConfigNode cnToLoad = new ConfigNode ();
-			foreach (ConfigNode _cn in Core.Instance.sunflareConfigs)
+			foreach (ConfigNode _cn in Core.Instance.planetsConfigsReader.sunflareConfigs)
 			{
 				if (_cn.TryGetNode(sourceName, ref cnToLoad))
 				{
@@ -370,6 +358,13 @@ namespace scatterer
 				}
 			}	
 			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
+		}
+
+		public void Configure(CelestialBody source, string sourceName, Transform sourceScaledTransform)
+		{
+			this.source = source;
+			this.sourceName = sourceName;
+			this.sourceScaledTransform = sourceScaledTransform;
 		}
 
 

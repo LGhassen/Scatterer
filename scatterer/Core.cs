@@ -20,7 +20,7 @@ namespace scatterer
 
 		public MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
 		public PluginDataReadWrite pluginData     = new PluginDataReadWrite();
-		public List <ScattererCelestialBody > scattererCelestialBodies = new List <ScattererCelestialBody> {};
+		public ConfigReader planetsConfigsReader = new ConfigReader ();
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
 		int windowId;
@@ -42,11 +42,8 @@ namespace scatterer
 		//planetsList Stuff
 		public List<PlanetShineLightSource> celestialLightSourcesData=new List<PlanetShineLightSource> {};	
 
-
 		//sunflares stuff
-		public ConfigNode[] sunflareConfigs;
-		public List<string> sunflaresList=new List<string> {};
-		public List<SunFlare> customSunFlares = new List<SunFlare>();
+		public SunflareManager sunflareManager;
 
 		//runtime shit
 		DisableAmbientLight ambientLightScript;
@@ -56,9 +53,8 @@ namespace scatterer
 		bool callCollector=false;
 		List<PlanetShineLight> celestialLightSources=new List<PlanetShineLight> {};
 		Cubemap planetShineCookieCubeMap;
-		public UrlDir.UrlConfig[] baseConfigs,atmoConfigs,oceanConfigs;
+//		public UrlDir.UrlConfig[] baseConfigs,atmoConfigs,oceanConfigs;
 		public bool visible = false;
-		bool customSunFlareAdded=false;
 
 
 		//means a PQS enabled for the closest celestial body, regardless of whether it uses scatterer effects or not
@@ -184,6 +180,17 @@ namespace scatterer
 				}
 			}
 
+			if ((mainSettings.fullLensFlareReplacement) && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+			{
+				sunflareManager = new SunflareManager();
+				sunflareManager.Init();
+			}
+
+			if (mainSettings.disableAmbientLight && !ambientLightScript)
+			{
+				ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
+			}
+
 //			//add shadowmask modulator (adds occlusion to shadows)
 //			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
 //
@@ -215,6 +222,7 @@ namespace scatterer
 		void Update ()
 		{
 			//toggle whether GUI is visible or not
+			//TODO: move to guihandler
 			if ((Input.GetKey (pluginData.guiModifierKey1) || Input.GetKey (pluginData.guiModifierKey2)) && (Input.GetKeyDown (pluginData.guiKey1) || (Input.GetKeyDown (pluginData.guiKey2))))
 			{
 				if (ToolbarButton.Instance.button!= null)
@@ -228,67 +236,16 @@ namespace scatterer
 				visible = !visible;
 			}
 
+			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
 			{
+				//TODO: determine if still needed anymore, ie test without
 				if (callCollector)
 				{
 					GC.Collect();
 					callCollector=false;
 				}
-				
-				//custom lens flares
-				//TODO: move to init
-				if ((mainSettings.fullLensFlareReplacement) && !customSunFlareAdded && (HighLogic.LoadedScene != GameScenes.MAINMENU))
-				{
-					//disable stock sun flares
-					global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
-					foreach(global::SunFlare _flare in stockFlares)
-					{
-						if (sunflaresList.Contains(_flare.sun.name))
-						{
-							Utils.LogDebug("Disabling stock sunflare for "+_flare.sun.name);
-							_flare.sunFlare.enabled=false;
-							_flare.enabled=false;
-							_flare.gameObject.SetActive(false);
-						}
-					}
-					
-					foreach (string sunflareBody in sunflaresList)
-					{
-						SunFlare customSunFlare =(SunFlare) scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
-						
-						try
-						{
-							customSunFlare.source=CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody);
-							customSunFlare.sourceName=sunflareBody;
-							customSunFlare.sourceScaledTransform = Utils.GetScaledTransform(customSunFlare.source.name);
-							customSunFlare.start ();
-							customSunFlares.Add(customSunFlare);
-						}
-						catch (Exception stupid)
-						{
-							Utils.LogDebug("Custom sunflare cannot be added to "+sunflareBody+" "+stupid.ToString());
-							
-							Component.Destroy(customSunFlare);
-							UnityEngine.Object.Destroy(customSunFlare);
-							
-							if (customSunFlares.Contains(customSunFlare))
-							{
-								customSunFlares.Remove(customSunFlare);
-							}
-							
-							continue;
-						}
-					}
-					customSunFlareAdded=true;
-				}
 
-				//TODO: move to init
-				if (mainSettings.disableAmbientLight && !ambientLightScript)
-				{
-					ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
-				}
-				
 				globalPQSEnabled = false;
 				if (FlightGlobals.currentMainBody )
 				{
@@ -300,7 +257,7 @@ namespace scatterer
 				underwater = false;
 
 				//TODO: make into it's own function
-				foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
+				foreach (ScattererCelestialBody _cur in planetsConfigsReader.scattererCelestialBodies)
 				{
 					float dist, shipDist=0f;
 					if (_cur.hasTransform)
@@ -359,7 +316,7 @@ namespace scatterer
 									
 									GUItool.selectedConfigPoint = 0;
 									GUItool.displayOceanSettings = false;
-									GUItool.selectedPlanet = scattererCelestialBodies.IndexOf (_cur);
+									GUItool.selectedPlanet = planetsConfigsReader.scattererCelestialBodies.IndexOf (_cur);
 									GUItool.getSettingsFromSkynode ();
 
 									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null)) {
@@ -379,7 +336,7 @@ namespace scatterer
 									{
 										Utils.LogDebug ("manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
 									}
-									scattererCelestialBodies.Remove(_cur);
+									planetsConfigsReader.scattererCelestialBodies.Remove(_cur);
 									Utils.LogDebug (""+ _cur.celestialBodyName +" removed from active planets.");
 									return;
 								}
@@ -394,14 +351,12 @@ namespace scatterer
 					if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
 						bufferRenderingManager.clearDepthTexture();
 				}
-				//update sun flare
-				if (mainSettings.fullLensFlareReplacement)
+
+				if (!ReferenceEquals(sunflareManager,null))
 				{
-					foreach (SunFlare customSunFlare in customSunFlares)
-					{
-						customSunFlare.updateNode();
-					}
+					sunflareManager.UpdateFlares();
 				}
+
 				//update planetshine lights
 				if(mainSettings.usePlanetShine)
 				{
@@ -428,9 +383,9 @@ namespace scatterer
 					}
 				}
 
-				for (int i = 0; i < scattererCelestialBodies.Count; i++) {
+				for (int i = 0; i < planetsConfigsReader.scattererCelestialBodies.Count; i++) {
 					
-					ScattererCelestialBody cur = scattererCelestialBodies [i];
+					ScattererCelestialBody cur = planetsConfigsReader.scattererCelestialBodies [i];
 					if (cur.active) {
 						cur.m_manager.OnDestroy ();
 						UnityEngine.Object.Destroy (cur.m_manager);
@@ -462,23 +417,10 @@ namespace scatterer
 				}
 
 
-				if (mainSettings.fullLensFlareReplacement && customSunFlareAdded)
+				if (!ReferenceEquals(sunflareManager,null))
 				{
-					foreach (SunFlare customSunFlare in customSunFlares)
-					{
-						customSunFlare.cleanUp();
-						Component.Destroy (customSunFlare);
-					}
-
-					//re-enable stock sun flares
-					global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
-					foreach(global::SunFlare _flare in stockFlares)
-					{						
-						if (sunflaresList.Contains(_flare.sun.name))
-						{
-							_flare.sunFlare.enabled=true;
-						}
-					}
+					sunflareManager.Cleanup();
+					UnityEngine.Component.Destroy(sunflareManager);
 				}
 
 				if (!ReferenceEquals(sunlightModulatorInstance,null))
@@ -548,17 +490,9 @@ namespace scatterer
 		
 		public void loadSettings ()
 		{
-			baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config"); //only used for displaying filepath
-
 			mainSettings.loadMainSettings ();
 			pluginData.loadPluginData ();
-
-			PlanetsListReader scattererPlanetsListReader = new PlanetsListReader ();
-			scattererPlanetsListReader.loadPlanetsListToCore (); //remove ToCore
-
-			atmoConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_atmosphere");
-			oceanConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_ocean");
-			sunflareConfigs = GameDatabase.Instance.GetConfigNodes ("Scatterer_sunflare");
+			planetsConfigsReader.loadConfigs ();
 		}
 		
 		public void saveSettings ()
@@ -601,7 +535,7 @@ namespace scatterer
 
 		void findScattererCelestialBodies()
 		{
-			foreach (ScattererCelestialBody sctBody in scattererCelestialBodies)
+			foreach (ScattererCelestialBody sctBody in planetsConfigsReader.scattererCelestialBodies)
 			{
 				var _idx = 0;
 			
@@ -615,7 +549,7 @@ namespace scatterer
 				Utils.LogDebug ("Celestial Body: " + celBody);
 				if (celBody != null)
 				{
-					_idx = scattererCelestialBodies.IndexOf (sctBody);
+					_idx = planetsConfigsReader.scattererCelestialBodies.IndexOf (sctBody);
 					Utils.LogDebug ("Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
 				};
 				
@@ -862,7 +796,7 @@ namespace scatterer
 
 		public void onRenderTexturesLost()
 		{
-			foreach (ScattererCelestialBody _cur in scattererCelestialBodies)
+			foreach (ScattererCelestialBody _cur in planetsConfigsReader.scattererCelestialBodies)
 			{
 				if (_cur.active)
 				{

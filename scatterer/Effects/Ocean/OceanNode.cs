@@ -693,7 +693,7 @@ namespace scatterer
 			ConfigNode[] configNodeArray;
 			bool found = false;
 
-			foreach (UrlDir.UrlConfig _url in Core.Instance.oceanConfigs)
+			foreach (UrlDir.UrlConfig _url in Core.Instance.planetsConfigsReader.oceanConfigs)
 			{
 				configNodeArray = _url.config.GetNodes("Ocean");
 				
@@ -720,7 +720,7 @@ namespace scatterer
 				Utils.LogDebug("Ocean config not found for: "+m_manager.parentCelestialBody.name);
 				Utils.LogDebug("Removing ocean for "+m_manager.parentCelestialBody.name +" from planets list");
 				
-				(Core.Instance.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == m_manager.parentCelestialBody.name)).hasOcean = false;
+				(Core.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == m_manager.parentCelestialBody.name)).hasOcean = false;
 				
 				this.Cleanup();
 				UnityEngine.Object.Destroy (this);
