@@ -1,8 +1,7 @@
-
 using System;
 namespace scatterer
 {
-	public static class EVEReflectionUtils
+	public static class ReflectionUtils
 	{
 		internal static Type getType(string name)
 		{

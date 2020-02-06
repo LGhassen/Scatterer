@@ -445,26 +445,26 @@ namespace scatterer
 				int size;
 				
 				//2d clouds
-				if(Core.Instance.EVEClouds.ContainsKey(celestialBodyName))
+				if(Core.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName))
 				{
-					size = Core.Instance.EVEClouds[celestialBodyName].Count;
+					size = Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
 					for (int i=0;i<size;i++)
 					{
-						SetUniforms(Core.Instance.EVEClouds[celestialBodyName][i]);
+						SetUniforms(Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i]);
 						
 						//if (!inScaledSpace)
-						UpdatePostProcessMaterial(Core.Instance.EVEClouds[celestialBodyName][i]);
+						UpdatePostProcessMaterial(Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i]);
 						
-						Core.Instance.EVEClouds[celestialBodyName][i].SetFloat
+						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
 							("cloudColorMultiplier", cloudColorMultiplier);
-						Core.Instance.EVEClouds[celestialBodyName][i].SetFloat
+						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
 							("cloudScatteringMultiplier", cloudScatteringMultiplier);
-						Core.Instance.EVEClouds[celestialBodyName][i].SetFloat
+						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
 							("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
 						
 						
-						Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_ON");
-						Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_OFF");
+						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_ON");
+						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_OFF");
 					}
 				}
 				
@@ -969,13 +969,13 @@ namespace scatterer
 					int size;
 					
 					//2d clouds
-					if(Core.Instance.EVEClouds.ContainsKey(celestialBodyName))
+					if(Core.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName))
 					{
-						size = Core.Instance.EVEClouds[celestialBodyName].Count;
+						size = Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
 						for (int i=0;i<size;i++)
 						{
-							Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_ON");
-							Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_OFF");
+							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_ON");
+							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_OFF");
 						}
 					}
 					
@@ -1155,14 +1155,14 @@ namespace scatterer
 
 		public void initiateEVEClouds()
 		{
-			if (!ReferenceEquals (Core.Instance.EVEinstance, null))
+			if (!ReferenceEquals (Core.Instance.eveReflectionHandler.EVEinstance, null))
 			{
 				try
 				{
 					const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | 
 						BindingFlags.Instance | BindingFlags.Static;
 					
-					foreach (object _obj in Core.Instance.EVECloudObjects[celestialBodyName])
+					foreach (object _obj in Core.Instance.eveReflectionHandler.EVECloudObjects[celestialBodyName])
 					{
 						object cloud2dObj = _obj.GetType ().GetField ("layer2D", flags).GetValue (_obj) as object;
 						if (cloud2dObj == null)
@@ -1184,19 +1184,19 @@ namespace scatterer
 					}
 					
 					//initialize other params here
-					int size = Core.Instance.EVEClouds [celestialBodyName].Count;
+					int size = Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName].Count;
 					for (int i=0; i<size; i++)
 					{
-						InitUniforms (Core.Instance.EVEClouds [celestialBodyName] [i]);
-						InitPostprocessMaterial (Core.Instance.EVEClouds [celestialBodyName] [i]);
+						InitUniforms (Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i]);
+						InitPostprocessMaterial (Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i]);
 						
 						if (EVEIntegration_preserveCloudColors)
 						{
-							Core.Instance.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
-							Core.Instance.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
 						} else {
-							Core.Instance.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
-							Core.Instance.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
 						}
 						
 					}
@@ -1217,9 +1217,9 @@ namespace scatterer
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
 
-			if (Core.Instance.EVECloudObjects.ContainsKey (celestialBodyName)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
+			if (Core.Instance.eveReflectionHandler.EVECloudObjects.ContainsKey (celestialBodyName)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
 			{
-				List<object> cloudObjs = Core.Instance.EVECloudObjects [celestialBodyName];
+				List<object> cloudObjs = Core.Instance.eveReflectionHandler.EVECloudObjects [celestialBodyName];
 				
 				foreach (object _obj in cloudObjs)
 				{
@@ -1280,20 +1280,20 @@ namespace scatterer
 		{
 			if (Core.Instance.mainSettings.integrateWithEVEClouds)
 			{
-				if(Core.Instance.EVEClouds.ContainsKey(celestialBodyName)) //change to a bool hasclouds
+				if(Core.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName)) //change to a bool hasclouds
 				{
-					int size = Core.Instance.EVEClouds[celestialBodyName].Count;
+					int size = Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
 					for (int i=0;i<size;i++)
 					{
 						if (EVEIntegration_preserveCloudColors)
 						{
-							Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
-							Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
 						}
 						else
 						{
-							Core.Instance.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
-							Core.Instance.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
 						}
 					}
 				}

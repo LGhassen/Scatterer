@@ -22,71 +22,48 @@ namespace scatterer
 		public PluginDataReadWrite pluginData     = new PluginDataReadWrite();
 		public ConfigReader planetsConfigsReader = new ConfigReader ();
 
-		public Rect windowRect = new Rect (0, 0, 400, 50);
-		int windowId;
-
 		GUIhandler GUItool= new GUIhandler();
+		public bool visible = false;
 
-		//EVE shit
-		//
-		//map EVE 2d cloud materials to planet names
-		public Dictionary<String, List<Material> > EVEClouds = new Dictionary<String, List<Material> >();
-		//map EVE CloudObjects to planet names
-		//as far as I understand CloudObjects in EVE contain the 2d clouds and the volumetrics for a given
-		//layer on a given planet, however due to the way they are handled in EVE they don't directly reference
-		//their parent planet and the volumetrics are only created when the PQS is active
-		//I map them here to facilitate accessing the volumetrics later
-		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
+		public EVEReflectionHandler eveReflectionHandler;
+		public SunflareManager sunflareManager;
 
+		public BufferRenderingManager bufferRenderingManager;
 
 		//planetsList Stuff
 		public List<PlanetShineLightSource> celestialLightSourcesData=new List<PlanetShineLightSource> {};	
-
-		//sunflares stuff
-		public SunflareManager sunflareManager;
-
-		//runtime shit
-		DisableAmbientLight ambientLightScript;
-		public CelestialBody[] CelestialBodies;		
-		Light[] lights;
-		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
-		bool callCollector=false;
 		List<PlanetShineLight> celestialLightSources=new List<PlanetShineLight> {};
 		Cubemap planetShineCookieCubeMap;
-//		public UrlDir.UrlConfig[] baseConfigs,atmoConfigs,oceanConfigs;
-		public bool visible = false;
 
+		//runtime stuff
+		DisableAmbientLight ambientLightScript;
+		public SunlightModulator sunlightModulatorInstance;
+		//		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
+		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
+		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
+
+		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
+
+		public CelestialBody[] CelestialBodies;		
+		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
+		public Camera farCamera, scaledSpaceCamera, nearCamera;
+
+		bool callCollector=false;
 
 		//means a PQS enabled for the closest celestial body, regardless of whether it uses scatterer effects or not
 		bool globalPQSEnabled = false;
-
 		public bool isGlobalPQSEnabled {get{return globalPQSEnabled;}}
 
 		//means a PQS enabled for a celestial body which scatterer effects are active on (is this useless?)
 		bool pqsEnabledOnScattererPlanet = false;
-
 		public bool isPQSEnabledOnScattererPlanet{get{return pqsEnabledOnScattererPlanet;}}
 
 		public bool underwater = false;
 
-		public BufferRenderingManager bufferRenderingManager;
-
 		bool coreInitiated = false;
-				
-		public Camera farCamera, scaledSpaceCamera, nearCamera;
-
 		public bool isActive = false;
 		public bool mainMenuOptions=false;
-		string versionNumber = "0.0543dev";
-
-		public object EVEinstance;
-		public SunlightModulator sunlightModulatorInstance;
-		
-//		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
-		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
-		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
-
-		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
+		public string versionNumber = "0.0543dev";
 
 		void Awake ()
 		{
@@ -102,7 +79,7 @@ namespace scatterer
                 UnityEngine.Object.Destroy(this);
             }
 
-			windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+			GUItool.windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
 			loadSettings ();
 
@@ -117,8 +94,8 @@ namespace scatterer
 			{
 				isActive = true;
 				mainMenuOptions = (HighLogic.LoadedScene == GameScenes.SPACECENTER);
-				windowRect.x=pluginData.inGameWindowLocation.x;
-				windowRect.y=pluginData.inGameWindowLocation.y;
+				GUItool.windowRect.x=pluginData.inGameWindowLocation.x;
+				GUItool.windowRect.y=pluginData.inGameWindowLocation.y;
 			} 
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -186,6 +163,12 @@ namespace scatterer
 				sunflareManager.Init();
 			}
 
+			if (mainSettings.integrateWithEVEClouds)
+			{
+				eveReflectionHandler = new EVEReflectionHandler();
+				eveReflectionHandler.mapEVEClouds();
+			}
+
 			if (mainSettings.disableAmbientLight && !ambientLightScript)
 			{
 				ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
@@ -196,12 +179,6 @@ namespace scatterer
 //
 			//add shadow far plane fixer
 			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
-
-			//find EVE clouds
-			if (mainSettings.integrateWithEVEClouds)
-			{
-				mapEVEClouds();
-			}
 
 			//magically fix stupid issues when reverting to space center from map view
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
@@ -257,6 +234,7 @@ namespace scatterer
 				underwater = false;
 
 				//TODO: make into it's own function
+				//TODO: definitely refactor this next
 				foreach (ScattererCelestialBody _cur in planetsConfigsReader.scattererCelestialBodies)
 				{
 					float dist, shipDist=0f;
@@ -458,7 +436,7 @@ namespace scatterer
 					Component.Destroy (bufferRenderingManager);
 				}
 
-				pluginData.inGameWindowLocation=new Vector2(windowRect.x,windowRect.y);
+				pluginData.inGameWindowLocation=new Vector2(GUItool.windowRect.x,GUItool.windowRect.y);
 				saveSettings();
 			}
 
@@ -468,23 +446,9 @@ namespace scatterer
 
 		void OnGUI ()
 		{
-
-			//why not move this shit to guiHandler?
 			if (visible)
 			{
-				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v"+versionNumber+": "
-				                               + pluginData.guiModifierKey1String+"/"+pluginData.guiModifierKey2String +"+" +pluginData.guiKey1String
-				                               +"/"+pluginData.guiKey2String+" toggle");
-
-				//prevent window from going offscreen
-				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
-				windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
-
-				//for debugging
-//				if (bufferRenderingManager.depthTexture)
-//				{
-//					GUI.DrawTexture(new Rect(0,0,1280, 720), bufferRenderingManager.depthTexture);
-//				}
+				GUItool.DrawGui();
 			}
 		}
 		
@@ -584,7 +548,7 @@ namespace scatterer
 
 				//set shadow bias
 				//fixes checkerboard artifacts aka shadow acne
-				lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
+				Light[] lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
 				foreach (Light _light in lights)
 				{
 					if ((_light.gameObject.name == "Scaledspace SunLight") 
@@ -611,7 +575,7 @@ namespace scatterer
 
 		void FindSunlights ()
 		{
-			lights = (Light[])Light.FindObjectsOfType (typeof(Light));
+			Light[] lights = (Light[])Light.FindObjectsOfType (typeof(Light));
 			foreach (Light _light in lights) {
 				if (_light.gameObject.name == "SunLight") {
 					sunLight = _light.gameObject;
@@ -682,115 +646,6 @@ namespace scatterer
 						Utils.LogDebug ("Added celestialLightSource " + aPsLight.source.name);
 					}
 				}
-			}
-		}
-		
-
-
-		//map EVE clouds to planet names
-		//move to own class
-		public void mapEVEClouds()
-		{
-			Utils.LogDebug ("mapping EVE clouds");
-			EVEClouds.Clear();
-			EVECloudObjects.Clear ();
-
-			//find EVE base type
-			Type EVEType = EVEReflectionUtils.getType("Atmosphere.CloudsManager"); 
-
-			if (EVEType == null)
-			{
-				Utils.LogDebug("Eve assembly type not found");
-				return;
-			}
-			else
-			{
-				Utils.LogDebug("Eve assembly type found");
-			}
-
-			Utils.LogDebug("Eve assembly version: " + EVEType.Assembly.GetName().ToString());
-
-			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
-				BindingFlags.Instance | BindingFlags.Static;
-
-			try
-			{
-//				EVEinstance = EVEType.GetField("Instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-				EVEinstance = EVEType.GetField("instance", flags).GetValue(null) ;
-			}
-			catch (Exception)
-			{
-				Utils.LogDebug("No EVE Instance found");
-				return;
-			}
-			if (EVEinstance == null)
-			{
-				Utils.LogDebug("Failed grabbing EVE Instance");
-				return;
-			}
-			else
-			{
-				Utils.LogDebug("Successfully grabbed EVE Instance");
-			}
-
-			IList objectList = EVEType.GetField ("ObjectList", flags).GetValue (EVEinstance) as IList;
-
-			foreach (object _obj in objectList)
-			{
-				String body = _obj.GetType().GetField("body", flags).GetValue(_obj) as String;
-
-				if (EVECloudObjects.ContainsKey(body))
-				{
-					EVECloudObjects[body].Add(_obj);
-				}
-				else
-				{
-					List<object> objectsList = new List<object>();
-					objectsList.Add(_obj);
-					EVECloudObjects.Add(body,objectsList);
-				}
-
-				object cloud2dObj;
-				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-				{
-					object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags).GetValue(_obj) as object;
-
-					if (cloudsPQS==null)
-					{
-						Utils.LogDebug("cloudsPQS not found for layer on planet :"+body);
-						continue;
-					}
-					cloud2dObj = cloudsPQS.GetType().GetField("mainMenuLayer", flags).GetValue(cloudsPQS) as object;
-				}
-				else
-				{
-					cloud2dObj = _obj.GetType().GetField("layer2D", flags).GetValue(_obj) as object;
-				}
-
-				if (cloud2dObj==null)
-				{
-					Utils.LogDebug("layer2d not found for layer on planet :"+body);
-					continue;
-				}
-
-				GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
-				if (cloudmesh==null)
-				{
-					Utils.LogDebug("cloudmesh null");
-					return;
-				}
-
-				if (EVEClouds.ContainsKey(body))
-				{
-					EVEClouds[body].Add(cloudmesh.GetComponent < MeshRenderer > ().material);
-				}
-				else
-				{
-					List<Material> cloudsList = new List<Material>();
-					cloudsList.Add(cloudmesh.GetComponent < MeshRenderer > ().material);
-					EVEClouds.Add(body,cloudsList);
-				}
-				Utils.LogDebug("Detected EVE 2d cloud layer for planet: "+body);
 			}
 		}
 

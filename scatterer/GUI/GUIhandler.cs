@@ -17,6 +17,7 @@ namespace scatterer
 	{
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
+		public int windowId;
 
 		public int selectedPlanet = 0;
 		public int selectedConfigPoint = 0;
@@ -95,11 +96,30 @@ namespace scatterer
 
 		//other stuff
 		float atmosphereGlobalScale = 1000f;
+		
+
 
 		public GUIhandler ()
 		{
 		}
 
+
+		public void DrawGui()
+		{
+			windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v"+Core.Instance.versionNumber+": "
+			                               + Core.Instance.pluginData.guiModifierKey1String+"/"+Core.Instance.pluginData.guiModifierKey2String +"+" +Core.Instance.pluginData.guiKey1String
+			                               +"/"+Core.Instance.pluginData.guiKey2String+" toggle");
+			
+			//prevent window from going offscreen
+			windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
+			windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
+			
+			//for debugging
+			//				if (bufferRenderingManager.depthTexture)
+			//				{
+			//					GUI.DrawTexture(new Rect(0,0,1280, 720), bufferRenderingManager.depthTexture);
+			//				}
+		}
 
 		//		UI BUTTONS
 		//		This isn't the most elegant section due to how many elements are here
@@ -424,23 +444,26 @@ namespace scatterer
 						GUILayout.Label (".cfg file used:");
 						GUILayout.TextField(Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configUrl.parent.url);
 						GUILayout.EndHorizontal ();
-						
-						GUILayout.BeginHorizontal ();
-						if (GUILayout.Button ("Map EVE clouds"))
-						{
-							Core.Instance.mapEVEClouds();
-							foreach (ScattererCelestialBody _cel in Core.Instance.planetsConfigsReader.scattererCelestialBodies)
-							{
-								if (_cel.active)
-								{
-									_cel.m_manager.m_skyNode.initiateEVEClouds();
 
-									if (!_cel.m_manager.m_skyNode.inScaledSpace)
-										_cel.m_manager.m_skyNode.mapEVEVolumetrics();
+						if (Core.Instance.mainSettings.integrateWithEVEClouds)
+						{
+							GUILayout.BeginHorizontal ();
+							if (GUILayout.Button ("Map EVE clouds"))
+							{
+								Core.Instance.eveReflectionHandler.mapEVEClouds();
+								foreach (ScattererCelestialBody _cel in Core.Instance.planetsConfigsReader.scattererCelestialBodies)
+								{
+									if (_cel.active)
+									{
+										_cel.m_manager.m_skyNode.initiateEVEClouds();
+										
+										if (!_cel.m_manager.m_skyNode.inScaledSpace)
+											_cel.m_manager.m_skyNode.mapEVEVolumetrics();
+									}
 								}
 							}
+							GUILayout.EndHorizontal ();
 						}
-						GUILayout.EndHorizontal ();
 					}
 					else
 					{
