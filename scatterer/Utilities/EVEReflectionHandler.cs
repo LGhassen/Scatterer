@@ -73,12 +73,12 @@ namespace scatterer
 			}
 			if (EVEinstance == null)
 			{
-				Utils.LogDebug("Failed grabbing EVE Instance");
+				Utils.LogError("Failed grabbing EVE Instance");
 				return;
 			}
 			else
 			{
-				Utils.LogDebug("Successfully grabbed EVE Instance");
+				Utils.LogInfo("Successfully grabbed EVE Instance");
 			}
 			
 			IList objectList = EVEType.GetField ("ObjectList", flags).GetValue (EVEinstance) as IList;
