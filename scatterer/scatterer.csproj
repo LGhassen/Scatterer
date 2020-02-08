@@ -96,18 +96,6 @@
     <Compile Include="Utilities\ShaderProperties.cs" />
     <Compile Include="Utilities\RenderTypeFixer.cs" />
     <Compile Include="Utilities\ShaderReplacer.cs" />
-    <Compile Include="Effects\Manager.cs" />
-    <Compile Include="Effects\Atmosphere\SkyNode.cs" />
-    <Compile Include="Effects\Ocean\Node.cs" />
-    <Compile Include="Effects\Ocean\OceanNode.cs" />
-    <Compile Include="Effects\Ocean\OceanWhiteCaps.cs" />
-    <Compile Include="Effects\Ocean\FourierGPU.cs" />
-    <Compile Include="Effects\Ocean\FourierCPU.cs" />
-    <Compile Include="Effects\Ocean\OceanFFTcpu.cs" />
-    <Compile Include="Effects\Ocean\OceanFFTgpu.cs" />
-    <Compile Include="Effects\Ocean\Utils\FakeOceanPQS.cs" />
-    <Compile Include="Effects\Ocean\Utils\WriteFloat.cs" />
-    <Compile Include="Effects\Ocean\Utils\RTUtility.cs" />
     <Compile Include="Effects\SunFlare\SunFlare.cs" />
     <Compile Include="Effects\SunFlare\SunflareCameraHook.cs" />
     <Compile Include="GUI\GUIhandler.cs" />
@@ -132,23 +120,35 @@
     <Compile Include="Effects\SunlightModulator\SunlightModulatorPostRenderHook.cs" />
     <Compile Include="Effects\SunlightModulator\SunlightModulatorPreRenderHook.cs" />
     <Compile Include="Effects\PlanetShine\PlanetShineLight.cs" />
-    <Compile Include="Effects\Ocean\UnderwaterDimmingHook.cs" />
     <Compile Include="Effects\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
-    <Compile Include="Effects\Atmosphere\Utils\SkySphereKSCUpdater.cs" />
-    <Compile Include="Effects\Atmosphere\Utils\AtmosphereUtils.cs" />
-    <Compile Include="Effects\Atmosphere\Utils\AtmospherePQS.cs" />
-    <Compile Include="Effects\Atmosphere\Utils\AtmosphereProjector.cs" />
     <Compile Include="Utilities\DepthToDistanceCommandBuffer.cs" />
-    <Compile Include="Effects\Ocean\Utils\OceanCameraUpdateHook.cs" />
     <Compile Include="DataSerialization\MainSettingsReadWrite.cs" />
     <Compile Include="DataSerialization\PluginDataReadWrite.cs" />
     <Compile Include="Utilities\Utils.cs" />
-    <Compile Include="Effects\Ocean\Utils\OceanUtils.cs" />
     <Compile Include="Effects\SunFlare\SunflareManager.cs" />
     <Compile Include="DataSerialization\ConfigReader.cs" />
     <Compile Include="Utilities\ReflectionUtils.cs" />
     <Compile Include="Utilities\EVEReflectionHandler.cs" />
     <Compile Include="Effects\PlanetShine\PlanetshineManager.cs" />
+    <Compile Include="Effects\Proland\Ocean\FourierCPU.cs" />
+    <Compile Include="Effects\Proland\Ocean\FourierGPU.cs" />
+    <Compile Include="Effects\Proland\Ocean\Node.cs" />
+    <Compile Include="Effects\Proland\Ocean\OceanFFTcpu.cs" />
+    <Compile Include="Effects\Proland\Ocean\OceanFFTgpu.cs" />
+    <Compile Include="Effects\Proland\Ocean\OceanNode.cs" />
+    <Compile Include="Effects\Proland\Ocean\OceanWhiteCaps.cs" />
+    <Compile Include="Effects\Proland\Ocean\UnderwaterDimmingHook.cs" />
+    <Compile Include="Effects\Proland\Ocean\Utils\FakeOceanPQS.cs" />
+    <Compile Include="Effects\Proland\Ocean\Utils\OceanCameraUpdateHook.cs" />
+    <Compile Include="Effects\Proland\Ocean\Utils\OceanUtils.cs" />
+    <Compile Include="Effects\Proland\Ocean\Utils\RTUtility.cs" />
+    <Compile Include="Effects\Proland\Ocean\Utils\WriteFloat.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\SkyNode.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\AtmospherePQS.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereProjector.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereUtils.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereKSCUpdater.cs" />
+    <Compile Include="Effects\Proland\ProlandManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -160,6 +160,6 @@
     <Folder Include="Effects\Occlusion\" />
     <Folder Include="Effects\SunlightModulator\" />
     <Folder Include="Effects\PlanetShine\" />
-    <Folder Include="Effects\Atmosphere\Utils\" />
+    <Folder Include="Effects\Proland\" />
   </ItemGroup>
 </Project>

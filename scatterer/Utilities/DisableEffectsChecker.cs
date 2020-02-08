@@ -19,7 +19,7 @@ namespace scatterer
 	public class DisableEffectsChecker : MonoBehaviour
 	{
 		Dictionary<Camera,DisableEffectsForTextureReplacer> camToEffectsDisablerDictionary =  new Dictionary<Camera,DisableEffectsForTextureReplacer>() ;
-		public Manager manager;
+		public ProlandManager manager;
 
 		public DisableEffectsChecker ()
 		{

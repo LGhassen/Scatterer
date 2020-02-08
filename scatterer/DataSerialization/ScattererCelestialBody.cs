@@ -23,7 +23,7 @@ namespace scatterer
 		public Transform transform;
 		public bool hasTransform = false;
 		public bool active;
-		public Manager m_manager;
+		public ProlandManager m_manager;
 		public Material originalPlanetMaterialBackup;
 		
 		public ScattererCelestialBody ()

@@ -14,9 +14,11 @@ namespace scatterer
 {
 	/*
 	 * A manger to organise what order update functions are called
+	 * Manages all effects taken from Proland (ie Precomputed Scattering and Ocean, maybe one day forests...)
+	 * The class structures from original Proland are kept
 	 * Provides a location for common settings and allows the nodes to access each other
 	 */
-	public class Manager: MonoBehaviour
+	public class ProlandManager: MonoBehaviour
 	{
 		
 		public bool hasOcean = false;

@@ -269,7 +269,7 @@ namespace scatterer
 									if (HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 										_cur.hasOcean=false;
 
-									_cur.m_manager = new Manager ();
+									_cur.m_manager = new ProlandManager ();
 
 									_cur.m_manager.Init(_cur);
 									_cur.active = true;

@@ -46,7 +46,7 @@ namespace scatterer
 	{
 		public UrlDir.UrlConfig configUrl;
 		
-		public Manager m_manager;
+		public ProlandManager m_manager;
 
 		public Material m_oceanMaterial;
 
@@ -653,7 +653,7 @@ namespace scatterer
 			}	
 		}
 
-		public void setManager (Manager manager)
+		public void setManager (ProlandManager manager)
 		{
 			m_manager = manager;
 		}

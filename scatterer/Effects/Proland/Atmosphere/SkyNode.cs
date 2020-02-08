@@ -137,7 +137,7 @@ namespace scatterer
 		Texture2D m_inscatter, m_irradiance;
 		public Texture2D m_transmit;
 		
-		public Manager m_manager;
+		public ProlandManager m_manager;
 		
 		[Persistent]
 		public float rimBlend = 20f;
@@ -847,7 +847,7 @@ namespace scatterer
 		}
 
 		
-		public void setManager (Manager manager)
+		public void setManager (ProlandManager manager)
 		{
 			m_manager = manager;
 		}

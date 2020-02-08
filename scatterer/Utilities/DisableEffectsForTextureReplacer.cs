@@ -17,7 +17,7 @@ namespace scatterer
 {
 	public class DisableEffectsForTextureReplacer : MonoBehaviour
 	{
-		public Manager manager;
+		public ProlandManager manager;
 
 		public DisableEffectsForTextureReplacer ()
 		{
