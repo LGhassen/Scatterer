@@ -143,9 +143,9 @@ namespace scatterer {
 		protected FourierCPU m_CPUfourier;
 
 
-		public override void Init()
+		public override void Init(ProlandManager manager)
 		{
-			base.Init();
+			base.Init(manager);
 		
 			m_initSpectrumMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
 			m_initDisplacementMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitDisplacement")]);
@@ -1517,7 +1517,7 @@ namespace scatterer {
 		//TODO: Make it so the FFTs are still done on the GPU for rendering and CPU uses lower-res FFTs that keep the same look (figure out how to keep the same look)
 		public float findHeight(Vector3 worldPos, float precision)
 		{
-			return (SampleHeight (worldPos));
+			//return (SampleHeight (worldPos)); //skip displacement -> much more stable, fix displacement code
 
 			int it = 0;
 			Vector3 newPos = worldPos;

@@ -126,13 +126,13 @@ namespace scatterer
 			m_skyNode.setParentScaledTransform (parentScaledTransform);
 			m_skyNode.setParentLocalTransform (parentLocalTransform);
 			m_skyNode.usesCloudIntegration = usesCloudIntegration;
-			if (m_skyNode.loadFromConfigNode ()) {
+			if (m_skyNode.loadFromConfigNode ())
+			{
 				m_skyNode.Init ();
-				if (hasOcean && Scatterer.Instance.mainSettings.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU)) {
+				if (hasOcean && Scatterer.Instance.mainSettings.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+				{
 					m_oceanNode = (OceanWhiteCaps)Scatterer.Instance.farCamera.gameObject.AddComponent (typeof(OceanWhiteCaps));
-					m_oceanNode.setManager (this);
-					m_oceanNode.loadFromConfigNode ();
-					m_oceanNode.Init ();
+					m_oceanNode.Init (this);
 				}
 			}
 		}
@@ -172,9 +172,7 @@ namespace scatterer
 				UnityEngine.Object.Destroy(m_oceanNode);
 
 				m_oceanNode = (OceanWhiteCaps) Scatterer.Instance.farCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
-				m_oceanNode.setManager(this);
-				m_oceanNode.loadFromConfigNode();
-				m_oceanNode.Init();
+				m_oceanNode.Init(this);
 
 				if (Scatterer.Instance.mainSettings.oceanRefraction && Scatterer.Instance.bufferManager.refractionTexture.IsCreated())
 				{

@@ -29,9 +29,9 @@ namespace scatterer {
 		RenderTexture m_map5, m_map6;
 		RenderTexture m_foam0, m_foam1;
 
-		public override void Init()
+		public override void Init(ProlandManager manager)
 		{
-			base.Init();
+			base.Init(manager);
 
 			m_initJacobiansMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitJacobians")]);
 			m_whiteCapsPrecomputeMat = new Material(ShaderReplacer.Instance.LoadedShaders[("Proland/Ocean/WhiteCapsPrecompute0")]);
@@ -113,6 +113,7 @@ namespace scatterer {
 					Graphics.Blit (null, m_foam0, m_whiteCapsPrecomputeMat, 0);
 					Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
 
+					//TODO: no need to do these every frame, move to initOceanMaterial
 					m_oceanMaterial.SetFloat (ShaderProperties._Ocean_WhiteCapStr_PROPERTY, m_whiteCapStr);
 					m_oceanMaterial.SetFloat (ShaderProperties.farWhiteCapStr_PROPERTY, m_farWhiteCapStr);
 					m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);

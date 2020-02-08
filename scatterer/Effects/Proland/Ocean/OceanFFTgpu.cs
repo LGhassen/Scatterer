@@ -115,9 +115,9 @@ namespace scatterer {
 		}
 
 
-		public override void Init()
+		public override void Init(ProlandManager manager)
 		{
-			base.Init();
+			base.Init(manager);
 		
 			m_initSpectrumMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
 			m_initDisplacementMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitDisplacement")]);
