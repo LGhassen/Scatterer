@@ -11,12 +11,10 @@ namespace scatterer
 		GameObject bufferRenderingManagerGO;
 		
 		public RenderTexture depthTexture;			//full-scene depth texture, from merged built-in depth textures of the two local cameras
-		public RenderTexture refractionTexture; 	//textures for the refractions, created once and accessed from here, written to from oceanNode
-		//public RenderTexture occlusionTexture; 		//for SSAO and eclipses, for now will just contain a copy of the screenspace shadowmask
+		public RenderTexture refractionTexture;		//textures for the refractions, created once and accessed from here, written to from oceanNode
+		//public RenderTexture occlusionTexture;	//for SSAO and eclipses, for now will just contain a copy of the screenspace shadowmask
 
 		public bool depthTextureCleared = false; 	//clear depth texture when away from PQS, for the sunflare shader
-
-		List<Projector> EVEprojector=new List<Projector> {}; int projectorCount=0; //EVE projectors to disable, move to EVEUtils
 
 		public void start()
 		{					
@@ -42,8 +40,6 @@ namespace scatterer
 //				godrayDepthShader=ShaderReplacer.Instance.LoadedShaders["Scatterer/GodrayDepthTexture"];
 
 			createTextures();
-
-			mapEVEshadowProjectors ();			
 		}
 
 		void OnPreRender () 
@@ -89,50 +85,6 @@ namespace scatterer
 			GL.Clear(false,true,Color.white);
 			RenderTexture.active=rt;			
 			depthTextureCleared = true;
-		}
-
-		
-		void mapEVEshadowProjectors()
-		{
-            if (EVEprojector == null)
-                return;
-			EVEprojector.Clear ();
-			//Material atmosphereMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
-			Projector[] list = (Projector[]) Projector.FindObjectsOfType(typeof(Projector));
-            if (list == null)
-                return;
-			for(int i=0;i<list.Length;i++)
-			{
-				if (list[i].material != null && list[i].material.name != null && list[i].material.name == "EVE/CloudShadow")
-				{
-					EVEprojector.Add(list[i]);
-					//list[i].material = atmosphereMaterial;
-				}
-			}
-			projectorCount = EVEprojector.Count;
-		}
-
-		void disableEVEshadowProjectors()
-		{
-			try
-			{
-				for (int i=0; i<projectorCount; i++) {
-					EVEprojector [i].enabled = false;
-				}
-			}
-			catch (Exception)
-			{
-				Utils.LogDebug ("BufferRenderingManager: null EVE shadow projectors, remapping...");
-				mapEVEshadowProjectors ();
-			}
-		}
-
-		void enableEVEshadowProjectors()
-		{
-			for(int i=0;i<projectorCount;i++)
-			{
-				EVEprojector[i].enabled=true;
-			}
 		}
 
 		public void OnDestroy ()

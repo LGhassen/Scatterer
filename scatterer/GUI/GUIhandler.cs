@@ -479,7 +479,7 @@ namespace scatterer
 							GUILayout.BeginHorizontal ();
 							if (GUILayout.Button ("Map EVE clouds"))
 							{
-								Core.Instance.eveReflectionHandler.mapEVEClouds();
+								Core.Instance.eveReflectionHandler.MapEVEClouds();
 								foreach (ScattererCelestialBody _cel in Core.Instance.planetsConfigsReader.scattererCelestialBodies)
 								{
 									if (_cel.active)

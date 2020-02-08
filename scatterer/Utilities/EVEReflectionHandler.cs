@@ -24,12 +24,20 @@ namespace scatterer
 		//I map them here to facilitate accessing the volumetrics later
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 		public object EVEinstance;
+				
+		List<Projector> EVEprojector=new List<Projector> {}; int projectorCount=0;
 
 		public EVEReflectionHandler ()
 		{
 		}
-		
-		public void mapEVEClouds()
+
+		public void Start()
+		{
+			MapEVEClouds ();
+			mapEVEshadowProjectors ();
+		}
+
+		public void MapEVEClouds()
 		{
 			Utils.LogDebug ("mapping EVE clouds");
 			EVEClouds.Clear();
@@ -131,6 +139,49 @@ namespace scatterer
 					EVEClouds.Add(body,cloudsList);
 				}
 				Utils.LogDebug("Detected EVE 2d cloud layer for planet: "+body);
+			}
+		}
+
+		void mapEVEshadowProjectors()
+		{
+			if (EVEprojector == null)
+				return;
+			EVEprojector.Clear ();
+			//Material atmosphereMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
+			Projector[] list = (Projector[]) Projector.FindObjectsOfType(typeof(Projector));
+			if (list == null)
+				return;
+			for(int i=0;i<list.Length;i++)
+			{
+				if (list[i].material != null && list[i].material.name != null && list[i].material.name == "EVE/CloudShadow")
+				{
+					EVEprojector.Add(list[i]);
+					//list[i].material = atmosphereMaterial;
+				}
+			}
+			projectorCount = EVEprojector.Count;
+		}
+		
+		void disableEVEshadowProjectors()
+		{
+			try
+			{
+				for (int i=0; i<projectorCount; i++) {
+					EVEprojector [i].enabled = false;
+				}
+			}
+			catch (Exception)
+			{
+				Utils.LogDebug ("Null EVE shadow projectors, remapping...");
+				mapEVEshadowProjectors ();
+			}
+		}
+		
+		void enableEVEshadowProjectors()
+		{
+			for(int i=0;i<projectorCount;i++)
+			{
+				EVEprojector[i].enabled=true;
 			}
 		}
 	}

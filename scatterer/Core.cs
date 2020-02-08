@@ -161,7 +161,7 @@ namespace scatterer
 			if (mainSettings.integrateWithEVEClouds)
 			{
 				eveReflectionHandler = new EVEReflectionHandler();
-				eveReflectionHandler.mapEVEClouds();
+				eveReflectionHandler.Start();
 			}
 
 			if (mainSettings.disableAmbientLight && !ambientLightScript)
