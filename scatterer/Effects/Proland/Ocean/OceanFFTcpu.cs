@@ -125,7 +125,7 @@ namespace scatterer {
 		float FFTtimer=0;
 
 		volatile int m_bufferIdx = 0;
-		public volatile bool done1=true,done2=true,done3=true,done4=true,done5=true;
+		public volatile bool done0=true,done1=true,done2=true,done3=true,done4=true,done5=true;
 		public volatile bool done=true;
 
 		int m_passes;
@@ -469,12 +469,13 @@ namespace scatterer {
 //#else
 				if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
 				{
-					if(!(done1&&done2&&done3&&done4&&done5))
+					if(!(done0&&done1&&done2&&done3&&done4&&done5))
 					{
 						base.UpdateNode();
 						return;
 					}
 					
+					done0 = false;
 					done1 = false;
 					done2 = false;
 					done3 = false;
@@ -488,7 +489,7 @@ namespace scatterer {
 					
 					Nullable<float> time = t;
 					
-					ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded1), time);
+					ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded), time);
 					CommitResults (ref m_fourierBuffer0vector, ref m_fourierBuffer0vectorResults);
 					CommitResults (ref m_fourierBuffer3vector, ref m_fourierBuffer3vectorResults);
 					CommitResults (ref m_fourierBuffer4vector, ref m_fourierBuffer4vectorResults);
@@ -497,47 +498,50 @@ namespace scatterer {
 
 
 				base.UpdateNode();
-
-
-				if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
-				{
-					PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
-					foreach (PartBuoyancy _part in parts)
-					{
-						//				_part.transform
-						Vector3 relativePartPos = _part.transform.position-Scatterer.Instance.farCamera.transform.position;
-						
-						//					Utils.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
-						
-//						_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
-						float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+offsetVector3.x,
-						                                        Vector3.Dot(relativePartPos,uy.ToVector3())+offsetVector3.y,
-						                                        0f),0.25f);
-						if (newheight!= (-255f))
-						{
-							//_part.waterLevel=m_oceanLevel+newheight;
-							_part.waterLevel=newheight;
-						}
-						//						_part.waterLevel=m_oceanLevel;
-
-//										_part.wasSplashed=true;
-//										_part.splashed=true;
-//										_part.allSplashed=true;
-
-						_part.wasSplashed=_part.splashed;
-						_part.slow=true;
-
-//										_part.wasSplashed=false;
-//										_part.splashed=false;
-//										_part.allSplashed=false;
-					}
-				
-				}
 //#endif
 
 			}
 		}
-		
+
+		//FixedUpdate is responsible for physics, should be more stable here
+		public void FixedUpdate()
+		{
+			if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
+			{
+				PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
+				foreach (PartBuoyancy _part in parts)
+				{
+					//				_part.transform
+					Vector3 relativePartPos = _part.transform.position-Scatterer.Instance.farCamera.transform.position;
+					
+					//					Utils.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
+					
+					//						_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
+					float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+offsetVector3.x,
+					                                        Vector3.Dot(relativePartPos,uy.ToVector3())+offsetVector3.y,
+					                                        0f),0.25f);
+					if (newheight!= (-255f))
+					{
+						//_part.waterLevel=m_oceanLevel+newheight;
+						_part.waterLevel=newheight;
+					}
+					//						_part.waterLevel=m_oceanLevel;
+					
+					//										_part.wasSplashed=true;
+					//										_part.splashed=true;
+					//										_part.allSplashed=true;
+					
+					_part.wasSplashed=_part.splashed;
+					_part.slow=true;
+					
+					//										_part.wasSplashed=false;
+					//										_part.splashed=false;
+					//										_part.allSplashed=false;
+				}
+				
+			}
+		}
+
 		public override void Cleanup()
 			//		protected override void OnDestroy()
 		{
@@ -1181,8 +1185,9 @@ namespace scatterer {
 //		}
 		
 
-		
-		void RunThreaded1(object o)
+
+		//main thread that launches the other threads
+		void RunThreaded(object o)
 		{
 			
 			Nullable<float> time  = o as Nullable<float>;
@@ -1194,7 +1199,8 @@ namespace scatterer {
 			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer2vector, m_result2, 2, 3 )), time);
 			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer3vector, m_result3, 2, 4 )), time);
 			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer4vector, m_result4, 2, 5 )), time);
-			
+
+			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded1), time);
 			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded2), time);
 			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded3), time);
 			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded4), time);
@@ -1202,28 +1208,25 @@ namespace scatterer {
 			
 			
 			//			m_bufferIdx = m_fourier.PeformFFT(0, m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
-			m_bufferIdx = m_CPUfourier.PeformFFT(0, m_fourierBuffer0vector);
+			//m_bufferIdx = m_CPUfourier.PeformFFT(0, m_fourierBuffer0vector);
 			//			CommitResults (ref m_fourierBuffer0vector, ref m_fourierBuffer0vectorResults);
 			
 			
 			//			PackResults(ref m_fourierBuffer0vector, ref m_result0,2f);
 			
-			
-			done1 = true;
+			//technically the only one needed I think
+			done0 = true;
 			
 		}
 		
-		//		void RunThreaded(object o,Vector4[,] data, Color[]  results, float packingFactor, ref bool inDone)
-		//		{
-		//			
-		////			Nullable<float> time  = o as Nullable<float>;
-		//
-		//			m_fourier.PeformFFT(0, data);
-		//			
-		//			PackResults(data, results, packingFactor);
-		//
-		//			inDone = true;
-		//		}
+		void RunThreaded1(object o)
+		{
+			Nullable<float> time  = o as Nullable<float>;	
+			
+			m_bufferIdx = m_CPUfourier.PeformFFT(0, m_fourierBuffer0vector);
+						
+			done1 = true;
+		}
 		
 		void RunThreaded2(object o)
 		{
@@ -1509,10 +1512,13 @@ namespace scatterer {
 			
 			return disp;
 		}
-		
+
+		//TODO: Improve this method, check scrawk's CETO code since it's now open source
+		//TODO: Make it so the FFTs are still done on the GPU for rendering and CPU uses lower-res FFTs that keep the same look (figure out how to keep the same look)
 		public float findHeight(Vector3 worldPos, float precision)
 		{
-			
+			return (SampleHeight (worldPos));
+
 			int it = 0;
 			Vector3 newPos = worldPos;
 			
