@@ -134,6 +134,19 @@ namespace scatterer
 				}
 			}
 		}
+
+		public static RenderTexture CreateTexture(string name, int width, int height, int depth, RenderTextureFormat format, bool useMipmap, FilterMode filtermode, int antiAliasing)
+		{
+			
+			RenderTexture renderTexture = new RenderTexture ( width,height,depth, format);
+			renderTexture.name = name;
+			renderTexture.useMipMap=useMipmap;
+			renderTexture.filterMode = filtermode;
+			renderTexture.antiAliasing = antiAliasing;
+			renderTexture.Create ();
+			
+			return renderTexture;
+		}
 	}
 }
 

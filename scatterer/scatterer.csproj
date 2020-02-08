@@ -91,7 +91,6 @@
     <Compile Include="Utilities\DisableEffectsForTextureReplacer.cs" />
     <Compile Include="Utilities\DisableEffectsChecker.cs" />
     <Compile Include="Utilities\DisableAmbientLight.cs" />
-    <Compile Include="Utilities\BufferRenderingManager.cs" />
     <Compile Include="Utilities\EncodeFloat.cs" />
     <Compile Include="Utilities\ShaderProperties.cs" />
     <Compile Include="Utilities\RenderTypeFixer.cs" />
@@ -149,6 +148,7 @@
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereUtils.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereKSCUpdater.cs" />
     <Compile Include="Effects\Proland\ProlandManager.cs" />
+    <Compile Include="Utilities\BufferManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

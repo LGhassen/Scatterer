@@ -7,7 +7,7 @@ namespace scatterer
 	{
 		public enum PLANE { XY, XZ, YZ };
 
-		public static Mesh MakePlane(int w, int h, PLANE plane, bool _01, bool cw) 
+		public static Mesh MakePlane(int w, int h, PLANE plane, bool _01, bool cw, float UVoffset=0f, float UVscale=1f) 
 		{
 			
 			Vector3[] vertices = new Vector3[w*h];
@@ -20,6 +20,10 @@ namespace scatterer
 				for(int y = 0; y < h; y++)
 				{
 					Vector2 uv = new Vector3((float)x / (float)(w-1), (float)y / (float)(h-1));
+
+					uv.y *= UVscale;
+					uv.y += UVoffset;
+
 					Vector2 p = new Vector2();
 					
 					if(_01)

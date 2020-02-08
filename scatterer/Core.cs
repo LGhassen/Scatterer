@@ -27,7 +27,7 @@ namespace scatterer
 		public EVEReflectionHandler eveReflectionHandler;
 		public SunflareManager sunflareManager;
 		public PlanetshineManager planetshineManager;
-		public BufferRenderingManager bufferRenderingManager;
+		public BufferManager bufferRenderingManager;
 
 		//runtime stuff
 		//TODO: merge all into lightAndShadowManager?
@@ -140,7 +140,7 @@ namespace scatterer
 			//create buffer manager
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				bufferRenderingManager = (BufferRenderingManager)farCamera.gameObject.AddComponent (typeof(BufferRenderingManager));
+				bufferRenderingManager = (BufferManager)farCamera.gameObject.AddComponent (typeof(BufferManager));
 				bufferRenderingManager.start();
 
 				//copy stock depth buffers and combine into a single depth buffer
@@ -310,7 +310,7 @@ namespace scatterer
 				if (bufferRenderingManager)
 				{
 					if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
-						bufferRenderingManager.clearDepthTexture();
+						bufferRenderingManager.ClearDepthTexture();
 				}
 
 				if (!ReferenceEquals(sunflareManager,null))
