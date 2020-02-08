@@ -23,9 +23,9 @@ namespace scatterer
 		
 		private void Awake()
 		{
-			sunLight = Core.Instance.sunLight.GetComponent < Light > ();
-			preRenderHook = (SunlightModulatorPreRenderHook) Core.Instance.farCamera.gameObject.AddComponent(typeof(SunlightModulatorPreRenderHook));
-			postRenderHook = (SunlightModulatorPostRenderHook) Core.Instance.nearCamera.gameObject.AddComponent(typeof(SunlightModulatorPostRenderHook)); //less than optimal, doesn't affect internalCamera
+			sunLight = Scatterer.Instance.sunLight.GetComponent < Light > ();
+			preRenderHook = (SunlightModulatorPreRenderHook) Scatterer.Instance.farCamera.gameObject.AddComponent(typeof(SunlightModulatorPreRenderHook));
+			postRenderHook = (SunlightModulatorPostRenderHook) Scatterer.Instance.nearCamera.gameObject.AddComponent(typeof(SunlightModulatorPostRenderHook)); //less than optimal, doesn't affect internalCamera
 																																						  //but also the issue is that internalCamera
 		}
 
@@ -58,7 +58,7 @@ namespace scatterer
 			{
 				sunLight.color = modulateColor * originalColor;
 				modulateColor = Color.white;
-				if (Core.Instance.mainSettings.integrateWithEVEClouds)	//preserve original directional light color to not have double extinction
+				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)	//preserve original directional light color to not have double extinction
 					Shader.SetGlobalColor("scattererOrigDirectionalColor",originalColor);
 			}
 		}

@@ -25,12 +25,12 @@ namespace scatterer
 		{
 			Utils.DisableStockSunflares ();
 
-			foreach (string sunflareBody in Core.Instance.planetsConfigsReader.sunflares)
+			foreach (string sunflareBody in Scatterer.Instance.planetsConfigsReader.sunflares)
 			{
-				SunFlare customSunFlare = (SunFlare)Core.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunFlare));
+				SunFlare customSunFlare = (SunFlare)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunFlare));
 				try
 				{
-					customSunFlare.Configure(Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody),
+					customSunFlare.Configure(Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody),
 					                         sunflareBody,Utils.GetScaledTransform (sunflareBody));
 					customSunFlare.start ();
 					scattererSunFlares.Add (customSunFlare);
@@ -60,7 +60,7 @@ namespace scatterer
 
 		public void Cleanup()
 		{
-			if (Core.Instance.mainSettings.fullLensFlareReplacement)
+			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
 			{
 				foreach (SunFlare customSunFlare in scattererSunFlares)
 				{

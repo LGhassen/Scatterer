@@ -123,12 +123,12 @@ namespace scatterer
 		public virtual void Init ()
 		{
 
-			if (Core.Instance.mainSettings.oceanPixelLights)
+			if (Scatterer.Instance.mainSettings.oceanPixelLights)
 				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCapsPixelLights")]);
 			else
 				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[ ("Scatterer/OceanWhiteCaps")]);
 
-			if (Core.Instance.mainSettings.oceanSkyReflections)
+			if (Scatterer.Instance.mainSettings.oceanSkyReflections)
 			{
 				m_oceanMaterial.EnableKeyword ("SKY_REFLECTIONS_ON");
 				m_oceanMaterial.DisableKeyword ("SKY_REFLECTIONS_OFF");
@@ -139,7 +139,7 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("SKY_REFLECTIONS_ON");
 			}
 
-			if (Core.Instance.mainSettings.usePlanetShine)
+			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				m_oceanMaterial.EnableKeyword ("PLANETSHINE_ON");
 				m_oceanMaterial.DisableKeyword ("PLANETSHINE_OFF");
@@ -150,7 +150,7 @@ namespace scatterer
 				m_oceanMaterial.EnableKeyword ("PLANETSHINE_OFF");
 			}
 
-			if (Core.Instance.mainSettings.oceanRefraction)
+			if (Scatterer.Instance.mainSettings.oceanRefraction)
 			{
 				m_oceanMaterial.EnableKeyword ("REFRACTION_ON");
 				m_oceanMaterial.DisableKeyword ("REFRACTION_OFF");
@@ -161,7 +161,7 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
 			}
 
-			if (Core.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable))
+			if (Scatterer.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable))
 			{
 				if (QualitySettings.shadows == ShadowQuality.HardOnly)
 				{
@@ -186,10 +186,10 @@ namespace scatterer
 
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterial);
 
-			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
+			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferRenderingManager.depthTexture);
 
 			//if (Core.Instance.oceanRefraction)
-			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture);
+			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferRenderingManager.refractionTexture);
 			m_oceanMaterial.renderQueue=2501;
 
 			m_oldlocalToOcean = Matrix4x4d.Identity ();
@@ -269,15 +269,15 @@ namespace scatterer
 			oceanRefractionCommandBuffer.name = "ScattererOceanGrabScreen";
 			
 			// copy screen
-			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Core.Instance.bufferRenderingManager.refractionTexture);
+			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Scatterer.Instance.bufferRenderingManager.refractionTexture);
 			
-			Core.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-			Core.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+			Scatterer.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+			Scatterer.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 
 			//dimming
-			if (Core.Instance.mainSettings.underwaterLightDimming && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+			if (Scatterer.Instance.mainSettings.underwaterLightDimming && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 			{
-				underwaterDimmingHook = (UnderwaterDimmingHook) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(UnderwaterDimmingHook));
+				underwaterDimmingHook = (UnderwaterDimmingHook) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(UnderwaterDimmingHook));
 				underwaterDimmingHook.oceanNode = this;
 			}
 		}
@@ -295,8 +295,8 @@ namespace scatterer
 
 			if (!ReferenceEquals(oceanRefractionCommandBuffer,null))
 			{
-				Core.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-				Core.Instance.nearCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+				Scatterer.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+				Scatterer.Instance.nearCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 			}
 
 			//			base.OnDestroy();
@@ -331,7 +331,7 @@ namespace scatterer
 				_mr.enabled= oceanDraw;
 			}
 
-			isUnderwater = ((Core.Instance.farCamera.transform.position - m_manager.parentLocalTransform.position).magnitude -(float)m_manager.m_radius) < 0f;
+			isUnderwater = ((Scatterer.Instance.farCamera.transform.position - m_manager.parentLocalTransform.position).magnitude -(float)m_manager.m_radius) < 0f;
 
 			underwaterProjector.projector.enabled = isUnderwater;
 
@@ -355,21 +355,21 @@ namespace scatterer
 			m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex); //these don't need to be updated every frame
 			m_oceanMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);					
-			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
-			m_oceanMaterial.SetTexture ("_BackgroundTexture", Core.Instance.bufferRenderingManager.refractionTexture); //these don't need to be updated every frame
+			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferRenderingManager.depthTexture);
+			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferRenderingManager.refractionTexture); //these don't need to be updated every frame
 			
 			underwaterMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			underwaterMaterial.SetFloat ("darknessDepth", darknessDepth);
 			underwaterMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
 			underwaterMaterial.SetFloat ("Rg",(float)m_manager.m_radius);
 			
-			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
+			float camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
 			m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
 
 		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
 		{
-			if (!MapView.MapIsEnabled && Core.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
+			if (!MapView.MapIsEnabled && Scatterer.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
 			{
 				updateNonCameraSpecificUniforms(m_oceanMaterial);
 			}
@@ -553,7 +553,7 @@ namespace scatterer
 			oceanMaterial.SetFloat (ShaderProperties.sinTheta_PROPERTY, (float) sinTheta);
 
 			//planetshine properties
-			if (Core.Instance.mainSettings.usePlanetShine)
+			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				Matrix4x4 planetShineSourcesMatrix=m_manager.m_skyNode.planetShineSourcesMatrix;
 
@@ -597,9 +597,9 @@ namespace scatterer
 		{
 			if (!MapView.MapIsEnabled && isUnderwater)
 			{
-				float underwaterDim = Mathf.Abs(Vector3.Distance (Core.Instance.farCamera.transform.position, m_manager.parentLocalTransform.position)-(float)m_manager.m_radius);
+				float underwaterDim = Mathf.Abs(Vector3.Distance (Scatterer.Instance.farCamera.transform.position, m_manager.parentLocalTransform.position)-(float)m_manager.m_radius);
 				underwaterDim = Mathf.Lerp(1.0f,0.0f,underwaterDim / darknessDepth);
-				Core.Instance.sunlightModulatorInstance.modulateByAttenuation(underwaterDim);
+				Scatterer.Instance.sunlightModulatorInstance.modulateByAttenuation(underwaterDim);
 			}	
 		}
 
@@ -643,7 +643,7 @@ namespace scatterer
 			ConfigNode[] configNodeArray;
 			bool found = false;
 
-			foreach (UrlDir.UrlConfig _url in Core.Instance.planetsConfigsReader.oceanConfigs)
+			foreach (UrlDir.UrlConfig _url in Scatterer.Instance.planetsConfigsReader.oceanConfigs)
 			{
 				configNodeArray = _url.config.GetNodes("Ocean");
 				
@@ -670,7 +670,7 @@ namespace scatterer
 				Utils.LogDebug("Ocean config not found for: "+m_manager.parentCelestialBody.name);
 				Utils.LogDebug("Removing ocean for "+m_manager.parentCelestialBody.name +" from planets list");
 				
-				(Core.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == m_manager.parentCelestialBody.name)).hasOcean = false;
+				(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == m_manager.parentCelestialBody.name)).hasOcean = false;
 				
 				this.Cleanup();
 				UnityEngine.Object.Destroy (this);

@@ -110,13 +110,13 @@ namespace scatterer
 		{
 			windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 			mainMenuOptions = (HighLogic.LoadedScene == GameScenes.SPACECENTER);
-			windowRect.x=Core.Instance.pluginData.inGameWindowLocation.x;
-			windowRect.y=Core.Instance.pluginData.inGameWindowLocation.y;
+			windowRect.x=Scatterer.Instance.pluginData.inGameWindowLocation.x;
+			windowRect.y=Scatterer.Instance.pluginData.inGameWindowLocation.y;
 		}
 
 		public void UpdateGUIvisible()
 		{
-			if ((Input.GetKey (Core.Instance.pluginData.guiModifierKey1) || Input.GetKey (Core.Instance.pluginData.guiModifierKey2)) && (Input.GetKeyDown (Core.Instance.pluginData.guiKey1) || (Input.GetKeyDown (Core.Instance.pluginData.guiKey2))))
+			if ((Input.GetKey (Scatterer.Instance.pluginData.guiModifierKey1) || Input.GetKey (Scatterer.Instance.pluginData.guiModifierKey2)) && (Input.GetKeyDown (Scatterer.Instance.pluginData.guiKey1) || (Input.GetKeyDown (Scatterer.Instance.pluginData.guiKey2))))
 			{
 				if (ToolbarButton.Instance.button!= null)
 				{
@@ -134,9 +134,9 @@ namespace scatterer
 			if (visible)
 			{
 				
-				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v"+Core.Instance.versionNumber+": "
-				                               + Core.Instance.pluginData.guiModifierKey1String+"/"+Core.Instance.pluginData.guiModifierKey2String +"+" +Core.Instance.pluginData.guiKey1String
-				                               +"/"+Core.Instance.pluginData.guiKey2String+" toggle");
+				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v"+Scatterer.Instance.versionNumber+": "
+				                               + Scatterer.Instance.pluginData.guiModifierKey1String+"/"+Scatterer.Instance.pluginData.guiModifierKey2String +"+" +Scatterer.Instance.pluginData.guiKey1String
+				                               +"/"+Scatterer.Instance.pluginData.guiKey2String+" toggle");
 				
 				//prevent window from going offscreen
 				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
@@ -159,57 +159,57 @@ namespace scatterer
 			if (mainMenuOptions)  //KSC screen options
 			{ 
 				GUILayout.Label (String.Format ("Scatterer: features selector"));
-				Core.Instance.mainSettings.useOceanShaders = GUILayout.Toggle(Core.Instance.mainSettings.useOceanShaders, "Ocean shaders (may require game restart on change)");
+				Scatterer.Instance.mainSettings.useOceanShaders = GUILayout.Toggle(Scatterer.Instance.mainSettings.useOceanShaders, "Ocean shaders (may require game restart on change)");
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Ocean: fourierGridSize (64:fast,128:normal,256:HQ)");
-				Core.Instance.mainSettings.m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (Core.Instance.mainSettings.m_fourierGridSize.ToString ())));
+				Scatterer.Instance.mainSettings.m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ())));
 				GUILayout.EndHorizontal ();
 				
-				Core.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle(Core.Instance.mainSettings.oceanSkyReflections, "Ocean: accurate sky reflection");
-				Core.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle(Core.Instance.mainSettings.shadowsOnOcean, "Ocean: Craft/Terrain shadows (may have artifacts on Directx11)");
-				Core.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle(Core.Instance.mainSettings.oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
+				Scatterer.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle(Scatterer.Instance.mainSettings.oceanSkyReflections, "Ocean: accurate sky reflection");
+				Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle(Scatterer.Instance.mainSettings.shadowsOnOcean, "Ocean: Craft/Terrain shadows (may have artifacts on Directx11)");
+				Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle(Scatterer.Instance.mainSettings.oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
 				
 				//Core.Instance.mainSettings.usePlanetShine = GUILayout.Toggle(Core.Instance.usePlanetShine, "PlanetShine");
-				Core.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle(Core.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
+				Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle(Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 				
-				Core.Instance.mainSettings.fullLensFlareReplacement=GUILayout.Toggle(Core.Instance.mainSettings.fullLensFlareReplacement, "Lens flare shader");
-				Core.Instance.mainSettings.useEclipses = GUILayout.Toggle(Core.Instance.mainSettings.useEclipses, "Eclipses (WIP, sky/orbit only for now)");
-				Core.Instance.mainSettings.useRingShadows = GUILayout.Toggle(Core.Instance.mainSettings.useRingShadows, "Kopernicus ring shadows");
+				Scatterer.Instance.mainSettings.fullLensFlareReplacement=GUILayout.Toggle(Scatterer.Instance.mainSettings.fullLensFlareReplacement, "Lens flare shader");
+				Scatterer.Instance.mainSettings.useEclipses = GUILayout.Toggle(Scatterer.Instance.mainSettings.useEclipses, "Eclipses (WIP, sky/orbit only for now)");
+				Scatterer.Instance.mainSettings.useRingShadows = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRingShadows, "Kopernicus ring shadows");
 				//Core.Instance.mainSettings.useGodrays = GUILayout.Toggle(Core.Instance.useGodrays, "Godrays (early WIP)");
 				
-				Core.Instance.mainSettings.terrainShadows = GUILayout.Toggle(Core.Instance.mainSettings.terrainShadows, "Terrain shadows");
+				Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle(Scatterer.Instance.mainSettings.terrainShadows, "Terrain shadows");
 				GUILayout.BeginHorizontal ();
 				
 				GUILayout.Label ("Shadow bias");
-				Core.Instance.mainSettings.shadowBias = float.Parse (GUILayout.TextField (Core.Instance.mainSettings.shadowBias.ToString ("0.000")));
+				Scatterer.Instance.mainSettings.shadowBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowBias.ToString ("0.000")));
 				
 				GUILayout.Label ("Shadow normal bias");
-				Core.Instance.mainSettings.shadowNormalBias = float.Parse (GUILayout.TextField (Core.Instance.mainSettings.shadowNormalBias.ToString ("0.000")));
+				Scatterer.Instance.mainSettings.shadowNormalBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowNormalBias.ToString ("0.000")));
 				
 				GUILayout.EndHorizontal ();
 				
 				GUILayout.BeginHorizontal ();
-				Core.Instance.mainSettings.overrideNearClipPlane = GUILayout.Toggle(Core.Instance.mainSettings.overrideNearClipPlane, "Override Near ClipPlane (not recommended - restart on disable)");
-				Core.Instance.mainSettings.nearClipPlane = float.Parse (GUILayout.TextField (Core.Instance.mainSettings.nearClipPlane.ToString ("0.000")));
+				Scatterer.Instance.mainSettings.overrideNearClipPlane = GUILayout.Toggle(Scatterer.Instance.mainSettings.overrideNearClipPlane, "Override Near ClipPlane (not recommended - restart on disable)");
+				Scatterer.Instance.mainSettings.nearClipPlane = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.nearClipPlane.ToString ("0.000")));
 				GUILayout.EndHorizontal ();
 
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Menu scroll section height");
-				Core.Instance.pluginData.scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (Core.Instance.pluginData.scrollSectionHeight.ToString ())));
+				Scatterer.Instance.pluginData.scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.pluginData.scrollSectionHeight.ToString ())));
 				GUILayout.EndHorizontal ();
 				
-				Core.Instance.mainSettings.disableAmbientLight = GUILayout.Toggle(Core.Instance.mainSettings.disableAmbientLight, "Disable scaled space ambient light");
-				Core.Instance.mainSettings.sunlightExtinction = GUILayout.Toggle(Core.Instance.mainSettings.sunlightExtinction, "Sunlight extinction (direct sun light changes color with sunset/dusk)");
-				Core.Instance.mainSettings.underwaterLightDimming = GUILayout.Toggle(Core.Instance.mainSettings.underwaterLightDimming, "Dim light underwater");
+				Scatterer.Instance.mainSettings.disableAmbientLight = GUILayout.Toggle(Scatterer.Instance.mainSettings.disableAmbientLight, "Disable scaled space ambient light");
+				Scatterer.Instance.mainSettings.sunlightExtinction = GUILayout.Toggle(Scatterer.Instance.mainSettings.sunlightExtinction, "Sunlight extinction (direct sun light changes color with sunset/dusk)");
+				Scatterer.Instance.mainSettings.underwaterLightDimming = GUILayout.Toggle(Scatterer.Instance.mainSettings.underwaterLightDimming, "Dim light underwater");
 				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label (".cfg file used:");
-				GUILayout.TextField(Core.Instance.planetsConfigsReader.baseConfigs [0].parent.url);
+				GUILayout.TextField(Scatterer.Instance.planetsConfigsReader.baseConfigs [0].parent.url);
 				GUILayout.EndHorizontal ();
 			}
 			
-			else if (Core.Instance.isActive)
+			else if (Scatterer.Instance.isActive)
 			{
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Planet:");
@@ -218,25 +218,25 @@ namespace scatterer
 					if (selectedPlanet > 0) {
 						selectedPlanet -= 1;
 						selectedConfigPoint = 0;
-						if (Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active) {
+						if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active) {
 							loadConfigPoint (selectedConfigPoint);
 							getSettingsFromSkynode ();
-							if (Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
+							if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
 								getSettingsFromOceanNode ();
 						}
 					}
 				}
 				
-				GUILayout.TextField ((Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].celestialBodyName).ToString ());
+				GUILayout.TextField ((Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].celestialBodyName).ToString ());
 				
 				if (GUILayout.Button (">")) {
-					if (selectedPlanet < Core.Instance.planetsConfigsReader.scattererCelestialBodies.Count - 1) {
+					if (selectedPlanet < Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Count - 1) {
 						selectedPlanet += 1;
 						selectedConfigPoint = 0;
-						if (Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active) {
+						if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active) {
 							loadConfigPoint (selectedConfigPoint);
 							getSettingsFromSkynode ();
-							if (Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
+							if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
 								getSettingsFromOceanNode ();
 						}
 					}
@@ -245,18 +245,18 @@ namespace scatterer
 				
 				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Planet loaded:" + Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active.ToString ()+
-				                 "                                Has ocean:" + Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean.ToString ());
+				GUILayout.Label ("Planet loaded:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active.ToString ()+
+				                 "                                Has ocean:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean.ToString ());
 				GUILayout.EndHorizontal ();
 				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Load distance:" + Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].loadDistance.ToString ()+
-				                 "                             Unload distance:" + Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
+				GUILayout.Label ("Load distance:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].loadDistance.ToString ()+
+				                 "                             Unload distance:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
 				GUILayout.EndHorizontal ();
 				
-				if (Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active)
+				if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active)
 				{
-					configPointsCnt = Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
+					configPointsCnt = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
 					
 					GUILayout.BeginHorizontal ();
 					if (GUILayout.Button ("Atmosphere settings")) {
@@ -265,7 +265,7 @@ namespace scatterer
 					}
 					
 					if (GUILayout.Button ("Ocean settings")) {
-						if (Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
+						if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
 							displayOceanSettings = true;
 						
 						//displaySunflareSettings = false;
@@ -277,7 +277,7 @@ namespace scatterer
 					//						}
 					GUILayout.EndHorizontal ();
 					
-					ConfigPoint _cur = Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint];
+					ConfigPoint _cur = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [selectedConfigPoint];
 					
 					if (!displayOceanSettings)
 					{
@@ -288,13 +288,13 @@ namespace scatterer
 							newCfgPtAlt = Convert.ToSingle (GUILayout.TextField (newCfgPtAlt.ToString ()));
 							if (GUILayout.Button ("Add"))
 							{
-								Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1,
+								Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Insert (selectedConfigPoint + 1,
 								                                                                                   new ConfigPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100,
 								                 postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, skyExtinctionTint / 100,
 								                 openglThreshold,viewdirOffset,extinctionTint/100,
 								                 extinctionThickness));
 								selectedConfigPoint += 1;
-								configPointsCnt = Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
+								configPointsCnt = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
 								loadConfigPoint (selectedConfigPoint);
 							}
 							GUILayout.EndHorizontal ();
@@ -326,12 +326,12 @@ namespace scatterer
 									print ("Can't delete config point, one or no points remaining");
 								else
 								{
-									Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.RemoveAt (selectedConfigPoint);
+									Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.RemoveAt (selectedConfigPoint);
 									if (selectedConfigPoint >= configPointsCnt - 1)
 									{
 										selectedConfigPoint = configPointsCnt - 2;
 									}
-									configPointsCnt = Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
+									configPointsCnt = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
 									loadConfigPoint (selectedConfigPoint);
 								}
 								
@@ -341,13 +341,13 @@ namespace scatterer
 														
 							GUIfloat("Point altitude", ref pointAltitude, ref _cur.altitude);
 														
-							_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width (400), GUILayout.Height (Core.Instance.pluginData.scrollSectionHeight));
+							_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width (400), GUILayout.Height (Scatterer.Instance.pluginData.scrollSectionHeight));
 
 							GUILayout.Label("(settings with a * are global and not cfgPoint dependent)");
 							GUILayout.Label("Atmo");
-							GUIfloat("ExperimentalAtmoScale*", ref experimentalAtmoScale,ref Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.experimentalAtmoScale);
-							GUIfloat("AtmosphereGlobalScale*", ref atmosphereGlobalScale, ref Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.atmosphereGlobalScale);
-							GUIfloat("mieG*", ref mieG, ref Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_mieG);
+							GUIfloat("ExperimentalAtmoScale*", ref experimentalAtmoScale,ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.experimentalAtmoScale);
+							GUIfloat("AtmosphereGlobalScale*", ref atmosphereGlobalScale, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.atmosphereGlobalScale);
+							GUIfloat("mieG*", ref mieG, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.m_mieG);
 
 							GUILayout.Label("Sky");
 							GUIfloat("Sky Exposure", ref exposure, ref _cur.skyExposure);
@@ -368,20 +368,20 @@ namespace scatterer
 							GUIfloat("Depth buffer Threshold", ref openglThreshold, ref _cur.openglThreshold);
 						}
 						
-						if (Core.Instance.mainSettings.integrateWithEVEClouds && Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.usesCloudIntegration)
+						if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.usesCloudIntegration)
 						{
 							GUILayout.Label("EVE integration");
-							GUIfloat("Cloud Color Multiplier*", ref cloudColorMultiplier, ref Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudColorMultiplier);
-							GUIfloat("Cloud Scattering Multiplier*", ref cloudScatteringMultiplier, ref Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudScatteringMultiplier);
-							GUIfloat("Cloud Sky irradiance Multiplier*", ref cloudSkyIrradianceMultiplier, ref Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudSkyIrradianceMultiplier);
+							GUIfloat("Cloud Color Multiplier*", ref cloudColorMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudColorMultiplier);
+							GUIfloat("Cloud Scattering Multiplier*", ref cloudScatteringMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudScatteringMultiplier);
+							GUIfloat("Cloud Sky irradiance Multiplier*", ref cloudSkyIrradianceMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.cloudSkyIrradianceMultiplier);
 							
-							GUIfloat("Volumetrics Color Multiplier*", ref volumetricsColorMultiplier, ref Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsColorMultiplier);
+							GUIfloat("Volumetrics Color Multiplier*", ref volumetricsColorMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsColorMultiplier);
 
 							GUILayout.BeginHorizontal ();
 							GUILayout.Label ("Preserve cloud colors*");
-							GUILayout.TextField ( Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.EVEIntegration_preserveCloudColors.ToString ());
+							GUILayout.TextField ( Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.EVEIntegration_preserveCloudColors.ToString ());
 							if (GUILayout.Button ("Toggle"))
-								Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePreserveCloudColors();
+								Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePreserveCloudColors();
 							GUILayout.EndHorizontal ();
 
 							//								GUIfloat("Volumetrics Scattering Multiplier", ref volumetricsScatteringMultiplier, ref Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsScatteringMultiplier);
@@ -397,9 +397,9 @@ namespace scatterer
 						rimpower = Convert.ToSingle (GUILayout.TextField (rimpower.ToString ()));
 						
 						if (GUILayout.Button ("Set")) {
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimBlend = rimBlend;
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimpower = rimpower;
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimBlend = rimBlend;
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimpower = rimpower;
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
 						}
 						GUILayout.EndHorizontal ();
 						
@@ -417,29 +417,29 @@ namespace scatterer
 						shininess = (float)(Convert.ToDouble (GUILayout.TextField (shininess.ToString ())));
 						
 						if (GUILayout.Button ("Set")) {
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specR = specR;
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specG = specG;
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specB = specB;
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.shininess = shininess;
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specR = specR;
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specG = specG;
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specB = specB;
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.shininess = shininess;
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
 						}
 						GUILayout.EndHorizontal ();
 						GUILayout.EndScrollView ();
 
 						GUILayout.BeginHorizontal ();
-						if (Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint == 0)
+						if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint == 0)
 							GUILayout.Label ("Current state:Lowest configPoint, cfgPoint 0");
-						else if (Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint >= configPointsCnt)
-							GUILayout.Label (String.Format ("Current state:Highest configPoint, cfgPoint{0}", Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1));
+						else if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint >= configPointsCnt)
+							GUILayout.Label (String.Format ("Current state:Highest configPoint, cfgPoint{0}", Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1));
 						else
-							GUILayout.Label (String.Format ("Current state:{0}% cfgPoint{1} + {2}% cfgPoint{3} ", (int)(100 * (1 - Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.percentage)), Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1, (int)(100 * Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.percentage), Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint));
+							GUILayout.Label (String.Format ("Current state:{0}% cfgPoint{1} + {2}% cfgPoint{3} ", (int)(100 * (1 - Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.percentage)), Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint - 1, (int)(100 * Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.percentage), Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint));
 						GUILayout.EndHorizontal ();
 						
 						GUILayout.BeginHorizontal ();
 						
 						if (GUILayout.Button ("Toggle PostProcessing"))
 						{
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePostProcessing();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePostProcessing();
 						}
 						GUILayout.EndHorizontal ();
 						
@@ -457,12 +457,12 @@ namespace scatterer
 						GUILayout.BeginHorizontal ();
 						if (GUILayout.Button ("Save atmo"))
 						{
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.saveToConfigNode ();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.saveToConfigNode ();
 						}
 						
 						if (GUILayout.Button ("Load atmo"))
 						{
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode ();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode ();
 							getSettingsFromSkynode ();
 							loadConfigPoint (selectedConfigPoint);
 						}
@@ -471,16 +471,16 @@ namespace scatterer
 						
 						GUILayout.BeginHorizontal ();
 						GUILayout.Label (".cfg file used:");
-						GUILayout.TextField(Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configUrl.parent.url);
+						GUILayout.TextField(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configUrl.parent.url);
 						GUILayout.EndHorizontal ();
 
-						if (Core.Instance.mainSettings.integrateWithEVEClouds)
+						if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)
 						{
 							GUILayout.BeginHorizontal ();
 							if (GUILayout.Button ("Map EVE clouds"))
 							{
-								Core.Instance.eveReflectionHandler.MapEVEClouds();
-								foreach (ScattererCelestialBody _cel in Core.Instance.planetsConfigsReader.scattererCelestialBodies)
+								Scatterer.Instance.eveReflectionHandler.MapEVEClouds();
+								foreach (ScattererCelestialBody _cel in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 								{
 									if (_cel.active)
 									{
@@ -496,9 +496,9 @@ namespace scatterer
 					}
 					else
 					{
-						OceanWhiteCaps oceanNode = Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
+						OceanWhiteCaps oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
 						//GUItoggle("Toggle ocean", ref stockOcean);
-						_scroll2 = GUILayout.BeginScrollView (_scroll2, false, true, GUILayout.Width (400), GUILayout.Height (Core.Instance.pluginData.scrollSectionHeight+100));
+						_scroll2 = GUILayout.BeginScrollView (_scroll2, false, true, GUILayout.Width (400), GUILayout.Height (Scatterer.Instance.pluginData.scrollSectionHeight+100));
 						{
 							GUIfloat ("Alpha/WhiteCap Radius", ref oceanAlphaRadius, ref oceanNode.alphaRadius);
 							GUIfloat ("ocean Alpha", ref oceanAlpha, ref oceanNode.oceanAlpha);
@@ -550,7 +550,7 @@ namespace scatterer
 							GUIint ("Ocean mesh resolution (lower is better)", ref m_resolution, ref oceanNode.m_resolution, 1);
 							
 							GUILayout.BeginHorizontal ();
-							GUILayout.Label ("current fourierGridSize: "+Core.Instance.mainSettings.m_fourierGridSize.ToString());
+							GUILayout.Label ("current fourierGridSize: "+Scatterer.Instance.mainSettings.m_fourierGridSize.ToString());
 							GUILayout.EndHorizontal ();
 							
 							//GUIint("Ocean renderqueue", ref oceanRenderQueue, ref oceanRenderQueue,1);
@@ -560,8 +560,8 @@ namespace scatterer
 						GUILayout.BeginHorizontal ();
 						if (GUILayout.Button ("Apply settings/Rebuild ocean"))
 						{
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().saveToConfigNode ();
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.reBuildOcean ();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().saveToConfigNode ();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.reBuildOcean ();
 						}
 						GUILayout.EndHorizontal ();
 						
@@ -569,18 +569,18 @@ namespace scatterer
 						
 						
 						if (GUILayout.Button ("Save ocean")) {
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().saveToConfigNode ();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().saveToConfigNode ();
 						}
 						
 						if (GUILayout.Button ("Load ocean")) {
-							Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().loadFromConfigNode ();
+							Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().loadFromConfigNode ();
 							getSettingsFromOceanNode ();
 						}
 						GUILayout.EndHorizontal ();
 						
 						GUILayout.BeginHorizontal ();
 						GUILayout.Label (".cfg file used:");
-						GUILayout.TextField(Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode().configUrl.parent.url);
+						GUILayout.TextField(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode().configUrl.parent.url);
 						GUILayout.EndHorizontal ();
 					}
 					
@@ -591,15 +591,15 @@ namespace scatterer
 						{
 							if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 							{
-								if (Core.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)))
-									Component.Destroy(Core.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)));
+								if (Scatterer.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)))
+									Component.Destroy(Scatterer.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)));
 
-								if (Core.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)))
-									Component.Destroy(Core.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)));
+								if (Scatterer.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)))
+									Component.Destroy(Scatterer.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)));
 							}
 
-							if (Core.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
-								Component.Destroy(Core.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
+							if (Scatterer.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
+								Component.Destroy(Scatterer.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
 
 							wireFrame=false;
 						}
@@ -608,10 +608,10 @@ namespace scatterer
 						{
 							if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 							{
-								Core.Instance.nearCamera.gameObject.AddComponent (typeof(Wireframe));
-								Core.Instance.farCamera.gameObject.AddComponent (typeof(Wireframe));
+								Scatterer.Instance.nearCamera.gameObject.AddComponent (typeof(Wireframe));
+								Scatterer.Instance.farCamera.gameObject.AddComponent (typeof(Wireframe));
 							}
-							Core.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(Wireframe));
+							Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(Wireframe));
 							
 							wireFrame=true;
 						}
@@ -688,7 +688,7 @@ namespace scatterer
 
 		public void getSettingsFromSkynode ()
 		{
-			SkyNode skyNode = Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode;
+			SkyNode skyNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode;
 			ConfigPoint selected = skyNode.configPoints [selectedConfigPoint];
 			
 			postProcessingalpha = selected.postProcessAlpha;
@@ -733,7 +733,7 @@ namespace scatterer
 		
 		public void getSettingsFromOceanNode ()
 		{
-			OceanWhiteCaps oceanNode = Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
+			OceanWhiteCaps oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
 
 			oceanAlpha = oceanNode.oceanAlpha;
 			oceanAlphaRadius = oceanNode.alphaRadius;
@@ -773,7 +773,7 @@ namespace scatterer
 		
 		public void loadConfigPoint (int point)
 		{
-			ConfigPoint _cur = Core.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point];
+			ConfigPoint _cur = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints [point];
 			
 			postProcessDepth = _cur.postProcessDepth;
 			extinctionTint = _cur.extinctionTint;

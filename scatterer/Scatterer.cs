@@ -13,10 +13,10 @@ using UnityEngine;
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	public partial class Core: MonoBehaviour
+	public partial class Scatterer: MonoBehaviour
 	{	
-		private static Core instance;
-		public static Core Instance {get {return instance;}}
+		private static Scatterer instance;
+		public static Scatterer Instance {get {return instance;}}
 
 		public MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
 		public PluginDataReadWrite pluginData     = new PluginDataReadWrite();
@@ -184,7 +184,7 @@ namespace scatterer
 			//create sunlightModulator
 			if (mainSettings.sunlightExtinction || (mainSettings.underwaterLightDimming && mainSettings.useOceanShaders))
 			{
-				sunlightModulatorInstance = (SunlightModulator) Core.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
+				sunlightModulatorInstance = (SunlightModulator) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
 			}
 
 			coreInitiated = true;

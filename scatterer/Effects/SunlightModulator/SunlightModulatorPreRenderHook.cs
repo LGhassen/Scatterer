@@ -20,7 +20,7 @@ namespace scatterer
 
 		public void OnPreCull() //needs to be onPreCull, onPreRender is too late
 		{
-			Core.Instance.sunlightModulatorInstance.applyColorModulation ();
+			Scatterer.Instance.sunlightModulatorInstance.applyColorModulation ();
 		}
 	}
 }

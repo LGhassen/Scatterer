@@ -17,15 +17,15 @@ namespace scatterer
 		public static void removeStockOceans()
 		{
 			Material invisibleOcean = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
-			foreach (ScattererCelestialBody sctBody in Core.Instance.planetsConfigsReader.scattererCelestialBodies)
+			foreach (ScattererCelestialBody sctBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
 				if (sctBody.hasOcean)
 				{
 					bool removed = false;
-					var celBody = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
+					var celBody = Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
 					if (celBody == null)
 					{
-						celBody = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
+						celBody = Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
 					}
 					
 					if (celBody != null)

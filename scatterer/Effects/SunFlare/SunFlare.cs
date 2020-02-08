@@ -113,7 +113,7 @@ namespace scatterer
 			sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
 
 			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-				sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.bufferRenderingManager.depthTexture);
+				sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferRenderingManager.depthTexture);
 			else
 				sunglareMaterial.SetTexture ("_customDepthTexture", Texture2D.whiteTexture);
 
@@ -208,13 +208,13 @@ namespace scatterer
 
 			sunglareMaterial.SetVector ("flareColor", flareColor);
 
-			scaledCameraHook = (SunflareCameraHook) Core.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
+			scaledCameraHook = (SunflareCameraHook) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
 			scaledCameraHook.flare = this;
 			scaledCameraHook.useDbufferOnCamera = 0f;
 
 			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
-				nearCameraHook = (SunflareCameraHook)Core.Instance.nearCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
+				nearCameraHook = (SunflareCameraHook)Scatterer.Instance.nearCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
 				nearCameraHook.flare = this;
 				nearCameraHook.useDbufferOnCamera = 1f;
 			}
@@ -225,13 +225,13 @@ namespace scatterer
 
 		public void updateProperties()
 		{
-			sunViewPortPos = Core.Instance.scaledSpaceCamera.WorldToViewportPoint
+			sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint
 				(ScaledSpace.LocalToScaledSpace(source.transform.position));
 
-			float dist = (float) (Core.Instance.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
+			float dist = (float) (Scatterer.Instance.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
 				.magnitude;
 
-			sunGlareScale = dist / 2266660f * Core.Instance.scaledSpaceCamera.fieldOfView / 60f;
+			sunGlareScale = dist / 2266660f * Scatterer.Instance.scaledSpaceCamera.fieldOfView / 60f;
 
 			//if dist > 1.25*sunglareFadeDistance -->1
 			//if dist < 0.25*sunglareFadeDistance -->0
@@ -249,20 +249,20 @@ namespace scatterer
 			//if (!MapView.MapIsEnabled)
 			{
 	
-				hitStatus = Physics.Raycast (Core.Instance.farCamera.transform.position,
-				                             (source.transform.position- Core.Instance.farCamera.transform.position).normalized,
+				hitStatus = Physics.Raycast (Scatterer.Instance.farCamera.transform.position,
+				                             (source.transform.position- Scatterer.Instance.farCamera.transform.position).normalized,
 				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
 				if(!hitStatus)
 				{
-					hitStatus = Physics.Raycast (Core.Instance.scaledSpaceCamera.transform.position,
-					                             (ScaledSpace.LocalToScaledSpace(source.transform.position)- Core.Instance.scaledSpaceCamera.transform.position)
+					hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position,
+					                             (ScaledSpace.LocalToScaledSpace(source.transform.position)- Scatterer.Instance.scaledSpaceCamera.transform.position)
 					                             .normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 				}
 			}
 			else
 			{
-				hitStatus = Physics.Raycast (Core.Instance.scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(source.transform.position)
-				                                                                           - Core.Instance.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
+				hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(source.transform.position)
+				                                                                           - Scatterer.Instance.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 			}
 
 			if(hitStatus)
@@ -273,16 +273,16 @@ namespace scatterer
 			}
 
 			eclipse = hitStatus;
-			sunglareMaterial.SetFloat("renderSunFlare", (!eclipse && (sunViewPortPos.z > 0) && !Core.Instance.underwater ) ? 1.0f : 0.0f);
+			sunglareMaterial.SetFloat("renderSunFlare", (!eclipse && (sunViewPortPos.z > 0) && !Scatterer.Instance.underwater ) ? 1.0f : 0.0f);
 
 			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
-			sunglareMaterial.SetFloat ("aspectRatio", Core.Instance.scaledSpaceCamera.aspect);
+			sunglareMaterial.SetFloat ("aspectRatio", Scatterer.Instance.scaledSpaceCamera.aspect);
 			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
 			sunglareMaterial.SetFloat ("sunGlareFade", sunGlareFade);
 			sunglareMaterial.SetFloat ("ghostFade", ghostFade);
 
 			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-				sunglareMaterial.SetTexture ("_customDepthTexture", Core.Instance.bufferRenderingManager.depthTexture);
+				sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferRenderingManager.depthTexture);
 		}	
 
 		public void Update()
@@ -349,7 +349,7 @@ namespace scatterer
 		public void LoadConfigNode ()
 		{
 			ConfigNode cnToLoad = new ConfigNode ();
-			foreach (ConfigNode _cn in Core.Instance.planetsConfigsReader.sunflareConfigs)
+			foreach (ConfigNode _cn in Scatterer.Instance.planetsConfigsReader.sunflareConfigs)
 			{
 				if (_cn.TryGetNode(sourceName, ref cnToLoad))
 				{

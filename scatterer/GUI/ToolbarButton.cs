@@ -63,12 +63,12 @@ namespace scatterer
 		}
 		public void ShowToolbarGUI()
 		{
-			Core.Instance.guiHandler.visible = true;
+			Scatterer.Instance.guiHandler.visible = true;
 		}
 		
 		public void HideToolbarGUI()
 		{
-			Core.Instance.guiHandler.visible = false;
+			Scatterer.Instance.guiHandler.visible = false;
 		}
 
 		void OnDestroy ()

@@ -207,7 +207,7 @@ namespace scatterer
 				localScatteringMaterial.DisableKeyword("GODRAYS_ON");
 				localScatteringMaterial.EnableKeyword("GODRAYS_OFF");
 //			}
-			if (Core.Instance.mainSettings.useEclipses)
+			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
 				localScatteringMaterial.EnableKeyword ("ECLIPSES_ON");
 				localScatteringMaterial.DisableKeyword ("ECLIPSES_OFF");
@@ -268,7 +268,7 @@ namespace scatterer
 
 			skySphereMeshRenderer.enabled = true;
 
-			if (Core.Instance.mainSettings.useRingShadows)
+			if (Scatterer.Instance.mainSettings.useRingShadows)
 			{
 				ringObject = GameObject.Find (celestialBodyName + "Ring");
 				if (ringObject)
@@ -329,7 +329,7 @@ namespace scatterer
 			InitUniforms (m_skyMaterial);
 			InitUniforms (scaledScatteringMaterial);
 
-			if (Core.Instance.mainSettings.fullLensFlareReplacement)
+			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
 			{
 				sunflareExtinctionMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer/sunFlareExtinction"]);
 				sunflareExtinctionMaterial.SetFloat ("Rg", Rg);
@@ -363,13 +363,13 @@ namespace scatterer
 			SetUniforms (m_skyMaterial);
 			SetUniforms (scaledScatteringMaterial);
 
-			if (!MapView.MapIsEnabled && Core.Instance.mainSettings.sunlightExtinction)
+			if (!MapView.MapIsEnabled && Scatterer.Instance.mainSettings.sunlightExtinction)
 			{
-				Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Core.Instance.farCamera.transform.position)- parentLocalTransform.position;
+				Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.farCamera.transform.position)- parentLocalTransform.position;
 
 				float lerpedScale = Mathf.Lerp(1f,experimentalAtmoScale,(extinctionPosition.magnitude-m_radius)/2000f); //hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
 
-				Core.Instance.sunlightModulatorInstance.modulateByColor(
+				Scatterer.Instance.sunlightModulatorInstance.modulateByColor(
 					AtmosphereUtils.getExtinction(extinctionPosition, m_manager.getDirectionToSun ().normalized,
 				                              Rt, Rg, m_transmit,lerpedScale));
 			}
@@ -385,7 +385,7 @@ namespace scatterer
 					}
 				}
 			}
-			if (Core.Instance.mainSettings.useEclipses)
+			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
 				float scaleFactor=ScaledSpace.ScaleFactor;
 				
@@ -411,7 +411,7 @@ namespace scatterer
 					                                           casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
 				}
 			}
-			if (Core.Instance.mainSettings.usePlanetShine)
+			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				planetShineRGBMatrix = Matrix4x4.zero;
 				planetShineSourcesMatrix = Matrix4x4.zero;
@@ -440,31 +440,31 @@ namespace scatterer
 			}
 			//update EVE cloud shaders
 			//maybe refactor?
-			if (Core.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
+			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				int size;
 				
 				//2d clouds
-				if(Core.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName))
+				if(Scatterer.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName))
 				{
-					size = Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
+					size = Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
 					for (int i=0;i<size;i++)
 					{
-						SetUniforms(Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i]);
+						SetUniforms(Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i]);
 						
 						//if (!inScaledSpace)
-						UpdatePostProcessMaterial(Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i]);
+						UpdatePostProcessMaterial(Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i]);
 						
-						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
+						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
 							("cloudColorMultiplier", cloudColorMultiplier);
-						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
+						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
 							("cloudScatteringMultiplier", cloudScatteringMultiplier);
-						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
+						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
 							("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
 						
 						
-						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_ON");
-						Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_OFF");
+						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_ON");
+						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_OFF");
 					}
 				}
 				
@@ -489,18 +489,18 @@ namespace scatterer
 				}
 			}
 			//update extinction for sunflares
-			if (!ReferenceEquals(Core.Instance.sunflareManager,null))
+			if (!ReferenceEquals(Scatterer.Instance.sunflareManager,null))
 			{
-				foreach (SunFlare customSunFlare in Core.Instance.sunflareManager.scattererSunFlares)
+				foreach (SunFlare customSunFlare in Scatterer.Instance.sunflareManager.scattererSunFlares)
 				{
 					//render extinction to texture
 					sunflareExtinctionMaterial.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
 					sunflareExtinctionMaterial.SetFloat("_experimentalAtmoScale",experimentalAtmoScale);
 
 					if (!MapView.MapIsEnabled)
-						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", Core.Instance.farCamera.transform.position - parentLocalTransform.position);
+						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", Scatterer.Instance.farCamera.transform.position - parentLocalTransform.position);
 					else
-						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Core.Instance.scaledSpaceCamera.transform.position) - parentLocalTransform.position);
+						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Scatterer.Instance.scaledSpaceCamera.transform.position) - parentLocalTransform.position);
 
 					Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 0); //pass 0 for sunflare extinction
 
@@ -528,7 +528,7 @@ namespace scatterer
 				if (!inScaledSpace && prevState)
 				{
 					//set flag to map EVE volumetrics after a few frames
-					if (Core.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
+					if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 						mapVolumetrics=true;
 				}
 
@@ -575,7 +575,7 @@ namespace scatterer
 
 				//after the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
 				//call EVE clouds2D.reassign() method to set the shader properties
-				if (Core.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
+				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 				{
 					initiateEVEClouds();
 				}
@@ -587,13 +587,13 @@ namespace scatterer
 			{
 				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 				{
-					alt = Vector3.Distance (Core.Instance.farCamera.transform.position, parentLocalTransform.position);
+					alt = Vector3.Distance (Scatterer.Instance.farCamera.transform.position, parentLocalTransform.position);
 					
 					trueAlt = alt - m_radius;
 				}
 				interpolateVariables ();
 
-				if (m_manager.hasOcean && !Core.Instance.mainSettings.useOceanShaders)
+				if (m_manager.hasOcean && !Scatterer.Instance.mainSettings.useOceanShaders)
 				{
 					skySphereMeshRenderer.enabled = (trueAlt>=0f);
 					stockSkyMeshRenderer.enabled = (trueAlt<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
@@ -620,19 +620,19 @@ namespace scatterer
 
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 
-			Vector3 temp = ScaledSpace.ScaledToLocalSpace (Core.Instance.scaledSpaceCamera.transform.position);
+			Vector3 temp = ScaledSpace.ScaledToLocalSpace (Scatterer.Instance.scaledSpaceCamera.transform.position);
 
 			mat.SetFloat ("_SkyExposure", interpolatedSettings.skyExposure);
 			mat.SetFloat ("_ScatteringExposure", interpolatedSettings.scatteringExposure);
 
-			if (Core.Instance.mainSettings.useEclipses)
+			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
 				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
 				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
 				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
 				                                                                       sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
 			}
-			if (Core.Instance.mainSettings.usePlanetShine)
+			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
 				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
@@ -664,7 +664,7 @@ namespace scatterer
 			
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 
-			mat.SetVector("_camForward", Core.Instance.farCamera.transform.forward);
+			mat.SetVector("_camForward", Scatterer.Instance.farCamera.transform.forward);
 
 			UpdatePostProcessMaterial (mat);
 		}
@@ -678,9 +678,9 @@ namespace scatterer
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 
-			if (Core.Instance.bufferRenderingManager && (HighLogic.LoadedScene != GameScenes.TRACKSTATION) )
+			if (Scatterer.Instance.bufferRenderingManager && (HighLogic.LoadedScene != GameScenes.TRACKSTATION) )
 			{
-				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Core.Instance.bufferRenderingManager.depthTexture);
+				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferRenderingManager.depthTexture);
 			}
 			
 			//Consts, best leave these alone
@@ -707,7 +707,7 @@ namespace scatterer
 			
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun().normalized);
 
-			if (Core.Instance.mainSettings.usePlanetShine)
+			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				mat.EnableKeyword ("PLANETSHINE_ON");
 				mat.DisableKeyword ("PLANETSHINE_OFF");	
@@ -725,7 +725,7 @@ namespace scatterer
 
 			mat.SetVector ("_sunColor", m_manager.sunColor);
 
-			float camerasOverlap = Core.Instance.nearCamera.farClipPlane - Core.Instance.farCamera.nearClipPlane;
+			float camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
 			Utils.LogDebug(" Camera overlap: "+camerasOverlap.ToString());
 			mat.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
@@ -760,7 +760,7 @@ namespace scatterer
 			mat.SetVector ("_planetPos", parentLocalTransform.position);  //better do this small calculation here
 
 
-			if (Core.Instance.mainSettings.usePlanetShine)
+			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
 				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
@@ -820,7 +820,7 @@ namespace scatterer
 			}
 
 
-			if (Core.Instance.mainSettings.useEclipses)
+			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
 				mat.EnableKeyword ("ECLIPSES_ON");
 				mat.DisableKeyword ("ECLIPSES_OFF");
@@ -831,7 +831,7 @@ namespace scatterer
 				mat.EnableKeyword ("ECLIPSES_OFF");
 			}
 			
-			if (Core.Instance.mainSettings.usePlanetShine)
+			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				mat.EnableKeyword ("PLANETSHINE_ON");
 				mat.DisableKeyword ("PLANETSHINE_OFF");	
@@ -936,7 +936,7 @@ namespace scatterer
 		
 		public void Cleanup ()
 		{
-			if (Core.Instance.mainSettings.autosavePlanetSettingsOnSceneChange)
+			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange)
 			{
 				saveToConfigNode ();
 			}
@@ -962,20 +962,20 @@ namespace scatterer
 			UnityEngine.Object.Destroy (skySphereGameObject);
 
 			//disable eve integration scatterer flag
-			if (Core.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
+			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				try
 				{
 					int size;
 					
 					//2d clouds
-					if(Core.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName))
+					if(Scatterer.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName))
 					{
-						size = Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
+						size = Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
 						for (int i=0;i<size;i++)
 						{
-							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_ON");
-							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_OFF");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("SCATTERER_ON");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_OFF");
 						}
 					}
 					
@@ -1010,7 +1010,7 @@ namespace scatterer
 			ConfigNode[] configNodeArray;
 			bool found = false;
 
-			foreach (UrlDir.UrlConfig _url in Core.Instance.planetsConfigsReader.atmoConfigs)
+			foreach (UrlDir.UrlConfig _url in Scatterer.Instance.planetsConfigsReader.atmoConfigs)
 			{
 				configNodeArray = _url.config.GetNodes("Atmo");
 				//if (_url.config.TryGetNode("Atmo",ref cnToLoad))
@@ -1044,7 +1044,7 @@ namespace scatterer
 				Utils.LogDebug(" Atmosphere config not found for: "+celestialBodyName);
 				Utils.LogDebug(" Removing "+celestialBodyName +" from planets list");
 
-				Core.Instance.planetsConfigsReader.scattererCelestialBodies.Remove(Core.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == celestialBodyName));
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Remove(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == celestialBodyName));
 
 				m_manager.OnDestroy();
 				UnityEngine.Object.Destroy (m_manager);
@@ -1155,14 +1155,14 @@ namespace scatterer
 
 		public void initiateEVEClouds()
 		{
-			if (!ReferenceEquals (Core.Instance.eveReflectionHandler.EVEinstance, null))
+			if (!ReferenceEquals (Scatterer.Instance.eveReflectionHandler.EVEinstance, null))
 			{
 				try
 				{
 					const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | 
 						BindingFlags.Instance | BindingFlags.Static;
 					
-					foreach (object _obj in Core.Instance.eveReflectionHandler.EVECloudObjects[celestialBodyName])
+					foreach (object _obj in Scatterer.Instance.eveReflectionHandler.EVECloudObjects[celestialBodyName])
 					{
 						object cloud2dObj = _obj.GetType ().GetField ("layer2D", flags).GetValue (_obj) as object;
 						if (cloud2dObj == null)
@@ -1184,19 +1184,19 @@ namespace scatterer
 					}
 					
 					//initialize other params here
-					int size = Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName].Count;
+					int size = Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName].Count;
 					for (int i=0; i<size; i++)
 					{
-						InitUniforms (Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i]);
-						InitPostprocessMaterial (Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i]);
+						InitUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i]);
+						InitPostprocessMaterial (Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i]);
 						
 						if (EVEIntegration_preserveCloudColors)
 						{
-							Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
-							Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
 						} else {
-							Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
-							Core.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
 						}
 						
 					}
@@ -1217,9 +1217,9 @@ namespace scatterer
 			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
 				BindingFlags.Instance | BindingFlags.Static;
 
-			if (Core.Instance.eveReflectionHandler.EVECloudObjects.ContainsKey (celestialBodyName)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
+			if (Scatterer.Instance.eveReflectionHandler.EVECloudObjects.ContainsKey (celestialBodyName)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
 			{
-				List<object> cloudObjs = Core.Instance.eveReflectionHandler.EVECloudObjects [celestialBodyName];
+				List<object> cloudObjs = Scatterer.Instance.eveReflectionHandler.EVECloudObjects [celestialBodyName];
 				
 				foreach (object _obj in cloudObjs)
 				{
@@ -1250,7 +1250,7 @@ namespace scatterer
 						InitUniforms(ParticleMaterial);
 						InitPostprocessMaterial(ParticleMaterial);
 
-						if (Core.Instance.sunlightModulatorInstance)
+						if (Scatterer.Instance.sunlightModulatorInstance)
 						{
 							ParticleMaterial.EnableKeyword ("SCATTERER_USE_ORIG_DIR_COLOR_ON");
 							ParticleMaterial.DisableKeyword("SCATTERER_USE_ORIG_DIR_COLOR_OFF");
@@ -1278,22 +1278,22 @@ namespace scatterer
 
 		public void togglePreserveCloudColors()
 		{
-			if (Core.Instance.mainSettings.integrateWithEVEClouds)
+			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)
 			{
-				if(Core.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName)) //change to a bool hasclouds
+				if(Scatterer.Instance.eveReflectionHandler.EVEClouds.ContainsKey(celestialBodyName)) //change to a bool hasclouds
 				{
-					int size = Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
+					int size = Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
 					for (int i=0;i<size;i++)
 					{
 						if (EVEIntegration_preserveCloudColors)
 						{
-							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
-							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
 						}
 						else
 						{
-							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
-							Core.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
 						}
 					}
 				}

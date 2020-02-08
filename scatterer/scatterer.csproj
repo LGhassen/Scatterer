@@ -86,21 +86,10 @@
     <Compile Include="DataSerialization\ConfigPoint.cs" />
     <Compile Include="DataSerialization\PlanetshineSource.cs" />
     <Compile Include="DataSerialization\ScattererCelestialBody.cs" />
-    <Compile Include="Core.cs" />
-    <Compile Include="Utilities\WireFrame.cs" />
-    <Compile Include="Utilities\DisableEffectsForTextureReplacer.cs" />
-    <Compile Include="Utilities\DisableEffectsChecker.cs" />
-    <Compile Include="Utilities\DisableAmbientLight.cs" />
-    <Compile Include="Utilities\EncodeFloat.cs" />
-    <Compile Include="Utilities\ShaderProperties.cs" />
-    <Compile Include="Utilities\RenderTypeFixer.cs" />
-    <Compile Include="Utilities\ShaderReplacer.cs" />
     <Compile Include="Effects\SunFlare\SunFlare.cs" />
     <Compile Include="Effects\SunFlare\SunflareCameraHook.cs" />
     <Compile Include="GUI\GUIhandler.cs" />
     <Compile Include="GUI\ToolbarButton.cs" />
-    <Compile Include="Utilities\TweakFarCameraShadowCascades.cs" />
-    <Compile Include="Utilities\MeshFactory.cs" />
     <Compile Include="Utilities\Math\MathUtility.cs" />
     <Compile Include="Utilities\Math\Matrix3x3.cs" />
     <Compile Include="Utilities\Math\Matrix3x3d.cs" />
@@ -110,20 +99,12 @@
     <Compile Include="Utilities\Math\Vector2i.cs" />
     <Compile Include="Utilities\Math\Vector3d2.cs" />
     <Compile Include="Utilities\Math\Vector4d.cs" />
-    <Compile Include="Utilities\SimpleRenderingShape.cs" />
-    <Compile Include="Effects\Occlusion\ShadowMapCopyCommandBuffer.cs" />
-    <Compile Include="Effects\Occlusion\ShadowMaskCopyCommandBuffer.cs" />
-    <Compile Include="Effects\Occlusion\ShadowRemoveFadeCommandBuffer.cs" />
-    <Compile Include="Effects\Occlusion\ShadowMaskModulateCommandBuffer.cs" />
     <Compile Include="Effects\SunlightModulator\SunlightModulator.cs" />
     <Compile Include="Effects\SunlightModulator\SunlightModulatorPostRenderHook.cs" />
     <Compile Include="Effects\SunlightModulator\SunlightModulatorPreRenderHook.cs" />
     <Compile Include="Effects\PlanetShine\PlanetShineLight.cs" />
-    <Compile Include="Effects\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
-    <Compile Include="Utilities\DepthToDistanceCommandBuffer.cs" />
     <Compile Include="DataSerialization\MainSettingsReadWrite.cs" />
     <Compile Include="DataSerialization\PluginDataReadWrite.cs" />
-    <Compile Include="Utilities\Utils.cs" />
     <Compile Include="Effects\SunFlare\SunflareManager.cs" />
     <Compile Include="DataSerialization\ConfigReader.cs" />
     <Compile Include="Utilities\ReflectionUtils.cs" />
@@ -131,7 +112,6 @@
     <Compile Include="Effects\PlanetShine\PlanetshineManager.cs" />
     <Compile Include="Effects\Proland\Ocean\FourierCPU.cs" />
     <Compile Include="Effects\Proland\Ocean\FourierGPU.cs" />
-    <Compile Include="Effects\Proland\Ocean\Node.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanFFTcpu.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanFFTgpu.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanNode.cs" />
@@ -149,6 +129,25 @@
     <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereKSCUpdater.cs" />
     <Compile Include="Effects\Proland\ProlandManager.cs" />
     <Compile Include="Utilities\BufferManager.cs" />
+    <Compile Include="Scatterer.cs" />
+    <Compile Include="Utilities\Shader\ShaderReplacer.cs" />
+    <Compile Include="Utilities\Shader\ShaderProperties.cs" />
+    <Compile Include="Utilities\Shader\RenderTypeFixer.cs" />
+    <Compile Include="Utilities\Camera\TweakFarCameraShadowCascades.cs" />
+    <Compile Include="Utilities\Camera\DisableEffectsChecker.cs" />
+    <Compile Include="Utilities\Camera\DisableEffectsForTextureReplacer.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\EncodeFloat.cs" />
+    <Compile Include="Utilities\Camera\DisableAmbientLight.cs" />
+    <Compile Include="Utilities\Camera\WireFrame.cs" />
+    <Compile Include="Utilities\Camera\DepthToDistanceCommandBuffer.cs" />
+    <Compile Include="Utilities\Misc\Utils.cs" />
+    <Compile Include="Utilities\Misc\SimpleRenderingShape.cs" />
+    <Compile Include="Utilities\Misc\MeshFactory.cs" />
+    <Compile Include="Utilities\Occlusion\ShadowMapCopyCommandBuffer.cs" />
+    <Compile Include="Utilities\Occlusion\ShadowMaskCopyCommandBuffer.cs" />
+    <Compile Include="Utilities\Occlusion\ShadowRemoveFadeCommandBuffer.cs" />
+    <Compile Include="Utilities\Occlusion\ShadowMaskModulateCommandBuffer.cs" />
+    <Compile Include="Utilities\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -157,9 +156,11 @@
     <Folder Include="Effects\SunFlare\" />
     <Folder Include="GUI\" />
     <Folder Include="Utilities\Math\" />
-    <Folder Include="Effects\Occlusion\" />
     <Folder Include="Effects\SunlightModulator\" />
     <Folder Include="Effects\PlanetShine\" />
     <Folder Include="Effects\Proland\" />
+    <Folder Include="Utilities\Shader\" />
+    <Folder Include="Utilities\Camera\" />
+    <Folder Include="Utilities\Misc\" />
   </ItemGroup>
 </Project>

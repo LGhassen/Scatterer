@@ -44,18 +44,18 @@ namespace scatterer
 			planetShineCookieCubeMap.Apply ();
 			
 			
-			foreach (PlanetShineLightSource _aSource in Core.Instance.planetsConfigsReader.celestialLightSourcesData)
+			foreach (PlanetShineLightSource _aSource in Scatterer.Instance.planetsConfigsReader.celestialLightSourcesData)
 			{
-				var celBody = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
+				var celBody = Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
 				if (celBody)
 				{
 					PlanetShineLight aPsLight = new PlanetShineLight ();
 					aPsLight.isSun = _aSource.isSun;
 					aPsLight.source = celBody;
 					if (!_aSource.isSun)
-						aPsLight.sunCelestialBody = Core.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _aSource.mainSunCelestialBody);
-					GameObject ScaledPlanetShineLight = (UnityEngine.GameObject)Instantiate (Core.Instance.scaledspaceSunLight);
-					GameObject LocalPlanetShineLight = (UnityEngine.GameObject)Instantiate (Core.Instance.scaledspaceSunLight);
+						aPsLight.sunCelestialBody = Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _aSource.mainSunCelestialBody);
+					GameObject ScaledPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledspaceSunLight);
+					GameObject LocalPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledspaceSunLight);
 					ScaledPlanetShineLight.GetComponent<Light> ().type = LightType.Point;
 					if (!_aSource.isSun)
 						ScaledPlanetShineLight.GetComponent<Light> ().cookie = planetShineCookieCubeMap;

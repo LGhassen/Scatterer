@@ -25,7 +25,7 @@ namespace scatterer
 			{
 				depthTexture = Utils.CreateTexture ("ScattererDepthTexture", Screen.width, Screen.height,0, RenderTextureFormat.RFloat, false, FilterMode.Point, 1);
 				
-				if (Core.Instance.mainSettings.useOceanShaders && Core.Instance.mainSettings.oceanRefraction)
+				if (Scatterer.Instance.mainSettings.useOceanShaders && Scatterer.Instance.mainSettings.oceanRefraction)
 				{
 					refractionTexture = Utils.CreateTexture ("ScattererRefractionTexture", Screen.width, Screen.height,0, RenderTextureFormat.ARGB32,false,FilterMode.Point,1);
 				}
@@ -39,7 +39,7 @@ namespace scatterer
 			{
 				Utils.LogDebug("BufferRenderingManager: Recreating textures");
 				CreateTextures();
-				Core.Instance.onRenderTexturesLost();
+				Scatterer.Instance.onRenderTexturesLost();
 			}
 		}
 

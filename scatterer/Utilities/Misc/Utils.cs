@@ -64,7 +64,7 @@ namespace scatterer
 			global::SunFlare[] stockFlares = (global::SunFlare[])global::SunFlare.FindObjectsOfType (typeof(global::SunFlare));
 			foreach (global::SunFlare _flare in stockFlares)
 			{
-				if (Core.Instance.planetsConfigsReader.sunflares.Contains (_flare.sun.name))
+				if (Scatterer.Instance.planetsConfigsReader.sunflares.Contains (_flare.sun.name))
 				{
 					Utils.LogDebug ("Disabling stock sunflare for " + _flare.sun.name);
 					_flare.sunFlare.enabled = false;
@@ -80,7 +80,7 @@ namespace scatterer
 			global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
 			foreach(global::SunFlare _flare in stockFlares)
 			{						
-				if (Core.Instance.planetsConfigsReader.sunflares.Contains(_flare.sun.name))
+				if (Scatterer.Instance.planetsConfigsReader.sunflares.Contains(_flare.sun.name))
 				{
 					_flare.sunFlare.enabled=true;
 				}
@@ -112,7 +112,7 @@ namespace scatterer
 		
 		public static void FixKopernicusRingsRenderQueue ()
 		{
-			foreach (CelestialBody _cb in Core.Instance.CelestialBodies) {
+			foreach (CelestialBody _cb in Scatterer.Instance.CelestialBodies) {
 				GameObject ringObject;
 				ringObject = GameObject.Find (_cb.name + "Ring");
 				if (ringObject) {
@@ -124,7 +124,7 @@ namespace scatterer
 		
 		public static void FixSunsCoronaRenderQueue ()
 		{
-			foreach(ScattererCelestialBody _scattererCB in Core.Instance.planetsConfigsReader.scattererCelestialBodies)
+			foreach(ScattererCelestialBody _scattererCB in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
 				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
 				foreach (Transform child in scaledSunTransform) {
