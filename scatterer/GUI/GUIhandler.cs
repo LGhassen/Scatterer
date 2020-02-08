@@ -19,6 +19,9 @@ namespace scatterer
 		public Rect windowRect = new Rect (0, 0, 400, 50);
 		public int windowId;
 
+		public bool visible = false;
+		public bool mainMenuOptions=false;
+
 		public int selectedPlanet = 0;
 		public int selectedConfigPoint = 0;
 		bool wireFrame = false;
@@ -103,22 +106,48 @@ namespace scatterer
 		{
 		}
 
+		public void Init()
+		{
+			windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+			mainMenuOptions = (HighLogic.LoadedScene == GameScenes.SPACECENTER);
+			windowRect.x=Core.Instance.pluginData.inGameWindowLocation.x;
+			windowRect.y=Core.Instance.pluginData.inGameWindowLocation.y;
+		}
+
+		public void UpdateGUIvisible()
+		{
+			if ((Input.GetKey (Core.Instance.pluginData.guiModifierKey1) || Input.GetKey (Core.Instance.pluginData.guiModifierKey2)) && (Input.GetKeyDown (Core.Instance.pluginData.guiKey1) || (Input.GetKeyDown (Core.Instance.pluginData.guiKey2))))
+			{
+				if (ToolbarButton.Instance.button!= null)
+				{
+					if (visible)
+						ToolbarButton.Instance.button.SetFalse(false);
+					else
+						ToolbarButton.Instance.button.SetTrue(false);
+				}
+				visible = !visible;
+			}
+		}
 
 		public void DrawGui()
 		{
-			windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v"+Core.Instance.versionNumber+": "
-			                               + Core.Instance.pluginData.guiModifierKey1String+"/"+Core.Instance.pluginData.guiModifierKey2String +"+" +Core.Instance.pluginData.guiKey1String
-			                               +"/"+Core.Instance.pluginData.guiKey2String+" toggle");
-			
-			//prevent window from going offscreen
-			windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
-			windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
-			
-			//for debugging
-			//				if (bufferRenderingManager.depthTexture)
-			//				{
-			//					GUI.DrawTexture(new Rect(0,0,1280, 720), bufferRenderingManager.depthTexture);
-			//				}
+			if (visible)
+			{
+				
+				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v"+Core.Instance.versionNumber+": "
+				                               + Core.Instance.pluginData.guiModifierKey1String+"/"+Core.Instance.pluginData.guiModifierKey2String +"+" +Core.Instance.pluginData.guiKey1String
+				                               +"/"+Core.Instance.pluginData.guiKey2String+" toggle");
+				
+				//prevent window from going offscreen
+				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
+				windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
+				
+				//for debugging
+				//				if (bufferRenderingManager.depthTexture)
+				//				{
+				//					GUI.DrawTexture(new Rect(0,0,1280, 720), bufferRenderingManager.depthTexture);
+				//				}
+			}
 		}
 
 		//		UI BUTTONS
@@ -127,7 +156,7 @@ namespace scatterer
 		//		After all it's a basic UI for tweaking settings and it does its job
 		public void DrawScattererWindow (int windowId)
 		{
-			if (Core.Instance.mainMenuOptions)  //KSC screen options
+			if (mainMenuOptions)  //KSC screen options
 			{ 
 				GUILayout.Label (String.Format ("Scatterer: features selector"));
 				Core.Instance.mainSettings.useOceanShaders = GUILayout.Toggle(Core.Instance.mainSettings.useOceanShaders, "Ocean shaders (may require game restart on change)");

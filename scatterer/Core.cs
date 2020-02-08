@@ -20,24 +20,24 @@ namespace scatterer
 
 		public MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
 		public PluginDataReadWrite pluginData     = new PluginDataReadWrite();
-		public ConfigReader planetsConfigsReader = new ConfigReader ();
+		public ConfigReader planetsConfigsReader  = new ConfigReader ();
 
-		GUIhandler GUItool= new GUIhandler();
-		public bool visible = false;
-
+		public GUIhandler guiHandler = new GUIhandler();
+		
 		public EVEReflectionHandler eveReflectionHandler;
 		public SunflareManager sunflareManager;
 		public PlanetshineManager planetshineManager;
-
 		public BufferRenderingManager bufferRenderingManager;
 
 		//runtime stuff
+		//TODO: merge all into lightAndShadowManager?
 		DisableAmbientLight ambientLightScript;
 		public SunlightModulator sunlightModulatorInstance;
 		//		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
 
+		//probably move these to buffer rendering manager
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
 
 		public CelestialBody[] CelestialBodies;		
@@ -58,55 +58,49 @@ namespace scatterer
 
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public bool mainMenuOptions=false;
 		public string versionNumber = "0.0543dev";
 
 		void Awake ()
 		{
-            if (instance == null)
-            {
-                instance = this;
-                Utils.LogDebug("Core instance created");
-            }
-            else
-            {
-                //destroy any duplicate instances that may be created by a duplicate install
-                Utils.LogError("Destroying duplicate instance, check your install for duplicate mod folders");
-                UnityEngine.Object.Destroy(this);
-            }
+			if (instance == null)
+			{
+				instance = this;
+				Utils.LogDebug("Core instance created");
+			}
+			else
+			{
+				//destroy any duplicate instances that may be created by a duplicate install
+				Utils.LogError("Destroying duplicate instance, check your install for duplicate mod folders");
+				UnityEngine.Object.Destroy(this);
+			}
 
-			GUItool.windowId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+			Utils.LogInfo ("Version:"+versionNumber);
+			Utils.LogInfo ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
+			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
 
 			loadSettings ();
 
 			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
 			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
 
-			Utils.LogInfo ("Version:"+versionNumber);
-			Utils.LogInfo ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
-			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
-			
-			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
 				isActive = true;
-				mainMenuOptions = (HighLogic.LoadedScene == GameScenes.SPACECENTER);
-				GUItool.windowRect.x=pluginData.inGameWindowLocation.x;
-				GUItool.windowRect.y=pluginData.inGameWindowLocation.y;
+				guiHandler.Init();
+
+				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+				{
+					if (mainSettings.useOceanShaders)
+					{
+						OceanUtils.removeStockOceans();
+					}
+					
+					if (mainSettings.integrateWithEVEClouds)
+					{
+						ShaderReplacer.Instance.replaceEVEshaders();
+					}
+				}
 			} 
-			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-			{
-				isActive = true;
-
-				if (mainSettings.useOceanShaders)
-				{
-					OceanUtils.removeStockOceans();
-				}
-
-				if (mainSettings.integrateWithEVEClouds)
-				{
-					ShaderReplacer.Instance.replaceEVEshaders();
-				}
-			}
 
 			if (isActive)
 			{
@@ -150,6 +144,7 @@ namespace scatterer
 				bufferRenderingManager.start();
 
 				//copy stock depth buffers and combine into a single depth buffer
+				//TODO: shouldn't this be moved to bufferRenderingManager?
 				if (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement)
 				{
 					farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
@@ -198,20 +193,7 @@ namespace scatterer
 
 		void Update ()
 		{
-			//toggle whether GUI is visible or not
-			//TODO: move to guihandler
-			if ((Input.GetKey (pluginData.guiModifierKey1) || Input.GetKey (pluginData.guiModifierKey2)) && (Input.GetKeyDown (pluginData.guiKey1) || (Input.GetKeyDown (pluginData.guiKey2))))
-			{
-				if (ToolbarButton.Instance.button!= null)
-				{
-					if (visible)
-						ToolbarButton.Instance.button.SetFalse(false);
-					else
-						ToolbarButton.Instance.button.SetTrue(false);
-				}
-
-				visible = !visible;
-			}
+			guiHandler.UpdateGUIvisible ();
 
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
@@ -234,7 +216,7 @@ namespace scatterer
 				underwater = false;
 
 				//TODO: make into it's own function
-				//TODO: definitely refactor this next
+				//TODO: definitely refactor this next, move to PlanetsManager
 				foreach (ScattererCelestialBody _cur in planetsConfigsReader.scattererCelestialBodies)
 				{
 					float dist, shipDist=0f;
@@ -292,13 +274,13 @@ namespace scatterer
 									_cur.m_manager.Init(_cur);
 									_cur.active = true;
 									
-									GUItool.selectedConfigPoint = 0;
-									GUItool.displayOceanSettings = false;
-									GUItool.selectedPlanet = planetsConfigsReader.scattererCelestialBodies.IndexOf (_cur);
-									GUItool.getSettingsFromSkynode ();
+									guiHandler.selectedConfigPoint = 0;
+									guiHandler.displayOceanSettings = false;
+									guiHandler.selectedPlanet = planetsConfigsReader.scattererCelestialBodies.IndexOf (_cur);
+									guiHandler.getSettingsFromSkynode ();
 
 									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null)) {
-										GUItool.getSettingsFromOceanNode ();
+										guiHandler.getSettingsFromOceanNode ();
 									}
 									callCollector=true;
 									Utils.LogDebug ("Effects loaded for " + _cur.celestialBodyName);
@@ -324,6 +306,7 @@ namespace scatterer
 				}
 
 				//move this out of this update, let it be a one time thing
+				//TODO: check what this means
 				if (bufferRenderingManager)
 				{
 					if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
@@ -353,8 +336,8 @@ namespace scatterer
 					Component.Destroy(planetshineManager);
 				}
 
-				for (int i = 0; i < planetsConfigsReader.scattererCelestialBodies.Count; i++) {
-					
+				for (int i = 0; i < planetsConfigsReader.scattererCelestialBodies.Count; i++)
+				{	
 					ScattererCelestialBody cur = planetsConfigsReader.scattererCelestialBodies [i];
 					if (cur.active) {
 						cur.m_manager.OnDestroy ();
@@ -362,7 +345,6 @@ namespace scatterer
 						cur.m_manager = null;
 						cur.active = false;
 					}
-					
 				}
 
 				if (ambientLightScript)
@@ -428,20 +410,17 @@ namespace scatterer
 					Component.Destroy (bufferRenderingManager);
 				}
 
-				pluginData.inGameWindowLocation=new Vector2(GUItool.windowRect.x,GUItool.windowRect.y);
+				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
 				saveSettings();
 			}
 
-			UnityEngine.Object.Destroy (GUItool);
+			UnityEngine.Object.Destroy (guiHandler);
 			
 		}
 
 		void OnGUI ()
 		{
-			if (visible)
-			{
-				GUItool.DrawGui();
-			}
+			guiHandler.DrawGui ();
 		}
 		
 		public void loadSettings ()
