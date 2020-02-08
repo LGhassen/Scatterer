@@ -24,11 +24,12 @@ namespace scatterer
 
 		public GUIhandler guiHandler = new GUIhandler();
 		
-		public EVEReflectionHandler eveReflectionHandler;
+		public ScattererCelestialBodiesManager scattererCelestialBodiesManager = new ScattererCelestialBodiesManager ();
+		public BufferManager bufferManager;
 		public SunflareManager sunflareManager;
+		public EVEReflectionHandler eveReflectionHandler;
 		public PlanetshineManager planetshineManager;
-		public BufferManager bufferRenderingManager;
-
+		
 		//runtime stuff
 		//TODO: merge all into lightAndShadowManager?
 		DisableAmbientLight ambientLightScript;
@@ -39,23 +40,10 @@ namespace scatterer
 
 		//probably move these to buffer rendering manager
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
-
-		public CelestialBody[] CelestialBodies;		
+		
 		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
-
-		bool callCollector=false;
-
-		//means a PQS enabled for the closest celestial body, regardless of whether it uses scatterer effects or not
-		bool globalPQSEnabled = false;
-		public bool isGlobalPQSEnabled {get{return globalPQSEnabled;}}
-
-		//means a PQS enabled for a celestial body which scatterer effects are active on (is this useless?)
-		bool pqsEnabledOnScattererPlanet = false;
-		public bool isPQSEnabledOnScattererPlanet{get{return pqsEnabledOnScattererPlanet;}}
-
-		public bool underwater = false;
-
+		
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public string versionNumber = "0.0543dev";
@@ -79,9 +67,7 @@ namespace scatterer
 			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
 
 			loadSettings ();
-
-			//find all celestial bodies, used for finding scatterer-enabled bodies and disabling the stock ocean
-			CelestialBodies = (CelestialBody[])CelestialBody.FindObjectsOfType (typeof(CelestialBody));
+			scattererCelestialBodiesManager.Init ();
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -120,8 +106,6 @@ namespace scatterer
 
 		void Init()
 		{
-			findScattererCelestialBodies();
-
 			SetupMainCameras ();
 
 			SetShadows();
@@ -136,15 +120,14 @@ namespace scatterer
 				planetshineManager = new PlanetshineManager();
 				planetshineManager.Init();
 			}
-			
-			//create buffer manager
+
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				bufferRenderingManager = (BufferManager)farCamera.gameObject.AddComponent (typeof(BufferManager));
-				bufferRenderingManager.start();
+				bufferManager = (BufferManager)farCamera.gameObject.AddComponent (typeof(BufferManager));
+				bufferManager.start();
 
 				//copy stock depth buffers and combine into a single depth buffer
-				//TODO: shouldn't this be moved to bufferRenderingManager?
+				//TODO: shouldn't this be moved to bufferManager?
 				if (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement)
 				{
 					farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
@@ -181,7 +164,6 @@ namespace scatterer
 				MapView.MapIsEnabled = false;
 			}
 
-			//create sunlightModulator
 			if (mainSettings.sunlightExtinction || (mainSettings.underwaterLightDimming && mainSettings.useOceanShaders))
 			{
 				sunlightModulatorInstance = (SunlightModulator) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
@@ -198,119 +180,14 @@ namespace scatterer
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
 			{
-				//TODO: determine if still needed anymore, ie test without
-				if (callCollector)
-				{
-					GC.Collect();
-					callCollector=false;
-				}
-
-				globalPQSEnabled = false;
-				if (FlightGlobals.currentMainBody )
-				{
-					if (FlightGlobals.currentMainBody.pqsController)
-						globalPQSEnabled = FlightGlobals.currentMainBody.pqsController.isActive;
-				}
-				
-				pqsEnabledOnScattererPlanet = false;
-				underwater = false;
-
-				//TODO: make into it's own function
-				//TODO: definitely refactor this next, move to PlanetsManager
-				foreach (ScattererCelestialBody _cur in planetsConfigsReader.scattererCelestialBodies)
-				{
-					float dist, shipDist=0f;
-					if (_cur.hasTransform)
-					{
-						dist = Vector3.Distance (ScaledSpace.ScaledToLocalSpace( scaledSpaceCamera.transform.position),
-						                         ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
-						
-						//don't unload planet the player ship is close to if panning away in map view
-						if (FlightGlobals.ActiveVessel)
-						{
-							shipDist = Vector3.Distance (FlightGlobals.ActiveVessel.transform.position,
-							                             ScaledSpace.ScaledToLocalSpace (_cur.transform.position));
-						}
-
-						if (_cur.active)
-						{
-							if (dist > _cur.unloadDistance && (shipDist > _cur.unloadDistance || shipDist == 0f )) {
-								
-								_cur.m_manager.OnDestroy ();
-								UnityEngine.Object.Destroy (_cur.m_manager);
-								_cur.m_manager = null;
-								_cur.active = false;
-								callCollector=true;
-								
-								Utils.LogDebug ("Effects unloaded for " + _cur.celestialBodyName);
-							} else {
-								
-								_cur.m_manager.Update ();
-								{
-									if (!_cur.m_manager.m_skyNode.inScaledSpace)
-									{
-										pqsEnabledOnScattererPlanet = true;
-									}
-									
-									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null) && pqsEnabledOnScattererPlanet) 
-									{
-										underwater = _cur.m_manager.GetOceanNode().isUnderwater;
-									}
-								}
-							}
-						} 
-						else
-						{
-							if (dist < _cur.loadDistance && _cur.transform && _cur.celestialBody)
-							{
-								try
-								{
-
-									if (HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
-										_cur.hasOcean=false;
-
-									_cur.m_manager = new ProlandManager ();
-
-									_cur.m_manager.Init(_cur);
-									_cur.active = true;
-									
-									guiHandler.selectedConfigPoint = 0;
-									guiHandler.displayOceanSettings = false;
-									guiHandler.selectedPlanet = planetsConfigsReader.scattererCelestialBodies.IndexOf (_cur);
-									guiHandler.getSettingsFromSkynode ();
-
-									if (!ReferenceEquals(_cur.m_manager.GetOceanNode(),null)) {
-										guiHandler.getSettingsFromOceanNode ();
-									}
-									callCollector=true;
-									Utils.LogDebug ("Effects loaded for " + _cur.celestialBodyName);
-								}
-								catch(Exception e)
-								{
-									Utils.LogDebug ("Effects couldn't be loaded for " + _cur.celestialBodyName +" because of exception: "+e.ToString());
-									try
-									{
-										_cur.m_manager.OnDestroy();
-									}
-									catch(Exception ee)
-									{
-										Utils.LogDebug ("manager couldn't be removed for " + _cur.celestialBodyName +" because of exception: "+ee.ToString());
-									}
-									planetsConfigsReader.scattererCelestialBodies.Remove(_cur);
-									Utils.LogDebug (""+ _cur.celestialBodyName +" removed from active planets.");
-									return;
-								}
-							}
-						}
-					}
-				}
+				scattererCelestialBodiesManager.Update ();
 
 				//move this out of this update, let it be a one time thing
 				//TODO: check what this means
-				if (bufferRenderingManager)
+				if (bufferManager)
 				{
-					if (!bufferRenderingManager.depthTextureCleared && (MapView.MapIsEnabled || !pqsEnabledOnScattererPlanet) )
-						bufferRenderingManager.ClearDepthTexture();
+					if (!bufferManager.depthTextureCleared && (MapView.MapIsEnabled || !scattererCelestialBodiesManager.isPQSEnabledOnScattererPlanet) )
+						bufferManager.ClearDepthTexture();
 				}
 
 				if (!ReferenceEquals(sunflareManager,null))
@@ -336,15 +213,9 @@ namespace scatterer
 					Component.Destroy(planetshineManager);
 				}
 
-				for (int i = 0; i < planetsConfigsReader.scattererCelestialBodies.Count; i++)
-				{	
-					ScattererCelestialBody cur = planetsConfigsReader.scattererCelestialBodies [i];
-					if (cur.active) {
-						cur.m_manager.OnDestroy ();
-						UnityEngine.Object.Destroy (cur.m_manager);
-						cur.m_manager = null;
-						cur.active = false;
-					}
+				if (!ReferenceEquals(scattererCelestialBodiesManager,null))
+				{
+					scattererCelestialBodiesManager.Cleanup();
 				}
 
 				if (ambientLightScript)
@@ -404,10 +275,10 @@ namespace scatterer
 				if (nearDepthCommandbuffer)
 					Component.Destroy (nearDepthCommandbuffer);
 
-				if (bufferRenderingManager)
+				if (bufferManager)
 				{
-					bufferRenderingManager.OnDestroy();
-					Component.Destroy (bufferRenderingManager);
+					bufferManager.OnDestroy();
+					Component.Destroy (bufferManager);
 				}
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
@@ -468,42 +339,6 @@ namespace scatterer
 			}
 		}
 
-		void findScattererCelestialBodies()
-		{
-			foreach (ScattererCelestialBody sctBody in planetsConfigsReader.scattererCelestialBodies)
-			{
-				var _idx = 0;
-			
-				var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
-				
-				if (celBody == null)
-				{
-					celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
-				}
-				
-				Utils.LogDebug ("Celestial Body: " + celBody);
-				if (celBody != null)
-				{
-					_idx = planetsConfigsReader.scattererCelestialBodies.IndexOf (sctBody);
-					Utils.LogDebug ("Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
-				};
-				
-				sctBody.celestialBody = celBody;
-
-				var sctBodyTransform = ScaledSpace.Instance.transform.FindChild (sctBody.transformName);
-				if (!sctBodyTransform)
-				{
-					sctBodyTransform = ScaledSpace.Instance.transform.FindChild (sctBody.celestialBodyName);
-				}
-				else
-				{
-					sctBody.transform = sctBodyTransform;
-					sctBody.hasTransform = true;
-				}
-				sctBody.active = false;
-			}
-		}
-
 		void SetShadows()
 		{
 			if (mainSettings.terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
@@ -533,7 +368,7 @@ namespace scatterer
 					}
 				}
 
-				foreach (CelestialBody _sc in CelestialBodies)
+				foreach (CelestialBody _sc in scattererCelestialBodiesManager.CelestialBodies)
 				{
 					if (_sc.pqsController)
 					{

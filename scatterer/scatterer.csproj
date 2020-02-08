@@ -148,6 +148,7 @@
     <Compile Include="Utilities\Occlusion\ShadowRemoveFadeCommandBuffer.cs" />
     <Compile Include="Utilities\Occlusion\ShadowMaskModulateCommandBuffer.cs" />
     <Compile Include="Utilities\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
+    <Compile Include="Effects\ScattererCelestialBodiesManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

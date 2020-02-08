@@ -48,7 +48,7 @@ namespace scatterer
 			usesCloudIntegration = scattererBody.usesCloudIntegration;
 			hasOcean = scattererBody.hasOcean;
 			
-			sunCelestialBody = Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
+			sunCelestialBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
 			
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -89,7 +89,7 @@ namespace scatterer
 		{
 			if (Scatterer.Instance.mainSettings.useEclipses) {
 				for (int k = 0; k < scattererBody.eclipseCasters.Count; k++) {
-					var cc = Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.eclipseCasters [k]);
+					var cc = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.eclipseCasters [k]);
 					if (cc == null)
 						Utils.LogDebug ("Eclipse caster " + scattererBody.eclipseCasters [k] + " not found for " + scattererBody.celestialBodyName);
 					else {
@@ -104,7 +104,7 @@ namespace scatterer
 		{
 			if (Scatterer.Instance.mainSettings.usePlanetShine) {
 				for (int k = 0; k < scattererBody.planetshineSources.Count; k++) {
-					var cc = Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.planetshineSources [k].bodyName);
+					var cc = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.planetshineSources [k].bodyName);
 					if (cc == null)
 						Utils.LogDebug ("planetshine source " + scattererBody.planetshineSources [k].bodyName + " not found for " + scattererBody.celestialBodyName);
 					else {
@@ -176,9 +176,9 @@ namespace scatterer
 				m_oceanNode.loadFromConfigNode();
 				m_oceanNode.Init();
 
-				if (Scatterer.Instance.mainSettings.oceanRefraction && Scatterer.Instance.bufferRenderingManager.refractionTexture.IsCreated())
+				if (Scatterer.Instance.mainSettings.oceanRefraction && Scatterer.Instance.bufferManager.refractionTexture.IsCreated())
 				{
-					Scatterer.Instance.bufferRenderingManager.refractionTexture.Create();
+					Scatterer.Instance.bufferManager.refractionTexture.Create();
 				}
 
 				Utils.LogDebug("Rebuilt Ocean");

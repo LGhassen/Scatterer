@@ -186,10 +186,10 @@ namespace scatterer
 
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterial);
 
-			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferRenderingManager.depthTexture);
+			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 
 			//if (Core.Instance.oceanRefraction)
-			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferRenderingManager.refractionTexture);
+			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferManager.refractionTexture);
 			m_oceanMaterial.renderQueue=2501;
 
 			m_oldlocalToOcean = Matrix4x4d.Identity ();
@@ -269,7 +269,7 @@ namespace scatterer
 			oceanRefractionCommandBuffer.name = "ScattererOceanGrabScreen";
 			
 			// copy screen
-			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Scatterer.Instance.bufferRenderingManager.refractionTexture);
+			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Scatterer.Instance.bufferManager.refractionTexture);
 			
 			Scatterer.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 			Scatterer.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
@@ -355,8 +355,8 @@ namespace scatterer
 			m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex); //these don't need to be updated every frame
 			m_oceanMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);					
-			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferRenderingManager.depthTexture);
-			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferRenderingManager.refractionTexture); //these don't need to be updated every frame
+			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
+			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferManager.refractionTexture); //these don't need to be updated every frame
 			
 			underwaterMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			underwaterMaterial.SetFloat ("darknessDepth", darknessDepth);

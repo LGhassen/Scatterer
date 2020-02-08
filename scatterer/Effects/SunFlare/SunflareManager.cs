@@ -30,7 +30,7 @@ namespace scatterer
 				SunFlare customSunFlare = (SunFlare)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunFlare));
 				try
 				{
-					customSunFlare.Configure(Scatterer.Instance.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody),
+					customSunFlare.Configure(Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody),
 					                         sunflareBody,Utils.GetScaledTransform (sunflareBody));
 					customSunFlare.start ();
 					scattererSunFlares.Add (customSunFlare);

@@ -113,7 +113,7 @@ namespace scatterer
 			sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
 
 			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-				sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferRenderingManager.depthTexture);
+				sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferManager.depthTexture);
 			else
 				sunglareMaterial.SetTexture ("_customDepthTexture", Texture2D.whiteTexture);
 
@@ -273,7 +273,7 @@ namespace scatterer
 			}
 
 			eclipse = hitStatus;
-			sunglareMaterial.SetFloat("renderSunFlare", (!eclipse && (sunViewPortPos.z > 0) && !Scatterer.Instance.underwater ) ? 1.0f : 0.0f);
+			sunglareMaterial.SetFloat("renderSunFlare", (!eclipse && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater ) ? 1.0f : 0.0f);
 
 			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
 			sunglareMaterial.SetFloat ("aspectRatio", Scatterer.Instance.scaledSpaceCamera.aspect);
@@ -282,7 +282,7 @@ namespace scatterer
 			sunglareMaterial.SetFloat ("ghostFade", ghostFade);
 
 			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-				sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferRenderingManager.depthTexture);
+				sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferManager.depthTexture);
 		}	
 
 		public void Update()

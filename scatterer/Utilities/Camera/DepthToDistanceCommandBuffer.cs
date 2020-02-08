@@ -23,12 +23,12 @@ namespace scatterer
 			m_Material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthToDistance")]);
 
 			if (m_Camera.name == "Camera 01"){
-				m_Buffer.SetRenderTarget(Scatterer.Instance.bufferRenderingManager.depthTexture);
+				m_Buffer.SetRenderTarget(Scatterer.Instance.bufferManager.depthTexture);
 				m_Buffer.ClearRenderTarget (false, true, Color.white);
 			}
 
 
-			m_Buffer.Blit (null, Scatterer.Instance.bufferRenderingManager.depthTexture, m_Material); //change to shadowmap texture
+			m_Buffer.Blit (null, Scatterer.Instance.bufferManager.depthTexture, m_Material); //change to shadowmap texture
 
 			m_Camera.AddCommandBuffer (CameraEvent.AfterDepthTexture, m_Buffer);
 		}
