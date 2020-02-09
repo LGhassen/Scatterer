@@ -166,10 +166,11 @@ namespace scatterer
 				Scatterer.Instance.mainSettings.m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ())));
 				GUILayout.EndHorizontal ();
 				
-				Scatterer.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle(Scatterer.Instance.mainSettings.oceanSkyReflections, "Ocean: accurate sky reflection");
+				Scatterer.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle(Scatterer.Instance.mainSettings.oceanSkyReflections, "Ocean: Accurate sky reflection");
 				Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle(Scatterer.Instance.mainSettings.shadowsOnOcean, "Ocean: Craft/Terrain shadows (may have artifacts on Directx11)");
 				Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle(Scatterer.Instance.mainSettings.oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
-				
+				Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle(Scatterer.Instance.mainSettings.oceanCaustics, "Ocean: Caustics");
+
 				//Core.Instance.mainSettings.usePlanetShine = GUILayout.Toggle(Core.Instance.usePlanetShine, "PlanetShine");
 				Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle(Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 				
@@ -514,7 +515,21 @@ namespace scatterer
 							GUIvector3 ("Ocean Upwelling Color", ref oceanUpwellingColorR, ref oceanUpwellingColorG, ref oceanUpwellingColorB, ref oceanNode.m_oceanUpwellingColor);
 							
 							GUIvector3 ("Ocean Underwater Color", ref oceanUnderwaterColorR, ref oceanUnderwaterColorG, ref oceanUnderwaterColorB, ref oceanNode.m_UnderwaterColor);
-							
+
+
+
+							//TODO: sriously this is a pain to work with, overhaul it, make it simpler
+							//public string causticsTexturePath;
+//
+//							GUIvector3 ("Caustics layer 1 scale", ref oceanUnderwaterColorR, ref oceanUnderwaterColorG, ref oceanUnderwaterColorB, ref oceanNode.m_UnderwaterColor);
+//							public Vector2 causticsLayer1Scale;
+//							public Vector2 causticsLayer1Speed;
+//							public Vector2 causticsLayer2Scale;
+//							public Vector2 causticsLayer2Speed;
+//							public float causticsMultiply;
+//							public float causticsMinBrightness;
+
+
 							GUILayout.BeginHorizontal ();
 							GUILayout.Label ("To apply the next setting press \"rebuild ocean\" and wait");
 							GUILayout.EndHorizontal ();
@@ -661,7 +676,21 @@ namespace scatterer
 			}
 			GUILayout.EndHorizontal ();
 		}
-		
+
+		public void GUIvector2 (string label, ref float localR, ref float localG, ref Vector2 target)
+		{
+			GUILayout.BeginHorizontal ();
+			GUILayout.Label (label);
+			
+			localR = float.Parse (GUILayout.TextField (localR.ToString ("0000.00000")));
+			localG = float.Parse (GUILayout.TextField (localG.ToString ("0000.00000")));
+			
+			if (GUILayout.Button ("Set")) {
+				target = new Vector2 (localR, localG);
+			}
+			GUILayout.EndHorizontal ();
+		}
+
 		public void GUIvector3 (string label, ref float localR, ref float localG, ref float localB, ref Vector3 target)
 		{
 			GUILayout.BeginHorizontal ();
@@ -733,6 +762,9 @@ namespace scatterer
 		
 		public void getSettingsFromOceanNode ()
 		{
+
+			//TODO: replace all this garbage with data structures that hold settings directly, ie oceanConfig Class
+			//Seriously, this takes a lot of time to work with
 			OceanWhiteCaps oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
 
 			oceanAlpha = oceanNode.oceanAlpha;

@@ -114,6 +114,24 @@ namespace scatterer
 		//Concrete classes must provide a function that returns the
 		//variance of the waves need for the BRDF rendering of waves
 		public abstract float GetMaxSlopeVariance ();
+
+		//caustics
+		[Persistent]
+		public string causticsTexturePath;
+		[Persistent]
+		public Vector2 causticsLayer1Scale;
+		[Persistent]
+		public Vector2 causticsLayer1Speed;
+		[Persistent]
+		public Vector2 causticsLayer2Scale;
+		[Persistent]
+		public Vector2 causticsLayer2Speed;
+		[Persistent]
+		public float causticsMultiply;
+		[Persistent]
+		public float causticsMinBrightness;
+
+		CausticsShadowMaskModulate causticsShadowMaskModulator;
 		
 		public virtual void Init (ProlandManager manager)
 		{
@@ -142,10 +160,17 @@ namespace scatterer
 			Scatterer.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 
 			//dimming
+			//TODO: maybe this can be changed, instead of complicated hooks on the Camera, add it to the light, like causticsShadowMaskModulate?
 			if (Scatterer.Instance.mainSettings.underwaterLightDimming && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 			{
 				underwaterDimmingHook = (UnderwaterDimmingHook) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(UnderwaterDimmingHook));
 				underwaterDimmingHook.oceanNode = this;
+			}
+
+			if (Scatterer.Instance.mainSettings.oceanCaustics && (HighLogic.LoadedScene == GameScenes.FLIGHT))
+			{
+				causticsShadowMaskModulator = (CausticsShadowMaskModulate) Scatterer.Instance.sunLight.AddComponent (typeof(CausticsShadowMaskModulate));
+				causticsShadowMaskModulator.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed, causticsMultiply, causticsMinBrightness);
 			}
 		}	
 
@@ -166,14 +191,12 @@ namespace scatterer
 			{
 				toggleUnderwaterMode();
 			}
-		}
 
-		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
-		{
-			if (!MapView.MapIsEnabled && Scatterer.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
+			if (!ReferenceEquals (causticsShadowMaskModulator, null))
 			{
-				updateNonCameraSpecificUniforms(m_oceanMaterial);
-			}
+				causticsShadowMaskModulator.isEnabled = oceanDraw;
+				causticsShadowMaskModulator.UpdateCaustics ();
+			}			
 		}
 
 		public void updateNonCameraSpecificUniforms (Material oceanMaterial)
@@ -191,6 +214,14 @@ namespace scatterer
 			m_oceanMaterial.SetInt ("_ZwriteVariable", (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
 		}
 
+		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
+		{
+			if (!MapView.MapIsEnabled && Scatterer.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
+			{
+				updateNonCameraSpecificUniforms(m_oceanMaterial);
+			}
+		}
+
 		public void updateCameraSpecificUniforms (Material oceanMaterial, Camera inCamera)
 		{
 			cameraToScreen = GL.GetGPUProjectionMatrix (inCamera.projectionMatrix,false);
@@ -204,7 +235,9 @@ namespace scatterer
 			
 			// compute ltoo = localToOcean transform, where ocean frame = tangent space at
 			// camera projection on sphere radius in local space
-			
+
+			//move these to dedicated projected grid class?
+
 			Matrix4x4 ctol1 = inCamera.cameraToWorldMatrix;
 
 			Matrix4x4d cameraToWorld = new Matrix4x4d (ctol1.m00, ctol1.m01, ctol1.m02, ctol1.m03,
@@ -368,6 +401,12 @@ namespace scatterer
 				oceanMaterial.SetMatrix ("planetShineSources", planetShineSourcesMatrix); //this can become shared code to not recompute
 
 				oceanMaterial.SetMatrix ("planetShineRGB", m_manager.m_skyNode.planetShineRGBMatrix);
+			}
+
+			if (!ReferenceEquals (causticsShadowMaskModulator, null))
+			{
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("CameraToWorld", inCamera.cameraToWorldMatrix);
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("WorldToLight", Scatterer.Instance.sunLight.transform.worldToLocalMatrix);
 			}
 		}
 
@@ -576,6 +615,12 @@ namespace scatterer
 			if (!ReferenceEquals(null,underwaterProjector))
 			{
 				UnityEngine.Object.Destroy (underwaterProjector);
+			}
+
+			if (!ReferenceEquals(null,causticsShadowMaskModulator))
+			{
+				causticsShadowMaskModulator.OnDestroy();
+				UnityEngine.Object.Destroy (causticsShadowMaskModulator);
 			}
 		}
 

@@ -149,6 +149,7 @@
     <Compile Include="Utilities\Occlusion\ShadowMaskModulateCommandBuffer.cs" />
     <Compile Include="Utilities\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
     <Compile Include="Effects\ScattererCelestialBodiesManager.cs" />
+    <Compile Include="Effects\Proland\Ocean\Caustics\CausticsShadowMaskModulate.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -163,5 +164,6 @@
     <Folder Include="Utilities\Shader\" />
     <Folder Include="Utilities\Camera\" />
     <Folder Include="Utilities\Misc\" />
+    <Folder Include="Effects\Proland\Ocean\Caustics\" />
   </ItemGroup>
 </Project>
