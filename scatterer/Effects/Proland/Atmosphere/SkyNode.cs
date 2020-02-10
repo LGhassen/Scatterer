@@ -1000,6 +1000,7 @@ namespace scatterer
 
 			if (!ReferenceEquals(null,localScatteringProjector))
 			{
+				localScatteringProjector.CleanUp();
 				UnityEngine.Object.Destroy (localScatteringProjector);
 			}
 		}

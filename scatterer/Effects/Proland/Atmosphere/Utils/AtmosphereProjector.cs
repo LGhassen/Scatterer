@@ -56,10 +56,9 @@ namespace scatterer
 			projectorGO.SetActive(isEnabled);
 		}
 
-		//public void OnDestroy()
-		~AtmosphereProjector()
+		public void CleanUp()
 		{
-			Utils.LogDebug ("AtmosphereProjector destructor called");
+			Utils.LogDebug ("AtmosphereProjector CleanUp called");
 			if(!ReferenceEquals(projectorGO,null))
 			{
 				if(!ReferenceEquals(projectorGO.transform,null))

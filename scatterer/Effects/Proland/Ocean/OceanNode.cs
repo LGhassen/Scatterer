@@ -614,6 +614,7 @@ namespace scatterer
 			
 			if (!ReferenceEquals(null,underwaterProjector))
 			{
+				underwaterProjector.CleanUp();
 				UnityEngine.Object.Destroy (underwaterProjector);
 			}
 
