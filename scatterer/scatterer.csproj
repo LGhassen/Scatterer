@@ -158,6 +158,7 @@
     <Compile Include="GUI\ModularGUI\GUIModuleVector2.cs" />
     <Compile Include="GUI\ModularGUI\GUIModuleVector3.cs" />
     <Compile Include="GUI\ModularGUI\GUIModuleVector4.cs" />
+    <Compile Include="GUI\ModularGUI\GUIModuleLabel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

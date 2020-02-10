@@ -103,7 +103,7 @@ namespace scatterer
 
 								if (!ReferenceEquals (scattererCelestialBody.m_manager.GetOceanNode (), null))
 								{
-									Scatterer.Instance.guiHandler.getSettingsFromOceanNode ();
+									Scatterer.Instance.guiHandler.buildOceanGUI ();
 								}
 								callCollector = true;
 								Utils.LogDebug ("Effects loaded for " + scattererCelestialBody.celestialBodyName);
