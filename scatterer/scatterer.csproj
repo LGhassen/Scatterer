@@ -150,6 +150,14 @@
     <Compile Include="Utilities\Occlusion\ShadowMapRetrieveCommandBuffer.cs" />
     <Compile Include="Effects\ScattererCelestialBodiesManager.cs" />
     <Compile Include="Effects\Proland\Ocean\Caustics\CausticsShadowMaskModulate.cs" />
+    <Compile Include="GUI\ModularGUI\ModularGUI.cs" />
+    <Compile Include="GUI\ModularGUI\AbstractGUIModule.cs" />
+    <Compile Include="GUI\ModularGUI\GUIModuleBool.cs" />
+    <Compile Include="GUI\ModularGUI\GUIModuleFloat.cs" />
+    <Compile Include="GUI\ModularGUI\GUIModuleInt.cs" />
+    <Compile Include="GUI\ModularGUI\GUIModuleVector2.cs" />
+    <Compile Include="GUI\ModularGUI\GUIModuleVector3.cs" />
+    <Compile Include="GUI\ModularGUI\GUIModuleVector4.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -165,5 +173,6 @@
     <Folder Include="Utilities\Camera\" />
     <Folder Include="Utilities\Misc\" />
     <Folder Include="Effects\Proland\Ocean\Caustics\" />
+    <Folder Include="GUI\ModularGUI\" />
   </ItemGroup>
 </Project>
