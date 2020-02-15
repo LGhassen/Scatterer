@@ -238,7 +238,10 @@ namespace scatterer
 
 			atmosphereMesh = new GameObject ();
 
-			localScatteringProjector = new AtmosphereProjector(localScatteringMaterial,parentLocalTransform,Rt);
+			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
+			{
+				localScatteringProjector = new AtmosphereProjector (localScatteringMaterial, parentLocalTransform, Rt);
+			}
 
 			float skySphereSize = 2*(4 * (Rt-Rg) + Rg) / ScaledSpace.ScaleFactor;
 			SkySphere = new SimpleRenderingShape (skySphereSize, m_skyMaterial,true);
@@ -380,7 +383,7 @@ namespace scatterer
 			if (!inScaledSpace)
 			{
 				if (!MapView.MapIsEnabled) {
-					if (postprocessingEnabled) {
+					if (postprocessingEnabled && !ReferenceEquals(localScatteringProjector,null)) {
 						UpdatePostProcessMaterial (localScatteringProjector.projector.material);
 					}
 				}
@@ -513,8 +516,11 @@ namespace scatterer
 			}
 
 			scaledScatteringMaterial.SetFloat ("renderScattering", inScaledSpace ? 1f : 0f); //not sure this is a good way to do it
-			localScatteringProjector.setInScaledSpace(inScaledSpace);
-			localScatteringProjector.updateProjector ();
+			if (!ReferenceEquals (localScatteringProjector, null))
+			{
+				localScatteringProjector.setInScaledSpace (inScaledSpace);
+				localScatteringProjector.updateProjector ();
+			}
 		}
 		
 		
@@ -961,6 +967,11 @@ namespace scatterer
 			Component.Destroy (skySphereMeshRenderer);
 			UnityEngine.Object.Destroy (skySphereGameObject);
 
+			if (localScatteringProjector)
+			{
+				UnityEngine.Object.Destroy (localScatteringProjector);
+			}
+
 			//disable eve integration scatterer flag
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
@@ -996,12 +1007,6 @@ namespace scatterer
 				{
 					//TODO
 				}
-			}
-
-			if (!ReferenceEquals(null,localScatteringProjector))
-			{
-				localScatteringProjector.CleanUp();
-				UnityEngine.Object.Destroy (localScatteringProjector);
 			}
 		}
 
@@ -1317,7 +1322,10 @@ namespace scatterer
 		//to be called on loss of rendertextures, ie alt-enter
 		public void reInitMaterialUniformsOnRenderTexturesLoss()
 		{
-			InitPostprocessMaterial (localScatteringProjector.projector.material);
+			if (!ReferenceEquals (localScatteringProjector, null))
+			{
+				InitPostprocessMaterial (localScatteringProjector.projector.material);
+			}
 		}	
 	}
 }

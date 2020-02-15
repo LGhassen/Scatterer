@@ -562,18 +562,20 @@ namespace scatterer
 			{
 				underwaterProjector.setActivated(false);
 				underwaterProjector.updateProjector ();
-				m_manager.GetSkyNode().localScatteringProjector.setUnderwater(false);
 				m_oceanMaterial.EnableKeyword("UNDERWATER_OFF");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_ON");
+				if (!ReferenceEquals(m_manager.GetSkyNode().localScatteringProjector,null))
+					m_manager.GetSkyNode().localScatteringProjector.setUnderwater(false);
 
 			}
 			else   //switch to underwater 
 			{
 				underwaterProjector.setActivated(true);
 				underwaterProjector.updateProjector ();
-				m_manager.GetSkyNode().localScatteringProjector.setUnderwater(true);
 				m_oceanMaterial.EnableKeyword("UNDERWATER_ON");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_OFF");
+				if (!ReferenceEquals(m_manager.GetSkyNode().localScatteringProjector,null))
+					m_manager.GetSkyNode().localScatteringProjector.setUnderwater(true);
 			}
 
 			underwaterMode = !underwaterMode;
@@ -614,7 +616,6 @@ namespace scatterer
 			
 			if (!ReferenceEquals(null,underwaterProjector))
 			{
-				underwaterProjector.CleanUp();
 				UnityEngine.Object.Destroy (underwaterProjector);
 			}
 

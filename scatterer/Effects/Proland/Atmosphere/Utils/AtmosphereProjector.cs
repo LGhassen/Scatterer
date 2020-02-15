@@ -56,9 +56,9 @@ namespace scatterer
 			projectorGO.SetActive(isEnabled);
 		}
 
-		public void CleanUp()
+		~AtmosphereProjector()
 		{
-			Utils.LogDebug ("AtmosphereProjector CleanUp called");
+			setActivated (false);
 			if(!ReferenceEquals(projectorGO,null))
 			{
 				if(!ReferenceEquals(projectorGO.transform,null))
