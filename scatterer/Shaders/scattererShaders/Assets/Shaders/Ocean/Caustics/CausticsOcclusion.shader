@@ -28,12 +28,15 @@ Shader "Scatterer/CausticsOcclusion"
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma target 3.0
+			#pragma multi_compile SPHERE_PLANET FLAT_PLANET
 
 			uniform sampler2D _CameraDepthTexture;
 			uniform float4x4 CameraToWorld;
+			float4x4 WorldToLight;
+			uniform float3 PlanetOrigin;
+			uniform float oceanRadius;
 
 			sampler2D _CausticsTexture;
-			float4x4 WorldToLight;
 
 			uniform float2 layer1Scale;
 			uniform float2 layer1Speed;
@@ -43,6 +46,9 @@ Shader "Scatterer/CausticsOcclusion"
 
 			uniform float causticsMultiply;
 			uniform float causticsMinBrightness;
+			uniform float causticsBlurDepth;
+
+			uniform float warpTime;
 
 			struct v2f 
 			{
@@ -83,21 +89,29 @@ Shader "Scatterer/CausticsOcclusion"
 				//return float4(worldDist,worldDist,worldDist,1.0);
 
 				// blur caustics the farther we are from texture
-				//float blurFactor = lerp(0.0,5.0,-worldPos.y/30.0);
 				float blurFactor = 0.0;
+				float time = _Time.y;
+
+#ifdef SPHERE_PLANET
+				float underwaterDepth = max(oceanRadius - length(worldPos - PlanetOrigin), 0.0);
+				blurFactor = lerp(0.0,5.0,underwaterDepth/causticsBlurDepth);
+				time = (warpTime == 0.0) ? time : warpTime;
+#else
+				blurFactor = lerp(0.0,5.0,-worldPos.y/30.0);
+#endif
 
 				float2 uvCookie = mul(WorldToLight, float4(worldPos.xyz, 1)).xy;
 
-    			float2 uvSample1 = layer1Scale * uvCookie + layer1Speed * float2(_Time.y,_Time.y);
-				float2 uvSample2 = layer2Scale * uvCookie + layer2Speed * float2(_Time.y,_Time.y);
+    			float2 uvSample1 = layer1Scale * uvCookie + layer1Speed * float2(time,time);
+				float2 uvSample2 = layer2Scale * uvCookie + layer2Speed * float2(time,time);
 
 				float causticsSample1 = tex2Dbias(_CausticsTexture,float4(uvSample1,0.0,blurFactor)).r;
 				float causticsSample2 = tex2Dbias(_CausticsTexture,float4(uvSample2,0.0,blurFactor)).r;
 
-				//fadeOutCaustics when the blur gets too strong, doesn't work well, figure it out later
-				//float fadeOut = clamp(10.0-blurFactor,0.0,1.0);
-
 				float caustics = causticsMultiply*min(causticsSample1,causticsSample2)+causticsMinBrightness;
+#ifdef SPHERE_PLANET
+				caustics = lerp (1.0, caustics, clamp(underwaterDepth/1.5f, 0.0, 1.0)); //fade caustics in over the first meter and half of depth
+#endif
 				return float4(caustics,caustics,caustics,1.0);
 			}
 			ENDCG

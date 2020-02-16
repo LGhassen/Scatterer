@@ -20,6 +20,9 @@ public class ModulateShadowMask : MonoBehaviour
 
 	public void Awake()
 	{
+		m_ShadowMaskModulateMaterial.DisableKeyword ("SPHERE_PLANET");
+		m_ShadowMaskModulateMaterial.EnableKeyword ("FLAT_PLANET");
+
 		m_Buffer = new CommandBuffer();
 		m_Buffer.name = "ScreenspaceShadowMaskmodulate";
 

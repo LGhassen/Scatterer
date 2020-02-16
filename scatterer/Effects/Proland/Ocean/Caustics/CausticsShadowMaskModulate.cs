@@ -21,7 +21,7 @@ namespace scatterer
 		}
 
 		public void Init(string causticsTexturePath,Vector2 causticsLayer1Scale,Vector2 causticsLayer1Speed,Vector2 causticsLayer2Scale,
-		                 Vector2 causticsLayer2Speed, float causticsMultiply, float causticsMinBrightness)
+		                 Vector2 causticsLayer2Speed, float causticsMultiply, float causticsMinBrightness, float oceanRadius, float blurDepth)
 		{
 			if (ReferenceEquals (CausticsShadowMaskModulateMaterial, null))
 			{
@@ -41,6 +41,11 @@ namespace scatterer
 
 			CausticsShadowMaskModulateMaterial.SetFloat("causticsMultiply",causticsMultiply);
 			CausticsShadowMaskModulateMaterial.SetFloat("causticsMinBrightness",causticsMinBrightness);
+			CausticsShadowMaskModulateMaterial.SetFloat("oceanRadius",oceanRadius);
+			CausticsShadowMaskModulateMaterial.SetFloat("causticsBlurDepth",blurDepth);
+
+			CausticsShadowMaskModulateMaterial.EnableKeyword ("SPHERE_PLANET");
+			CausticsShadowMaskModulateMaterial.DisableKeyword ("FLAT_PLANET");
 
 			sunLight = Scatterer.Instance.sunLight.GetComponent < Light > ();
 

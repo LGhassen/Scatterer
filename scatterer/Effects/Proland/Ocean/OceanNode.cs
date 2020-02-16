@@ -129,7 +129,11 @@ namespace scatterer
 		[Persistent]
 		public float causticsMultiply;
 		[Persistent]
+		public float causticsUnderwaterLightBoost;
+		[Persistent]
 		public float causticsMinBrightness;
+		[Persistent]
+		public float causticsBlurDepth;
 
 		CausticsShadowMaskModulate causticsShadowMaskModulator;
 		
@@ -161,7 +165,7 @@ namespace scatterer
 
 			//dimming
 			//TODO: maybe this can be changed, instead of complicated hooks on the Camera, add it to the light, like causticsShadowMaskModulate?
-			if (Scatterer.Instance.mainSettings.underwaterLightDimming && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+			if ((Scatterer.Instance.mainSettings.underwaterLightDimming || Scatterer.Instance.mainSettings.oceanCaustics) && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 			{
 				underwaterDimmingHook = (UnderwaterDimmingHook) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(UnderwaterDimmingHook));
 				underwaterDimmingHook.oceanNode = this;
@@ -170,7 +174,7 @@ namespace scatterer
 			if (Scatterer.Instance.mainSettings.oceanCaustics && (HighLogic.LoadedScene == GameScenes.FLIGHT))
 			{
 				causticsShadowMaskModulator = (CausticsShadowMaskModulate) Scatterer.Instance.sunLight.AddComponent (typeof(CausticsShadowMaskModulate));
-				causticsShadowMaskModulator.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed, causticsMultiply, causticsMinBrightness);
+				causticsShadowMaskModulator.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed, causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth);
 			}
 		}	
 
@@ -407,6 +411,10 @@ namespace scatterer
 			{
 				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("CameraToWorld", inCamera.cameraToWorldMatrix);
 				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("WorldToLight", Scatterer.Instance.sunLight.transform.worldToLocalMatrix);
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector ("PlanetOrigin", m_manager.parentLocalTransform.position);
+
+				float warpTime = (TimeWarp.CurrentRate > 1) ? (float) Planetarium.GetUniversalTime() : 0f;
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetFloat ("warpTime", warpTime);
 			}
 		}
 
@@ -630,9 +638,18 @@ namespace scatterer
 		{
 			if (!MapView.MapIsEnabled && isUnderwater)
 			{
-				float underwaterDim = Mathf.Abs(Vector3.Distance (Scatterer.Instance.farCamera.transform.position, m_manager.parentLocalTransform.position)-(float)m_manager.m_radius);
-				underwaterDim = Mathf.Lerp(1.0f,0.0f,underwaterDim / darknessDepth);
-				Scatterer.Instance.sunlightModulatorInstance.modulateByAttenuation(underwaterDim);
+				float finalDim = 1f;
+				if (Scatterer.Instance.mainSettings.underwaterLightDimming)
+				{
+					float underwaterDim = Mathf.Abs(Vector3.Distance (Scatterer.Instance.farCamera.transform.position, m_manager.parentLocalTransform.position)-(float)m_manager.m_radius);
+					underwaterDim = Mathf.Lerp(1.0f,0.0f,underwaterDim / darknessDepth);
+					finalDim*=underwaterDim;
+				}
+				if (Scatterer.Instance.mainSettings.oceanCaustics)
+				{
+					finalDim*=causticsUnderwaterLightBoost; //replace by caustics multiplier
+				}
+				Scatterer.Instance.sunlightModulatorInstance.modulateByAttenuation(finalDim);
 			}	
 		}
 

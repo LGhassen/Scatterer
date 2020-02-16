@@ -424,12 +424,14 @@ namespace scatterer
 
 			if (Scatterer.Instance.mainSettings.oceanCaustics)
 			{
-				oceanModularGUI.AddModule (new GUIModuleVector2 ("causticsLayer1Scale", oceanNode, "causticsLayer1Scale"));
-				oceanModularGUI.AddModule (new GUIModuleVector2 ("causticsLayer1Speed", oceanNode, "causticsLayer1Speed"));
-				oceanModularGUI.AddModule (new GUIModuleVector2 ("causticsLayer2Scale", oceanNode, "causticsLayer2Scale"));
-				oceanModularGUI.AddModule (new GUIModuleVector2 ("causticsLayer2Speed", oceanNode, "causticsLayer2Speed"));
-				oceanModularGUI.AddModule (new GUIModuleFloat ("causticsMultiply", oceanNode, "causticsMultiply"));
-				oceanModularGUI.AddModule (new GUIModuleFloat ("causticsMinBrightness", oceanNode, "causticsMinBrightness"));
+				oceanModularGUI.AddModule (new GUIModuleVector2 ("Caustics layer 1 scale", oceanNode, "causticsLayer1Scale"));
+				oceanModularGUI.AddModule (new GUIModuleVector2 ("caustics layer 1 speed", oceanNode, "causticsLayer1Speed"));
+				oceanModularGUI.AddModule (new GUIModuleVector2 ("Caustics Layer 2 scale", oceanNode, "causticsLayer2Scale"));
+				oceanModularGUI.AddModule (new GUIModuleVector2 ("caustics Layer 2 speed", oceanNode, "causticsLayer2Speed"));
+				oceanModularGUI.AddModule (new GUIModuleFloat ("Caustics texture multiply", oceanNode, "causticsMultiply"));
+				oceanModularGUI.AddModule (new GUIModuleFloat ("Caustics underwater light boost", oceanNode, "causticsUnderwaterLightBoost"));
+				oceanModularGUI.AddModule (new GUIModuleFloat ("Caustics minimum brightness (of dark areas in the caustics texture)", oceanNode, "causticsMinBrightness"));
+				oceanModularGUI.AddModule (new GUIModuleFloat ("Caustics blur depth", oceanNode, "causticsBlurDepth"));
 			}
 
 			oceanModularGUI.AddModule (new GUIModuleLabel ("To apply the next setting press \"rebuild ocean\" and wait"));
