@@ -15,10 +15,6 @@ namespace scatterer
 {
 	public class GUIhandler: MonoBehaviour
 	{
-
-		public Rect windowRect = new Rect (0, 0, 400, 50);
-		int windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
-
 		public int selectedPlanet = 0;
 		public int selectedConfigPoint = 0;
 		bool wireFrame = false;

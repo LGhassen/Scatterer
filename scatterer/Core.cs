@@ -41,7 +41,7 @@ namespace scatterer
 		}
 
 		public Rect windowRect = new Rect (0, 0, 400, 50);
-		int windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
+		int windowId = 0;
 
 		GUIhandler GUItool= new GUIhandler();
 
@@ -824,6 +824,9 @@ namespace scatterer
 		{
 			if (visible)
 			{
+				if (windowId == 0)
+					windowId = UnityEngine.Random.Range(int.MinValue,int.MaxValue);
+
 				windowRect = GUILayout.Window (windowId, windowRect, GUItool.DrawScattererWindow,"Scatterer v"+versionNumber+": "
 				                               + guiModifierKey1String+"/"+guiModifierKey2String +"+" +guiKey1String
 				                               +"/"+guiKey2String+" toggle");
