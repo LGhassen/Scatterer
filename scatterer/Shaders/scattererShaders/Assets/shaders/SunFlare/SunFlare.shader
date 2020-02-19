@@ -63,17 +63,25 @@
 			
 			struct v2f 
 			{
+    			float4 pos: SV_POSITION;
     			float2 uv : TEXCOORD0;
+    			float3 extinction : TEXCOORD1;
 			};
 
-			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
+			v2f vert(appdata_base v)
 			{
 				v2f OUT;
 				v.vertex.y = v.vertex.y *_ProjectionParams.x;
-    			outpos = float4(v.vertex.xy, 1.0, 1.0);
-    			outpos = (renderSunFlare == 1.0) && (_ProjectionParams.y < 200.0) && (renderOnCurrentCamera == 1.0) ? outpos : float4(2.0,2.0,2.0,1.0); //if we don't need to render the sunflare, cull vertexes by placing them outside clip space
+
+				float depth =  tex2Dlod(_customDepthTexture,float4(sunViewPortPos.xy,0.0,0.0));  //if there's something in the way don't render the flare	
+				float returnPixel = (useDbufferOnCamera < 1.0) ? 1.0 : ((depth < 1.0) ? 0.0 : 1.0);
+
+    			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
+    			OUT.pos = (renderSunFlare == 1.0) && (_ProjectionParams.y < 200.0) && (renderOnCurrentCamera == 1.0) && (returnPixel ==1.0) ? OUT.pos : float4(2.0,2.0,2.0,1.0); //if we don't need to render the sunflare, cull vertexes by placing them outside clip space
     																												  //also use near plane to not render on far camera
     			OUT.uv = v.texcoord.xy;
+
+    			OUT.extinction = tex2Dlod(extinctionTexture,float4(0.0,0.0,0.0,0.0)).rgb; //precomputed extinction through multiple atmospheres and rings
 
 //#if UNITY_UV_STARTS_AT_TOP
 //				OUT.uv.y = 1.0 - OUT.uv.y;
@@ -82,16 +90,14 @@
 			}
 
 
-			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
-			{
-//
-//			    float3 WSD = _Sun_WorldSunDir;
-//			    float3 WCP = _Globals_WorldCameraPos;
-			    
+			float4 frag(v2f IN) : SV_Target
+			{						   
 				float3 sunColor=0;
 				
-				//move aspectRatio precomputations to CPU?
+				//TODO: move aspectRatio precomputations to CPU?
+
 				sunColor+=flareSettings.x * (tex2Dlod(sunFlare,float4((IN.uv.xy-sunViewPortPos.xy)*float2(aspectRatio * flareSettings.y,1)* flareSettings.z * sunGlareScale+0.5,0,0) ).rgb);
+
 			    sunColor+=spikesSettings.x * (tex2Dlod(sunSpikes,float4((IN.uv.xy-sunViewPortPos.xy)*float2(aspectRatio * spikesSettings.y ,1)* spikesSettings.z * sunGlareScale+0.5,0,0) ).rgb);
 			    		    		    
 				float2 toScreenCenter=sunViewPortPos.xy-0.5;
@@ -100,30 +106,35 @@
 				//ghost 1
 				for (int i=0; i<4; ++i)
     			{
-        					ghosts+=ghost1Settings1[i].x * (tex2Dlod(sunGhost1,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost1Settings1[i].w))*
+
+        				ghosts+=ghost1Settings1[i].x * (tex2Dlod(sunGhost1,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost1Settings1[i].w))*
         					float2(aspectRatio*ghost1Settings1[i].y,1)*ghost1Settings1[i].z+0.5,0,0)).rgb);
-        					
-        					ghosts+=ghost1Settings2[i].x * (tex2Dlod(sunGhost1,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost1Settings2[i].w))*
+
+        				ghosts+=ghost1Settings2[i].x * (tex2Dlod(sunGhost1,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost1Settings2[i].w))*
         					float2(aspectRatio*ghost1Settings2[i].y,1)*ghost1Settings2[i].z+0.5,0,0)).rgb);
 				}			
 	
 				//ghost 2
 				for (int j=0; j<4; ++j)
-    			{        					        					
-        					ghosts+=ghost2Settings1[j].x * (tex2Dlod(sunGhost2,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost2Settings1[j].w))*
+    			{
+		        					
+        				ghosts+=ghost2Settings1[j].x * (tex2Dlod(sunGhost2,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost2Settings1[j].w))*
         					float2(aspectRatio*ghost2Settings1[j].y,1)*ghost2Settings1[j].z+0.5,0,0)).rgb);
-        					
-        					ghosts+=ghost2Settings2[j].x * (tex2Dlod(sunGhost2,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost2Settings2[j].w))*
+
+        				ghosts+=ghost2Settings2[j].x * (tex2Dlod(sunGhost2,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost2Settings2[j].w))*
         					float2(aspectRatio*ghost2Settings2[j].y,1)*ghost2Settings2[j].z+0.5,0,0)).rgb);
+
 				}
 				
 				//ghost 3
 				for (int k=0; k<4; ++k)
-    			{        					        					
-        					ghosts+=ghost3Settings1[k].x * (tex2Dlod(sunGhost3,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost3Settings1[k].w))*
+    			{
+	        					
+        				ghosts+=ghost3Settings1[k].x * (tex2Dlod(sunGhost3,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost3Settings1[k].w))*
         					float2(aspectRatio*ghost3Settings1[k].y,1)*ghost3Settings1[k].z+0.5,0,0)).rgb);
-        					
-        					ghosts+=ghost3Settings2[k].x * (tex2Dlod(sunGhost3,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost3Settings2[k].w))*
+
+
+        				ghosts+=ghost3Settings2[k].x * (tex2Dlod(sunGhost3,float4((IN.uv.xy-sunViewPortPos.xy+(toScreenCenter*ghost3Settings2[k].w))*
         					float2(aspectRatio*ghost3Settings2[k].y,1)*ghost3Settings2[k].z+0.5,0,0)).rgb);
 				}
 
@@ -131,18 +142,9 @@
 			   	
 			   	sunColor+=ghosts;
 			    
-				float depth =  tex2D(_customDepthTexture,sunViewPortPos.xy);  //if there's something in the way don't render the flare	
+				sunColor*= flareColor * IN.extinction * sunGlareFade;
 
-				float returnPixel = (useDbufferOnCamera < 1.0) ? 1.0 : ((depth < 1.0) ? 0.0 : 1.0);
-
-				float3 extinction = tex2D(extinctionTexture,float2(0,0)); //precomputed extinction through multiple atmospheres and rings
-				sunColor*=extinction;
-
-				sunColor*=sunGlareFade;
-
-				sunColor*=flareColor;
-
-				return float4(sunColor*returnPixel,1.0);
+				return float4(sunColor,1.0);
 			}
 			
 			ENDCG
