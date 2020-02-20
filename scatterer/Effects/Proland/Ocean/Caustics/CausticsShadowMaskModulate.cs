@@ -20,41 +20,50 @@ namespace scatterer
 		{
 		}
 
-		public void Init(string causticsTexturePath,Vector2 causticsLayer1Scale,Vector2 causticsLayer1Speed,Vector2 causticsLayer2Scale,
+		public bool Init(string causticsTexturePath,Vector2 causticsLayer1Scale,Vector2 causticsLayer1Speed,Vector2 causticsLayer2Scale,
 		                 Vector2 causticsLayer2Speed, float causticsMultiply, float causticsMinBrightness, float oceanRadius, float blurDepth)
 		{
-			if (ReferenceEquals (CausticsShadowMaskModulateMaterial, null))
+
+			if (string.IsNullOrEmpty (causticsTexturePath) || !System.IO.File.Exists (Utils.GameDataPath+causticsTexturePath))
 			{
-				CausticsShadowMaskModulateMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CausticsOcclusion")]);
+				Utils.LogInfo("Caustics texture "+ Utils.GameDataPath+causticsTexturePath +" not found, disabling caustics for current planet");
+				return false;
 			}
+			else
+			{
+				if (ReferenceEquals (CausticsShadowMaskModulateMaterial, null)) {
+					CausticsShadowMaskModulateMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CausticsOcclusion")]);
+				}
 
-			causticsTexture = new Texture2D (1, 1);
-			causticsTexture.LoadImage(System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath, causticsTexturePath)));
-			causticsTexture.wrapMode = TextureWrapMode.Repeat;
+				causticsTexture = new Texture2D (1, 1);
+				causticsTexture.LoadImage (System.IO.File.ReadAllBytes (Utils.GameDataPath+causticsTexturePath));
+				causticsTexture.wrapMode = TextureWrapMode.Repeat;
 
-			CausticsShadowMaskModulateMaterial.SetTexture("_CausticsTexture",causticsTexture);
+				CausticsShadowMaskModulateMaterial.SetTexture ("_CausticsTexture", causticsTexture);
 
-			CausticsShadowMaskModulateMaterial.SetVector("layer1Scale",causticsLayer1Scale);
-			CausticsShadowMaskModulateMaterial.SetVector("layer1Speed",causticsLayer1Speed);
-			CausticsShadowMaskModulateMaterial.SetVector("layer2Scale",causticsLayer2Scale);
-			CausticsShadowMaskModulateMaterial.SetVector("layer2Speed",causticsLayer2Speed);
+				CausticsShadowMaskModulateMaterial.SetVector ("layer1Scale", causticsLayer1Scale);
+				CausticsShadowMaskModulateMaterial.SetVector ("layer1Speed", causticsLayer1Speed);
+				CausticsShadowMaskModulateMaterial.SetVector ("layer2Scale", causticsLayer2Scale);
+				CausticsShadowMaskModulateMaterial.SetVector ("layer2Speed", causticsLayer2Speed);
 
-			CausticsShadowMaskModulateMaterial.SetFloat("causticsMultiply",causticsMultiply);
-			CausticsShadowMaskModulateMaterial.SetFloat("causticsMinBrightness",causticsMinBrightness);
-			CausticsShadowMaskModulateMaterial.SetFloat("oceanRadius",oceanRadius);
-			CausticsShadowMaskModulateMaterial.SetFloat("causticsBlurDepth",blurDepth);
+				CausticsShadowMaskModulateMaterial.SetFloat ("causticsMultiply", causticsMultiply);
+				CausticsShadowMaskModulateMaterial.SetFloat ("causticsMinBrightness", causticsMinBrightness);
+				CausticsShadowMaskModulateMaterial.SetFloat ("oceanRadius", oceanRadius);
+				CausticsShadowMaskModulateMaterial.SetFloat ("causticsBlurDepth", blurDepth);
 
-			CausticsShadowMaskModulateMaterial.EnableKeyword ("SPHERE_PLANET");
-			CausticsShadowMaskModulateMaterial.DisableKeyword ("FLAT_PLANET");
+				CausticsShadowMaskModulateMaterial.EnableKeyword ("SPHERE_PLANET");
+				CausticsShadowMaskModulateMaterial.DisableKeyword ("FLAT_PLANET");
 
-			sunLight = Scatterer.Instance.sunLight.GetComponent < Light > ();
+				sunLight = Scatterer.Instance.sunLight.GetComponent < Light > ();
 
-			m_Buffer = new CommandBuffer();
-			m_Buffer.name = "CausticsShadowMaskmodulate";			
-			m_Buffer.Blit (null, BuiltinRenderTextureType.CurrentActive, CausticsShadowMaskModulateMaterial);
+				m_Buffer = new CommandBuffer ();
+				m_Buffer.name = "CausticsShadowMaskmodulate";			
+				m_Buffer.Blit (null, BuiltinRenderTextureType.CurrentActive, CausticsShadowMaskModulateMaterial);
 
-			AddCommandBuffer ();
-			isEnabled = true;
+				AddCommandBuffer ();
+				isEnabled = true;
+				return true;
+			}
 		}
 
 		public void AddCommandBuffer()
@@ -77,7 +86,8 @@ namespace scatterer
 				
 		public void RemoveCommandBuffer ()
 		{
-			sunLight.RemoveCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
+			if (!ReferenceEquals(sunLight,null))
+				sunLight.RemoveCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
 			commandBufferAdded = false;
 		}
 

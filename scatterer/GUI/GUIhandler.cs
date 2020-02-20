@@ -424,6 +424,7 @@ namespace scatterer
 
 			if (Scatterer.Instance.mainSettings.oceanCaustics)
 			{
+				oceanModularGUI.AddModule (new GUIModuleString ("Caustics texture path", oceanNode, "causticsTexturePath"));
 				oceanModularGUI.AddModule (new GUIModuleVector2 ("Caustics layer 1 scale", oceanNode, "causticsLayer1Scale"));
 				oceanModularGUI.AddModule (new GUIModuleVector2 ("caustics layer 1 speed", oceanNode, "causticsLayer1Speed"));
 				oceanModularGUI.AddModule (new GUIModuleVector2 ("Caustics Layer 2 scale", oceanNode, "causticsLayer2Scale"));

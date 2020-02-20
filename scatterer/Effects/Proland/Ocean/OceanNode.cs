@@ -117,7 +117,7 @@ namespace scatterer
 
 		//caustics
 		[Persistent]
-		public string causticsTexturePath;
+		public string causticsTexturePath="";
 		[Persistent]
 		public Vector2 causticsLayer1Scale;
 		[Persistent]
@@ -174,7 +174,12 @@ namespace scatterer
 			if (Scatterer.Instance.mainSettings.oceanCaustics && (HighLogic.LoadedScene == GameScenes.FLIGHT))
 			{
 				causticsShadowMaskModulator = (CausticsShadowMaskModulate) Scatterer.Instance.sunLight.AddComponent (typeof(CausticsShadowMaskModulate));
-				causticsShadowMaskModulator.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed, causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth);
+				if(!causticsShadowMaskModulator.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
+				                                     causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth))
+				{
+					UnityEngine.Object.DestroyImmediate (causticsShadowMaskModulator);
+					causticsShadowMaskModulator = null;
+				}
 			}
 		}	
 
@@ -645,7 +650,7 @@ namespace scatterer
 					underwaterDim = Mathf.Lerp(1.0f,0.0f,underwaterDim / darknessDepth);
 					finalDim*=underwaterDim;
 				}
-				if (Scatterer.Instance.mainSettings.oceanCaustics)
+				if (causticsShadowMaskModulator)
 				{
 					finalDim*=causticsUnderwaterLightBoost; //replace by caustics multiplier
 				}
