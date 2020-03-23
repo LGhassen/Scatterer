@@ -1109,7 +1109,8 @@ namespace scatterer
 			
 			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
 			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);
-			sharedMaterial.SetColor ("_SpecColor", new Color (specR / 100f, specG / 100f, specB / 100f));
+			//why don't we apply my config fix in code?
+			sharedMaterial.SetColor ("_SpecColor", new Color (specR / 500f, specG / 500f, specB / 500f));
 			sharedMaterial.SetFloat ("_Shininess", shininess / 100);
 
 
