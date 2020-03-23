@@ -173,7 +173,7 @@ namespace scatterer
 
 			if (Scatterer.Instance.mainSettings.oceanCaustics && (HighLogic.LoadedScene == GameScenes.FLIGHT))
 			{
-				causticsShadowMaskModulator = (CausticsShadowMaskModulate) Scatterer.Instance.scaledspaceSunLight.AddComponent (typeof(CausticsShadowMaskModulate));
+				causticsShadowMaskModulator = (CausticsShadowMaskModulate) Scatterer.Instance.SunLight.AddComponent (typeof(CausticsShadowMaskModulate));
 				if(!causticsShadowMaskModulator.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
 				                                     causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth))
 				{
@@ -415,7 +415,7 @@ namespace scatterer
 			if (!ReferenceEquals (causticsShadowMaskModulator, null))
 			{
 				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("CameraToWorld", inCamera.cameraToWorldMatrix);
-				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("WorldToLight", Scatterer.Instance.scaledspaceSunLight.transform.worldToLocalMatrix);
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("WorldToLight", Scatterer.Instance.SunLight.transform.worldToLocalMatrix);
 				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector ("PlanetOrigin", m_manager.parentLocalTransform.position);
 
 				float warpTime = (TimeWarp.CurrentRate > 1) ? (float) Planetarium.GetUniversalTime() : 0f;

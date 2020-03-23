@@ -341,25 +341,14 @@ namespace scatterer
 				Light[] lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
 				foreach (Light _light in lights)
 				{
-					if (_light.gameObject.name == "Scaledspace SunLight")
+					if ((_light.gameObject.name == "Scaledspace SunLight")
+						|| (_light.gameObject.name == "SunLight"))
 					{
-						scaledspaceSunLight = _light.gameObject;
-
 						_light.shadowNormalBias = mainSettings.shadowNormalBias;
 						_light.shadowBias = mainSettings.shadowBias;
-					}
-
-					if (_light.gameObject.name == "SunLight")
-					{
-						sunLight = _light.gameObject;
-						_light.shadowNormalBias = mainSettings.shadowNormalBias;
-						_light.shadowBias = mainSettings.shadowBias;
-					}
-
-
-					if (_light.gameObject.name.Contains("PlanetLight") || _light.gameObject.name.Contains("Directional light"))
-					{
-						mainMenuLight = _light.gameObject;
+						//_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.VeryHigh;
+						//_light.shadows=LightShadows.Soft;
+						//_light.shadowCustomResolution=8192;
 					}
 				}
 
