@@ -18,7 +18,7 @@ namespace scatterer
 			m_Buffer = new CommandBuffer();
 			m_Buffer.name = "ScattererScreenspaceShadowMaskCopy";
 			
-//			m_Buffer.Blit (BuiltinRenderTextureType.CurrentActive, Core.Instance.bufferRenderingManager.occlusionTexture);
+//			m_Buffer.Blit (BuiltinRenderTextureType.CurrentActive, Scatterer.Instance.bufferRenderingManager.occlusionTexture);
 			
 			m_Light = GetComponent<Light>();
 			m_Light.AddCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);

@@ -1,7 +1,7 @@
 //rendering steps
 //scaledSpaceCamera.OnPrecull -> skynodes update the extinction texture one after one
 //camerahook on the relevant scaledSpace or farCamera -> clear the extinction texture before the next frame
-//						while taking care of keeping it around until the rendering has finished (either nearCamera or scaledCamera)
+//						while taking care of keeping it around until the rendering has finished (either unifiedCamera or scaledCamera)
 
 
 using UnityEngine;
@@ -34,7 +34,7 @@ namespace scatterer
 
 		public RenderTexture extinctionTexture;
 		int waitBeforeReloadCnt = 0;
-		SunflareCameraHook nearCameraHook, scaledCameraHook;
+		SunflareCameraHook unifiedCameraHook;
 
 		Vector3 sunViewPortPos=Vector3.zero;
 
@@ -208,18 +208,9 @@ namespace scatterer
 
 			sunglareMaterial.SetVector ("flareColor", flareColor);
 
-			scaledCameraHook = (SunflareCameraHook) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
-			scaledCameraHook.flare = this;
-			scaledCameraHook.useDbufferOnCamera = 0f;
-
-			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-			{
-				nearCameraHook = (SunflareCameraHook)Scatterer.Instance.nearCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
-				nearCameraHook.flare = this;
-				nearCameraHook.useDbufferOnCamera = 1f;
-			}
-
-			Utils.LogDebug ("Added custom sun flare for "+sourceName);
+			unifiedCameraHook = (SunflareCameraHook)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
+			unifiedCameraHook.flare = this;
+			unifiedCameraHook.useDbufferOnCamera = 0f;
 
 		}
 
@@ -249,8 +240,8 @@ namespace scatterer
 			//if (!MapView.MapIsEnabled)
 			{
 	
-				hitStatus = Physics.Raycast (Scatterer.Instance.farCamera.transform.position,
-				                             (source.transform.position- Scatterer.Instance.farCamera.transform.position).normalized,
+				hitStatus = Physics.Raycast (Scatterer.Instance.unifiedCamera.transform.position,
+				                             (source.transform.position- Scatterer.Instance.unifiedCamera.transform.position).normalized,
 				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
 				if(!hitStatus)
 				{
@@ -298,21 +289,23 @@ namespace scatterer
 				}
 			}
 
-			//enable or disable scaled or near script depending on trackstation or mapview
-			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			//Disable this code, this new simple code works aparently
+			unifiedCameraHook.enabled = true;
+			sunflareGameObject.layer = 10;
+			/*if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
-				nearCameraHook.enabled = true;
+				unifiedCameraHook.enabled = true;
 				scaledCameraHook.enabled = false;
 				sunflareGameObject.layer = 15;
 			}
 			else
 			{
-				if (nearCameraHook)
-					nearCameraHook.enabled=false;
+				if (unifiedCameraHook)
+					unifiedCameraHook.enabled=false;
 
 				scaledCameraHook.enabled=true;
 				sunflareGameObject.layer = 10;
-			}
+			}*/
 		}
 
 		public void ClearExtinction()
@@ -328,15 +321,10 @@ namespace scatterer
 
 		public void CleanUp()
 		{
-			if (nearCameraHook)
+			if (unifiedCameraHook)
 			{
-				Component.Destroy (nearCameraHook);
-				UnityEngine.Object.Destroy (nearCameraHook);
-			}
-			if (scaledCameraHook)
-			{
-				Component.Destroy (scaledCameraHook);
-				UnityEngine.Object.Destroy (scaledCameraHook);
+				Component.Destroy (unifiedCameraHook);
+				UnityEngine.Object.Destroy (unifiedCameraHook);
 			}
 
 			if (extinctionTexture)

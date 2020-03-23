@@ -169,12 +169,12 @@ namespace scatterer
 			Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle (Scatterer.Instance.mainSettings.shadowsOnOcean, "Ocean: Craft/Terrain shadows (may have artifacts on Directx11)");
 			Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
 			Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCaustics, "Ocean: Caustics");
-			//Core.Instance.mainSettings.usePlanetShine = GUILayout.Toggle(Core.Instance.usePlanetShine, "PlanetShine");
+			//Scatterer.Instance.mainSettings.usePlanetShine = GUILayout.Toggle(Scatterer.Instance.usePlanetShine, "PlanetShine");
 			Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 			Scatterer.Instance.mainSettings.fullLensFlareReplacement = GUILayout.Toggle (Scatterer.Instance.mainSettings.fullLensFlareReplacement, "Lens flare shader");
 			Scatterer.Instance.mainSettings.useEclipses = GUILayout.Toggle (Scatterer.Instance.mainSettings.useEclipses, "Eclipses (WIP, sky/orbit only for now)");
 			Scatterer.Instance.mainSettings.useRingShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.useRingShadows, "Kopernicus ring shadows");
-			//Core.Instance.mainSettings.useGodrays = GUILayout.Toggle(Core.Instance.useGodrays, "Godrays (early WIP)");
+			//Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle(Scatterer.Instance.useGodrays, "Godrays (early WIP)");
 			Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Terrain shadows");
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label ("Shadow bias");
@@ -318,8 +318,8 @@ namespace scatterer
 				if (GUILayout.Button ("Toggle"))
 					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePreserveCloudColors ();
 				GUILayout.EndHorizontal ();
-				//								GUIfloat("Volumetrics Scattering Multiplier", ref volumetricsScatteringMultiplier, ref Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsScatteringMultiplier);
-				//								GUIfloat("Volumetrics Sky irradiance Multiplier", ref volumetricsSkyIrradianceMultiplier, ref Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsSkyIrradianceMultiplier);
+				//								GUIfloat("Volumetrics Scattering Multiplier", ref volumetricsScatteringMultiplier, ref Scatterer.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsScatteringMultiplier);
+				//								GUIfloat("Volumetrics Sky irradiance Multiplier", ref volumetricsSkyIrradianceMultiplier, ref Scatterer.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsSkyIrradianceMultiplier);
 			}
 			GUILayout.Label ("ScaledSpace model");
 			GUILayout.BeginHorizontal ();
@@ -368,11 +368,11 @@ namespace scatterer
 			//							GUILayout.BeginHorizontal ();
 			//							if (GUILayout.Button ("toggle sky"))
 			//							{
-			//								Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled = !Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled;
-			//								if (Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled)
-			//									Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere();
+			//								Scatterer.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled = !Scatterer.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled;
+			//								if (Scatterer.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.skyEnabled)
+			//									Scatterer.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere();
 			//								else
-			//									Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
+			//									Scatterer.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.RestoreStockAtmosphere();
 			//							}
 			//							GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
@@ -487,10 +487,8 @@ namespace scatterer
 			if (GUILayout.Button ("Toggle WireFrame")) {
 				if (wireFrame) {
 					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION) {
-						if (Scatterer.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)))
-							Component.Destroy (Scatterer.Instance.nearCamera.gameObject.GetComponent (typeof(Wireframe)));
-						if (Scatterer.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)))
-							Component.Destroy (Scatterer.Instance.farCamera.gameObject.GetComponent (typeof(Wireframe)));
+						if (Scatterer.Instance.unifiedCamera.gameObject.GetComponent (typeof(Wireframe)))
+							Component.Destroy (Scatterer.Instance.unifiedCamera.gameObject.GetComponent (typeof(Wireframe)));
 					}
 					if (Scatterer.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.Destroy (Scatterer.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
@@ -498,8 +496,7 @@ namespace scatterer
 				}
 				else {
 					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION) {
-						Scatterer.Instance.nearCamera.gameObject.AddComponent (typeof(Wireframe));
-						Scatterer.Instance.farCamera.gameObject.AddComponent (typeof(Wireframe));
+						Scatterer.Instance.unifiedCamera.gameObject.AddComponent (typeof(Wireframe));
 					}
 					Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(Wireframe));
 					wireFrame = true;

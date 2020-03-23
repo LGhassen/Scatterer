@@ -42,6 +42,7 @@ namespace scatterer
 				{
 					sunLight=_light.gameObject;
 					Utils.LogDebug("disableAmbientLight: Found sunlight");
+					_light.shadowCustomResolution = 8192;
 				}				
 			}
 

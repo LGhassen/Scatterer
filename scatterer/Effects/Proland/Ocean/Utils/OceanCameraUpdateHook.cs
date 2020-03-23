@@ -17,7 +17,7 @@ namespace scatterer
 
 			oceanNode.updateCameraSpecificUniforms (oceanNode.m_oceanMaterial, cam);
 
-			if (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera)
+			if (cam == Scatterer.Instance.unifiedCamera)
 			{
 				oceanNode.m_oceanMaterial.EnableKeyword("REFRACTIONS_AND_TRANSPARENCY_ON");
 				oceanNode.m_oceanMaterial.DisableKeyword("REFRACTIONS_AND_TRANSPARENCY_OFF");

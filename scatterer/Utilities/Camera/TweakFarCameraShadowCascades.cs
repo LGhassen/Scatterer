@@ -25,12 +25,12 @@ namespace scatterer
 		public void OnPreRender()
 		{
 			//QualitySettings.shadowCascade4Split= new Vector3(0.002856f,0.02856f,0.2856f);
-			QualitySettings.shadowCascade4Split= new Vector3(0.005f,0.025f,0.125f);
+			QualitySettings.shadowCascade4Split = new Vector3(0.005f, 0.025f, 0.125f);
 		}
 
 		public void OnPostRender()
 		{
-			QualitySettings.shadowCascade4Split= new Vector3(0.05041852f,0.1527327f,0.2643032f);
+			QualitySettings.shadowCascade4Split = new Vector3(0.05041852f, 0.1527327f, 0.2643032f);
 		}
 
 		public void restoreLight()

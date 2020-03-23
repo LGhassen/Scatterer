@@ -22,7 +22,8 @@ namespace scatterer
 			m_Buffer.name = "ScattererDepthToDistanceCommandBuffer";
 			m_Material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthToDistance")]);
 
-			if (m_Camera.name == "Camera 01"){
+			if (m_Camera.name == "Camera 01")
+			{
 				m_Buffer.SetRenderTarget(Scatterer.Instance.bufferManager.depthTexture);
 				m_Buffer.ClearRenderTarget (false, true, Color.white);
 			}
@@ -36,7 +37,8 @@ namespace scatterer
 		public void OnDestroy ()
 		{
 			Utils.LogDebug ("Removing DepthToDistanceCommandBuffer from "+m_Camera.name);
-			m_Camera.RemoveCommandBuffer (CameraEvent.AfterDepthTexture, m_Buffer);
+			if (!ReferenceEquals(m_Buffer, null) && !ReferenceEquals(m_Camera, null))
+				m_Camera.RemoveCommandBuffer(CameraEvent.AfterDepthTexture, m_Buffer);
 		}
 	}
 }

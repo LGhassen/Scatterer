@@ -18,7 +18,7 @@ namespace scatterer
 			m_Buffer = new CommandBuffer();
 			m_Buffer.name = "ScattererShadowRemoveFade";
 					
-			//works for the fade but doesn't fix breaks in squares/axis-aligned lines near farclipPlane of nearCamera, limitation of what? idk
+			//works for the fade but doesn't fix breaks in squares/axis-aligned lines near farclipPlane of unifiedCamera, limitation of what? idk
 			//could still be ok for SSAO, maybe passable for eclipses but not sure
 			m_Buffer.SetGlobalVector ("unity_ShadowFadeCenterAndType",new Vector4(float.PositiveInfinity,float.PositiveInfinity,float.PositiveInfinity,-1f));
 
