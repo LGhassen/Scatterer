@@ -30,7 +30,8 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
-			QualitySettings.shadowCascade4Split = new Vector3(0.05041852f, 0.1527327f, 0.2643032f);
+			//No longer utilized
+			//QualitySettings.shadowCascade4Split = new Vector3(0.05041852f, 0.1527327f, 0.2643032f);
 		}
 
 		public void restoreLight()
