@@ -19,9 +19,9 @@ namespace scatterer
 
 			projector.aspectRatio = 1;
 			projector.orthographic = true;
-			projector.orthographicSize = 2*Rt;
+			projector.orthographicSize = 3f*Rt;
 			projector.nearClipPlane = 1;
-			projector.farClipPlane = 4.25f*Rt;
+			projector.farClipPlane = 6f*Rt;
 			projector.ignoreLayers = ~((1<<0) | (1<<1) | (1<<4) | (1<<15) | (1<<16) | (1<<19)); //ignore all except 4 water 15 local 16 kerbals and 19 parts
 
 			projectorGO.layer = 15;
