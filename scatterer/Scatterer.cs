@@ -304,7 +304,7 @@ namespace scatterer
 			{
 				//attempt to fix atmosphere cloud fade transition at low altitude?
 				unifiedCamera.nearClipPlane = 1f;
-				unifiedCamera.farClipPlane = 700000f;
+				unifiedCamera.farClipPlane = 9750000f;
 				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades)unifiedCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
 
 				if (mainSettings.overrideNearClipPlane)
