@@ -46,7 +46,7 @@ namespace scatterer
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_R3";
+		public string versionNumber = "0.055_UFCRTBDEV_RC2";
 
 		void Awake ()
 		{
@@ -302,9 +302,6 @@ namespace scatterer
 			unifiedCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 00");
 			if (scaledSpaceCamera && unifiedCamera)
 			{
-				//attempt to fix atmosphere cloud fade transition at low altitude?
-				unifiedCamera.nearClipPlane = 1f;
-				unifiedCamera.farClipPlane = 8750000f;
 				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades)unifiedCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
 
 				if (mainSettings.overrideNearClipPlane)
