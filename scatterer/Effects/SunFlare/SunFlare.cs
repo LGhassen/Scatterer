@@ -312,7 +312,7 @@ namespace scatterer
 			{
 				unifiedCameraHook.enabled = true;
 				scaledCameraHook.enabled = false;
-				sunflareGameObject.layer = 15;
+				sunflareGameObject.layer = 10;
 			}
 			else
 			{
