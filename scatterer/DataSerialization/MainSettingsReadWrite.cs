@@ -64,8 +64,8 @@ namespace scatterer
 		
 		//[Persistent]
 		public bool usePlanetShine = false;
-		
-		[Persistent]
+		//Until such time as I can fix shadows, I am disabling scatterer shadows in code and menus.  Blackrack can revert if he wishes.
+		/*[Persistent]
 		public bool terrainShadows = true;
 		
 		[Persistent]
@@ -76,7 +76,7 @@ namespace scatterer
 		
 		[Persistent]
 		public float shadowsDistance=100000f;
-		
+		*/
 		[Persistent]
 		public int m_fourierGridSize = 128;
 		
@@ -133,10 +133,6 @@ namespace scatterer
 				 OldConfig.showMenuOnStart != showMenuOnStart ||
 				 OldConfig.useEclipses != useEclipses ||
 				 OldConfig.useRingShadows != useRingShadows ||
-				 OldConfig.terrainShadows != terrainShadows ||
-				 OldConfig.shadowNormalBias != shadowNormalBias ||
-				 OldConfig.shadowBias != shadowBias ||
-				 OldConfig.shadowsDistance != shadowsDistance ||
 				 OldConfig.m_fourierGridSize != m_fourierGridSize);
 			
 			if (configChanged)

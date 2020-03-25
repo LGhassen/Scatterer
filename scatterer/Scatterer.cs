@@ -46,7 +46,7 @@ namespace scatterer
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_RC4";
+		public string versionNumber = "0.055_UFCRTBDEV_RC5";
 
 		void Awake ()
 		{
@@ -108,7 +108,7 @@ namespace scatterer
 		{
 			SetupMainCameras ();
 
-			SetShadows();
+			//SetShadows();
 
 			FindSunlights ();
 			
@@ -175,7 +175,6 @@ namespace scatterer
 
 		void Update()
 		{
-			//Some hacky Camera fixes for in flight, move wherever you wish
 			guiHandler.UpdateGUIvisible ();
 
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
@@ -322,7 +321,8 @@ namespace scatterer
 				unifiedCamera = scaledSpaceCamera;
 			}
 		}
-
+		//We are disabling scatterer shadows for now.  Maybe back someday.  KSP Has terraain shadowing now, no?
+		/*
 		void SetShadows()
 		{
 			if (mainSettings.terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
@@ -362,7 +362,7 @@ namespace scatterer
 				}
 			}
 		}
-
+		*/
 		void FindSunlights ()
 		{
 			Light[] lights = (Light[])Light.FindObjectsOfType (typeof(Light));
