@@ -180,7 +180,6 @@ namespace scatterer
 
 		void Update()
 		{
-			//Some hacky Camera fixes for in flight, move wherever you wish
 			guiHandler.UpdateGUIvisible ();
 
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
