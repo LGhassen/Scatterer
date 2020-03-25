@@ -208,22 +208,10 @@ namespace scatterer
 
 			sunglareMaterial.SetVector ("flareColor", flareColor);
 
-			if ((!(HighLogic.LoadedScene == GameScenes.TRACKSTATION)) && (!Scatterer.Instance.unifiedCameraEnabled))
-			{
 
-				scaledCameraHook = (SunflareCameraHook)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
-				scaledCameraHook.flare = this;
-				scaledCameraHook.useDbufferOnCamera = 0f;
-				unifiedCameraHook = (SunflareCameraHook)Scatterer.Instance.nearCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
-				unifiedCameraHook.flare = this;
-				unifiedCameraHook.useDbufferOnCamera = 1f;
-			}
-			else
-			{
-				unifiedCameraHook = (SunflareCameraHook)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
-				unifiedCameraHook.flare = this;
-				unifiedCameraHook.useDbufferOnCamera = 0f;
-			}
+			unifiedCameraHook = (SunflareCameraHook)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
+			unifiedCameraHook.flare = this;
+			unifiedCameraHook.useDbufferOnCamera = 0f;
 
 		}
 
@@ -301,28 +289,8 @@ namespace scatterer
 					waitBeforeReloadCnt = 0;
 				}
 			}
-
-			//unified camera path, we need some special handling here:
-			if (Scatterer.Instance.unifiedCameraEnabled)
-			{
-				unifiedCameraHook.enabled = true;
-				sunflareGameObject.layer = 10;
-			}
-			else if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))              //the old, dual camera path handling runs from here
-			{
-				unifiedCameraHook.enabled = true;
-				scaledCameraHook.enabled = false;
-				sunflareGameObject.layer = 10;
-			}
-			else
-			{
-
-				if (unifiedCameraHook)
-					unifiedCameraHook.enabled = false;
-
-				scaledCameraHook.enabled = true;
-				sunflareGameObject.layer = 10;
-			}
+			unifiedCameraHook.enabled = true;
+			sunflareGameObject.layer = 10;
 
 		}
 
