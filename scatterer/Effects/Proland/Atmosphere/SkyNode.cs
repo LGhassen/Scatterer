@@ -731,14 +731,11 @@ namespace scatterer
 
 			mat.SetVector ("_sunColor", m_manager.sunColor);
 			Camera nearCam = Scatterer.Instance.ReturnProperCamera(false, true);
+			//What if Camera got returned null?  We are in unified mode, then.  No overlap.
+			float camerasOverlap = 0f;
 			if (!(nearCam is null))
 			{
-				float camerasOverlap = nearCam.farClipPlane - Scatterer.Instance.ReturnProperCamera(true, false).nearClipPlane;
-			}
-			else
-			{
-				//Camera got returned null?  We are in unified mode, then.  No overlap.
-				float camerasOverlap = 0f;
+				camerasOverlap = nearCam.farClipPlane - Scatterer.Instance.ReturnProperCamera(true, false).nearClipPlane;
 			}
 			Utils.LogDebug(" Camera overlap: "+camerasOverlap.ToString());
 			mat.SetFloat("_ScattererCameraOverlap",camerasOverlap);

@@ -561,14 +561,11 @@ namespace scatterer
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferManager.refractionTexture); //these don't need to be updated every frame
 
 			Camera nearCam = Scatterer.Instance.ReturnProperCamera(false, true);
+			//What if Camera got returned null?  We are in unified mode, then.  No overlap.
+			float camerasOverlap = 0f;
 			if (!(nearCam is null))
 			{
-				float camerasOverlap = nearCam.farClipPlane - Scatterer.Instance.ReturnProperCamera(true, false).nearClipPlane;
-			}
-			else
-			{
-				//Camera got returned null?  We are in unified mode, then.  No overlap.
-				float camerasOverlap = 0f;
+				camerasOverlap = nearCam.farClipPlane - Scatterer.Instance.ReturnProperCamera(true, false).nearClipPlane;
 			}
 			m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
