@@ -512,7 +512,7 @@ namespace scatterer {
 				foreach (PartBuoyancy _part in parts)
 				{
 					//				_part.transform
-					Vector3 relativePartPos = _part.transform.position-Scatterer.Instance.unifiedCamera.transform.position;
+					Vector3 relativePartPos = _part.transform.position-Scatterer.Instance.ReturnProperCamera(true, false).transform.position;
 					
 					//					Utils.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
 					

@@ -487,8 +487,8 @@ namespace scatterer
 			if (GUILayout.Button ("Toggle WireFrame")) {
 				if (wireFrame) {
 					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION) {
-						if (Scatterer.Instance.unifiedCamera.gameObject.GetComponent (typeof(Wireframe)))
-							Component.Destroy (Scatterer.Instance.unifiedCamera.gameObject.GetComponent (typeof(Wireframe)));
+						if (Scatterer.Instance.ReturnProperCamera(false, false).gameObject.GetComponent (typeof(Wireframe)))
+							Component.Destroy (Scatterer.Instance.ReturnProperCamera(false, false).gameObject.GetComponent (typeof(Wireframe)));
 					}
 					if (Scatterer.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.Destroy (Scatterer.Instance.scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
@@ -496,7 +496,7 @@ namespace scatterer
 				}
 				else {
 					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION) {
-						Scatterer.Instance.unifiedCamera.gameObject.AddComponent (typeof(Wireframe));
+						Scatterer.Instance.ReturnProperCamera(false, false).gameObject.AddComponent (typeof(Wireframe));
 					}
 					Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(Wireframe));
 					wireFrame = true;

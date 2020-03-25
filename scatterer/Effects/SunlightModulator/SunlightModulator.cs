@@ -24,8 +24,8 @@ namespace scatterer
 		private void Awake()
 		{
 			sunLight = Scatterer.Instance.sunLight.GetComponent < Light > ();
-			preRenderHook = (SunlightModulatorPreRenderHook)Scatterer.Instance.unifiedCamera.gameObject.AddComponent(typeof(SunlightModulatorPreRenderHook));
-			postRenderHook = (SunlightModulatorPostRenderHook) Scatterer.Instance.unifiedCamera.gameObject.AddComponent(typeof(SunlightModulatorPostRenderHook)); //less than optimal, doesn't affect internalCamera
+			preRenderHook = (SunlightModulatorPreRenderHook)Scatterer.Instance.ReturnProperCamera(true, false).gameObject.AddComponent(typeof(SunlightModulatorPreRenderHook));
+			postRenderHook = (SunlightModulatorPostRenderHook) Scatterer.Instance.ReturnProperCamera(false, false).gameObject.AddComponent(typeof(SunlightModulatorPostRenderHook)); //less than optimal, doesn't affect internalCamera
 																																						  //but also the issue is that internalCamera
 		}
 

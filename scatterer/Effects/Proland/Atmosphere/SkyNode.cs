@@ -368,7 +368,7 @@ namespace scatterer
 
 			if (!MapView.MapIsEnabled && Scatterer.Instance.mainSettings.sunlightExtinction)
 			{
-				Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.unifiedCamera.transform.position) - parentLocalTransform.position;
+				Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.ReturnProperCamera(true, false).transform.position) - parentLocalTransform.position;
 
 				float lerpedScale = Mathf.Lerp(1f,experimentalAtmoScale,(extinctionPosition.magnitude-m_radius)/2000f); //hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
 
@@ -501,7 +501,7 @@ namespace scatterer
 					sunflareExtinctionMaterial.SetFloat("_experimentalAtmoScale",experimentalAtmoScale);
 
 					if (!MapView.MapIsEnabled)
-						sunflareExtinctionMaterial.SetVector("_Globals_WorldCameraPos", Scatterer.Instance.unifiedCamera.transform.position - parentLocalTransform.position);
+						sunflareExtinctionMaterial.SetVector("_Globals_WorldCameraPos", Scatterer.Instance.ReturnProperCamera(true, false).transform.position - parentLocalTransform.position);
 					else
 						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Scatterer.Instance.scaledSpaceCamera.transform.position) - parentLocalTransform.position);
 
@@ -593,7 +593,7 @@ namespace scatterer
 			{
 				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 				{
-					alt = Vector3.Distance(Scatterer.Instance.unifiedCamera.transform.position, parentLocalTransform.position);
+					alt = Vector3.Distance(Scatterer.Instance.ReturnProperCamera(true, false).transform.position, parentLocalTransform.position);
 
 					trueAlt = alt - m_radius;
 				}
@@ -670,7 +670,7 @@ namespace scatterer
 			
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 
-			mat.SetVector("_camForward", Scatterer.Instance.unifiedCamera.transform.forward);
+			mat.SetVector("_camForward", Scatterer.Instance.ReturnProperCamera(true, false).transform.forward);
 
 			UpdatePostProcessMaterial (mat);
 		}
@@ -730,9 +730,16 @@ namespace scatterer
 				mat.SetFloat ("_PlanetOpacity", 1f);
 
 			mat.SetVector ("_sunColor", m_manager.sunColor);
-
-			//float camerasOverlap = Scatterer.Instance.unifiedCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
-			float camerasOverlap = 0f;
+			Camera nearCam = Scatterer.Instance.ReturnProperCamera(false, true);
+			if (!(nearCam is null))
+			{
+				float camerasOverlap = nearCam.farClipPlane - Scatterer.Instance.ReturnProperCamera(true, false).nearClipPlane;
+			}
+			else
+			{
+				//Camera got returned null?  We are in unified mode, then.  No overlap.
+				float camerasOverlap = 0f;
+			}
 			Utils.LogDebug(" Camera overlap: "+camerasOverlap.ToString());
 			mat.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}

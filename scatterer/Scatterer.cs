@@ -39,14 +39,15 @@ namespace scatterer
 		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
 
 		//probably move these to buffer rendering manager
-		DepthToDistanceCommandBuffer nearDepthCommandbuffer;
-		
+		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
+
 		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
-		public Camera scaledSpaceCamera, unifiedCamera;
+		public Camera scaledSpaceCamera, unifiedCamera, farCamera, nearCamera;
+		public Boolean unifiedCameraEnabled;
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_RC4";
+		public string versionNumber = "0.055_UFCRTBDEV_RC6";
 
 		void Awake ()
 		{
@@ -123,15 +124,19 @@ namespace scatterer
 
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				bufferManager = (BufferManager)unifiedCamera.gameObject.AddComponent (typeof(BufferManager));
+				bufferManager = (BufferManager)ReturnProperCamera(true, false).gameObject.AddComponent (typeof(BufferManager));
 				bufferManager.start();
 
 				//copy stock depth buffers and combine into a single depth buffer
 				//TODO: shouldn't this be moved to bufferManager?
 				if (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement)
 				{
-					//farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
-					nearDepthCommandbuffer = unifiedCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
+					Camera farCam = ReturnProperCamera(true, true);
+					if (!(farCam is null))
+					{
+						farDepthCommandbuffer = farCam.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
+					}
+					nearDepthCommandbuffer = ReturnProperCamera(false, false).gameObject.AddComponent<DepthToDistanceCommandBuffer>();
 				}
 			}
 
@@ -156,7 +161,7 @@ namespace scatterer
 //			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
 //
 			//add shadow far plane fixer
-			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)unifiedCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
+			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)ReturnProperCamera(false, false).gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
 
 			//magically fix stupid issues when reverting to space center from map view
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
@@ -226,10 +231,10 @@ namespace scatterer
 				}
 				
 
-				if (unifiedCamera)
+				if (ReturnProperCamera(true, false))
 				{
-					if (unifiedCamera.gameObject.GetComponent (typeof(Wireframe)))
-						Component.Destroy (unifiedCamera.gameObject.GetComponent (typeof(Wireframe)));
+					if (ReturnProperCamera(false, false).gameObject.GetComponent (typeof(Wireframe)))
+						Component.Destroy (ReturnProperCamera(false, false).gameObject.GetComponent (typeof(Wireframe)));
 					if (scaledSpaceCamera.gameObject.GetComponent(typeof(Wireframe)))
 						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent(typeof(Wireframe)));
 				}
@@ -258,6 +263,14 @@ namespace scatterer
 					shadowFadeRemover.OnDestroy();
 					Component.Destroy(shadowFadeRemover);
 				}
+
+				if (farCameraShadowCascadeTweaker)
+				{
+					Component.Destroy(farCameraShadowCascadeTweaker);
+				}
+
+				if (farDepthCommandbuffer)
+					Component.Destroy(farDepthCommandbuffer);
 
 				if (nearDepthCommandbuffer)
 					Component.Destroy (nearDepthCommandbuffer);
@@ -293,33 +306,108 @@ namespace scatterer
 			pluginData.savePluginData ();
 			mainSettings.saveMainSettingsIfChanged ();
 		}
+		public Camera ReturnProperCamera(Boolean requestingFarCamera, Boolean disableIfUnified )
+		{
+			if (disableIfUnified)
+			{
+				//They have explicitly said to disable this camera if in unified mode. 
+				if (unifiedCameraEnabled)
+				{
+					//It is in unified mode, so we return a null camera, signaling this camera is disabled as requested.
+					return null;
+				}
+				else
+				{
+					//this implies we are not in unified mode.  Return the requested camera no matter what.
+					if (requestingFarCamera) 
+					{
+						//the request is for the far camera
+						return farCamera;
+					}
+					else
+					{
+						//logically, the request must be for the near camera.
+						return nearCamera;
+					}
+				}
+			}
+			else
+			{
+				//this section implies the request wants the camera whether unified or not.  Just give them the closest camera.
+				if (unifiedCameraEnabled)
+				{
+					//we return the unifiedCamera in this case.
+					return unifiedCamera;
+				}
+				else if (requestingFarCamera)
+				{
+					//they are requesting the far camera and we are not in unified mode.  Give them it.
+					return farCamera;
+				}
+				else
+				{
+					//logically, the only thing left to do is return the nearCamera.
+					return nearCamera;
+				}
+			}
 
+		}
 		void SetupMainCameras()
 		{
 			Camera[] cams = Camera.allCameras;
 			scaledSpaceCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera ScaledSpace");
-			//farCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 01");
-			unifiedCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 00");
-			if (scaledSpaceCamera && unifiedCamera)
+			if (SystemInfo.graphicsDeviceVersion.Contains("Direct3D 11.0")) 
+			{ 
+				unifiedCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "Camera 00");
+				unifiedCameraEnabled = true;
+				Utils.LogDebug("Using Unified Camera.");
+			}
+			else
 			{
-				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades)unifiedCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
+				farCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "Camera 01");
+				nearCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "Camera 00");
+				unifiedCameraEnabled = false;
+				Utils.LogDebug("Not using Unified Camera");
+			}
+
+			if (((scaledSpaceCamera && unifiedCamera) && unifiedCameraEnabled) || (!unifiedCameraEnabled && (scaledSpaceCamera && farCamera && nearCamera)))
+			{
+				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades)ReturnProperCamera(false, false).gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
 
 				if (mainSettings.overrideNearClipPlane)
 				{
-					Utils.LogDebug("Override near clip plane from:" + unifiedCamera.nearClipPlane.ToString() + " to:" + mainSettings.nearClipPlane.ToString());
-					unifiedCamera.nearClipPlane = mainSettings.nearClipPlane;
+					Utils.LogDebug("Override near clip plane from:" + ReturnProperCamera(false, false).nearClipPlane.ToString() + " to:" + mainSettings.nearClipPlane.ToString());
+					ReturnProperCamera(false, false).nearClipPlane = mainSettings.nearClipPlane;
 				}
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
 				//if are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
 				scaledSpaceCamera = Camera.allCameras.Single(_cam => _cam.name == "Landscape Camera");
-				unifiedCamera = scaledSpaceCamera;
+				if (unifiedCameraEnabled)
+				{
+					unifiedCamera = scaledSpaceCamera;
+				}
+				else
+				{
+					scaledSpaceCamera = Camera.allCameras.Single(_cam => _cam.name == "Landscape Camera");
+					farCamera = scaledSpaceCamera;
+					nearCamera = scaledSpaceCamera;
+				}
+
 			}
 			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
 				//if in trackstation, just to get rid of some nullrefs
-				unifiedCamera = scaledSpaceCamera;
+				if (unifiedCameraEnabled)
+				{
+					unifiedCamera = scaledSpaceCamera;
+				}
+				else
+				{
+					farCamera = scaledSpaceCamera;
+					nearCamera = scaledSpaceCamera;
+				}
 			}
 		}
 

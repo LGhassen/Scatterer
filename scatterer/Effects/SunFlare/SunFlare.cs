@@ -34,7 +34,7 @@ namespace scatterer
 
 		public RenderTexture extinctionTexture;
 		int waitBeforeReloadCnt = 0;
-		SunflareCameraHook unifiedCameraHook;
+		SunflareCameraHook unifiedCameraHook, scaledCameraHook;
 
 		Vector3 sunViewPortPos=Vector3.zero;
 
@@ -208,9 +208,22 @@ namespace scatterer
 
 			sunglareMaterial.SetVector ("flareColor", flareColor);
 
-			unifiedCameraHook = (SunflareCameraHook)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
-			unifiedCameraHook.flare = this;
-			unifiedCameraHook.useDbufferOnCamera = 0f;
+			if ((!(HighLogic.LoadedScene == GameScenes.TRACKSTATION)) && (!Scatterer.Instance.unifiedCameraEnabled))
+			{
+
+				scaledCameraHook = (SunflareCameraHook)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
+				scaledCameraHook.flare = this;
+				scaledCameraHook.useDbufferOnCamera = 0f;
+				unifiedCameraHook = (SunflareCameraHook)Scatterer.Instance.nearCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
+				unifiedCameraHook.flare = this;
+				unifiedCameraHook.useDbufferOnCamera = 1f;
+			}
+			else
+			{
+				unifiedCameraHook = (SunflareCameraHook)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunflareCameraHook));
+				unifiedCameraHook.flare = this;
+				unifiedCameraHook.useDbufferOnCamera = 0f;
+			}
 
 		}
 
@@ -240,8 +253,8 @@ namespace scatterer
 			//if (!MapView.MapIsEnabled)
 			{
 	
-				hitStatus = Physics.Raycast (Scatterer.Instance.unifiedCamera.transform.position,
-				                             (source.transform.position- Scatterer.Instance.unifiedCamera.transform.position).normalized,
+				hitStatus = Physics.Raycast (Scatterer.Instance.ReturnProperCamera(true, false).transform.position,
+				                             (source.transform.position- Scatterer.Instance.ReturnProperCamera(false, false).transform.position).normalized,
 				                             out hit, Mathf.Infinity, (int)((1 << 15) + (1 << 0)));
 				if(!hitStatus)
 				{
@@ -289,10 +302,13 @@ namespace scatterer
 				}
 			}
 
-			//Disable this code, this new simple code works aparently
-			unifiedCameraHook.enabled = true;
-			sunflareGameObject.layer = 10;
-			/*if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			//unified camera path, we need some special handling here:
+			if (Scatterer.Instance.unifiedCameraEnabled)
+			{
+				unifiedCameraHook.enabled = true;
+				sunflareGameObject.layer = 10;
+			}
+			else if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))              //the old, dual camera path handling runs from here
 			{
 				unifiedCameraHook.enabled = true;
 				scaledCameraHook.enabled = false;
@@ -300,12 +316,14 @@ namespace scatterer
 			}
 			else
 			{
-				if (unifiedCameraHook)
-					unifiedCameraHook.enabled=false;
 
-				scaledCameraHook.enabled=true;
+				if (unifiedCameraHook)
+					unifiedCameraHook.enabled = false;
+
+				scaledCameraHook.enabled = true;
 				sunflareGameObject.layer = 10;
-			}*/
+			}
+
 		}
 
 		public void ClearExtinction()
@@ -326,8 +344,12 @@ namespace scatterer
 				Component.Destroy (unifiedCameraHook);
 				UnityEngine.Object.Destroy (unifiedCameraHook);
 			}
-
-			if (extinctionTexture)
+			if (scaledCameraHook)
+			{
+				Component.Destroy(scaledCameraHook);
+				UnityEngine.Object.Destroy(scaledCameraHook);
+			}
+				if (extinctionTexture)
 			{
 				extinctionTexture.Release();
 				UnityEngine.Object.Destroy (extinctionTexture);

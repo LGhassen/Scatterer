@@ -159,9 +159,16 @@ namespace scatterer
 			//refraction command buffer
 			oceanRefractionCommandBuffer = new CommandBuffer();
 			oceanRefractionCommandBuffer.name = "ScattererOceanGrabScreen";
-			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Scatterer.Instance.bufferManager.refractionTexture);			
-			//Scatterer.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-			Scatterer.Instance.unifiedCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Scatterer.Instance.bufferManager.refractionTexture);
+			Camera farCam;
+			farCam = Scatterer.Instance.ReturnProperCamera(true, true);
+			if (!(farCam is null))
+			{
+				//Ok, dual camera mode, register this far camera.
+				farCam.AddCommandBuffer(CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+			}
+			//this will register right regardless
+			Scatterer.Instance.ReturnProperCamera(false, false).AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 
 			//dimming
 			//TODO: maybe this can be changed, instead of complicated hooks on the Camera, add it to the light, like causticsShadowMaskModulate?
@@ -192,7 +199,7 @@ namespace scatterer
 				_mr.enabled= oceanDraw;
 			}
 
-			isUnderwater = ((Scatterer.Instance.unifiedCamera.transform.position - m_manager.parentLocalTransform.position).magnitude - (float)m_manager.m_radius) < 0f;
+			isUnderwater = ((Scatterer.Instance.ReturnProperCamera(true, false).transform.position - m_manager.parentLocalTransform.position).magnitude - (float)m_manager.m_radius) < 0f;
 
 			underwaterProjector.projector.enabled = isUnderwater;
 
@@ -225,7 +232,7 @@ namespace scatterer
 
 		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
 		{
-			if (!MapView.MapIsEnabled && Scatterer.Instance.unifiedCamera && !m_manager.m_skyNode.inScaledSpace)
+			if (!MapView.MapIsEnabled && Scatterer.Instance.ReturnProperCamera(true, false) && !m_manager.m_skyNode.inScaledSpace)
 			{
 				updateNonCameraSpecificUniforms(m_oceanMaterial);
 			}
@@ -552,8 +559,17 @@ namespace scatterer
 			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);					
 			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferManager.refractionTexture); //these don't need to be updated every frame
-			
-			float camerasOverlap = 0f;
+
+			Camera nearCam = Scatterer.Instance.ReturnProperCamera(false, true);
+			if (!(nearCam is null))
+			{
+				float camerasOverlap = nearCam.farClipPlane - Scatterer.Instance.ReturnProperCamera(true, false).nearClipPlane;
+			}
+			else
+			{
+				//Camera got returned null?  We are in unified mode, then.  No overlap.
+				float camerasOverlap = 0f;
+			}
 			m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
 		
@@ -607,8 +623,12 @@ namespace scatterer
 			
 			if (!ReferenceEquals(oceanRefractionCommandBuffer,null))
 			{
-				//Scatterer.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-				Scatterer.Instance.unifiedCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+				Camera farCam = Scatterer.Instance.ReturnProperCamera(true, true);
+				if (!(farCam is null))
+				{
+					farCam.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+				}
+				Scatterer.Instance.ReturnProperCamera(false, false).RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 			}
 			
 			for (int i = 0; i < numGrids; i++)
@@ -646,7 +666,7 @@ namespace scatterer
 				float finalDim = 1f;
 				if (Scatterer.Instance.mainSettings.underwaterLightDimming)
 				{
-					float underwaterDim = Mathf.Abs(Vector3.Distance(Scatterer.Instance.unifiedCamera.transform.position, m_manager.parentLocalTransform.position) - (float)m_manager.m_radius);
+					float underwaterDim = Mathf.Abs(Vector3.Distance(Scatterer.Instance.ReturnProperCamera(true, false).transform.position, m_manager.parentLocalTransform.position) - (float)m_manager.m_radius);
 					underwaterDim = Mathf.Lerp(1.0f,0.0f,underwaterDim / darknessDepth);
 					finalDim*=underwaterDim;
 				}
