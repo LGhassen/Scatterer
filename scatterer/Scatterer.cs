@@ -47,7 +47,7 @@ namespace scatterer
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_RC6";
+		public string versionNumber = "0.055_UFCRTBDEV_RC7";
 
 		void Awake ()
 		{
@@ -366,7 +366,7 @@ namespace scatterer
 				farCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "Camera 01");
 				nearCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "Camera 00");
 				unifiedCameraEnabled = false;
-				Utils.LogDebug("Not using Unified Camera");
+				Utils.LogDebug("Not using Unified Camera.");
 			}
 
 			if (((scaledSpaceCamera && unifiedCamera) && unifiedCameraEnabled) || (!unifiedCameraEnabled && (scaledSpaceCamera && farCamera && nearCamera)))
