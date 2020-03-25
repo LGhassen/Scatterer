@@ -175,12 +175,12 @@ namespace scatterer
 			Scatterer.Instance.mainSettings.useEclipses = GUILayout.Toggle (Scatterer.Instance.mainSettings.useEclipses, "Eclipses (WIP, sky/orbit only for now)");
 			Scatterer.Instance.mainSettings.useRingShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.useRingShadows, "Kopernicus ring shadows");
 			//Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle(Scatterer.Instance.useGodrays, "Godrays (early WIP)");
-			//Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Terrain shadows");
+			Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Terrain shadows");
 			GUILayout.BeginHorizontal ();
-			//GUILayout.Label ("Shadow bias");
-			//Scatterer.Instance.mainSettings.shadowBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowBias.ToString ("0.000")));
-			//GUILayout.Label ("Shadow normal bias");
-			//Scatterer.Instance.mainSettings.shadowNormalBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowNormalBias.ToString ("0.000")));
+			GUILayout.Label ("Shadow bias");
+			Scatterer.Instance.mainSettings.shadowBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowBias.ToString ("0.000")));
+			GUILayout.Label ("Shadow normal bias");
+			Scatterer.Instance.mainSettings.shadowNormalBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowNormalBias.ToString ("0.000")));
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
 			Scatterer.Instance.mainSettings.overrideNearClipPlane = GUILayout.Toggle (Scatterer.Instance.mainSettings.overrideNearClipPlane, "Override Near ClipPlane (not recommended - restart on disable)");
