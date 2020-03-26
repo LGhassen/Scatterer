@@ -185,6 +185,16 @@ namespace scatterer
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
 			{
+				// decide near clipplane depth, main menu needs like none
+				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+				{
+					ReturnProperCamera(false, false).nearClipPlane = 0.5f;
+				}
+				else
+				{
+					ReturnProperCamera(false, false).nearClipPlane = 2.25f;
+					ReturnProperCamera(false, false).farClipPlane = 100000f;
+				}
 				scattererCelestialBodiesManager.Update ();
 
 				//move this out of this update, let it be a one time thing
@@ -378,6 +388,11 @@ namespace scatterer
 					Utils.LogDebug("Override near clip plane from:" + ReturnProperCamera(false, false).nearClipPlane.ToString() + " to:" + mainSettings.nearClipPlane.ToString());
 					ReturnProperCamera(false, false).nearClipPlane = mainSettings.nearClipPlane;
 				}
+				else
+				{
+					ReturnProperCamera(false, false).nearClipPlane = 2.25f;
+				}
+				ReturnProperCamera(false, false).farClipPlane = 100000f;
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -393,7 +408,7 @@ namespace scatterer
 					farCamera = scaledSpaceCamera;
 					nearCamera = scaledSpaceCamera;
 				}
-
+				//and finally in main menu we probably need a shorter clip plane:
 			}
 			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
@@ -407,6 +422,7 @@ namespace scatterer
 					farCamera = scaledSpaceCamera;
 					nearCamera = scaledSpaceCamera;
 				}
+				//and finally in tracking station we probably need a shorter near clip plane:
 			}
 		}
 
@@ -416,12 +432,10 @@ namespace scatterer
 			{
 				QualitySettings.shadowDistance = mainSettings.shadowsDistance;
 				Utils.LogDebug("Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
+				//StabkeFit always.  It prevents flicker.
+				QualitySettings.shadowProjection = ShadowProjection.StableFit;
+				QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
 
-
-				if (mainSettings.shadowsOnOcean)
-					QualitySettings.shadowProjection = ShadowProjection.CloseFit; //with ocean shadows
-				else
-					QualitySettings.shadowProjection = ShadowProjection.StableFit; //without ocean shadows
 
 				//set shadow bias
 				//fixes checkerboard artifacts aka shadow acne
