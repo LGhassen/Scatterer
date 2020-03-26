@@ -36,7 +36,7 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
-			if (Scatterer.Instance.unifiedCameraEnabled)
+			if (!Scatterer.Instance.unifiedCameraEnabled)
 			{
 				QualitySettings.shadowCascade4Split = new Vector3(0.05041852f, 0.1527327f, 0.2643032f);
 			}
