@@ -79,7 +79,10 @@ namespace scatterer
 		
 		[Persistent]
 		public int m_fourierGridSize = 128;
-		
+
+		[Persistent]
+		public bool RSSMode = false;
+
 		public void loadMainSettings ()
 		{
 			UrlDir.UrlConfig[] baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
@@ -137,7 +140,8 @@ namespace scatterer
 				 OldConfig.shadowNormalBias != shadowNormalBias ||
 				 OldConfig.shadowBias != shadowBias ||
 				 OldConfig.shadowsDistance != shadowsDistance ||
-				 OldConfig.m_fourierGridSize != m_fourierGridSize);
+				 OldConfig.m_fourierGridSize != m_fourierGridSize) ||
+				 OldConfig.RSSMode != RSSMode;
 			
 			if (configChanged)
 			{

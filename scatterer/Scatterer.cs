@@ -47,7 +47,7 @@ namespace scatterer
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_RC10";
+		public string versionNumber = "0.055_UFCRTBDEV_RC11";
 
 		void Awake ()
 		{
@@ -190,10 +190,15 @@ namespace scatterer
 				{
 					ReturnProperCamera(false, false).nearClipPlane = 0.5f;
 				}
+				else if (!mainSettings.RSSMode)
+				{
+					ReturnProperCamera(false, false).nearClipPlane = 1.25f;
+					ReturnProperCamera(false, false).farClipPlane = 825000f;
+				}
 				else
 				{
-					ReturnProperCamera(false, false).nearClipPlane = 2.125f;
-					ReturnProperCamera(false, false).farClipPlane = 825000f;
+					ReturnProperCamera(false, false).nearClipPlane = 2f;
+					ReturnProperCamera(false, false).farClipPlane = 1750000f;
 				}
 				scattererCelestialBodiesManager.Update ();
 
@@ -388,11 +393,24 @@ namespace scatterer
 					Utils.LogDebug("Override near clip plane from:" + ReturnProperCamera(false, false).nearClipPlane.ToString() + " to:" + mainSettings.nearClipPlane.ToString());
 					ReturnProperCamera(false, false).nearClipPlane = mainSettings.nearClipPlane;
 				}
+				else if (!mainSettings.RSSMode)
+				{
+					ReturnProperCamera(false, false).nearClipPlane = 1.25f;
+				}
 				else
 				{
-					ReturnProperCamera(false, false).nearClipPlane = 2.125f;
+					ReturnProperCamera(false, false).nearClipPlane = 2f;
 				}
-				ReturnProperCamera(false, false).farClipPlane = 825000f;
+				//then set the farclip
+				if (!mainSettings.RSSMode)
+				{
+					ReturnProperCamera(false, false).farClipPlane = 825000f;
+				}
+				else
+				{
+					ReturnProperCamera(false, false).farClipPlane = 1750000f;
+				}
+
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -426,7 +444,7 @@ namespace scatterer
 
 		void SetShadows()
 		{
-			if (mainSettings.terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
+			if ((mainSettings.terrainShadows && (!mainSettings.RSSMode)) && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
 			{
 				QualitySettings.shadowDistance = mainSettings.shadowsDistance;
 				Utils.LogDebug("Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
