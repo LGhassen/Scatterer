@@ -47,7 +47,7 @@ namespace scatterer
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_RC8";
+		public string versionNumber = "0.055_UFCRTBDEV_RC9";
 
 		void Awake ()
 		{
@@ -192,8 +192,8 @@ namespace scatterer
 				}
 				else
 				{
-					ReturnProperCamera(false, false).nearClipPlane = 2.25f;
-					ReturnProperCamera(false, false).farClipPlane = 100000f;
+					ReturnProperCamera(false, false).nearClipPlane = 2.125f;
+					ReturnProperCamera(false, false).farClipPlane = 825000f;
 				}
 				scattererCelestialBodiesManager.Update ();
 
@@ -390,9 +390,9 @@ namespace scatterer
 				}
 				else
 				{
-					ReturnProperCamera(false, false).nearClipPlane = 2.25f;
+					ReturnProperCamera(false, false).nearClipPlane = 2.125f;
 				}
-				ReturnProperCamera(false, false).farClipPlane = 100000f;
+				ReturnProperCamera(false, false).farClipPlane = 825000f;
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -408,7 +408,6 @@ namespace scatterer
 					farCamera = scaledSpaceCamera;
 					nearCamera = scaledSpaceCamera;
 				}
-				//and finally in main menu we probably need a shorter clip plane:
 			}
 			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
@@ -422,7 +421,6 @@ namespace scatterer
 					farCamera = scaledSpaceCamera;
 					nearCamera = scaledSpaceCamera;
 				}
-				//and finally in tracking station we probably need a shorter near clip plane:
 			}
 		}
 
@@ -432,12 +430,12 @@ namespace scatterer
 			{
 				QualitySettings.shadowDistance = mainSettings.shadowsDistance;
 				Utils.LogDebug("Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
-				//StabkeFit always.  It prevents flicker.
+				//StableFit always.  It prevents flicker.
 				QualitySettings.shadowProjection = ShadowProjection.StableFit;
-				QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
+				//QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
 
 
-				//set shadow bias
+				//set shadow bias in dual camera
 				//fixes checkerboard artifacts aka shadow acne
 				Light[] lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
 				foreach (Light _light in lights)
