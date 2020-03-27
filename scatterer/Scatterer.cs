@@ -435,7 +435,7 @@ namespace scatterer
 				//QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
 
 
-				//set shadow bias in dual camera
+				//set shadow bias
 				//fixes checkerboard artifacts aka shadow acne
 				Light[] lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
 				foreach (Light _light in lights)
