@@ -47,7 +47,7 @@ namespace scatterer
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_RC11";
+		public string versionNumber = "0.055_UFCRTBDEV_UR1_1";
 
 		void Awake ()
 		{
@@ -185,21 +185,6 @@ namespace scatterer
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
 			{
-				// decide near clipplane depth, main menu needs like none
-				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-				{
-					ReturnProperCamera(false, false).nearClipPlane = 0.5f;
-				}
-				else if (!mainSettings.RSSMode)
-				{
-					ReturnProperCamera(false, false).nearClipPlane = 1.25f;
-					ReturnProperCamera(false, false).farClipPlane = 825000f;
-				}
-				else
-				{
-					ReturnProperCamera(false, false).nearClipPlane = 2f;
-					ReturnProperCamera(false, false).farClipPlane = 1750000f;
-				}
 				scattererCelestialBodiesManager.Update ();
 
 				//move this out of this update, let it be a one time thing
@@ -395,11 +380,11 @@ namespace scatterer
 				}
 				else if (!mainSettings.RSSMode)
 				{
-					ReturnProperCamera(false, false).nearClipPlane = 1.25f;
+					ReturnProperCamera(false, false).nearClipPlane = 0.5f;
 				}
 				else
 				{
-					ReturnProperCamera(false, false).nearClipPlane = 2f;
+					ReturnProperCamera(false, false).nearClipPlane = 1f;
 				}
 				//then set the farclip
 				if (!mainSettings.RSSMode)
@@ -425,6 +410,11 @@ namespace scatterer
 					scaledSpaceCamera = Camera.allCameras.Single(_cam => _cam.name == "Landscape Camera");
 					farCamera = scaledSpaceCamera;
 					nearCamera = scaledSpaceCamera;
+				}
+				// decide near clipplane depth, main menu needs like none
+				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+				{
+					ReturnProperCamera(false, false).nearClipPlane = 0.5f;
 				}
 			}
 			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
