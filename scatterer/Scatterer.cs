@@ -13,23 +13,23 @@ using UnityEngine;
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	public partial class Scatterer: MonoBehaviour
-	{	
+	public partial class Scatterer : MonoBehaviour
+	{
 		private static Scatterer instance;
-		public static Scatterer Instance {get {return instance;}}
+		public static Scatterer Instance { get { return instance; } }
 
 		public MainSettingsReadWrite mainSettings = new MainSettingsReadWrite();
-		public PluginDataReadWrite pluginData     = new PluginDataReadWrite();
-		public ConfigReader planetsConfigsReader  = new ConfigReader ();
+		public PluginDataReadWrite pluginData = new PluginDataReadWrite();
+		public ConfigReader planetsConfigsReader = new ConfigReader();
 
 		public GUIhandler guiHandler = new GUIhandler();
-		
-		public ScattererCelestialBodiesManager scattererCelestialBodiesManager = new ScattererCelestialBodiesManager ();
+
+		public ScattererCelestialBodiesManager scattererCelestialBodiesManager = new ScattererCelestialBodiesManager();
 		public BufferManager bufferManager;
 		public SunflareManager sunflareManager;
 		public EVEReflectionHandler eveReflectionHandler;
 		public PlanetshineManager planetshineManager;
-		
+
 		//runtime stuff
 		//TODO: merge all into lightAndShadowManager?
 		DisableAmbientLight ambientLightScript;
@@ -41,15 +41,15 @@ namespace scatterer
 		//probably move these to buffer rendering manager
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
 
-		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
+		public GameObject sunLight, scaledspaceSunLight, mainMenuLight;
 		public Camera scaledSpaceCamera, unifiedCamera, farCamera, nearCamera;
 		public Boolean unifiedCameraEnabled;
-		
+
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_UR1_1";
+		public string versionNumber = "0.055_UFCRTBDEV_UR1_2";
 
-		void Awake ()
+		void Awake()
 		{
 			if (instance == null)
 			{
@@ -63,12 +63,12 @@ namespace scatterer
 				UnityEngine.Object.Destroy(this);
 			}
 
-			Utils.LogInfo ("Version:"+versionNumber);
-			Utils.LogInfo ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
-			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
+			Utils.LogInfo("Version:" + versionNumber);
+			Utils.LogInfo("Running on " + SystemInfo.graphicsDeviceVersion + " on " + SystemInfo.operatingSystem);
+			Utils.LogInfo("Game resolution " + Screen.width.ToString() + "x" + Screen.height.ToString());
 
-			loadSettings ();
-			scattererCelestialBodiesManager.Init ();
+			loadSettings();
+			scattererCelestialBodiesManager.Init();
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -81,17 +81,17 @@ namespace scatterer
 					{
 						OceanUtils.removeStockOceans();
 					}
-					
+
 					if (mainSettings.integrateWithEVEClouds)
 					{
 						ShaderReplacer.Instance.replaceEVEshaders();
 					}
 				}
-			} 
+			}
 
 			if (isActive)
 			{
-				StartCoroutine (DelayedInit ());
+				StartCoroutine(DelayedInit());
 			}
 		}
 
@@ -99,22 +99,22 @@ namespace scatterer
 		IEnumerator DelayedInit()
 		{
 			int delayFrames = (HighLogic.LoadedScene == GameScenes.MAINMENU) ? 5 : 1;
-			for (int i=0; i<delayFrames; i++)
-				yield return new WaitForFixedUpdate ();
+			for (int i = 0; i < delayFrames; i++)
+				yield return new WaitForFixedUpdate();
 
 			Init();
 		}
 
 		void Init()
 		{
-			SetupMainCameras ();
+			SetupMainCameras();
 
 			SetShadows();
 
-			FindSunlights ();
-			
-			Utils.FixKopernicusRingsRenderQueue ();			
-			Utils.FixSunsCoronaRenderQueue ();
+			FindSunlights();
+
+			Utils.FixKopernicusRingsRenderQueue();
+			Utils.FixSunsCoronaRenderQueue();
 
 			if (mainSettings.usePlanetShine)
 			{
@@ -124,7 +124,7 @@ namespace scatterer
 
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				bufferManager = (BufferManager)ReturnProperCamera(true, false).gameObject.AddComponent (typeof(BufferManager));
+				bufferManager = (BufferManager)ReturnProperCamera(true, false).gameObject.AddComponent(typeof(BufferManager));
 				bufferManager.start();
 
 				//copy stock depth buffers and combine into a single depth buffer
@@ -154,14 +154,14 @@ namespace scatterer
 
 			if (mainSettings.disableAmbientLight && !ambientLightScript)
 			{
-				ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
+				ambientLightScript = (DisableAmbientLight)scaledSpaceCamera.gameObject.AddComponent(typeof(DisableAmbientLight));
 			}
 
-//			//add shadowmask modulator (adds occlusion to shadows)
-//			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
-//
+			//			//add shadowmask modulator (adds occlusion to shadows)
+			//			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
+			//
 			//add shadow far plane fixer
-			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)ReturnProperCamera(false, false).gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
+			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)ReturnProperCamera(false, false).gameObject.AddComponent(typeof(ShadowRemoveFadeCommandBuffer));
 
 			//magically fix stupid issues when reverting to space center from map view
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
@@ -171,7 +171,7 @@ namespace scatterer
 
 			if (mainSettings.sunlightExtinction || (mainSettings.underwaterLightDimming && mainSettings.useOceanShaders))
 			{
-				sunlightModulatorInstance = (SunlightModulator) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
+				sunlightModulatorInstance = (SunlightModulator)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
 			}
 
 			coreInitiated = true;
@@ -180,45 +180,49 @@ namespace scatterer
 
 		void Update()
 		{
-			guiHandler.UpdateGUIvisible ();
+			guiHandler.UpdateGUIvisible();
 
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
 			{
-				scattererCelestialBodiesManager.Update ();
+				scattererCelestialBodiesManager.Update();
 
 				//move this out of this update, let it be a one time thing
 				//TODO: check what this means
 				if (bufferManager)
 				{
-					if (!bufferManager.depthTextureCleared && (MapView.MapIsEnabled || !scattererCelestialBodiesManager.isPQSEnabledOnScattererPlanet) )
+					if (!bufferManager.depthTextureCleared && (MapView.MapIsEnabled || !scattererCelestialBodiesManager.isPQSEnabledOnScattererPlanet))
 						bufferManager.ClearDepthTexture();
 				}
 
-				if (!ReferenceEquals(sunflareManager,null))
+				if (!ReferenceEquals(sunflareManager, null))
 				{
 					sunflareManager.UpdateFlares();
 				}
 
-				if(!ReferenceEquals(planetshineManager,null))
+				if (!ReferenceEquals(planetshineManager, null))
 				{
 					planetshineManager.UpdatePlanetshine();
 				}
+				if (!CheckClipPlanes())
+				{
+					setupClipPlanes();
+				}
 			}
-		} 
+		}
 
 
-		void OnDestroy ()
+		void OnDestroy()
 		{
 			if (isActive)
 			{
-				if(!ReferenceEquals(planetshineManager,null))
+				if (!ReferenceEquals(planetshineManager, null))
 				{
 					planetshineManager.CleanUp();
 					Component.Destroy(planetshineManager);
 				}
 
-				if (!ReferenceEquals(scattererCelestialBodiesManager,null))
+				if (!ReferenceEquals(scattererCelestialBodiesManager, null))
 				{
 					scattererCelestialBodiesManager.Cleanup();
 				}
@@ -228,34 +232,34 @@ namespace scatterer
 					ambientLightScript.restoreLight();
 					Component.Destroy(ambientLightScript);
 				}
-				
+
 
 				if (ReturnProperCamera(true, false))
 				{
-					if (ReturnProperCamera(false, false).gameObject.GetComponent (typeof(Wireframe)))
-						Component.Destroy (ReturnProperCamera(false, false).gameObject.GetComponent (typeof(Wireframe)));
+					if (ReturnProperCamera(false, false).gameObject.GetComponent(typeof(Wireframe)))
+						Component.Destroy(ReturnProperCamera(false, false).gameObject.GetComponent(typeof(Wireframe)));
 					if (scaledSpaceCamera.gameObject.GetComponent(typeof(Wireframe)))
 						Component.Destroy(scaledSpaceCamera.gameObject.GetComponent(typeof(Wireframe)));
 				}
 
 
-				if (!ReferenceEquals(sunflareManager,null))
+				if (!ReferenceEquals(sunflareManager, null))
 				{
 					sunflareManager.Cleanup();
 					UnityEngine.Component.Destroy(sunflareManager);
 				}
 
-				if (!ReferenceEquals(sunlightModulatorInstance,null))
+				if (!ReferenceEquals(sunlightModulatorInstance, null))
 				{
 					sunlightModulatorInstance.OnDestroy();
 					Component.Destroy(sunlightModulatorInstance);
 				}
 
-//				if (shadowMaskModulate)
-//				{
-//					shadowMaskModulate.OnDestroy();
-//					Component.Destroy(shadowMaskModulate);
-//				}
+				//				if (shadowMaskModulate)
+				//				{
+				//					shadowMaskModulate.OnDestroy();
+				//					Component.Destroy(shadowMaskModulate);
+				//				}
 
 				if (shadowFadeRemover)
 				{
@@ -272,40 +276,40 @@ namespace scatterer
 					Component.Destroy(farDepthCommandbuffer);
 
 				if (nearDepthCommandbuffer)
-					Component.Destroy (nearDepthCommandbuffer);
+					Component.Destroy(nearDepthCommandbuffer);
 
 				if (bufferManager)
 				{
 					bufferManager.OnDestroy();
-					Component.Destroy (bufferManager);
+					Component.Destroy(bufferManager);
 				}
 
-				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
+				pluginData.inGameWindowLocation = new Vector2(guiHandler.windowRect.x, guiHandler.windowRect.y);
 				saveSettings();
 			}
 
-			UnityEngine.Object.Destroy (guiHandler);
-			
+			UnityEngine.Object.Destroy(guiHandler);
+
 		}
 
-		void OnGUI ()
+		void OnGUI()
 		{
-			guiHandler.DrawGui ();
+			guiHandler.DrawGui();
 		}
-		
-		public void loadSettings ()
+
+		public void loadSettings()
 		{
-			mainSettings.loadMainSettings ();
-			pluginData.loadPluginData ();
-			planetsConfigsReader.loadConfigs ();
+			mainSettings.loadMainSettings();
+			pluginData.loadPluginData();
+			planetsConfigsReader.loadConfigs();
 		}
-		
-		public void saveSettings ()
+
+		public void saveSettings()
 		{
-			pluginData.savePluginData ();
-			mainSettings.saveMainSettingsIfChanged ();
+			pluginData.savePluginData();
+			mainSettings.saveMainSettingsIfChanged();
 		}
-		public Camera ReturnProperCamera(Boolean requestingFarCamera, Boolean disableIfUnified )
+		public Camera ReturnProperCamera(Boolean requestingFarCamera, Boolean disableIfUnified)
 		{
 			if (disableIfUnified)
 			{
@@ -318,7 +322,7 @@ namespace scatterer
 				else
 				{
 					//this implies we are not in unified mode.  Return the requested camera no matter what.
-					if (requestingFarCamera) 
+					if (requestingFarCamera)
 					{
 						//the request is for the far camera
 						return farCamera;
@@ -354,9 +358,9 @@ namespace scatterer
 		void SetupMainCameras()
 		{
 			Camera[] cams = Camera.allCameras;
-			scaledSpaceCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera ScaledSpace");
-			if (SystemInfo.graphicsDeviceVersion.Contains("Direct3D 11.0")) 
-			{ 
+			scaledSpaceCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "Camera ScaledSpace");
+			if (SystemInfo.graphicsDeviceVersion.Contains("Direct3D 11.0"))
+			{
 				unifiedCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "Camera 00");
 				unifiedCameraEnabled = true;
 				Utils.LogDebug("Using Unified Camera.");
@@ -372,29 +376,7 @@ namespace scatterer
 			if (((scaledSpaceCamera && unifiedCamera) && unifiedCameraEnabled) || (!unifiedCameraEnabled && (scaledSpaceCamera && farCamera && nearCamera)))
 			{
 				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades)ReturnProperCamera(false, false).gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
-
-				if (mainSettings.overrideNearClipPlane)
-				{
-					Utils.LogDebug("Override near clip plane from:" + ReturnProperCamera(false, false).nearClipPlane.ToString() + " to:" + mainSettings.nearClipPlane.ToString());
-					ReturnProperCamera(false, false).nearClipPlane = mainSettings.nearClipPlane;
-				}
-				else if (!mainSettings.RSSMode)
-				{
-					ReturnProperCamera(false, false).nearClipPlane = 0.5f;
-				}
-				else
-				{
-					ReturnProperCamera(false, false).nearClipPlane = 1f;
-				}
-				//then set the farclip
-				if (!mainSettings.RSSMode)
-				{
-					ReturnProperCamera(false, false).farClipPlane = 825000f;
-				}
-				else
-				{
-					ReturnProperCamera(false, false).farClipPlane = 1750000f;
-				}
+				setupClipPlanes();
 
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
@@ -429,6 +411,50 @@ namespace scatterer
 					farCamera = scaledSpaceCamera;
 					nearCamera = scaledSpaceCamera;
 				}
+			}
+		}
+		public bool CheckClipPlanes()
+		{
+			float farClip = ReturnProperCamera(false, false).farClipPlane;
+			float nearClip = ReturnProperCamera(false, false).nearClipPlane;
+			if (mainSettings.overrideNearClipPlane)
+			{
+				return true;
+			}
+			else if ((!mainSettings.RSSMode) && ((nearClip < 0.52f) && (farClip > 820000f) && (farClip < 850000f)))
+			{
+				return true;
+			}
+			else if ((mainSettings.RSSMode) && ((nearClip > 0.52f) && (farClip > 1700000f) && (farClip < 1800000f)))
+			{
+				return true;
+			}
+			return false;	
+		}
+
+		void setupClipPlanes()
+		{
+			if (mainSettings.overrideNearClipPlane)
+			{
+				Utils.LogDebug("Override near clip plane from:" + ReturnProperCamera(false, false).nearClipPlane.ToString() + " to:" + mainSettings.nearClipPlane.ToString());
+				ReturnProperCamera(false, false).nearClipPlane = mainSettings.nearClipPlane;
+			}
+			else if (!mainSettings.RSSMode)
+			{
+				ReturnProperCamera(false, false).nearClipPlane = 0.5f;
+			}
+			else
+			{
+				ReturnProperCamera(false, false).nearClipPlane = 1f;
+			}
+			//then set the farclip
+			if (!mainSettings.RSSMode)
+			{
+				ReturnProperCamera(false, false).farClipPlane = 825000f;
+			}
+			else
+			{
+				ReturnProperCamera(false, false).farClipPlane = 1750000f;
 			}
 		}
 
