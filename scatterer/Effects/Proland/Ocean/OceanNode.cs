@@ -160,7 +160,8 @@ namespace scatterer
 			oceanRefractionCommandBuffer = new CommandBuffer();
 			oceanRefractionCommandBuffer.name = "ScattererOceanGrabScreen";
 			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Scatterer.Instance.bufferManager.refractionTexture);			
-			Scatterer.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+			if (!Scatterer.Instance.unifiedCameraMode)
+				Scatterer.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 			Scatterer.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 
 			//dimming
@@ -192,7 +193,7 @@ namespace scatterer
 				_mr.enabled= oceanDraw;
 			}
 
-			isUnderwater = ((Scatterer.Instance.farCamera.transform.position - m_manager.parentLocalTransform.position).magnitude -(float)m_manager.m_radius) < 0f;
+			isUnderwater = ((Scatterer.Instance.nearCamera.transform.position - m_manager.parentLocalTransform.position).magnitude -(float)m_manager.m_radius) < 0f;
 
 			underwaterProjector.projector.enabled = isUnderwater;
 
@@ -223,9 +224,9 @@ namespace scatterer
 			m_oceanMaterial.SetInt ("_ZwriteVariable", (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
 		}
 
-		public void OnPreCull() //OnPreCull of OceanNode (added to farCamera) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
+		public void OnPreCull() //OnPreCull of OceanNode (added to first local Camera to render) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
 		{
-			if (!MapView.MapIsEnabled && Scatterer.Instance.farCamera && !m_manager.m_skyNode.inScaledSpace)
+			if (!MapView.MapIsEnabled && Scatterer.Instance.nearCamera && !m_manager.m_skyNode.inScaledSpace)
 			{
 				updateNonCameraSpecificUniforms(m_oceanMaterial);
 			}
@@ -552,8 +553,11 @@ namespace scatterer
 			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);					
 			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferManager.refractionTexture); //these don't need to be updated every frame
-			
-			float camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
+
+			float camerasOverlap = 0f;
+			if (!Scatterer.Instance.unifiedCameraMode)
+				camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
+
 			m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 		}
 		
@@ -607,7 +611,9 @@ namespace scatterer
 			
 			if (!ReferenceEquals(oceanRefractionCommandBuffer,null))
 			{
-				Scatterer.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+				if (!Scatterer.Instance.unifiedCameraMode)
+					Scatterer.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
+
 				Scatterer.Instance.nearCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 			}
 			
@@ -646,7 +652,7 @@ namespace scatterer
 				float finalDim = 1f;
 				if (Scatterer.Instance.mainSettings.underwaterLightDimming)
 				{
-					float underwaterDim = Mathf.Abs(Vector3.Distance (Scatterer.Instance.farCamera.transform.position, m_manager.parentLocalTransform.position)-(float)m_manager.m_radius);
+					float underwaterDim = Mathf.Abs(Vector3.Distance (Scatterer.Instance.nearCamera.transform.position, m_manager.parentLocalTransform.position)-(float)m_manager.m_radius);
 					underwaterDim = Mathf.Lerp(1.0f,0.0f,underwaterDim / darknessDepth);
 					finalDim*=underwaterDim;
 				}

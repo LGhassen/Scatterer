@@ -46,6 +46,7 @@ namespace scatterer
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
+		public bool unifiedCameraMode = false;
 		public string versionNumber = "0.055";
 
 		void Awake ()
@@ -123,14 +124,16 @@ namespace scatterer
 
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				bufferManager = (BufferManager)farCamera.gameObject.AddComponent (typeof(BufferManager));
+				bufferManager = (BufferManager)Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(BufferManager));
 				bufferManager.start();
 
 				//copy stock depth buffers and combine into a single depth buffer
 				//TODO: shouldn't this be moved to bufferManager?
 				if (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement)
 				{
-					farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
+					if (!unifiedCameraMode)
+						farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
+
 					nearDepthCommandbuffer = nearCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
 				}
 			}
@@ -156,7 +159,8 @@ namespace scatterer
 //			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
 //
 			//add shadow far plane fixer
-			shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
+			if (!unifiedCameraMode)
+				shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
 
 			//magically fix stupid issues when reverting to space center from map view
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
@@ -225,13 +229,13 @@ namespace scatterer
 				}
 				
 
-				if (farCamera)
+				if (nearCamera)
 				{
 					if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.Destroy (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
 					
 					
-					if (farCamera.gameObject.GetComponent (typeof(Wireframe)))
+					if (farCamera && farCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.Destroy (farCamera.gameObject.GetComponent (typeof(Wireframe)));
 					
 					
@@ -314,9 +318,15 @@ namespace scatterer
 			farCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 01");
 			nearCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 00");
 
-			if (scaledSpaceCamera && farCamera && nearCamera)
+			if (nearCamera && !farCamera) 
 			{
-				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades) farCamera.gameObject.AddComponent(typeof(TweakFarCameraShadowCascades));
+				Utils.LogInfo("Running in unified camera mode");
+				unifiedCameraMode = true;
+			}
+
+			if (scaledSpaceCamera && nearCamera)
+			{
+				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakFarCameraShadowCascades)); //check what to do with this in the new mode
 				
 				if (mainSettings.overrideNearClipPlane)
 				{
@@ -407,6 +417,5 @@ namespace scatterer
 				} 
 			}
 		}
-	
 	}
 }

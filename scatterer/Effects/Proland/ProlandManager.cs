@@ -131,7 +131,7 @@ namespace scatterer
 				m_skyNode.Init ();
 				if (hasOcean && Scatterer.Instance.mainSettings.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 				{
-					m_oceanNode = (OceanWhiteCaps)Scatterer.Instance.farCamera.gameObject.AddComponent (typeof(OceanWhiteCaps));
+					m_oceanNode = (OceanWhiteCaps)Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(OceanWhiteCaps));
 					m_oceanNode.Init (this);
 				}
 			}
@@ -171,7 +171,7 @@ namespace scatterer
 				Component.Destroy(m_oceanNode);
 				UnityEngine.Object.Destroy(m_oceanNode);
 
-				m_oceanNode = (OceanWhiteCaps) Scatterer.Instance.farCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
+				m_oceanNode = (OceanWhiteCaps) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(OceanWhiteCaps));
 				m_oceanNode.Init(this);
 
 				if (Scatterer.Instance.mainSettings.oceanRefraction && Scatterer.Instance.bufferManager.refractionTexture.IsCreated())

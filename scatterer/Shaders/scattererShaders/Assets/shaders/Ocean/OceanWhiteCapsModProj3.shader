@@ -58,7 +58,7 @@
 /**
  * Author: Eric Bruneton
  * Modified and ported to Unity by Justin Hawkins 2014
- * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015-2019
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015-2020
  */
 
 Shader "Scatterer/OceanWhiteCaps" 
@@ -404,11 +404,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				float fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r* 750000;
 				float depth= fragDistance - oceanDistance; //water depth, ie viewing ray distance in water
-#endif
 
-				
-
-#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				uv = (depth < 0) ? depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
 				fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r* 750000.0;
 				depth= fragDistance - oceanDistance;

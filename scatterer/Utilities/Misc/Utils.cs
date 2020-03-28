@@ -147,6 +147,13 @@ namespace scatterer
 			
 			return renderTexture;
 		}
+
+		// As of 1.9.1 there are two rendering modes in KSP, unified localCamera (Directx 11) and dual local cameras (the old mode)
+		// Sometimes we need to do some work on the first local camera to render, which can be either the unified camera or the far camera
+		public static Camera getEarliestLocalCamera()
+		{
+			return Scatterer.Instance.unifiedCameraMode ? Scatterer.Instance.nearCamera : Scatterer.Instance.farCamera;
+		}	
 	}
 }
 
