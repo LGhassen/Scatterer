@@ -1110,7 +1110,7 @@ namespace scatterer
 
 			Renderer tRenderer=(Renderer) parentScaledTransform.GetComponent(typeof(Renderer));
 			Material sharedMaterial = tRenderer.sharedMaterial;
-			
+
 			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
 			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);
 			sharedMaterial.SetColor ("_SpecColor", new Color (specR / 100f, specG / 100f, specB / 100f));
@@ -1271,7 +1271,6 @@ namespace scatterer
 							ParticleMaterial.DisableKeyword ("SCATTERER_USE_ORIG_DIR_COLOR_ON");
 							ParticleMaterial.EnableKeyword("SCATTERER_USE_ORIG_DIR_COLOR_OFF");
 						}
-
 						EVEvolumetrics.Add (ParticleMaterial);
 					}
 					catch (Exception stupid)

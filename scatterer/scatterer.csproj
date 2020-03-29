@@ -166,7 +166,4 @@
     <Compile Include="GUI\ModularGUI\GUIModuleString.cs" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services\" />
-  </ItemGroup>
 </Project>

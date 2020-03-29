@@ -47,7 +47,7 @@ namespace scatterer
 
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_UR1_2";
+		public string versionNumber = "0.055_UFCRTBDEV_UR1_21";
 
 		void Awake()
 		{
@@ -417,6 +417,11 @@ namespace scatterer
 		{
 			float farClip = ReturnProperCamera(false, false).farClipPlane;
 			float nearClip = ReturnProperCamera(false, false).nearClipPlane;
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				ReturnProperCamera(false, false).nearClipPlane = 0.5f;
+				return true;
+			}
 			if (mainSettings.overrideNearClipPlane)
 			{
 				return true;
