@@ -47,7 +47,7 @@ namespace scatterer
 
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_UR1_21";
+		public string versionNumber = "0.055_UFCRTBDEV_UR1_22";
 
 		void Awake()
 		{
@@ -424,7 +424,14 @@ namespace scatterer
 			}
 			if (mainSettings.overrideNearClipPlane)
 			{
-				return true;
+				if ((!mainSettings.RSSMode) && (farClip > 820000f) && (farClip < 850000f))
+				{
+					return true;
+				}
+				else if ((mainSettings.RSSMode) && (farClip > 1700000f) && (farClip < 1800000f))
+				{
+					return true;
+				}
 			}
 			else if ((!mainSettings.RSSMode) && ((nearClip < 0.52f) && (farClip > 820000f) && (farClip < 850000f)))
 			{
