@@ -160,16 +160,19 @@ Shader "Scatterer-EVE/Cloud" {
 #if defined (SCATTERER_ON)
 					o.worldOrigin = origin;
 #endif
-
 					return o;
 				}
 
-				struct fout {
+				struct fout
+				{
 					float4 color : COLOR;
+#if !SHADER_API_D3D11
 					float depth : DEPTH;
+#endif
 				};
 
 				fout frag(v2f IN)
+
 				{
 					fout OUT;
 					float4 color;
@@ -192,8 +195,6 @@ Shader "Scatterer-EVE/Cloud" {
 					float distAlpha = lerp(distFade, rim, distLerp);
 
 					color.a = lerp(0, color.a, distAlpha);
-
-					//suspect
 
 #ifdef WORLD_SPACE_ON
 					float3 worldDir = normalize(IN.worldVert - _WorldSpaceCameraPos.xyz);
@@ -313,17 +314,19 @@ Shader "Scatterer-EVE/Cloud" {
 //					OUT.color = lerp(scolor, color, _MinLight);					
 //					color.rgb*= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies); //causes artifacts with SVE for some reason
 
-
 					OUT.color = lerp(color, texColor, _MinLight);
 #endif //endif SCATTERER_ON
-					
+
 					float depthWithOffset = IN.projPos.z;
 #ifndef WORLD_SPACE_ON
 					depthWithOffset *= _DepthPull;
 					OUT.color.a *= step(0, dot(IN.viewDir, IN.worldNormal));
 #endif
+
+#if !SHADER_API_D3D11 //fixes clouds fading into the planet when zooming out
 					OUT.depth = (1.0 - depthWithOffset * _ZBufferParams.w) / (depthWithOffset * _ZBufferParams.z);
-					
+#endif
+
 					return OUT;
 				}
 				ENDCG
