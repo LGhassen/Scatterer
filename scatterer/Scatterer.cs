@@ -47,7 +47,7 @@ namespace scatterer
 
 		bool coreInitiated = false;
 		public bool isActive = false;
-		public string versionNumber = "0.055_UFCRTBDEV_UR1_22";
+		public string versionNumber = "0.055_UFCRTBDEV_UR1_30";
 
 		void Awake()
 		{
