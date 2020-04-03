@@ -9,6 +9,7 @@ using System.Runtime;
 using KSP;
 using KSP.IO;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace scatterer
 {
@@ -351,10 +352,18 @@ namespace scatterer
 
 		void SetShadows()
 		{
-			if (mainSettings.terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU ) )
+			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 			{
-				QualitySettings.shadowDistance = mainSettings.shadowsDistance;
-				Utils.LogDebug("Number of shadow cascades detected "+QualitySettings.shadowCascades.ToString());
+				if ((mainSettings.d3d11ShadowFix && unifiedCameraMode) && (GraphicsSettings.GetShaderMode (BuiltinShaderType.ScreenSpaceShadows) == BuiltinShaderMode.UseBuiltin))
+				{
+					GraphicsSettings.SetShaderMode (BuiltinShaderType.ScreenSpaceShadows, BuiltinShaderMode.UseCustom);
+					GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/fixedScreenSpaceShadows")]);
+				}
+
+				if (mainSettings.terrainShadows)
+				{
+					QualitySettings.shadowDistance = mainSettings.shadowsDistance;
+					Utils.LogDebug ("Number of shadow cascades detected " + QualitySettings.shadowCascades.ToString ());
 
 
 				if (mainSettings.shadowsOnOcean)
@@ -362,28 +371,32 @@ namespace scatterer
 				else
 					QualitySettings.shadowProjection = ShadowProjection.StableFit; //without ocean shadows
 
-				//set shadow bias
-				//fixes checkerboard artifacts aka shadow acne
-				Light[] lights = (Light[]) Light.FindObjectsOfType(typeof( Light));
-				foreach (Light _light in lights)
-				{
-					if ((_light.gameObject.name == "Scaledspace SunLight") 
-					    || (_light.gameObject.name == "SunLight"))
+					//set shadow bias
+					//fixes checkerboard artifacts aka shadow acne
+					Light[] lights = (Light[])Light.FindObjectsOfType (typeof(Light));
+					foreach (Light _light in lights)
 					{
+						if ((_light.gameObject.name == "Scaledspace SunLight") 
+							|| (_light.gameObject.name == "SunLight"))
+						{
 						_light.shadowNormalBias=mainSettings.shadowNormalBias;
 						_light.shadowBias=mainSettings.shadowBias;
-						//_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.VeryHigh;
-						//_light.shadows=LightShadows.Soft;
-						//_light.shadowCustomResolution=8192;
-					}
-				}
 
-				foreach (CelestialBody _sc in scattererCelestialBodiesManager.CelestialBodies)
-				{
-					if (_sc.pqsController)
+							Utils.LogInfo ("shadowNormalBias " + _light.shadowNormalBias.ToString ());
+							Utils.LogInfo ("shadowBias " + _light.shadowBias.ToString ());
+
+							//_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.VeryHigh;
+							//_light.shadows = LightShadows.Soft;
+							//_light.shadowCustomResolution = 8192;
+						}
+					}
+
+					foreach (CelestialBody _sc in scattererCelestialBodiesManager.CelestialBodies)
 					{
-						_sc.pqsController.meshCastShadows = true;
-						_sc.pqsController.meshRecieveShadows = true;
+						if (_sc.pqsController) {
+							_sc.pqsController.meshCastShadows = true;
+							_sc.pqsController.meshRecieveShadows = true;
+						}
 					}
 				}
 			}

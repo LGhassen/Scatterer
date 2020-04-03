@@ -64,7 +64,10 @@ namespace scatterer
 		
 		//[Persistent]
 		public bool usePlanetShine = false;
-		
+
+		[Persistent]
+		public bool d3d11ShadowFix = true;
+
 		[Persistent]
 		public bool terrainShadows = true;
 		
@@ -133,6 +136,7 @@ namespace scatterer
 				 OldConfig.showMenuOnStart != showMenuOnStart ||
 				 OldConfig.useEclipses != useEclipses ||
 				 OldConfig.useRingShadows != useRingShadows ||
+				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.shadowNormalBias != shadowNormalBias ||
 				 OldConfig.shadowBias != shadowBias ||
