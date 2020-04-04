@@ -160,11 +160,11 @@ Shader "Scatterer-EVE/Cloud" {
 #if defined (SCATTERER_ON)
 					o.worldOrigin = origin;
 #endif
-
 					return o;
 				}
 
-				struct fout {
+				struct fout
+				{
 					float4 color : COLOR;
 #if !SHADER_API_D3D11
 					float depth : DEPTH;
