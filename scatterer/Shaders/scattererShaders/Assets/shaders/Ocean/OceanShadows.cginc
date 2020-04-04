@@ -92,7 +92,12 @@ half getOceanSoftShadow(float4 worldPos, float viewPosZ)
     fixed4 cascadeWeights = GET_CASCADE_WEIGHTS (worldPos, viewPosZ);
     float4 coord = GET_SHADOW_COORDINATES(worldPos, cascadeWeights);
 
+
+#if SHADER_API_D3D11
     float3 receiverPlaneDepthBias = float3(0.001,0.001,0.001); //custom bias to fix issue with jittering shadows on d3d11 in 1.9, probably not necessary for ocean though
+#else
+	float3 receiverPlaneDepthBias = 0.0;
+#endif
 
     half shadow = ScattererSampleShadowmap_PCF7x7(coord, receiverPlaneDepthBias);
     //shadow = lerp(_LightShadowData.r, 1.0f, shadow); //min strength/intensity, not used for ocean
