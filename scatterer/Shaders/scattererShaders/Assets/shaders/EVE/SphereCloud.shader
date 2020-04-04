@@ -166,7 +166,7 @@ Shader "Scatterer-EVE/Cloud" {
 				struct fout
 				{
 					float4 color : COLOR;
-#if !SHADER_API_D3D11
+#if !(SHADER_API_D3D11 && WORLD_SPACE_ON)
 					float depth : DEPTH;
 #endif
 				};
@@ -323,7 +323,7 @@ Shader "Scatterer-EVE/Cloud" {
 					OUT.color.a *= step(0, dot(IN.viewDir, IN.worldNormal));
 #endif
 
-#if !SHADER_API_D3D11 //fixes clouds fading into the planet when zooming out
+#if !(SHADER_API_D3D11 && WORLD_SPACE_ON) //fixes clouds fading into the planet when zooming out
 					OUT.depth = (1.0 - depthWithOffset * _ZBufferParams.w) / (depthWithOffset * _ZBufferParams.z);
 #endif
 
