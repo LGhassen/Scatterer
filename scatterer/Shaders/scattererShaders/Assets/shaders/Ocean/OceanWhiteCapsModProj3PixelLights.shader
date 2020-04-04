@@ -59,18 +59,24 @@
 /**
  * Author: Eric Bruneton
  * Modified and ported to Unity by Justin Hawkins 2014
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015-2020
  */
 
 Shader "Scatterer/OceanWhiteCapsPixelLights" 
 {
 	SubShader 
 	{
-		Tags { "Queue" = "Geometry+100" "RenderType"="" }
-		
-	
-Pass   
+		Tags { "Queue" = "Geometry+100"
+				"RenderType"="Transparent"
+				"IgnoreProjector"="True"}
+
+    	Pass   
     	{
-    	
+
+    		Tags { "Queue" = "Geometry+100"
+				"RenderType"="Transparent"
+				"IgnoreProjector"="True"}
+
     		Blend SrcAlpha OneMinusSrcAlpha
 
 			Cull Back
@@ -98,10 +104,6 @@ Pass
 			#include "OceanBRDF.cginc"
 			#include "OceanDisplacement3.cginc"
 			#include "../ClippingUtils.cginc"
-
-//			#include "Lighting.cginc"
-//			#include "AutoLight.cginc"
-//			#include "OceanLight.cginc"
 			
 			uniform float4x4 _Globals_ScreenToCamera;
 			uniform float4x4 _Globals_CameraToWorld;
@@ -111,8 +113,7 @@ Pass
 			
 			uniform float4x4 _Globals_WorldToOcean;
 			uniform float4x4 _Globals_OceanToWorld;
-			
-			//uniform float3 _Scatterer_Origin;
+
 			uniform float3 _Sun_WorldSunDir;
 			
 			uniform float2 _Ocean_MapSize;

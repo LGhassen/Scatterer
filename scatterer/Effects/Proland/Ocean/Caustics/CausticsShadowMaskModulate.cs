@@ -54,7 +54,7 @@ namespace scatterer
 				CausticsShadowMaskModulateMaterial.EnableKeyword ("SPHERE_PLANET");
 				CausticsShadowMaskModulateMaterial.DisableKeyword ("FLAT_PLANET");
 
-				sunLight = Scatterer.Instance.sunLight.GetComponent < Light > ();
+				sunLight = Scatterer.Instance.sunLight;
 
 				m_Buffer = new CommandBuffer ();
 				m_Buffer.name = "CausticsShadowMaskmodulate";			

@@ -18,7 +18,7 @@ namespace scatterer
 			m_Buffer.name = "ScattererShadowMapRetrieve";
 
 			//instead of making a copy like shadowMapCopyCommandbuffer, here we just set the shadowmap as a global texture, for access in shader
-			m_Buffer.SetGlobalTexture ("_ShadowMapTexture", new RenderTargetIdentifier(BuiltinRenderTextureType.CurrentActive));
+			m_Buffer.SetGlobalTexture ("_ShadowMapTextureScatterer", new RenderTargetIdentifier(BuiltinRenderTextureType.CurrentActive));
 			
 			m_Light = GetComponent<Light>();
 			m_Light.AddCommandBuffer (LightEvent.AfterShadowMap, m_Buffer);

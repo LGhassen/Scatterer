@@ -188,7 +188,7 @@ namespace scatterer
 		{
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				return (Scatterer.Instance.mainMenuLight.transform.forward*(-1));
+				return (Scatterer.Instance.mainMenuLight.gameObject.transform.forward*(-1));
 			}
 			else
 				return (sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position);			

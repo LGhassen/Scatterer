@@ -54,8 +54,8 @@ namespace scatterer
 					aPsLight.source = celBody;
 					if (!_aSource.isSun)
 						aPsLight.sunCelestialBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _aSource.mainSunCelestialBody);
-					GameObject ScaledPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledspaceSunLight);
-					GameObject LocalPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledspaceSunLight);
+					GameObject ScaledPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledSpaceSunLight.gameObject);
+					GameObject LocalPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledSpaceSunLight.gameObject);
 					ScaledPlanetShineLight.GetComponent<Light> ().type = LightType.Point;
 					if (!_aSource.isSun)
 						ScaledPlanetShineLight.GetComponent<Light> ().cookie = planetShineCookieCubeMap;

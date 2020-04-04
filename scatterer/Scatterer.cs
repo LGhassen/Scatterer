@@ -36,13 +36,15 @@ namespace scatterer
 		DisableAmbientLight ambientLightScript;
 		public SunlightModulator sunlightModulatorInstance;
 		//		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
+
+		public ShadowMapRetrieveCommandBuffer shadowMapRetriever; //may be unnecessary but it doesn't hurt
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
 
 		//probably move these to buffer rendering manager
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
 		
-		public GameObject sunLight,scaledspaceSunLight, mainMenuLight;
+		public Light sunLight,scaledSpaceSunLight, mainMenuLight;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
 		
 		bool coreInitiated = false;
@@ -110,9 +112,9 @@ namespace scatterer
 		{
 			SetupMainCameras ();
 
-			SetShadows();
-
 			FindSunlights ();
+
+			SetShadows();
 			
 			Utils.FixKopernicusRingsRenderQueue ();			
 			Utils.FixSunsCoronaRenderQueue ();
@@ -263,6 +265,12 @@ namespace scatterer
 //					Component.Destroy(shadowMaskModulate);
 //				}
 
+				if (shadowMapRetriever)
+				{
+					shadowMapRetriever.OnDestroy();
+					Component.Destroy(shadowMapRetriever);
+				}
+
 				if (shadowFadeRemover)
 				{
 					shadowFadeRemover.OnDestroy();
@@ -354,10 +362,28 @@ namespace scatterer
 		{
 			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 			{
-				if ((mainSettings.d3d11ShadowFix && unifiedCameraMode) && (GraphicsSettings.GetShaderMode (BuiltinShaderType.ScreenSpaceShadows) == BuiltinShaderMode.UseBuiltin))
+				if ((mainSettings.d3d11ShadowFix && unifiedCameraMode))
 				{
 					GraphicsSettings.SetShaderMode (BuiltinShaderType.ScreenSpaceShadows, BuiltinShaderMode.UseCustom);
 					GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/fixedScreenSpaceShadows")]);
+					QualitySettings.shadowProjection = ShadowProjection.StableFit; //way more resistant to jittering
+				}
+
+				if (mainSettings.shadowsOnOcean)
+				{
+					if (unifiedCameraMode)
+					{
+						QualitySettings.shadowProjection = ShadowProjection.StableFit;	//StableFit + splitSpheres is the only thing that works Correctly for unified camera (dx11) ocean shadows
+																					  	//Otherwise we get artifacts near shadow cascade edges
+					}
+					else
+					{
+						QualitySettings.shadowProjection = ShadowProjection.CloseFit;	//CloseFit without SplitSpheres seems to be the only setting that works for OpenGL for ocean shadows
+																						//Seems like I lack the correct variables to determine which shadow path to take
+																						//also try without the transparent tag
+					}
+
+					shadowMapRetriever = sunLight.gameObject.AddComponent (typeof(ShadowMapRetrieveCommandBuffer));
 				}
 
 				if (mainSettings.terrainShadows)
@@ -365,35 +391,23 @@ namespace scatterer
 					QualitySettings.shadowDistance = mainSettings.shadowsDistance;
 					Utils.LogDebug ("Number of shadow cascades detected " + QualitySettings.shadowCascades.ToString ());
 
-
-				if (mainSettings.shadowsOnOcean)
-					QualitySettings.shadowProjection = ShadowProjection.CloseFit; //with ocean shadows
-				else
-					QualitySettings.shadowProjection = ShadowProjection.StableFit; //without ocean shadows
-
-					//set shadow bias
 					//fixes checkerboard artifacts aka shadow acne
-					Light[] lights = (Light[])Light.FindObjectsOfType (typeof(Light));
-					foreach (Light _light in lights)
+					if (sunLight)
 					{
-						if ((_light.gameObject.name == "Scaledspace SunLight") 
-							|| (_light.gameObject.name == "SunLight"))
-						{
-						_light.shadowNormalBias=mainSettings.shadowNormalBias;
-						_light.shadowBias=mainSettings.shadowBias;
+//						Utils.LogInfo ("shadowNormalBias " + sunLight.shadowNormalBias.ToString ());
+//						Utils.LogInfo ("shadowBias " + sunLight.shadowBias.ToString ());
 
-							Utils.LogInfo ("shadowNormalBias " + _light.shadowNormalBias.ToString ());
-							Utils.LogInfo ("shadowBias " + _light.shadowBias.ToString ());
+						sunLight.shadowNormalBias = mainSettings.shadowNormalBias;
+						sunLight.shadowBias = mainSettings.shadowBias;
 
-							//_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.VeryHigh;
-							//_light.shadows = LightShadows.Soft;
-							//_light.shadowCustomResolution = 8192;
-						}
+						//sunLight.shadowCustomResolution = 8192;
 					}
 
+					//and finally force shadow Casting and receiving on celestial bodies if not already set
 					foreach (CelestialBody _sc in scattererCelestialBodiesManager.CelestialBodies)
 					{
-						if (_sc.pqsController) {
+						if (_sc.pqsController)
+						{
 							_sc.pqsController.meshCastShadows = true;
 							_sc.pqsController.meshRecieveShadows = true;
 						}
@@ -405,12 +419,22 @@ namespace scatterer
 		void FindSunlights ()
 		{
 			Light[] lights = (Light[])Light.FindObjectsOfType (typeof(Light));
-			foreach (Light _light in lights) {
-				if (_light.gameObject.name == "SunLight") {
-					sunLight = _light.gameObject;
+			foreach (Light _light in lights)
+			{
+				if (_light.gameObject.name == "SunLight")
+				{
+					sunLight = _light;
+					Utils.LogDebug ("Found SunLight");
 				}
-				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light")) {
-					mainMenuLight = _light.gameObject;
+				if (_light.gameObject.name == "Scaledspace SunLight")
+				{
+					scaledSpaceSunLight = _light;
+					Utils.LogDebug ("Found Scaledspace SunLight");
+				}
+
+				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light"))
+				{
+					mainMenuLight = _light;
 					Utils.LogDebug ("Found main menu light");
 				}
 			}

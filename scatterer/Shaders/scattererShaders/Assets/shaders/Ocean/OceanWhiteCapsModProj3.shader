@@ -65,11 +65,17 @@ Shader "Scatterer/OceanWhiteCaps"
 {
 	SubShader 
 	{
-		Tags { "Queue" = "Geometry+100" "RenderType"="Transparent" "IgnoreProjector"="True"}
+		Tags { "Queue" = "Geometry+100"
+				"RenderType"="Transparent"
+				"IgnoreProjector"="True"}
 
     	Pass   
     	{
-    	
+
+    		Tags { "Queue" = "Geometry+100"
+				"RenderType"="Transparent"
+				"IgnoreProjector"="True"}
+
     		Blend SrcAlpha OneMinusSrcAlpha
 
 			Cull Back
@@ -97,10 +103,6 @@ Shader "Scatterer/OceanWhiteCaps"
 			#include "OceanBRDF.cginc"
 			#include "OceanDisplacement3.cginc"
 			#include "../ClippingUtils.cginc"
-
-//			#include "Lighting.cginc"
-//			#include "AutoLight.cginc"
-//			#include "OceanLight.cginc"
 			
 			uniform float4x4 _Globals_ScreenToCamera;
 			uniform float4x4 _Globals_CameraToWorld;
@@ -110,8 +112,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			
 			uniform float4x4 _Globals_WorldToOcean;
 			uniform float4x4 _Globals_OceanToWorld;
-			
-			//uniform float3 _Scatterer_Origin;
+
 			uniform float3 _Sun_WorldSunDir;
 			
 			uniform float2 _Ocean_MapSize;
