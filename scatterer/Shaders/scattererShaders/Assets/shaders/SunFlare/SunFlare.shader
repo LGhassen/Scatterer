@@ -17,11 +17,13 @@
 			CGPROGRAM
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
+			#include "../DepthCommon.cginc"
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma glsl
 
+			#pragma multi_compile SCATTERER_MERGED_DEPTH_ON SCATTERER_MERGED_DEPTH_OFF
 			
 			uniform float sunGlareScale;
 			uniform float sunGlareFade;
@@ -34,10 +36,6 @@
 			uniform sampler2D sunGhost3;
 
 			uniform float3 flareColor;
-
-			uniform sampler2D _customDepthTexture;  //depth buffer, to check if sun is behin terrain
-													//I would love it if this wasn't necessary, unfortunately, mountains far away
-													//don't generate colliders so raycasting alone isn't enough
 
 			uniform sampler2D extinctionTexture;
 													
@@ -73,11 +71,11 @@
 				v2f OUT;
 				v.vertex.y = v.vertex.y *_ProjectionParams.x;
 
-				float depth =  tex2Dlod(_customDepthTexture,float4(sunViewPortPos.xy,0.0,0.0));  //if there's something in the way don't render the flare	
-				float returnPixel = (useDbufferOnCamera < 1.0) ? 1.0 : ((depth < 1.0) ? 0.0 : 1.0);
+				//if there's something in the way don't render the flare
+				float drawFlare = (useDbufferOnCamera < 1.0) ? 1.0 : checkDepthBufferEmpty(sunViewPortPos.xy);
 
     			OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
-    			OUT.pos = (renderSunFlare == 1.0) && (_ProjectionParams.y < 200.0) && (renderOnCurrentCamera == 1.0) && (returnPixel ==1.0) ? OUT.pos : float4(2.0,2.0,2.0,1.0); //if we don't need to render the sunflare, cull vertexes by placing them outside clip space
+    			OUT.pos = (renderSunFlare == 1.0) && (_ProjectionParams.y < 200.0) && (renderOnCurrentCamera == 1.0) && (drawFlare ==1.0) ? OUT.pos : float4(2.0,2.0,2.0,1.0); //if we don't need to render the sunflare, cull vertexes by placing them outside clip space
     																												  //also use near plane to not render on far camera
     			OUT.uv = v.texcoord.xy;
 

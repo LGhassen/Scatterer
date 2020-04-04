@@ -23,7 +23,10 @@ namespace scatterer
 		{
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				depthTexture = Utils.CreateTexture ("ScattererDepthTexture", Screen.width, Screen.height,0, RenderTextureFormat.RFloat, false, FilterMode.Point, 1);
+				if (!Scatterer.Instance.unifiedCameraMode)
+				{
+					depthTexture = Utils.CreateTexture ("ScattererDepthTexture", Screen.width, Screen.height,0, RenderTextureFormat.RFloat, false, FilterMode.Point, 1);
+				}
 				
 				if (Scatterer.Instance.mainSettings.useOceanShaders && Scatterer.Instance.mainSettings.oceanRefraction)
 				{
@@ -33,9 +36,10 @@ namespace scatterer
 		}
 
 		//Before farCamera renders
+		//TODO: change to coroutine that checks this once every 100 frames or something, no need to check every frame
 		void OnPreRender () 
 		{
-			if (!depthTexture || !depthTexture.IsCreated())
+			if (!Scatterer.Instance.unifiedCameraMode && (!depthTexture || !depthTexture.IsCreated()))
 			{
 				Utils.LogDebug("BufferRenderingManager: Recreating textures");
 				CreateTextures();
@@ -45,10 +49,13 @@ namespace scatterer
 
 		public void ClearDepthTexture()
 		{
-			RenderTexture rt=RenderTexture.active;
-			RenderTexture.active= depthTexture;			
-			GL.Clear(false,true,Color.white);
-			RenderTexture.active=rt;			
+			if (!Scatterer.Instance.unifiedCameraMode)
+			{
+				RenderTexture rt = RenderTexture.active;
+				RenderTexture.active = depthTexture;			
+				GL.Clear (false, true, Color.white);
+				RenderTexture.active = rt;			
+			}
 			depthTextureCleared = true;
 		}
 

@@ -529,10 +529,25 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_HARD");
 				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_SOFT");
 			}
+
+			if (Scatterer.Instance.unifiedCameraMode)
+			{
+				m_oceanMaterial.EnableKeyword ("SCATTERER_MERGED_DEPTH_OFF");
+				m_oceanMaterial.DisableKeyword ("SCATTERER_MERGED_DEPTH_ON");
+			}
+			else
+			{
+				m_oceanMaterial.EnableKeyword ("SCATTERER_MERGED_DEPTH_ON");
+				m_oceanMaterial.DisableKeyword ("SCATTERER_MERGED_DEPTH_OFF");
+			}
+
+
 			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			
 			m_manager.GetSkyNode ().InitUniforms (m_oceanMaterial);
-			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
+
+			if (!Scatterer.Instance.unifiedCameraMode)
+				m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 			
 			//if (Core.Instance.oceanRefraction)
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferManager.refractionTexture);
@@ -551,7 +566,6 @@ namespace scatterer
 			m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex); //these don't need to be updated every frame
 			m_oceanMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);					
-			m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferManager.refractionTexture); //these don't need to be updated every frame
 
 			float camerasOverlap = 0f;

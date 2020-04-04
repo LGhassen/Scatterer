@@ -94,9 +94,11 @@ Shader "Scatterer/OceanWhiteCaps"
 			#pragma multi_compile UNDERWATER_OFF UNDERWATER_ON
 			#pragma multi_compile OCEAN_SHADOWS_OFF OCEAN_SHADOWS_HARD OCEAN_SHADOWS_SOFT
 			#pragma multi_compile REFRACTIONS_AND_TRANSPARENCY_OFF REFRACTIONS_AND_TRANSPARENCY_ON
+			#pragma multi_compile SCATTERER_MERGED_DEPTH_ON SCATTERER_MERGED_DEPTH_OFF
 			//#pragma multi_compile SCATTERING_ON SCATTERING_OFF
 
 			#include "../CommonAtmosphere.cginc"
+			#include "../DepthCommon.cginc"
 #if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
 			#include "OceanShadows.cginc"
 #endif			
@@ -142,9 +144,6 @@ Shader "Scatterer/OceanWhiteCaps"
 			uniform float _ScatteringExposure;
 			
 			uniform float2 _VarianceMax;
-
-			uniform sampler2D _customDepthTexture;
-			uniform sampler2D _CameraDepthTexture;
 
 			uniform float transparencyDepth;
 			uniform float darknessDepth;
@@ -388,8 +387,6 @@ Shader "Scatterer/OceanWhiteCaps"
 				Lsea = hdrNoExposure(waterLightExtinction * ocColor) * lerp(0.8,1.0,shadowTerm);
 #endif
 
-				
-
 				float oceanDistance = length(IN.viewPos);
 
 				//depth stuff
@@ -402,12 +399,11 @@ Shader "Scatterer/OceanWhiteCaps"
 				float2 uv = depthUV.xy + N.xy*0.025;
 		#endif
 
-
-				float fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r* 750000;
+				float fragDistance = getScattererFragDistance(uv);
 				float depth= fragDistance - oceanDistance; //water depth, ie viewing ray distance in water
 
 				uv = (depth < 0) ? depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
-				fragDistance = tex2Dlod(_customDepthTexture, float4(uv,0,0)).r* 750000.0;
+				fragDistance = getScattererFragDistance(uv);
 				depth= fragDistance - oceanDistance;
 			#if !defined (UNDERWATER_ON)
 				transparencyDepth=lerp(transparencyDepth,0.0,clamp(oceanDistance/10000.0,0.0,1.0));   //fade out refractions and transparency at distance, to hide swirly artifacts of low precision

@@ -683,11 +683,6 @@ namespace scatterer
 			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-
-			if (Scatterer.Instance.bufferManager && (HighLogic.LoadedScene != GameScenes.TRACKSTATION) )
-			{
-				mat.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
-			}
 			
 			//Consts, best leave these alone
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);

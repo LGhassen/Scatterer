@@ -132,11 +132,9 @@ namespace scatterer
 
 				//copy stock depth buffers and combine into a single depth buffer
 				//TODO: shouldn't this be moved to bufferManager?
-				if (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement)
+				if (!unifiedCameraMode && (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement))
 				{
-					if (!unifiedCameraMode)
-						farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
-
+					farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
 					nearDepthCommandbuffer = nearCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
 				}
 			}

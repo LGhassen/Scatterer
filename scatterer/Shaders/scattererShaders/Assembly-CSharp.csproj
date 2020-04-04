@@ -95,6 +95,7 @@
      <None Include="Assets\Shaders\OldOrUnused\SphereCloud - Copy (3).shader" />
      <None Include="Assets\Shaders\Instancing\My Lighting.cginc" />
      <None Include="Assets\Shaders\Instancing\Texture Splatting.shader" />
+     <None Include="Assets\Shaders\DepthCommon.cginc" />
      <None Include="Assets\Shaders\Ocean\OceanDisplacement3.cginc" />
      <None Include="Assets\Shaders\Ocean\OceanWhiteCapsModProj3PixelLights.shader" />
      <None Include="Assets\Shaders\Atmo\atmosphereLocalScattering.shader" />
