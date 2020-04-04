@@ -383,7 +383,7 @@ namespace scatterer
 																						//also try without the transparent tag
 					}
 
-					shadowMapRetriever = sunLight.gameObject.AddComponent (typeof(ShadowMapRetrieveCommandBuffer));
+					shadowMapRetriever = (ShadowMapRetrieveCommandBuffer) sunLight.gameObject.AddComponent (typeof(ShadowMapRetrieveCommandBuffer));
 				}
 
 				if (mainSettings.terrainShadows)

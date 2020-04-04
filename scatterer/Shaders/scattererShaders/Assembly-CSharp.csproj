@@ -103,6 +103,7 @@
      <None Include="Assets\Shaders\EVE\old\alphaMap.cginc" />
      <None Include="Assets\Shaders\Instancing\My First Lighting Shader.shader" />
      <None Include="Assets\Shaders\Instancing\MyDeferredShading.cginc" />
+     <None Include="Assets\Shaders\ShadowsCommon.cginc" />
      <None Include="Assets\Shaders\KSP\LightingKSP.cginc" />
      <None Include="Assets\Shaders\Ocean\OceanBRDF.cginc" />
      <None Include="Assets\Shaders\Ocean\WhiteCapsPrecompute0.shader" />
