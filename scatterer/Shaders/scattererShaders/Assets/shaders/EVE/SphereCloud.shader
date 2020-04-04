@@ -41,7 +41,7 @@ Shader "Scatterer-EVE/Cloud" {
 
 				Lighting On
 				Tags { "LightMode" = "ForwardBase"}
-
+				Offset -0.05, -0.05
 				CGPROGRAM
 
 
