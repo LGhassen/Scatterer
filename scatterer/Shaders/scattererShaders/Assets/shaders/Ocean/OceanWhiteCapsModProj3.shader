@@ -405,12 +405,13 @@ Shader "Scatterer/OceanWhiteCaps"
 				uv = (depth < 0) ? depthUV.xy : uv;   //for refractions, use the normal fragment uv instead the perturbed one if the perturbed one is closer
 				fragDistance = getScattererFragDistance(uv);
 				depth= fragDistance - oceanDistance;
+
 			#if !defined (UNDERWATER_ON)
 				depth=lerp(depth,transparencyDepth,clamp((oceanDistance-1000.0)/5000.0,0.0,1.0)); //fade out refractions and transparency at distance, to hide swirly artifacts of low precision
 			#endif
 				float outAlpha=lerp(0.0,1.0,depth/transparencyDepth);
 				outAlpha = (depth < -0.5) ? 1.0 : outAlpha;   //fix black edge around antialiased terrain in front of ocean
-				_Ocean_WhiteCapStr=lerp(shoreFoam,_Ocean_WhiteCapStr, depth*0.2);
+				_Ocean_WhiteCapStr=lerp(shoreFoam,_Ocean_WhiteCapStr, clamp(depth*0.2,0.0,1.0));
 				_Ocean_WhiteCapStr= (depth <= 0.0) ? 0.0 : _Ocean_WhiteCapStr; //fixes white outline around objects in front of the ocean
 #else
 				float outAlpha=1.0;
