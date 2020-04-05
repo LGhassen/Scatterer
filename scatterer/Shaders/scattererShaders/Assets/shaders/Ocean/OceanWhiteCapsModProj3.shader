@@ -406,7 +406,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				fragDistance = getScattererFragDistance(uv);
 				depth= fragDistance - oceanDistance;
 			#if !defined (UNDERWATER_ON)
-				transparencyDepth=lerp(transparencyDepth,0.0,clamp(oceanDistance/10000.0,0.0,1.0));   //fade out refractions and transparency at distance, to hide swirly artifacts of low precision
+				depth=lerp(depth,transparencyDepth,clamp((oceanDistance-1000.0)/5000.0,0.0,1.0)); //fade out refractions and transparency at distance, to hide swirly artifacts of low precision
 			#endif
 				float outAlpha=lerp(0.0,1.0,depth/transparencyDepth);
 				outAlpha = (depth < -0.5) ? 1.0 : outAlpha;   //fix black edge around antialiased terrain in front of ocean

@@ -52,7 +52,7 @@ namespace scatterer
 				CausticsShadowMaskModulateMaterial.SetFloat ("causticsBlurDepth", blurDepth);
 
 				CausticsShadowMaskModulateMaterial.EnableKeyword ("SPHERE_PLANET");
-				CausticsShadowMaskModulateMaterial.DisableKeyword ("FLAT_PLANET");
+				CausticsShadowMaskModulateMaterial.DisableKeyword ("FLAT_PLANET"); //for testing in unity editor only, obviously, Kerbin is not flat I swear
 
 				sunLight = Scatterer.Instance.sunLight;
 
