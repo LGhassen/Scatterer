@@ -40,6 +40,7 @@ namespace scatterer
 		public ShadowMapRetrieveCommandBuffer shadowMapRetriever; //may be unnecessary but it doesn't hurt
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
+		public PartialDepthBuffer partialUnifiedCameraDepthBuffer;
 
 		//probably move these to buffer rendering manager
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
@@ -292,6 +293,12 @@ namespace scatterer
 					Component.Destroy (bufferManager);
 				}
 
+				if (partialUnifiedCameraDepthBuffer)
+				{
+					partialUnifiedCameraDepthBuffer.OnDestroy();
+					Component.Destroy(partialUnifiedCameraDepthBuffer);
+				}
+
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
 				saveSettings();
 			}
@@ -360,11 +367,20 @@ namespace scatterer
 		{
 			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 			{
-				if ((mainSettings.d3d11ShadowFix && unifiedCameraMode))
+				if (unifiedCameraMode && (mainSettings.d3d11ShadowFix || mainSettings.terrainShadows))
 				{
-					GraphicsSettings.SetShaderMode (BuiltinShaderType.ScreenSpaceShadows, BuiltinShaderMode.UseCustom);
-					GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/fixedScreenSpaceShadows")]);
 					QualitySettings.shadowProjection = ShadowProjection.StableFit; //way more resistant to jittering
+					GraphicsSettings.SetShaderMode (BuiltinShaderType.ScreenSpaceShadows, BuiltinShaderMode.UseCustom);
+					if ((mainSettings.terrainShadows) && (mainSettings.shadowsDistance > 8000f))
+					{
+						GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/longDistanceScreenSpaceShadows")]);
+						partialUnifiedCameraDepthBuffer = (PartialDepthBuffer) nearCamera.gameObject.AddComponent(typeof(PartialDepthBuffer));
+						partialUnifiedCameraDepthBuffer.Init(nearCamera);
+					}
+					else
+					{
+						GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/fixedScreenSpaceShadows")]);
+					}
 				}
 
 				if (mainSettings.shadowsOnOcean)
@@ -389,7 +405,7 @@ namespace scatterer
 					QualitySettings.shadowDistance = mainSettings.shadowsDistance;
 					Utils.LogDebug ("Number of shadow cascades detected " + QualitySettings.shadowCascades.ToString ());
 
-					//fixes checkerboard artifacts aka shadow acne
+					//fixes checkerboard artifacts aka shadow acne (review if still useful)
 					if (sunLight)
 					{
 //						Utils.LogInfo ("shadowNormalBias " + sunLight.shadowNormalBias.ToString ());
@@ -398,7 +414,7 @@ namespace scatterer
 						sunLight.shadowNormalBias = mainSettings.shadowNormalBias;
 						sunLight.shadowBias = mainSettings.shadowBias;
 
-						//sunLight.shadowCustomResolution = 8192;
+						//sunLight.shadowCustomResolution = 8192; //change it to only set this when unifiedCamera is rendering and revert it after
 					}
 
 					//and finally force shadow Casting and receiving on celestial bodies if not already set

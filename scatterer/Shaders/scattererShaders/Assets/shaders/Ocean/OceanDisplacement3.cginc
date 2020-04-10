@@ -39,7 +39,8 @@ uniform float cosTheta;
 uniform float sinTheta;
  
 
-
+// A glorified sphere intersect, with some code to snap above the horizon back to the horizon
+// Returns Position in ocean space
 float2 OceanPos(float4 vert, float4x4 stoc, out float t, out float3 cameraDir, out float3 oceanDir) 
 {
 

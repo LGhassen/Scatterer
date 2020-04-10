@@ -4,6 +4,8 @@
 		
 //extinction pass
 Pass {
+		Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+
 			//Cull Front
 			Cull Back
 			ZTest LEqual
@@ -93,6 +95,8 @@ Pass {
 
 //scattering pass
 Pass {
+			Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+
 			//Cull Front
 			Cull Back
 			ZTest LEqual

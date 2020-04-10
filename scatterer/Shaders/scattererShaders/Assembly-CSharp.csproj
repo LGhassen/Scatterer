@@ -100,6 +100,7 @@
      <None Include="Assets\Shaders\Ocean\OceanWhiteCapsModProj3PixelLights.shader" />
      <None Include="Assets\Shaders\Atmo\atmosphereLocalScattering.shader" />
      <None Include="Assets\Shaders\Atmo\SkySphere.shader" />
+     <None Include="Assets\Shaders\Shadows\LongDistanceScreenSpaceShadows.shader" />
      <None Include="Assets\Shaders\Ocean\Caustics\CausticsOcclusion.shader" />
      <None Include="Assets\Shaders\EVE\old\alphaMap.cginc" />
      <None Include="Assets\Shaders\Instancing\My First Lighting Shader.shader" />
@@ -136,10 +137,12 @@
      <None Include="Assets\Shaders\EVE\SphereCloud.shader" />
      <None Include="Assets\Shaders\Ocean\InitJacobians.shader" />
      <None Include="Assets\Shaders\Instancing\Textured With Detail.shader" />
+     <None Include="Assets\Shaders\Shadows\FixedScreenSpaceShadows.cginc" />
      <None Include="Assets\Shaders\Occlusion\ModulateShadowMaskWithOcclusion.shader" />
      <None Include="Assets\Shaders\EVE\CloudVolumeParticle.shader" />
      <None Include="Assets\Shaders\Atmo\atmospherePostProcessing32bitViewSpaceDepth.shader" />
      <None Include="Assets\Shaders\Utility.cginc" />
+     <None Include="Assets\Shaders\DepthTexture\simpleDepthTexture.shader" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>E:/gh/scattererGithub/Scatterer/scatterer/Shaders/scattererShaders/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
  </Reference>

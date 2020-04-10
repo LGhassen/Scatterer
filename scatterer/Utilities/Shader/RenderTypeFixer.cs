@@ -35,14 +35,13 @@ namespace scatterer
 		public static void fixRenderType(Material mat)
 		{
 			String name = mat.shader.name;
-			if ((name == "Terrain/PQS/PQS Main - Optimised")
-			    || (name == "Terrain/PQS/PQS Main Shader")
-			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (AP) ")
-			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD (Fallback) ")
-			    || (name == "Terrain/PQS/Sphere Projection SURFACE QUAD")
-			    || (name.Contains ("PQS Main - Extras")
-			    || (name == "Legacy Shaders/Transparent/Specular")    //fixes kerbal visor leaking into water refraction
-			    || (name == "KSP/Emissive/Diffuse")))    			  //fixes new mk1-3 pod
+			if ((name.Contains("PQS") && name.Contains("Terrain"))
+			    || (name.Contains ("PQS Main")))
+
+				//no longer need custom depth buffer for refractions or scattering, only for distant shadows, so disable these
+			    //|| (name == "Legacy Shaders/Transparent/Specular")    //fixes kerbal visor leaking into water refraction
+			    //|| (name == "KSP/Emissive/Diffuse")))    			  //fixes new mk1-3 pod
+			    													  
 			{
 				mat.SetOverrideTag("RenderType", "Opaque");
 			}
@@ -51,6 +50,12 @@ namespace scatterer
 			if ( (name == "Legacy Shaders/Transparent/Cutout") || (name == "KSP/Alpha/Cutoff") || (name == "KSP/Specular (Cutoff)"))
 			{
 				mat.SetOverrideTag("RenderType", "TransparentCutout");
+			}
+
+			if (name.Contains ("EVE/PlanetLight") || name.Contains ("EVE/Cloud") || name.Contains("Translucent") || name.Contains("Legacy Shaders/Particles"))
+			{
+				mat.SetOverrideTag ("RenderType", "Transparent");
+				mat.SetOverrideTag ("IgnoreProjector", "True");
 			}
 		}
 	}
