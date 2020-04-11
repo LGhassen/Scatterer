@@ -129,9 +129,14 @@ half getOceanSoftShadow(float4 worldPos, float viewPosZ)
 
 half getOceanShadow(float4 worldPos, float viewPosZ)
 {
+	//fade value
+	float zDist = dot(_WorldSpaceCameraPos - worldPos, UNITY_MATRIX_V[2].xyz);
+	float fadeDist = UnityComputeShadowFadeDistance(worldPos, zDist);
+	half  shadowFade = UnityComputeShadowFade(fadeDist);
+
 #if defined (OCEAN_SHADOWS_SOFT)
-	return getOceanSoftShadow(worldPos, viewPosZ);
+	return lerp(getOceanSoftShadow(worldPos, viewPosZ),1.0,shadowFade);
 #elif defined (OCEAN_SHADOWS_HARD)
-	return getOceanHardShadow(worldPos, viewPosZ);
+	return lerp(getOceanHardShadow(worldPos, viewPosZ),1.0,shadowFade);
 #endif
 }
