@@ -385,7 +385,7 @@ namespace scatterer
 
 				if (mainSettings.shadowsOnOcean)
 				{
-					if (unifiedCameraMode)
+					if (unifiedCameraMode || SystemInfo.graphicsDeviceVersion.Contains("Direct3D 11.0"))
 					{
 						QualitySettings.shadowProjection = ShadowProjection.StableFit;	//StableFit + splitSpheres is the only thing that works Correctly for unified camera (dx11) ocean shadows
 																					  	//Otherwise we get artifacts near shadow cascade edges
