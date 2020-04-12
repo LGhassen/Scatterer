@@ -131,11 +131,13 @@ namespace scatterer
 				if (EVEClouds.ContainsKey(body))
 				{
 					EVEClouds[body].Add(cloudmesh.GetComponent < MeshRenderer > ().material);
+					cloudmesh.GetComponent < MeshRenderer > ().material.renderQueue = 2999; //we might as well fix the EVE clouds renderqueue for 1.9 until official EVE fix
 				}
 				else
 				{
 					List<Material> cloudsList = new List<Material>();
 					cloudsList.Add(cloudmesh.GetComponent < MeshRenderer > ().material);
+					cloudmesh.GetComponent < MeshRenderer > ().material.renderQueue = 2999;
 					EVEClouds.Add(body,cloudsList);
 				}
 				Utils.LogDebug("Detected EVE 2d cloud layer for planet: "+body);
