@@ -78,6 +78,7 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
 				"IgnoreProjector"="True"}
 
     		Blend SrcAlpha OneMinusSrcAlpha
+    		Offset 0.0, -0.10 //give a superior depth offset to that of localScattering to prevent scattering that should be behind ocean from appearing in front
 
 			Cull Back
 
@@ -571,10 +572,9 @@ Shader "Scatterer/OceanWhiteCapsPixelLights"
     	{
 			Tags { "LightMode" = "ForwardAdd" } 
     	
-    	
-//    		Blend One One
+
 			Blend One OneMinusSrcColor //"reverse" soft-additive
-//			Blend SrcAlpha OneMinusSrcAlpha
+			Offset 0.0, -0.10 //give a superior depth offset to that of localScattering to prevent scattering that should be behind ocean from appearing in front
     	
 			CGPROGRAM
 			#include "UnityCG.cginc"
