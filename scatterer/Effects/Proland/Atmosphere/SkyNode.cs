@@ -1112,12 +1112,18 @@ namespace scatterer
 			
 			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
 			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);
-			//why don't we apply my config fix in code?
 
 			if (sharedMaterial.shader.name == "Terrain/Scaled Planet (RimAerial) Standard")
 			{
 				sharedMaterial.SetColor ("_SpecColor", new Color (specR / 255f, specG / 255f, specB / 255f));
-				sharedMaterial.SetFloat ("_Shininess", shininess / 120f);
+				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+				{
+					sharedMaterial.SetFloat ("_Shininess", shininess / 140f); //for some reason still too strong in main menu
+				}
+				else
+				{
+					sharedMaterial.SetFloat ("_Shininess", shininess / 120f);
+				}
 			}
 			else
 			{
