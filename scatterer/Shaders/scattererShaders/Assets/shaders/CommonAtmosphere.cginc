@@ -305,48 +305,6 @@ float sphere(float3 ray, float3 dir, float3 center, float radius)
  return lerp(-1.0, t, st);
 }
 
-
-//float intersectPlane(float3 planeNormal, float3 planeOrigin, float3 rayOrigin, float3 rayDir) 
-//{ 
-//    //assuming vectors are all normalized
-//    float denom = dot(planeNormal, rayDir);
-//	float t=-1;
-//				
-//    if (denom > 1e-6)
-//	{ 
-//        float3 p0l0 = planeOrigin - rayOrigin; 
-//        t = dot(p0l0, planeNormal) / denom; 
-//        
-//		//t = (t>=0) ? t : -1;
-//    } 
-//	
-//    return t; 
-//}
-
-float3 LinePlaneIntersection(float3 linePoint, float3 lineVec, float3 planeNormal, float3 planePoint)
-{
-		float tlength;
-		float dotNumerator;
-		float dotDenominator;
-		
-		float3 intersectVector;
-		float3 intersection = 0;
- 
-		//calculate the distance between the linePoint and the line-plane intersection point
-		dotNumerator = dot((planePoint - linePoint), planeNormal);
-		dotDenominator = dot(lineVec, planeNormal);
- 
-		//line and plane are not parallel
-//		if(dotDenominator != 0.0f)   //don't care, it's faster
-		{
-			tlength =  dotNumerator / dotDenominator;
-  			intersection= (tlength > 0.0) ? linePoint + normalize(lineVec) * (tlength) : linePoint;
-
-			return intersection;	
-		}
-}
-
-
 // optical depth for ray (r,mu) of length d, using analytic formula
 // (mu=cos(view zenith angle)), intersections with ground ignored
 // H=height scale of exponential density function
@@ -516,54 +474,51 @@ float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, f
 //Extinction for a ray going all the way to the end of the atmosphere
 //i.e an infinite ray
 //for clouds so no analyticTransmittance required
-			float3 getSkyExtinction(float3 camera, float3 viewdir) //instead of camera this is the cloud position
-			{
-				float3 extinction = float3(1,1,1);
+float3 getSkyExtinction(float3 camera, float3 viewdir) //instead of camera this is the cloud position
+{
+	float3 extinction = float3(1,1,1);
 
-				float RtResized=Rg+(Rt-Rg)*_experimentalAtmoScale;
+	float RtResized=Rg+(Rt-Rg)*_experimentalAtmoScale;
 
-				float r = length(camera);
-				float rMu = dot(camera, viewdir);
-				float mu = rMu / r;
+	float r = length(camera);
+	float rMu = dot(camera, viewdir);
+	float mu = rMu / r;
 
-			    float dSq = rMu * rMu - r * r + RtResized*RtResized;
-			    float deltaSq = sqrt(dSq);
+    float dSq = rMu * rMu - r * r + RtResized*RtResized;
+    float deltaSq = sqrt(dSq);
 
-    			float din = max(-rMu - deltaSq, 0.0);
-    			if (din > 0.0)
-    			{
-        			camera += din * viewdir;
-        			rMu += din;
-        			mu = rMu / RtResized;
-        			r = RtResized;
-    			}
+    float din = max(-rMu - deltaSq, 0.0);
+    if (din > 0.0)
+    {
+        camera += din * viewdir;
+        rMu += din;
+        mu = rMu / RtResized;
+        r = RtResized;
+    }
 
-    			extinction = Transmittance(r, mu);
+    extinction = Transmittance(r, mu);
 
-    			if (r > RtResized || dSq < 0.0) 
-    			{
-    				extinction = float3(1,1,1);
-    			} 				
-    			    			
-//    			//return mu < -sqrt(1.0 - (Rg / r) * (Rg / r)) ? float3(0,0,0) : extinction; //why is this not needed?
+    if (r > RtResized || dSq < 0.0) 
+    {
+    	extinction = float3(1,1,1);
+    } 	
+        
+//    //return mu < -sqrt(1.0 - (Rg / r) * (Rg / r)) ? float3(0,0,0) : extinction; //why is this not needed?
 //
-//    			float terminatorAngle = -sqrt(1.0 - (Rg / r) * (Rg / r));
-//    			//return mu < terminatorAngle ? float3(0,0,0) : extinction;
+//    float terminatorAngle = -sqrt(1.0 - (Rg / r) * (Rg / r));
+//    //return mu < terminatorAngle ? float3(0,0,0) : extinction;
 //
-//    			float index= (mu - (terminatorAngle - cloudTerminatorSmooth)) / (cloudTerminatorSmooth);
+//    float index= (mu - (terminatorAngle - cloudTerminatorSmooth)) / (cloudTerminatorSmooth);
 //
-//    			if (index>1)
-//    				return extinction;
-//    			else if (index < 0)
-//    				return float3(0,0,0);
-//    			else
-//    				return lerp (float3(0,0,0),extinction,index);
+//    if (index>1)
+//    	return extinction;
+//    else if (index < 0)
+//    	return float3(0,0,0);
+//    else
+//    	return lerp (float3(0,0,0),extinction,index);
 
-    			return extinction;
-    			
-
-
-    		}
+    return extinction;
+}
 
 //Extinction for a ray going all the way to the end of the atmosphere
 //i.e an infinite ray

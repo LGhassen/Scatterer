@@ -70,7 +70,7 @@
 #endif
 
 #if defined (RINGSHADOW_ON)
-				extinction *= getRingShadow(IN.worldPos*6000, _Sun_WorldSunDir, IN.planetOrigin*6000);
+				extinction *= getLinearRingColor(IN.worldPos*6000, _Sun_WorldSunDir, IN.planetOrigin*6000).a;
 #endif
 				float average=(extinction.r+extinction.g+extinction.b)/3;
 				extinction = extinctionTint * extinction + (1-extinctionTint) * float3(average,average,average);
@@ -159,7 +159,7 @@
 #endif
 
 #if defined (RINGSHADOW_ON)
-				inscatter *= getRingShadow(IN.worldPos*6000, _Sun_WorldSunDir, IN.planetOrigin*6000);
+				inscatter *= getLinearRingColor(IN.worldPos*6000, _Sun_WorldSunDir, IN.planetOrigin*6000).a;
 #endif
 
 ///////////////////PLANETSHINE///////////////////////////////						    

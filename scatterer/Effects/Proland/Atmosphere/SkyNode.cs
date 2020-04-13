@@ -306,7 +306,7 @@ namespace scatterer
 								Utils.LogDebug(" ringTexture.width "+ringTexture.width.ToString());
 								Utils.LogDebug(" ringTexture.height "+ringTexture.height.ToString());
 
-								MeshRenderer ringMR = _script.GetType().GetField("ringMR", flags).GetValue(_script) as MeshRenderer;
+								MeshRenderer ringMR = _script.GetType().GetField("ringMr", flags).GetValue(_script) as MeshRenderer;
 								Utils.LogDebug(" ring MeshRenderer fetch successful");
 
 								ringInnerRadius = ringMR.material.GetFloat("innerRadius");
@@ -315,13 +315,19 @@ namespace scatterer
 								Utils.LogDebug (" ring innerRadius (with parent scale) " + ringInnerRadius.ToString ());
 								Utils.LogDebug (" ring outerRadius (with parent scale) " + ringOuterRadius.ToString ());
 
+								int tiles = (int) _script.GetType().GetField("tiles", flags).GetValue(_script);
+								if (tiles > 0)
+								{
+									throw new Exception("Scatterer doesn't support tiled/thick Kopernicus rings (not implemented)");
+								}
+
 								ringInnerRadius *= 6000; //*6000 to convert to local space size
 								ringOuterRadius *= 6000;
 							}
 							catch (Exception e)
 							{
-								Utils.LogDebug(" Kopernicus ring exception "+e.ToString());
-								Utils.LogDebug(" Disabling ring shadows for "+celestialBodyName);
+								Utils.LogError("Kopernicus ring exception: "+e.ToString());
+								Utils.LogDebug("Disabling ring shadows for "+celestialBodyName);
 								hasRingObjectAndShadowActivated=false;
 							}
 						}

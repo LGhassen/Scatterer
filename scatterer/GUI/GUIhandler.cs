@@ -10,7 +10,6 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-
 namespace scatterer
 {
 	public class GUIhandler: MonoBehaviour
@@ -173,7 +172,7 @@ namespace scatterer
 			Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 			Scatterer.Instance.mainSettings.fullLensFlareReplacement = GUILayout.Toggle (Scatterer.Instance.mainSettings.fullLensFlareReplacement, "Lens flare shader");
 			Scatterer.Instance.mainSettings.useEclipses = GUILayout.Toggle (Scatterer.Instance.mainSettings.useEclipses, "Eclipses (WIP, sky/orbit only for now)");
-			Scatterer.Instance.mainSettings.useRingShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.useRingShadows, "Kopernicus ring shadows");
+			Scatterer.Instance.mainSettings.useRingShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.useRingShadows, "Kopernicus ring shadows (linear only, tiled rings not supported)");
 			//Core.Instance.mainSettings.useGodrays = GUILayout.Toggle(Core.Instance.useGodrays, "Godrays (early WIP)");
 			Scatterer.Instance.mainSettings.d3d11ShadowFix = GUILayout.Toggle (Scatterer.Instance.mainSettings.d3d11ShadowFix, "Directx11 flickering shadows fix (recommended)");
 			GUILayout.BeginHorizontal ();

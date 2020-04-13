@@ -111,9 +111,6 @@ Shader "Scatterer/sunFlareExtinction"
     	}
 
 
-
-
-
     	Pass //pass 1 - ring extinction
     	{
 			ZWrite Off
@@ -124,14 +121,10 @@ Shader "Scatterer/sunFlareExtinction"
 
 			CGPROGRAM
 			#include "UnityCG.cginc"
+			#include "../RingCommon.cginc"
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
-
-			uniform sampler2D ringTexture;
-			uniform float ringInnerRadius;
-			uniform float ringOuterRadius;
-			uniform float3 ringNormal;
 
 			uniform float3 _Sun_WorldSunDir;
 			uniform float3 _Globals_WorldCameraPos;
@@ -150,51 +143,11 @@ Shader "Scatterer/sunFlareExtinction"
     			return OUT;
 			}
 
-			float3 LinePlaneIntersection(float3 linePoint, float3 lineVec, float3 planeNormal, float3 planePoint)
-			{
-				float tlength;
-				float dotNumerator;
-				float dotDenominator;
-		
-				float3 intersectVector;
-				float3 intersection = 0;
- 
-				//calculate the distance between the linePoint and the line-plane intersection point
-				dotNumerator = dot((planePoint - linePoint), planeNormal);
-				dotDenominator = dot(lineVec, planeNormal);
- 
-				//line and plane are not parallel
-				//if(dotDenominator != 0.0f)   //don't care, it's faster
-				{
-					tlength =  dotNumerator / dotDenominator;
-  					intersection= (tlength > 0.0) ? linePoint + normalize(lineVec) * (tlength) : linePoint;
-
-					return intersection;	
-				}
-			}
-
-
 			float4 frag(v2f IN): COLOR
 			{
 			    float3 WCP = _Globals_WorldCameraPos;
 
-				//raycast from atmo to ring plane and find intersection
-				//float3 ringIntersectPt = LinePlaneIntersection(WCP, _Sun_WorldSunDir, ringNormal, _Scatterer_Origin);
-				float3 ringIntersectPt = LinePlaneIntersection(WCP, _Sun_WorldSunDir, ringNormal, float3(0,0,0));
-
-				//calculate ring texture position on intersect
-//				float distance = length (ringIntersectPt - _Scatterer_Origin);
-				float distance = length (ringIntersectPt);
-				float ringTexturePosition = (distance - ringInnerRadius) / (ringOuterRadius - ringInnerRadius); //inner and outer radiuses need are converted to local space coords on plugin side
-				ringTexturePosition = 1 - ringTexturePosition; //flip to match UVs
-
-				//read 1-alpha of ring texture
-				float4 ringColor = tex2Dlod(ringTexture, float4 (ringTexturePosition,ringTexturePosition,0,0));
-				float ringShadow = 1-ringColor.a;
-
-				//don't apply any shadows if intersect point is not between inner and outer radius
-				ringColor.xyz*=ringShadow;
-				ringColor.xyz = (ringTexturePosition > 1 || ringTexturePosition < 0 ) ? float3(1,1,1) : ringColor.xyz;
+				float4 ringColor = getLinearRingColor(WCP,_Sun_WorldSunDir,float3(0,0,0));
 
 				return float4(ringColor.xyz,1.0);
 			}

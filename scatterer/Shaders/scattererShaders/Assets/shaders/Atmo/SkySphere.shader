@@ -188,7 +188,7 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 #if defined (RINGSHADOW_ON)
 				if (interSectPt != -1)
 				{
-					finalColor *= getRingShadow(worldPos, _Sun_WorldSunDir, IN.planetOrigin);
+					finalColor *= getLinearRingColor(worldPos, _Sun_WorldSunDir, IN.planetOrigin).a;
 				}
 #endif
 
