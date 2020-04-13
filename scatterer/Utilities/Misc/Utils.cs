@@ -55,7 +55,7 @@ namespace scatterer
 		
 		public static void LogError(string log)
 		{
-			Debug.Log ("[Scatterer][Error] " + log);
+			Debug.LogError("[Scatterer][Error] " + log);
 		}
 
 		public static void DisableStockSunflares ()
