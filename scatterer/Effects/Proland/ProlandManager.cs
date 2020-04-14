@@ -163,6 +163,7 @@ namespace scatterer
 		
 		
 		//this fixes the alt-enter bug the really stupid way but it's fast and simple so it'll do
+		//Do we still need this to fix alt-enter or any rendertexture lost?
 		public void reBuildOcean()
 		{
 			if (!ReferenceEquals(m_oceanNode,null))

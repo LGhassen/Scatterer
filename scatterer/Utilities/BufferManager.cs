@@ -11,12 +11,14 @@ namespace scatterer
 		public RenderTexture depthTexture;			//full-scene depth texture, from merged built-in depth textures of the two local cameras
 		public RenderTexture refractionTexture;		//textures for the refractions, created once and accessed from here, written to from oceanNode
 		//public RenderTexture occlusionTexture;	//for SSAO and eclipses, for now will just contain a copy of the screenspace shadowmask, probably not necessary
+		Coroutine checkTexturesCoroutine;
 
 		public bool depthTextureCleared = false; 	//clear depth texture when away from PQS, for the sunflare shader
 
-		public void start()
+		public void Awake()
 		{
 			CreateTextures();
+			checkTexturesCoroutine = StartCoroutine (CheckTexturesAreCreated());
 		}
 
 		public void CreateTextures() //create simpler method createTexture with params, call it multiple times, make it static and move it to utils, reuse in skynode as well
@@ -35,15 +37,22 @@ namespace scatterer
 			}
 		}
 
-		//Before farCamera renders
-		//TODO: change to coroutine that checks this once every 100 frames or something, no need to check every frame
-		void OnPreRender () 
+		//every 10 seconds we check the textures are still created
+		//not sure we still need this, the alt-enter bug that destroys rendertextures seems to be gone
+		IEnumerator CheckTexturesAreCreated()
 		{
-			if (!Scatterer.Instance.unifiedCameraMode && (!depthTexture || !depthTexture.IsCreated()))
+			while (true)
 			{
-				Utils.LogDebug("BufferRenderingManager: Recreating textures");
-				CreateTextures();
-				Scatterer.Instance.onRenderTexturesLost();
+				yield return new WaitForSeconds (10f);
+
+				if ((!Scatterer.Instance.unifiedCameraMode && (!depthTexture || !depthTexture.IsCreated ())) ||
+				    (Scatterer.Instance.mainSettings.useOceanShaders && Scatterer.Instance.mainSettings.oceanRefraction && (!refractionTexture || !refractionTexture.IsCreated ())))
+				{
+
+					Utils.LogDebug ("BufferRenderingManager: Recreating textures");
+					CreateTextures ();
+					Scatterer.Instance.onRenderTexturesLost();
+				}
 			}
 		}
 
@@ -70,6 +79,10 @@ namespace scatterer
 			{
 				refractionTexture.Release ();
 				UnityEngine.Object.Destroy (refractionTexture);
+			}
+			if (!ReferenceEquals(checkTexturesCoroutine,null))
+			{
+				StopCoroutine(checkTexturesCoroutine);
 			}
 		}
 

@@ -128,8 +128,10 @@ namespace scatterer
 
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				bufferManager = (BufferManager)Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(BufferManager));
-				bufferManager.start();
+				// Note: Stock KSP dragCubes make a copy of components and removes them rom far/near cameras when rendering
+				// This can cause issues with renderTextures and commandBuffers, to keep in mind for when implementing godrays
+				bufferManager = (BufferManager)scaledSpaceCamera.gameObject.AddComponent (typeof(BufferManager));	// This doesn't need to be added to any camera anymore
+																													// TODO: move to appropriate gameObject
 
 				//copy stock depth buffers and combine into a single depth buffer
 				//TODO: shouldn't this be moved to bufferManager?
@@ -465,8 +467,9 @@ namespace scatterer
 					{
 						_cur.m_manager.reBuildOcean ();
 					}
-				} 
+				}
 			}
 		}
+
 	}
 }
