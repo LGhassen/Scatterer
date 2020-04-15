@@ -71,12 +71,13 @@ namespace scatterer
 			Utils.LogInfo ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
 			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
 
-			loadSettings ();
-			scattererCelestialBodiesManager.Init ();
-
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
 				isActive = true;
+
+				loadSettings ();
+				scattererCelestialBodiesManager.Init ();
+
 				guiHandler.Init();
 
 				if (HighLogic.LoadedScene == GameScenes.MAINMENU)

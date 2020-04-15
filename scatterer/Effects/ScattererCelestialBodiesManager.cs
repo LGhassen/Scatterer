@@ -137,20 +137,27 @@ namespace scatterer
 			foreach (ScattererCelestialBody sctBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
 				var _idx = 0;
-				
+
+				Utils.LogDebug("Finding ScattererCelestialBody name: "+sctBody.celestialBodyName+". TransformName: "+sctBody.transformName);
+
 				var celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
 				
 				if (celBody == null)
 				{
+					Utils.LogDebug("ScattererCelestialBody not found by name, trying transformName");
 					celBody = CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
 				}
-				
-				Utils.LogDebug ("Celestial Body: " + celBody);
-				if (celBody != null)
+
+				if (celBody == null)
+				{
+					Utils.LogError("ScattererCelestialBody "+sctBody.celestialBodyName+" not found by name, or transformName. Effects for this body won't be available.");
+					continue;
+				}
+				else				
 				{
 					_idx = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (sctBody);
-					Utils.LogDebug ("Found: " + sctBody.celestialBodyName + " / " + celBody.GetName ());
-				};
+					Utils.LogDebug ("Found ScattererCelestialBody: " + sctBody.celestialBodyName + ", actual ingame name: " + celBody.GetName ());
+				}
 				
 				sctBody.celestialBody = celBody;
 				
