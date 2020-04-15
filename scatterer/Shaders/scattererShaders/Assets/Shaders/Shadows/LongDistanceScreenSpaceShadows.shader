@@ -9,7 +9,7 @@ CGINCLUDE
 #include "FixedScreenSpaceShadows.cginc"
 
 UNITY_DECLARE_DEPTH_TEXTURE(AdditionalDepthBuffer);
-float4x4  AdditionalCameraInvProjection;
+float4x4  ScattererAdditionalInvProjection;
 
 /**
 * Get camera space coord from depth and inv projection matrices
@@ -32,7 +32,7 @@ inline float3 computeCameraSpacePosFromDualDepthAndInvProjMat(v2f i)
 
     float4 clipPos2 = float4(i.uv.zw, zdepth2, 1.0);
     clipPos2.xyz = 2.0f * clipPos2.xyz - 1.0f;
-    float4 camPos2 = mul(AdditionalCameraInvProjection, clipPos2);
+    float4 camPos2 = mul(ScattererAdditionalInvProjection, clipPos2);
     camPos2.xyz /= camPos2.w;
     camPos2.z *= -1;
 

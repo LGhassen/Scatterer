@@ -33,13 +33,13 @@ namespace scatterer
 			depthCamera = depthCameraGO.AddComponent<Camera>();
 			targetCamera = target;
 			depthCamera.CopyFrom(targetCamera);
+			depthCamera.transform.position = targetCamera.transform.position;
 			depthCamera.transform.parent = targetCamera.transform;
 
 			depthCamera.farClipPlane = QualitySettings.shadowDistance;
 			depthCamera.depthTextureMode=DepthTextureMode.None;
 			depthCamera.enabled = false;
-			depthCamera.clearFlags = CameraClearFlags.Color;
-			depthCamera.backgroundColor = Color.black;
+			depthCamera.clearFlags = CameraClearFlags.Depth;
 
 			depthTexture = new RenderTexture (Screen.width, Screen.height, 24, RenderTextureFormat.Depth); //we could almost get away with 16bit but it gets weird sometimes
 			depthTexture.useMipMap = false;
@@ -52,19 +52,20 @@ namespace scatterer
 
 		public void OnPreCull()
 		{
-			FindNearClipPlane ();
+			UpdateClipPlanes ();
 
 			depthCamera.targetTexture = depthTexture;
-
 			depthCamera.RenderWithShader(depthShader, "RenderType"); //doesn't fire camera events (doesn't pick up EVE planetLight commandbuffers)
 
-			Shader.SetGlobalMatrix ("AdditionalCameraInvProjection", depthCamera.projectionMatrix.inverse);
+			Shader.SetGlobalMatrix ("ScattererAdditionalInvProjection", depthCamera.projectionMatrix.inverse);
 			Shader.SetGlobalTexture ("AdditionalDepthBuffer", depthTexture);
 		}
 
 		// Adjusts nearClipPlane to cover minimum shadow Distance we are going for
-		void FindNearClipPlane ()
+		void UpdateClipPlanes ()
 		{
+			depthCamera.farClipPlane = QualitySettings.shadowDistance;	//apparently this needs to be set again every frame or we get a projection
+																		// matrix in plugin which doesn't match what is rendered
 			depthCamera.fieldOfView = targetCamera.fieldOfView;
 
 			Vector3 topLeft = depthCamera.ViewportPointToRay (new Vector3 (0f, 1f, 0f)).direction; // Take a frustum corner and compute the angle to the camera forward direction
