@@ -287,16 +287,16 @@ namespace scatterer
 			}
 
 			eclipse = hitStatus;
-			sunglareMaterial.SetFloat("renderSunFlare", (!eclipse && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater ) ? 1.0f : 0.0f);
+			sunglareMaterial.SetFloat(ShaderProperties.renderSunFlare_PROPERTY, (!eclipse && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater ) ? 1.0f : 0.0f);
 
-			sunglareMaterial.SetVector ("sunViewPortPos", sunViewPortPos);
-			sunglareMaterial.SetFloat ("aspectRatio", Scatterer.Instance.scaledSpaceCamera.aspect);
-			sunglareMaterial.SetFloat ("sunGlareScale", sunGlareScale);
-			sunglareMaterial.SetFloat ("sunGlareFade", sunGlareFade);
-			sunglareMaterial.SetFloat ("ghostFade", ghostFade);
+			sunglareMaterial.SetVector (ShaderProperties.sunViewPortPos_PROPERTY, sunViewPortPos);
+			sunglareMaterial.SetFloat (ShaderProperties.aspectRatio_PROPERTY, Scatterer.Instance.scaledSpaceCamera.aspect);
+			sunglareMaterial.SetFloat (ShaderProperties.sunGlareScale_PROPERTY, sunGlareScale);
+			sunglareMaterial.SetFloat (ShaderProperties.sunGlareFade_PROPERTY, sunGlareFade);
+			sunglareMaterial.SetFloat (ShaderProperties.ghostFade_PROPERTY, ghostFade);
 
 			if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-				sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferManager.depthTexture);
+				sunglareMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 		}	
 
 		public void Update()

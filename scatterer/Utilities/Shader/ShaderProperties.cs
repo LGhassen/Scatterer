@@ -1,3 +1,6 @@
+//here we get the int for each shader property beforehand
+//that way we don't do a string compare for lookup every frame (what Shader.SetFloat/Color/Matrix does)
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +9,6 @@ using UnityEngine;
 
 namespace scatterer
 {
-	
 	[KSPAddon(KSPAddon.Startup.Instantly, true)]
 	public class ShaderProperties : MonoBehaviour
 	{
@@ -55,6 +57,8 @@ namespace scatterer
 		private static int _Scatterer_Origin;
 		public static int _Exposure_PROPERTY { get { return _Exposure; } }
 		private static int _Exposure;
+		public static int _ScatteringExposure_PROPERTY { get { return _ScatteringExposure; } }
+		private static int _ScatteringExposure;
 		public static int _RimExposure_PROPERTY { get { return _RimExposure; } }
 		private static int _RimExposure;
 		public static int lightOccluders1_PROPERTY { get { return lightOccluders1; } }
@@ -221,8 +225,140 @@ namespace scatterer
 		public static int _Buffer2_PROPERTY { get { return _Buffer2; } }
 		private static int _Buffer2;
 
-			
+		public static int _PlanetOpacity_PROPERTY { get { return _PlanetOpacity; } }
+		private static int _PlanetOpacity;
+		
+		public static int extinctionThickness_PROPERTY { get { return extinctionThickness; } }
+		private static int extinctionThickness;
+		
+		public static int _planetPos_PROPERTY { get { return _planetPos; } }
+		private static int _planetPos;
+		
+		public static int planetShineSources_PROPERTY { get { return planetShineSources; } }
+		private static int planetShineSources;
+
+		public static int planetShineRGB_PROPERTY { get { return planetShineRGB; } }
+		private static int planetShineRGB;
+
+		public static int _Sky_Transmittance_PROPERTY { get { return _Sky_Transmittance; } }
+		private static int _Sky_Transmittance;
+		
+		public static int ringInnerRadius_PROPERTY { get { return ringInnerRadius; } }
+		private static int ringInnerRadius;
+		
+		public static int ringOuterRadius_PROPERTY { get { return ringOuterRadius; } }
+		private static int ringOuterRadius;
+		
+		public static int ringNormal_PROPERTY { get { return ringNormal; } }
+		private static int ringNormal;
+		
+		public static int ringTexture_PROPERTY { get { return ringTexture; } }
+		private static int ringTexture;
+		
+		public static int cloudColorMultiplier_PROPERTY { get { return cloudColorMultiplier; } }
+		private static int cloudColorMultiplier;
+		
+		public static int cloudScatteringMultiplier_PROPERTY { get { return cloudScatteringMultiplier; } }
+		private static int cloudScatteringMultiplier;
+		
+		public static int cloudSkyIrradianceMultiplier_PROPERTY { get { return cloudSkyIrradianceMultiplier; } }
+		private static int cloudSkyIrradianceMultiplier;
+		
+		public static int _PlanetWorldPos_PROPERTY { get { return _PlanetWorldPos; } }
+		private static int _PlanetWorldPos;
+		
+		public static int renderScattering_PROPERTY { get { return renderScattering; } }
+		private static int renderScattering;
+		
+		public static int extinctionTint_PROPERTY { get { return extinctionTint; } }
+		private static int extinctionTint;
+		
+		public static int _SkyExposure_PROPERTY { get { return _SkyExposure; } }
+		private static int _SkyExposure;
+		
+		public static int _camForward_PROPERTY { get { return _camForward; } }
+		private static int _camForward;
+		
+		public static int _sunColor_PROPERTY { get { return _sunColor; } }
+		private static int _sunColor;
+		
+		public static int _ScattererCameraOverlap_PROPERTY { get { return _ScattererCameraOverlap; } }
+		private static int _ScattererCameraOverlap;
+		
+		public static int flatScaledSpaceModel_PROPERTY { get { return flatScaledSpaceModel; } }
+		private static int flatScaledSpaceModel;
+
+		public static int renderSunFlare_PROPERTY { get { return renderSunFlare; } }
+		private static int renderSunFlare;
+		
+		public static int sunViewPortPos_PROPERTY { get { return sunViewPortPos; } }
+		private static int sunViewPortPos;
+		
+		public static int aspectRatio_PROPERTY { get { return aspectRatio; } }
+		private static int aspectRatio;
+		
+		public static int sunGlareScale_PROPERTY { get { return sunGlareScale; } }
+		private static int sunGlareScale;
+		
+		public static int sunGlareFade_PROPERTY { get { return sunGlareFade; } }
+		private static int sunGlareFade;
+		
+		public static int ghostFade_PROPERTY { get { return ghostFade; } }
+		private static int ghostFade;
+		
+		public static int _ButterFlyLookUp_PROPERTY { get { return _ButterFlyLookUp; } }
+		private static int _ButterFlyLookUp;
+		
+		public static int _ReadBuffer0_PROPERTY { get { return _ReadBuffer0; } }
+		private static int _ReadBuffer0;
+		
+		public static int _ReadBuffer1_PROPERTY { get { return _ReadBuffer1; } }
+		private static int _ReadBuffer1;
+		
+		public static int _MainTex_PROPERTY { get { return _MainTex; } }
+		private static int _MainTex;
 				
+		public static int _ZwriteVariable_PROPERTY { get { return _ZwriteVariable; } }
+		private static int _ZwriteVariable;
+		
+		public static int warpTime_PROPERTY { get { return warpTime; } }
+		private static int warpTime;
+		
+		public static int renderOnCurrentCamera_PROPERTY { get { return renderOnCurrentCamera; } }
+		private static int renderOnCurrentCamera;
+		
+		public static int useDbufferOnCamera_PROPERTY { get { return useDbufferOnCamera; } }
+		private static int useDbufferOnCamera;
+		
+		public static int shoreFoam_PROPERTY { get { return shoreFoam; } }
+		private static int shoreFoam;
+		
+		public static int CameraToWorld_PROPERTY { get { return CameraToWorld; } }
+		private static int CameraToWorld;
+		
+		public static int WorldToLight_PROPERTY { get { return WorldToLight; } }
+		private static int WorldToLight;
+		
+		public static int PlanetOrigin_PROPERTY { get { return PlanetOrigin	; } }
+		private static int PlanetOrigin	;
+		
+		public static int refractionIndex_PROPERTY { get { return refractionIndex; } }
+		private static int refractionIndex;
+
+		public static int scattererOrigDirectionalColor_PROPERTY { get { return scattererOrigDirectionalColor; } }
+		private static int scattererOrigDirectionalColor;
+		
+		public static int unity_ShadowFadeCenterAndType_PROPERTY { get { return unity_ShadowFadeCenterAndType; } }
+		private static int unity_ShadowFadeCenterAndType;
+		
+		public static int _ShadowMapTextureScatterer_PROPERTY { get { return _ShadowMapTextureScatterer; } }
+		private static int _ShadowMapTextureScatterer;
+		
+		public static int ScattererAdditionalInvProjection_PROPERTY { get { return ScattererAdditionalInvProjection; } }
+		private static int ScattererAdditionalInvProjection;
+		
+		public static int AdditionalDepthBuffer_PROPERTY { get { return AdditionalDepthBuffer; } }
+		private static int AdditionalDepthBuffer;
 		
 		private void Awake()
 		{
@@ -247,6 +383,7 @@ namespace scatterer
 			_Globals_WorldCameraPos = Shader.PropertyToID("_Globals_WorldCameraPos");
 			_Scatterer_Origin = Shader.PropertyToID("_Scatterer_Origin");
 			_Exposure = Shader.PropertyToID("_Exposure");
+			_ScatteringExposure = Shader.PropertyToID ("_ScatteringExposure");
 			_RimExposure = Shader.PropertyToID("_RimExposure");
 			lightOccluders1 = Shader.PropertyToID("lightOccluders1");
 			lightOccluders2 = Shader.PropertyToID("lightOccluders2");
@@ -333,6 +470,55 @@ namespace scatterer
 			_T = Shader.PropertyToID("_T");
 			_Buffer1 = Shader.PropertyToID("_Buffer1");
 			_Buffer2 = Shader.PropertyToID("_Buffer2");
+
+			_PlanetOpacity = Shader.PropertyToID("_PlanetOpacity");
+			extinctionThickness = Shader.PropertyToID("extinctionThickness");
+			_planetPos = Shader.PropertyToID("_planetPos");
+			planetShineSources = Shader.PropertyToID("planetShineSources");
+			planetShineRGB = Shader.PropertyToID("planetShineRGB");
+			_Sky_Transmittance = Shader.PropertyToID("_Sky_Transmittance");
+			ringInnerRadius = Shader.PropertyToID("ringInnerRadius");
+			ringOuterRadius = Shader.PropertyToID("ringOuterRadius");
+			ringNormal = Shader.PropertyToID("ringNormal");
+			ringTexture = Shader.PropertyToID("ringTexture");
+			cloudColorMultiplier = Shader.PropertyToID("cloudColorMultiplier");
+			cloudScatteringMultiplier = Shader.PropertyToID("cloudScatteringMultiplier");
+			cloudSkyIrradianceMultiplier = Shader.PropertyToID("cloudSkyIrradianceMultiplier");
+			_PlanetWorldPos = Shader.PropertyToID("_PlanetWorldPos");
+			renderScattering = Shader.PropertyToID("renderScattering");
+			extinctionTint = Shader.PropertyToID("extinctionTint");
+			_SkyExposure = Shader.PropertyToID("_SkyExposure");
+			_camForward = Shader.PropertyToID("_camForward");
+			_sunColor = Shader.PropertyToID("_sunColor");
+			_ScattererCameraOverlap = Shader.PropertyToID("_ScattererCameraOverlap");
+			flatScaledSpaceModel = Shader.PropertyToID("flatScaledSpaceModel");
+
+			renderSunFlare = Shader.PropertyToID("renderSunFlare");
+			sunViewPortPos = Shader.PropertyToID("sunViewPortPos");
+			aspectRatio = Shader.PropertyToID("aspectRatio");
+			sunGlareScale = Shader.PropertyToID("sunGlareScale");
+			sunGlareFade = Shader.PropertyToID("sunGlareFade");
+			ghostFade = Shader.PropertyToID("ghostFade");
+			_ButterFlyLookUp = Shader.PropertyToID("_ButterFlyLookUp");
+			_ReadBuffer0 = Shader.PropertyToID("_ReadBuffer0");
+			_ReadBuffer1 = Shader.PropertyToID("_ReadBuffer1");
+			_MainTex = Shader.PropertyToID("_MainTex");
+			_ZwriteVariable = Shader.PropertyToID("_ZwriteVariable");
+			warpTime = Shader.PropertyToID("warpTime");
+			renderOnCurrentCamera = Shader.PropertyToID("renderOnCurrentCamera");
+			useDbufferOnCamera = Shader.PropertyToID("useDbufferOnCamera");
+			shoreFoam = Shader.PropertyToID("shoreFoam");
+
+			CameraToWorld = Shader.PropertyToID("CameraToWorld");
+			WorldToLight = Shader.PropertyToID("WorldToLight");
+			PlanetOrigin = Shader.PropertyToID("PlanetOrigin");
+			refractionIndex = Shader.PropertyToID("refractionIndex");
+
+			scattererOrigDirectionalColor = Shader.PropertyToID("scattererOrigDirectionalColor");
+			unity_ShadowFadeCenterAndType = Shader.PropertyToID("unity_ShadowFadeCenterAndType");
+			_ShadowMapTextureScatterer = Shader.PropertyToID("_ShadowMapTextureScatterer");
+			ScattererAdditionalInvProjection = Shader.PropertyToID("ScattererAdditionalInvProjection");
+			AdditionalDepthBuffer = Shader.PropertyToID("AdditionalDepthBuffer");
 
 		}
 	}

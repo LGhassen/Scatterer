@@ -25,15 +25,15 @@ namespace scatterer
 		public void OnPreRender()
 		{
 			flare.updateProperties ();
-			flare.sunglareMaterial.SetFloat("renderOnCurrentCamera",1.0f);
-			flare.sunglareMaterial.SetFloat("useDbufferOnCamera",useDbufferOnCamera);
+			flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,1.0f);
+			flare.sunglareMaterial.SetFloat(ShaderProperties.useDbufferOnCamera_PROPERTY,useDbufferOnCamera);
 		}
 
 		public void OnPostRender()
 		{
 			flare.ClearExtinction ();
-			flare.sunglareMaterial.SetFloat("renderOnCurrentCamera",0.0f);
-			flare.sunglareMaterial.SetFloat("useDbufferOnCamera",useDbufferOnCamera);
+			flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,0.0f);
+			flare.sunglareMaterial.SetFloat(ShaderProperties.useDbufferOnCamera_PROPERTY,useDbufferOnCamera);
 		}
 	}
 }

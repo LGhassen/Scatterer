@@ -59,7 +59,7 @@ namespace scatterer
 				sunLight.color = modulateColor * originalColor;
 				modulateColor = Color.white;
 				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)	//preserve original directional light color to not have double extinction
-					Shader.SetGlobalColor("scattererOrigDirectionalColor",originalColor);
+					Shader.SetGlobalColor(ShaderProperties.scattererOrigDirectionalColor_PROPERTY,originalColor);
 			}
 		}
 		

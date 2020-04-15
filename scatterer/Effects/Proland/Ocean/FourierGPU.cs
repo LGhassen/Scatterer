@@ -126,10 +126,10 @@ public class FourierGPU
 			idx = j%2;
 			idx1 = (j+1)%2;
 			
-			m_fourier.SetTexture("_ButterFlyLookUp", m_butterflyLookupTable[i]);
+			m_fourier.SetTexture(ShaderProperties._ButterFlyLookUp_PROPERTY, m_butterflyLookupTable[i]);
 			
-			m_fourier.SetTexture("_ReadBuffer0", data0[idx1]);
-			m_fourier.SetTexture("_ReadBuffer1", data1[idx1]);
+			m_fourier.SetTexture(ShaderProperties._ReadBuffer0_PROPERTY, data0[idx1]);
+			m_fourier.SetTexture(ShaderProperties._ReadBuffer1_PROPERTY, data1[idx1]);
 
 			if(idx == 0)
 				RTUtility.MultiTargetBlit(pass0, m_fourier, PASS_X_2);
@@ -142,10 +142,10 @@ public class FourierGPU
 			idx = j%2;
 			idx1 = (j+1)%2;
 			
-			m_fourier.SetTexture("_ButterFlyLookUp", m_butterflyLookupTable[i]);
+			m_fourier.SetTexture(ShaderProperties._ButterFlyLookUp_PROPERTY, m_butterflyLookupTable[i]);
 			
-			m_fourier.SetTexture("_ReadBuffer0", data0[idx1]);
-			m_fourier.SetTexture("_ReadBuffer1", data1[idx1]);
+			m_fourier.SetTexture(ShaderProperties._ReadBuffer0_PROPERTY, data0[idx1]);
+			m_fourier.SetTexture(ShaderProperties._ReadBuffer1_PROPERTY, data1[idx1]);
 
 			if(idx == 0)
 				RTUtility.MultiTargetBlit(pass0, m_fourier, PASS_Y_2);
@@ -170,10 +170,10 @@ public class FourierGPU
 			idx = j%2;
 			idx1 = (j+1)%2;
 			
-			m_fourier.SetTexture("_ButterFlyLookUp", m_butterflyLookupTable[i]);
+			m_fourier.SetTexture(ShaderProperties._ButterFlyLookUp_PROPERTY, m_butterflyLookupTable[i]);
 			
-			m_fourier.SetTexture("_ReadBuffer0", data0[idx1]);
-			m_fourier.SetTexture("_ReadBuffer1", data1[idx1]);
+			m_fourier.SetTexture(ShaderProperties._ReadBuffer0_PROPERTY, data0[idx1]);
+			m_fourier.SetTexture(ShaderProperties._ReadBuffer1_PROPERTY, data1[idx1]);
 			m_fourier.SetTexture("_ReadBuffer2", data2[idx1]);
 			
 			if(idx == 0)
@@ -187,10 +187,10 @@ public class FourierGPU
 			idx = j%2;
 			idx1 = (j+1)%2;
 			
-			m_fourier.SetTexture("_ButterFlyLookUp", m_butterflyLookupTable[i]);
+			m_fourier.SetTexture(ShaderProperties._ButterFlyLookUp_PROPERTY, m_butterflyLookupTable[i]);
 			
-			m_fourier.SetTexture("_ReadBuffer0", data0[idx1]);
-			m_fourier.SetTexture("_ReadBuffer1", data1[idx1]);
+			m_fourier.SetTexture(ShaderProperties._ReadBuffer0_PROPERTY, data0[idx1]);
+			m_fourier.SetTexture(ShaderProperties._ReadBuffer1_PROPERTY, data1[idx1]);
 			m_fourier.SetTexture("_ReadBuffer2", data2[idx1]);
 			
 			if(idx == 0)

@@ -119,15 +119,9 @@ namespace scatterer {
 					m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);
 					m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam1_PROPERTY, m_foam1);
 
-					m_oceanMaterial.SetFloat ("shoreFoam", shoreFoam);
+					m_oceanMaterial.SetFloat (ShaderProperties.shoreFoam_PROPERTY, shoreFoam);
 				}
-				
-
 			}
 		}
-		
-		
-
 	}
-	
 }

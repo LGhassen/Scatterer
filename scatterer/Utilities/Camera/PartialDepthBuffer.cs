@@ -57,8 +57,8 @@ namespace scatterer
 			depthCamera.targetTexture = depthTexture;
 			depthCamera.RenderWithShader(depthShader, "RenderType"); //doesn't fire camera events (doesn't pick up EVE planetLight commandbuffers)
 
-			Shader.SetGlobalMatrix ("ScattererAdditionalInvProjection", depthCamera.projectionMatrix.inverse);
-			Shader.SetGlobalTexture ("AdditionalDepthBuffer", depthTexture);
+			Shader.SetGlobalMatrix (ShaderProperties.ScattererAdditionalInvProjection_PROPERTY, depthCamera.projectionMatrix.inverse);
+			Shader.SetGlobalTexture (ShaderProperties.AdditionalDepthBuffer_PROPERTY, depthTexture);
 		}
 
 		// Adjusts nearClipPlane to cover minimum shadow Distance we are going for

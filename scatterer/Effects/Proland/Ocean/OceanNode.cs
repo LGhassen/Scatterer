@@ -219,10 +219,10 @@ namespace scatterer
 				m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterMaterial);
 			}
 			
-			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity");
-			m_oceanMaterial.SetFloat ("_PlanetOpacity", planetOpacity);
+			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
+			m_oceanMaterial.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, planetOpacity);
 			
-			m_oceanMaterial.SetInt ("_ZwriteVariable", (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
+			m_oceanMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
 		}
 
 		public void OnPreCull() //OnPreCull of OceanNode (added to first local Camera to render) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
@@ -238,8 +238,8 @@ namespace scatterer
 			cameraToScreen = GL.GetGPUProjectionMatrix (inCamera.projectionMatrix,false);
 			screenToCamera = cameraToScreen.inverse;
 			
-			m_oceanMaterial.SetMatrix ("_Globals_CameraToScreen", cameraToScreen);
-			m_oceanMaterial.SetMatrix ("_Globals_ScreenToCamera", screenToCamera);
+			m_oceanMaterial.SetMatrix (ShaderProperties._Globals_CameraToScreen_PROPERTY, cameraToScreen);
+			m_oceanMaterial.SetMatrix (ShaderProperties._Globals_ScreenToCamera_PROPERTY, screenToCamera);
 
 
 			//Calculates the required data for the projected grid
@@ -409,19 +409,19 @@ namespace scatterer
 					oceanSunDir2=localToOcean.ToMatrix3x3d () * new Vector3d2(row.x,row.y,row.z);
 					planetShineSourcesMatrix.SetRow(i,new Vector4((float)oceanSunDir2.x,(float)oceanSunDir2.y,(float)oceanSunDir2.z,row.w));
 				}
-				oceanMaterial.SetMatrix ("planetShineSources", planetShineSourcesMatrix); //this can become shared code to not recompute
+				oceanMaterial.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix); //this can become shared code to not recompute
 
-				oceanMaterial.SetMatrix ("planetShineRGB", m_manager.m_skyNode.planetShineRGBMatrix);
+				oceanMaterial.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, m_manager.m_skyNode.planetShineRGBMatrix);
 			}
 
 			if (!ReferenceEquals (causticsShadowMaskModulator, null))
 			{
-				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("CameraToWorld", inCamera.cameraToWorldMatrix);
-				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix ("WorldToLight", Scatterer.Instance.sunLight.gameObject.transform.worldToLocalMatrix);
-				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector ("PlanetOrigin", m_manager.parentLocalTransform.position);
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, Scatterer.Instance.sunLight.gameObject.transform.worldToLocalMatrix);
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, m_manager.parentLocalTransform.position);
 
 				float warpTime = (TimeWarp.CurrentRate > 1) ? (float) Planetarium.GetUniversalTime() : 0f;
-				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetFloat ("warpTime", warpTime);
+				causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetFloat (ShaderProperties.warpTime_PROPERTY, warpTime);
 			}
 		}
 

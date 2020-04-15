@@ -341,16 +341,16 @@ namespace scatterer
 			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
 			{
 				sunflareExtinctionMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer/sunFlareExtinction"]);
-				sunflareExtinctionMaterial.SetFloat ("Rg", Rg);
-				sunflareExtinctionMaterial.SetFloat ("Rt", Rt);
-				sunflareExtinctionMaterial.SetTexture ("_Sky_Transmittance", m_transmit);
+				sunflareExtinctionMaterial.SetFloat (ShaderProperties.Rg_PROPERTY, Rg);
+				sunflareExtinctionMaterial.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
+				sunflareExtinctionMaterial.SetTexture (ShaderProperties._Sky_Transmittance_PROPERTY, m_transmit);
 
 				if (hasRingObjectAndShadowActivated)
 				{
-					sunflareExtinctionMaterial.SetFloat ("ringInnerRadius", ringInnerRadius);
-					sunflareExtinctionMaterial.SetFloat ("ringOuterRadius", ringOuterRadius);
-					sunflareExtinctionMaterial.SetVector ("ringNormal", ringObject.transform.up);
-					sunflareExtinctionMaterial.SetTexture ("ringTexture", ringTexture);
+					sunflareExtinctionMaterial.SetFloat (ShaderProperties.ringInnerRadius_PROPERTY, ringInnerRadius);
+					sunflareExtinctionMaterial.SetFloat (ShaderProperties.ringOuterRadius_PROPERTY, ringOuterRadius);
+					sunflareExtinctionMaterial.SetVector (ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
+					sunflareExtinctionMaterial.SetTexture (ShaderProperties.ringTexture_PROPERTY, ringTexture);
 				}
 
 				if (m_manager.hasOcean)
@@ -465,11 +465,11 @@ namespace scatterer
 						UpdatePostProcessMaterial(Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i]);
 						
 						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
-							("cloudColorMultiplier", cloudColorMultiplier);
+							(ShaderProperties.cloudColorMultiplier_PROPERTY, cloudColorMultiplier);
 						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
-							("cloudScatteringMultiplier", cloudScatteringMultiplier);
+							(ShaderProperties.cloudScatteringMultiplier_PROPERTY, cloudScatteringMultiplier);
 						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].SetFloat
-							("cloudSkyIrradianceMultiplier", cloudSkyIrradianceMultiplier);
+							(ShaderProperties.cloudSkyIrradianceMultiplier_PROPERTY, cloudSkyIrradianceMultiplier);
 						
 						
 						Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("SCATTERER_ON");
@@ -490,10 +490,10 @@ namespace scatterer
 						UpdatePostProcessMaterial(EVEvolumetrics[i]);
 						
 						EVEvolumetrics[i].SetVector
-							("_PlanetWorldPos", parentLocalTransform.position);
+							(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
 						
 						EVEvolumetrics[i].SetFloat
-							("cloudColorMultiplier", volumetricsColorMultiplier); //doesn't need to be done very frame
+							(ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier); //doesn't need to be done very frame
 					}
 				}
 			}
@@ -503,25 +503,25 @@ namespace scatterer
 				foreach (SunFlare customSunFlare in Scatterer.Instance.sunflareManager.scattererSunFlares)
 				{
 					//render extinction to texture
-					sunflareExtinctionMaterial.SetVector ("_Sun_WorldSunDir", m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
-					sunflareExtinctionMaterial.SetFloat("_experimentalAtmoScale",experimentalAtmoScale);
+					sunflareExtinctionMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
+					sunflareExtinctionMaterial.SetFloat(ShaderProperties._experimentalAtmoScale_PROPERTY,experimentalAtmoScale);
 
 					if (!MapView.MapIsEnabled)
-						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", Scatterer.Instance.nearCamera.transform.position - parentLocalTransform.position);
+						sunflareExtinctionMaterial.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, Scatterer.Instance.nearCamera.transform.position - parentLocalTransform.position);
 					else
-						sunflareExtinctionMaterial.SetVector ("_Globals_WorldCameraPos", (Vector3) ScaledSpace.ScaledToLocalSpace(Scatterer.Instance.scaledSpaceCamera.transform.position) - parentLocalTransform.position);
+						sunflareExtinctionMaterial.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, (Vector3) ScaledSpace.ScaledToLocalSpace(Scatterer.Instance.scaledSpaceCamera.transform.position) - parentLocalTransform.position);
 
 					Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 0); //pass 0 for sunflare extinction
 
 					if (hasRingObjectAndShadowActivated)
 					{
-						sunflareExtinctionMaterial.SetVector("ringNormal", ringObject.transform.up);
+						sunflareExtinctionMaterial.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
 						Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 1); //pass 1 for ring extinction
 					}
 				}
 			}
 
-			scaledScatteringMaterial.SetFloat ("renderScattering", inScaledSpace ? 1f : 0f); //not sure this is a good way to do it
+			scaledScatteringMaterial.SetFloat (ShaderProperties.renderScattering_PROPERTY, inScaledSpace ? 1f : 0f); //not sure this is a good way to do it
 			if (!ReferenceEquals (localScatteringProjector, null))
 			{
 				localScatteringProjector.setInScaledSpace (inScaledSpace);
@@ -620,8 +620,8 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, interpolatedSettings.viewdirOffset);
 			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
 			mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
-			mat.SetFloat ("extinctionTint", interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
-			mat.SetFloat ("extinctionThickness", interpolatedSettings.extinctionThickness);
+			mat.SetFloat (ShaderProperties.extinctionTint_PROPERTY, interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
+			mat.SetFloat (ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
 
 			mat.SetFloat (ShaderProperties.scale_PROPERTY, 1);
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
@@ -634,8 +634,8 @@ namespace scatterer
 
 			Vector3 temp = ScaledSpace.ScaledToLocalSpace (Scatterer.Instance.scaledSpaceCamera.transform.position);
 
-			mat.SetFloat ("_SkyExposure", interpolatedSettings.skyExposure);
-			mat.SetFloat ("_ScatteringExposure", interpolatedSettings.scatteringExposure);
+			mat.SetFloat (ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
+			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 
 			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
@@ -646,13 +646,13 @@ namespace scatterer
 			}
 			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
-				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
-				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
+				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix);
+				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, planetShineRGBMatrix);
 			}
 
 			if (hasRingObjectAndShadowActivated)
 			{
-				mat.SetVector("ringNormal", ringObject.transform.up);
+				mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
 			}
 		}
 		
@@ -663,7 +663,7 @@ namespace scatterer
 			if (mat == null)
 				return;
 
-			mat.SetFloat ("_ScatteringExposure", interpolatedSettings.scatteringExposure);
+			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 
 			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			
@@ -676,7 +676,7 @@ namespace scatterer
 			
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 
-			mat.SetVector("_camForward", Scatterer.Instance.nearCamera.transform.forward);
+			mat.SetVector(ShaderProperties._camForward_PROPERTY, Scatterer.Instance.nearCamera.transform.forward);
 
 			UpdatePostProcessMaterial (mat);
 		}
@@ -684,7 +684,7 @@ namespace scatterer
 
 		public void InitPostprocessMaterial (Material mat)
 		{
-			mat.SetFloat ("mieG", Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
 			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
@@ -726,54 +726,53 @@ namespace scatterer
 			}
 
 			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
-				mat.SetFloat ("_PlanetOpacity", 0f);
+				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
 			else
-				mat.SetFloat ("_PlanetOpacity", 1f);
+				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f);
 
-			mat.SetVector ("_sunColor", m_manager.sunColor);
+			mat.SetVector (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
 
 			float camerasOverlap = 0f;
 			if (!Scatterer.Instance.unifiedCameraMode)
 				camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
 
 			Utils.LogDebug(" Camera overlap: "+camerasOverlap.ToString());
-			mat.SetFloat("_ScattererCameraOverlap",camerasOverlap);
+			mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY,camerasOverlap);
 		}
 
 		
 		public void UpdatePostProcessMaterial (Material mat)
 		{
-			mat.SetFloat ("Rg", Rg * atmosphereGlobalScale);
-			mat.SetFloat ("Rt", Rt * atmosphereGlobalScale);
-			mat.SetFloat ("Rl", RL * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
 
-			mat.SetFloat ("_experimentalAtmoScale", experimentalAtmoScale);
+			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 
-			mat.SetFloat ("_global_alpha", interpolatedSettings.postProcessAlpha);
-			mat.SetFloat ("_ScatteringExposure", interpolatedSettings.scatteringExposure);
-			mat.SetFloat ("_global_depth", interpolatedSettings.postProcessDepth *1000000);
+			mat.SetFloat (ShaderProperties._global_alpha_PROPERTY, interpolatedSettings.postProcessAlpha);
+			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
+			mat.SetFloat (ShaderProperties._global_depth_PROPERTY, interpolatedSettings.postProcessDepth *1000000);
 
 			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
 			{
 				if (MapView.MapIsEnabled)
-					mat.SetFloat ("_PlanetOpacity", 0f);
+					mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
 				else
-					mat.SetFloat ("_PlanetOpacity", 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat ("_PlanetOpacity"));
+					mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY));
 			}
-			
-			mat.SetFloat ("_Post_Extinction_Tint", interpolatedSettings.extinctionTint);
-			mat.SetFloat ("extinctionThickness", interpolatedSettings.extinctionThickness);
 
-			mat.SetFloat ("_openglThreshold", interpolatedSettings.openglThreshold);
+			mat.SetFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, interpolatedSettings.extinctionTint);
+			mat.SetFloat (ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
 
-			mat.SetVector ("SUN_DIR", m_manager.getDirectionToSun ().normalized);
-			mat.SetVector ("_planetPos", parentLocalTransform.position);  //better do this small calculation here
+			mat.SetFloat (ShaderProperties._openglThreshold_PROPERTY, interpolatedSettings.openglThreshold);
+
+			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
+			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);  //better do this small calculation here
 
 
 			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
-				mat.SetMatrix ("planetShineSources", planetShineSourcesMatrix);
-				mat.SetMatrix ("planetShineRGB", planetShineRGBMatrix);
+				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix);
+				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, planetShineRGBMatrix);
 			}
 		}
 
@@ -814,12 +813,12 @@ namespace scatterer
 				mat.EnableKeyword ("RINGSHADOW_ON");
 				mat.DisableKeyword ("RINGSHADOW_OFF");
 
-				mat.SetFloat ("ringInnerRadius", ringInnerRadius);
-				mat.SetFloat ("ringOuterRadius", ringOuterRadius);
+				mat.SetFloat (ShaderProperties.ringInnerRadius_PROPERTY, ringInnerRadius);
+				mat.SetFloat (ShaderProperties.ringOuterRadius_PROPERTY, ringOuterRadius);
 
-				mat.SetVector ("ringNormal", ringObject.transform.up);
+				mat.SetVector (ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
 
-				mat.SetTexture ("ringTexture", ringTexture);
+				mat.SetTexture (ShaderProperties.ringTexture_PROPERTY, ringTexture);
 			}
 			else
 			{
@@ -852,8 +851,8 @@ namespace scatterer
 				mat.EnableKeyword ("PLANETSHINE_OFF");
 			}
 
-			mat.SetFloat ("flatScaledSpaceModel", m_manager.flatScaledSpaceModel ? 1f : 0f );
-			mat.SetVector ("_sunColor", m_manager.sunColor);
+			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, m_manager.flatScaledSpaceModel ? 1f : 0f );
+			mat.SetVector (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
 		}
 
 		

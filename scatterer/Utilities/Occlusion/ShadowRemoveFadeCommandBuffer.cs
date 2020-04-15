@@ -20,7 +20,7 @@ namespace scatterer
 					
 			//works for the fade but doesn't fix breaks in squares/axis-aligned lines near farclipPlane of nearCamera, limitation of what? idk
 			//could still be ok for SSAO, maybe passable for eclipses but not sure
-			m_Buffer.SetGlobalVector ("unity_ShadowFadeCenterAndType",new Vector4(float.PositiveInfinity,float.PositiveInfinity,float.PositiveInfinity,-1f));
+			m_Buffer.SetGlobalVector (ShaderProperties.unity_ShadowFadeCenterAndType_PROPERTY,new Vector4(float.PositiveInfinity,float.PositiveInfinity,float.PositiveInfinity,-1f));
 
 			m_Camera = GetComponent<Camera>();
 			m_Camera.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, m_Buffer);
