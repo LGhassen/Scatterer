@@ -21,6 +21,18 @@ namespace scatterer
 		public bool visible = false;
 		public bool mainOptions=false;
 
+		enum mainMenuTabs
+		{
+			Ocean,
+			Sunflare,
+			Lighting,
+			Shadows,
+			EVEintegration,
+			Camera
+		}
+
+		mainMenuTabs selectedTab = mainMenuTabs.Ocean;
+
 		public int selectedPlanet = 0;
 		public int selectedConfigPoint = 0;
 		bool wireFrame = false;
@@ -156,50 +168,131 @@ namespace scatterer
 			GUI.DragWindow();
 		}
 
-		static void DrawOptionsMenu ()
+		void DrawOptionsMenu ()
 		{
-			GUILayout.Label (String.Format ("Scatterer: features selector"));
-			Scatterer.Instance.mainSettings.useOceanShaders = GUILayout.Toggle (Scatterer.Instance.mainSettings.useOceanShaders, "Ocean shaders (may require game restart on change)");
 			GUILayout.BeginHorizontal ();
-			GUILayout.Label ("Ocean: fourierGridSize (64:fast,128:normal,256:HQ)");
-			Scatterer.Instance.mainSettings.m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ())));
+			{
+				GUILayout.Label ("Menu scroll section height");
+				Scatterer.Instance.pluginData.scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.pluginData.scrollSectionHeight.ToString ())));
+			}
 			GUILayout.EndHorizontal ();
-			Scatterer.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanSkyReflections, "Ocean: Accurate sky reflection");
-			Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle (Scatterer.Instance.mainSettings.shadowsOnOcean, "Ocean: Craft/Terrain shadows (may have artifacts on Directx11)");
-			Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Ocean: lights compatibility (huge performance hit when lights on)");
-			Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCaustics, "Ocean: Caustics");
-			//Core.Instance.mainSettings.usePlanetShine = GUILayout.Toggle(Core.Instance.usePlanetShine, "PlanetShine");
-			Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
-			Scatterer.Instance.mainSettings.fullLensFlareReplacement = GUILayout.Toggle (Scatterer.Instance.mainSettings.fullLensFlareReplacement, "Lens flare shader");
-			Scatterer.Instance.mainSettings.useEclipses = GUILayout.Toggle (Scatterer.Instance.mainSettings.useEclipses, "Eclipses (WIP, sky/orbit only for now)");
-			Scatterer.Instance.mainSettings.useRingShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.useRingShadows, "Kopernicus ring shadows (linear only, tiled rings not supported)");
-			//Core.Instance.mainSettings.useGodrays = GUILayout.Toggle(Core.Instance.useGodrays, "Godrays (early WIP)");
-			Scatterer.Instance.mainSettings.d3d11ShadowFix = GUILayout.Toggle (Scatterer.Instance.mainSettings.d3d11ShadowFix, "Directx11 flickering shadows fix (recommended)");
+			
 			GUILayout.BeginHorizontal ();
-			Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Terrain shadows");
-			GUILayout.Label ("Distance (m)");
-			Scatterer.Instance.mainSettings.shadowsDistance = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowsDistance.ToString ("0")));
-			GUILayout.Label ("Bias");
-			Scatterer.Instance.mainSettings.shadowBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowBias.ToString ("0.000")));
-			GUILayout.Label ("Normal bias");
-			Scatterer.Instance.mainSettings.shadowNormalBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowNormalBias.ToString ("0.000")));
+			{
+				GUILayout.Label (".cfg file used (display only):");
+				GUILayout.TextField (Scatterer.Instance.planetsConfigsReader.baseConfigs [0].parent.url);
+			}
+			GUILayout.EndHorizontal ();
 
-			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
-			Scatterer.Instance.mainSettings.overrideNearClipPlane = GUILayout.Toggle (Scatterer.Instance.mainSettings.overrideNearClipPlane, "Override Near ClipPlane (not recommended - restart on disable)");
-			Scatterer.Instance.mainSettings.nearClipPlane = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.nearClipPlane.ToString ("0.000")));
+			{
+				if (GUILayout.Button ("Ocean"))
+				{
+					selectedTab = mainMenuTabs.Ocean;
+				}
+				if (GUILayout.Button ("Sunflare"))
+				{
+					selectedTab = mainMenuTabs.Sunflare;
+				}
+				if (GUILayout.Button ("Light"))
+				{
+					selectedTab = mainMenuTabs.Lighting;
+				}
+				if (GUILayout.Button ("Shadows"))
+				{
+					selectedTab = mainMenuTabs.Shadows;
+				}
+				if (GUILayout.Button ("EVE Clouds"))
+				{
+					selectedTab = mainMenuTabs.EVEintegration;
+				}
+				if (GUILayout.Button ("Camera"))
+				{
+					selectedTab = mainMenuTabs.Camera;
+				}
+			}
 			GUILayout.EndHorizontal ();
-			GUILayout.BeginHorizontal ();
-			GUILayout.Label ("Menu scroll section height");
-			Scatterer.Instance.pluginData.scrollSectionHeight = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.pluginData.scrollSectionHeight.ToString ())));
-			GUILayout.EndHorizontal ();
-			Scatterer.Instance.mainSettings.disableAmbientLight = GUILayout.Toggle (Scatterer.Instance.mainSettings.disableAmbientLight, "Disable scaled space ambient light");
-			Scatterer.Instance.mainSettings.sunlightExtinction = GUILayout.Toggle (Scatterer.Instance.mainSettings.sunlightExtinction, "Sunlight extinction (direct sun light changes color with sunset/dusk)");
-			Scatterer.Instance.mainSettings.underwaterLightDimming = GUILayout.Toggle (Scatterer.Instance.mainSettings.underwaterLightDimming, "Dim light underwater");
-			GUILayout.BeginHorizontal ();
-			GUILayout.Label (".cfg file used:");
-			GUILayout.TextField (Scatterer.Instance.planetsConfigsReader.baseConfigs [0].parent.url);
-			GUILayout.EndHorizontal ();
+
+			if (selectedTab == mainMenuTabs.Ocean)
+			{
+				Scatterer.Instance.mainSettings.useOceanShaders = GUILayout.Toggle (Scatterer.Instance.mainSettings.useOceanShaders, "Ocean shaders (may require game restart on change)");
+				if(Scatterer.Instance.mainSettings.useOceanShaders)
+				{
+					GUILayout.BeginHorizontal ();
+					{
+						GUILayout.Label ("\t");
+						GUILayout.BeginVertical();
+						{
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("Fourier grid size (64:fast,128:normal,256:HQ)");
+							Scatterer.Instance.mainSettings.m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ())));
+							GUILayout.EndHorizontal ();
+							Scatterer.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanSkyReflections, "Sky reflections");
+							Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle (Scatterer.Instance.mainSettings.shadowsOnOcean, "Surface receives shadows");
+							Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Secondary lights compatibility (huge performance hit when lights on)");
+							Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCaustics, "Underwater caustics");
+						}
+						GUILayout.EndVertical();
+					}
+					GUILayout.EndHorizontal ();
+				}
+			}
+			else if (selectedTab == mainMenuTabs.Lighting)
+			{
+				Scatterer.Instance.mainSettings.useEclipses = GUILayout.Toggle (Scatterer.Instance.mainSettings.useEclipses, "Eclipses (WIP, sky/orbit only for now)");
+				Scatterer.Instance.mainSettings.useRingShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.useRingShadows, "Kopernicus ring shadows (linear only, tiled rings not supported)");
+
+				Scatterer.Instance.mainSettings.disableAmbientLight = GUILayout.Toggle (Scatterer.Instance.mainSettings.disableAmbientLight, "Disable scaled space ambient light");
+				Scatterer.Instance.mainSettings.sunlightExtinction = GUILayout.Toggle (Scatterer.Instance.mainSettings.sunlightExtinction, "Sunlight extinction (direct sun light changes color with sunset/dusk)");
+				Scatterer.Instance.mainSettings.underwaterLightDimming = GUILayout.Toggle (Scatterer.Instance.mainSettings.underwaterLightDimming, "Dim light underwater");
+			}
+			else if (selectedTab == mainMenuTabs.Shadows)
+			{	
+				Scatterer.Instance.mainSettings.d3d11ShadowFix = GUILayout.Toggle (Scatterer.Instance.mainSettings.d3d11ShadowFix, "1.9 Directx11 flickering shadows fix (recommended)");
+				Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Long-Distance Terrain shadows");
+				
+				if(Scatterer.Instance.mainSettings.terrainShadows)
+				{
+					GUILayout.BeginHorizontal ();
+					{
+						GUILayout.Label ("\t");
+						GUILayout.BeginVertical();
+						{
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("Distance (m)");
+							Scatterer.Instance.mainSettings.shadowsDistance = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowsDistance.ToString ("0")));
+							GUILayout.Label ("Bias");
+							Scatterer.Instance.mainSettings.shadowBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowBias.ToString ("0.000")));
+							GUILayout.Label ("Normal bias");
+							Scatterer.Instance.mainSettings.shadowNormalBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowNormalBias.ToString ("0.000")));
+							GUILayout.EndHorizontal ();
+						}
+						GUILayout.EndVertical();
+					}
+					GUILayout.EndHorizontal ();
+				}
+
+			}
+			else if (selectedTab == mainMenuTabs.Sunflare)
+			{
+				Scatterer.Instance.mainSettings.fullLensFlareReplacement = GUILayout.Toggle (Scatterer.Instance.mainSettings.fullLensFlareReplacement, "Lens flare shader");
+			}
+			else if (selectedTab == mainMenuTabs.EVEintegration)
+			{
+				Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
+			}
+			else if (selectedTab == mainMenuTabs.Camera)
+			{
+				GUILayout.BeginHorizontal ();
+				{
+					Scatterer.Instance.mainSettings.overrideNearClipPlane = GUILayout.Toggle (Scatterer.Instance.mainSettings.overrideNearClipPlane, "Override Near ClipPlane (not recommended - restart on disable)");
+					Scatterer.Instance.mainSettings.nearClipPlane = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.nearClipPlane.ToString ("0.000")));
+				}
+				GUILayout.EndHorizontal ();
+			}
+
+			//Core.Instance.mainSettings.usePlanetShine = GUILayout.Toggle(Core.Instance.usePlanetShine, "PlanetShine");
+			//Core.Instance.mainSettings.useGodrays = GUILayout.Toggle(Core.Instance.useGodrays, "Godrays (early WIP)");
 		}
 
 		void DrawPlanetSelectionHeader ()
