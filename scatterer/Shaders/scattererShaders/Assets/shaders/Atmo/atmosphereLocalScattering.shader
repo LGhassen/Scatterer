@@ -158,7 +158,9 @@ Pass {
 				float4 worldPos = mul(unity_ObjectToWorld,v.vertex);
 				worldPos.xyz/=worldPos.w; //needed?
 
-				worldPos.xyz = (_PlanetOpacity < 1.0) && (length(worldPos.xyz-_planetPos) < Rg) ? _planetPos+Rg* normalize(worldPos.xyz-_planetPos)  : worldPos.xyz  ;
+				worldPos.xyz = (_PlanetOpacity < 1.0) && (length(worldPos.xyz-_planetPos) < Rg) ? _planetPos+Rg* normalize(worldPos.xyz-_planetPos)  : worldPos.xyz ; //display scattering at ocean level when we are fading out local shading
+																																									  //at the same time ocean stops rendering it's own scattering
+																																									  //check if not needed for stock ocean? or maybe raise it a bit for stock ocean to kill that z-fighting
 
 				o.worldPos = float4(worldPos.xyz,1.0);
 				o.worldPos.xyz*=worldPos.w;

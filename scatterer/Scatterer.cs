@@ -37,7 +37,7 @@ namespace scatterer
 		public SunlightModulator sunlightModulatorInstance;
 		//		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
 
-		public ShadowMapRetrieveCommandBuffer shadowMapRetriever; //may be unnecessary but it doesn't hurt
+		public ShadowMapRetrieveCommandBuffer shadowMapRetriever;
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
 		public PartialDepthBuffer partialUnifiedCameraDepthBuffer;

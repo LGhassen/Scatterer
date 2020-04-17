@@ -27,7 +27,11 @@ namespace scatterer
 		
 		SimpleRenderingShape SkySphere;
 		GameObject skySphereGameObject;
-		MeshRenderer skySphereMeshRenderer, stockSkyMeshRenderer;
+		MeshRenderer skySphereMeshRenderer, stockSkyMeshRenderer, stockScaledPlanetMeshRenderer;
+		Mesh originalScaledMesh, tweakedScaledmesh;
+
+		[Persistent]
+		public float flattenScaledSpaceMesh = 0f;
 
 		public bool usesCloudIntegration = true;
 		
@@ -38,8 +42,7 @@ namespace scatterer
 		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
 		
 		Vector3 sunPosRelPlanet=Vector3.zero;
-		
-		public float postDist = -4500f;
+
 		public float percentage;
 		public int currentConfigPoint;
 		
@@ -578,7 +581,11 @@ namespace scatterer
 				RL = (RL / Rg) * m_radius;
 				Rg = m_radius;
 
+				stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
+
 				tweakStockAtmosphere();
+				if (flattenScaledSpaceMesh != 0f)
+					tweakScaledMesh();
 				addScaledScatteringMaterialToPlanet();
 
 				//disable postprocessing and ocean effects for Texture Replacer reflections
@@ -1011,6 +1018,9 @@ namespace scatterer
 					//TODO
 				}
 			}
+
+			if (!ReferenceEquals(originalScaledMesh,null))
+				parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = originalScaledMesh;
 		}
 
 		public bool loadFromConfigNode ()
@@ -1106,8 +1116,7 @@ namespace scatterer
 				}
 			}
 
-			Renderer tRenderer=(Renderer) parentScaledTransform.GetComponent(typeof(Renderer));
-			Material sharedMaterial = tRenderer.sharedMaterial;
+			Material sharedMaterial = stockScaledPlanetMeshRenderer.sharedMaterial;
 			
 			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
 			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);
@@ -1130,15 +1139,43 @@ namespace scatterer
 				sharedMaterial.SetFloat ("_Shininess", shininess / 100f);
 			}
 		}
+		
+		public void tweakScaledMesh()
+		{
+			if (ReferenceEquals (originalScaledMesh, null))
+			{
+				originalScaledMesh = parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh;
+			}
+
+			tweakedScaledmesh = (Mesh)Instantiate (originalScaledMesh);
+			
+			double scaledRadius = m_manager.GetRadius () / (6000d * parentScaledTransform.localScale.x);
+			
+			Vector3[] verts = tweakedScaledmesh.vertices;
+			
+			for (int i=0; i<verts.Length; i++)
+			{
+				if (verts [i].magnitude > scaledRadius)
+				{
+					verts [i] = verts [i].normalized * (Mathf.Lerp (verts [i].magnitude, (float)scaledRadius, flattenScaledSpaceMesh));
+				}
+			}
+			
+			tweakedScaledmesh.vertices = verts;
+			tweakedScaledmesh.RecalculateNormals ();
+			tweakedScaledmesh.RecalculateTangents ();
+			tweakedScaledmesh.RecalculateBounds ();
+			
+			parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = tweakedScaledmesh;
+		}
 
 		public void addScaledScatteringMaterialToPlanet ()
 		{
-			MeshRenderer tMeshRenderer=(MeshRenderer) parentScaledTransform.GetComponent(typeof(MeshRenderer));
-			List<Material> mats = tMeshRenderer.materials.ToList();
+			List<Material> mats = stockScaledPlanetMeshRenderer.materials.ToList();
 			mats.RemoveAll (mat => mat.name.Contains("Scatterer/ScaledPlanetScattering")); //clean up old materials
 
 			mats.Add (scaledScatteringMaterial);
-			tMeshRenderer.materials = mats.ToArray ();
+			stockScaledPlanetMeshRenderer.materials = mats.ToArray ();
 		}
 
 		public void interpolateVariables ()

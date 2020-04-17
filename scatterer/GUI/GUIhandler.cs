@@ -45,7 +45,7 @@ namespace scatterer
 		float extinctionThickness = 1f;
 		float skyExtinctionTint = 1f;
 		
-		float specR = 0f, specG = 0f, specB = 0f, shininess = 0f;
+		float specR = 0f, specG = 0f, specB = 0f, shininess = 0f, flattenScaledSpaceMesh = 0f;
 		
 		//ConfigPoint variables 		
 		float pointAltitude = 0f;
@@ -350,7 +350,16 @@ namespace scatterer
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specG = specG;
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specB = specB;
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.shininess = shininess;
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.flattenScaledSpaceMesh = flattenScaledSpaceMesh;
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
+			}
+			GUILayout.EndHorizontal ();
+			GUILayout.BeginHorizontal ();
+			GUILayout.Label ("Flatten scaled mesh");
+			flattenScaledSpaceMesh = (float)(Convert.ToDouble (GUILayout.TextField (flattenScaledSpaceMesh.ToString ("0.000"))));
+			if (GUILayout.Button ("Set")) {
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.flattenScaledSpaceMesh = flattenScaledSpaceMesh;
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakScaledMesh();
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.EndScrollView ();
@@ -603,6 +612,7 @@ namespace scatterer
 			specG = skyNode.specG;
 			specB = skyNode.specB;
 			shininess = skyNode.shininess;
+			flattenScaledSpaceMesh = skyNode.flattenScaledSpaceMesh;
 
 			rimBlend = skyNode.rimBlend;
 			rimpower = skyNode.rimpower;
