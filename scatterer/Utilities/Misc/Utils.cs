@@ -153,7 +153,13 @@ namespace scatterer
 		public static Camera getEarliestLocalCamera()
 		{
 			return Scatterer.Instance.unifiedCameraMode ? Scatterer.Instance.nearCamera : Scatterer.Instance.farCamera;
-		}	
+		}
+
+		// Will return true for zero, so be aware
+		public static bool IsPowerOfTwo(int x)
+		{
+			return (x & (x - 1)) == 0;
+		}
 	}
 }
 

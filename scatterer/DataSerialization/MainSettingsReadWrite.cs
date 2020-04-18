@@ -70,15 +70,40 @@ namespace scatterer
 
 		[Persistent]
 		public bool terrainShadows = true;
+
+
+		[Persistent]
+		public float unifiedCamShadowsDistance=50000f;
+
+		[Persistent]
+		public float unifiedCamShadowNormalBiasOverride=0.4f;
 		
 		[Persistent]
-		public float shadowNormalBias=0.4f;
+		public float unifiedCamShadowBiasOverride=0.125f;
+
+		[Persistent]
+		public int unifiedCamShadowResolutionOverride=4096;
+
+		[Persistent]
+		public Vector3 unifiedCamShadowCascadeSplitsOverride=Vector3.zero;
+
 		
 		[Persistent]
-		public float shadowBias=0.125f;
+		public float dualCamShadowsDistance=50000f;
+
+		[Persistent]
+		public float dualCamShadowNormalBiasOverride=0.4f;
 		
 		[Persistent]
-		public float shadowsDistance=100000f;
+		public float dualCamShadowBiasOverride=0.125f;
+
+		[Persistent]
+		public int dualCamShadowResolutionOverride=0;
+
+		[Persistent]
+		public Vector3 dualCamShadowCascadeSplitsOverride=Vector3.zero;
+
+
 		
 		[Persistent]
 		public int m_fourierGridSize = 128;
@@ -138,9 +163,19 @@ namespace scatterer
 				 OldConfig.useRingShadows != useRingShadows ||
 				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
 				 OldConfig.terrainShadows != terrainShadows ||
-				 OldConfig.shadowNormalBias != shadowNormalBias ||
-				 OldConfig.shadowBias != shadowBias ||
-				 OldConfig.shadowsDistance != shadowsDistance ||
+
+				 OldConfig.unifiedCamShadowsDistance != unifiedCamShadowsDistance ||
+				 OldConfig.unifiedCamShadowNormalBiasOverride != unifiedCamShadowNormalBiasOverride ||
+				 OldConfig.unifiedCamShadowBiasOverride != unifiedCamShadowBiasOverride ||
+				 OldConfig.unifiedCamShadowCascadeSplitsOverride != unifiedCamShadowCascadeSplitsOverride ||
+				 OldConfig.unifiedCamShadowResolutionOverride != unifiedCamShadowResolutionOverride ||
+
+				 OldConfig.dualCamShadowsDistance != dualCamShadowsDistance ||
+				 OldConfig.dualCamShadowNormalBiasOverride != dualCamShadowNormalBiasOverride ||
+				 OldConfig.dualCamShadowBiasOverride != dualCamShadowBiasOverride ||
+				 OldConfig.dualCamShadowCascadeSplitsOverride != dualCamShadowCascadeSplitsOverride ||
+				 OldConfig.dualCamShadowResolutionOverride != dualCamShadowResolutionOverride ||
+
 				 OldConfig.m_fourierGridSize != m_fourierGridSize);
 			
 			if (configChanged)

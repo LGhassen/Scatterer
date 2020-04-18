@@ -39,7 +39,7 @@ namespace scatterer
 
 		public ShadowMapRetrieveCommandBuffer shadowMapRetriever;
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
-		public TweakFarCameraShadowCascades farCameraShadowCascadeTweaker;
+		public TweakShadowCascades shadowCascadeTweaker;
 		public PartialDepthBuffer partialUnifiedCameraDepthBuffer;
 
 		//probably move these to buffer rendering manager
@@ -279,9 +279,9 @@ namespace scatterer
 					Component.Destroy(shadowFadeRemover);
 				}
 
-				if (farCameraShadowCascadeTweaker)
+				if (shadowCascadeTweaker)
 				{
-					Component.Destroy(farCameraShadowCascadeTweaker);
+					Component.Destroy(shadowCascadeTweaker);
 				}
 
 				if (farDepthCommandbuffer)
@@ -343,7 +343,16 @@ namespace scatterer
 
 			if (scaledSpaceCamera && nearCamera)
 			{
-				farCameraShadowCascadeTweaker = (TweakFarCameraShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakFarCameraShadowCascades)); //check what to do with this in the new mode
+				if (!unifiedCameraMode && (mainSettings.dualCamShadowCascadeSplitsOverride != Vector3.zero))
+				{
+					shadowCascadeTweaker = (TweakShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakShadowCascades));
+					shadowCascadeTweaker.Init(mainSettings.dualCamShadowCascadeSplitsOverride);
+				}
+				else if (unifiedCameraMode && (mainSettings.unifiedCamShadowCascadeSplitsOverride != Vector3.zero))
+				{
+					shadowCascadeTweaker = (TweakShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakShadowCascades));
+					shadowCascadeTweaker.Init(mainSettings.unifiedCamShadowCascadeSplitsOverride);
+				}
 				
 				if (mainSettings.overrideNearClipPlane)
 				{
@@ -374,7 +383,7 @@ namespace scatterer
 				{
 					QualitySettings.shadowProjection = ShadowProjection.StableFit; //way more resistant to jittering
 					GraphicsSettings.SetShaderMode (BuiltinShaderType.ScreenSpaceShadows, BuiltinShaderMode.UseCustom);
-					if ((mainSettings.terrainShadows) && (mainSettings.shadowsDistance > 8000f))
+					if ((mainSettings.terrainShadows) && (mainSettings.unifiedCamShadowsDistance > 8000f))
 					{
 						GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/longDistanceScreenSpaceShadows")]);
 						partialUnifiedCameraDepthBuffer = (PartialDepthBuffer) nearCamera.gameObject.AddComponent(typeof(PartialDepthBuffer));
@@ -405,19 +414,34 @@ namespace scatterer
 
 				if (mainSettings.terrainShadows)
 				{
-					QualitySettings.shadowDistance = mainSettings.shadowsDistance;
+					QualitySettings.shadowDistance = unifiedCameraMode ? mainSettings.unifiedCamShadowsDistance : mainSettings.dualCamShadowsDistance;
 					Utils.LogDebug ("Number of shadow cascades detected " + QualitySettings.shadowCascades.ToString ());
 
-					//fixes checkerboard artifacts aka shadow acne (review if still useful)
 					if (sunLight)
 					{
-//						Utils.LogInfo ("shadowNormalBias " + sunLight.shadowNormalBias.ToString ());
-//						Utils.LogInfo ("shadowBias " + sunLight.shadowBias.ToString ());
+						//fixes checkerboard artifacts aka shadow acne
+						float bias = unifiedCameraMode ? mainSettings.unifiedCamShadowNormalBiasOverride : mainSettings.dualCamShadowNormalBiasOverride;
+						float normalBias = unifiedCameraMode ? mainSettings.unifiedCamShadowBiasOverride : mainSettings.dualCamShadowBiasOverride;
 
-						sunLight.shadowNormalBias = mainSettings.shadowNormalBias;
-						sunLight.shadowBias = mainSettings.shadowBias;
+						if (bias > 0f)
+							sunLight.shadowBias = bias;
 
-						//sunLight.shadowCustomResolution = 8192; //change it to only set this when unifiedCamera is rendering and revert it after
+						if (normalBias > 0f)
+							sunLight.shadowNormalBias = normalBias;
+
+						int customRes = unifiedCameraMode ? mainSettings.unifiedCamShadowResolutionOverride : mainSettings.dualCamShadowResolutionOverride;
+						if (customRes!=0)
+						{
+							if (Utils.IsPowerOfTwo(customRes))
+							{
+								Utils.LogDebug("Setting shadowmap resolution to: "+customRes.ToString());
+								sunLight.shadowCustomResolution = customRes;
+							}
+							else
+							{
+								Utils.LogError("Selected shadowmap resolution not a power of 2: "+customRes.ToString());
+							}
+						}
 					}
 
 					//and finally force shadow Casting and receiving on celestial bodies if not already set

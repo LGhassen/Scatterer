@@ -194,7 +194,7 @@ namespace scatterer
 				{
 					selectedTab = mainMenuTabs.Sunflare;
 				}
-				if (GUILayout.Button ("Light"))
+				if (GUILayout.Button ("Lighting"))
 				{
 					selectedTab = mainMenuTabs.Lighting;
 				}
@@ -249,29 +249,94 @@ namespace scatterer
 			else if (selectedTab == mainMenuTabs.Shadows)
 			{	
 				Scatterer.Instance.mainSettings.d3d11ShadowFix = GUILayout.Toggle (Scatterer.Instance.mainSettings.d3d11ShadowFix, "1.9 Directx11 flickering shadows fix (recommended)");
-				Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Long-Distance Terrain shadows");
-				
+				Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Long-Distance Terrain shadows (may not reset until game restart)");
+
 				if(Scatterer.Instance.mainSettings.terrainShadows)
 				{
 					GUILayout.BeginHorizontal ();
 					{
-						GUILayout.Label ("\t");
+						GUILayout.Label ("  ");
 						GUILayout.BeginVertical();
 						{
+							GUI.contentColor = Scatterer.Instance.unifiedCameraMode ? Color.white : Color.gray;
+							GUILayout.Label ((Scatterer.Instance.unifiedCameraMode ? "[Active] ":"[Inactive] ") +"Unified camera mode (1.9 Directx11):");
 							GUILayout.BeginHorizontal ();
-							GUILayout.Label ("Distance (m)");
-							Scatterer.Instance.mainSettings.shadowsDistance = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowsDistance.ToString ("0")));
-							GUILayout.Label ("Bias");
-							Scatterer.Instance.mainSettings.shadowBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowBias.ToString ("0.000")));
-							GUILayout.Label ("Normal bias");
-							Scatterer.Instance.mainSettings.shadowNormalBias = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.shadowNormalBias.ToString ("0.000")));
-							GUILayout.EndHorizontal ();
-						}
-						GUILayout.EndVertical();
-					}
-					GUILayout.EndHorizontal ();
-				}
+							{
+								GUILayout.Label ("\t");
+								GUILayout.BeginVertical();
+								{
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Label ("Shadows Distance (in meters):");
+										Scatterer.Instance.mainSettings.unifiedCamShadowsDistance = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.unifiedCamShadowsDistance.ToString ("0")));
+									}
+									GUILayout.EndHorizontal ();
+									
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Label ("Shadowmap resolution (power of 2, zero for no override):");
+										Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride.ToString ())));
+									}
+									GUILayout.EndHorizontal ();
 
+									GUIvector3NoButton("Shadow cascade splits (zeroes for no override):",ref Scatterer.Instance.mainSettings.unifiedCamShadowCascadeSplitsOverride);
+									
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Label ("Shadow bias (0 for no override)");
+										Scatterer.Instance.mainSettings.unifiedCamShadowBiasOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.unifiedCamShadowBiasOverride.ToString ("0.000")));
+										GUILayout.Label ("Normal bias (0 for no override)");
+										Scatterer.Instance.mainSettings.unifiedCamShadowNormalBiasOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.unifiedCamShadowNormalBiasOverride.ToString ("0.000")));
+									}
+									GUILayout.EndHorizontal ();
+									
+								}
+								GUILayout.EndVertical();
+							}
+							GUILayout.EndHorizontal();
+							
+							GUI.contentColor = !Scatterer.Instance.unifiedCameraMode ? Color.white : Color.gray;
+							GUILayout.Label ((!Scatterer.Instance.unifiedCameraMode ? "[Active] ":"[Inactive] ") +"Dual camera mode (1.8 and 1.9 Opengl):");
+							GUILayout.BeginHorizontal ();
+							{
+								GUILayout.Label ("\t");
+								GUILayout.BeginVertical();
+								{
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Label ("Shadows Distance (in meters):");
+										Scatterer.Instance.mainSettings.dualCamShadowsDistance = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.dualCamShadowsDistance.ToString ("0")));
+									}
+									GUILayout.EndHorizontal ();
+									
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Label ("Shadowmap resolution (power of 2, zero for no override):");
+										Scatterer.Instance.mainSettings.dualCamShadowResolutionOverride = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.dualCamShadowResolutionOverride.ToString ())));
+									}
+									GUILayout.EndHorizontal ();
+
+									GUIvector3NoButton("Shadow cascade splits (zeroes for no override):",ref Scatterer.Instance.mainSettings.dualCamShadowCascadeSplitsOverride);
+
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Label ("Shadow bias (0 for no override)");
+										Scatterer.Instance.mainSettings.dualCamShadowBiasOverride  = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.dualCamShadowBiasOverride.ToString ("0.000")));
+										GUILayout.Label ("Normal bias (0 for no override)");
+										Scatterer.Instance.mainSettings.dualCamShadowNormalBiasOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.dualCamShadowNormalBiasOverride.ToString ("0.000")));
+									}
+									GUILayout.EndHorizontal ();
+									
+								}
+								GUILayout.EndVertical();
+							}
+							GUILayout.EndHorizontal();
+							
+							GUILayout.EndVertical();
+						}
+						GUILayout.EndHorizontal ();
+					}
+				}
 			}
 			else if (selectedTab == mainMenuTabs.Sunflare)
 			{
@@ -671,6 +736,18 @@ namespace scatterer
 			if (GUILayout.Button ("Set")) {
 				target = new Vector3 (localR, localG, localB);
 			}
+			GUILayout.EndHorizontal ();
+		}
+
+		public void GUIvector3NoButton (string label, ref Vector3 target)
+		{
+			GUILayout.BeginHorizontal ();
+			GUILayout.Label (label);
+			
+			target.x = float.Parse (GUILayout.TextField (target.x.ToString ("0.0000")));
+			target.y = float.Parse (GUILayout.TextField (target.y.ToString ("0.0000")));
+			target.z = float.Parse (GUILayout.TextField (target.z.ToString ("0.0000")));
+
 			GUILayout.EndHorizontal ();
 		}
 		
