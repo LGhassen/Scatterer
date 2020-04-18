@@ -415,6 +415,7 @@ namespace scatterer
 				if (mainSettings.terrainShadows)
 				{
 					QualitySettings.shadowDistance = unifiedCameraMode ? mainSettings.unifiedCamShadowsDistance : mainSettings.dualCamShadowsDistance;
+					Utils.LogDebug ("Set shadow distance: " + QualitySettings.shadowDistance.ToString ());
 					Utils.LogDebug ("Number of shadow cascades detected " + QualitySettings.shadowCascades.ToString ());
 
 					if (sunLight)

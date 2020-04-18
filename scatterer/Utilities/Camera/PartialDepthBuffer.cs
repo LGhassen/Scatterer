@@ -3,7 +3,7 @@
 // This class is meant to re-render a partial depth buffer for the scene, starting from where depth precision degrades too much to the max shadow distance
 // Example: 8000 -> 50000
 // Which then can be used in the screenSpace shadow shader when the regular depth buffer's precision degrades
-// Due to the (comparatively) low ratio of farClipPlane/nearClipPlane, we could can get away with 24bit to save bandwidth (and almost 16bit but it gets weird sometimes)
+// Due to the (comparatively) low ratio of farClipPlane/nearClipPlane, we can get away with 24bit to save bandwidth (and almost 16bit but it gets weird sometimes)
 
 using System;
 using UnityEngine;
