@@ -161,6 +161,8 @@
     <Compile Include="Utilities\Camera\PartialDepthBuffer.cs" />
     <Compile Include="Utilities\Camera\TweakShadowCascades.cs" />
     <Compile Include="Utilities\Camera\DisableEffectsForReflectionsCamera.cs" />
+    <Compile Include="Utilities\Camera\ReflectionProbeFixer.cs" />
+    <Compile Include="Utilities\Camera\ReflectionProbeChecker.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

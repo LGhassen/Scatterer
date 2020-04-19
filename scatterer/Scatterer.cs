@@ -47,6 +47,10 @@ namespace scatterer
 		
 		public Light sunLight,scaledSpaceSunLight, mainMenuLight;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
+
+		//classic SQUAD
+		ReflectionProbeChecker reflectionProbeChecker;
+		GameObject ReflectionProbeCheckerGO;
 		
 		bool coreInitiated = false;
 		public bool isActive = false;
@@ -120,7 +124,9 @@ namespace scatterer
 			
 			Utils.FixKopernicusRingsRenderQueue ();			
 			Utils.FixSunsCoronaRenderQueue ();
-				
+
+			addReflectionProbeFixer ();
+
 			if (mainSettings.usePlanetShine)
 			{
 				planetshineManager = new PlanetshineManager();
@@ -300,6 +306,17 @@ namespace scatterer
 				{
 					partialUnifiedCameraDepthBuffer.OnDestroy();
 					Component.Destroy(partialUnifiedCameraDepthBuffer);
+				}
+
+				if (reflectionProbeChecker)
+				{
+					reflectionProbeChecker.OnDestroy ();
+					Component.Destroy (reflectionProbeChecker);
+				}
+
+				if (ReflectionProbeCheckerGO)
+				{
+					UnityEngine.GameObject.Destroy (ReflectionProbeCheckerGO);
 				}
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
@@ -495,6 +512,28 @@ namespace scatterer
 					}
 				}
 			}
+		}
+
+		// Just a dummy gameObject so the reflectionProbeChecker can capture the reflection Camera
+		public void addReflectionProbeFixer()
+		{
+			ReflectionProbeCheckerGO = new GameObject ("Scatterer ReflectionProbeCheckerGO");
+			ReflectionProbeCheckerGO.transform.parent = nearCamera.transform;
+			ReflectionProbeCheckerGO.layer = 15;
+
+			reflectionProbeChecker = ReflectionProbeCheckerGO.AddComponent<ReflectionProbeChecker> ();
+
+			MeshFilter _mf = ReflectionProbeCheckerGO.AddComponent<MeshFilter> ();
+			_mf.mesh.Clear ();
+			_mf.mesh = MeshFactory.MakePlane (2, 2, MeshFactory.PLANE.XY, false, false);
+			_mf.mesh.bounds = new Bounds (Vector4.zero, new Vector3 (Mathf.Infinity, Mathf.Infinity, Mathf.Infinity));
+
+			MeshRenderer _mr = ReflectionProbeCheckerGO.AddComponent<MeshRenderer> ();
+			_mr.sharedMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
+			_mr.material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
+			_mr.receiveShadows = false;
+			_mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			_mr.enabled = true;
 		}
 
 	}
