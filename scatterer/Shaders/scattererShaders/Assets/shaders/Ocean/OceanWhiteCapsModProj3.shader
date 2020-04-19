@@ -77,7 +77,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				"IgnoreProjector"="True"}
 
     		Blend SrcAlpha OneMinusSrcAlpha
-    		Offset 0.0, -0.10 //give a superior depth offset to that of localScattering to prevent scattering that should be behind ocean from appearing in front
+    		Offset 0.0, -0.14
 
 			Cull Back
 

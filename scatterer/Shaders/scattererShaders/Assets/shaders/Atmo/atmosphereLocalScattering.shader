@@ -12,7 +12,7 @@ Pass {
 			ZWrite Off
 
             Blend DstColor Zero //multiplicative
-            Offset 0.0, -0.05
+			Offset 0.0, -0.07
 
             CGPROGRAM
             #pragma vertex vert
@@ -103,7 +103,7 @@ Pass {
 			ZWrite Off
 
             Blend OneMinusDstColor One //soft additive
-            Offset 0.0, -0.05
+            Offset 0.0, -0.07
 
             CGPROGRAM
             #pragma vertex vert
