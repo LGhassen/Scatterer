@@ -18,7 +18,7 @@ namespace scatterer
 {
 	public class DisableEffectsChecker : MonoBehaviour
 	{
-		Dictionary<Camera,DisableEffectsForTextureReplacer> camToEffectsDisablerDictionary =  new Dictionary<Camera,DisableEffectsForTextureReplacer>() ;
+		Dictionary<Camera,DisableEffectsForReflectionsCamera> camToEffectsDisablerDictionary =  new Dictionary<Camera,DisableEffectsForReflectionsCamera>() ;
 		public ProlandManager manager;
 
 		public DisableEffectsChecker ()
@@ -31,12 +31,13 @@ namespace scatterer
 			if (!cam)
 				return;
 
-			if (cam.name == "TRReflectionCamera" && !camToEffectsDisablerDictionary.ContainsKey(cam))
+			// TODO: find solutions for the Reflection Probes Camera mess, seriously squad? local and scaledScenery in the same culling mask?
+			if (!camToEffectsDisablerDictionary.ContainsKey(cam) && ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera")))
 			{
-				camToEffectsDisablerDictionary[cam] = (DisableEffectsForTextureReplacer) cam.gameObject.AddComponent(typeof(DisableEffectsForTextureReplacer));
+				camToEffectsDisablerDictionary[cam] = (DisableEffectsForReflectionsCamera) cam.gameObject.AddComponent(typeof(DisableEffectsForReflectionsCamera));
 				camToEffectsDisablerDictionary[cam].manager = manager;
 
-				Utils.LogDebug("Post-processing and ocean effects disabled from Texture Replacer reflections");
+				Utils.LogDebug("Post-processing and ocean effects disabled from reflections Camera "+cam.name);
 			}
 
 		}

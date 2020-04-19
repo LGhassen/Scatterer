@@ -134,7 +134,6 @@
     <Compile Include="Utilities\Shader\ShaderProperties.cs" />
     <Compile Include="Utilities\Shader\RenderTypeFixer.cs" />
     <Compile Include="Utilities\Camera\DisableEffectsChecker.cs" />
-    <Compile Include="Utilities\Camera\DisableEffectsForTextureReplacer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\EncodeFloat.cs" />
     <Compile Include="Utilities\Camera\DisableAmbientLight.cs" />
     <Compile Include="Utilities\Camera\WireFrame.cs" />
@@ -161,6 +160,7 @@
     <Compile Include="GUI\ModularGUI\GUIModuleString.cs" />
     <Compile Include="Utilities\Camera\PartialDepthBuffer.cs" />
     <Compile Include="Utilities\Camera\TweakShadowCascades.cs" />
+    <Compile Include="Utilities\Camera\DisableEffectsForReflectionsCamera.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

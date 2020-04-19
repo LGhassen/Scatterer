@@ -15,21 +15,22 @@ using KSP.IO;
 
 namespace scatterer
 {
-	public class DisableEffectsForTextureReplacer : MonoBehaviour
+	public class DisableEffectsForReflectionsCamera : MonoBehaviour
 	{
 		public ProlandManager manager;
 
-		public DisableEffectsForTextureReplacer ()
+		public DisableEffectsForReflectionsCamera ()
 		{
 		}
 
+		//also add EVE cloud Projectors, EVE/PlanetLight, underwaterProjector, sunflare, should be all
+		//and scatteringProjector not disabling correctly
 		public void OnPreCull()
 		{
 //			if (!ReferenceEquals(null,manager.GetSkyNode ().localScatteringProjector))
 //				manager.GetSkyNode ().localScatteringProjector.setActivated(false);
 			if (!ReferenceEquals(manager.GetOceanNode (),null))
 				manager.GetOceanNode ().setWaterMeshrenderersEnabled (false);
-
 		}
 
 		public void OnPostRender()
