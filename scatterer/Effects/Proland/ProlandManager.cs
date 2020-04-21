@@ -52,8 +52,8 @@ namespace scatterer
 			
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				parentScaledTransform = Utils.GetMainMenuObject(scattererBody.celestialBodyName).transform;
-				parentLocalTransform  = Utils.GetMainMenuObject(scattererBody.celestialBodyName).transform;
+					parentScaledTransform = Utils.GetMainMenuObject(scattererBody.celestialBody).transform;
+					parentLocalTransform  = Utils.GetMainMenuObject(scattererBody.celestialBody).transform;
 			}
 			else
 			{
@@ -66,7 +66,7 @@ namespace scatterer
 
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				GameObject _go = Utils.GetMainMenuObject(parentCelestialBody.name);
+				GameObject _go = Utils.GetMainMenuObject(scattererBody.celestialBody);
 				if (_go)
 				{
 					MeshRenderer _mr = _go.GetComponent<MeshRenderer> ();

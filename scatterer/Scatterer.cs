@@ -55,7 +55,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0600";
+		public string versionNumber = "0.0610 Dev";
 
 		void Awake ()
 		{
@@ -337,6 +337,16 @@ namespace scatterer
 			mainSettings.loadMainSettings ();
 			pluginData.loadPluginData ();
 			planetsConfigsReader.loadConfigs ();
+
+			// Hack: for mainMenu everything is jumbled, so just attempt to load every planet always
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+			{
+				foreach (ScattererCelestialBody _SCB in planetsConfigsReader.scattererCelestialBodies)
+				{
+					_SCB.loadDistance = Mathf.Infinity;
+					_SCB.unloadDistance = Mathf.Infinity;
+				}
+			}
 		}
 		
 		public void saveSettings ()

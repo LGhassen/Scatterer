@@ -87,22 +87,19 @@ namespace scatterer
 			}
 		}
 
-		public static GameObject GetMainMenuObject(string name)
+
+		public static GameObject GetMainMenuObject(CelestialBody celestialBody)
 		{
-			GameObject kopernicusMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault
-				(b => b.name == (name+"(Clone)") && b.transform.parent.name.Contains("Scene"));
+			string name = celestialBody.isHomeWorld ? "Kerbin" : celestialBody.name;
+
+			GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("OrbitScene")));
 			
-			if (kopernicusMainMenuObject != null)
-				return kopernicusMainMenuObject;
-			
-			GameObject kspMainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => b.name == name && b.transform.parent.name.Contains("Scene"));
-			
-			if (kspMainMenuObject == null)
+			if (ReferenceEquals(mainMenuObject,null))
 			{
-				throw new Exception("No correct main menu object found for "+name);
+				throw new Exception("No correct main menu object found for "+celestialBody.name);
 			}
 			
-			return kspMainMenuObject;
+			return mainMenuObject;
 		}
 		
 		public static Transform GetScaledTransform (string body)
