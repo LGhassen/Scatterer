@@ -20,17 +20,29 @@ namespace scatterer
 		{
 		}
 
+		public void OnUpdate()
+		{
+			gameObject.transform.position = Scatterer.Instance.nearCamera.transform.position + (Scatterer.Instance.nearCamera.transform.forward * -5000f);
+		}
+
 		public void OnWillRenderObject()
 		{
 			Camera cam = Camera.current;
 			if (!cam)
 				return;
 
-			if (!camToFixer.ContainsKey(cam) && (cam.name=="Reflection Probes Camera"))
+			if (!camToFixer.ContainsKey(cam))
 			{
-				camToFixer[cam] = (ReflectionProbeFixer) cam.gameObject.AddComponent(typeof(ReflectionProbeFixer));
-
-				Utils.LogDebug("Added reflection probe fixer to "+cam.name);
+				if (cam.name=="Reflection Probes Camera")
+				{
+					camToFixer[cam] = (ReflectionProbeFixer) cam.gameObject.AddComponent(typeof(ReflectionProbeFixer));
+					Utils.LogDebug("Added reflection probe fixer to "+cam.name);
+				}
+				else
+				{
+					//we add it anyway to avoid doing a string compare
+					camToFixer[cam] = null;
+				}
 			}
 
 		}
@@ -41,8 +53,11 @@ namespace scatterer
 			{
 				foreach (var _val in camToFixer.Values)
 				{
-					Component.Destroy (_val);
-					UnityEngine.Object.Destroy (_val);
+					if (!ReferenceEquals(_val,null))
+					{
+						Component.Destroy (_val);
+						UnityEngine.Object.Destroy (_val);
+					}
 				}
 				camToFixer.Clear();
 			}

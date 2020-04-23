@@ -31,7 +31,7 @@ namespace scatterer
 		public void Awake()
 		{
 			// Create a camera that will render scaledSpace for reflection probes
-			scaledCameraGO = new GameObject("ReflectionProbeScaledSpaceCamera");
+			scaledCameraGO = new GameObject("ScattererReflectionProbeScaledSpaceCamera");
 			scaledCamera = scaledCameraGO.AddComponent<Camera>();
 			reflectionProbeCamera = gameObject.GetComponent<Camera> ();
 

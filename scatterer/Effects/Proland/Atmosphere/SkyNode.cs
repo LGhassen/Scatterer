@@ -22,9 +22,6 @@ namespace scatterer
 		protected string name;
 		public UrlDir.UrlConfig configUrl;
 		
-		public GameObject atmosphereMesh;
-		public MeshRenderer atmosphereMeshrenderer;
-		
 		SimpleRenderingShape SkySphere;
 		GameObject skySphereGameObject;
 		MeshRenderer skySphereMeshRenderer, stockSkyMeshRenderer, stockScaledPlanetMeshRenderer;
@@ -238,8 +235,6 @@ namespace scatterer
 				m_manager.parentCelestialBody.pqsController.isActive = false; 	//sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
 													//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
 			}
-
-			atmosphereMesh = new GameObject ();
 
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
@@ -589,8 +584,8 @@ namespace scatterer
 				addScaledScatteringMaterialToPlanet();
 
 				//disable postprocessing and ocean effects for Texture Replacer reflections
-				DisableEffectsChecker effectsDisabler = atmosphereMesh.AddComponent<DisableEffectsChecker>();
-				effectsDisabler.manager = m_manager;
+//				DisableEffectsChecker effectsDisabler = atmosphereMesh.AddComponent<DisableEffectsChecker>();
+//				effectsDisabler.manager = m_manager;
 
 				//after the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
 				//call EVE clouds2D.reassign() method to set the shader properties
@@ -970,7 +965,7 @@ namespace scatterer
 				UnityEngine.Object.Destroy (m_inscatter);
 			}
 
-			UnityEngine.Object.Destroy(atmosphereMesh);
+//			UnityEngine.Object.Destroy(atmosphereMesh);
 
 			Component.Destroy (skySphereMeshRenderer);
 			UnityEngine.Object.Destroy (skySphereGameObject);

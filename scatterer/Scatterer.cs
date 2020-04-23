@@ -370,6 +370,7 @@ namespace scatterer
 
 			if (scaledSpaceCamera && nearCamera)
 			{
+				//move these to be used only with long-distance shadows?
 				if (!unifiedCameraMode && (mainSettings.dualCamShadowCascadeSplitsOverride != Vector3.zero))
 				{
 					shadowCascadeTweaker = (TweakShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakShadowCascades));
@@ -528,7 +529,7 @@ namespace scatterer
 		public void addReflectionProbeFixer()
 		{
 			ReflectionProbeCheckerGO = new GameObject ("Scatterer ReflectionProbeCheckerGO");
-			ReflectionProbeCheckerGO.transform.parent = nearCamera.transform;
+			//ReflectionProbeCheckerGO.transform.parent = nearCamera.transform; //VesselViewer doesn't like this for some reason
 			ReflectionProbeCheckerGO.layer = 15;
 
 			reflectionProbeChecker = ReflectionProbeCheckerGO.AddComponent<ReflectionProbeChecker> ();
