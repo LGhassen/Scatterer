@@ -92,7 +92,7 @@ namespace scatterer
 		{
 			string name = celestialBody.isHomeWorld ? "Kerbin" : celestialBody.name;
 
-			GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("OrbitScene")));
+			GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("Scene")));
 			
 			if (ReferenceEquals(mainMenuObject,null))
 			{
