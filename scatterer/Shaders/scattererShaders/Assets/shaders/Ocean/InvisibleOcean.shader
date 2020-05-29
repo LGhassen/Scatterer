@@ -3,11 +3,11 @@
 	SubShader 
 	{
 		Tags {"Queue" = "Transparent" "IgnoreProjector"="True" "RenderType"="InvOcean"}
-	
-    	Pass 
-    	{
-    		ZWrite Off
-    		ZTest on
+
+		Pass 
+		{
+			ZWrite Off
+			ZTest on
 
 			Blend SrcAlpha OneMinusSrcAlpha
 
@@ -18,17 +18,17 @@
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma glsl
-			
+
 			struct v2f 
 			{
-    			float4 pos : SV_POSITION;
+				float4 pos : SV_POSITION;
 			};
 
 			v2f vert(appdata_base v)
 			{
 				v2f OUT;
-    			OUT.pos = float4(2.0, 2.0, 2.0, 1.0); //outside clip space => cull vertex
-    			return OUT;
+				OUT.pos = float4(2.0, 2.0, 2.0, 1.0); //outside clip space => cull vertex
+				return OUT;
 			}
 
 
@@ -36,8 +36,8 @@
 			{
 				return float4(0.0,0.0,0.0,0.0);			
 			}
-			
+
 			ENDCG
-    	}
+		}
 	}
 }

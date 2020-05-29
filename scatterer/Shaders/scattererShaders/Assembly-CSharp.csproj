@@ -122,8 +122,6 @@
      <None Include="Assets\Shaders\OldOrUnused\atmosphereScatterNew.shader" />
      <None Include="Assets\Shaders\OldOrUnused\SkyScaledBox.shader" />
      <None Include="Assets\Shaders\DepthTexture\ShadowVolumeDepth - Copy.shader" />
-     <None Include="Assets\Shaders\DepthTexture\customDepthTextureGEOM.shader" />
-     <None Include="Assets\Shaders\DepthTexture\customDepthTextureBak.shader" />
      <None Include="Assets\Shaders\Grass\Grass.shader" />
      <None Include="Assets\Shaders\EVE\alphaMap.cginc" />
      <None Include="Assets\Shaders\Ocean\underwaterPostProcessing32bitViewSpaceDepth.shader" />
@@ -141,7 +139,7 @@
      <None Include="Assets\Shaders\Shadows\FixedScreenSpaceShadows.cginc" />
      <None Include="Assets\Shaders\Occlusion\ModulateShadowMaskWithOcclusion.shader" />
      <None Include="Assets\Shaders\EVE\CloudVolumeParticle.shader" />
-     <None Include="Assets\Shaders\Atmo\atmospherePostProcessing32bitViewSpaceDepth.shader" />
+     <None Include="Assets\Shaders\OldOrUnused\atmospherePostProcessing32bitViewSpaceDepth.shader" />
      <None Include="Assets\Shaders\Utility.cginc" />
      <None Include="Assets\Shaders\DepthTexture\simpleDepthTexture.shader" />
  <Reference Include="Unity.Timeline.Editor">

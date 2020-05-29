@@ -193,14 +193,11 @@ fixed4 frag_pcfSoft(v2f i) : SV_Target
     fixed4 cascadeWeights = GET_CASCADE_WEIGHTS(wpos, vpos.z);
     float4 coord = GET_SHADOW_COORDINATES(wpos, cascadeWeights);
     	
-	//float3 receiverPlaneDepthBias = float3(0.0,0.0,0.001); //flickers a bit around 50000
-	float zdepth2 = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv.xy);
-	float3 receiverPlaneDepthBias = float3(0.0,0.0,0.5*Linear01Depth(zdepth2));	//my best or worst hack yet?
-																				//seems to fix all issues, no peter-panning either
-																				//perfect for 5000 shadowDistance
-																				//Holds up to 8000-9000 shadow distance and gets swimmy after
-//
-//	float3 receiverPlaneDepthBias = float3(0.0,0.0,Linear01Depth(zdepth2));
+    float zdepth2 = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv.xy);
+    float3 receiverPlaneDepthBias = float3(0.0,0.0,0.5*Linear01Depth(zdepth2));	//my best or worst hack yet?
+											//seems to fix all issues, no peter-panning either
+											//perfect for 5000 shadowDistance
+											//Holds up to 8000-9000 shadow distance and gets swimmy after
 
 #ifdef UNITY_USE_RECEIVER_PLANE_BIAS
     // Reveiver plane depth bias: need to calculate it based on shadow coordinate

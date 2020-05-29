@@ -1,47 +1,47 @@
 ﻿
 Shader "Scatterer/UnderwaterScatterProjector" {
-    SubShader {
-          Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
-	
-Pass {
+	SubShader {
+		Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+
+		Pass {
 			//Cull Front
 			Cull Back
 			ZTest LEqual
 			ZWrite Off
-    	
-            Blend SrcAlpha OneMinusSrcAlpha
 
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma target 3.0
-            #include "UnityCG.cginc"
-            #include "../CommonAtmosphere.cginc"
+			Blend SrcAlpha OneMinusSrcAlpha
 
-            uniform float3 _planetPos;
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+			#pragma target 3.0
+			#include "UnityCG.cginc"
+			#include "../CommonAtmosphere.cginc"
 
-            uniform float3 _Underwater_Color;
+			uniform float3 _planetPos;
+
+			uniform float3 _Underwater_Color;
 
 			uniform float transparencyDepth;
 			uniform float darknessDepth;
-                    
-            struct v2f
-            {
-                float3 viewPos:TEXCOORD0;
-                float3 viewDir:TEXCOORD1;
-                float3 worldPos:TEXCOORD2;
-            };
 
-            v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
-            {
-                v2f o;
-                outpos =  UnityObjectToClipPos(v.vertex);
+			struct v2f
+			{
+				float3 viewPos:TEXCOORD0;
+				float3 viewDir:TEXCOORD1;
+				float3 worldPos:TEXCOORD2;
+			};
+
+			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
+			{
+				v2f o;
+				outpos =  UnityObjectToClipPos(v.vertex);
 				o.viewPos =  UnityObjectToViewPos(v.vertex.xyz);
 				o.worldPos = mul(unity_ObjectToWorld,v.vertex).xyz;
 				o.viewDir = o.worldPos - _WorldSpaceCameraPos;
 				o.worldPos = o.worldPos - _planetPos;
-                return o;
-            }
+				return o;
+			}
 
 			float3 oceanColor(float3 viewDir, float3 lightDir, float3 surfaceDir)
 			{
@@ -50,8 +50,8 @@ Pass {
 				return waterColor;
 			}
 
-            half4 frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
-            {
+			half4 frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
+			{
 				float fragDistance = length(i.viewPos);                
 
 				float3 rayDir=normalize(i.viewDir);
@@ -68,7 +68,7 @@ Pass {
 				return float4(dither(waterColor, screenPos), alpha);
 			}
 
-            ENDCG
-        }
-    }
+			ENDCG
+		}
+	}
 }

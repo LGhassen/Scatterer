@@ -11,7 +11,7 @@ bool fragmentInsideOfClippingRange(float depth)
 	else								//if nearcamera
 	{
 		return (depth <= (_ProjectionParams.z+1.0));
-    }
+	}
 }
 
 bool oceanFragmentInsideOfClippingRange(float depth)
@@ -24,5 +24,5 @@ bool oceanFragmentInsideOfClippingRange(float depth)
 	else								//if nearcamera
 	{
 		return (depth <= (_ProjectionParams.z+1.0));
-    }
+	}
 }
