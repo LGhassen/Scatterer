@@ -1014,6 +1014,8 @@ namespace scatterer
 
 			if (!ReferenceEquals(originalScaledMesh,null))
 				parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = originalScaledMesh;
+
+			cleanupScaledScatteringMaterial ();
 		}
 
 		public bool loadFromConfigNode ()
@@ -1162,11 +1164,17 @@ namespace scatterer
 			parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = tweakedScaledmesh;
 		}
 
-		public void addScaledScatteringMaterialToPlanet ()
+		public void cleanupScaledScatteringMaterial()
 		{
 			List<Material> mats = stockScaledPlanetMeshRenderer.materials.ToList();
 			mats.RemoveAll (mat => mat.name.Contains("Scatterer/ScaledPlanetScattering")); //clean up old materials
+			stockScaledPlanetMeshRenderer.materials = mats.ToArray ();
+		}
 
+		public void addScaledScatteringMaterialToPlanet ()
+		{
+			List<Material> mats = stockScaledPlanetMeshRenderer.materials.ToList();
+			mats.RemoveAll (mat => mat.name.Contains("Scatterer/ScaledPlanetScattering"));
 			mats.Add (scaledScatteringMaterial);
 			stockScaledPlanetMeshRenderer.materials = mats.ToArray ();
 		}
