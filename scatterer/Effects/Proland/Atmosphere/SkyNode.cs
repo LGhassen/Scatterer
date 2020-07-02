@@ -23,8 +23,8 @@ namespace scatterer
 		public UrlDir.UrlConfig configUrl;
 		
 		SimpleRenderingShape SkySphere;
-		GameObject skySphereGameObject;
-		MeshRenderer skySphereMeshRenderer, stockSkyMeshRenderer, stockScaledPlanetMeshRenderer;
+		GameObject skySphereGameObject, stockSkyGameObject;
+		MeshRenderer skySphereMeshRenderer, stockScaledPlanetMeshRenderer;
 		Mesh originalScaledMesh, tweakedScaledmesh;
 
 		[Persistent]
@@ -610,7 +610,7 @@ namespace scatterer
 				if (m_manager.hasOcean && !Scatterer.Instance.mainSettings.useOceanShaders)
 				{
 					skySphereMeshRenderer.enabled = (trueAlt>=0f);
-					stockSkyMeshRenderer.enabled = (trueAlt<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
+					stockSkyGameObject.SetActive(trueAlt<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
 				}
 			}
 		}
@@ -1102,10 +1102,12 @@ namespace scatterer
 			{
 				if (parentScaledTransform.GetChild (i).gameObject.layer == 9)
 				{
-					if (parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > () != skySphereMeshRenderer)
+					if (parentScaledTransform.GetChild (i).gameObject.name=="Atmosphere")
 					{
-						stockSkyMeshRenderer = parentScaledTransform.GetChild (i).gameObject.GetComponent < MeshRenderer > ();
-						stockSkyMeshRenderer.enabled=false;
+						stockSkyGameObject = parentScaledTransform.GetChild (i).gameObject;
+						stockSkyGameObject.SetActive(false);
+
+						Utils.LogInfo("Stock sky disabled");
 						break;
 					}
 				}
