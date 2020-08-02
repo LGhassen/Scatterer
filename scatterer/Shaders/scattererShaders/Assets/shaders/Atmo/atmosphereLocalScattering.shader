@@ -21,6 +21,8 @@
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
 
+			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
+
 			uniform float _global_alpha;
 			uniform float _global_depth;
 			uniform float3 _planetPos; //planet origin, in world space
@@ -61,7 +63,9 @@
 				float4 worldPos = mul(unity_ObjectToWorld,v.vertex);
 				worldPos.xyz/=worldPos.w; //needed?
 
-				worldPos.xyz = (_PlanetOpacity < 1.0) && (length(worldPos.xyz-_planetPos) < Rg) ? _planetPos+Rg* normalize(worldPos.xyz-_planetPos)  : worldPos.xyz  ;
+#if defined (CUSTOM_OCEAN_ON)
+				worldPos.xyz = (_PlanetOpacity < 1.0) && (length(worldPos.xyz-_planetPos) < Rg) ? _planetPos+Rg* normalize(worldPos.xyz-_planetPos)  : worldPos.xyz;
+#endif
 
 				o.worldPos = float4(worldPos.xyz,1.0);
 				o.pos = mul (UNITY_MATRIX_VP,o.worldPos);
@@ -76,6 +80,7 @@
 				float3 worldPos = i.worldPos.xyz/i.worldPos.w - _planetPos; //worldPos relative to planet origin
 
 				half returnPixel = ((  (length(i._camPos)-Rg) < 1000 )  && (length(worldPos) < (Rg-50))) ? 0.0: 1.0;  //enable in case of ocean and close enough to water surface, works well for kerbin
+
 
 				worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
@@ -115,6 +120,7 @@
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 			//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
+			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
 
 			uniform float _global_alpha;
 			uniform float _global_depth;
@@ -158,9 +164,11 @@
 				float4 worldPos = mul(unity_ObjectToWorld,v.vertex);
 				worldPos.xyz/=worldPos.w; //needed?
 
-				worldPos.xyz = (_PlanetOpacity < 1.0) && (length(worldPos.xyz-_planetPos) < Rg) ? _planetPos+Rg* normalize(worldPos.xyz-_planetPos)  : worldPos.xyz ; //display scattering at ocean level when we are fading out local shading
+				//display scattering at ocean level when we are fading out local shading
 				//at the same time ocean stops rendering it's own scattering
-				//check if not needed for stock ocean? or maybe raise it a bit for stock ocean to kill that z-fighting
+				#if defined (CUSTOM_OCEAN_ON)
+				worldPos.xyz = (_PlanetOpacity < 1.0) && (length(worldPos.xyz-_planetPos) < Rg) ? _planetPos+Rg* normalize(worldPos.xyz-_planetPos)  : worldPos.xyz;
+				#endif
 
 				o.worldPos = float4(worldPos.xyz,1.0);
 				o.worldPos.xyz*=worldPos.w;

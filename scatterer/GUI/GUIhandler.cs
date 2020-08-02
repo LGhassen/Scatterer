@@ -248,7 +248,7 @@ namespace scatterer
 			}
 			else if (selectedTab == mainMenuTabs.Shadows)
 			{	
-				Scatterer.Instance.mainSettings.d3d11ShadowFix = GUILayout.Toggle (Scatterer.Instance.mainSettings.d3d11ShadowFix, "1.9 Directx11 flickering shadows fix (recommended)");
+				Scatterer.Instance.mainSettings.d3d11ShadowFix = GUILayout.Toggle (Scatterer.Instance.mainSettings.d3d11ShadowFix, "1.9+ Directx11 flickering shadows fix (recommended)");
 				Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Long-Distance Terrain shadows (may not reset until game restart)");
 
 				if(Scatterer.Instance.mainSettings.terrainShadows)
@@ -259,7 +259,7 @@ namespace scatterer
 						GUILayout.BeginVertical();
 						{
 							GUI.contentColor = Scatterer.Instance.unifiedCameraMode ? Color.white : Color.gray;
-							GUILayout.Label ((Scatterer.Instance.unifiedCameraMode ? "[Active] ":"[Inactive] ") +"Unified camera mode (1.9 Directx11):");
+							GUILayout.Label ((Scatterer.Instance.unifiedCameraMode ? "[Active] ":"[Inactive] ") +"Unified camera mode (1.9+ Directx11):");
 							GUILayout.BeginHorizontal ();
 							{
 								GUILayout.Label ("\t");
@@ -296,7 +296,7 @@ namespace scatterer
 							GUILayout.EndHorizontal();
 							
 							GUI.contentColor = !Scatterer.Instance.unifiedCameraMode ? Color.white : Color.gray;
-							GUILayout.Label ((!Scatterer.Instance.unifiedCameraMode ? "[Active] ":"[Inactive] ") +"Dual camera mode (1.8 and 1.9 Opengl):");
+							GUILayout.Label ((!Scatterer.Instance.unifiedCameraMode ? "[Active] ":"[Inactive] ") +"Dual camera mode (1.8, 1.9 and 1.10 Opengl):");
 							GUILayout.BeginHorizontal ();
 							{
 								GUILayout.Label ("\t");

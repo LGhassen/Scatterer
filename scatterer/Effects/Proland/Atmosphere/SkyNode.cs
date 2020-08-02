@@ -725,6 +725,22 @@ namespace scatterer
 				mat.EnableKeyword ("PLANETSHINE_OFF");
 			}
 
+			//when using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately
+			//instead ocean shader handles scattering internally
+			//when the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
+			//the ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering
+			//this is not needed for stock ocean so disable it
+			if (m_manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders)
+			{
+				mat.EnableKeyword ("CUSTOM_OCEAN_ON");
+				mat.DisableKeyword ("CUSTOM_OCEAN_OFF");
+			}
+			else
+			{
+				mat.EnableKeyword ("CUSTOM_OCEAN_OFF");
+				mat.DisableKeyword ("CUSTOM_OCEAN_ON");
+			}
+
 			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
 			else
