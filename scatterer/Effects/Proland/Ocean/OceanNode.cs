@@ -100,7 +100,6 @@ namespace scatterer
 		}
 
 		OceanCameraUpdateHook oceanCameraProjectionMatModifier;
-		CommandBuffer oceanRefractionCommandBuffer;
 		UnderwaterDimmingHook underwaterDimmingHook;
 
 		Vector3d2 m_offset = Vector3d2.Zero ();
@@ -154,15 +153,6 @@ namespace scatterer
 
 			underwaterProjector = new AtmosphereProjector(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius);
 			underwaterProjector.setActivated(false);
-
-			//move this to separate class and make it work on every camera
-			//refraction command buffer
-			oceanRefractionCommandBuffer = new CommandBuffer();
-			oceanRefractionCommandBuffer.name = "ScattererOceanGrabScreen";
-			oceanRefractionCommandBuffer.Blit (BuiltinRenderTextureType.CurrentActive, Scatterer.Instance.bufferManager.refractionTexture);			
-			if (!Scatterer.Instance.unifiedCameraMode)
-				Scatterer.Instance.farCamera.AddCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-			Scatterer.Instance.nearCamera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 
 			//dimming
 			//TODO: maybe this can be changed, instead of complicated hooks on the Camera, add it to the light, like causticsShadowMaskModulate?
@@ -622,14 +612,6 @@ namespace scatterer
 				oceanCameraProjectionMatModifier.OnDestroy ();
 				Component.Destroy (oceanCameraProjectionMatModifier);
 				UnityEngine.Object.Destroy (oceanCameraProjectionMatModifier);
-			}
-			
-			if (!ReferenceEquals(oceanRefractionCommandBuffer,null))
-			{
-				if (!Scatterer.Instance.unifiedCameraMode)
-					Scatterer.Instance.farCamera.RemoveCommandBuffer  (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
-
-				Scatterer.Instance.nearCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, oceanRefractionCommandBuffer);
 			}
 			
 			for (int i = 0; i < numGrids; i++)

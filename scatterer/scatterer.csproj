@@ -178,6 +178,8 @@
     <Compile Include="Utilities\Camera\DisableEffectsForReflectionsCamera.cs" />
     <Compile Include="Utilities\Camera\ReflectionProbeFixer.cs" />
     <Compile Include="Utilities\Camera\ReflectionProbeChecker.cs" />
+    <Compile Include="Utilities\Camera\ScreenCopyCommandBuffer.cs" />
+    <Compile Include="Utilities\Camera\ScreenCopierNotifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

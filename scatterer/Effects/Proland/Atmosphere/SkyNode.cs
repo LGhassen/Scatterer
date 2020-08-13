@@ -24,6 +24,7 @@ namespace scatterer
 		
 		SimpleRenderingShape SkySphere;
 		GameObject skySphereGameObject, stockSkyGameObject;
+		ScreenCopierNotifierObject screenCopierNotifier = null;
 		MeshRenderer skySphereMeshRenderer, stockScaledPlanetMeshRenderer;
 		Mesh originalScaledMesh, tweakedScaledmesh;
 
@@ -268,6 +269,8 @@ namespace scatterer
 			scaledScatteringMaterial.renderQueue=2999;
 
 			skySphereMeshRenderer.enabled = true;
+
+			screenCopierNotifier = new ScreenCopierNotifierObject (m_manager.parentCelestialBody);
 
 			if (Scatterer.Instance.mainSettings.useRingShadows)
 			{
@@ -612,6 +615,8 @@ namespace scatterer
 					skySphereMeshRenderer.enabled = (trueAlt>=0f);
 					stockSkyGameObject.SetActive(trueAlt<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
 				}
+
+				screenCopierNotifier.Enable(!inScaledSpace);
 			}
 		}
 		
@@ -961,6 +966,8 @@ namespace scatterer
 		
 		public void Cleanup ()
 		{
+
+
 			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange)
 			{
 				saveToConfigNode ();
@@ -990,6 +997,9 @@ namespace scatterer
 			{
 				UnityEngine.Object.Destroy (localScatteringProjector);
 			}
+
+			screenCopierNotifier.Cleanup();
+			screenCopierNotifier = null;
 
 			//disable eve integration scatterer flag
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)

@@ -1,10 +1,10 @@
 ﻿Shader "Scatterer/AtmosphericLocalScatter" {
 	SubShader {
-		Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+		Tags {"Queue" = "Transparent-498" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 
 		//extinction pass
 		Pass {
-			Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+			Tags {"Queue" = "Transparent-498" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 
 			//Cull Front
 			Cull Back
@@ -100,7 +100,7 @@
 
 		//scattering pass
 		Pass {
-			Tags {"Queue" = "Transparent-5" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+			Tags {"Queue" = "Transparent-498" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 
 			//Cull Front
 			Cull Back

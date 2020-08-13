@@ -158,7 +158,7 @@
 			uniform float extinctionThickness;
 
 			//#if defined (REFRACTION_ON)
-			uniform sampler2D _BackgroundTexture;   //background texture used for refraction
+			uniform sampler2D ScattererScreenCopy;   //background texture used for refraction
 			//#endif
 
 #if defined (PLANETSHINE_ON)
@@ -489,9 +489,9 @@
 			outAlpha = min(outAlpha, 1.0);
 
 	#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
-			float3 backGrnd = tex2D(_BackgroundTexture, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
+			float3 backGrnd = tex2D(ScattererScreenCopy, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
 	#else
-			float3 backGrnd = tex2D(_BackgroundTexture, uv );
+			float3 backGrnd = tex2D(ScattererScreenCopy, uv );
 	#endif
 #endif
 
