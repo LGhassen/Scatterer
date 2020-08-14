@@ -149,6 +149,8 @@ namespace scatterer
 			oceanCameraProjectionMatModifier = waterGameObjects[0].AddComponent<OceanCameraUpdateHook>();
 			oceanCameraProjectionMatModifier.oceanNode = this;
 
+			waterGameObjects[0].AddComponent<ScreenCopierNotifier>();
+
 			InitUnderwaterMaterial ();
 
 			underwaterProjector = new AtmosphereProjector(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius);
