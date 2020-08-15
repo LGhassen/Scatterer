@@ -55,7 +55,9 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0621 dev";
+
+		public string versionNumber = "0.0622 dev";
+
 
 		void Awake ()
 		{
