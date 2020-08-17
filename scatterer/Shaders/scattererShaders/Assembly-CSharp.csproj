@@ -84,6 +84,7 @@
      <None Include="Assets\Shaders\OldOrUnused\SkyScaledBoxScaled.shader" />
      <None Include="Assets\Shaders\DecodeEncode\WriteToFloat.shader" />
      <None Include="Assets\Shaders\OldOrUnused\SphereCloudOld.shader" />
+     <None Include="Assets\Shaders\EVE\GeometryCloudVolumeParticleToTexture.shader" />
      <None Include="Assets\Shaders\Ocean\Caustics\CausticsGodrays.shader" />
      <None Include="Assets\Shaders\EVE\old\SphereCloud.shader" />
      <None Include="Assets\Shaders\Atmo\mergedAtmosphereLocalScattering.shader" />

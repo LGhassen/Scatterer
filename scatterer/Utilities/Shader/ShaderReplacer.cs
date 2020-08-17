@@ -159,6 +159,18 @@ namespace scatterer
 					}
 					
 					Utils.LogDebug("replaced EVE/GeometryCloudVolumeParticle in EVE shader dictionary");
+
+					if (EVEshaderDictionary.ContainsKey("EVE/GeometryCloudVolumeParticleToTexture"))
+					{
+						EVEshaderDictionary["EVE/GeometryCloudVolumeParticleToTexture"] = LoadedShaders["Scatterer-EVE/GeometryCloudVolumeParticleToTexture"];
+					}
+					else
+					{
+						List<Material> cloudsList = new List<Material>();
+						EVEshaderDictionary.Add("EVE/GeometryCloudVolumeParticleToTexture",LoadedShaders["Scatterer-EVE/GeometryCloudVolumeParticleToTexture"]);
+					}
+					
+					Utils.LogDebug("replaced EVE/GeometryCloudVolumeParticleToTexture in EVE shader dictionary");
 				}
 			}
 			
@@ -234,6 +246,11 @@ namespace scatterer
 			case "EVE/GeometryCloudVolumeParticle":
 				Utils.LogDebug("replacing EVE/GeometryCloudVolumeParticle");
 				replacementShader = LoadedShaders["Scatterer-EVE/GeometryCloudVolumeParticle"];
+				Utils.LogDebug("Shader replaced");
+				break;
+			case "EVE/GeometryCloudVolumeParticleToTexture":
+				Utils.LogDebug("replacing EVE/GeometryCloudVolumeParticleToTexture");
+				replacementShader = LoadedShaders["Scatterer-EVE/GeometryCloudVolumeParticleToTexture"];
 				Utils.LogDebug("Shader replaced");
 				break;
 //			case "Terrain/PQS/PQS Main - Optimised":
