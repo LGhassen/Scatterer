@@ -22,7 +22,7 @@
 
 	Category {
 
-		Tags { "Queue"="Transparent+2" "IgnoreProjector"="True" "RenderType"="Transparent" "DisableBatching"="True" }
+		Tags { "Queue"="Transparent-1" "IgnoreProjector"="True" "RenderType"="Transparent" "DisableBatching"="True" }
 		//Blend SrcAlpha OneMinusSrcAlpha
 		Blend SrcAlpha OneMinusSrcAlpha, Zero OneMinusSrcAlpha   //traditional alpha blending for colors, multiply by (1-alpha) for alpha to store in texture
 		Fog { Mode Global}
