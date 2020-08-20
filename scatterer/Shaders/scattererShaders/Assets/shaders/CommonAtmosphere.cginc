@@ -111,6 +111,7 @@ uint bayer8inl(const uint2 xy)
 
 float3 dither (float3 iColor, float2 iScreenPos)
 {
+#if defined (DITHERING_ON)
 	float bayer=bayerPattern(3,fmod(int2(iScreenPos),8));
 
 	const float rgbByteMax=255.;
@@ -120,6 +121,9 @@ float3 dither (float3 iColor, float2 iScreenPos)
 	float3 tail=frac(rgb);
 
 	return (head + step(bayer,64.f*tail)) / rgbByteMax;
+#else
+	return iColor;
+#endif
 }
 
 float4 dither (float4 iColor, float2 iScreenPos)

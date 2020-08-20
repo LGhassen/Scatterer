@@ -578,6 +578,17 @@ namespace scatterer
 			underwaterMaterial.SetFloat ("darknessDepth", darknessDepth);
 			underwaterMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
 			underwaterMaterial.SetFloat ("Rg",(float)m_manager.m_radius);
+
+			if (Scatterer.Instance.mainSettings.useDithering)
+			{
+				underwaterMaterial.EnableKeyword ("DITHERING_ON");
+				underwaterMaterial.DisableKeyword ("DITHERING_OFF");	
+			}
+			else
+			{
+				underwaterMaterial.DisableKeyword ("DITHERING_ON");
+				underwaterMaterial.EnableKeyword ("DITHERING_OFF");
+			}
 		}
 
 		void toggleUnderwaterMode()

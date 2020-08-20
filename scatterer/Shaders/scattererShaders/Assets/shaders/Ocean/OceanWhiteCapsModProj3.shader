@@ -96,6 +96,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			#pragma multi_compile OCEAN_SHADOWS_OFF OCEAN_SHADOWS_HARD OCEAN_SHADOWS_SOFT
 			#pragma multi_compile REFRACTIONS_AND_TRANSPARENCY_OFF REFRACTIONS_AND_TRANSPARENCY_ON
 			#pragma multi_compile SCATTERER_MERGED_DEPTH_ON SCATTERER_MERGED_DEPTH_OFF
+			#pragma multi_compile DITHERING_OFF DITHERING_ON
 			//#pragma multi_compile SCATTERING_ON SCATTERING_OFF
 
 			#include "../CommonAtmosphere.cginc"

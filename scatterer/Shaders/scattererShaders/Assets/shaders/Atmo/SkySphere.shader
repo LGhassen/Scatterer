@@ -126,6 +126,7 @@ Shader "Scatterer/SkySphere"
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
+			#pragma multi_compile DITHERING_OFF DITHERING_ON
 
 			uniform float _Alpha_Global;
 

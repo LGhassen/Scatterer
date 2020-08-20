@@ -18,13 +18,15 @@ Shader "Scatterer/UnderwaterScatterProjector" {
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
 
+			#pragma multi_compile DITHERING_OFF DITHERING_ON
+			
 			uniform float3 _planetPos;
 
 			uniform float3 _Underwater_Color;
 
 			uniform float transparencyDepth;
 			uniform float darknessDepth;
-
+			
 			struct v2f
 			{
 				float3 viewPos:TEXCOORD0;

@@ -741,6 +741,17 @@ namespace scatterer
 				mat.DisableKeyword ("CUSTOM_OCEAN_ON");
 			}
 
+			if (Scatterer.Instance.mainSettings.useDithering)
+			{
+				mat.EnableKeyword ("DITHERING_ON");
+				mat.DisableKeyword ("DITHERING_OFF");
+			}
+			else
+			{
+				mat.DisableKeyword ("DITHERING_ON");
+				mat.EnableKeyword ("DITHERING_OFF");
+			}
+
 			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
 			else
@@ -865,6 +876,17 @@ namespace scatterer
 			{
 				mat.DisableKeyword ("PLANETSHINE_ON");
 				mat.EnableKeyword ("PLANETSHINE_OFF");
+			}
+
+			if (Scatterer.Instance.mainSettings.useDithering)
+			{
+				mat.EnableKeyword ("DITHERING_ON");
+				mat.DisableKeyword ("DITHERING_OFF");	
+			}
+			else
+			{
+				mat.DisableKeyword ("DITHERING_ON");
+				mat.EnableKeyword ("DITHERING_OFF");
 			}
 
 			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, m_manager.flatScaledSpaceModel ? 1f : 0f );

@@ -28,7 +28,7 @@ namespace scatterer
 			Lighting,
 			Shadows,
 			EVEintegration,
-			Camera
+			Misc
 		}
 
 		mainMenuTabs selectedTab = mainMenuTabs.Ocean;
@@ -206,9 +206,9 @@ namespace scatterer
 				{
 					selectedTab = mainMenuTabs.EVEintegration;
 				}
-				if (GUILayout.Button ("Camera"))
+				if (GUILayout.Button ("Misc."))
 				{
-					selectedTab = mainMenuTabs.Camera;
+					selectedTab = mainMenuTabs.Misc;
 				}
 			}
 			GUILayout.EndHorizontal ();
@@ -346,12 +346,18 @@ namespace scatterer
 			{
 				Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
 			}
-			else if (selectedTab == mainMenuTabs.Camera)
+			else if (selectedTab == mainMenuTabs.Misc)
 			{
 				GUILayout.BeginHorizontal ();
 				{
 					Scatterer.Instance.mainSettings.overrideNearClipPlane = GUILayout.Toggle (Scatterer.Instance.mainSettings.overrideNearClipPlane, "Override Near ClipPlane (not recommended - restart on disable)");
 					Scatterer.Instance.mainSettings.nearClipPlane = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.nearClipPlane.ToString ("0.000")));
+				}
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				{
+					Scatterer.Instance.mainSettings.useDithering = GUILayout.Toggle (Scatterer.Instance.mainSettings.useDithering, "Use dithering (Reduces color banding in sky and scattering, disable if you notice dithering patterns");
 				}
 				GUILayout.EndHorizontal ();
 			}

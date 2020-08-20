@@ -27,6 +27,7 @@
 			//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
+			#pragma multi_compile DITHERING_OFF DITHERING_ON
 
 			uniform float _global_alpha;
 			uniform float _global_depth;

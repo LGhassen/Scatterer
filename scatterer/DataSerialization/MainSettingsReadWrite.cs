@@ -103,6 +103,8 @@ namespace scatterer
 		[Persistent]
 		public Vector3 dualCamShadowCascadeSplitsOverride=Vector3.zero;
 
+		[Persistent]
+		public bool useDithering = true;
 
 		
 		[Persistent]
@@ -163,6 +165,7 @@ namespace scatterer
 				 OldConfig.useRingShadows != useRingShadows ||
 				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
 				 OldConfig.terrainShadows != terrainShadows ||
+				 OldConfig.useDithering != useDithering ||
 
 				 OldConfig.unifiedCamShadowsDistance != unifiedCamShadowsDistance ||
 				 OldConfig.unifiedCamShadowNormalBiasOverride != unifiedCamShadowNormalBiasOverride ||
