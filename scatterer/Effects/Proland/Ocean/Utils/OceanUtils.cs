@@ -16,42 +16,69 @@ namespace scatterer
 	{
 		public static void removeStockOceans()
 		{
-			Material invisibleOcean = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
-			foreach (ScattererCelestialBody sctBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
+			Material invisibleOceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
+
+			FakeOceanPQS[] fakes = (FakeOceanPQS[])FakeOceanPQS.FindObjectsOfType (typeof(FakeOceanPQS));
+
+			// if we haven't already added ocean disablers
+			if (fakes.Length == 0)
 			{
-				if (sctBody.hasOcean)
+				foreach (ScattererCelestialBody sctBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 				{
-					bool removed = false;
-					var celBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
-					if (celBody == null)
-					{
-						celBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
-					}
-					
-					if (celBody != null)
-					{
-						//Thanks to rbray89 for this snippet and the FakeOcean class which disable the stock ocean in a clean way
-						PQS pqs = celBody.pqsController;
-						if ((pqs != null) && (pqs.ChildSpheres!= null) && (pqs.ChildSpheres.Count() != 0))
+					if (sctBody.hasOcean) {
+						bool removed = false;
+						var celBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
+						if (celBody == null) {
+							celBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
+						}
+						
+						if (celBody != null)
 						{
-							
-							PQS ocean = pqs.ChildSpheres [0];
-							if (ocean != null)
-							{
-								ocean.surfaceMaterial = invisibleOcean;
-								ocean.surfaceMaterial.SetOverrideTag("IgnoreProjector","True");
-								ocean.surfaceMaterial.SetOverrideTag("ForceNoShadowCasting","True");
+							PQS pqs = celBody.pqsController;
+							if ((pqs != null) && (pqs.ChildSpheres != null) && (pqs.ChildSpheres.Count () != 0)) {
 								
-								removed = true;
+								PQS ocean = pqs.ChildSpheres [0];
+								if (ocean != null)
+								{
+									//Leave it like this for a while until we make sure it works even with mods kopernicus etc, when that's done
+									//add the material to hide it in the first few frames when switching back from map mode, and also just in case
+//									ocean.surfaceMaterial = invisibleOcean;
+//									ocean.surfaceMaterial.SetOverrideTag ("IgnoreProjector", "True");
+//									ocean.surfaceMaterial.SetOverrideTag ("ForceNoShadowCasting", "True");
+
+									GameObject go = new GameObject ();
+									FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
+									fakeOcean.Apply (ocean);
+
+									removed = true;
+								}
 							}
 						}
-					}
-					if (!removed) {
-						Utils.LogDebug ("Couldn't remove stock ocean for " + sctBody.celestialBodyName);
+						if (!removed) {
+							Utils.LogDebug ("Couldn't remove stock ocean for " + sctBody.celestialBodyName);
+						}
 					}
 				}
+				Utils.LogDebug ("Removed stock oceans");
 			}
-			Utils.LogDebug ("Removed stock oceans");
+			else
+			{
+				Utils.LogDebug ("Stock oceans already removed");
+			}
+		}
+
+
+		//Technically we could disable scatterer oceans and re-enable stock oceans without restarting the game if we wanted
+		//but once started the stock ocean "pollutes" the scene with gameObjects that remain and lower our performance even
+		//if we disable the stock ocean again, so we'll just require users to restart the game and have better performance
+		public static void restoreOceansIfNeeded()
+		{
+			FakeOceanPQS[] fakes = (FakeOceanPQS[])FakeOceanPQS.FindObjectsOfType (typeof(FakeOceanPQS));
+
+			foreach (FakeOceanPQS fake in fakes)
+			{
+				fake.Remove();
+			}
 		}
 	}
 }
