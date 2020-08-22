@@ -18,9 +18,7 @@ Shader "Scatterer/CausticsOcclusion"
 		Pass
 		{
 			Cull Back ZWrite Off ZTest Off
-			Blend DstColor Zero  // Multiplicative
-			//Blend SrcAlpha OneMinusSrcAlpha //alpha blending
-			//Blend One One  // Additive
+			BlendOp Min //take the minimum so existing shadows that are not completely at zero are respected
 
 			CGPROGRAM
 			#include "UnityCG.cginc"
