@@ -33,6 +33,7 @@ namespace scatterer
 			// Create a camera that will render scaledSpace for reflection probes
 			scaledCameraGO = new GameObject("ScattererReflectionProbeScaledSpaceCamera");
 			scaledCamera = scaledCameraGO.AddComponent<Camera>();
+			scaledCamera.enabled = false;
 			reflectionProbeCamera = gameObject.GetComponent<Camera> ();
 
 			// Remove scaledSpace rendering from the stock reflection probe Camera
@@ -69,6 +70,7 @@ namespace scatterer
 
 		public void OnDestroy()
 		{
+			scaledCamera.enabled = false;
 			Component.Destroy (scaledCamera);
 			UnityEngine.Object.Destroy (scaledCameraGO);
 		}
