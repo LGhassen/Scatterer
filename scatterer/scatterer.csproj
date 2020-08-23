@@ -180,6 +180,7 @@
     <Compile Include="Utilities\Camera\ReflectionProbeChecker.cs" />
     <Compile Include="Utilities\Camera\ScreenCopyCommandBuffer.cs" />
     <Compile Include="Utilities\Camera\ScreenCopierNotifier.cs" />
+    <Compile Include="Effects\Proland\Ocean\Utils\CBUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

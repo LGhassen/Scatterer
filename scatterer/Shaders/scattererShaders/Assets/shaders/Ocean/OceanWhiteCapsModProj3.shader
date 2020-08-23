@@ -347,8 +347,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				float ua = pow(A / SCALE, 0.25);
 				float ub = 0.5 + 0.5 * B / sqrt(A * C);
 				float uc = pow(C / SCALE, 0.25);
-				//			    float sigmaSq = tex3D(_Ocean_Variance, float3(ua, ub, uc)).x;
-				float2 sigmaSq = tex3D(_Ocean_Variance, float3(ua, ub, uc)).xy * _VarianceMax;
+				float sigmaSq = tex3D(_Ocean_Variance, float3(ua, ub, uc)).x * _VarianceMax.x;
 
 				sigmaSq = max(sigmaSq, 2e-5);
 

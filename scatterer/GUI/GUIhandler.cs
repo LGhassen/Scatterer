@@ -620,8 +620,6 @@ namespace scatterer
 			oceanModularGUI.AddModule(new GUIModuleInt("m_ansio", oceanNode, "m_ansio"));
 			oceanModularGUI.AddModule(new GUIModuleInt("m_foamAnsio", oceanNode, "m_foamAnsio"));
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Performance settings"));
-			oceanModularGUI.AddModule(new GUIModuleInt("m_varianceSize (sun reflection, power of 2)", oceanNode, "m_varianceSize"));
-			oceanModularGUI.AddModule (new GUIModuleLabel ("m_varianceSize increases rebuild time exponentially"));
 			oceanModularGUI.AddModule(new GUIModuleInt("Ocean mesh resolution (lower is better)", oceanNode, "m_resolution"));
 			oceanModularGUI.AddModule (new GUIModuleLabel ("current fourierGridSize: " + Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ()));
 		}
