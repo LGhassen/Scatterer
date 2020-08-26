@@ -23,7 +23,6 @@
 	Category {
 
 		Tags { "Queue"="Transparent-1" "IgnoreProjector"="True" "RenderType"="Transparent" "DisableBatching"="True" }
-		//Blend SrcAlpha OneMinusSrcAlpha
 		Blend SrcAlpha OneMinusSrcAlpha, Zero OneMinusSrcAlpha   //traditional alpha blending for colors, multiply by (1-alpha) for alpha to store in texture
 		Fog { Mode Global}
 		AlphaTest Greater 0
@@ -112,6 +111,7 @@
 					float4 origin : TEXCOORD2;
 					float viewDirFade : TEXCOORD3;
 					float3 planetPos : TEXCOORD4;
+					float particleFade: TEXCOORD5;
 				};
 
 				//vertex function, called for every point on our hexSeg, each vertex corresponding to the origin of a particle/quad
@@ -142,7 +142,7 @@
 					localOrigin = mul (unity_WorldToObject, origin);	//transform back to find the new localOrigin
 					o.localOrigin = localOrigin;
 
-					planet_pos = mul(_MainRotation, origin);  		//new planet pos based on offset origin
+					planet_pos = mul(_MainRotation, origin);   		//new planet pos based on offset origin
 					o.planetPos = planet_pos.xyz;
 																											
 					float3 detail_pos = mul(_DetailRotation, planet_pos).xyz;
@@ -155,6 +155,9 @@
 					float4 mvCenter = mul(UNITY_MATRIX_MV, float4(localOrigin.xyz,1.0));  //offset quad origin in viewspace
 					o.pos=mvCenter;
 					o.pos = o.color.a > (1.0/255.0) ? o.pos : float4(2.0, 2.0, 2.0, 1.0); //cull vertex if low alpha, pos outside clipspace
+
+					float fadeOut = (-mvCenter.z/mvCenter.w) * 0.004;
+					o.particleFade = smoothstep(0.0,1.0,fadeOut);
 #ifdef SCATTERER_ON
 
 					float3 worldPos = origin;
@@ -207,7 +210,7 @@
 					float2 texcoordZY : TEXCOORD1;
 					float2 texcoordXZ : TEXCOORD2;
 					float2 texcoordXY : TEXCOORD3;
-					float2 uv : TEXCOORD4;
+					float3 uv : TEXCOORD4;		//x and y UVs, z is particleFade
 					float4 projPos : TEXCOORD5;
 					float3 planetPos : TEXCOORD6;
 					float3 viewDirT : TEXCOORD7;
@@ -284,7 +287,7 @@
 					tri.lightDirT = normalize(mul(rotation, _WorldSpaceLightPos0.xyz));
 					tri.viewDirT = normalize(mul(rotation, viewDir));
 
-					tri.uv = vertexUV;   //quad UV
+					tri.uv = float3(vertexUV, originPoint.particleFade);   			//x and y quad UV, z particleFade
 					tri.localOrigin = originPoint.localOrigin;
 
     				return tri;
@@ -295,7 +298,7 @@
 				[maxvertexcount(4)]
     			void geom(point v2g input[1], inout TriangleStream<g2f> outStream)
     			{
-					g2f tri;
+    				g2f tri;
 
 					//common values for all the quad
 					float localScale = (input[0].hashVect.x*(_MaxScale - 1)) + 1;
@@ -326,7 +329,6 @@
 
 				float4 frag (g2f IN) : COLOR
 				{
-
 					half4 tex;
 					tex.r = tex2D(_Tex, IN.texcoordZY).r;
 					tex.g = tex2D(_Tex, IN.texcoordXZ).g;
@@ -345,19 +347,18 @@
 
 					color *= _Color * IN.color;
 
+					color.a *= tex.a;
+					tex.a = IN.viewDir.w*tex.a;
+
 					
 					//half3 normT = UnpackNormal(tex2D(_BumpMap, IN.uv));
 					half3 normT;
-					normT.xy = ((2*IN.uv)-1);
+					normT.xy = ((2*IN.uv.xy)-1);
 					normT.z = sqrt(1 - saturate(dot(normT.xy, normT.xy)));
 					//normT.xy = 2 * INV_PI*asin((2 * IN.uv) - 1) ;
 					//normT.xy = sin(PI*(IN.uv-.5));
 					//normT.z = 1;
 					//color.rg = IN.uv;
-
-
-					color.a *= tex.a;
-					tex.a = IN.viewDir.w*tex.a;
 
 #if (defined(SCATTERER_ON) && defined(SCATTERER_USE_ORIG_DIR_COLOR_ON))
 					_LightColor0.rgb = scattererOrigDirectionalColor;
@@ -366,14 +367,14 @@
 					color.rgb *= ScatterColorLight(IN.lightDirT, IN.viewDirT, normT, tex, _MinScatter, _Opacity, 1).rgb;
 
 #ifdef SOFT_DEPTH_ON
-					//float depth = UNITY_SAMPLE_DEPTH(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(IN.projPos)));
 					float depth = UNITY_SAMPLE_DEPTH(tex2Dlod(EVEDownscaledDepth, float4(IN.projPos.xy/IN.projPos.w,0.0,0.0))); //to be sure we are reading a single point/using point filtering
 					depth = LinearEyeDepth (depth);
 					float partZ = IN.projPos.z;
-					float fade = saturate (_InvFade * (depth-partZ));
+					float fade = depth >= (0.99 * _ProjectionParams.z) ? 1.0 : saturate (_InvFade * (depth-partZ));	//fade near objects but don't fade on far plane (max depth value)
 					color.a *= fade;
 #endif
 
+					color.a *= IN.uv.z;		//particle fade as they approach camera
 					return color;
 				}
 				ENDCG
