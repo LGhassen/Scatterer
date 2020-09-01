@@ -76,6 +76,7 @@
      <None Include="Assets\Shaders\OldOrUnused\SimpleBlit.shader" />
      <None Include="Assets\Shaders\DepthTexture\ShadowVolumeDepthGEOM.shader" />
      <None Include="Assets\Shaders\OldOrUnused\SunGlare - Copy.shader" />
+     <None Include="Assets\Shaders\Ocean\ReadData.compute" />
      <None Include="Assets\Shaders\DepthTexture\DepthToDistance.shader" />
      <None Include="Assets\Shaders\Instancing\My First Shader.shader" />
      <None Include="Assets\Shaders\EVE\old\noiseSimplex.cginc" />
@@ -128,6 +129,7 @@
      <None Include="Assets\Shaders\OldOrUnused\SkyScaledBox.shader" />
      <None Include="Assets\Shaders\DepthTexture\ShadowVolumeDepth - Copy.shader" />
      <None Include="Assets\Shaders\Grass\Grass.shader" />
+     <None Include="Assets\Shaders\Ocean\SlopeVariance.compute" />
      <None Include="Assets\Shaders\EVE\alphaMap.cginc" />
      <None Include="Assets\Shaders\Ocean\underwaterPostProcessing32bitViewSpaceDepth.shader" />
      <None Include="Assets\Shaders\Ocean\InvisibleOcean.shader" />
@@ -136,7 +138,6 @@
      <None Include="Assets\Shaders\Grass\GrassBak.shader" />
      <None Include="Assets\Shaders\Ocean\UnderwaterProjector.shader" />
      <None Include="Assets\Shaders\KSP\Diffuse.shader" />
-     <None Include="Assets\Shaders\EVE\CloudVolumeParticleBAKKK.shader" />
      <None Include="Assets\Shaders\RingCommon.cginc" />
      <None Include="Assets\Shaders\EVE\SphereCloud.shader" />
      <None Include="Assets\Shaders\Ocean\InitJacobians.shader" />

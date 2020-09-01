@@ -40,11 +40,10 @@ namespace scatterer
 								PQS ocean = pqs.ChildSpheres [0];
 								if (ocean != null)
 								{
-									//Leave it like this for a while until we make sure it works even with mods kopernicus etc, when that's done
-									//add the material to hide it in the first few frames when switching back from map mode, and also just in case
-//									ocean.surfaceMaterial = invisibleOcean;
-//									ocean.surfaceMaterial.SetOverrideTag ("IgnoreProjector", "True");
-//									ocean.surfaceMaterial.SetOverrideTag ("ForceNoShadowCasting", "True");
+									//Add the material to hide it in the first few frames when switching back from map mode, and also just in case
+									ocean.surfaceMaterial = invisibleOceanMaterial;
+									ocean.surfaceMaterial.SetOverrideTag ("IgnoreProjector", "True");
+									ocean.surfaceMaterial.SetOverrideTag ("ForceNoShadowCasting", "True");
 
 									GameObject go = new GameObject ();
 									FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
