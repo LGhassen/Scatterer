@@ -112,16 +112,7 @@ namespace scatterer
 			sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
 			sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
 
-			if (Scatterer.Instance.unifiedCameraMode)
-			{
-				sunglareMaterial.EnableKeyword ("SCATTERER_MERGED_DEPTH_OFF");
-				sunglareMaterial.DisableKeyword ("SCATTERER_MERGED_DEPTH_ON");
-			}
-			else
-			{
-				sunglareMaterial.EnableKeyword ("SCATTERER_MERGED_DEPTH_ON");
-				sunglareMaterial.DisableKeyword ("SCATTERER_MERGED_DEPTH_OFF");
-			}
+			Utils.EnableOrDisableShaderKeywords (sunglareMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
 
 			if (!Scatterer.Instance.unifiedCameraMode)
 			{

@@ -196,37 +196,12 @@ namespace scatterer
 			m_skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			localScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
-			
-//			if (Core.Instance.useGodrays)
-//			{
-//				localScatteringMaterial.EnableKeyword("GODRAYS_ON");
-//				localScatteringMaterial.DisableKeyword("GODRAYS_OFF");
-//			}
-//			else
-//			{
-				localScatteringMaterial.DisableKeyword("GODRAYS_ON");
-				localScatteringMaterial.EnableKeyword("GODRAYS_OFF");
-//			}
-			if (Scatterer.Instance.mainSettings.useEclipses)
-			{
-				localScatteringMaterial.EnableKeyword ("ECLIPSES_ON");
-				localScatteringMaterial.DisableKeyword ("ECLIPSES_OFF");
-			}
-			else
-			{
-				localScatteringMaterial.DisableKeyword ("ECLIPSES_ON");
-				localScatteringMaterial.EnableKeyword ("ECLIPSES_OFF");
-			}
-			if (m_manager.hasOcean)
-			{
-				localScatteringMaterial.EnableKeyword ("DISABLE_UNDERWATER_ON");
-				localScatteringMaterial.DisableKeyword ("DISABLE_UNDERWATER_OFF");
-			}
-			else
-			{
-				localScatteringMaterial.DisableKeyword ("DISABLE_UNDERWATER_ON");
-				localScatteringMaterial.EnableKeyword ("DISABLE_UNDERWATER_OFF");
-			}
+
+//			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "GODRAYS_ON", "GODRAYS_OFF", Core.Instance.useGodrays);
+			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "GODRAYS_ON", "GODRAYS_OFF", false);
+
+			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses);
+			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", m_manager.hasOcean);
 
 			InitPostprocessMaterial (localScatteringMaterial);
 
@@ -351,16 +326,7 @@ namespace scatterer
 					sunflareExtinctionMaterial.SetTexture (ShaderProperties.ringTexture_PROPERTY, ringTexture);
 				}
 
-				if (m_manager.hasOcean)
-				{
-					sunflareExtinctionMaterial.EnableKeyword ("DISABLE_UNDERWATER_ON");
-					sunflareExtinctionMaterial.DisableKeyword ("DISABLE_UNDERWATER_OFF");
-				}
-				else
-				{
-					sunflareExtinctionMaterial.DisableKeyword ("DISABLE_UNDERWATER_ON");
-					sunflareExtinctionMaterial.EnableKeyword ("DISABLE_UNDERWATER_OFF");
-				}
+				Utils.EnableOrDisableShaderKeywords (sunflareExtinctionMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", m_manager.hasOcean);
 			}
 		}
 		
@@ -714,43 +680,16 @@ namespace scatterer
 			
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun().normalized);
 
-			if (Scatterer.Instance.mainSettings.usePlanetShine)
-			{
-				mat.EnableKeyword ("PLANETSHINE_ON");
-				mat.DisableKeyword ("PLANETSHINE_OFF");	
-			}
-			else
-			{
-				mat.DisableKeyword ("PLANETSHINE_ON");
-				mat.EnableKeyword ("PLANETSHINE_OFF");
-			}
+			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
 
 			//when using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately
 			//instead ocean shader handles scattering internally
 			//when the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
 			//the ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering
 			//this is not needed for stock ocean so disable it
-			if (m_manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders)
-			{
-				mat.EnableKeyword ("CUSTOM_OCEAN_ON");
-				mat.DisableKeyword ("CUSTOM_OCEAN_OFF");
-			}
-			else
-			{
-				mat.EnableKeyword ("CUSTOM_OCEAN_OFF");
-				mat.DisableKeyword ("CUSTOM_OCEAN_ON");
-			}
+			Utils.EnableOrDisableShaderKeywords (mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders);
 
-			if (Scatterer.Instance.mainSettings.useDithering)
-			{
-				mat.EnableKeyword ("DITHERING_ON");
-				mat.DisableKeyword ("DITHERING_OFF");
-			}
-			else
-			{
-				mat.DisableKeyword ("DITHERING_ON");
-				mat.EnableKeyword ("DITHERING_OFF");
-			}
+			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
 			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
@@ -837,8 +776,7 @@ namespace scatterer
 			//ring shadow parameters
 			if (hasRingObjectAndShadowActivated)
 			{
-				mat.EnableKeyword ("RINGSHADOW_ON");
-				mat.DisableKeyword ("RINGSHADOW_OFF");
+				Utils.EnableOrDisableShaderKeywords (mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", true);
 
 				mat.SetFloat (ShaderProperties.ringInnerRadius_PROPERTY, ringInnerRadius);
 				mat.SetFloat (ShaderProperties.ringOuterRadius_PROPERTY, ringOuterRadius);
@@ -849,45 +787,12 @@ namespace scatterer
 			}
 			else
 			{
-				mat.DisableKeyword ("RINGSHADOW_ON");
-				mat.EnableKeyword ("RINGSHADOW_OFF");
-				mat.DisableKeyword ("RINGSHADOW_ON");
-				mat.EnableKeyword ("RINGSHADOW_OFF");
+				Utils.EnableOrDisableShaderKeywords (mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", false);
 			}
 
-
-			if (Scatterer.Instance.mainSettings.useEclipses)
-			{
-				mat.EnableKeyword ("ECLIPSES_ON");
-				mat.DisableKeyword ("ECLIPSES_OFF");
-			}
-			else
-			{
-				mat.DisableKeyword ("ECLIPSES_ON");
-				mat.EnableKeyword ("ECLIPSES_OFF");
-			}
-			
-			if (Scatterer.Instance.mainSettings.usePlanetShine)
-			{
-				mat.EnableKeyword ("PLANETSHINE_ON");
-				mat.DisableKeyword ("PLANETSHINE_OFF");	
-			}
-			else
-			{
-				mat.DisableKeyword ("PLANETSHINE_ON");
-				mat.EnableKeyword ("PLANETSHINE_OFF");
-			}
-
-			if (Scatterer.Instance.mainSettings.useDithering)
-			{
-				mat.EnableKeyword ("DITHERING_ON");
-				mat.DisableKeyword ("DITHERING_OFF");	
-			}
-			else
-			{
-				mat.DisableKeyword ("DITHERING_ON");
-				mat.EnableKeyword ("DITHERING_OFF");
-			}
+			Utils.EnableOrDisableShaderKeywords (mat, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses);
+			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
+			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
 			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, m_manager.flatScaledSpaceModel ? 1f : 0f );
 			mat.SetVector (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
@@ -1284,15 +1189,8 @@ namespace scatterer
 					{
 						InitUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i]);
 						InitPostprocessMaterial (Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i]);
-						
-						if (EVEIntegration_preserveCloudColors)
-						{
-							Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
-							Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
-						} else {
-							Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
-							Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
-						}
+
+						Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds [celestialBodyName] [i], "PRESERVECLOUDCOLORS_ON", "PRESERVECLOUDCOLORS_OFF", EVEIntegration_preserveCloudColors);
 						
 					}
 				}
@@ -1345,16 +1243,7 @@ namespace scatterer
 						InitUniforms(ParticleMaterial);
 						InitPostprocessMaterial(ParticleMaterial);
 
-						if (Scatterer.Instance.sunlightModulatorInstance)
-						{
-							ParticleMaterial.EnableKeyword ("SCATTERER_USE_ORIG_DIR_COLOR_ON");
-							ParticleMaterial.DisableKeyword("SCATTERER_USE_ORIG_DIR_COLOR_OFF");
-						}
-						else
-						{
-							ParticleMaterial.DisableKeyword ("SCATTERER_USE_ORIG_DIR_COLOR_ON");
-							ParticleMaterial.EnableKeyword("SCATTERER_USE_ORIG_DIR_COLOR_OFF");
-						}
+						Utils.EnableOrDisableShaderKeywords (ParticleMaterial, "SCATTERER_USE_ORIG_DIR_COLOR_ON", "SCATTERER_USE_ORIG_DIR_COLOR_OFF", Scatterer.Instance.sunlightModulatorInstance);
 
 						EVEvolumetrics.Add (ParticleMaterial);
 					}
@@ -1380,16 +1269,7 @@ namespace scatterer
 					int size = Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName].Count;
 					for (int i=0;i<size;i++)
 					{
-						if (EVEIntegration_preserveCloudColors)
-						{
-							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_OFF");
-							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_ON");
-						}
-						else
-						{
-							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].EnableKeyword ("PRESERVECLOUDCOLORS_ON");
-							Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i].DisableKeyword ("PRESERVECLOUDCOLORS_OFF");
-						}
+						Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds[celestialBodyName][i], "PRESERVECLOUDCOLORS_OFF", "PRESERVECLOUDCOLORS_ON", EVEIntegration_preserveCloudColors);
 					}
 				}
 				EVEIntegration_preserveCloudColors =!EVEIntegration_preserveCloudColors;

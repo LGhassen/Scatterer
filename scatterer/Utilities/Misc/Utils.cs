@@ -157,6 +157,21 @@ namespace scatterer
 		{
 			return (x & (x - 1)) == 0;
 		}
+
+		// If condition is true, enable keywordOn and disable keywordOff, else do the opposite
+		public static void EnableOrDisableShaderKeywords(Material mat, string keywordOn, string keywordOff, bool condition) 
+		{
+			if (condition)
+			{
+				mat.EnableKeyword (keywordOn);
+				mat.DisableKeyword (keywordOff);
+			}
+			else
+			{
+				mat.EnableKeyword (keywordOff);
+				mat.DisableKeyword (keywordOn);
+			}
+		}
 	}
 }
 

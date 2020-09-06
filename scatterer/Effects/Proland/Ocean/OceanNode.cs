@@ -472,48 +472,14 @@ namespace scatterer
 			{
 				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/OceanWhiteCaps")]);
 			}
-			
-			if (Scatterer.Instance.mainSettings.oceanSkyReflections)
-			{
-				m_oceanMaterial.EnableKeyword ("SKY_REFLECTIONS_ON");
-				m_oceanMaterial.DisableKeyword ("SKY_REFLECTIONS_OFF");
-			}
-			else
-			{
-				m_oceanMaterial.EnableKeyword ("SKY_REFLECTIONS_OFF");
-				m_oceanMaterial.DisableKeyword ("SKY_REFLECTIONS_ON");
-			}
-			if (Scatterer.Instance.mainSettings.usePlanetShine)
-			{
-				m_oceanMaterial.EnableKeyword ("PLANETSHINE_ON");
-				m_oceanMaterial.DisableKeyword ("PLANETSHINE_OFF");
-			}
-			else {
-				m_oceanMaterial.DisableKeyword ("PLANETSHINE_ON");
-				m_oceanMaterial.EnableKeyword ("PLANETSHINE_OFF");
-			}
-			if (Scatterer.Instance.mainSettings.oceanRefraction)
-			{
-				m_oceanMaterial.EnableKeyword ("REFRACTION_ON");
-				m_oceanMaterial.DisableKeyword ("REFRACTION_OFF");
-			}
-			else
-			{
-				m_oceanMaterial.EnableKeyword ("REFRACTION_OFF");
-				m_oceanMaterial.DisableKeyword ("REFRACTION_ON");
-			}
+
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "SKY_REFLECTIONS_ON", "SKY_REFLECTIONS_OFF", Scatterer.Instance.mainSettings.oceanSkyReflections);
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "REFRACTION_ON", "REFRACTION_OFF", Scatterer.Instance.mainSettings.oceanRefraction);
+
 			if (Scatterer.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable))
 			{
-				if (QualitySettings.shadows == ShadowQuality.HardOnly)
-				{
-					m_oceanMaterial.EnableKeyword ("OCEAN_SHADOWS_HARD");
-					m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_SOFT");
-				}
-				else
-				{
-					m_oceanMaterial.EnableKeyword ("OCEAN_SHADOWS_SOFT");
-					m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_HARD");
-				}
+				Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "OCEAN_SHADOWS_HARD", "OCEAN_SHADOWS_SOFT", (QualitySettings.shadows == ShadowQuality.HardOnly));
 				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_OFF");
 			}
 			else
@@ -523,17 +489,7 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_SOFT");
 			}
 
-			if (Scatterer.Instance.unifiedCameraMode)
-			{
-				m_oceanMaterial.EnableKeyword ("SCATTERER_MERGED_DEPTH_OFF");
-				m_oceanMaterial.DisableKeyword ("SCATTERER_MERGED_DEPTH_ON");
-			}
-			else
-			{
-				m_oceanMaterial.EnableKeyword ("SCATTERER_MERGED_DEPTH_ON");
-				m_oceanMaterial.DisableKeyword ("SCATTERER_MERGED_DEPTH_OFF");
-			}
-
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
 
 			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			
@@ -579,16 +535,7 @@ namespace scatterer
 			underwaterMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
 			underwaterMaterial.SetFloat ("Rg",(float)m_manager.m_radius);
 
-			if (Scatterer.Instance.mainSettings.useDithering)
-			{
-				underwaterMaterial.EnableKeyword ("DITHERING_ON");
-				underwaterMaterial.DisableKeyword ("DITHERING_OFF");	
-			}
-			else
-			{
-				underwaterMaterial.DisableKeyword ("DITHERING_ON");
-				underwaterMaterial.EnableKeyword ("DITHERING_OFF");
-			}
+			Utils.EnableOrDisableShaderKeywords (underwaterMaterial, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 		}
 
 		void toggleUnderwaterMode()
