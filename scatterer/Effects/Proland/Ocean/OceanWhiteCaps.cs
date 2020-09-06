@@ -39,7 +39,7 @@ namespace scatterer {
 			m_initJacobiansMat.SetTexture(ShaderProperties._Spectrum01_PROPERTY, m_spectrum01);
 			m_initJacobiansMat.SetTexture(ShaderProperties._Spectrum23_PROPERTY, m_spectrum23);
 			m_initJacobiansMat.SetTexture(ShaderProperties._WTable_PROPERTY, m_WTable);
-			m_initJacobiansMat.SetVector (ShaderProperties._Offset_PROPERTY, m_offset);
+			m_initJacobiansMat.SetVector (ShaderProperties._Offset_PROPERTY, m_spectrumOffset);
 			m_initJacobiansMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 		}
 		

@@ -83,7 +83,7 @@ namespace scatterer {
 		float m_fsize;
 		float m_maxSlopeVariance;
 		protected int m_idx = 0;
-		protected Vector4 m_offset;
+		protected Vector4 m_spectrumOffset;
 		protected Vector4 m_inverseGridSizes;
 		
 		protected RenderTexture m_spectrum01, m_spectrum23;
@@ -133,7 +133,7 @@ namespace scatterer {
 			}
 			
 			m_fsize = (float) m_fourierGridSize;
-			m_offset = new Vector4(1.0f + 0.5f / m_fsize, 1.0f + 0.5f / m_fsize, 0, 0);
+			m_spectrumOffset = new Vector4(1.0f + 0.5f / m_fsize, 1.0f + 0.5f / m_fsize, 0, 0);
 			
 			
 			float factor = 2.0f * Mathf.PI * m_fsize;
@@ -152,7 +152,7 @@ namespace scatterer {
 			m_initSpectrumMat.SetTexture (ShaderProperties._Spectrum01_PROPERTY, m_spectrum01);
 			m_initSpectrumMat.SetTexture (ShaderProperties._Spectrum23_PROPERTY, m_spectrum23);
 			m_initSpectrumMat.SetTexture (ShaderProperties._WTable_PROPERTY, m_WTable);
-			m_initSpectrumMat.SetVector (ShaderProperties._Offset_PROPERTY, m_offset);
+			m_initSpectrumMat.SetVector (ShaderProperties._Offset_PROPERTY, m_spectrumOffset);
 			m_initSpectrumMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 			
 			m_initDisplacementMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
