@@ -68,6 +68,7 @@ namespace scatterer
 				shaderspath = path+"/shaders/scatterershaders-macosx";
 
 			LoadedShaders.Clear ();
+			LoadedComputeShaders.Clear ();
 
 			using (WWW www = new WWW("file://"+shaderspath))
 			{
