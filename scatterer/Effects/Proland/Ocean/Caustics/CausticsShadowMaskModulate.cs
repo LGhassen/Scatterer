@@ -7,6 +7,10 @@ using System;
 
 namespace scatterer
 {
+	//transform this to general caustics class, pass to it the light and once of the ocean's meshrenderers?
+	//how to handle the lightrays? do we need to render a quad to screen? do we set it as texture which the underwaterProjector reads from?
+
+
 	public class CausticsShadowMaskModulate : MonoBehaviour
 	{
 		private CommandBuffer m_Buffer;
@@ -74,6 +78,12 @@ namespace scatterer
 		
 		public void UpdateCaustics()
 		{
+			if (isEnabled)
+			{
+				float warpTime = (TimeWarp.CurrentRate > 1) ? (float) Planetarium.GetUniversalTime() : 0f;
+				CausticsShadowMaskModulateMaterial.SetFloat (ShaderProperties.warpTime_PROPERTY, warpTime);
+			}
+
 			if (commandBufferAdded && !isEnabled)
 			{
 				RemoveCommandBuffer();

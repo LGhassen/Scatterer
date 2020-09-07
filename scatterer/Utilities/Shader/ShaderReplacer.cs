@@ -85,7 +85,7 @@ namespace scatterer
 				
 				foreach (ComputeShader computeShader in computeShaders)
 				{
-					Utils.LogInfo ("Compute shader "+computeShader.name+" loaded.");
+					//Utils.LogInfo ("Compute shader "+computeShader.name+" loaded.");
 					LoadedComputeShaders.Add(computeShader.name, computeShader);
 				}
 				

@@ -197,6 +197,7 @@ namespace scatterer
 			oceanMaterial.SetFloat (ShaderProperties.sinTheta_PROPERTY, (float) sinTheta);
 			
 			//planetshine properties
+			//I think these should be moved to NonCameraSpecificUniforms
 			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				Matrix4x4 planetShineSourcesMatrix=oceanNode.m_manager.m_skyNode.planetShineSourcesMatrix;
@@ -218,9 +219,14 @@ namespace scatterer
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, Scatterer.Instance.sunLight.gameObject.transform.worldToLocalMatrix);
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.m_manager.parentLocalTransform.position);
-				
-				float warpTime = (TimeWarp.CurrentRate > 1) ? (float) Planetarium.GetUniversalTime() : 0f; //shouldn't this be moved to updateCaustics?
-				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetFloat (ShaderProperties.warpTime_PROPERTY, warpTime);
+			}
+
+			if (!ReferenceEquals (oceanNode.causticsLightRaysRenderer, null))
+			{
+				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
+				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, Scatterer.Instance.sunLight.gameObject.transform.worldToLocalMatrix);
+				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.LightDir_PROPERTY, Scatterer.Instance.sunLight.gameObject.transform.forward);
+				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.m_manager.parentLocalTransform.position);
 			}
 			
 			//maybe just update the godray thing here? add an if underwater? it's not super clean though

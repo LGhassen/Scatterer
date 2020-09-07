@@ -71,9 +71,9 @@ Shader "Scatterer/CausticsOcclusion"
         			zdepth = 1 - zdepth;
 #endif
 
-    			float4 clipPos = float4(i.uv, zdepth, 1.0);
-    			clipPos.xyz = 2.0f * clipPos.xyz - 1.0f;
-    			float4 camPos = mul(unity_CameraInvProjection, clipPos);
+    				float4 clipPos = float4(i.uv, zdepth, 1.0);
+    				clipPos.xyz = 2.0f * clipPos.xyz - 1.0f;
+    				float4 camPos = mul(unity_CameraInvProjection, clipPos);
 				float4 worldPos = mul(CameraToWorld,camPos);
 				worldPos/=worldPos.w;
 
@@ -100,7 +100,7 @@ Shader "Scatterer/CausticsOcclusion"
 
 				float2 uvCookie = mul(WorldToLight, float4(worldPos.xyz, 1)).xy;
 
-    			float2 uvSample1 = layer1Scale * uvCookie + layer1Speed * float2(time,time);
+    				float2 uvSample1 = layer1Scale * uvCookie + layer1Speed * float2(time,time);
 				float2 uvSample2 = layer2Scale * uvCookie + layer2Speed * float2(time,time);
 
 				float causticsSample1 = tex2Dbias(_CausticsTexture,float4(uvSample1,0.0,blurFactor)).r;

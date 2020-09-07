@@ -56,8 +56,8 @@ namespace scatterer
 		//Size of each grid in the projected grid. (number of pixels on screen)		
 		[Persistent]
 		public int m_resolution = 4;
-		[Persistent]
-		public int MAX_VERTS = 65000;
+
+		public const int MAX_VERTS = 65000;
 		[Persistent]
 		public float oceanScale = 1f;
 		[Persistent]
@@ -88,8 +88,6 @@ namespace scatterer
 		//TODO: merge AtmosphereProjector class and it's material, make material public, rename AtmosphereProjector to LocalEffectProjector
 		public AtmosphereProjector underwaterProjector;
 		Material underwaterMaterial;
-
-
 
 		public Vector3 offsetVector3{
 			get {
@@ -132,6 +130,7 @@ namespace scatterer
 		public float causticsBlurDepth;
 
 		public CausticsShadowMaskModulate causticsShadowMaskModulator;
+		public CausticsLightRaysRenderer causticsLightRaysRenderer;
 		
 		public virtual void Init (ProlandManager manager)
 		{
@@ -170,6 +169,17 @@ namespace scatterer
 				{
 					UnityEngine.Object.DestroyImmediate (causticsShadowMaskModulator);
 					causticsShadowMaskModulator = null;
+				}
+
+				if (Scatterer.Instance.mainSettings.oceanLightRays && Scatterer.Instance.mainSettings.shadowsOnOcean)
+				{
+					causticsLightRaysRenderer = (CausticsLightRaysRenderer) waterGameObjects[0].AddComponent<CausticsLightRaysRenderer>();
+					if (!causticsLightRaysRenderer.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
+					                                    causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth, this))
+					{
+						UnityEngine.Object.DestroyImmediate (causticsLightRaysRenderer);
+						causticsLightRaysRenderer = null;
+					}
 				}
 			}
 		}	

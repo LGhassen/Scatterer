@@ -86,7 +86,7 @@
      <None Include="Assets\Shaders\DecodeEncode\WriteToFloat.shader" />
      <None Include="Assets\Shaders\OldOrUnused\SphereCloudOld.shader" />
      <None Include="Assets\Shaders\EVE\GeometryCloudVolumeParticleToTexture.shader" />
-     <None Include="Assets\Shaders\Ocean\Caustics\CausticsGodrays.shader" />
+     <None Include="Assets\Shaders\Ocean\Caustics\CausticsGodraysRaymarch.shader" />
      <None Include="Assets\Shaders\EVE\old\SphereCloud.shader" />
      <None Include="Assets\Shaders\Atmo\mergedAtmosphereLocalScattering.shader" />
      <None Include="Assets\Shaders\Shadows\FixedScreenSpaceShadows.shader" />
@@ -138,6 +138,7 @@
      <None Include="Assets\Shaders\Grass\GrassBak.shader" />
      <None Include="Assets\Shaders\Ocean\UnderwaterProjector.shader" />
      <None Include="Assets\Shaders\KSP\Diffuse.shader" />
+     <None Include="Assets\Shaders\Ocean\Caustics\CompositeCausticsGodrays.shader" />
      <None Include="Assets\Shaders\RingCommon.cginc" />
      <None Include="Assets\Shaders\EVE\SphereCloud.shader" />
      <None Include="Assets\Shaders\Ocean\InitJacobians.shader" />

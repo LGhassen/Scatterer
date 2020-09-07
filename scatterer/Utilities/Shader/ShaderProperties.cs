@@ -338,6 +338,9 @@ namespace scatterer
 		
 		public static int WorldToLight_PROPERTY { get { return WorldToLight; } }
 		private static int WorldToLight;
+
+		public static int LightDir_PROPERTY { get { return LightDir; } }
+		private static int LightDir;
 		
 		public static int PlanetOrigin_PROPERTY { get { return PlanetOrigin	; } }
 		private static int PlanetOrigin	;
@@ -511,6 +514,7 @@ namespace scatterer
 
 			CameraToWorld = Shader.PropertyToID("CameraToWorld");
 			WorldToLight = Shader.PropertyToID("WorldToLight");
+			LightDir = Shader.PropertyToID("LightDir");
 			PlanetOrigin = Shader.PropertyToID("PlanetOrigin");
 			refractionIndex = Shader.PropertyToID("refractionIndex");
 

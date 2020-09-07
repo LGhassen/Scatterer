@@ -37,6 +37,9 @@ namespace scatterer
 
 		[Persistent]
 		public bool oceanCaustics = true;
+
+		[Persistent]
+		public bool oceanLightRays = true;
 		
 		//[Persistent]
 		public bool craft_WaveInteractions = false;
@@ -156,6 +159,7 @@ namespace scatterer
 				 OldConfig.oceanSkyReflections != oceanSkyReflections ||
 				 OldConfig.oceanRefraction != oceanRefraction ||
 				 OldConfig.oceanCaustics != oceanCaustics ||
+				 OldConfig.oceanLightRays != oceanLightRays ||
 				 OldConfig.oceanPixelLights != oceanPixelLights ||
 				 OldConfig.fullLensFlareReplacement != fullLensFlareReplacement ||
 				 OldConfig.sunlightExtinction != sunlightExtinction ||

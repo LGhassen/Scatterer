@@ -133,7 +133,6 @@
     <Compile Include="Effects\Proland\Ocean\OceanWhiteCaps.cs" />
     <Compile Include="Effects\Proland\Ocean\UnderwaterDimmingHook.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\FakeOceanPQS.cs" />
-    <Compile Include="Effects\Proland\Ocean\Utils\OceanCameraUpdateHook.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\OceanUtils.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\RTUtility.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\WriteFloat.cs" />
@@ -181,6 +180,8 @@
     <Compile Include="Utilities\Camera\ScreenCopyCommandBuffer.cs" />
     <Compile Include="Utilities\Camera\ScreenCopierNotifier.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\CBUtility.cs" />
+    <Compile Include="Effects\Proland\Ocean\Caustics\CausticsLightRaysRenderer.cs" />
+    <Compile Include="Effects\Proland\Ocean\OceanCameraUpdateHook.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
