@@ -139,7 +139,7 @@
 					float causticsSample1 = tex2Dlod(_CausticsTexture,float4(uvSample1,0.0,blurFactor)).r;
 					float causticsSample2 = tex2Dlod(_CausticsTexture,float4(uvSample2,0.0,blurFactor)).r;
 
-					float caustics = 0.007*causticsMultiply*min(causticsSample1,causticsSample2);
+					float caustics = 0.0055*causticsMultiply*min(causticsSample1,causticsSample2);
 //#ifdef SPHERE_PLANET
 //					caustics =  lerp (1.0, caustics, clamp(underwaterDepth/1.5f, 0.0, 1.0)); //fade caustics in over the first meter and half of depth, may not be needed here
 //#endif

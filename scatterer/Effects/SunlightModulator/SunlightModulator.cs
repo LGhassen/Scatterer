@@ -15,7 +15,14 @@ namespace scatterer
 	public class SunlightModulator : MonoBehaviour
 	{
 		Color originalColor;
-		Color modulateColor;
+		Color modulateColor, lastModulateColor;
+
+		public Color LastModulateColor {
+			get {
+				return lastModulateColor;
+			}
+		}
+
 		Light sunLight;
 		bool applyModulation = false;
 		SunlightModulatorPreRenderHook  preRenderHook;
@@ -57,6 +64,7 @@ namespace scatterer
 			if (applyModulation)
 			{
 				sunLight.color = modulateColor * originalColor;
+				lastModulateColor = sunLight.color;
 				modulateColor = Color.white;
 				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)	//preserve original directional light color to not have double extinction
 					Shader.SetGlobalColor(ShaderProperties.scattererOrigDirectionalColor_PROPERTY,originalColor);

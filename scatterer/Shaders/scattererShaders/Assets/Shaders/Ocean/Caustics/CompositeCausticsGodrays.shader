@@ -24,6 +24,7 @@ Shader "Scatterer/CompositeCausticsGodrays"
 			uniform sampler2D ScattererDownscaledDepth;
 			float4 ScattererDownscaledDepth_TexelSize;
 
+			uniform float3 _sunColor; //already calculated sun extinction or color
 
 			struct appdata_t {
 				float4 vertex : POSITION;
@@ -115,7 +116,7 @@ Shader "Scatterer/CompositeCausticsGodrays"
 
 
 				float4 color = tex2Dlod(LightRaysTexture, float4(i.uv,0,0)) ;
-				return float4(color.rgb,1.0);
+				return float4(_sunColor * color.rgb,1.0);
 			}
 
 			ENDCG

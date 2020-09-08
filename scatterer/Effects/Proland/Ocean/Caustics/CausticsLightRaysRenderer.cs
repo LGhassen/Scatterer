@@ -53,7 +53,6 @@ namespace scatterer
 				CausticsLightRaysMaterial.SetFloat ("oceanRadius", oceanRadius);
 				CausticsLightRaysMaterial.SetFloat ("causticsBlurDepth", blurDepth);
 				CausticsLightRaysMaterial.SetFloat ("transparencyDepth", oceanNodeIn.transparencyDepth);
-
 				
 				CausticsLightRaysMaterial.EnableKeyword ("SPHERE_PLANET");
 				CausticsLightRaysMaterial.DisableKeyword ("FLAT_PLANET"); //for testing in unity editor only, obviously, Kerbin is not flat I swear
@@ -161,6 +160,7 @@ namespace scatterer
 			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]); //still need to copy this from EVE
 			compositeLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeCausticsGodrays")]);
 			compositeLightRaysMaterial.SetTexture ("LightRaysTexture", targetRT);
+			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, Color.white);
 
 			commandBuffer = new CommandBuffer(); //might be worth doing this in init? since always the same, yes
 			
@@ -187,7 +187,13 @@ namespace scatterer
 				//TODO: move this out of here
 				float warpTime = (TimeWarp.CurrentRate > 1) ? (float) Planetarium.GetUniversalTime() : 0f;
 				CausticsLightRaysMaterial.SetFloat (ShaderProperties.warpTime_PROPERTY, warpTime);
-				
+
+				// If we use sunglightExtinction, reuse already computed extinction color
+				if (Scatterer.Instance.mainSettings.sunlightExtinction)
+				{
+					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, Scatterer.Instance.sunlightModulatorInstance.LastModulateColor);
+				}
+
 				renderingEnabled = true;
 			}
 		}
