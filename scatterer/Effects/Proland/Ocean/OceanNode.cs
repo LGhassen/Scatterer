@@ -414,6 +414,12 @@ namespace scatterer
 				causticsShadowMaskModulator.OnDestroy();
 				UnityEngine.Object.Destroy (causticsShadowMaskModulator);
 			}
+
+			if (!ReferenceEquals(null,causticsLightRaysRenderer))
+			{
+				causticsLightRaysRenderer.OnDestroy();
+				UnityEngine.Object.Destroy (causticsLightRaysRenderer);
+			}
 		}
 
 		public void applyUnderwaterDimming () //called OnPostRender of scaledSpace Camera by hook, needs to be done before farCamera onPreCull where the color is set

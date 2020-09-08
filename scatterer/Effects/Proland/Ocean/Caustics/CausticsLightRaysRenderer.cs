@@ -16,7 +16,7 @@ namespace scatterer
 		
 		public OceanNode oceanNode;
 		
-		private static Dictionary<Camera, CausticsLightRaysCameraScript> CameraToLightRaysScript = new Dictionary<Camera, CausticsLightRaysCameraScript>();
+		private Dictionary<Camera, CausticsLightRaysCameraScript> CameraToLightRaysScript = new Dictionary<Camera, CausticsLightRaysCameraScript>();
 		
 		public CausticsLightRaysRenderer ()
 		{
@@ -95,12 +95,18 @@ namespace scatterer
 					}
 				}
 			}
-			
 		}
 		
 		public void OnDestroy ()
 		{
-			
+			foreach (CausticsLightRaysCameraScript script in CameraToLightRaysScript.Values)
+			{
+				if (script != null)
+				{
+					script.CleanUp();
+					Component.Destroy(script);
+				}
+			}
 		}
 	}
 	
@@ -193,6 +199,22 @@ namespace scatterer
 				targetCamera.RemoveCommandBuffer(CameraEvent.AfterForwardAlpha, commandBuffer);
 				renderingEnabled = false;
 			}
+		}
+
+		public void CleanUp()
+		{
+			renderingEnabled = false;
+			if (!ReferenceEquals(commandBuffer,null))
+			{
+				if (targetCamera)
+				{
+					targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, commandBuffer);
+				}
+				commandBuffer.Dispose ();
+			}
+
+			targetRT.Release ();
+			downscaledDepthRT.Release ();
 		}
 	}
 }
