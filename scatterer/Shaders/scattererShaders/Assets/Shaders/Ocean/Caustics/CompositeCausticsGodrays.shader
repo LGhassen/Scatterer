@@ -25,6 +25,7 @@ Shader "Scatterer/CompositeCausticsGodrays"
 			float4 ScattererDownscaledDepth_TexelSize;
 
 			uniform float3 _sunColor; //already calculated sun extinction or color
+			uniform float3 _Underwater_Color;
 
 			struct appdata_t {
 				float4 vertex : POSITION;
@@ -73,7 +74,8 @@ Shader "Scatterer/CompositeCausticsGodrays"
 //				float ZFull = Linear01Depth( SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv) );
 //
 //				//find low res depth texture texel size
-//				float2 lowResTexelSize = 2.0 * _CameraDepthTexture_TexelSize.xy;
+//				//float2 lowResTexelSize = 2.0 * _CameraDepthTexture_TexelSize.xy;
+//				float2 lowResTexelSize = 4.0 * _CameraDepthTexture_TexelSize.xy;
 //				float depthTreshold =  0.01; //play with this?
 //
 //				float2 lowResUV = i.uv; 
@@ -115,8 +117,9 @@ Shader "Scatterer/CompositeCausticsGodrays"
 //				//				}
 
 
-				float4 color = tex2Dlod(LightRaysTexture, float4(i.uv,0,0)) ;
-				return float4(_sunColor * color.rgb,1.0);
+				//float4 color = tex2Dlod(LightRaysTexture, float4(i.uv,0,0)) ;
+				float color = tex2D(LightRaysTexture, i.uv).r;
+				return float4(_Underwater_Color * _sunColor * color,1.0);
 			}
 
 			ENDCG

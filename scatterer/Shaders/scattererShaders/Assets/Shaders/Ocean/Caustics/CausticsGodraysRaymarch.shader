@@ -105,69 +105,61 @@
 				maxDistance = min(maxDistance, length(camPos.xyz / camPos.w));
 				maxDistance = min(maxDistance, transparencyDepth * 2.0);
 
-				float dotLight = dot(viewDir,-LightDir); //lightDir not passed so this doesn't work!
+				float dotLight = dot(viewDir,-LightDir);
 				dotLight=pow(abs(dotLight),40) * sign(dotLight);
+				float boostFactor = (dotLight<0.0) ? -0.0085 : 0.005 ;
 
-				//I found this to be ugly I think, but worth retrying in-game
-//				float GRID_SIZE = 8;
-//				float GRID_SIZE_SQR_RCP = (1.0/(GRID_SIZE*GRID_SIZE));
-//				float stepSize = 0.1;
-//				// Calculate the offsets on the ray according to the interleaved sampling pattern
-//				float2 interleavedPos = fmod( float2(IN.pos.x, ScattererDownscaledDepth_TexelSize.w - IN.pos.y), GRID_SIZE );
-//				float rayStartOffset = ( interleavedPos.y * GRID_SIZE + interleavedPos.x ) * ( stepSize * GRID_SIZE_SQR_RCP ) ;
-//
-				//worldPosition+=rayStartOffset*viewDir;
+				float GRID_SIZE = 8;
+				float GRID_SIZE_SQR_RCP = (1.0/(GRID_SIZE*GRID_SIZE));
+				float stepSize = 0.2; //maybe change this to 0.007?
+				// Calculate the offsets on the ray according to the interleaved sampling pattern
+				float2 interleavedPos = fmod( float2(IN.pos.x, ScattererDownscaledDepth_TexelSize.w - IN.pos.y), GRID_SIZE );
+				float rayStartOffset = ( interleavedPos.y * GRID_SIZE + interleavedPos.x ) * ( stepSize * GRID_SIZE_SQR_RCP ) ;
 
-				worldPosition+=0.03*viewDir;
+				worldPosition+=(0.1+rayStartOffset)*viewDir;
 
-				for (int i=0;i<150;i++)
-				{
+				float fadeOut = 1.0;
 #ifdef SPHERE_PLANET
-					float underwaterDepth = max(oceanRadius - length(worldPosition - PlanetOrigin), 0.0);
-					blurFactor = lerp(0.0,5.0,underwaterDepth/causticsBlurDepth);
+				float underwaterDepth = max(oceanRadius - length(worldPosition - PlanetOrigin), 0.0);
+				blurFactor = lerp(0.0,5.0,underwaterDepth/causticsBlurDepth);
+
+				fadeOut = smoothstep(0.0,0.5,2.0-(underwaterDepth/causticsBlurDepth)); //fade them out at causticsBlurDepth*1.5
 #else
-					blurFactor = lerp(0.0,5.0,worldPosition.y/30.0);
+				blurFactor = lerp(0.0,5.0,worldPosition.y/30.0);
 #endif
 
-					//maybe with the blur add a fade too? how is fade done for the regular caustics?
-					
+				float2 layer1Offset = layer1Speed * float2(time,time);
+				float2 layer2Offset = layer2Speed * float2(time,time);
+
+				for (int i=0;i<150;i++)
+				{	
 					float2 uvCookie = mul(WorldToLight, float4(worldPosition, 1)).xy;
 
-    					float2 uvSample1 = layer1Scale * uvCookie + layer1Speed * float2(time,time);
-					float2 uvSample2 = layer2Scale * uvCookie + layer2Speed * float2(time,time);
+					float2 uvSample1 = layer1Scale * uvCookie + layer1Offset;
+					float2 uvSample2 = layer2Scale * uvCookie + layer2Offset;
 
 					float causticsSample1 = tex2Dlod(_CausticsTexture,float4(uvSample1,0.0,blurFactor)).r;
 					float causticsSample2 = tex2Dlod(_CausticsTexture,float4(uvSample2,0.0,blurFactor)).r;
 
-					float caustics = 0.0055*causticsMultiply*min(causticsSample1,causticsSample2);
-//#ifdef SPHERE_PLANET
-//					caustics =  lerp (1.0, caustics, clamp(underwaterDepth/1.5f, 0.0, 1.0)); //fade caustics in over the first meter and half of depth, may not be needed here
-//#endif
-										
+					float caustics = 0.01*causticsMultiply*min(causticsSample1,causticsSample2); //TODO: replace caustics multiply by lightrays brightness
+
 					float4 clipPos = mul(UNITY_MATRIX_VP,float4(worldPosition,1.0));
 					float4 screenPos = ComputeScreenPos(clipPos);
-					float shadowTerm = getOceanHardShadow(float4(worldPosition,1.0),-screenPos.z); //there is weights here that can be taken out of the loop
-					//shadowTerm*= 1.0 - saturate(currentDistance / (transparencyDepth * 2.0));
+					float shadowTerm = getOceanHardShadow(float4(worldPosition,1.0),-screenPos.z);
 
-#ifdef SPHERE_PLANET
-					shadowTerm*=1.0-saturate(underwaterDepth/causticsBlurDepth);
-#endif
-					totalCaustics+=(1.0-totalCaustics)*caustics*shadowTerm; //probably fade out farther rays too, to soften it in the distance, or fade them out when they go deeper?
-					//totalCaustics+=0.03*caustics; //probably fade out farther rays too, to soften it in the distance, or fade them out when they go deeper?
-
-					float boostFactor = (dotLight<0.0) ? -0.018 : 0.006 ;
-					float increment = 0.07 + boostFactor*i*dotLight; //variable step size, boost when looking towards light source or direction to make it
-											  //look like it's properly coming from infinity
+					totalCaustics+=(1.0-totalCaustics)*caustics*shadowTerm;
+					float increment = 0.2 + boostFactor*i*dotLight;   //variable step size, boost when looking towards light source or direction to make it look like it's properly coming from infinity
+										
 					currentDistance+=increment;
-//					currentDistance+=0.05;
 					worldPosition+=viewDir*increment;
-//					worldPosition+=viewDir*0.05;
 //
 					if (currentDistance > maxDistance)
 					{
 						break;
 					}
 				}
+
+				totalCaustics*=fadeOut;
 
 				return float4(totalCaustics,totalCaustics,totalCaustics,1.0);
 			}

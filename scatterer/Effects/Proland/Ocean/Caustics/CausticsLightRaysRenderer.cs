@@ -83,7 +83,7 @@ namespace scatterer
 					{
 						CameraToLightRaysScript [cam] = (CausticsLightRaysCameraScript)cam.gameObject.AddComponent (typeof(CausticsLightRaysCameraScript));
 						CameraToLightRaysScript [cam].CausticsLightRaysMaterial = CausticsLightRaysMaterial;
-						CameraToLightRaysScript [cam].Init ();
+						CameraToLightRaysScript [cam].Init (oceanNode);
 					}
 				}
 				else
@@ -115,8 +115,8 @@ namespace scatterer
 		
 		CommandBuffer commandBuffer;
 		Camera targetCamera;
-		private RenderTexture targetRT;
-		private RenderTexture downscaledDepthRT;
+		private RenderTexture targetRT, targetRT2;
+		private RenderTexture downscaledDepthRT,downscaledDepthRT2;
 		private Material downscaleDepthMaterial;
 		bool isInitialized = false;
 		bool renderingEnabled = false;
@@ -126,52 +126,84 @@ namespace scatterer
 			
 		}
 		
-		public void Init()
+		public void Init(OceanNode oceanNodeIn)
 		{
 			targetCamera = GetComponent<Camera>();
 			Utils.LogInfo ("CausticsLightRaysCameraScript::Init for cam " + targetCamera.name);
 			
 			if (!ReferenceEquals (targetCamera.targetTexture, null))
 			{
-				targetRT = new RenderTexture (targetCamera.targetTexture.width / 2, targetCamera.targetTexture.height / 2, 0, RenderTextureFormat.ARGB32); //maybe change this to single 8 bit texture? doesn't exist I think lmao
+				targetRT = new RenderTexture (targetCamera.targetTexture.width / 4, targetCamera.targetTexture.height / 4, 0, RenderTextureFormat.R8);
 			}
 			else
 			{
-				targetRT = new RenderTexture (Screen.width / 2, Screen.height / 2, 0, RenderTextureFormat.ARGB32); //maybe change this to single 8 bit texture? doesn't exist I think lmao
+				targetRT = new RenderTexture (Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8);
 			}
 			targetRT.anisoLevel = 1;
 			targetRT.antiAliasing = 1;
 			targetRT.volumeDepth = 0;
 			targetRT.useMipMap = true;
 			targetRT.autoGenerateMips = false;
+			targetRT.filterMode = FilterMode.Bilinear;
 			targetRT.Create();
-			targetRT.filterMode = FilterMode.Point; //might need a way to access both point and bilinear, or try the coord trick
+
+			targetRT2 = new RenderTexture (targetRT.width, targetRT.height, 0, RenderTextureFormat.R8);
+			targetRT2.anisoLevel = 1;
+			targetRT2.antiAliasing = 1;
+			targetRT2.volumeDepth = 0;
+			targetRT2.useMipMap = true;
+			targetRT2.autoGenerateMips = false;
+			targetRT2.filterMode = FilterMode.Bilinear;
+			targetRT2.Create();
 			
-			downscaledDepthRT = new RenderTexture(targetRT.width, targetRT.height, 0, RenderTextureFormat.RFloat);
+			downscaledDepthRT = new RenderTexture(targetRT.width * 2, targetRT.height * 2, 0, RenderTextureFormat.RFloat);
 			downscaledDepthRT.anisoLevel = 1;
 			downscaledDepthRT.antiAliasing = 1;
 			downscaledDepthRT.volumeDepth = 0;
 			downscaledDepthRT.useMipMap = false;
 			downscaledDepthRT.autoGenerateMips = false;
-			downscaledDepthRT.Create();
-			
 			downscaledDepthRT.filterMode = FilterMode.Point;
+			downscaledDepthRT.Create();			
+
+			downscaledDepthRT2 = new RenderTexture(downscaledDepthRT.width / 2, downscaledDepthRT.height / 2, 0, RenderTextureFormat.RFloat);
+			downscaledDepthRT2.anisoLevel = 1;
+			downscaledDepthRT2.antiAliasing = 1;
+			downscaledDepthRT2.volumeDepth = 0;
+			downscaledDepthRT2.useMipMap = false;
+			downscaledDepthRT2.autoGenerateMips = false;
+			downscaledDepthRT2.filterMode = FilterMode.Point;
+			downscaledDepthRT2.Create();
+
 			
-			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]); //still need to copy this from EVE
+			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]);
 			compositeLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeCausticsGodrays")]);
 			compositeLightRaysMaterial.SetTexture ("LightRaysTexture", targetRT);
 			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, Color.white);
+			compositeLightRaysMaterial.SetVector ("_Underwater_Color", oceanNodeIn.m_UnderwaterColor);
 
-			commandBuffer = new CommandBuffer(); //might be worth doing this in init? since always the same, yes
+			commandBuffer = new CommandBuffer();
 			
-			//downscale depth
-			commandBuffer.Blit(null, downscaledDepthRT, downscaleDepthMaterial);
-			commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT);
+			//downscale depth to 1/4
+			commandBuffer.Blit(null, downscaledDepthRT, downscaleDepthMaterial, 0);
+			commandBuffer.SetGlobalTexture("ScattererDownscaledDepthIntermediate", downscaledDepthRT);
+			//further downscale depth to 1/16
+			commandBuffer.Blit(null, downscaledDepthRT2, downscaleDepthMaterial, 1);
+			commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT2);
 			
-			//render and copy to screen (add upscaling)
-			commandBuffer.Blit(null, targetRT, CausticsLightRaysMaterial); //blitting a bunch of garbage so check this
+			//render
+			commandBuffer.Blit(null, targetRT, CausticsLightRaysMaterial);
+
+			//bilateral blur, 2 taps seems enough
+			commandBuffer.SetGlobalVector ("BlurDir", new Vector2(0,1));
+			commandBuffer.SetGlobalTexture ("TextureToBlur", targetRT);
+			commandBuffer.Blit(null, targetRT2, downscaleDepthMaterial, 2);
+
+			commandBuffer.SetGlobalVector ("BlurDir", new Vector2(1,0));
+			commandBuffer.SetGlobalTexture ("TextureToBlur", targetRT2);
+			commandBuffer.Blit(null, targetRT, downscaleDepthMaterial, 2);
+
+			//copy to screen
 			commandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, compositeLightRaysMaterial);
-
 
 
 			isInitialized = true;
@@ -180,7 +212,7 @@ namespace scatterer
 		
 		public void EnableForThisFrame()
 		{
-			if (isInitialized) //this still neeeds a check for underwater, or do it in the renderer class
+			if (isInitialized)
 			{
 				targetCamera.AddCommandBuffer(CameraEvent.AfterForwardAlpha, commandBuffer);
 				
@@ -220,7 +252,9 @@ namespace scatterer
 			}
 
 			targetRT.Release ();
+			targetRT2.Release ();
 			downscaledDepthRT.Release ();
+			downscaledDepthRT2.Release ();
 		}
 	}
 }
