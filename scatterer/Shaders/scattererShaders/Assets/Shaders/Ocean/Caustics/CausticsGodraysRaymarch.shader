@@ -24,7 +24,6 @@
 			#pragma fragment frag
 			#pragma target 3.0
 
-			//#pragma multi_compile_fwdbase
 			#pragma multi_compile SPHERE_PLANET FLAT_PLANET
 
 			#include "UnityCG.cginc"
@@ -123,7 +122,7 @@
 				float underwaterDepth = max(oceanRadius - length(worldPosition - PlanetOrigin), 0.0);
 				blurFactor = lerp(0.0,5.0,underwaterDepth/causticsBlurDepth);
 
-				fadeOut = smoothstep(0.0,0.5,2.0-(underwaterDepth/causticsBlurDepth)); //fade them out at causticsBlurDepth*1.5
+				fadeOut = smoothstep(0.0,0.4,1.0-(underwaterDepth/causticsBlurDepth)); //fade them out starting from last 40% of causticsBlurDepth
 #else
 				blurFactor = lerp(0.0,5.0,worldPosition.y/30.0);
 #endif
