@@ -140,7 +140,6 @@ Shader "Scatterer/OceanWhiteCaps"
 			uniform sampler2D _Ocean_Foam0;
 			uniform sampler2D _Ocean_Foam1;
 
-			uniform float _OceanAlpha;
 			uniform float alphaRadius;
 			uniform float _PlanetOpacity;  //to fade out the ocean when PQS is fading out
 			uniform float _ScatteringExposure;

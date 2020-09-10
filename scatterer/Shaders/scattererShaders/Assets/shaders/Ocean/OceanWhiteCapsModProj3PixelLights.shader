@@ -141,7 +141,6 @@
 			uniform sampler2D _Ocean_Foam0;
 			uniform sampler2D _Ocean_Foam1;
 
-			uniform float _OceanAlpha;
 			uniform float alphaRadius;
 			uniform float _PlanetOpacity;  //to fade out the ocean when PQS is fading out
 			uniform float _ScatteringExposure;
@@ -618,7 +617,6 @@
 		uniform sampler2D _Ocean_Foam0;
 		uniform sampler2D _Ocean_Foam1;
 
-		uniform float _OceanAlpha;
 		uniform float alphaRadius;
 		uniform float _ScatteringExposure;
 
@@ -700,7 +698,6 @@
 
 			float clampFactor= clamp(dist/alphaRadius,0.0,1.0);			
 
-			float outAlpha=lerp(_OceanAlpha,1.0,clampFactor);
 			float outWhiteCapStr=lerp(_Ocean_WhiteCapStr,farWhiteCapStr,clampFactor);
 
 			float3 oceanCamera = float3(0.0, 0.0, _Ocean_CameraPos.z);

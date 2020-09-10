@@ -24,7 +24,7 @@ namespace scatterer
 		
 		//Todo refactor and make caustics class which handles the common code of lightrays and shadowmask?
 		public bool Init(string causticsTexturePath,Vector2 causticsLayer1Scale,Vector2 causticsLayer1Speed,Vector2 causticsLayer2Scale,
-		                 Vector2 causticsLayer2Speed, float causticsMultiply, float causticsMinBrightness, float oceanRadius, float blurDepth, OceanNode oceanNodeIn)
+		                 Vector2 causticsLayer2Speed, float causticsMultiply, float causticsMinBrightness, float oceanRadius, float blurDepth, OceanNode oceanNodeIn, float lightRaysStrength)
 		{
 			if (string.IsNullOrEmpty (causticsTexturePath) || !System.IO.File.Exists (Utils.GameDataPath+causticsTexturePath))
 			{
@@ -53,7 +53,9 @@ namespace scatterer
 				CausticsLightRaysMaterial.SetFloat ("oceanRadius", oceanRadius);
 				CausticsLightRaysMaterial.SetFloat ("causticsBlurDepth", blurDepth);
 				CausticsLightRaysMaterial.SetFloat ("transparencyDepth", oceanNodeIn.transparencyDepth);
-				
+				CausticsLightRaysMaterial.SetFloat ("lightRaysStrength", lightRaysStrength);
+
+
 				CausticsLightRaysMaterial.EnableKeyword ("SPHERE_PLANET");
 				CausticsLightRaysMaterial.DisableKeyword ("FLAT_PLANET"); //for testing in unity editor only, obviously, Kerbin is not flat I swear
 

@@ -58,10 +58,6 @@ namespace scatterer
 		public int m_resolution = 4;
 
 		public const int MAX_VERTS = 65000;
-		[Persistent]
-		public float oceanScale = 1f;
-		[Persistent]
-		public float oceanAlpha = 1f;
 
 		[Persistent]
 		public float alphaRadius = 3000f;
@@ -128,6 +124,8 @@ namespace scatterer
 		public float causticsMinBrightness;
 		[Persistent]
 		public float causticsBlurDepth;
+		[Persistent]
+		public float lightRaysStrength=1f;
 
 		public CausticsShadowMaskModulate causticsShadowMaskModulator;
 		public CausticsLightRaysRenderer causticsLightRaysRenderer;
@@ -175,7 +173,7 @@ namespace scatterer
 				{
 					causticsLightRaysRenderer = (CausticsLightRaysRenderer) waterGameObjects[0].AddComponent<CausticsLightRaysRenderer>();
 					if (!causticsLightRaysRenderer.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
-					                                    causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth, this))
+					                                    causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth, this, lightRaysStrength))
 					{
 						UnityEngine.Object.DestroyImmediate (causticsLightRaysRenderer);
 						causticsLightRaysRenderer = null;
@@ -322,8 +320,7 @@ namespace scatterer
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
 			//oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
 			m_oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(m_manager.GetRadius()));
-			
-			m_oceanMaterial.SetFloat (ShaderProperties._OceanAlpha_PROPERTY, oceanAlpha);
+
 			m_oceanMaterial.SetFloat (ShaderProperties.alphaRadius_PROPERTY, alphaRadius);
 			
 			m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex); //these don't need to be updated every frame

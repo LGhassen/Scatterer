@@ -59,7 +59,7 @@ namespace scatterer {
 		Material m_initDisplacementMat;
 
 		
-		[Persistent] public int m_ansio = 2;
+		public int m_ansio = 2;
 		
 		//A higher wind speed gives greater swell to the waves
 		[Persistent] public float m_windSpeed = 5.0f;

@@ -231,6 +231,7 @@ namespace scatterer
 							Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle (Scatterer.Instance.mainSettings.shadowsOnOcean, "Surface receives shadows");
 							Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Secondary lights compatibility (huge performance hit when lights on)");
 							Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCaustics, "Underwater caustics");
+							Scatterer.Instance.mainSettings.oceanLightRays = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanLightRays, "Underwater light rays (requires ocean surface shadows)");
 						}
 						GUILayout.EndVertical();
 					}
@@ -587,18 +588,24 @@ namespace scatterer
 			OceanWhiteCaps oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
 
 			oceanModularGUI.ClearModules ();
-			oceanModularGUI.AddModule(new GUIModuleFloat("Alpha/WhiteCap Radius", oceanNode, "alphaRadius")); //TODO rename this and check what it does
-			oceanModularGUI.AddModule(new GUIModuleFloat("ocean Alpha", oceanNode, "oceanAlpha"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("Transparency Depth", oceanNode, "transparencyDepth"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("Darkness Depth", oceanNode, "darknessDepth"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("Refraction Index", oceanNode, "refractionIndex"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("Shore foam strength", oceanNode, "shoreFoam"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("Foam strength (m_whiteCapStr)", oceanNode, "m_whiteCapStr"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength (m_farWhiteCapStr)", oceanNode, "m_farWhiteCapStr"));
+
+
+
+			oceanModularGUI.AddModule (new GUIModuleLabel ("Surface settings"));
 			oceanModularGUI.AddModule(new GUIModuleVector3("Ocean Upwelling Color", oceanNode, "m_oceanUpwellingColor"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Transparency Depth", oceanNode, "transparencyDepth"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Foam strength (m_whiteCapStr)", oceanNode, "m_whiteCapStr"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Shore/shallow foam strength", oceanNode, "shoreFoam"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength (m_farWhiteCapStr)", oceanNode, "m_farWhiteCapStr"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength radius (alphaRadius)", oceanNode, "alphaRadius"));
+
+			oceanModularGUI.AddModule (new GUIModuleLabel ("Underwater Settings"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Refraction Index", oceanNode, "refractionIndex"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Darkness Depth", oceanNode, "darknessDepth"));
 			oceanModularGUI.AddModule(new GUIModuleVector3("Ocean Underwater Color", oceanNode, "m_UnderwaterColor"));
 
-			if (Scatterer.Instance.mainSettings.oceanCaustics)
+			oceanModularGUI.AddModule (new GUIModuleLabel ("Caustics/lightrays Settings"));
+			if (Scatterer.Instance.mainSettings.oceanCaustics || Scatterer.Instance.mainSettings.oceanLightRays)
 			{
 				oceanModularGUI.AddModule (new GUIModuleString ("Caustics texture path", oceanNode, "causticsTexturePath"));
 				oceanModularGUI.AddModule (new GUIModuleVector2 ("Caustics layer 1 scale", oceanNode, "causticsLayer1Scale"));
@@ -609,19 +616,20 @@ namespace scatterer
 				oceanModularGUI.AddModule (new GUIModuleFloat ("Caustics underwater light boost", oceanNode, "causticsUnderwaterLightBoost"));
 				oceanModularGUI.AddModule (new GUIModuleFloat ("Caustics minimum brightness (of dark areas in the caustics texture)", oceanNode, "causticsMinBrightness"));
 				oceanModularGUI.AddModule (new GUIModuleFloat ("Caustics blur depth", oceanNode, "causticsBlurDepth"));
+				oceanModularGUI.AddModule (new GUIModuleFloat ("Light rays strength", oceanNode, "lightRaysStrength"));
 			}
 
-			oceanModularGUI.AddModule (new GUIModuleLabel ("To apply the next setting press \"rebuild ocean\" and wait"));
+			oceanModularGUI.AddModule (new GUIModuleLabel ("To apply press \"rebuild ocean\" and wait"));
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Keep in mind this saves your current settings"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("AMP (default 1)", oceanNode, "AMP"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("wind Speed", oceanNode, "m_windSpeed"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("omega: inverse wave age", oceanNode, "m_omega"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("foamMipMapBias", oceanNode, "m_foamMipMapBias"));
-			oceanModularGUI.AddModule(new GUIModuleInt("m_ansio", oceanNode, "m_ansio"));
-			oceanModularGUI.AddModule(new GUIModuleInt("m_foamAnsio", oceanNode, "m_foamAnsio"));
+
+			oceanModularGUI.AddModule (new GUIModuleLabel ("Waves physical model settings"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Wave amplitude (AMP)", oceanNode, "AMP"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Wind Speed", oceanNode, "m_windSpeed"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Omega (inverse wave age)", oceanNode, "m_omega"));
+
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Performance settings"));
-			oceanModularGUI.AddModule(new GUIModuleInt("Ocean mesh resolution (lower is better)", oceanNode, "m_resolution"));
-			oceanModularGUI.AddModule (new GUIModuleLabel ("current fourierGridSize: " + Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ()));
+			oceanModularGUI.AddModule(new GUIModuleInt("Ocean mesh resolution (pixels covered by a mesh quad, lower is better)", oceanNode, "m_resolution"));
+			oceanModularGUI.AddModule (new GUIModuleLabel ("Current fourierGridSize (change from KSC menu): " + Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ()));
 		}
 
 		void DrawOceanGUI ()

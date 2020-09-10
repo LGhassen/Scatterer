@@ -14,9 +14,9 @@ namespace scatterer {
 		[Persistent]
 		protected string name;
 		
-		[Persistent] public int m_foamAnsio = 9;
+		public int m_foamAnsio = 9;
 		
-		[Persistent] public float m_foamMipMapBias = -2.0f;
+		public float m_foamMipMapBias = -2.0f;
 		
 		[Persistent] public float m_whiteCapStr = 0.1f;
 
@@ -25,8 +25,7 @@ namespace scatterer {
 		[Persistent] public float m_farWhiteCapStr = 0.1f;
 		
 		RenderTexture[] m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7;
-		
-		RenderTexture m_map5, m_map6;
+
 		RenderTexture m_foam0, m_foam1;
 
 		public override void Init(ProlandManager manager)
@@ -48,10 +47,6 @@ namespace scatterer {
 			
 			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBFloat;
 			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
-			
-			//These texture hold the actual data use in the ocean renderer
-			CreateMap(ref m_map5, mapFormat, m_ansio, true);
-			CreateMap(ref m_map6, mapFormat, m_ansio, true);
 			
 			CreateMap(ref m_foam0, format, m_foamAnsio, true);
 			CreateMap(ref m_foam1, format, m_foamAnsio, true);

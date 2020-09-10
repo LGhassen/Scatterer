@@ -115,8 +115,6 @@ namespace scatterer
 		private static int _OceanAlpha;
 		public static int alphaRadius_PROPERTY { get { return alphaRadius; } }
 		private static int alphaRadius;
-		public static int _GlobalOceanAlpha_PROPERTY { get { return _GlobalOceanAlpha; } }
-		private static int _GlobalOceanAlpha;
 		public static int sphereDir_PROPERTY { get { return sphereDir; } }
 		private static int sphereDir;
 		public static int cosTheta_PROPERTY { get { return cosTheta; } }
@@ -415,7 +413,6 @@ namespace scatterer
 			_Ocean_Radius = Shader.PropertyToID("_Ocean_Radius");
 			_OceanAlpha = Shader.PropertyToID("_OceanAlpha");
 			alphaRadius = Shader.PropertyToID("alphaRadius");
-			_GlobalOceanAlpha = Shader.PropertyToID("_GlobalOceanAlpha");
 			sphereDir = Shader.PropertyToID("sphereDir");
 			cosTheta = Shader.PropertyToID("cosTheta");
 			sinTheta = Shader.PropertyToID("sinTheta");

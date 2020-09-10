@@ -7,7 +7,6 @@
 		layer1Speed ("Layer 1 speed", Vector) = (0.05123,0.05123,0)
 		layer2Scale ("Layer 2 scale", Vector) = (1.235487,1.235487,0)
 		layer2Speed ("Layer 2 speed", Vector) = (0.074872,0.074872,0)
-		causticsMultiply ("causticsMultiply", Float) = 1
 	}
 
 	SubShader
@@ -38,6 +37,7 @@
 			uniform float3 PlanetOrigin;
 			uniform float oceanRadius;
 			uniform float transparencyDepth;
+			uniform float lightRaysStrength;
 
 			sampler2D _CausticsTexture;
 
@@ -47,7 +47,6 @@
 			uniform float2 layer2Scale;
 			uniform float2 layer2Speed;
 
-			uniform float causticsMultiply;
 			uniform float causticsBlurDepth;
 
 			uniform float warpTime;
@@ -140,7 +139,7 @@
 					float causticsSample1 = tex2Dlod(_CausticsTexture,float4(uvSample1,0.0,blurFactor)).r;
 					float causticsSample2 = tex2Dlod(_CausticsTexture,float4(uvSample2,0.0,blurFactor)).r;
 
-					float caustics = 0.01*causticsMultiply*min(causticsSample1,causticsSample2); //TODO: replace caustics multiply by lightrays brightness
+					float caustics = 0.01*lightRaysStrength*min(causticsSample1,causticsSample2);
 
 					float4 clipPos = mul(UNITY_MATRIX_VP,float4(worldPosition,1.0));
 					float4 screenPos = ComputeScreenPos(clipPos);
