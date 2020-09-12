@@ -218,11 +218,31 @@ namespace scatterer
 				{
 					planetshineManager.UpdatePlanetshine();
 				}
-			}
-		} 
+
+                CheckRSSMode();
+            }
+		}
 
 
-		void OnDestroy ()
+
+        private void CheckRSSMode()
+        {
+            if (!mainSettings.RSSMode) return;
+            if(HighLogic.LoadedScene == GameScenes.MAINMENU) return;
+
+			if (nearCamera.nearClipPlane < 1f)
+            {
+                nearCamera.nearClipPlane = 1f;
+            }
+
+            if (nearCamera.farClipPlane < 1750000f)
+            {
+                nearCamera.farClipPlane = 1750000f;
+            }
+        }
+
+
+        void OnDestroy ()
 		{
 			if (isActive)
 			{
@@ -390,6 +410,17 @@ namespace scatterer
 				{
 					Utils.LogDebug("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+mainSettings.nearClipPlane.ToString());
 					nearCamera.nearClipPlane = mainSettings.nearClipPlane;
+				}
+                if (mainSettings.overrideNearClipPlane)
+                {
+                    Utils.LogDebug("Override near clip plane from:" + nearCamera.nearClipPlane.ToString() + " to:" + mainSettings.nearClipPlane.ToString());
+                    nearCamera.nearClipPlane = mainSettings.nearClipPlane;
+                }
+
+                if (mainSettings.RSSMode)
+                {
+					nearCamera.nearClipPlane = 1f;
+                    nearCamera.farClipPlane = 1750000f;
 				}
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)

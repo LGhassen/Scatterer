@@ -19,7 +19,10 @@ namespace scatterer
 		
 		[Persistent]
 		public bool overrideNearClipPlane=false;
-		
+
+        [Persistent]
+        public bool RSSMode = false;
+
 		[Persistent]
 		public float nearClipPlane=0.5f;
 		
@@ -150,6 +153,7 @@ namespace scatterer
 				 OldConfig.disableAmbientLight != disableAmbientLight ||
 				 OldConfig.integrateWithEVEClouds != integrateWithEVEClouds ||
 				 OldConfig.overrideNearClipPlane != overrideNearClipPlane ||
+                 OldConfig.RSSMode != RSSMode ||
 				 OldConfig.nearClipPlane != nearClipPlane ||
 				 OldConfig.useOceanShaders != useOceanShaders ||
 				 OldConfig.shadowsOnOcean != shadowsOnOcean ||
