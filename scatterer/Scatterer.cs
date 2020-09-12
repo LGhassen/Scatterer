@@ -223,11 +223,10 @@ namespace scatterer
             }
 		}
 
-
-
         private void CheckRSSMode()
         {
             if (!mainSettings.RSSMode) return;
+
             if(HighLogic.LoadedScene == GameScenes.MAINMENU) return;
 
 			if (nearCamera.nearClipPlane < 1f)
@@ -411,11 +410,6 @@ namespace scatterer
 					Utils.LogDebug("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+mainSettings.nearClipPlane.ToString());
 					nearCamera.nearClipPlane = mainSettings.nearClipPlane;
 				}
-                if (mainSettings.overrideNearClipPlane)
-                {
-                    Utils.LogDebug("Override near clip plane from:" + nearCamera.nearClipPlane.ToString() + " to:" + mainSettings.nearClipPlane.ToString());
-                    nearCamera.nearClipPlane = mainSettings.nearClipPlane;
-                }
 
                 if (mainSettings.RSSMode)
                 {
