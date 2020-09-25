@@ -926,11 +926,10 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 ext
 	float3 viewdir = _point - camera;
 	float d = length(viewdir);
 	viewdir = viewdir / d;
-	//    /////////////////////experimental block begin
+
 	float RtResized = Rg + (Rt - Rg) * _experimentalAtmoScale;
-	//                viewdir.x += _viewdirOffset;
 	viewdir = normalize(viewdir);
-	//    /////////////////////experimental block end
+
 	float r = length(camera);
 	//    if (r < 0.9 * Rg) {
 	//        camera.y += Rg;
@@ -976,6 +975,7 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 ext
 		float rMu1 = dot(_point, viewdir);
 		float mu1 = rMu1 / r1;
 		float muS1 = dot(_point, sunDir) / r1;
+
 		//        #if defined (useAnalyticTransmittance)
 		extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
 		//#else
@@ -988,36 +988,50 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 ext
 		//                                    extinction = min(Transmittance(r1, -mu1, Rt) / Transmittance(r, -mu, Rt), 1.0);
 		//                            }
 
-		//        #endif
-		//        #ifdef useHorizonHack
-		//        const float EPS = 0.004;
-		//        //                    float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
-		//        float lim = -sqrt(1.0 - (Rg / r) * (Rg / r),0.000001);
-		//        if (abs(mu - lim) < EPS){                //ground fix, somehow doesn't really make a difference and causes all kind of crap in dx11/ogl
-		//            float a = ((mu - lim) + EPS) / (2.0 * EPS);
-		//            mu = lim - EPS;
-		//            //                        r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-		//            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu,0.000001);
-		//            mu1 = (r * mu + d) / r1;
-		//            float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
-		//            float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
-		//            float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-		//            mu = lim + EPS;
-		//            //                        r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
-		//            r1 = sqrt(r * r + d * d + 2.0 * r * d * mu,0.000001);
-		//            mu1 = (r * mu + d) / r1;
-		//            inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu);
-		//            inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu);
-		//            float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-		//            inScatter = lerp(inScatterA, inScatterB, a);
-		//        }
-		//        else
-		//        #endif
-		{
-			float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu,RtResized);
-			float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu,RtResized);
-			inScatter = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
-		}
+//		        #endif
+//		#ifdef useHorizonHack
+		//reduces it but doesn't fix it, have to try to get the other one
+		        //const float EPS = 0.004;
+			const float EPS = 0.01;
+		        float lim = -sqrt(1.0 - (Rg / r) * (Rg / r));
+		        if (abs(mu - lim) < EPS)
+			{
+				//float a = ((mu - lim) + EPS) / (2.0 * EPS);
+				float a = saturate(2.0 * ((mu - lim) + EPS) / (2.0 * EPS));
+
+				//these make inScatterA black, let's try without and increase EPS to 0.01
+				//almost does it, still a faint outline of it visible, maybe debug if sqrt doesn't need to be 0 below?
+			        //trying 0.04, nope, still a faint outline visible
+				//back to 0.01 with sqrt fix, doesn't work either, weird, maybe extinction is too strong?
+
+//				mu = lim - EPS;
+//				r1 = r * r + d * d + 2.0 * r * d * mu;
+//				r1 = r1 > 0.0 ? sqrt(r1) : 1e30;
+//				mu1 = (r * mu + d) / r1;
+
+				float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu, RtResized);
+				float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu, RtResized);
+				float4 inScatterA = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+
+				mu = lim + EPS;
+				r1 = sqrt(r * r + d * d + 2.0 * r * d * mu);
+				mu1 = (r * mu + d) / r1;
+
+				inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu, RtResized);
+				inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu, RtResized);
+				float4 inScatterB = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+
+				inScatter = lerp(inScatterA, inScatterB, a);
+		        }
+		        else
+//		#endif
+			{
+				float4 inScatter0 = Texture4D(_Inscatter, r, mu, muS, nu,RtResized);
+				float4 inScatter1 = Texture4D(_Inscatter, r1, mu1, muS1, nu,RtResized);
+				inScatter = max(inScatter0 - inScatter1 * extinction.rgbr, 0.0);
+			}
+
+		
 		// avoids imprecision problems in Mie scattering when sun is below horizon
 		inScatter.w *= smoothstep(0.00, 0.02, muS);
 		float3 inScatterM = GetMie(inScatter);

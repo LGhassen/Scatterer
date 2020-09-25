@@ -200,17 +200,17 @@
 				#if defined (PLANETSHINE_ON)
 				for (int j=0; j<4;++j)
 				{
-				if (planetShineRGB[j].w == 0) break;
+					if (planetShineRGB[j].w == 0) break;
 
-				float intensity=1;  
-				if (planetShineSources[j].w != 1.0f)
-				{
-				intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[j].xyz - worldPos),SUN_DIR)),0); //if source is not a sun compute intensity of light from angle to light source
-				//totally made up formula by eyeballing it
-				}
+					float intensity=1;  
+					if (planetShineSources[j].w != 1.0f)
+					{
+						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[j].xyz - worldPos),SUN_DIR)),0); //if source is not a sun compute intensity of light from angle to light source
+						//totally made up formula by eyeballing it
+					}
 
-				inscatter+=InScattering2(i._camPos, worldPos, normalize(planetShineSources[j].xyz),extinction)  //lot of potential extinction recomputations here
-				*planetShineRGB[j].xyz*planetShineRGB[j].w*intensity;
+					inscatter+=InScattering2(i._camPos, worldPos, normalize(planetShineSources[j].xyz),extinction)  //lot of potential extinction recomputations here
+					*planetShineRGB[j].xyz*planetShineRGB[j].w*intensity;
 				}
 				#endif
 
