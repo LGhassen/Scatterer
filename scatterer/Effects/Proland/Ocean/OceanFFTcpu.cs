@@ -511,25 +511,13 @@ namespace scatterer {
 				PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
 				foreach (PartBuoyancy _part in parts)
 				{
-					//				_part.transform
 					Vector3 relativePartPos = _part.transform.position-Scatterer.Instance.nearCamera.transform.position;
-					
-					//					Utils.Log("new ocean level: "+ (m_oceanLevel+ SampleHeight(relativePartPos)).ToString());
-					
-					//						_part.waterLevel=m_oceanLevel+ SampleHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3()),Vector3.Dot(relativePartPos,uy.ToVector3()),0f));
+
 					float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+offsetVector3.x,
 					                                        Vector3.Dot(relativePartPos,uy.ToVector3())+offsetVector3.y,
-					                                        0f),0.25f);
-					if (newheight!= (-255f))
-					{
-						//_part.waterLevel=m_oceanLevel+newheight;
-						_part.waterLevel=newheight;
-					}
-					//						_part.waterLevel=m_oceanLevel;
-					
-					//										_part.wasSplashed=true;
-					//										_part.splashed=true;
-					//										_part.allSplashed=true;
+					                                        0f),0.02f);
+
+					_part.waterLevel=newheight;
 					
 					_part.wasSplashed=_part.splashed;
 					_part.slow=true;
@@ -1512,41 +1500,29 @@ namespace scatterer {
 			
 			return disp;
 		}
-
-		//TODO: Improve this method, check scrawk's CETO code since it's now open source
+		
 		//TODO: Make it so the FFTs are still done on the GPU for rendering and CPU uses lower-res FFTs that keep the same look (figure out how to keep the same look)
 		public float findHeight(Vector3 worldPos, float precision)
 		{
-			//return (SampleHeight (worldPos)); //skip displacement -> much more stable, fix displacement code
-
 			int it = 0;
-			Vector3 newPos = worldPos;
-			
-			Vector3 oldPos = worldPos;
-			
-			
-			Vector2 disp = SampleDisplacement (worldPos);
-			Vector3 newPosR = newPos + new Vector3 (disp.x, disp.y, 0f);
-			
-			while (((newPosR - worldPos).magnitude > precision) && (it<30)) {
-				
-				newPos = newPos - (newPosR - worldPos);
-				
-				disp = SampleDisplacement (newPos);
-				newPosR = newPos + new Vector3 (disp.x, disp.y, 0f);
+
+			Vector3 currentPosition = worldPos;
+			Vector2 displacement = SampleDisplacement (currentPosition);
+			Vector3 resultingPosition = currentPosition + new Vector3 (displacement.x, displacement.y, 0f);
+
+			while ( ((resultingPosition - worldPos).magnitude > precision) && it<40 )
+			{
+				Vector3 newPosition = currentPosition - (resultingPosition - worldPos);
+				Vector3 newDisplacement = SampleDisplacement (newPosition);
+				Vector3 newResultingPosition = newPosition + new Vector3 (newDisplacement.x, newDisplacement.y, 0f);
+
+				currentPosition = newPosition;
+				resultingPosition = newResultingPosition;
+
 				it++;
 			}
-			
-			if (it >= 30)
-			{
-				Utils.LogDebug("findHeight exceeded 30 iterations and quit");
-				return (-255f);
-			}
-			
-			//			Utils.Log ("findheight iterations " + it.ToString ());
-			
-			
-			return (SampleHeight (newPos));
+
+			return (SampleHeight (currentPosition));
 		}
 		
 	}
