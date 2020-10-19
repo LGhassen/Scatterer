@@ -1203,7 +1203,10 @@ namespace scatterer {
 			
 			return disp;
 		}
-		
+
+		//Essentially a search method to find which point on the ocean is displaced sideways to end up at our part's position, so we can sample the correct height
+		//Thanks to Scrawk (Justin Hawkins) for the tip
+		//Original source: Water technology of uncharted p.126 https://www.gdcvault.com/play/1015309/Water-Technology-of
 		//TODO: Make it so the FFTs are still done on the GPU for rendering and CPU uses lower-res FFTs that keep the same look (figure out how to keep the same look)
 		public float findHeight(Vector3 worldPos, float precision)
 		{

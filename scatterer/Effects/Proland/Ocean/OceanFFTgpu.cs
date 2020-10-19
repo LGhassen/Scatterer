@@ -27,9 +27,9 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
-
-
+using UnityEngine.Rendering;
 
 namespace scatterer {
 	/*
@@ -112,6 +112,12 @@ namespace scatterer {
 			return m_maxSlopeVariance;
 		}
 
+		private ComputeShader findHeightsShader;
+		private List<PartBuoyancy> parts = new List<PartBuoyancy>();
+		private bool heightsRequestInProgress=false;
+		float[] heights = {0f};
+		ComputeBuffer positionsBuffer, heightsBuffer;
+		int frameLatencyCounter = 1;
 
 		public override void Init(ProlandManager manager)
 		{
@@ -156,6 +162,25 @@ namespace scatterer {
 			m_initSpectrumMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 			
 			m_initDisplacementMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
+
+
+			m_oceanMaterial.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
+			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
+			m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+
+			if (SystemInfo.supportsComputeShaders)
+			{
+				findHeightsShader = ShaderReplacer.Instance.LoadedComputeShaders ["FindHeights"];
+
+				//now we need to give this guy all the info to find the positions: height + displacement
+				//first read heights directly, without displacement
+//				findHeightsShader.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
+//				findHeightsShader.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+//
+//				findHeightsShader.SetTexture (0, ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
+//				findHeightsShader.SetTexture (0 ,ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
+//				findHeightsShader.SetTexture (0, ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
+			}
 		}
 		
 		Vector2 GetSlopeVariances(Vector2 k, float A, float B, float C, float spectrumX, float spectrumY) {
@@ -258,10 +283,12 @@ namespace scatterer {
 					Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
 
 					
-					m_oceanMaterial.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
-					m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
-					m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+//					m_oceanMaterial.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
+//					m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
+//					m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+
 					//				m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);
+
 					m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
 					if (SystemInfo.supportsComputeShaders)
 					{
@@ -277,6 +304,13 @@ namespace scatterer {
 					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
 					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
 					m_oceanMaterial.SetVector (ShaderProperties._VarianceMax_PROPERTY, SystemInfo.supportsComputeShaders? Vector2.one : m_varianceMax);
+
+					findHeightsShader.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
+					findHeightsShader.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+					
+					findHeightsShader.SetTexture (0, ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
+					findHeightsShader.SetTexture (0 ,ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
+					findHeightsShader.SetTexture (0, ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
 				}
 			}
 
@@ -689,6 +723,114 @@ namespace scatterer {
 //					//			GUI.DrawTexture(new Rect(512,0,512, 512), m_map0);
 //		}
 
+		//FixedUpdate is responsible for physics, we do the part displacement here
+		public void FixedUpdate()
+		{
+			if (Scatterer.Instance.mainSettings.craft_WaveInteractions && findHeightsShader != null)
+			{
+				if (!heightsRequestInProgress)
+				{
+					//if list is not empty, we have a successful query, retrieve the positions from it
+					if (!ReferenceEquals(parts,null) &&  parts.Count > 0)
+					{
+						for (int i=0; i<heights.Length; i++)
+						{
+							if (!ReferenceEquals(parts [i],null))
+							{
+								parts [i].waterLevel = heights [i];
+								parts [i].wasSplashed = parts [i].splashed;
+								parts [i].slow = true;
+							}
+						}
+
+						parts.Clear();
+						//Utils.LogInfo("GPU readback latency :"+frameLatencyCounter.ToString());
+					}
+
+					//List<PartBuoyancy> 
+					parts = new List<PartBuoyancy>((PartBuoyancy[]) PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy))); //this can't be good for performance, iterate over craft? how to get their partbuoyancy? //calling this line alone gets us from 60 to 38 fps, damn
+
+					int size = parts.Count;
+
+					if (size > 0)
+					{
+						List<Vector3> positionsList = new List<Vector3> ();
+					
+						//foreach (PartBuoyancy _part in parts)
+						for (int i=0; i<size; i++)
+						{
+							//here we build a list of positions which we send to the GPU compute shader
+							Vector3 relativePartPos = parts [i].transform.position - Scatterer.Instance.nearCamera.transform.position; //is the camera position considered ocean's zero? seems like it
+
+							relativePartPos = new Vector3 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x,
+						            Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y,
+						                              0f);// transform from worldPos to oceanPos, apparently, change this to Vector2 later as it's oceanPos basically
+
+							positionsList.Add (relativePartPos);
+						}
+						//calling the computebuffer and retrieveing the data makes us go from 38 to 21 fps					
+						positionsBuffer = new ComputeBuffer (size, 3 * sizeof(float));
+						positionsBuffer.SetData (positionsList);
+
+						findHeightsShader.SetBuffer (0, "positions", positionsBuffer);
+						heightsBuffer = new ComputeBuffer (size, sizeof(float));
+						findHeightsShader.SetBuffer (0, "result", heightsBuffer);
+					
+						findHeightsShader.Dispatch (0, size, 1, 1); //worry about figuring out threads and groups later
+
+						//request the thing here
+						AsyncGPUReadback.Request(heightsBuffer,OnCompleteReadback);
+						frameLatencyCounter=1;
+						heightsRequestInProgress = true;
+
+						//						float[] heights = new float[size];
+						//						heightsBuffer.GetData (heights);
+						//					
+						//					
+						//						//here we have to dispatch the compute shader
+						//					
+						//						for (int i=0; i<size; i++) {
+						//							//here we get back the heights from the GPU and set them to the parts, sounds easy enough
+						//						
+						//							//Debug.Log("relativePOS: "+positionsList[i].ToString()+" retrieved X from GPU: "+heights[i].ToString());
+						//							//Debug.Log("POSX: "+positionsX[i].ToString()+" retrieved X from GPU: "+heights[i].ToString());
+						//
+						//							//Debug.Log("retrieved height from GPU: "+heights[i].ToString());
+						//						
+						//						
+						//							//float newheight=//
+						//						
+						//							parts [i].waterLevel = heights [i];
+						//						
+						//							parts [i].wasSplashed = parts [i].splashed;
+						//							parts [i].slow = true;
+						//						}
+						//
+						//						positionsBuffer.Dispose ();
+						//						heightsBuffer.Dispose ();
+					}
+				}
+				else
+				{
+					frameLatencyCounter++;
+				}
+			}
+		}
+
+		void OnCompleteReadback(AsyncGPUReadbackRequest request)
+		{
+			if (request.hasError)
+			{
+				Utils.LogError("GPU readback error detected.");
+				return;
+			}
+
+			heights = request.GetData<float>().ToArray();
+			heightsRequestInProgress = false;
+
+			positionsBuffer.Dispose ();
+			heightsBuffer.Dispose ();
+		}
 
 	}
 	
