@@ -42,17 +42,10 @@ namespace scatterer {
 		
 		WriteFloat m_writeFloat;
 		Vector2 m_varianceMax;
-		
-		//		//CONST DONT CHANGE
-		//		const float WAVE_CM = 0.23f;	// Eq 59
-		//		const float WAVE_KM = 370.0f;	// Eq 59
-		//		const float AMP = 1.0f;
-		
-//		[Persistent]
-		public float WAVE_CM = 0.23f; // Eq 59
 
-//		[Persistent]
+		public float WAVE_CM = 0.23f; // Eq 59
 		public float WAVE_KM = 370.0f; // Eq 59
+
 		[Persistent] public float AMP = 1.0f;
 		
 		Material m_initSpectrumMat;
@@ -102,9 +95,6 @@ namespace scatterer {
 		RenderTexture[] m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2;
 		RenderTexture[] m_fourierBuffer3, m_fourierBuffer4;
 		public RenderTexture m_map0, m_map1, m_map2, m_map3, m_map4;
-		
-		
-		//		RenderTexture m_variance;
 		
 		
 		public Texture3D variance {
@@ -421,13 +411,6 @@ namespace scatterer {
 					//Perform fourier transform and record what is the current index
 					m_idx = m_fourier.PeformFFT(m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
 					m_fourier.PeformFFT(m_fourierBuffer3, m_fourierBuffer4);
-					
-					//Copy the contents of the completed fourier transform to the map textures.
-					//You could just use the buffer textures (m_fourierBuffer0,1,2,etc) to read from for the ocean shader 
-					//but they need to have mipmaps and unity updates the mipmaps
-					//every time the texture is renderer into. This impacts performance during fourier transform stage as mipmaps would be updated every pass
-					//and there is no way to disable and then enable mipmaps on render textures in Unity at time of writting.
-
 
 					Graphics.Blit(m_fourierBuffer0[m_idx], m_map0);
 					Graphics.Blit(m_fourierBuffer1[m_idx], m_map1);
@@ -435,25 +418,9 @@ namespace scatterer {
 					Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
 					Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
 
-				
-				
-//					m_oceanMaterialNear.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
-//					m_oceanMaterialNear.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
-//					m_oceanMaterialNear.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
-//					//				m_oceanMaterialNear_PROPERTY,t("_Ocean_HeightOffset_PROPERTY, m_oceanLevel);
-//					m_oceanMaterialNear.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
-//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_variance);
-//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
-//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
-//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
-//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
-//					m_oceanMaterialNear.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
-//					m_oceanMaterialNear.SetVector (ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
-					
 					m_oceanMaterial.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
 					m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
 					m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
-					//				m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);
 					m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
 					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_variance);
 					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
@@ -463,10 +430,8 @@ namespace scatterer {
 					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
 					m_oceanMaterial.SetVector (ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
 				}
-//#if !CPUmode
-				//Make sure base class get updated as well
-//				base.UpdateNode();
-//#else
+//#if CPUmode
+
 				if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
 				{
 					if(!(done0&&done1&&done2&&done3&&done4&&done5))
@@ -481,12 +446,9 @@ namespace scatterer {
 					done3 = false;
 					done4 = false;
 					done5 = false;
-					
-//					Utils.Log ("FFT time " + (Time.realtimeSinceStartup - FFTtimer).ToString ());
+
 					FFTtimer = Time.realtimeSinceStartup;
-					
-					//				Nullable<float> time = Time.realtimeSinceStartup;
-					
+
 					Nullable<float> time = t;
 					
 					ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded), time);
@@ -495,10 +457,9 @@ namespace scatterer {
 					CommitResults (ref m_fourierBuffer4vector, ref m_fourierBuffer4vectorResults);
 				}
 
-
-
-				base.UpdateNode();
 //#endif
+				base.UpdateNode();
+
 
 			}
 		}
@@ -508,7 +469,7 @@ namespace scatterer {
 		{
 			if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
 			{
-				PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy));
+				PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy)); //this can't be good for performance, iterate over craft? how to get their partbuoyancy?
 				foreach (PartBuoyancy _part in parts)
 				{
 					Vector3 relativePartPos = _part.transform.position-Scatterer.Instance.nearCamera.transform.position;
@@ -531,7 +492,6 @@ namespace scatterer {
 		}
 
 		public override void Cleanup()
-			//		protected override void OnDestroy()
 		{
 			base.Cleanup();
 			
@@ -545,8 +505,6 @@ namespace scatterer {
 			m_spectrum23.Release();
 			
 			m_WTable.Release();
-			//m_variance.Release();
-			//			Destroy (m_variance);
 			
 			for (int i = 0; i < 2; i++) {
 				m_fourierBuffer0[i].Release();
@@ -595,17 +553,7 @@ namespace scatterer {
 			m_WTable.filterMode = FilterMode.Point;
 			m_WTable.wrapMode = TextureWrapMode.Clamp;
 			m_WTable.enableRandomWrite = false;
-			m_WTable.Create();
-			
-			//			m_variance = new RenderTexture(m_varianceSize, m_varianceSize, 0, RenderTextureFormat.RHalf);
-			//			m_variance.volumeDepth = m_varianceSize;
-			//			m_variance.wrapMode = TextureWrapMode.Clamp;
-			//			m_variance.filterMode = FilterMode.Bilinear;
-			//			m_variance.isVolume = true;
-			//			m_variance.enableRandomWrite = false;
-			//			m_variance.useMipMap = true;
-			//			m_variance.Create();
-			
+			m_WTable.Create();			
 			
 			m_variance = new Texture3D(m_varianceSize, m_varianceSize, m_varianceSize, TextureFormat.ARGB32, true);
 			
@@ -808,55 +756,20 @@ namespace scatterer {
 				}
 			}
 			
-			//Write floating point data into render texture
-//			ComputeBuffer buffer = new ComputeBuffer(m_fourierGridSize * m_fourierGridSize, sizeof(float) * 4);
-			
-			//			buffer.SetData(spectrum01);
-			//			CBUtility.WriteIntoRenderTexture(m_spectrum01, 4, buffer, m_manager.GetWriteData());
-			
-			//			buffer.SetData(spectrum23);
-			//			CBUtility.WriteIntoRenderTexture(m_spectrum23, 4, buffer, m_manager.GetWriteData());
-			
 			m_writeFloat.WriteIntoRenderTexture(m_spectrum01, 4, spectrum01);
 			m_writeFloat.WriteIntoRenderTexture(m_spectrum23, 4, spectrum23);
 			
-			
-			//			buffer.Release();
-			
-			//			m_varianceShader.SetFloat (ShaderProperties._SlopeVarianceDelta_PROPERTY, 0.5f * (theoreticSlopeVariance - totalSlopeVariance));
-			//			m_varianceShader.SetFloat (ShaderProperties._VarianceSize_PROPERTY, (float)m_varianceSize);
-			//			m_varianceShader.SetFloat (ShaderProperties._Size_PROPERTY, m_fsize);
-			//			m_varianceShader.SetVector (ShaderProperties._GridSizes_PROPERTY, m_gridSizes);
-			//			m_varianceShader.SetTexture(0, "_Spectrum01_PROPERTY, m_spectrum01);
-			//			m_varianceShader.SetTexture(0, "_Spectrum23_PROPERTY, m_spectrum23);
-			//			m_varianceShader.SetTexture(0, "des_PROPERTY, m_variance);
-			//			
-			//			m_varianceShader.Dispatch(0,m_varianceSize/4,m_varianceSize/4,m_varianceSize/4);
-			
-			//			Find the maximum value for slope variance
-			
-			//			buffer = new ComputeBuffer(m_varianceSize*m_varianceSize*m_varianceSize, sizeof(float));
-			//			CBUtility.ReadFromRenderTexture(m_variance, 1, buffer, m_manager.GetReadData());
-			
-			
-			
-			
-			//			Compute variance for the BRDF 
-			//			copied from the dx9 project
-			//			Crashes everything
-			
 			float slopeVarianceDelta = 0.5f * (theoreticSlopeVariance - totalSlopeVariance);
-			//			
+		
 			m_varianceMax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
 			
 			Vector2[, , ] variance32bit = new Vector2[m_varianceSize, m_varianceSize, m_varianceSize];
 			Color[] variance8bit = new Color[m_varianceSize * m_varianceSize * m_varianceSize];
-			//			
+	
 			for (int x = 0; x < m_varianceSize; x++) {
 				for (int y = 0; y < m_varianceSize; y++) {
 					for (int z = 0; z < m_varianceSize; z++) {
 						variance32bit[x, y, z] = ComputeVariance(slopeVarianceDelta, spectrum01, spectrum23, x, y, z);
-						//problematic line
 						
 						if (variance32bit[x, y, z].x > m_varianceMax.x) m_varianceMax.x = variance32bit[x, y, z].x;
 						if (variance32bit[x, y, z].y > m_varianceMax.y) m_varianceMax.y = variance32bit[x, y, z].y;
@@ -925,15 +838,7 @@ namespace scatterer {
 				}
 			}
 			
-			//Write floating point data into render texture
-			//			ComputeBuffer buffer = new ComputeBuffer(m_fourierGridSize*m_fourierGridSize, sizeof(float)*4);
-			
-			//			buffer.SetData(table);
-			//			CBUtility.WriteIntoRenderTexture(m_WTable, 4, buffer, m_manager.GetWriteData());
-			
 			m_writeFloat.WriteIntoRenderTexture(m_WTable, 4, table);
-			
-			//			buffer.Release();
 			
 		}
 
@@ -972,9 +877,6 @@ namespace scatterer {
 				}
 			}
 			
-			//			m_writeFloat.WriteIntoRenderTexture( m_WTabletex, 4, m_WTable);
-			//			packVector4arrayinTexture (m_WTable, m_WTabletex);
-			
 		}
 		
 		Vector2 GetSpectrum(float t, float w, float s0x, float s0y, float s0cx, float s0cy)
@@ -994,53 +896,6 @@ namespace scatterer {
 			return;
 		}
 		
-//		public void WriteResultsCPU()
-//		{
-//			
-//			//			if(!done) return;
-//			//			if(!(done1 && done2 && done3 && done4 && done5)) return;
-//			
-//			m_map0tex2D.SetPixels(m_result0);
-//			m_map1tex2D.SetPixels(m_result1);
-//			//			m_map1tex2DR.SetPixels (result1R);
-//			//			m_map1tex2DG.SetPixels (result1G);
-//			//			m_map1tex2DB.SetPixels (result1B);
-//			//			m_map1tex2DA.SetPixels (result1A);
-//			//
-//			m_map2tex2D.SetPixels(m_result2);
-//			//			m_map2tex2DR.SetPixels (result2R);
-//			//			m_map2tex2DG.SetPixels (result2G);
-//			//			m_map2tex2DB.SetPixels (result2B);
-//			//			m_map2tex2DA.SetPixels (result2A);
-//			
-//			
-//			m_map3tex2D.SetPixels(m_result3);
-//			m_map4tex2D.SetPixels(m_result4);
-//			
-//			m_map0tex2D.Apply();
-//			m_map1tex2D.Apply();
-//			m_map2tex2D.Apply();
-//			
-//			//			m_map1tex2DR.Apply();
-//			//			m_map1tex2DG.Apply();
-//			//			m_map1tex2DB.Apply();
-//			//			m_map1tex2DA.Apply();
-//			//
-//			//			m_map2tex2DR.Apply();
-//			//			m_map2tex2DG.Apply();
-//			//			m_map2tex2DB.Apply();
-//			//			m_map2tex2DA.Apply();
-//			
-//			
-//			m_map3tex2D.Apply();
-//			m_map4tex2D.Apply();
-//			
-//			//			m_writeFloat.WriteIntoRenderTexture(m_map0,4,m_fourierBuffer0vector, m_bufferIdx, m_fourierGridSize);
-//			//			m_writeFloat.WriteIntoRenderTexture(m_map1,4,m_fourierBuffer1vector, m_idx, m_fourierGridSize);
-//			//			m_writeFloat.WriteIntoRenderTexture(m_map2,4,m_fourierBuffer2vector, m_idx, m_fourierGridSize);
-//		}
-		
-		
 		void CommitResults(ref Vector4[,] data, ref Vector4[,] output)
 		{
 			
@@ -1055,124 +910,6 @@ namespace scatterer {
 				}
 			}
 		}
-		
-		
-//		void PackResults(ref Vector4[,] data, ref Color[] results, float packingFactor)
-//		{
-//			Vector4 map;
-//			float packFactorHalf = packingFactor / 2f;
-//			
-//			for (int x = 0; x < m_fourierGridSize; x++)
-//			{
-//				for (int y = 0; y < m_fourierGridSize; y++)
-//				{
-//					int i = x + y * m_fourierGridSize;
-//					
-//					map = data[m_bufferIdx, i];
-//					
-//					results[i].r = (map.x + packFactorHalf) / packingFactor;
-//					results[i].g = (map.y + packFactorHalf) / packingFactor;
-//					results[i].b = (map.z + packFactorHalf) / packingFactor;
-//					results[i].a = (map.w + packFactorHalf) / packingFactor;
-//					
-//				}
-//			}
-//		}
-		
-		
-		
-		
-		
-		
-//		void PackResultsAsTheyAre(ref Vector4[,] data, ref Color[] results)
-//		{
-//			Vector4 map;
-//			for (int x = 0; x < m_fourierGridSize; x++)
-//			{
-//				for (int y = 0; y < m_fourierGridSize; y++)
-//				{
-//					int i = x + y * m_fourierGridSize;
-//					
-//					map = data[m_bufferIdx, i];
-//					
-//					results[i].r = map.x;
-//					results[i].g = map.y;
-//					results[i].b = map.z;
-//					results[i].a = map.w;
-//					
-//				}
-//			}
-//		}
-		
-		
-//		//I use this to encode a single 32bit per channel texture into 4 separate 8bit per channel texture
-//		//This is because unity 4 doesn't support floating point textures outside of rendertextures
-//		//Later on these are decoded in the shader as if coming from a single texture
-//		void PackResultsRGBA(ref Vector4[,] data, ref Color[] resultsR, ref Color[] resultsG,
-//		                     ref Color[] resultsB, ref Color[] resultsA, float packingFactor)
-//			
-//		{
-//			Vector4 map,encode;
-//			for (int x = 0; x < m_fourierGridSize; x++)
-//			{
-//				for (int y = 0; y < m_fourierGridSize; y++)
-//				{
-//					int i = x + y * m_fourierGridSize;
-//					
-//					
-//					map = data[m_bufferIdx, i]/packingFactor;
-//					map+=new Vector4(0.5f,0.5f,0.5f,0.5f);
-//					
-//					
-//					encode=encodeFloatRGBA(map.x);
-//					resultsR[i].r = encode.x;
-//					resultsR[i].g = encode.y;
-//					resultsR[i].b = encode.z;
-//					resultsR[i].a = encode.w;
-//					
-//					encode=encodeFloatRGBA(map.y);
-//					resultsG[i].r = encode.x;
-//					resultsG[i].g = encode.y;
-//					resultsG[i].b = encode.z;
-//					resultsG[i].a = encode.w;
-//					
-//					encode=encodeFloatRGBA(map.z);
-//					resultsB[i].r = encode.x;
-//					resultsB[i].g = encode.y;
-//					resultsB[i].b = encode.z;
-//					resultsB[i].a = encode.w;
-//					
-//					encode=encodeFloatRGBA(map.w);
-//					resultsA[i].r = encode.x;
-//					resultsA[i].g = encode.y;
-//					resultsA[i].b = encode.z;
-//					resultsA[i].a = encode.w;
-//					
-//				}
-//			}
-//		}
-		
-		
-//		Vector4 encodeFloatRGBA(float v) 
-//		{
-//			Vector4 enc = new Vector4(1.0f, 255.0f, 65025.0f, 160581375.0f) * v;
-//			
-//			//			enc = frac(enc);
-//			enc.x = enc.x - (float) Math.Floor(enc.x);   //get the fractional
-//			enc.y = enc.y - (float) Math.Floor(enc.y);
-//			enc.z = enc.z - (float) Math.Floor(enc.z);
-//			enc.w = enc.w - (float) Math.Floor(enc.w);
-//			
-//			//			enc -= enc.yzww * float4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);
-//			
-//			Vector4 temp = new Vector4 (enc.y, enc.z, enc.w, enc.w);
-//			temp.Scale (new Vector4 (1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f, 0.0f));
-//			enc -= temp;
-//			
-//			return enc;
-//		}
-		
-
 
 		//main thread that launches the other threads
 		void RunThreaded(object o)
@@ -1181,30 +918,14 @@ namespace scatterer {
 			Nullable<float> time  = o as Nullable<float>;
 			
 			InitWaveSpectrumCPU(time.Value);
-			
-			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreadedInit), time);
-			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer1vector, m_result1, 2, 2 )), time);
-			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer2vector, m_result2, 2, 3 )), time);
-			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer3vector, m_result3, 2, 4 )), time);
-			//			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded(m_fourierBuffer4vector, m_result4, 2, 5 )), time);
 
 			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded1), time);
 			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded2), time);
 			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded3), time);
 			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded4), time);
 			ThreadPool.QueueUserWorkItem(new WaitCallback(RunThreaded5), time);
-			
-			
-			//			m_bufferIdx = m_fourier.PeformFFT(0, m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
-			//m_bufferIdx = m_CPUfourier.PeformFFT(0, m_fourierBuffer0vector);
-			//			CommitResults (ref m_fourierBuffer0vector, ref m_fourierBuffer0vectorResults);
-			
-			
-			//			PackResults(ref m_fourierBuffer0vector, ref m_result0,2f);
-			
-			//technically the only one needed I think
+
 			done0 = true;
-			
 		}
 		
 		void RunThreaded1(object o)
@@ -1222,13 +943,7 @@ namespace scatterer {
 			Nullable<float> time  = o as Nullable<float>;
 			
 			m_CPUfourier.PeformFFT(0, m_fourierBuffer1vector);
-			
-			//			PackResults (ref m_fourierBuffer1vector, ref m_result1, 2f);
-			//			PackResultsAsTheyAre (ref m_fourierBuffer1vector, ref m_result1);
-			//			PackResultsRGBA (ref m_fourierBuffer2vector, ref result1R, ref result1G,
-			//			                 ref result1B, ref result1A,4f);
-			
-			
+
 			done2 = true;
 			
 		}
@@ -1239,13 +954,7 @@ namespace scatterer {
 			Nullable<float> time  = o as Nullable<float>;
 			
 			m_CPUfourier.PeformFFT(0, m_fourierBuffer2vector);
-			
-			//			PackResults (ref m_fourierBuffer2vector, ref m_result2, 2f);
-			//			PackResultsAsTheyAre (ref m_fourierBuffer2vector, ref m_result2);
-			//			PackResultsRGBA (ref m_fourierBuffer2vector, ref result2R, ref result2G,
-			//			                 ref result2B, ref result2A,4f);
-			
-			
+
 			done3 = true;
 			
 		}
@@ -1256,9 +965,6 @@ namespace scatterer {
 			Nullable<float> time  = o as Nullable<float>;
 			
 			m_CPUfourier.PeformFFT(0, m_fourierBuffer3vector);
-			//			CommitResults (ref m_fourierBuffer3vector, ref m_fourierBuffer3vectorResults);
-			
-			//			PackResults (ref m_fourierBuffer3vector, ref m_result3, 2f);
 			
 			done4 = true;
 			
@@ -1271,9 +977,6 @@ namespace scatterer {
 			Nullable<float> time  = o as Nullable<float>;
 			
 			m_CPUfourier.PeformFFT(0, m_fourierBuffer4vector);
-			//			CommitResults (ref m_fourierBuffer4vector, ref m_fourierBuffer4vectorResults);
-			
-			//			PackResults (ref m_fourierBuffer4vector, ref m_result4, 2f);
 			
 			done5 = true;
 			
@@ -1464,7 +1167,7 @@ namespace scatterer {
 		
 		
 		/// <summary>
-		/// This will return the ocean height at any world pos.
+		/// This will return the ocean displacement at any world pos.
 		/// </summary>
 		public Vector2 SampleDisplacement(Vector3 worldPos)
 		{
