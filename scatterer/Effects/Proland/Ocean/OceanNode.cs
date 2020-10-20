@@ -57,6 +57,9 @@ namespace scatterer
 		[Persistent]
 		public int m_resolution = 4;
 
+		[Persistent]
+		public float offScreenVertexStretch = 1.25f;
+
 		public const int MAX_VERTS = 65000;
 
 		[Persistent]
@@ -333,6 +336,8 @@ namespace scatterer
 				camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
 
 			m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
+
+			m_oceanMaterial.SetFloat ("offScreenVertexStretch", offScreenVertexStretch);
 		}
 		
 		void InitUnderwaterMaterial ()

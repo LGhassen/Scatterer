@@ -109,6 +109,8 @@
 			#include "OceanDisplacement3.cginc"
 			#include "../ClippingUtils.cginc"
 
+			uniform float offScreenVertexStretch;
+
 			uniform float4x4 _Globals_ScreenToCamera;
 			uniform float4x4 _Globals_CameraToWorld;
 			uniform float4x4 _Globals_WorldToScreen;
@@ -181,7 +183,7 @@
 				float t;
 				float3 cameraDir, oceanDir;
 				float4 vert = v.vertex;
-				vert.xy *= 1.25;
+				vert.xy *= offScreenVertexStretch;
 
 				float2 u = OceanPos(vert, _Globals_ScreenToCamera, t, cameraDir, oceanDir);		//camera dir is viewing direction in camera space
 				float2 dux = OceanPos(vert + float4(_Ocean_ScreenGridSize.x, 0.0, 0.0, 0.0), _Globals_ScreenToCamera) - u;
@@ -591,6 +593,8 @@
 		#include "AutoLight.cginc"
 		#include "OceanLight.cginc"
 
+		uniform float offScreenVertexStretch;
+
 		uniform float4x4 _Globals_ScreenToCamera;
 		uniform float4x4 _Globals_CameraToWorld;
 		uniform float4x4 _Globals_WorldToScreen;
@@ -637,7 +641,7 @@
 			float t;
 			float3 cameraDir, oceanDir;
 			float4 vert = v.vertex;
-			vert.xy *= 1.25;
+			vert.xy *= offScreenVertexStretch;
 
 			float2 u = OceanPos(vert, _Globals_ScreenToCamera, t, cameraDir, oceanDir);		//camera dir is viewing direction in camera space
 			float2 dux = OceanPos(vert + float4(_Ocean_ScreenGridSize.x, 0.0, 0.0, 0.0), _Globals_ScreenToCamera) - u;
