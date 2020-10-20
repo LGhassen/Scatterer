@@ -171,15 +171,6 @@ namespace scatterer {
 			if (SystemInfo.supportsComputeShaders)
 			{
 				findHeightsShader = ShaderReplacer.Instance.LoadedComputeShaders ["FindHeights"];
-
-				//now we need to give this guy all the info to find the positions: height + displacement
-				//first read heights directly, without displacement
-//				findHeightsShader.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
-//				findHeightsShader.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
-//
-//				findHeightsShader.SetTexture (0, ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
-//				findHeightsShader.SetTexture (0 ,ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
-//				findHeightsShader.SetTexture (0, ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
 			}
 		}
 		
@@ -715,14 +706,14 @@ namespace scatterer {
 			}
 			return Sum;
 		}
-		
+
 //		void OnGUI()
 //		{
 //			//			GUI.DrawTexture(new Rect(0,0,512, 512), m_map0tex2DScaleMode.ScaleToFit, false);
 //			//			GUI.DrawTexture(new Rect(0,0,512, 512), m_map0, ScaleMode.ScaleToFit, false);
 //					//			GUI.DrawTexture(new Rect(512,0,512, 512), m_map0);
 //		}
-
+		
 		//FixedUpdate is responsible for physics, we do the part displacement here
 		public void FixedUpdate()
 		{
@@ -730,61 +721,15 @@ namespace scatterer {
 			{
 				if (!heightsRequestInProgress)
 				{
-					//if list is not empty, we have a successful query, retrieve the positions from it
-					if (!ReferenceEquals(partsBuoyancies,null) &&  partsBuoyancies.Count > 0)
+					//if list is not empty at this point, we have a successful query, apply the heights from it
+					if (!ReferenceEquals (partsBuoyancies, null) && partsBuoyancies.Count > 0)
 					{
-						for (int i=0; i<heights.Length; i++)
-						{
-							if (!ReferenceEquals(partsBuoyancies [i],null))
-							{
-								//parts [i].waterLevel = Mathf.HalfToFloat(heights [i]);
-								partsBuoyancies [i].waterLevel = heights [i];
-								partsBuoyancies [i].wasSplashed = partsBuoyancies [i].splashed;
-								partsBuoyancies [i].slow = true;
-							}
-						}
-
-						partsBuoyancies.Clear();
-						//Utils.LogInfo("GPU readback latency :"+frameLatencyCounter.ToString());
+						ApplyPartsWaterLevelHeights ();
 					}
 
 					List<Vector2> positionsList = new List<Vector2> ();
-
-					foreach( Vessel vessel in FlightGlobals.VesselsLoaded)
-					{
-						foreach(Part part in vessel.parts)
-						{
-							if (!ReferenceEquals(part.partBuoyancy, null))
-							{
-								Vector3 relativePartPos = part.partBuoyancy.transform.position - Scatterer.Instance.nearCamera.transform.position;
-								
-								Vector2 oceanPos = new Vector2 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x,
-								                                Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y);
-								
-								positionsList.Add (oceanPos);
-								partsBuoyancies.Add(part.partBuoyancy);
-							}
-						}
-					}
-
-					int size = partsBuoyancies.Count;
-
-					if (size > 0)
-					{
-						//calling the computebuffer and retrieveing the data makes us go from 38 to 21 fps					
-						positionsBuffer = new ComputeBuffer (size, 2 * sizeof(float));
-						positionsBuffer.SetData (positionsList);
-						
-						findHeightsShader.SetBuffer (0, "positions", positionsBuffer);
-						heightsBuffer = new ComputeBuffer (size, sizeof(float));
-						findHeightsShader.SetBuffer (0, "result", heightsBuffer);
-					
-						findHeightsShader.Dispatch (0, size, 1, 1); //worry about figuring out threads and groups later
-
-						AsyncGPUReadback.Request(heightsBuffer,OnCompleteReadback);
-						frameLatencyCounter=1;
-						heightsRequestInProgress = true;
-					}
+					BuildPartPositionsList (positionsList, partsBuoyancies);
+					RequestAsyncWaterLevelHeights (positionsList);
 				}
 				else
 				{
@@ -792,8 +737,59 @@ namespace scatterer {
 				}
 			}
 		}
+		
+		void BuildPartPositionsList (List<Vector2> positionsList, List<PartBuoyancy> partsBuoyanciesList)
+		{
+			foreach (Vessel vessel in FlightGlobals.VesselsLoaded)
+			{
+				foreach (Part part in vessel.parts)
+				{
+					if (!ReferenceEquals (part.partBuoyancy, null))
+					{
+						Vector3 relativePartPos = part.partBuoyancy.transform.position - Scatterer.Instance.nearCamera.transform.position;
+						Vector2 oceanPos = new Vector2 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x, Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y);
+						positionsList.Add (oceanPos);
+						partsBuoyanciesList.Add (part.partBuoyancy);
+					}
+				}
+			}
+		}
+		
+		void ApplyPartsWaterLevelHeights ()
+		{
+			for (int i = 0; i < heights.Length; i++)
+			{
+				if (!ReferenceEquals (partsBuoyancies [i], null))
+				{
+					partsBuoyancies [i].waterLevel = heights [i];
+					partsBuoyancies [i].wasSplashed = partsBuoyancies [i].splashed;
+					partsBuoyancies [i].slow = true;
+				}
+			}
+			partsBuoyancies.Clear ();
+			//Utils.LogInfo ("GPU readback latency :" + frameLatencyCounter.ToString ());
+		}
 
-		void OnCompleteReadback(AsyncGPUReadbackRequest request)
+		void RequestAsyncWaterLevelHeights (List<Vector2> positionsList)
+		{
+			int size = partsBuoyancies.Count;
+			if (size > 0)
+			{
+				positionsBuffer = new ComputeBuffer (size, 2 * sizeof(float));
+				positionsBuffer.SetData (positionsList);
+				findHeightsShader.SetBuffer (0, "positions", positionsBuffer);
+				heightsBuffer = new ComputeBuffer (size, sizeof(float));
+				findHeightsShader.SetBuffer (0, "result", heightsBuffer);
+				
+				findHeightsShader.Dispatch (0, size, 1, 1); //worry about figuring out threads and groups later
+				
+				AsyncGPUReadback.Request (heightsBuffer, OnCompletePartHeightsReadback);
+				frameLatencyCounter = 1;
+				heightsRequestInProgress = true;
+			}
+		}
+
+		void OnCompletePartHeightsReadback(AsyncGPUReadbackRequest request)
 		{
 			if (request.hasError)
 			{

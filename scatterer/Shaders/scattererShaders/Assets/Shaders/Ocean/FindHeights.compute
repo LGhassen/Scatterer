@@ -8,7 +8,6 @@ sampler2D _Ocean_Map3;
 sampler2D _Ocean_Map4;
 
 RWStructuredBuffer<float2> positions;
-//RWStructuredBuffer<half> result;
 RWStructuredBuffer<float> result;
 
 float SampleHeight(float2 oceanPos)
