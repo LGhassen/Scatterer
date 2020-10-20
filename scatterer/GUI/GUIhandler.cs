@@ -599,8 +599,6 @@ namespace scatterer
 			oceanModularGUI.AddModule(new GUIModuleFloat("Shore/shallow foam strength", oceanNode, "shoreFoam"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength (m_farWhiteCapStr)", oceanNode, "m_farWhiteCapStr"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength radius (alphaRadius)", oceanNode, "alphaRadius"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("Off screen vertex coverage (Increase with big waves)", oceanNode, "offScreenVertexStretch"));
-
 
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Underwater Settings"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Refraction Index", oceanNode, "refractionIndex"));
@@ -629,6 +627,7 @@ namespace scatterer
 			oceanModularGUI.AddModule(new GUIModuleFloat("Wave amplitude (AMP)", oceanNode, "AMP"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Wind Speed", oceanNode, "m_windSpeed"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Omega (inverse wave age)", oceanNode, "m_omega"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Off screen vertex coverage (Increase with big waves)", oceanNode, "offScreenVertexStretch"));
 
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Performance settings"));
 			oceanModularGUI.AddModule(new GUIModuleInt("Ocean mesh resolution (pixels covered by a mesh quad, lower is better)", oceanNode, "m_resolution"));
