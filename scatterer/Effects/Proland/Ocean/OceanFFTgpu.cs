@@ -113,7 +113,7 @@ namespace scatterer {
 		}
 
 		private ComputeShader findHeightsShader;
-		private List<PartBuoyancy> parts = new List<PartBuoyancy>();
+		private List<PartBuoyancy> partsBuoyancies = new List<PartBuoyancy>();
 		private bool heightsRequestInProgress=false;
 		float[] heights = {0f};
 		ComputeBuffer positionsBuffer, heightsBuffer;
@@ -726,88 +726,64 @@ namespace scatterer {
 		//FixedUpdate is responsible for physics, we do the part displacement here
 		public void FixedUpdate()
 		{
-			if (Scatterer.Instance.mainSettings.craft_WaveInteractions && findHeightsShader != null)
+			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null)
 			{
 				if (!heightsRequestInProgress)
 				{
 					//if list is not empty, we have a successful query, retrieve the positions from it
-					if (!ReferenceEquals(parts,null) &&  parts.Count > 0)
+					if (!ReferenceEquals(partsBuoyancies,null) &&  partsBuoyancies.Count > 0)
 					{
 						for (int i=0; i<heights.Length; i++)
 						{
-							if (!ReferenceEquals(parts [i],null))
+							if (!ReferenceEquals(partsBuoyancies [i],null))
 							{
-								parts [i].waterLevel = heights [i];
-								parts [i].wasSplashed = parts [i].splashed;
-								parts [i].slow = true;
+								//parts [i].waterLevel = Mathf.HalfToFloat(heights [i]);
+								partsBuoyancies [i].waterLevel = heights [i];
+								partsBuoyancies [i].wasSplashed = partsBuoyancies [i].splashed;
+								partsBuoyancies [i].slow = true;
 							}
 						}
 
-						parts.Clear();
+						partsBuoyancies.Clear();
 						//Utils.LogInfo("GPU readback latency :"+frameLatencyCounter.ToString());
 					}
 
-					//List<PartBuoyancy> 
-					parts = new List<PartBuoyancy>((PartBuoyancy[]) PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy))); //this can't be good for performance, iterate over craft? how to get their partbuoyancy? //calling this line alone gets us from 60 to 38 fps, damn
+					List<Vector2> positionsList = new List<Vector2> ();
 
-					int size = parts.Count;
+					foreach( Vessel vessel in FlightGlobals.VesselsLoaded)
+					{
+						foreach(Part part in vessel.parts)
+						{
+							if (!ReferenceEquals(part.partBuoyancy, null))
+							{
+								Vector3 relativePartPos = part.partBuoyancy.transform.position - Scatterer.Instance.nearCamera.transform.position;
+								
+								Vector2 oceanPos = new Vector2 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x,
+								                                Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y);
+								
+								positionsList.Add (oceanPos);
+								partsBuoyancies.Add(part.partBuoyancy);
+							}
+						}
+					}
+
+					int size = partsBuoyancies.Count;
 
 					if (size > 0)
 					{
-						List<Vector3> positionsList = new List<Vector3> ();
-					
-						//foreach (PartBuoyancy _part in parts)
-						for (int i=0; i<size; i++)
-						{
-							//here we build a list of positions which we send to the GPU compute shader
-							Vector3 relativePartPos = parts [i].transform.position - Scatterer.Instance.nearCamera.transform.position; //is the camera position considered ocean's zero? seems like it
-
-							relativePartPos = new Vector3 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x,
-						            Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y,
-						                              0f);// transform from worldPos to oceanPos, apparently, change this to Vector2 later as it's oceanPos basically
-
-							positionsList.Add (relativePartPos);
-						}
 						//calling the computebuffer and retrieveing the data makes us go from 38 to 21 fps					
-						positionsBuffer = new ComputeBuffer (size, 3 * sizeof(float));
+						positionsBuffer = new ComputeBuffer (size, 2 * sizeof(float));
 						positionsBuffer.SetData (positionsList);
-
+						
 						findHeightsShader.SetBuffer (0, "positions", positionsBuffer);
 						heightsBuffer = new ComputeBuffer (size, sizeof(float));
 						findHeightsShader.SetBuffer (0, "result", heightsBuffer);
 					
 						findHeightsShader.Dispatch (0, size, 1, 1); //worry about figuring out threads and groups later
 
-						//request the thing here
 						AsyncGPUReadback.Request(heightsBuffer,OnCompleteReadback);
 						frameLatencyCounter=1;
 						heightsRequestInProgress = true;
-
-						//						float[] heights = new float[size];
-						//						heightsBuffer.GetData (heights);
-						//					
-						//					
-						//						//here we have to dispatch the compute shader
-						//					
-						//						for (int i=0; i<size; i++) {
-						//							//here we get back the heights from the GPU and set them to the parts, sounds easy enough
-						//						
-						//							//Debug.Log("relativePOS: "+positionsList[i].ToString()+" retrieved X from GPU: "+heights[i].ToString());
-						//							//Debug.Log("POSX: "+positionsX[i].ToString()+" retrieved X from GPU: "+heights[i].ToString());
-						//
-						//							//Debug.Log("retrieved height from GPU: "+heights[i].ToString());
-						//						
-						//						
-						//							//float newheight=//
-						//						
-						//							parts [i].waterLevel = heights [i];
-						//						
-						//							parts [i].wasSplashed = parts [i].splashed;
-						//							parts [i].slow = true;
-						//						}
-						//
-						//						positionsBuffer.Dispose ();
-						//						heightsBuffer.Dispose ();
 					}
 				}
 				else

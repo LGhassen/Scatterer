@@ -24,6 +24,7 @@
  * 
  */
 
+
 using UnityEngine;
 using System;
 using System.Collections;
@@ -33,6 +34,7 @@ using System.Threading;
 
 namespace scatterer {
 	/*
+	 * Unused CPU FFT version, ship interaction is better done with async GPU readback so this isn't needed. Kept for reference
 	 * Extend the base class OceanNode to provide the data need 
 	 * to create the waves using fourier transform which can then be applied
 	 * to the projected grid handled by the OceanNode.
@@ -166,7 +168,7 @@ namespace scatterer {
 
 
 //#if CPUmode
-			if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
+			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{
 				m_CPUfourier = new FourierCPU (m_fourierGridSize);
 				
@@ -204,7 +206,7 @@ namespace scatterer {
 			m_initDisplacementMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 
 //#if CPUmode
-			if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
+			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{
 				CreateWTableForCPU ();
 			}
@@ -432,7 +434,7 @@ namespace scatterer {
 				}
 //#if CPUmode
 
-				if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
+				if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 				{
 					if(!(done0&&done1&&done2&&done3&&done4&&done5))
 					{
@@ -467,7 +469,7 @@ namespace scatterer {
 		//FixedUpdate is responsible for physics, should be more stable here
 		public void FixedUpdate()
 		{
-			if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
+			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{
 				PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy)); //this can't be good for performance, iterate over craft? how to get their partbuoyancy?
 				foreach (PartBuoyancy _part in parts)
@@ -688,7 +690,7 @@ namespace scatterer {
 			float[] spectrum23 = new float[m_fourierGridSize * m_fourierGridSize * 4];
 
 //#if CPUmode
-			if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
+			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{
 				m_spectrum01vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
 				m_spectrum23vector = new Vector4[m_fourierGridSize * m_fourierGridSize];
@@ -720,7 +722,7 @@ namespace scatterer {
 					
 
 //#if CPUmode
-					if (Scatterer.Instance.mainSettings.craft_WaveInteractions)
+					if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 					{
 						m_spectrum01vector[idx].x = sample12XY.x;
 						m_spectrum01vector[idx].y = sample12XY.y;

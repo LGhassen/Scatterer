@@ -7,7 +7,8 @@ sampler2D _Ocean_Map0;
 sampler2D _Ocean_Map3;
 sampler2D _Ocean_Map4;
 
-RWStructuredBuffer<float3> positions;
+RWStructuredBuffer<float2> positions;
+//RWStructuredBuffer<half> result;
 RWStructuredBuffer<float> result;
 
 float SampleHeight(float2 oceanPos)
@@ -40,20 +41,20 @@ float2 SampleDisplacement(float2 oceanPos)
 [numthreads(1,1,1)]
 void CSMain (uint id : SV_DispatchThreadID)
 {
-    //result[id] = SampleHeight(positions[id].xy); //simple height only method
+    //result[id] = SampleHeight(positions[id]); //simple height only method
 
     float pecisionRequired = 0.02;
 
-	float2 currentPosition = positions[id].xy;
+	float2 currentPosition = positions[id];
 	float2 displacement = SampleDisplacement (currentPosition);
 	float2 resultingPosition = currentPosition + displacement;
 
 	for (int i = 0; i < 40; i++)
 	{
-		if (length(resultingPosition - positions[id].xy) <= pecisionRequired)
+		if (length(resultingPosition - positions[id]) <= pecisionRequired)
 			break;
 
-		float2 newPosition = currentPosition - (resultingPosition - positions[id].xy);
+		float2 newPosition = currentPosition - (resultingPosition - positions[id]);
 		float2 newDisplacement = SampleDisplacement (newPosition);
 		float2 newResultingPosition = newPosition + newDisplacement;
 

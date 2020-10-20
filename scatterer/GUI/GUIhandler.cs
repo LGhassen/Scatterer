@@ -232,6 +232,7 @@ namespace scatterer
 							Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Secondary lights compatibility (huge performance hit when lights on)");
 							Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCaustics, "Underwater caustics");
 							Scatterer.Instance.mainSettings.oceanLightRays = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanLightRays, "Underwater light rays (requires ocean surface shadows)");
+							Scatterer.Instance.mainSettings.oceanCraftWaveInteractions = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions, "Waves interact with ships (Kraken risk, backup your saves)");
 						}
 						GUILayout.EndVertical();
 					}

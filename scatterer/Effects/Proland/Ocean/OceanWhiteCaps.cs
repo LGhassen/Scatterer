@@ -44,8 +44,6 @@ namespace scatterer {
 		
 		protected override void CreateRenderTextures()
 		{
-			
-			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBFloat;
 			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
 			
 			CreateMap(ref m_foam0, format, m_foamAnsio, true);
