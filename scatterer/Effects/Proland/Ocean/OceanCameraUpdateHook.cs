@@ -119,9 +119,9 @@ namespace scatterer
 			//			Matrix4x4d stoc = ctos.Inverse ();
 			
 			Vector3d2 oc = cameraToOcean * Vector3d2.Zero ();
-			oceanNode.h = oc.z;					
+			oceanNode.height = oc.z;					
 			
-			oceanNode.offset = new Vector3d2 (-oceanNode.m_Offset.x, -oceanNode.m_Offset.y, oceanNode.h);
+			oceanNode.offset = new Vector3d2 (-oceanNode.m_Offset.x, -oceanNode.m_Offset.y, oceanNode.height);
 			
 			//old horizon code
 			//This breaks down when you tilt the camera by 90 degrees in any direction

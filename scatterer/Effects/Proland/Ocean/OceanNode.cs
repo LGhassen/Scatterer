@@ -92,7 +92,7 @@ namespace scatterer
 			}
 		}
 
-		public double h = 0;
+		public double height = 0;
 		public Vector3d2 m_Offset = Vector3d2.Zero ();
 		public Vector3d2 offset;
 		public Vector3d2 ux, uy, uz, oo;
@@ -130,7 +130,9 @@ namespace scatterer
 
 		public CausticsShadowMaskModulate causticsShadowMaskModulator;
 		public CausticsLightRaysRenderer causticsLightRaysRenderer;
-		
+
+		protected float waterHeightAtCameraPosition = 0f;
+
 		public virtual void Init (ProlandManager manager)
 		{
 			m_manager = manager;
@@ -192,7 +194,7 @@ namespace scatterer
 				_mr.enabled= oceanDraw;
 			}
 
-			isUnderwater = ((Scatterer.Instance.nearCamera.transform.position - m_manager.parentLocalTransform.position).magnitude -(float)m_manager.m_radius) < 0f;
+			isUnderwater = height < waterHeightAtCameraPosition;
 
 			underwaterProjector.projector.enabled = isUnderwater;
 

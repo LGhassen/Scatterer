@@ -106,7 +106,8 @@ namespace scatterer {
 		private ComputeShader findHeightsShader;
 		private List<PartBuoyancy> partsBuoyancies = new List<PartBuoyancy>();
 		private bool heightsRequestInProgress=false;
-		float[] heights = {0f};
+		private bool cameraHeightRequested=false;
+		float[] heights = {};
 		ComputeBuffer positionsBuffer, heightsBuffer;
 		int frameLatencyCounter = 1;
 
@@ -695,14 +696,11 @@ namespace scatterer {
 			{
 				if (!heightsRequestInProgress)
 				{
-					//if list is not empty at this point, we have a successful query, apply the heights from it
-					if (!ReferenceEquals (partsBuoyancies, null) && partsBuoyancies.Count > 0)
-					{
-						ApplyPartsWaterLevelHeights ();
-					}
+					ApplyWaterLevelHeights ();
 
 					List<Vector2> positionsList = new List<Vector2> ();
-					BuildPartPositionsList (positionsList, partsBuoyancies);
+					BuildPartsPositionsList (positionsList, partsBuoyancies);
+					AddCameraPosition (positionsList);
 					RequestAsyncWaterLevelHeights (positionsList);
 				}
 				else
@@ -712,7 +710,7 @@ namespace scatterer {
 			}
 		}
 		
-		void BuildPartPositionsList (List<Vector2> positionsList, List<PartBuoyancy> partsBuoyanciesList)
+		void BuildPartsPositionsList (List<Vector2> positionsList, List<PartBuoyancy> partsBuoyanciesList)
 		{
 			foreach (Vessel vessel in FlightGlobals.VesselsLoaded)
 			{
@@ -731,25 +729,45 @@ namespace scatterer {
 				}
 			}
 		}
-		
-		void ApplyPartsWaterLevelHeights ()
+
+		void AddCameraPosition (List<Vector2> positionsList)
 		{
-			for (int i = 0; i < heights.Length; i++)
+			if (height <= Mathf.Abs (maxWaveInteractionShipAltitude))
 			{
-				if (!ReferenceEquals (partsBuoyancies [i], null))
+				positionsList.Add (new Vector2(offsetVector3.x,offsetVector3.y));
+				cameraHeightRequested = true;
+			}
+		}
+		
+		void ApplyWaterLevelHeights ()
+		{
+			if (cameraHeightRequested)
+			{
+				waterHeightAtCameraPosition = heights[heights.Length-1];
+			}
+
+			if (!ReferenceEquals (partsBuoyancies, null))
+			{
+				for (int i = 0; i < partsBuoyancies.Count; i++)
 				{
-					partsBuoyancies [i].waterLevel = heights [i];
-					partsBuoyancies [i].wasSplashed = partsBuoyancies [i].splashed;
-					partsBuoyancies [i].slow = true;
+					if (!ReferenceEquals (partsBuoyancies [i], null))
+					{
+						partsBuoyancies [i].waterLevel = heights [i];
+						partsBuoyancies [i].wasSplashed = partsBuoyancies [i].splashed;
+						partsBuoyancies [i].slow = true;
+					}
 				}
 			}
+
 			partsBuoyancies.Clear ();
+			cameraHeightRequested = false;
+
 			//Utils.LogInfo ("GPU readback latency :" + frameLatencyCounter.ToString ());
 		}
 
 		void RequestAsyncWaterLevelHeights (List<Vector2> positionsList)
 		{
-			int size = partsBuoyancies.Count;
+			int size = positionsList.Count;
 			if (size > 0)
 			{
 				positionsBuffer = new ComputeBuffer (size, 2 * sizeof(float));
