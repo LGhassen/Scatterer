@@ -40,6 +40,13 @@ namespace scatterer {
 			m_initJacobiansMat.SetTexture(ShaderProperties._WTable_PROPERTY, m_WTable);
 			m_initJacobiansMat.SetVector (ShaderProperties._Offset_PROPERTY, m_spectrumOffset);
 			m_initJacobiansMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
+
+			m_oceanMaterial.SetFloat (ShaderProperties._Ocean_WhiteCapStr_PROPERTY, m_whiteCapStr);
+			m_oceanMaterial.SetFloat (ShaderProperties.farWhiteCapStr_PROPERTY, m_farWhiteCapStr);
+			m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);
+			m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam1_PROPERTY, m_foam1);
+			
+			m_oceanMaterial.SetFloat (ShaderProperties.shoreFoam_PROPERTY, shoreFoam);
 		}
 		
 		protected override void CreateRenderTextures()
@@ -84,36 +91,28 @@ namespace scatterer {
 			// Init jacobians (5,6,7)
 			RenderTexture[] buffers567 = new RenderTexture[]{m_fourierBuffer5[1], m_fourierBuffer6[1], m_fourierBuffer7[1]};
 			m_initJacobiansMat.SetFloat (ShaderProperties._T_PROPERTY, t);
-			//			RTUtility.MultiTargetBlit(buffers567, m_initJacobiansMat);
+			//RTUtility.MultiTargetBlit(buffers567, m_initJacobiansMat);
 			RTUtility.MultiTargetBlit(buffers567, m_initJacobiansMat, 0);
 		}
 		
 		public override void UpdateNode() {
-			if (!MapView.MapIsEnabled) {
-				base.UpdateNode();
 
-				if (!MapView.MapIsEnabled)
-				{
-					m_fourier.PeformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
+			base.UpdateNode();
 
-					//fixed block, two passes, fixes mipmapping issue resulting in black ocean
-					m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map5_PROPERTY, m_fourierBuffer5[m_idx]);
-					m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map6_PROPERTY, m_fourierBuffer6[m_idx]);
-					m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map7_PROPERTY, m_fourierBuffer7[m_idx]);
-					m_whiteCapsPrecomputeMat.SetVector (ShaderProperties._Choppyness_PROPERTY, m_choppyness);
-//					RenderTexture[] buffers = new RenderTexture[] {m_foam0, m_foam1};
-//					RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat, 0); //causes mipmapping issue resulting in black ocean
-					Graphics.Blit (null, m_foam0, m_whiteCapsPrecomputeMat, 0);
-					Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
+			if (!MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace)
+			{
+				m_fourier.PeformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
+				
+				//fixed block, two passes, fixes mipmapping issue resulting in black ocean
+				m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map5_PROPERTY, m_fourierBuffer5[m_idx]);
+				m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map6_PROPERTY, m_fourierBuffer6[m_idx]);
+				m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map7_PROPERTY, m_fourierBuffer7[m_idx]);
+				m_whiteCapsPrecomputeMat.SetVector (ShaderProperties._Choppyness_PROPERTY, m_choppyness);
 
-					//TODO: no need to do these every frame, move to initOceanMaterial
-					m_oceanMaterial.SetFloat (ShaderProperties._Ocean_WhiteCapStr_PROPERTY, m_whiteCapStr);
-					m_oceanMaterial.SetFloat (ShaderProperties.farWhiteCapStr_PROPERTY, m_farWhiteCapStr);
-					m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam0_PROPERTY, m_foam0);
-					m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam1_PROPERTY, m_foam1);
-
-					m_oceanMaterial.SetFloat (ShaderProperties.shoreFoam_PROPERTY, shoreFoam);
-				}
+				//RenderTexture[] buffers = new RenderTexture[] {m_foam0, m_foam1};
+				//RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat, 0); //causes mipmapping issue resulting in black ocean
+				Graphics.Blit (null, m_foam0, m_whiteCapsPrecomputeMat, 0);
+				Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
 			}
 		}
 	}

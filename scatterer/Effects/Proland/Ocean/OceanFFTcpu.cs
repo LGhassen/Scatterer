@@ -34,7 +34,7 @@ using System.Threading;
 
 namespace scatterer {
 	/*
-	 * Unused CPU FFT version, ship interaction is better done with async GPU readback so this isn't needed. Kept for reference
+	 * Unused CPU FFT version, ship interaction is better done with async GPU readback so this CPU version is not needed. Kept for reference
 	 * Extend the base class OceanNode to provide the data need 
 	 * to create the waves using fourier transform which can then be applied
 	 * to the projected grid handled by the OceanNode.
@@ -465,31 +465,32 @@ namespace scatterer {
 
 			}
 		}
-
-		//FixedUpdate is responsible for physics, should be more stable here
+		
+		//Craft-wave interactions
+		//Note: This version was a proof of concept, the final version is the GPU readback version in OceanFFTgpu, this is only kept here for reference
 		public void FixedUpdate()
 		{
 			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{
-				PartBuoyancy[] parts = (PartBuoyancy[])PartBuoyancy.FindObjectsOfType (typeof(PartBuoyancy)); //this can't be good for performance, iterate over craft? how to get their partbuoyancy?
-				foreach (PartBuoyancy _part in parts)
+				foreach (Vessel vessel in FlightGlobals.VesselsLoaded)
 				{
-					Vector3 relativePartPos = _part.transform.position-Scatterer.Instance.nearCamera.transform.position;
-
-					float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+offsetVector3.x,
-					                                        Vector3.Dot(relativePartPos,uy.ToVector3())+offsetVector3.y,
-					                                        0f),0.02f);
-
-					_part.waterLevel=newheight;
-					
-					_part.wasSplashed=_part.splashed;
-					_part.slow=true;
-					
-					//										_part.wasSplashed=false;
-					//										_part.splashed=false;
-					//										_part.allSplashed=false;
+					foreach (Part part in vessel.parts)
+					{
+						if (!ReferenceEquals (part.partBuoyancy, null))
+						{
+							Vector3 relativePartPos = part.partBuoyancy.transform.position-Scatterer.Instance.nearCamera.transform.position;
+							
+							float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+offsetVector3.x,
+							                                        Vector3.Dot(relativePartPos,uy.ToVector3())+offsetVector3.y,
+							                                        0f),0.02f);
+							
+							part.partBuoyancy.waterLevel=newheight;
+							
+							part.partBuoyancy.wasSplashed=part.partBuoyancy.splashed;
+							part.partBuoyancy.slow=true;
+						}
+					}
 				}
-				
 			}
 		}
 
@@ -1209,7 +1210,6 @@ namespace scatterer {
 		//Essentially a search method to find which point on the ocean is displaced sideways to end up at our part's position, so we can sample the correct height
 		//Thanks to Scrawk (Justin Hawkins) for the tip
 		//Original source: Water technology of uncharted p.126 https://www.gdcvault.com/play/1015309/Water-Technology-of
-		//TODO: Make it so the FFTs are still done on the GPU for rendering and CPU uses lower-res FFTs that keep the same look (figure out how to keep the same look)
 		public float findHeight(Vector3 worldPos, float precision)
 		{
 			int it = 0;

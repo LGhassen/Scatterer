@@ -60,8 +60,6 @@ namespace scatterer
 		[Persistent]
 		public float offScreenVertexStretch = 1.25f;
 
-		public const int MAX_VERTS = 65000;
-
 		[Persistent]
 		public float alphaRadius = 3000f;
 
@@ -218,14 +216,14 @@ namespace scatterer
 			{
 				m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterMaterial);
 			}
-			
+
 			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
 			m_oceanMaterial.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, planetOpacity);
 			
 			m_oceanMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
 		}
 
-		public void OnPreCull() //OnPreCull of OceanNode (added to first local Camera to render) executes after OnPreCull of SkyNode (added to ScaledSpaceCamera, executes first)
+		public void OnPreCull()
 		{
 			if (!MapView.MapIsEnabled && Scatterer.Instance.nearCamera && !m_manager.m_skyNode.inScaledSpace)
 			{
@@ -244,8 +242,9 @@ namespace scatterer
 			int NX = Screen.width / m_resolution;
 			int NY = Screen.height / m_resolution;
 			numGrids = 1;
-			//			const int MAX_VERTS = 65000;
-			//The number of meshes need to make a grid of this resolution
+
+			const int MAX_VERTS = 65000; //The number of meshes need to make a grid of this resolution
+
 			if (NX * NY > MAX_VERTS) {
 				numGrids += (NX * NY) / MAX_VERTS;
 			}
@@ -312,8 +311,7 @@ namespace scatterer
 
 			if (!Scatterer.Instance.unifiedCameraMode)
 				m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
-			
-			//if (Core.Instance.oceanRefraction)
+
 			m_oceanMaterial.SetTexture ("_BackgroundTexture", Scatterer.Instance.bufferManager.refractionTexture);
 			m_oceanMaterial.renderQueue=2501;
 			m_manager.GetSkyNode ().InitPostprocessMaterial (m_oceanMaterial);
@@ -321,6 +319,7 @@ namespace scatterer
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
 			m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
+
 			//oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
 			m_oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(m_manager.GetRadius()));
 

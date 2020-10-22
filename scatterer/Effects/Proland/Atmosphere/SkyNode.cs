@@ -350,13 +350,9 @@ namespace scatterer
 
 		public void UpdateStuff () //to be called by onPrerender for some graphical stuff
 		{
-			if (!inScaledSpace)
+			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && !ReferenceEquals(localScatteringProjector,null))
 			{
-				if (!MapView.MapIsEnabled) {
-					if (postprocessingEnabled && !ReferenceEquals(localScatteringProjector,null)) {
-						UpdatePostProcessMaterial (localScatteringProjector.projector.material);
-					}
-				}
+				UpdatePostProcessMaterial (localScatteringProjector.projector.material);
 			}
 			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
@@ -485,7 +481,7 @@ namespace scatterer
 				}
 			}
 
-			scaledScatteringMaterial.SetFloat (ShaderProperties.renderScattering_PROPERTY, inScaledSpace ? 1f : 0f); //not sure this is a good way to do it
+			scaledScatteringMaterial.SetFloat (ShaderProperties.renderScattering_PROPERTY, (m_manager.parentCelestialBody.pqsController != null) ? (!m_manager.parentCelestialBody.pqsController.isActive ? 1f : 0f ) : 0f); //not sure this is a good way to do it
 			if (!ReferenceEquals (localScatteringProjector, null))
 			{
 				localScatteringProjector.setInScaledSpace (inScaledSpace);
@@ -499,7 +495,12 @@ namespace scatterer
 			if ((m_manager.parentCelestialBody.pqsController != null) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
 				bool prevState = inScaledSpace;
-				inScaledSpace = !(m_manager.parentCelestialBody.pqsController.isActive);
+
+				//Change to scaledSpace only if we aren't in map view, otherwise we can be in the surface but pqsController is inactive
+				if (!MapView.MapIsEnabled)
+					inScaledSpace = !m_manager.parentCelestialBody.pqsController.isActive;
+
+
 				//if we go from scaled to local space
 				if (!inScaledSpace && prevState)
 				{

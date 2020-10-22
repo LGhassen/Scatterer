@@ -41,23 +41,15 @@ namespace scatterer {
 	public class OceanFFTgpu: OceanNode {
 
 		WriteFloat m_writeFloat;
-		
-		//		//CONST DONT CHANGE
-		//		const float WAVE_CM = 0.23f;	// Eq 59
-		//		const float WAVE_KM = 370.0f;	// Eq 59
-		//		const float AMP = 1.0f;
-		
-//		[Persistent]
-		public float WAVE_CM = 0.23f; // Eq 59
 
-//		[Persistent]
+		public float WAVE_CM = 0.23f; // Eq 59
+		
 		public float WAVE_KM = 370.0f; // Eq 59
 		[Persistent] public float AMP = 1.0f;
 		
 		Material m_initSpectrumMat;
 		
 		Material m_initDisplacementMat;
-
 		
 		public int m_ansio = 2;
 		
@@ -68,11 +60,9 @@ namespace scatterer {
 		[Persistent] public float m_omega = 0.84f;
 		
 		//Size in meters (i.e. in spatial domain) of each grid
-//		[Persistent] 
 		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);
 		
 		//strenght of sideways displacement for each grid
-//		[Persistent]
 		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);
 		
 		//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
@@ -112,6 +102,7 @@ namespace scatterer {
 			return m_maxSlopeVariance;
 		}
 
+		[Persistent] public float maxWaveInteractionShipAltitude = 500.0f;
 		private ComputeShader findHeightsShader;
 		private List<PartBuoyancy> partsBuoyancies = new List<PartBuoyancy>();
 		private bool heightsRequestInProgress=false;
@@ -168,7 +159,7 @@ namespace scatterer {
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
 
-			if (SystemInfo.supportsComputeShaders)
+			if (SystemInfo.supportsComputeShaders && Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{
 				findHeightsShader = ShaderReplacer.Instance.LoadedComputeShaders ["FindHeights"];
 			}
@@ -242,60 +233,50 @@ namespace scatterer {
 
 		public override void UpdateNode()
 		{
+			if (!m_manager.m_skyNode.inScaledSpace && (!MapView.MapIsEnabled || (findHeightsShader != null)))
 			{
-				float t;
-				if (TimeWarp.CurrentRate > 4)
+				//keep within low float exponents, otherwise we lose precision
+				float t = (float)(Planetarium.GetUniversalTime() % 1000000); // will cause discontinuity every 46.3 game days.
+
+				InitWaveSpectrum(t);
+				
+				//Perform fourier transform and record what is the current index
+				m_idx = m_fourier.PeformFFT(m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
+				m_fourier.PeformFFT(m_fourierBuffer3, m_fourierBuffer4);
+				
+				//Copy the contents of the completed fourier transform to the map textures.
+				//You could just use the buffer textures (m_fourierBuffer0,1,2,etc) to read from for the ocean shader 
+				//but they need to have mipmaps and unity updates the mipmaps
+				//every time the texture is renderer into. This impacts performance during fourier transform stage as mipmaps would be updated every pass
+				//and there is no way to disable and then enable mipmaps on render textures in Unity at time of writting.
+				
+				Graphics.Blit(m_fourierBuffer0[m_idx], m_map0);
+				Graphics.Blit(m_fourierBuffer1[m_idx], m_map1);
+				Graphics.Blit(m_fourierBuffer2[m_idx], m_map2);
+				Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
+				Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
+				
+				//m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);
+				
+				m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
+				if (SystemInfo.supportsComputeShaders)
 				{
-					t = (float) Planetarium.GetUniversalTime();
+					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceRenderTexture );
 				}
 				else
 				{
-					t =	Time.time;
+					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceTexture);
 				}
-
-				if (!MapView.MapIsEnabled)
-				{
-					InitWaveSpectrum(t);
+				m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
+				m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
+				m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
+				m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
+				m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
+				m_oceanMaterial.SetVector (ShaderProperties._VarianceMax_PROPERTY, SystemInfo.supportsComputeShaders? Vector2.one : m_varianceMax);
 				
-					//Perform fourier transform and record what is the current index
-					m_idx = m_fourier.PeformFFT(m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
-					m_fourier.PeformFFT(m_fourierBuffer3, m_fourierBuffer4);
-					
-					//Copy the contents of the completed fourier transform to the map textures.
-					//You could just use the buffer textures (m_fourierBuffer0,1,2,etc) to read from for the ocean shader 
-					//but they need to have mipmaps and unity updates the mipmaps
-					//every time the texture is renderer into. This impacts performance during fourier transform stage as mipmaps would be updated every pass
-					//and there is no way to disable and then enable mipmaps on render textures in Unity at time of writting.
-
-					Graphics.Blit(m_fourierBuffer0[m_idx], m_map0);
-					Graphics.Blit(m_fourierBuffer1[m_idx], m_map1);
-					Graphics.Blit(m_fourierBuffer2[m_idx], m_map2);
-					Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
-					Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
-
-					
-//					m_oceanMaterial.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
-//					m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
-//					m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
-
-					//				m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);
-
-					m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
-					if (SystemInfo.supportsComputeShaders)
-					{
-						m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceRenderTexture );
-					}
-					else
-					{
-						m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceTexture);
-					}
-					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
-					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
-					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
-					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
-					m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
-					m_oceanMaterial.SetVector (ShaderProperties._VarianceMax_PROPERTY, SystemInfo.supportsComputeShaders? Vector2.one : m_varianceMax);
-
+				
+				if (findHeightsShader != null)
+				{
 					findHeightsShader.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
 					findHeightsShader.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
 					
@@ -706,18 +687,11 @@ namespace scatterer {
 			}
 			return Sum;
 		}
-
-//		void OnGUI()
-//		{
-//			//			GUI.DrawTexture(new Rect(0,0,512, 512), m_map0tex2DScaleMode.ScaleToFit, false);
-//			//			GUI.DrawTexture(new Rect(0,0,512, 512), m_map0, ScaleMode.ScaleToFit, false);
-//					//			GUI.DrawTexture(new Rect(512,0,512, 512), m_map0);
-//		}
 		
 		//FixedUpdate is responsible for physics, we do the part displacement here
 		public void FixedUpdate()
 		{
-			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null)
+			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null && !m_manager.GetSkyNode().inScaledSpace)
 			{
 				if (!heightsRequestInProgress)
 				{
@@ -742,14 +716,17 @@ namespace scatterer {
 		{
 			foreach (Vessel vessel in FlightGlobals.VesselsLoaded)
 			{
-				foreach (Part part in vessel.parts)
+				if (vessel.altitude <= Mathf.Abs(maxWaveInteractionShipAltitude))
 				{
-					if (!ReferenceEquals (part.partBuoyancy, null))
+					foreach (Part part in vessel.parts)
 					{
-						Vector3 relativePartPos = part.partBuoyancy.transform.position - Scatterer.Instance.nearCamera.transform.position;
-						Vector2 oceanPos = new Vector2 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x, Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y);
-						positionsList.Add (oceanPos);
-						partsBuoyanciesList.Add (part.partBuoyancy);
+						if (!ReferenceEquals (part.partBuoyancy, null))
+						{
+							Vector3 relativePartPos = part.partBuoyancy.transform.position - Scatterer.Instance.nearCamera.transform.position;
+							Vector2 oceanPos = new Vector2 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x, Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y);
+							positionsList.Add (oceanPos);
+							partsBuoyanciesList.Add (part.partBuoyancy);
+						}
 					}
 				}
 			}

@@ -40,8 +40,6 @@ float2 SampleDisplacement(float2 oceanPos)
 [numthreads(1,1,1)]
 void CSMain (uint id : SV_DispatchThreadID)
 {
-    //result[id] = SampleHeight(positions[id]); //simple height only method
-
     float pecisionRequired = 0.02;
 
 	float2 currentPosition = positions[id];

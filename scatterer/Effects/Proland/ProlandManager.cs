@@ -131,7 +131,7 @@ namespace scatterer
 				m_skyNode.Init ();
 				if (hasOcean && Scatterer.Instance.mainSettings.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 				{
-					m_oceanNode = (OceanWhiteCaps)Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(OceanWhiteCaps));
+					m_oceanNode = (OceanWhiteCaps)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(OceanWhiteCaps));
 					m_oceanNode.Init (this);
 				}
 			}
