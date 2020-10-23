@@ -64,13 +64,14 @@ float2 OceanPos(float4 vert, float4x4 stoc, out float t, out float3 cameraDir, o
 	float b = dz * (cz + radius);
 	float c = cz * (cz + 2.0 * radius);
 
-	//float u = sqrt(max(b * b - c, 0.0));
-	float u = sqrt(max(b * b - c, 0.02));
+#if !defined (UNDERWATER_ON)
+	float tSphere = - b - sqrt(max(b * b - c, 0.02));
+#else
+	float tSphere = - b + sqrt(max(b * b - c, 0.02));
+#endif
+	float tApprox = - cz / dz * (1.0 + cz / (2.0 * radius) * (1.0 - dz * dz));
+	t = abs((tApprox - tSphere) * dz) < 1.0 ? tApprox : tSphere;
 
-	float tSphere = - b - u;
-	tSphere = (tSphere < 0.0) ? (- b + u) : tSphere;
-
-	t = tSphere;
 
 	return _Ocean_CameraPos.xy + t * oceanDir.xy;
 }
