@@ -409,7 +409,10 @@ namespace scatterer {
 		float Spectrum(float kx, float ky, bool omnispectrum) {
 			//I know this is a big chunk of ugly math but dont worry to much about what it all means
 			//It recreates a statistcally representative model of a wave spectrum in the frequency domain.
-			
+
+			//How to rotate the windDirection in the spectrum: https://github.com/Scrawk/Ceto/blob/07f8f45955a989983fe2330ea17eaf3f44c82031/Assets/Ceto/Scripts/Spectrum/CustomWaveSpectrumExample.cs#L248-L250
+			//But I prefere to rotate the Ux and Uy axis, that way can change the wind direction without regenerating spectrum
+
 			float U10 = m_windSpeed;
 			
 			// phase speed

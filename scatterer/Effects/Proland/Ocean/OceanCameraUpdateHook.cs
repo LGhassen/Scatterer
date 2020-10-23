@@ -84,7 +84,9 @@ namespace scatterer
 			}
 			
 			oceanNode.uy = oceanNode.uz.Cross (oceanNode.ux); // unit y vector
-			
+
+			//Wind moves in -Ux direction, which by default points north for some reason, can rotate it to any desired direction this way
+
 			oceanNode.oo = oceanNode.uz * (radius); // origin of ocean frame, in local space
 			
 			//local to ocean transform
