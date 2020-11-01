@@ -354,7 +354,10 @@ namespace scatterer
 		
 		public static int _ShadowMapTextureScatterer_PROPERTY { get { return _ShadowMapTextureScatterer; } }
 		private static int _ShadowMapTextureScatterer;
-		
+
+		public static int _ShadowMapTextureCopyScatterer_PROPERTY { get { return _ShadowMapTextureCopyScatterer; } }
+		private static int _ShadowMapTextureCopyScatterer;
+
 		public static int ScattererAdditionalInvProjection_PROPERTY { get { return ScattererAdditionalInvProjection; } }
 		private static int ScattererAdditionalInvProjection;
 		
@@ -518,6 +521,9 @@ namespace scatterer
 			scattererOrigDirectionalColor = Shader.PropertyToID("scattererOrigDirectionalColor");
 			unity_ShadowFadeCenterAndType = Shader.PropertyToID("unity_ShadowFadeCenterAndType");
 			_ShadowMapTextureScatterer = Shader.PropertyToID("_ShadowMapTextureScatterer");
+
+			_ShadowMapTextureCopyScatterer = Shader.PropertyToID("_ShadowMapTextureCopyScatterer");
+
 			ScattererAdditionalInvProjection = Shader.PropertyToID("ScattererAdditionalInvProjection");
 			AdditionalDepthBuffer = Shader.PropertyToID("AdditionalDepthBuffer");
 

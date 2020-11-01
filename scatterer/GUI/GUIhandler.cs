@@ -23,6 +23,7 @@ namespace scatterer
 
 		enum mainMenuTabs
 		{
+			Scattering,
 			Ocean,
 			Sunflare,
 			Lighting,
@@ -186,6 +187,10 @@ namespace scatterer
 
 			GUILayout.BeginHorizontal ();
 			{
+				if (GUILayout.Button ("Scattering"))
+				{
+					selectedTab = mainMenuTabs.Scattering;
+				}
 				if (GUILayout.Button ("Ocean"))
 				{
 					selectedTab = mainMenuTabs.Ocean;
@@ -213,7 +218,15 @@ namespace scatterer
 			}
 			GUILayout.EndHorizontal ();
 
-			if (selectedTab == mainMenuTabs.Ocean)
+			if (selectedTab == mainMenuTabs.Scattering)
+			{
+				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (D3D11 only)(recommend enabling long distance shadows)");
+				if(Scatterer.Instance.mainSettings.useGodrays)
+				{
+					//Godrays tesselation placeholder
+				}
+			}
+			else if (selectedTab == mainMenuTabs.Ocean)
 			{
 				Scatterer.Instance.mainSettings.useOceanShaders = GUILayout.Toggle (Scatterer.Instance.mainSettings.useOceanShaders, "Ocean shaders (may require game restart on change)");
 				if(Scatterer.Instance.mainSettings.useOceanShaders)

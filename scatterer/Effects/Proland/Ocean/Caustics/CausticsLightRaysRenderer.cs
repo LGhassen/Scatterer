@@ -131,7 +131,6 @@ namespace scatterer
 		public void Init(OceanNode oceanNodeIn)
 		{
 			targetCamera = GetComponent<Camera>();
-			Utils.LogInfo ("CausticsLightRaysCameraScript::Init for cam " + targetCamera.name);
 			
 			if (!ReferenceEquals (targetCamera.targetTexture, null))
 			{
@@ -207,9 +206,7 @@ namespace scatterer
 			//copy to screen
 			commandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, compositeLightRaysMaterial);
 
-
 			isInitialized = true;
-			Utils.LogInfo ("CausticsLightRaysCameraScript::Init 2");
 		}
 		
 		public void EnableForThisFrame()

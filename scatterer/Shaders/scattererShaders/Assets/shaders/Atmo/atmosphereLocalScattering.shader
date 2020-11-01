@@ -108,6 +108,7 @@
 			ZWrite Off
 
 			Blend OneMinusDstColor One //soft additive
+			//Blend SrcAlpha OneMinusSrcAlpha //alpha
 			Offset 0.0, -0.07
 
 			CGPROGRAM
@@ -117,11 +118,12 @@
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
 
-			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
+
 			//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
+			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 
 			uniform float _global_alpha;
 			uniform float _global_depth;
@@ -131,10 +133,9 @@
 
 			uniform float _PlanetOpacity; //to smooth transition from/to scaledSpace
 
-			uniform sampler2D _customDepthTexture;
-			#if defined (GODRAYS_ON)
+//#if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;
-			#endif
+//#endif
 			uniform float _openglThreshold;
 			uniform float4x4 _Globals_CameraToWorld;
 			uniform float4x4 scattererFrustumCorners;
@@ -147,15 +148,19 @@
 			//			uniform float4x4 lightOccluders2;
 			//#endif
 
-			#if defined (PLANETSHINE_ON)
+#if defined (PLANETSHINE_ON)
 			uniform float4x4 planetShineSources;
 			uniform float4x4 planetShineRGB;
-			#endif
+#endif
 
 			struct v2f
 			{
 				float4 worldPos : TEXCOORD0;
 				float3 _camPos  : TEXCOORD1;
+#if defined (GODRAYS_ON)
+				float4 projPos  : TEXCOORD2;
+#endif
+
 			};
 
 			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
@@ -167,15 +172,19 @@
 
 				//display scattering at ocean level when we are fading out local shading
 				//at the same time ocean stops rendering it's own scattering
-				#if defined (CUSTOM_OCEAN_ON)
+#if defined (CUSTOM_OCEAN_ON)
 				worldPos.xyz = (_PlanetOpacity < 1.0) && (length(worldPos.xyz-_planetPos) < Rg) ? _planetPos+Rg* normalize(worldPos.xyz-_planetPos)  : worldPos.xyz;
-				#endif
+#endif
 
 				o.worldPos = float4(worldPos.xyz,1.0);
 				o.worldPos.xyz*=worldPos.w;
 				outpos = mul (UNITY_MATRIX_VP,o.worldPos);
 
 				o._camPos = _WorldSpaceCameraPos - _planetPos;
+
+#if defined (GODRAYS_ON)
+				o.projPos = ComputeScreenPos(outpos);
+#endif
 
 				return o;
 			}
@@ -197,7 +206,7 @@
 				float3 extinction=1.0;
 
 				//TODO: put planetshine stuff in callable function
-				#if defined (PLANETSHINE_ON)
+#if defined (PLANETSHINE_ON)
 				for (int j=0; j<4;++j)
 				{
 					if (planetShineRGB[j].w == 0) break;
@@ -212,8 +221,26 @@
 					inscatter+=InScattering2(i._camPos, worldPos, normalize(planetShineSources[j].xyz),extinction)  //lot of potential extinction recomputations here
 					*planetShineRGB[j].xyz*planetShineRGB[j].w*intensity;
 				}
-				#endif
+#endif
 
+#if defined (GODRAYS_ON)
+				float2 depthUV = i.projPos.xy/i.projPos.w;
+				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
+				//godrayDepth = max(0.0, godrayDepth); //normally can't be negative, seems like it helps with holes though or when the stuff is malformed
+
+				if (godrayDepth < 0.0)   //if godray depth is negative then we have an entry point and no exit point, this seems to happen when looking towards the direction light is going, don't understand exactly why, in this case our exit point would be the terrain depth
+				{
+					godrayDepth = minDistance + godrayDepth; //now we have actual godray depth like in the other case, fixes my immediate square issue but introduces more issues, to investigate
+					worldPos = worldPos - godrayDepth * normalize(worldPos-i._camPos);
+				}
+				else
+				{
+					worldPos = worldPos - godrayDepth * normalize(worldPos-i._camPos);
+				}
+
+				//idk how to handle the similar issue for the sky though
+				//return float4(godrayDepth,0.0,0.0,1.0);
+#endif
 
 				inscatter+= InScattering2(i._camPos, worldPos,SUN_DIR,extinction);
 				inscatter*= (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ; //somehow the shader compiler for OpenGL behaves differently around braces

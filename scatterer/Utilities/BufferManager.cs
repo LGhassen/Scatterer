@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace scatterer
 {
-	
+	//Pretty sure this class should be useless, change affected classes to static
 	public class BufferManager : MonoBehaviour
 	{
 		public RenderTexture depthTexture;			//full-scene depth texture, from merged built-in depth textures of the two local cameras

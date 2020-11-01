@@ -159,9 +159,9 @@ namespace scatterer
 		}
 
 		// If condition is true, enable keywordOn and disable keywordOff, else do the opposite
-		public static void EnableOrDisableShaderKeywords(Material mat, string keywordOn, string keywordOff, bool condition) 
+		public static void EnableOrDisableShaderKeywords(Material mat, string keywordOn, string keywordOff, bool enable) 
 		{
-			if (condition)
+			if (enable)
 			{
 				mat.EnableKeyword (keywordOn);
 				mat.DisableKeyword (keywordOff);

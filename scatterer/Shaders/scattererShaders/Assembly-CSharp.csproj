@@ -106,6 +106,7 @@
      <None Include="Assets\Shaders\Atmo\atmosphereLocalScattering.shader" />
      <None Include="Assets\Shaders\Atmo\SkySphere.shader" />
      <None Include="Assets\Shaders\Shadows\LongDistanceScreenSpaceShadows.shader" />
+     <None Include="Assets\Shaders\Ocean\FindHeights.compute" />
      <None Include="Assets\Shaders\IntersectCommon.cginc" />
      <None Include="Assets\Shaders\Ocean\Caustics\CausticsOcclusion.shader" />
      <None Include="Assets\Shaders\Ocean\Caustics\CausticsGodraysBAK.shader" />
@@ -115,6 +116,7 @@
      <None Include="Assets\Shaders\ShadowsCommon.cginc" />
      <None Include="Assets\Shaders\KSP\LightingKSP.cginc" />
      <None Include="Assets\Shaders\Ocean\OceanBRDF.cginc" />
+     <None Include="Assets\Shaders\DepthTexture\ShadowVolumeDepth - Copy (2).shader" />
      <None Include="Assets\Shaders\Ocean\WhiteCapsPrecompute0.shader" />
      <None Include="Assets\Shaders\CommonAtmosphere.cginc" />
      <None Include="Assets\Shaders\Instancing\DeferredShading.shader" />
@@ -127,6 +129,7 @@
      <None Include="Assets\Shaders\Instancing\My Lightmapping.cginc" />
      <None Include="Assets\Shaders\OldOrUnused\atmosphereScatterNew.shader" />
      <None Include="Assets\Shaders\OldOrUnused\SkyScaledBox.shader" />
+     <None Include="Assets\Shaders\Atmo\Godrays\ShadowVolumeUtils.cginc" />
      <None Include="Assets\Shaders\DepthTexture\ShadowVolumeDepth - Copy.shader" />
      <None Include="Assets\Shaders\Grass\Grass.shader" />
      <None Include="Assets\Shaders\Ocean\SlopeVariance.compute" />
@@ -137,6 +140,7 @@
      <None Include="Assets\Shaders\OldOrUnused\AccumulateExposure.shader" />
      <None Include="Assets\Shaders\Grass\GrassBak.shader" />
      <None Include="Assets\Shaders\Ocean\UnderwaterProjector.shader" />
+     <None Include="Assets\Shaders\Atmo\Godrays\VolumeDepth.shader" />
      <None Include="Assets\Shaders\KSP\Diffuse.shader" />
      <None Include="Assets\Shaders\Ocean\Caustics\CompositeCausticsGodrays.shader" />
      <None Include="Assets\Shaders\RingCommon.cginc" />
@@ -150,6 +154,7 @@
      <None Include="Assets\Shaders\OldOrUnused\atmospherePostProcessing32bitViewSpaceDepth.shader" />
      <None Include="Assets\Shaders\Utility.cginc" />
      <None Include="Assets\Shaders\DepthTexture\simpleDepthTexture.shader" />
+     <None Include="Assets\Shaders\Atmo\Godrays\ComputeInverseShadowMatrices.compute" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>C:/gh/scattererGithub/Scatterer/scatterer/Shaders/scattererShaders/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
  </Reference>

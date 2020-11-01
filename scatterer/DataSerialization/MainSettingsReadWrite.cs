@@ -72,8 +72,10 @@ namespace scatterer
 		public bool d3d11ShadowFix = true;
 
 		[Persistent]
-		public bool terrainShadows = true;
+		public bool useGodrays = true;
 
+		[Persistent]
+		public bool terrainShadows = true;
 
 		[Persistent]
 		public float unifiedCamShadowsDistance=50000f;
@@ -169,6 +171,7 @@ namespace scatterer
 				 OldConfig.useEclipses != useEclipses ||
 				 OldConfig.useRingShadows != useRingShadows ||
 				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
+				 OldConfig.useGodrays != useGodrays ||
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.useDithering != useDithering ||
 

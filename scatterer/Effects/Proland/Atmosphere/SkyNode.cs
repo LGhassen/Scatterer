@@ -157,7 +157,9 @@ namespace scatterer
 
 		[Persistent]
 		public string assetPath;
-		
+
+		public GodraysRenderer godraysRenderer;
+
 		public void Init ()
 		{
 			m_radius = (float) m_manager.GetRadius ();
@@ -197,11 +199,18 @@ namespace scatterer
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			localScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
-//			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "GODRAYS_ON", "GODRAYS_OFF", Core.Instance.useGodrays);
-			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "GODRAYS_ON", "GODRAYS_OFF", false);
-
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses);
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", m_manager.hasOcean);
+
+			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode)
+			{
+				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
+				if (!godraysRenderer.Init(Scatterer.Instance.sunLight))
+				{
+					Component.Destroy (godraysRenderer);
+					godraysRenderer = null;
+				}
+			}
 
 			InitPostprocessMaterial (localScatteringMaterial);
 
@@ -507,11 +516,22 @@ namespace scatterer
 					//set flag to map EVE volumetrics after a few frames
 					if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 						mapVolumetrics=true;
+
+					//if we have godrays renderer re-enable it
+					if (!ReferenceEquals(godraysRenderer,null))
+						godraysRenderer.Enable();
 				}
 
-				//if we go from local to scaled, clear volumetrics
+				//if we go from local to scaled
 				if (inScaledSpace && !prevState)
+				{
+					//clear volumetrics
 					EVEvolumetrics.Clear();
+
+					//if we have godrays renderer disable it
+					if (!ReferenceEquals(godraysRenderer,null))
+						godraysRenderer.Disable();
+				}
 			}
 			else
 			{
@@ -705,6 +725,13 @@ namespace scatterer
 
 			Utils.LogDebug(" Camera overlap: "+camerasOverlap.ToString());
 			mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY,camerasOverlap);
+
+			if (!ReferenceEquals (godraysRenderer, null))
+			{
+				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
+				Utils.LogInfo("Ghassen set godrays texture for local scattering mat");
+			}
+			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
 		}
 
 		
@@ -889,8 +916,6 @@ namespace scatterer
 		
 		public void Cleanup ()
 		{
-
-
 			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange)
 			{
 				saveToConfigNode ();
@@ -919,6 +944,12 @@ namespace scatterer
 			if (localScatteringProjector)
 			{
 				UnityEngine.Object.Destroy (localScatteringProjector);
+			}
+
+			if (!ReferenceEquals (godraysRenderer, null))
+			{
+				godraysRenderer.OnDestroy();
+				Component.DestroyImmediate(godraysRenderer);
 			}
 
 			//disable eve integration scatterer flag

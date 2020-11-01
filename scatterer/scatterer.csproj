@@ -182,6 +182,7 @@
     <Compile Include="Effects\Proland\Ocean\Utils\CBUtility.cs" />
     <Compile Include="Effects\Proland\Ocean\Caustics\CausticsLightRaysRenderer.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanCameraUpdateHook.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Godrays\GodraysRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -198,5 +199,6 @@
     <Folder Include="Utilities\Misc\" />
     <Folder Include="Effects\Proland\Ocean\Caustics\" />
     <Folder Include="GUI\ModularGUI\" />
+    <Folder Include="Effects\Proland\Atmosphere\Godrays\" />
   </ItemGroup>
 </Project>
