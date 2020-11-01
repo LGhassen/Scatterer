@@ -85,12 +85,11 @@ namespace scatterer
 			_mr.receiveShadows = false;
 			_mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			_mr.enabled = false;
-//			_mr.enabled = true;
 			
-			//volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RFloat); //check if we can do half precision
-			volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //check if we can do half precision
+			volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RFloat); //check if we can do half precision
+			//volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to cause issues, seems like the max value a half can be is 65000 (from insight)
 			volumeDepthTexture.useMipMap = false;
-			volumeDepthTexture.antiAliasing = 1; //try to change this if we render at lower-res
+			volumeDepthTexture.antiAliasing = 1; //no need, the depth makes it naturally soft
 			volumeDepthTexture.filterMode = FilterMode.Point;
 			volumeDepthTexture.Create ();
 			
@@ -106,17 +105,10 @@ namespace scatterer
 			shadowVolumeCB.ClearRenderTarget(false, true, Color.black, 1f);
 			shadowVolumeCB.DrawRenderer (_mr, volumeDepthMaterial);
 
-//			volumeDepthGO.layer = 15; //just crap for testing
-//			volumeDepthMaterial.renderQueue = 3999;
-
 			targetCamera = gameObject.GetComponent<Camera> ();
 			targetCamera.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
 
-			//Need to add shadowMapCopy commandBuffer which is different from shadowMapRetrieve (although maybe test with retrieve after just to check it doesn't work)
-			//Make the shadowMap texture a static class (if size is the same don't recreate it, if size is different we recreate it)
-			//Make the shadowMap copier not static but dependent on each godrayRenderer
 			shadowMapCopier = (ShadowMapCopyCommandBuffer) targetLight.gameObject.AddComponent (typeof(ShadowMapCopyCommandBuffer));
-
 
 			//Still need to add a parameter to pass the second higher precision depth texture to shader (if needed though)
 

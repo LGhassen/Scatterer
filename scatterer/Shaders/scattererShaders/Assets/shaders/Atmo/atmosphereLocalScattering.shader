@@ -118,7 +118,6 @@
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
 
-
 			//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
@@ -133,12 +132,11 @@
 
 			uniform float _PlanetOpacity; //to smooth transition from/to scaledSpace
 
-//#if defined (GODRAYS_ON)
+#if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;
-//#endif
+#endif
 			uniform float _openglThreshold;
 			uniform float4x4 _Globals_CameraToWorld;
-			uniform float4x4 scattererFrustumCorners;
 
 			//            //eclipse uniforms
 			//#if defined (ECLIPSES_ON)			
@@ -226,20 +224,8 @@
 #if defined (GODRAYS_ON)
 				float2 depthUV = i.projPos.xy/i.projPos.w;
 				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
-				//godrayDepth = max(0.0, godrayDepth); //normally can't be negative, seems like it helps with holes though or when the stuff is malformed
 
-				if (godrayDepth < 0.0)   //if godray depth is negative then we have an entry point and no exit point, this seems to happen when looking towards the direction light is going, don't understand exactly why, in this case our exit point would be the terrain depth
-				{
-					godrayDepth = minDistance + godrayDepth; //now we have actual godray depth like in the other case, fixes my immediate square issue but introduces more issues, to investigate
-					worldPos = worldPos - godrayDepth * normalize(worldPos-i._camPos);
-				}
-				else
-				{
-					worldPos = worldPos - godrayDepth * normalize(worldPos-i._camPos);
-				}
-
-				//idk how to handle the similar issue for the sky though
-				//return float4(godrayDepth,0.0,0.0,1.0);
+				worldPos = worldPos - godrayDepth * normalize(worldPos-i._camPos);
 #endif
 
 				inscatter+= InScattering2(i._camPos, worldPos,SUN_DIR,extinction);
