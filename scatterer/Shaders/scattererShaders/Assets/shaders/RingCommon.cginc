@@ -2,7 +2,6 @@
 uniform float ringInnerRadius;
 uniform float ringOuterRadius;
 uniform float3 ringNormal;
-#include "IntersectCommon.cginc"
 
 //only supporting Kopernicus linear rings for now (no support for tiled rings or rings with thickness)
 //rgb channels are returned modulated by alpha value (used for sunflare)

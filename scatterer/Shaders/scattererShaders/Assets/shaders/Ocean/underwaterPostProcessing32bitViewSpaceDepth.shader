@@ -62,7 +62,7 @@ Shader "Scatterer/UnderwaterScatter" {
 
 				float3 rayDir=normalize(i.view_dir);
 
-				float waterSurfaceDistance = intersectSphere4(_camPos,rayDir,float3(0,0,0),Rg); //ocean surface check
+				float waterSurfaceDistance = intersectSphereInside(_camPos,rayDir,float3(0,0,0),Rg); //ocean surface check
 
 				fragDistance = (waterSurfaceDistance != -1) && (waterSurfaceDistance<fragDistance) ? waterSurfaceDistance : fragDistance;
 

@@ -99,7 +99,7 @@
 
 				float3 viewDir = normalize(fragWorldPos.xyz - worldPosition);
 
-				float maxDistance = intersectSphere4 (worldPosition, viewDir, PlanetOrigin, oceanRadius);
+				float maxDistance = intersectSphereInside (worldPosition, viewDir, PlanetOrigin, oceanRadius);
 				maxDistance = min(maxDistance, length(camPos.xyz / camPos.w));
 				maxDistance = min(maxDistance, transparencyDepth * 2.0);
 

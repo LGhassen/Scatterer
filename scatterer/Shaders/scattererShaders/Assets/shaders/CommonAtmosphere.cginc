@@ -74,6 +74,8 @@ uniform float _viewdirOffset;
 
 uniform float cloudTerminatorSmooth;
 
+#include "IntersectCommon.cginc"
+
 /** returns the matrix {{0.0,3.0},{2.0,1.0}} */
 float bayer2(const float2 xy)
 {
@@ -219,94 +221,6 @@ float3 Transmittance(float r, float mu, float Rt0)
 	//#else
 	//    return tex2D (_Transmittance, float2(uMu, uR)).rgb;
 	//#endif
-}
-
-
-//stole this from basic GLSL raytracing shader somewhere on the net
-//a quick google search and you'll find it
-//float intersectSphere2(float3 p1, float3 p2, float3 p3, float r) {
-float intersectSphere2(float3 p1, float3 d, float3 p3, float r) {
-	// The line passes through p1 and p2:
-	// p3 is the sphere center
-	//float3 d = p2 - p1;
-	float a = dot(d, d);
-	float b = 2.0 * dot(d, p1 - p3);
-	float c = dot(p3, p3) + dot(p1, p1) - 2.0 * dot(p3, p1) - r * r;
-	float test = b * b - 4.0 * a * c;
-	//    if (test < 0)
-	//    {
-	//        return -1.0;
-	//    }
-	//    float u = (-b - sqrt(test)) / (2.0 * a);
-	float u = (test < 0) ? -1.0 : (-b - sqrt(test)) / (2.0 * a);
-	//                      float3 hitp = p1 + u * (p2 - p1);            //we'll just do this later instead if needed
-	//                      return(hitp);
-	return u;
-}
-
-
-//for eclipses
-//works from inside sphere
-float intersectSphere4(float3 p1, float3 d, float3 p3, float r)
-{
-	// p1 starting point
-	// d look direction
-	// p3 is the sphere center
-
-	float a = dot(d, d);
-	float b = 2.0 * dot(d, p1 - p3);
-	float c = dot(p3, p3) + dot(p1, p1) - 2.0 * dot(p3, p1) - r*r;
-
-	float test = b*b - 4.0*a*c;
-
-	if (test<0)
-	{
-		return -1.0;
-	}
-
-	float u = (-b - sqrt(test)) / (2.0 * a);
-
-	//eclipse compatbility for inside the atmosphere
-	//  		if (u<0)
-	//  		{
-	//  			u = (-b + sqrt(test)) / (2.0 * a);
-	//  		}
-
-	u = (u < 0) ? (-b + sqrt(test)) / (2.0 * a) : u;
-
-	return u;
-}
-
-
-//Can't get this simpler version to work, will re-try it later
-//float intSphere( float4 sp, float3 ro, float3 rd, float tm) //sp.xyz sphere Pos? sp.w sphere rad?, r0 ray origin rd ray direction, tm?
-float intSphere( float3 ro, float3 rd, float4 sp) //sp.xyz sphere Pos? sp.w sphere rad?, r0 ray origin rd ray direction, tm?
-{
-	float3 d = ro - sp.xyz;
-	float b = dot(rd,d);
-	float c = dot(d,d) - sp.w*sp.w;
-	float t = b*b-c;
-	t = ( t > 0.0 ) ? -b-sqrt(t) : t;
-
-	//    if( t > 0.0 )
-	//    {
-	//        t = -b-sqrt(t);
-	////        r = (t > 0.0) && (t < tm);
-	//    }
-
-	return t;
-}
-
-//Can't get this simpler version to work, will re-try it later
-float sphere(float3 ray, float3 dir, float3 center, float radius)
-{
-	float3 rc = ray-center;
-	float c = dot(rc, rc) - (radius*radius);
-	float b = dot(dir, rc);
-	float d = b*b - c;
-	float t = -b - sqrt(abs(d));
-	float st = step(0.0, min(t,d)); //if min(t,d) >= 0 return 1 else return 0
-	return lerp(-1.0, t, st);
 }
 
 // optical depth for ray (r,mu) of length d, using analytic formula
@@ -551,7 +465,7 @@ float3 getSkyExtinctionAnaLyticTransmittance(float3 camera, float3 viewdir) //in
 
 	//extinction = Transmittance(r, mu);
 
-	float distInAtmo = abs(intersectSphere4(camera,viewdir,float3(0,0,0),RtResized));
+	float distInAtmo = abs(intersectSphereInside(camera,viewdir,float3(0,0,0),RtResized));
 	extinction = AnalyticTransmittance(r, mu, distInAtmo);
 
 	if (r > RtResized || dSq < 0.0) 
@@ -607,7 +521,7 @@ float3 getSkyExtinctionLerped(float3 camera, float3 viewdir) //instead of camera
 
 	extinction = Transmittance(r, mu);
 
-	float distInAtmo = abs(intersectSphere4(camera,viewdir,float3(0,0,0),RtResized));
+	float distInAtmo = abs(intersectSphereInside(camera,viewdir,float3(0,0,0),RtResized));
 	float3 analyticExtinction = AnalyticTransmittance(r, mu, distInAtmo);
 
 	if (r > RtResized || dSq < 0.0) 

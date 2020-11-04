@@ -135,9 +135,9 @@ Shader "Scatterer/SkyLocal"
 
 #if defined (useAnalyticSkyTransmittance)
 
-				if (intersectSphere2(WCP,d,IN.planetOrigin,Rg) > 0)
+				if (intersectSphereOutside(WCP,d,IN.planetOrigin,Rg) > 0)
 				{
-					float distInAtmo= intersectSphere2(WCP,d,IN.planetOrigin,Rg)-intersectSphere2(WCP,d,IN.planetOrigin,Rt);
+				float distInAtmo= intersectSphereOutside(WCP,d,IN.planetOrigin,Rg)-intersectSphereOutside(WCP,d,IN.planetOrigin,Rt);
 					extinction = AnalyticTransmittanceNormalized(r, mu, (distInAtmo));
 				}
 				else
@@ -156,7 +156,7 @@ Shader "Scatterer/SkyLocal"
     								_Extinction_Tint*extinction.g + (1-_Extinction_Tint)*average,
     								_Extinction_Tint*extinction.b + (1-_Extinction_Tint)*average);
 
-				float interSectPt= intersectSphere2(WCP,d,IN.planetOrigin,Rg);
+				float interSectPt= intersectSphereOutside(WCP,d,IN.planetOrigin,Rg);
 				
 				bool rightDir = (interSectPt > 0) ;
 				if (!rightDir)
@@ -169,7 +169,7 @@ Shader "Scatterer/SkyLocal"
 				//necessary for eclipses, ring shadows and planetshine
 				float3 worldPos;
 
-			    interSectPt= intersectSphere4(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
+				interSectPt= intersectSphereInside(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
 			    
 				if (interSectPt != -1)
 				{
@@ -333,7 +333,7 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			    
 			    float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);  //viewdir computed in scaledSpace
 			    
-				float interSectPt= intersectSphere2(WCP,d,IN.planetOrigin,Rg);
+				float interSectPt= intersectSphereOutside(WCP,d,IN.planetOrigin,Rg);
 
 				bool rightDir = (interSectPt > 0) ;  //rightdir && exists combined
 				if (!rightDir)
@@ -348,7 +348,7 @@ float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 				//necessary for eclipses, ring shadows and planetshine
 				float3 worldPos;
 #if defined (PLANETSHINE_ON) || defined (ECLIPSES_ON) || defined (RINGSHADOW_ON)
-			    interSectPt= intersectSphere4(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
+				interSectPt= intersectSphereInside(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
 			    
 				if (interSectPt != -1)
 				{

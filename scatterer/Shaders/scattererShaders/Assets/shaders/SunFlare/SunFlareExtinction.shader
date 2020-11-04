@@ -121,6 +121,7 @@ Shader "Scatterer/sunFlareExtinction"
 
 			CGPROGRAM
 			#include "UnityCG.cginc"
+			#include "../IntersectCommon.cginc"
 			#include "../RingCommon.cginc"
 			#pragma target 3.0
 			#pragma vertex vert

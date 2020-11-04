@@ -170,8 +170,8 @@ Shader "Scatterer/SkySphere"
 				//find worldPos of the point in the atmo we're looking at directly
 				//necessary for eclipses, ring shadows and planetshine
 				float3 worldPos;
-				#if defined (PLANETSHINE_ON) || defined (ECLIPSES_ON) || defined (RINGSHADOW_ON)
-				float interSectPt= intersectSphere4(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
+#if defined (PLANETSHINE_ON) || defined (ECLIPSES_ON) || defined (RINGSHADOW_ON)
+				float interSectPt= intersectSphereInside(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
 
 				if (interSectPt != -1)
 				{
