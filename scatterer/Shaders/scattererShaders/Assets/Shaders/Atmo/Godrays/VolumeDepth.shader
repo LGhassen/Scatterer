@@ -182,23 +182,25 @@
 				float4 depthViewPos = mul(unity_CameraInvProjection, depthClipPos);
 
 				float depthLength = length(depthViewPos.xyz/depthViewPos.w);
-//#if defined(DUAL_DEPTH_ON)
-//				zdepth = SAMPLE_DEPTH_TEXTURE(AdditionalDepthBuffer, depthUV);
-//
-//#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
-//				zdepth = 1 - zdepth;
-//#endif
-//				depthClipPos = float4(depthUV, zdepth, 1.0);
-//				depthClipPos.xyz = 2.0f * depthClipPos.xyz - 1.0f;
-//				float4 depthViewPos2 = mul(ScattererAdditionalInvProjection, depthClipPos);
-//
-//				depthLength = (depthLength < 8000) || (depthLength > 50000) ? depthLength : length(depthViewPos2.xyz/depthViewPos2.w); //the 50000 is hardcoded shadow distance, hopefully we don't even need this crap
-//#endif
+#if defined(DUAL_DEPTH_ON)
+				float zdepth2 = SAMPLE_DEPTH_TEXTURE(AdditionalDepthBuffer, depthUV);
+
+	#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
+				zdepth2 = 1 - zdepth2;
+	#endif
+				depthClipPos = float4(depthUV, zdepth2, 1.0);
+				depthClipPos.xyz = 2.0f * depthClipPos.xyz - 1.0f;
+				float4 depthViewPos2 = mul(ScattererAdditionalInvProjection, depthClipPos);
+
+				depthLength = (depthLength < 8000) || (zdepth2 == 0.0) ? depthLength : length(depthViewPos2.xyz/depthViewPos2.w);
+#endif
 
 				float viewLength = length(i.viewPos.xyz/i.viewPos.w);
 
-				if (viewLength>depthLength) 		//cap viewLength by depthLength
-					viewLength = depthLength;
+				if ((viewLength>depthLength) && (zdepth < 1.0) ) 		//cap viewLength by depthLength
+					viewLength = depthLength; //add zdepth < 1.0 condition?
+
+
 
 				return facing > 0 ? viewLength : -viewLength;
 			}

@@ -65,7 +65,6 @@ namespace scatterer
 			if (Scatterer.Instance.unifiedCameraMode && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowsDistance > 8000f))
 			{
 				Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "DUAL_DEPTH_ON", "DUAL_DEPTH_OFF", true);
-				//volumeDepthMaterial.SetTexture("AdditionalDepthBuffer", Scatterer.Instance.partialUnifiedCameraDepthBuffer.depthTexture); //no need it's set as global
 			}
 			else
 			{
