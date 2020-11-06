@@ -97,13 +97,14 @@ Shader "Scatterer/OceanWhiteCaps"
 			#pragma multi_compile REFRACTIONS_AND_TRANSPARENCY_OFF REFRACTIONS_AND_TRANSPARENCY_ON
 			#pragma multi_compile SCATTERER_MERGED_DEPTH_ON SCATTERER_MERGED_DEPTH_OFF
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
+			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 			//#pragma multi_compile SCATTERING_ON SCATTERING_OFF
 
 			#include "../CommonAtmosphere.cginc"
 			#include "../DepthCommon.cginc"
-			#if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
+#if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
 			#include "OceanShadows.cginc"
-			#endif			
+#endif			
 			#include "OceanBRDF.cginc"
 			#include "OceanDisplacement3.cginc"
 			#include "../ClippingUtils.cginc"
@@ -161,6 +162,10 @@ Shader "Scatterer/OceanWhiteCaps"
 			//#if defined (REFRACTION_ON)
 			uniform sampler2D ScattererScreenCopy;   //background texture used for refraction
 			//#endif
+
+			#if defined (GODRAYS_ON)
+			uniform sampler2D _godrayDepthTexture;
+			#endif
 
 			#if defined (PLANETSHINE_ON)
 			uniform float4x4 planetShineSources;
@@ -541,6 +546,14 @@ Shader "Scatterer/OceanWhiteCaps"
 					float3 _camPos = _WorldSpaceCameraPos - _planetPos;
 
 					float minDistance = length(worldPos-_camPos);
+
+#if defined (GODRAYS_ON)
+					float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
+					float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(godrayUV,0,0)).r;
+					godrayDepth*=0.8; //temp
+					worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
+#endif
+
 					float3 inscatter=0.0;float3 extinction=1.0;
 					inscatter = InScattering2(_camPos, worldPos,SUN_DIR,extinction);
 

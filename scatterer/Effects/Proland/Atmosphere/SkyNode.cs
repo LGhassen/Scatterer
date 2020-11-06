@@ -57,7 +57,7 @@ namespace scatterer
 		public float trueAlt;
 		
 		string celestialBodyName;
-		Transform parentScaledTransform, parentLocalTransform;
+		public Transform parentScaledTransform, parentLocalTransform;
 
 		GameObject ringObject;
 		float ringInnerRadius, ringOuterRadius;
@@ -205,7 +205,7 @@ namespace scatterer
 			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode)
 			{
 				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
-				if (!godraysRenderer.Init(Scatterer.Instance.sunLight))
+				if (!godraysRenderer.Init(Scatterer.Instance.sunLight, this))
 				{
 					Component.Destroy (godraysRenderer);
 					godraysRenderer = null;
@@ -729,7 +729,6 @@ namespace scatterer
 			if (!ReferenceEquals (godraysRenderer, null))
 			{
 				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
-				Utils.LogInfo("Ghassen set godrays texture for local scattering mat");
 			}
 			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
 		}
@@ -760,7 +759,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties._openglThreshold_PROPERTY, interpolatedSettings.openglThreshold);
 
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ().normalized);
-			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);  //better do this small calculation here
+			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);
 
 
 			if (Scatterer.Instance.mainSettings.usePlanetShine)

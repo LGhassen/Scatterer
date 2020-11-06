@@ -19,6 +19,7 @@
 			ZTest Always
 			Blend One One
 
+//			Cull Off
 //			Blend SrcAlpha OneMinusSrcAlpha
 
 			CGPROGRAM
@@ -30,15 +31,23 @@
 			#include "UnityCG.cginc"
 			#include "UnityShadowLibrary.cginc"
 			#include "ShadowVolumeUtils.cginc"
+			#include "../../IntersectCommon.cginc"
 
 			#pragma multi_compile DUAL_DEPTH_OFF DUAL_DEPTH_ON
+			#pragma multi_compile OCEAN_INTERSECT_OFF OCEAN_INTERSECT_ON  //enable ocean_intersect only for custom ocean shader
 
 			sampler2D _ShadowMapTextureCopyScatterer;
+
 			sampler2D _CameraDepthTexture;
 			float4x4 CameraToWorld;
 
 			float3 lightDirection;
 			float3 cameraForwardDir;
+
+			float3 _planetPos;
+			float Rg;
+			float Rt;
+			float _experimentalAtmoScale;
 
 #if defined(DUAL_DEPTH_ON)
 			UNITY_DECLARE_DEPTH_TEXTURE(AdditionalDepthBuffer);
@@ -68,6 +77,7 @@
 				float4 pos : SV_POSITION;
 				float4 viewPos: TEXCOORD0;
 				float4 projPos : TEXCOORD1;
+				float4 finalWorldPos : TEXCOORD2;
 			};
 
 			v2t vert (appdata v)
@@ -164,6 +174,7 @@
 				o.pos=UnityWorldToClipPos(finalWorldPos);
 				o.viewPos = float4(UnityWorldToViewPos(finalWorldPos),1.0);
 				o.projPos = ComputeScreenPos(o.pos);
+				o.finalWorldPos = finalWorldPos;
 				return o;
 			}
 
@@ -195,13 +206,23 @@
 				depthLength = (depthLength < 8000) || (zdepth2 == 0.0) ? depthLength : length(depthViewPos2.xyz/depthViewPos2.w);
 #endif
 
+				float3 viewDir = normalize(i.finalWorldPos.xyz/i.finalWorldPos.w - _WorldSpaceCameraPos);
 				float viewLength = length(i.viewPos.xyz/i.viewPos.w);
 
-				if ((viewLength>depthLength) && (zdepth < 1.0) ) 		//cap viewLength by depthLength
-					viewLength = depthLength; //add zdepth < 1.0 condition?
+				if (zdepth != 0.0) //cap by terrain distance
+				{
+					viewLength = min(depthLength, viewLength);
+				}
+				else //cap by boundary to atmo
+				{
+					float skyIntersectDistance = intersectSphereInside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg + _experimentalAtmoScale * (Rt-Rg));
+					viewLength = min(skyIntersectDistance, viewLength);
+				}
 
-
-
+#if defined(OCEAN_INTERSECT_ON)  //cap by boundary to ocean
+				float oceanIntersectDistance = intersectSphereOutside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg);
+				viewLength = (oceanIntersectDistance > 0.0) ? min(oceanIntersectDistance, viewLength) : viewLength;
+#endif
 				return facing > 0 ? viewLength : -viewLength;
 			}
 			ENDCG

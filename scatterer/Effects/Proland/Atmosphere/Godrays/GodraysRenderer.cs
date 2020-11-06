@@ -8,11 +8,10 @@ namespace scatterer
 	//Class to initialize the godray settings, commandBuffers, rendertexture and create the mesh
 	public class GodraysRenderer : MonoBehaviour
 	{
-		public Material volumeDepthMaterial;
-		public Camera targetCamera;
-		public ComputeShader inverseShadowMatricesComputeShader;
-		public GameObject targetLight;
-		
+		Material volumeDepthMaterial;
+		Camera targetCamera;
+		ComputeShader inverseShadowMatricesComputeShader;
+		GameObject targetLight;
 		public RenderTexture volumeDepthTexture;
 
 		GameObject volumeDepthGO;
@@ -20,13 +19,14 @@ namespace scatterer
 		CommandBuffer shadowVolumeCB;
 		ShadowMapCopyCommandBuffer shadowMapCopier;
 
-		//Does it need to be added to a camera? I think so, for OnPreCull to work
+		SkyNode parentSkyNode;
+		
 		public GodraysRenderer ()
 		{
 
 		}
 
-		public bool Init(Light inputLight) //or init or whatever
+		public bool Init(Light inputLight, SkyNode inputParentSkyNode)
 		{
 			if (!SystemInfo.supportsComputeShaders)
 			{
@@ -61,18 +61,16 @@ namespace scatterer
 			}
 
 			targetLight = inputLight.gameObject;
+			parentSkyNode = inputParentSkyNode;
 
-			if (Scatterer.Instance.unifiedCameraMode && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowsDistance > 8000f))
-			{
-				Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "DUAL_DEPTH_ON", "DUAL_DEPTH_OFF", true);
-			}
-			else
-			{
-				Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "DUAL_DEPTH_ON", "DUAL_DEPTH_OFF", false);
-			}
-
+			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "DUAL_DEPTH_ON", "DUAL_DEPTH_OFF", (Scatterer.Instance.unifiedCameraMode && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowsDistance > 8000f)));
+			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "OCEAN_INTERSECT_ON", "OCEAN_INTERSECT_OFF", parentSkyNode.m_manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders);
 
 			volumeDepthGO = new GameObject ("GodraysVolumeDepth");
+
+			volumeDepthMaterial.renderQueue = 2999; //for debugging only
+			volumeDepthGO.layer = 15;
+
 			MeshFilter _mf = volumeDepthGO.AddComponent<MeshFilter> ();
 			_mf.mesh.Clear ();			
 			_mf.mesh = MeshFactory.MakePlane32BitIndexFormat (512, 512, MeshFactory.PLANE.XY, false, false); //fixed with 32bit indices
@@ -84,6 +82,8 @@ namespace scatterer
 			_mr.receiveShadows = false;
 			_mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			_mr.enabled = false;
+
+
 			
 			volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RFloat); //check if we can do half precision
 			//volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to cause issues, seems like the max value a half can be is 65000 (from insight)
@@ -91,14 +91,16 @@ namespace scatterer
 			volumeDepthTexture.antiAliasing = 1; //no need, the depth makes it naturally soft
 			volumeDepthTexture.filterMode = FilterMode.Point;
 			volumeDepthTexture.Create ();
-			
+
+			//world to shadow matrices aren't exposed in the C# api so we can't compute the shadow to world matrices from them
+			//since they are exposed in shaders we use a compute shader to do it
 			inverseShadowMatricesBuffer = new ComputeBuffer (4, 16 * sizeof(float));
 			inverseShadowMatricesComputeShader.SetBuffer (0, "resultBuffer", inverseShadowMatricesBuffer);
 
 			shadowVolumeCB = new CommandBuffer();
 			shadowVolumeCB.DispatchCompute(inverseShadowMatricesComputeShader, 0, 4, 1, 1);
 			
-			shadowVolumeCB.SetGlobalBuffer("inverseShadowMatricesBuffer", inverseShadowMatricesBuffer); //here we set the matrices buffer for our runtime shader
+			shadowVolumeCB.SetGlobalBuffer("inverseShadowMatricesBuffer", inverseShadowMatricesBuffer);
 			
 			shadowVolumeCB.SetRenderTarget(volumeDepthTexture);
 			shadowVolumeCB.ClearRenderTarget(false, true, Color.black, 1f);
@@ -109,7 +111,7 @@ namespace scatterer
 
 			shadowMapCopier = (ShadowMapCopyCommandBuffer) targetLight.gameObject.AddComponent (typeof(ShadowMapCopyCommandBuffer));
 
-			//Still need to add a parameter to pass the second higher precision depth texture to shader (if needed though)
+			//think about how to handle the commandBuffer for rendering eve clouds to our copied shaddowMap, maybe do it directly in our shadowMap Copier class
 
 			return true;
 		}
@@ -185,6 +187,8 @@ namespace scatterer
 				volumeDepthMaterial.SetVector("lightDirection", targetLight.transform.forward);
 				volumeDepthMaterial.SetVector("cameraForwardDir", targetCamera.transform.forward);
 
+				volumeDepthMaterial.SetFloat(ShaderProperties._experimentalAtmoScale_PROPERTY,parentSkyNode.experimentalAtmoScale);
+				volumeDepthMaterial.SetVector (ShaderProperties._planetPos_PROPERTY, parentSkyNode.parentLocalTransform.position);
 			}
 		}
 		

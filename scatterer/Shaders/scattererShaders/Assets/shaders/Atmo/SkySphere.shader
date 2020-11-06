@@ -127,21 +127,29 @@ Shader "Scatterer/SkySphere"
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
+			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 
 			uniform float _Alpha_Global;
 
 			uniform float3 _Sun_WorldSunDir;
 			uniform float _SkyExposure;
 
-			#if defined (PLANETSHINE_ON)
+#if defined (PLANETSHINE_ON)
 			uniform float4x4 planetShineSources;
 			uniform float4x4 planetShineRGB;
-			#endif
+#endif
+
+#if defined (GODRAYS_ON)
+			uniform sampler2D _godrayDepthTexture;
+#endif
 
 			struct v2f 
 			{
 				float3 worldPos : TEXCOORD0;
 				float3 planetOrigin: TEXCOORD1;
+#if defined (GODRAYS_ON)
+				float4 projPos  : TEXCOORD2;
+#endif
 			};
 
 
@@ -152,6 +160,11 @@ Shader "Scatterer/SkySphere"
 				outpos = UnityObjectToClipPos(v.vertex);
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz * 6000;  //all calculations are done in localSpace
+
+#if defined (GODRAYS_ON)
+				OUT.projPos = ComputeScreenPos(outpos);
+#endif
+
 				return OUT;
 			}
 
@@ -163,7 +176,15 @@ Shader "Scatterer/SkySphere"
 
 				float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);  //viewdir computed from scaledSpace
 
-				float3 inscatter = SkyRadiance3(WCP - IN.planetOrigin, d, WSD);
+				float3 scatteringCameraPos = WCP - IN.planetOrigin;
+#if defined (GODRAYS_ON)
+				float2 depthUV = IN.projPos.xy/IN.projPos.w;
+				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
+				godrayDepth*=0.8; //temp
+				scatteringCameraPos = scatteringCameraPos + d * godrayDepth;
+#endif
+
+				float3 inscatter = SkyRadiance3(scatteringCameraPos, d, WSD);
 				float3 finalColor = inscatter;
 				float eclipseShadow = 1;
 
@@ -175,42 +196,41 @@ Shader "Scatterer/SkySphere"
 
 				if (interSectPt != -1)
 				{
-				worldPos = WCP + d * interSectPt;
+					worldPos = WCP + d * interSectPt;
 				}
-				#endif
+#endif
 
-				#if defined (ECLIPSES_ON)
+#if defined (ECLIPSES_ON)
 				if (interSectPt != -1)
 				{				
-				finalColor*= getEclipseShadows(worldPos);
+					finalColor*= getEclipseShadows(worldPos);
 				}
-				#endif
+#endif
 
-				#if defined (RINGSHADOW_ON)
+#if defined (RINGSHADOW_ON)
 				if (interSectPt != -1)
 				{
-				finalColor *= getLinearRingColor(worldPos, _Sun_WorldSunDir, IN.planetOrigin).a;
+					finalColor *= getLinearRingColor(worldPos, _Sun_WorldSunDir, IN.planetOrigin).a;
 				}
-				#endif
+#endif
 
 				/////////////////PLANETSHINE///////////////////////////////						    
-				#if defined (PLANETSHINE_ON)
+#if defined (PLANETSHINE_ON)
 				float3 inscatter2=0;
 				float intensity=1;
 				for (int i=0; i<4; ++i)
 				{
-				if (planetShineRGB[i].w == 0) break;
+					if (planetShineRGB[i].w == 0) break;
 
-				//if source is not a sun compute intensity of light from angle to light source
-				intensity=1;  
-				if (planetShineSources[i].w != 1.0f)
-				{
-				//						intensity = 0.5f*(1-dot(normalize(planetShineSources[i].xyz - worldPos),WSD));
-				intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - worldPos),WSD)),0);
-				}
+					//if source is not a sun compute intensity of light from angle to light source
+					intensity=1;  
+					if (planetShineSources[i].w != 1.0f)
+					{
+//						intensity = 0.5f*(1-dot(normalize(planetShineSources[i].xyz - worldPos),WSD));
+						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - worldPos),WSD)),0);
+					}
 
-				inscatter2+=SkyRadiance3(WCP - IN.planetOrigin, d, normalize(planetShineSources[i].xyz))
-				*planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
+					inscatter2+=SkyRadiance3(WCP - IN.planetOrigin, d, normalize(planetShineSources[i].xyz)) *planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
 				}
 
 				finalColor+=inscatter2;
