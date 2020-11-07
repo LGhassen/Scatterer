@@ -215,6 +215,7 @@
 				}
 				else //cap by boundary to atmo
 				{
+					//I think here I should take into account optical depth, or use log(depth), seems too dark
 					float skyIntersectDistance = intersectSphereInside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg + _experimentalAtmoScale * (Rt-Rg));
 					viewLength = min(skyIntersectDistance, viewLength);
 				}
