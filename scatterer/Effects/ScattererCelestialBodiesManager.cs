@@ -110,7 +110,10 @@ namespace scatterer
 							}
 							catch (Exception exception)
 							{
-								Utils.LogError ("Effects couldn't be loaded for " + scattererCelestialBody.celestialBodyName + " because of exception: " + exception.ToString ());
+
+								if (HighLogic.LoadedScene != GameScenes.MAINMENU)
+									Utils.LogError ("Effects couldn't be loaded for " + scattererCelestialBody.celestialBodyName + " because of exception: " + exception.ToString ());
+
 								try
 								{
 									scattererCelestialBody.m_manager.OnDestroy ();
@@ -120,7 +123,8 @@ namespace scatterer
 									Utils.LogDebug ("manager couldn't be removed for " + scattererCelestialBody.celestialBodyName + " because of exception: " + exception2.ToString ());
 								}
 								Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Remove (scattererCelestialBody);
-								Utils.LogDebug ("" + scattererCelestialBody.celestialBodyName + " removed from active planets.");
+								if (HighLogic.LoadedScene != GameScenes.MAINMENU)
+									Utils.LogDebug ("" + scattererCelestialBody.celestialBodyName + " removed from active planets.");
 								return;
 							}
 						}
