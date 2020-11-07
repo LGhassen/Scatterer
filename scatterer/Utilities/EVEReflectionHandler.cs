@@ -15,7 +15,7 @@ namespace scatterer
 	public class EVEReflectionHandler
 	{
 		//map EVE 2d cloud materials to planet names
-		public Dictionary<String, List<Material> > EVEClouds = new Dictionary<String, List<Material> >();
+		public Dictionary<String, List<Material> > EVE2dCloudsMaterials = new Dictionary<String, List<Material> >();
 
 		//map EVE CloudObjects to planet names
 		//as far as I understand CloudObjects in EVE contain the 2d clouds and the volumetrics for a given
@@ -24,8 +24,6 @@ namespace scatterer
 		//I map them here to facilitate accessing the volumetrics later
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 		public object EVEinstance;
-				
-		List<Projector> EVEprojector=new List<Projector> {}; int projectorCount=0;
 
 		public EVEReflectionHandler ()
 		{
@@ -34,13 +32,12 @@ namespace scatterer
 		public void Start()
 		{
 			MapEVEClouds ();
-			mapEVEshadowProjectors ();
 		}
 
 		public void MapEVEClouds()
 		{
 			Utils.LogDebug ("mapping EVE clouds");
-			EVEClouds.Clear();
+			EVE2dCloudsMaterials.Clear();
 			EVECloudObjects.Clear ();
 			
 			//find EVE base type
@@ -128,9 +125,9 @@ namespace scatterer
 					return;
 				}
 				
-				if (EVEClouds.ContainsKey(body))
+				if (EVE2dCloudsMaterials.ContainsKey(body))
 				{
-					EVEClouds[body].Add(cloudmesh.GetComponent < MeshRenderer > ().material);
+					EVE2dCloudsMaterials[body].Add(cloudmesh.GetComponent < MeshRenderer > ().material);
 					cloudmesh.GetComponent < MeshRenderer > ().material.renderQueue = 2999; //we might as well fix the EVE clouds renderqueue for 1.9 until official EVE fix
 				}
 				else
@@ -138,52 +135,85 @@ namespace scatterer
 					List<Material> cloudsList = new List<Material>();
 					cloudsList.Add(cloudmesh.GetComponent < MeshRenderer > ().material);
 					cloudmesh.GetComponent < MeshRenderer > ().material.renderQueue = 2999;
-					EVEClouds.Add(body,cloudsList);
+
+					EVE2dCloudsMaterials.Add(body,cloudsList);
 				}
 				Utils.LogDebug("Detected EVE 2d cloud layer for planet: "+body);
 			}
 		}
 
-		void mapEVEshadowProjectors()
+		public void invokeClouds2dReassign(string celestialBodyName)
 		{
-			if (EVEprojector == null)
-				return;
-			EVEprojector.Clear ();
-			//Material atmosphereMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
-			Projector[] list = (Projector[]) Projector.FindObjectsOfType(typeof(Projector));
-			if (list == null)
-				return;
-			for(int i=0;i<list.Length;i++)
+			const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | 
+				BindingFlags.Instance | BindingFlags.Static;
+			
+			foreach (object _obj in Scatterer.Instance.eveReflectionHandler.EVECloudObjects[celestialBodyName])
 			{
-				if (list[i].material != null && list[i].material.name != null && list[i].material.name == "EVE/CloudShadow")
+				object cloud2dObj = _obj.GetType ().GetField ("layer2D", flags).GetValue (_obj) as object;
+				if (cloud2dObj == null) {
+					Utils.LogDebug (" layer2d not found for layer on planet: " + celestialBodyName);
+					continue;
+				}
+				
+				bool cloud2dScaled = (bool)cloud2dObj.GetType ().GetField ("isScaled", flags).GetValue (cloud2dObj);
+				
+				MethodInfo scaledGetter = cloud2dObj.GetType ().GetProperty ("Scaled").GetGetMethod ();
+				MethodInfo scaledSetter = cloud2dObj.GetType ().GetProperty ("Scaled").GetSetMethod ();
+				
+				//if in scaled mode, switch it to local then back to scaled, to set all the properties
+				if (cloud2dScaled)
+					scaledSetter.Invoke (cloud2dObj, new object[] { !cloud2dScaled });
+				
+				scaledSetter.Invoke (cloud2dObj, new object[] { cloud2dScaled });
+			}
+	}
+
+
+		public void mapEVEVolumetrics(string celestialBodyName, List<Material> EVEvolumetrics)
+		{
+			Utils.LogDebug (" Mapping EVE volumetrics for planet: "+celestialBodyName);
+			
+			EVEvolumetrics.Clear ();
+			
+			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
+				BindingFlags.Instance | BindingFlags.Static;
+			
+			if (EVECloudObjects.ContainsKey (celestialBodyName)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
+			{
+				List<object> cloudObjs = Scatterer.Instance.eveReflectionHandler.EVECloudObjects [celestialBodyName];
+				
+				foreach (object _obj in cloudObjs)
 				{
-					EVEprojector.Add(list[i]);
-					//list[i].material = atmosphereMaterial;
-				}
+					try
+					{
+						object cloudsPQS = _obj.GetType ().GetField ("cloudsPQS", flags).GetValue (_obj) as object;
+						object layerVolume = cloudsPQS.GetType ().GetField ("layerVolume", flags).GetValue (cloudsPQS) as object;
+						if (ReferenceEquals(layerVolume, null))
+						{
+							Utils.LogDebug (" No volumetric cloud for layer on planet: " + celestialBodyName);
+							continue;
+						}
+						
+						Material ParticleMaterial = layerVolume.GetType ().GetField ("ParticleMaterial", flags).GetValue (layerVolume) as Material;
+						
+						if (ReferenceEquals(layerVolume, null))
+						{
+							Utils.LogDebug (" Volumetric cloud has no material on planet: " + celestialBodyName);
+							continue;
+						}
+						
+						EVEvolumetrics.Add (ParticleMaterial);
+					}
+					catch (Exception stupid)
+					{
+						Utils.LogDebug (" Volumetric clouds error on planet: " + celestialBodyName + stupid.ToString ());
+					}
+				}				
+				Utils.LogDebug (" Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + celestialBodyName);
 			}
-			projectorCount = EVEprojector.Count;
-		}
-		
-		void disableEVEshadowProjectors()
-		{
-			try
+			else
 			{
-				for (int i=0; i<projectorCount; i++) {
-					EVEprojector [i].enabled = false;
-				}
-			}
-			catch (Exception)
-			{
-				Utils.LogDebug ("Null EVE shadow projectors, remapping...");
-				mapEVEshadowProjectors ();
-			}
-		}
-		
-		void enableEVEshadowProjectors()
-		{
-			for(int i=0;i<projectorCount;i++)
-			{
-				EVEprojector[i].enabled=true;
+				Utils.LogDebug (" No cloud objects for planet: " + celestialBodyName);
 			}
 		}
 	}

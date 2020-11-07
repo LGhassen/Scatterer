@@ -121,7 +121,7 @@ namespace scatterer
 		void InitSkyAndOceanNodes ()
 		{
 			m_skyNode = (SkyNode)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SkyNode));
-			m_skyNode.setManager (this);
+			m_skyNode.m_manager = this;
 			m_skyNode.setCelestialBodyName (parentCelestialBody.name);
 			m_skyNode.setParentScaledTransform (parentScaledTransform);
 			m_skyNode.setParentLocalTransform (parentLocalTransform);
