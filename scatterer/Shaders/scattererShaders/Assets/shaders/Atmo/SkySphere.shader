@@ -141,6 +141,7 @@ Shader "Scatterer/SkySphere"
 
 #if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;
+			uniform float _godrayStrength;
 #endif
 
 			struct v2f 
@@ -180,7 +181,7 @@ Shader "Scatterer/SkySphere"
 #if defined (GODRAYS_ON)
 				float2 depthUV = IN.projPos.xy/IN.projPos.w;
 				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
-				godrayDepth*=0.8; //temp
+				godrayDepth*=_godrayStrength;
 				scatteringCameraPos = scatteringCameraPos + d * godrayDepth;
 #endif
 

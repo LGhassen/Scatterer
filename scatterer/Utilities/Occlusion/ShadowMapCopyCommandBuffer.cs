@@ -9,31 +9,49 @@ namespace scatterer
 	public class ShadowMapCopyCommandBuffer : MonoBehaviour
 	{
 
-		private CommandBuffer m_Buffer;
+		private CommandBuffer m_CopyOnceBuffer;
+		private CommandBuffer copyCascadeCB0, copyCascadeCB1, copyCascadeCB2, copyCascadeCB3;
 		private Light m_Light;
 		bool commandBufferAdded = false;
 
 		public ShadowMapCopyCommandBuffer ()
 		{
-			// After light's shadow map is computed, copy it
-			RenderTargetIdentifier shadowmap = BuiltinRenderTextureType.CurrentActive;
-			m_Buffer = new CommandBuffer();
-			m_Buffer.name = "ScattererShadowMapCopy";
-			
-			// Change shadow sampling mode for shadowmap.
-			m_Buffer.SetShadowSamplingMode(shadowmap, ShadowSamplingMode.RawDepth);
-
-			m_Buffer.Blit (shadowmap, ShadowMapCopy.RenderTexture);
-			m_Buffer.SetGlobalTexture (ShaderProperties._ShadowMapTextureCopyScatterer_PROPERTY, ShadowMapCopy.RenderTexture);
-
 			m_Light = GetComponent<Light>();
-			m_Light.AddCommandBuffer (LightEvent.AfterShadowMap, m_Buffer);			// Sampling mode is restored automatically after this command buffer completes, so shadows will render normally.
+			CreateCopyCascadeCBs ();
+			Enable ();
+
 			commandBufferAdded = true;
+		}
+		
+		private void CreateCopyCascadeCBs()
+		{
+			copyCascadeCB0 = CreateCopyCascadeCB (ShadowMapCopy.RenderTexture,   0f,   0f, 0.5f, 0.5f);
+			copyCascadeCB1 = CreateCopyCascadeCB (ShadowMapCopy.RenderTexture, 0.5f,   0f, 0.5f, 0.5f);
+			copyCascadeCB2 = CreateCopyCascadeCB (ShadowMapCopy.RenderTexture,   0f, 0.5f, 0.5f, 0.5f);
+			copyCascadeCB3 = CreateCopyCascadeCB (ShadowMapCopy.RenderTexture, 0.5f, 0.5f, 0.5f, 0.5f);
+			copyCascadeCB3.SetGlobalTexture (ShaderProperties._ShadowMapTextureCopyScatterer_PROPERTY, ShadowMapCopy.RenderTexture);			
+		}
+
+		private CommandBuffer CreateCopyCascadeCB(RenderTexture targetRt, float startX, float startY, float width, float height)
+		{
+			CommandBuffer cascadeCopyCB = new CommandBuffer();
+			Rect cascadeRect = new Rect ((int)(startX * targetRt.width), (int)(startY * targetRt.height), (int)(width * targetRt.width), (int)(height * targetRt.height));
+
+			cascadeCopyCB.EnableScissorRect(cascadeRect);
+			cascadeCopyCB.SetShadowSamplingMode(BuiltinRenderTextureType.CurrentActive, ShadowSamplingMode.RawDepth);
+			cascadeCopyCB.Blit (BuiltinRenderTextureType.CurrentActive,targetRt);
+			cascadeCopyCB.DisableScissorRect();
+
+			return cascadeCopyCB;
 		}
 
 		public void Disable()
 		{
-			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMap, m_Buffer);
+			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB0);
+			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB1);
+			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB2);
+			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB3);
+
 			commandBufferAdded = false;
 		}
 
@@ -41,7 +59,11 @@ namespace scatterer
 		{
 			if (!commandBufferAdded)
 			{
-				m_Light.AddCommandBuffer (LightEvent.AfterShadowMap, m_Buffer);
+				m_Light.AddCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB0, ShadowMapPass.DirectionalCascade0);
+				m_Light.AddCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB1, ShadowMapPass.DirectionalCascade1);
+				m_Light.AddCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB2, ShadowMapPass.DirectionalCascade2);
+				m_Light.AddCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB3, ShadowMapPass.DirectionalCascade3);
+
 				commandBufferAdded = true;
 			}
 		}
@@ -67,7 +89,6 @@ namespace scatterer
 				else
 				{
 					//If the size of the shadowMap changed from the last time we created a copy
-					//if (QualitySettings.shadowResolution != renderTexture.width)
 					if (Scatterer.Instance.sunLight.shadowCustomResolution != renderTexture.width)
 					{
 						renderTexture.Release();
@@ -81,10 +102,7 @@ namespace scatterer
 
 		private static void CreateTexture()
 		{
-			//renderTexture = new RenderTexture ((int) QualitySettings.shadowResolution, (int) QualitySettings.shadowResolution, 0, RenderTextureFormat.RFloat); //QualitySettings return 2x2? Try anyway, RFloat may not be right, shadowMaps may use half? check with nsight
 			renderTexture = new RenderTexture ((int) Scatterer.Instance.sunLight.shadowCustomResolution, (int) Scatterer.Instance.sunLight.shadowCustomResolution, 0, RenderTextureFormat.RHalf); //QualitySettings return 2x2? Try anyway, RFloat may not be right, shadowMaps may use half? check with nsight
-			Utils.LogInfo("Ghassen QualitySettings.shadowResolution "+Scatterer.Instance.sunLight.shadowCustomResolution.ToString());
-			//renderTexture = new RenderTexture (4096, 4096, 0, RenderTextureFormat.RFloat); //RFloat may not be right, shadowMaps may use half?
 			renderTexture.useMipMap = false;
 			renderTexture.antiAliasing = 1;
 			renderTexture.filterMode = FilterMode.Point;

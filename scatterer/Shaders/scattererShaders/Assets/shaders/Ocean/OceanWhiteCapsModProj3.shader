@@ -165,6 +165,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 			#if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;
+			uniform float _godrayStrength;
 			#endif
 
 			#if defined (PLANETSHINE_ON)
@@ -550,7 +551,7 @@ Shader "Scatterer/OceanWhiteCaps"
 #if defined (GODRAYS_ON)
 					float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
 					float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(godrayUV,0,0)).r;
-					godrayDepth*=0.8; //temp
+					godrayDepth*=_godrayStrength;
 					worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
 #endif
 

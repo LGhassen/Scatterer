@@ -124,6 +124,7 @@
      <None Include="Assets\Shaders\Ocean\SlopeVariance.compute" />
      <None Include="Assets\Shaders\EVE\alphaMap.cginc" />
      <None Include="Assets\Shaders\Ocean\underwaterPostProcessing32bitViewSpaceDepth.shader" />
+     <None Include="Assets\Shaders\EVE\SphereCloudShadowMap.shader" />
      <None Include="Assets\Shaders\Ocean\InvisibleOcean.shader" />
      <None Include="Assets\Shaders\Ocean\OceanWhiteCapsModProj3.shader" />
      <None Include="Assets\Shaders\Grass\GrassBak.shader" />

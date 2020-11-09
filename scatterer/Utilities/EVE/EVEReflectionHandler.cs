@@ -12,16 +12,25 @@ using UnityEngine;
 
 namespace scatterer
 {
+	public struct EVEClouds2d
+	{
+		public Material Clouds2dMaterial;
+		public MeshRenderer Clouds2dMeshRenderer;
+		public Material CloudShadowMaterial;
+	}
+
 	public class EVEReflectionHandler
 	{
-		//map EVE 2d cloud materials to planet names
-		public Dictionary<String, List<Material> > EVE2dCloudsMaterials = new Dictionary<String, List<Material> >();
+		public Dictionary<String, List<EVEClouds2d> > EVEClouds2dDictionary = new Dictionary<String, List<EVEClouds2d>>();
+		
+		//how to make this detect when EVE re-applies though? need some kind of callback, is there one on EVE? maybe there is a C# way to add one?
+		//doesn't seem to be a way to do this, just do it in the map eve clouds button
+		//also make it so that the map eve clouds button causes the active planet to remap
 
 		//map EVE CloudObjects to planet names
-		//as far as I understand CloudObjects in EVE contain the 2d clouds and the volumetrics for a given
-		//layer on a given planet, however due to the way they are handled in EVE they don't directly reference
-		//their parent planet and the volumetrics are only created when the PQS is active
-		//I map them here to facilitate accessing the volumetrics later
+		//CloudObjects in EVE contain the 2d clouds and the volumetrics for a given layer on a given planet
+		//Due to the way they are handled in EVE they don't directly reference their parent planet and the volumetrics are only created when the PQS is active
+		//Map them here to facilitate accessing the volumetrics later
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 		public object EVEinstance;
 
@@ -37,7 +46,7 @@ namespace scatterer
 		public void MapEVEClouds()
 		{
 			Utils.LogDebug ("mapping EVE clouds");
-			EVE2dCloudsMaterials.Clear();
+			EVEClouds2dDictionary.Clear();
 			EVECloudObjects.Clear ();
 			
 			//find EVE base type
@@ -60,7 +69,6 @@ namespace scatterer
 			
 			try
 			{
-				//				EVEinstance = EVEType.GetField("Instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
 				EVEinstance = EVEType.GetField("instance", flags).GetValue(null) ;
 			}
 			catch (Exception)
@@ -124,19 +132,61 @@ namespace scatterer
 					Utils.LogDebug("cloudmesh null");
 					return;
 				}
-				
-				if (EVE2dCloudsMaterials.ContainsKey(body))
+
+				Material shadowMaterial = null;
+
+				//first try to get screenSpace shadow, if it doesn't work means we are on old EVE and grab shadowProjector
+				//make sure to try this on old EVE
+
+				object screenSpaceShadow = null;
+
+				try
 				{
-					EVE2dCloudsMaterials[body].Add(cloudmesh.GetComponent < MeshRenderer > ().material);
-					cloudmesh.GetComponent < MeshRenderer > ().material.renderQueue = 2999; //we might as well fix the EVE clouds renderqueue for 1.9 until official EVE fix
+					screenSpaceShadow = cloud2dObj.GetType().GetField("screenSpaceShadow", flags).GetValue(cloud2dObj) as object;
+				}
+				catch(Exception){}
+
+				if (screenSpaceShadow != null)
+				{
+					Utils.LogInfo("Ghassen screenspace shadow identified");
+					shadowMaterial = screenSpaceShadow.GetType().GetField("material", flags).GetValue(screenSpaceShadow) as Material;
 				}
 				else
 				{
-					List<Material> cloudsList = new List<Material>();
-					cloudsList.Add(cloudmesh.GetComponent < MeshRenderer > ().material);
+					Utils.LogInfo("Ghassen NOOO screenspace shadow identified");
+					Projector shadowProjector = cloud2dObj.GetType().GetField("ShadowProjector", flags).GetValue(cloud2dObj) as Projector;
+					
+					if (shadowProjector != null && shadowProjector.material != null)
+					{
+						Utils.LogInfo("Ghassen shadowProjector identified");
+						shadowMaterial = shadowProjector.material;
+					}
+				}
+
+				if (EVEClouds2dDictionary.ContainsKey(body))
+				{
+					EVEClouds2d clouds2d = new EVEClouds2d();
+					clouds2d.Clouds2dMeshRenderer = cloudmesh.GetComponent < MeshRenderer > ();
+					clouds2d.Clouds2dMaterial = clouds2d.Clouds2dMeshRenderer.material;
+					clouds2d.CloudShadowMaterial = shadowMaterial;
+
+					EVEClouds2dDictionary[body].Add(clouds2d);
+
+					clouds2d.Clouds2dMaterial.renderQueue = 2999; //we might as well fix the EVE clouds renderqueue for 1.9 until official EVE fix
+				}
+				else
+				{
+					List<EVEClouds2d> cloudsList = new List<EVEClouds2d>();
+
+					EVEClouds2d clouds2d = new EVEClouds2d();
+					clouds2d.Clouds2dMeshRenderer = cloudmesh.GetComponent < MeshRenderer > ();
+					clouds2d.Clouds2dMaterial = clouds2d.Clouds2dMeshRenderer.material;
+					clouds2d.CloudShadowMaterial = shadowMaterial;
+
+					cloudsList.Add(clouds2d);
 					cloudmesh.GetComponent < MeshRenderer > ().material.renderQueue = 2999;
 
-					EVE2dCloudsMaterials.Add(body,cloudsList);
+					EVEClouds2dDictionary.Add(body,cloudsList);
 				}
 				Utils.LogDebug("Detected EVE 2d cloud layer for planet: "+body);
 			}

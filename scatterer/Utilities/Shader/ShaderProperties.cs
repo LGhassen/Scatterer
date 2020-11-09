@@ -363,7 +363,16 @@ namespace scatterer
 		
 		public static int AdditionalDepthBuffer_PROPERTY { get { return AdditionalDepthBuffer; } }
 		private static int AdditionalDepthBuffer;
-		
+
+		public static int lightDirection_PROPERTY { get { return lightDirection; } }
+		private static int lightDirection;
+
+		public static int _godrayCloudThreshold_PROPERTY { get { return _godrayCloudThreshold; } }
+		private static int _godrayCloudThreshold;
+
+		public static int lightToWorld_PROPERTY { get { return lightToWorld; } }
+		private static int lightToWorld;
+
 		private void Awake()
 		{
 			_experimentalAtmoScale = Shader.PropertyToID("_experimentalAtmoScale");
@@ -527,6 +536,10 @@ namespace scatterer
 			ScattererAdditionalInvProjection = Shader.PropertyToID("ScattererAdditionalInvProjection");
 			AdditionalDepthBuffer = Shader.PropertyToID("AdditionalDepthBuffer");
 
+			lightDirection = Shader.PropertyToID("lightDirection");
+			_godrayCloudThreshold = Shader.PropertyToID("_godrayCloudThreshold");
+
+			lightToWorld = Shader.PropertyToID("lightToWorld");
 		}
 	}
 }

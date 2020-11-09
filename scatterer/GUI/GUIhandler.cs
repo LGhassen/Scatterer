@@ -55,6 +55,9 @@ namespace scatterer
 		float mieG = 0.85f;
 		float openglThreshold = 10f;
 
+		float godrayStrength = 1.0f;
+		float godrayCloudAlphaThreshold = 0.1f;
+
 		float extinctionThickness = 1f;
 		float skyExtinctionTint = 1f;
 		
@@ -360,6 +363,10 @@ namespace scatterer
 			else if (selectedTab == mainMenuTabs.EVEintegration)
 			{
 				Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
+				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)
+				{
+					Scatterer.Instance.mainSettings.integrateEVECloudsGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateEVECloudsGodrays, "EVE clouds cast godrays (require godrays)");
+				}
 			}
 			else if (selectedTab == mainMenuTabs.Misc)
 			{
@@ -487,6 +494,8 @@ namespace scatterer
 				GUILayout.Label ("Artifact Fixes");
 				GUIfloat ("ViewDirOffset", ref viewdirOffset, ref _cur.viewdirOffset);
 				GUIfloat ("Depth buffer Threshold", ref openglThreshold, ref _cur.openglThreshold);
+				GUILayout.Label ("Godrays");
+				GUIfloat ("Godray strength*", ref godrayStrength, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.godrayStrength);
 			}
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.usesCloudIntegration) {
 				GUILayout.Label ("EVE integration");
@@ -500,6 +509,7 @@ namespace scatterer
 				if (GUILayout.Button ("Toggle"))
 					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePreserveCloudColors ();
 				GUILayout.EndHorizontal ();
+				GUIfloat ("Godray alpha threshold* (alpha value above which a cloud casts a godray)", ref godrayCloudAlphaThreshold, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.godrayCloudAlphaThreshold);
 				//								GUIfloat("Volumetrics Scattering Multiplier", ref volumetricsScatteringMultiplier, ref Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsScatteringMultiplier);
 				//								GUIfloat("Volumetrics Sky irradiance Multiplier", ref volumetricsSkyIrradianceMultiplier, ref Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsSkyIrradianceMultiplier);
 			}
@@ -831,6 +841,9 @@ namespace scatterer
 			volumetricsColorMultiplier = skyNode.volumetricsColorMultiplier;
 			//			volumetricsScatteringMultiplier = skyNode.volumetricsScatteringMultiplier;
 			//			volumetricsSkyIrradianceMultiplier = skyNode.volumetricsSkyIrradianceMultiplier;
+
+			godrayStrength = skyNode.godrayStrength;
+			godrayCloudAlphaThreshold = skyNode.godrayCloudAlphaThreshold;
 		}
 		
 		public void loadConfigPoint (int point)

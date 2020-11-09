@@ -42,7 +42,6 @@
 			float4x4 CameraToWorld;
 
 			float3 lightDirection;
-			float3 cameraForwardDir;
 
 			float3 _planetPos;
 			float Rg;

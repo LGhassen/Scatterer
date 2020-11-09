@@ -237,7 +237,7 @@ namespace scatterer {
 			if (!m_manager.m_skyNode.inScaledSpace && (!MapView.MapIsEnabled || (findHeightsShader != null)))
 			{
 				//keep within low float exponents, otherwise we lose precision
-				float t = (float)(Planetarium.GetUniversalTime() % 1000000); // will cause discontinuity every 46.3 game days.
+				float t = (float)(Planetarium.GetUniversalTime() % 100000.0);
 
 				InitWaveSpectrum(t);
 				

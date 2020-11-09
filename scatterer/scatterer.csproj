@@ -123,7 +123,6 @@
     <Compile Include="Effects\SunFlare\SunflareManager.cs" />
     <Compile Include="DataSerialization\ConfigReader.cs" />
     <Compile Include="Utilities\ReflectionUtils.cs" />
-    <Compile Include="Utilities\EVEReflectionHandler.cs" />
     <Compile Include="Effects\PlanetShine\PlanetshineManager.cs" />
     <Compile Include="Effects\Proland\Ocean\FourierCPU.cs" />
     <Compile Include="Effects\Proland\Ocean\FourierGPU.cs" />
@@ -183,6 +182,8 @@
     <Compile Include="Effects\Proland\Ocean\Caustics\CausticsLightRaysRenderer.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanCameraUpdateHook.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Godrays\GodraysRenderer.cs" />
+    <Compile Include="Utilities\EVE\EVEReflectionHandler.cs" />
+    <Compile Include="Utilities\Misc\IcoSphere.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -200,5 +201,6 @@
     <Folder Include="Effects\Proland\Ocean\Caustics\" />
     <Folder Include="GUI\ModularGUI\" />
     <Folder Include="Effects\Proland\Atmosphere\Godrays\" />
+    <Folder Include="Utilities\EVE\" />
   </ItemGroup>
 </Project>

@@ -34,7 +34,6 @@ Shader "Scatterer-EVE/Cloud" {
 		//ColorMask RGB
 		Cull Off
 		Lighting On
-		ZWrite Off
 
 		SubShader {
 			Pass {
@@ -60,6 +59,7 @@ Shader "Scatterer-EVE/Cloud" {
 				#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 //				#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 				#pragma multi_compile PRESERVECLOUDCOLORS_OFF PRESERVECLOUDCOLORS_ON
+				#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 				#pragma multi_compile SCATTERER_OFF SCATTERER_ON
 				
 #ifndef MAP_TYPE_CUBE2_1
@@ -106,6 +106,11 @@ Shader "Scatterer-EVE/Cloud" {
 				uniform float3 _Scatterer_Origin;
 				uniform float extinctionThickness;
 				uniform float _PlanetOpacity; //to smooth transition from/to scaledSpace when using flatScaledSpaceModel
+
+	#if defined (GODRAYS_ON)
+				uniform sampler2D _godrayDepthTexture;
+				uniform float _godrayStrength;
+	#endif
 #endif
 
 //			//stuff for kopernicus ring shadows
@@ -244,7 +249,7 @@ Shader "Scatterer-EVE/Cloud" {
 					float3 worldPos = IN.worldVert;
 					float3 worldOrigin = IN.worldOrigin;
 	#else
-			    	float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
+			    		float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
 					float3 worldPos = IN.worldVert * 6000;
 					float3 worldOrigin = IN.worldOrigin * 6000;
 	#endif
@@ -260,10 +265,18 @@ Shader "Scatterer-EVE/Cloud" {
 					float3 groundPos = normalize (relWorldPos) * Rg*1.0008;
 					relWorldPos =  lerp(groundPos,relWorldPos,_PlanetOpacity);
 
-                	//inScattering from cloud to observer
-					float3 inscatter = InScattering2(relCameraPos, relWorldPos, _Sun_WorldSunDir,extinction);
-					      	
-                	//extinction from cloud to observer
+					float3 scatteringPos = relWorldPos;
+#if defined (GODRAYS_ON) && defined(WORLD_SPACE_ON)
+					float2 depthUV = IN.projPos.xy/IN.projPos.w;
+					float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
+					godrayDepth*=_godrayStrength;
+					scatteringPos -= godrayDepth * IN.viewDir; //this works but it looks suuuper wrong when outside the cloud layer, to be revised I guess
+#endif
+					
+					//inScattering from cloud to observer
+					float3 inscatter = InScattering2(relCameraPos, scatteringPos, _Sun_WorldSunDir,extinction);
+					
+                			//extinction from cloud to observer
 					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);
 					extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );			
 
@@ -272,6 +285,11 @@ Shader "Scatterer-EVE/Cloud" {
 
 					//skyLight
 					float3 skyE = SimpleSkyirradiance(relWorldPos, IN.viewDir, _Sun_WorldSunDir);
+					
+
+
+
+
 	#if defined (PRESERVECLOUDCOLORS_OFF)
 					color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction+ inscatter*cloudScatteringMultiplier+skyE*cloudSkyIrradianceMultiplier), color.a); //not bad
 	#else

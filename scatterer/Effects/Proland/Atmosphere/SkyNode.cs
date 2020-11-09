@@ -64,8 +64,7 @@ namespace scatterer
 		Texture2D ringTexture;
 
 		bool hasRingObjectAndShadowActivated = false;
-				
-		//atmosphere properties
+
 		public ConfigPoint interpolatedSettings= new ConfigPoint();
 
 		[Persistent]
@@ -157,6 +156,12 @@ namespace scatterer
 
 		[Persistent]
 		public string assetPath;
+
+		[Persistent]
+		public float godrayStrength = 0.8f;
+
+		[Persistent]
+		public float godrayCloudAlphaThreshold = 0.25f;
 
 		public GodraysRenderer godraysRenderer;
 
@@ -519,6 +524,11 @@ namespace scatterer
 			{
 				mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
 			}
+
+			if (!ReferenceEquals (godraysRenderer, null))
+			{
+				mat.SetFloat("_godrayStrength", godrayStrength);
+			}
 		}
 		
 		
@@ -644,6 +654,11 @@ namespace scatterer
 			{
 				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix);
 				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, planetShineRGBMatrix);
+			}
+
+			if (!ReferenceEquals (godraysRenderer, null))
+			{
+				mat.SetFloat("_godrayStrength", godrayStrength);
 			}
 		}
 
@@ -822,7 +837,7 @@ namespace scatterer
 
 			if (!ReferenceEquals (godraysRenderer, null))
 			{
-				godraysRenderer.OnDestroy();
+				godraysRenderer.Cleanup();
 				Component.DestroyImmediate(godraysRenderer);
 			}
 
@@ -834,13 +849,13 @@ namespace scatterer
 					int size;
 					
 					//2d clouds
-					if(Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials.ContainsKey(celestialBodyName))
+					if(Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
 					{
-						size = Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials[celestialBodyName].Count;
+						size = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName].Count;
 						for (int i=0;i<size;i++)
 						{
-							Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials[celestialBodyName][i].DisableKeyword ("SCATTERER_ON");
-							Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials[celestialBodyName][i].EnableKeyword ("SCATTERER_OFF");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i].Clouds2dMaterial.DisableKeyword ("SCATTERER_ON");
+							Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i].Clouds2dMaterial.EnableKeyword ("SCATTERER_OFF");
 						}
 					}
 					
@@ -1134,13 +1149,13 @@ namespace scatterer
 					// Call EVE clouds2D.reassign() method to set the shader properties
 					Scatterer.Instance.eveReflectionHandler.invokeClouds2dReassign(celestialBodyName);
 
-					int size = Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials [celestialBodyName].Count;
+					int size = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName].Count;
 					for (int i=0; i<size; i++)
 					{
-						InitUniforms (Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials [celestialBodyName] [i]);
-						InitPostprocessMaterial (Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials [celestialBodyName] [i]);
+						InitUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
+						InitPostprocessMaterial (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
 
-						Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials [celestialBodyName] [i], "PRESERVECLOUDCOLORS_ON", "PRESERVECLOUDCOLORS_OFF", EVEIntegration_preserveCloudColors);
+						Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial, "PRESERVECLOUDCOLORS_ON", "PRESERVECLOUDCOLORS_OFF", EVEIntegration_preserveCloudColors);
 						
 					}
 				}
@@ -1169,20 +1184,20 @@ namespace scatterer
 
 		void UpdateEVECloudMaterials ()
 		{
-			if (Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials.ContainsKey (celestialBodyName))
+			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey (celestialBodyName))
 			{
-				foreach (Material clouds2dMat in Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials[celestialBodyName])
+				foreach (EVEClouds2d clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName])
 				{
-					SetUniforms (clouds2dMat);
+					SetUniforms (clouds2d.Clouds2dMaterial);
 					//if (!inScaledSpace)
-					UpdatePostProcessMaterial (clouds2dMat);
-					clouds2dMat.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, cloudColorMultiplier);
-					clouds2dMat.SetFloat (ShaderProperties.cloudScatteringMultiplier_PROPERTY, cloudScatteringMultiplier);
-					clouds2dMat.SetFloat (ShaderProperties.cloudSkyIrradianceMultiplier_PROPERTY, cloudSkyIrradianceMultiplier);
+					UpdatePostProcessMaterial (clouds2d.Clouds2dMaterial);
+					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, cloudColorMultiplier);
+					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudScatteringMultiplier_PROPERTY, cloudScatteringMultiplier);
+					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudSkyIrradianceMultiplier_PROPERTY, cloudSkyIrradianceMultiplier);
 					
 					//why is this here? try without it?
-					clouds2dMat.EnableKeyword ("SCATTERER_ON");
-					clouds2dMat.DisableKeyword ("SCATTERER_OFF");
+					clouds2d.Clouds2dMaterial.EnableKeyword ("SCATTERER_ON");
+					clouds2d.Clouds2dMaterial.DisableKeyword ("SCATTERER_OFF");
 				}
 			}
 			
@@ -1204,12 +1219,12 @@ namespace scatterer
 		{
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)
 			{
-				if(Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials.ContainsKey(celestialBodyName)) //change to a bool hasclouds
+				if(Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName)) //change to a bool hasclouds
 				{
-					int size = Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials[celestialBodyName].Count;
+					int size = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName].Count;
 					for (int i=0;i<size;i++)
 					{
-						Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVE2dCloudsMaterials[celestialBodyName][i], "PRESERVECLOUDCOLORS_OFF", "PRESERVECLOUDCOLORS_ON", EVEIntegration_preserveCloudColors);
+						Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i].Clouds2dMaterial, "PRESERVECLOUDCOLORS_OFF", "PRESERVECLOUDCOLORS_ON", EVEIntegration_preserveCloudColors);
 					}
 				}
 				EVEIntegration_preserveCloudColors =!EVEIntegration_preserveCloudColors;

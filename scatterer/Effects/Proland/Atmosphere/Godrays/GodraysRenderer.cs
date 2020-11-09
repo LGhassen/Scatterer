@@ -5,21 +5,26 @@ using System;
 
 namespace scatterer
 {
-	//Class to initialize the godray settings, commandBuffers, rendertexture and create the mesh
 	public class GodraysRenderer : MonoBehaviour
 	{
-		Material volumeDepthMaterial;
+		SkyNode parentSkyNode;
 		Camera targetCamera;
-		ComputeShader inverseShadowMatricesComputeShader;
-		GameObject targetLight;
-		public RenderTexture volumeDepthTexture;
-
-		GameObject volumeDepthGO;
-		ComputeBuffer inverseShadowMatricesBuffer;
-		CommandBuffer shadowVolumeCB;
+		GameObject targetLightGO;
+		
 		ShadowMapCopyCommandBuffer shadowMapCopier;
 
-		SkyNode parentSkyNode;
+		ComputeBuffer inverseShadowMatricesBuffer;
+		ComputeShader inverseShadowMatricesComputeShader;
+
+		CommandBuffer shadowVolumeCB;
+		Material volumeDepthMaterial;
+		GameObject volumeDepthGO;
+		public RenderTexture volumeDepthTexture;
+
+		GameObject cloudShadowGO;
+		MeshRenderer cloudShadowMR;
+		Dictionary<ShadowMapPass, List<CommandBuffer>> shadowRenderCommandBuffers = new Dictionary<ShadowMapPass, List<CommandBuffer>> ();
+		List<Tuple<EVEClouds2d,Material>> cloudsShadowsMaterials = new List<Tuple<EVEClouds2d, Material>>();
 		
 		public GodraysRenderer ()
 		{
@@ -60,7 +65,7 @@ namespace scatterer
 				return false;
 			}
 
-			targetLight = inputLight.gameObject;
+			targetLightGO = inputLight.gameObject;
 			parentSkyNode = inputParentSkyNode;
 
 			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "DUAL_DEPTH_ON", "DUAL_DEPTH_OFF", (Scatterer.Instance.unifiedCameraMode && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowsDistance > 8000f)));
@@ -69,7 +74,6 @@ namespace scatterer
 			volumeDepthMaterial.SetFloat ("Rg", parentSkyNode.Rg);
 
 			volumeDepthGO = new GameObject ("GodraysVolumeDepth");
-
 			volumeDepthMaterial.renderQueue = 2999; //for debugging only
 			volumeDepthGO.layer = 15;
 
@@ -84,15 +88,20 @@ namespace scatterer
 			_mr.receiveShadows = false;
 			_mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			_mr.enabled = false;
-
-
 			
 			volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RFloat); //check if we can do half precision
-			//volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to cause issues, seems like the max value a half can be is 65000 (from insight)
+			//volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to cause issues, seems like the max value a half can be is 65000 (from nsight)
 			volumeDepthTexture.useMipMap = false;
 			volumeDepthTexture.antiAliasing = 1; //no need, the depth makes it naturally soft
 			volumeDepthTexture.filterMode = FilterMode.Point;
 			volumeDepthTexture.Create ();
+
+			shadowMapCopier = (ShadowMapCopyCommandBuffer) targetLightGO.gameObject.AddComponent (typeof(ShadowMapCopyCommandBuffer));
+
+			if (Scatterer.Instance.mainSettings.integrateEVECloudsGodrays)
+			{
+				InitCloudShadowCommandBuffers ();
+			}
 
 			//world to shadow matrices aren't exposed in the C# api so we can't compute the shadow to world matrices from them
 			//since they are exposed in shaders we use a compute shader to do it
@@ -100,10 +109,9 @@ namespace scatterer
 			inverseShadowMatricesComputeShader.SetBuffer (0, "resultBuffer", inverseShadowMatricesBuffer);
 
 			shadowVolumeCB = new CommandBuffer();
-			shadowVolumeCB.DispatchCompute(inverseShadowMatricesComputeShader, 0, 4, 1, 1);
-			
+			shadowVolumeCB.DispatchCompute(inverseShadowMatricesComputeShader, 0, 4, 1, 1);			
 			shadowVolumeCB.SetGlobalBuffer("inverseShadowMatricesBuffer", inverseShadowMatricesBuffer);
-			
+
 			shadowVolumeCB.SetRenderTarget(volumeDepthTexture);
 			shadowVolumeCB.ClearRenderTarget(false, true, Color.black, 1f);
 			shadowVolumeCB.DrawRenderer (_mr, volumeDepthMaterial);
@@ -111,24 +119,96 @@ namespace scatterer
 			targetCamera = gameObject.GetComponent<Camera> ();
 			targetCamera.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
 
-			shadowMapCopier = (ShadowMapCopyCommandBuffer) targetLight.gameObject.AddComponent (typeof(ShadowMapCopyCommandBuffer));
-
-			//think about how to handle the commandBuffer for rendering eve clouds to our copied shaddowMap, maybe do it directly in our shadowMap Copier class
-
 			return true;
 		}
 
+		void InitCloudShadowCommandBuffers ()
+		{
+			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey (parentSkyNode.m_manager.parentCelestialBody.name))
+			{
+				foreach (EVEClouds2d clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [parentSkyNode.m_manager.parentCelestialBody.name])
+				{
+					if (clouds2d.CloudShadowMaterial != null)
+					{
+						Material cloudShadowDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer-EVE/CloudShadowMap"]);
+						cloudShadowDepthMaterial.CopyKeywordsFrom (clouds2d.CloudShadowMaterial);
+						if (cloudShadowGO == null)
+						{
+							cloudShadowGO = GameObject.CreatePrimitive (PrimitiveType.Sphere);
+							GameObject.Destroy (cloudShadowGO.GetComponent<Collider> ());
+							MeshFilter cloudShadowMF = cloudShadowGO.GetComponent<MeshFilter> ();
+							cloudShadowMF.mesh.Clear ();
+							cloudShadowMF.mesh = IcoSphere.CreateIcoSphereMesh ();
+							cloudShadowMR = cloudShadowGO.GetComponent<MeshRenderer> ();
+							cloudShadowGO.transform.parent = parentSkyNode.m_manager.parentCelestialBody.transform;
+							cloudShadowMR.receiveShadows = false;
+							cloudShadowMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+							cloudShadowMR.enabled = false;
+						}
+						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), ShadowMapCopy.RenderTexture, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade0, 0f, 0f, 0.5f, 0.5f);
+						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), ShadowMapCopy.RenderTexture, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade1, 0.5f, 0f, 0.5f, 0.5f);
+						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), ShadowMapCopy.RenderTexture, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade2, 0f, 0.5f, 0.5f, 0.5f);
+						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), ShadowMapCopy.RenderTexture, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade3, 0.5f, 0.5f, 0.5f, 0.5f);
+						cloudsShadowsMaterials.Add (new Tuple<EVEClouds2d, Material> (clouds2d, cloudShadowDepthMaterial));
+					}
+				}
+			}
+		}
+		
+		void RenderObjectInCustomCascade(Light targetLight, RenderTexture rt, MeshRenderer mr, Material mat , ShadowMapPass passMask, float startX, float startY, float width, float height)
+		{
+			CommandBuffer cloudShadowDepthCB = new CommandBuffer();
+			Rect cascadeRect = new Rect ((int)(startX * rt.width), (int)(startY * rt.height), (int)(width * rt.width), (int)(height * rt.height));
+
+			cloudShadowDepthCB.SetRenderTarget(rt);
+			cloudShadowDepthCB.EnableScissorRect(cascadeRect);
+			cloudShadowDepthCB.SetViewport(cascadeRect);
+			cloudShadowDepthCB.DrawRenderer(mr, mat);
+			cloudShadowDepthCB.DisableScissorRect();
+			
+			targetLight.AddCommandBuffer(LightEvent.AfterShadowMapPass, cloudShadowDepthCB, passMask);
+
+			if (shadowRenderCommandBuffers.ContainsKey (passMask))
+			{
+				shadowRenderCommandBuffers[passMask].Add(cloudShadowDepthCB);
+			}
+			else
+			{
+				shadowRenderCommandBuffers[passMask] = new List<CommandBuffer>();
+				shadowRenderCommandBuffers[passMask].Add(cloudShadowDepthCB);
+			}
+		}
 
 		public void Enable()
 		{
 			shadowMapCopier.Enable ();
 			targetCamera.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
+
+			Light targetLight = targetLightGO.GetComponent<Light> ();
+
+			foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys)
+			{
+				foreach(CommandBuffer cb in shadowRenderCommandBuffers[pass])
+				{
+					targetLight.AddCommandBuffer(LightEvent.AfterShadowMapPass, cb, pass);
+				}
+			}
 		}
 
 		public void Disable() //to disable when in scaledSpace
 		{
 			shadowMapCopier.Disable ();
 			targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
+
+			Light targetLight = targetLightGO.GetComponent<Light> ();
+			
+			foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys)
+			{
+				foreach(CommandBuffer cb in shadowRenderCommandBuffers[pass])
+				{
+					targetLight.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, cb);
+				}
+			}
 		}
 
 		void OnPreCull()
@@ -139,9 +219,9 @@ namespace scatterer
 				
 				//Calculate light's bounding Box englobing camera's frustum up to the shadows distance
 				//The idea is to create a "projector" from the light's PoV, which is essentially a bounding box cover the whole range from near clip plance to the shadows, so we can project into the scene
-				Vector3 lightDirForward = targetLight.transform.forward.normalized;
-				Vector3 lightDirRight = targetLight.transform.right.normalized;
-				Vector3 lightDirUp = targetLight.transform.up.normalized;
+				Vector3 lightDirForward = targetLightGO.transform.forward.normalized;
+				Vector3 lightDirRight = targetLightGO.transform.right.normalized;
+				Vector3 lightDirUp = targetLightGO.transform.up.normalized;
 				
 				Vector3[] frustumCornersNear = new Vector3[4];
 				Vector3[] frustumCornersFar = new Vector3[4];
@@ -155,12 +235,12 @@ namespace scatterer
 				
 				foreach(Vector3 corner in frustumCornersNear)
 				{
-					frustumCornersInLightSpace.Add(targetLight.transform.worldToLocalMatrix.MultiplyPoint(targetCamera.transform.localToWorldMatrix.MultiplyPoint(corner)));
+					frustumCornersInLightSpace.Add(targetLightGO.transform.worldToLocalMatrix.MultiplyPoint(targetCamera.transform.localToWorldMatrix.MultiplyPoint(corner)));
 				}
 				
 				foreach(Vector3 corner in frustumCornersFar)
 				{
-					frustumCornersInLightSpace.Add(targetLight.transform.worldToLocalMatrix.MultiplyPoint(targetCamera.transform.localToWorldMatrix.MultiplyPoint(corner)));
+					frustumCornersInLightSpace.Add(targetLightGO.transform.worldToLocalMatrix.MultiplyPoint(targetCamera.transform.localToWorldMatrix.MultiplyPoint(corner)));
 				}
 
 				Bounds bounds = GeometryUtility.CalculateBounds(frustumCornersInLightSpace.ToArray(), Matrix4x4.identity);
@@ -179,22 +259,27 @@ namespace scatterer
 				shadowProjectionMatrix = GL.GetGPUProjectionMatrix(shadowProjectionMatrix, false);
 				
 				//Transformation from world into our "shadow space" matrix
-				Matrix4x4 VP = shadowProjectionMatrix * targetLight.transform.worldToLocalMatrix;
+				Matrix4x4 VP = shadowProjectionMatrix * targetLightGO.transform.worldToLocalMatrix;
 				
 				//And inverse transformation from "shadow space" into world used to create our mesh
 				Matrix4x4 lightToWorld = VP.inverse;
 
-				//make sure to rewrite these with shader properties
-				volumeDepthMaterial.SetMatrix("lightToWorld", lightToWorld);
-				volumeDepthMaterial.SetVector("lightDirection", targetLight.transform.forward);
-				volumeDepthMaterial.SetVector("cameraForwardDir", targetCamera.transform.forward);
+				volumeDepthMaterial.SetMatrix(ShaderProperties.lightToWorld_PROPERTY, lightToWorld);
+				volumeDepthMaterial.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLightGO.transform.forward);
 
 				volumeDepthMaterial.SetFloat(ShaderProperties._experimentalAtmoScale_PROPERTY,parentSkyNode.experimentalAtmoScale);
 				volumeDepthMaterial.SetVector (ShaderProperties._planetPos_PROPERTY, parentSkyNode.parentLocalTransform.position);
+
+				foreach(Tuple<EVEClouds2d, Material> tuple in cloudsShadowsMaterials)
+				{
+					tuple.Item2.CopyPropertiesFromMaterial(tuple.Item1.CloudShadowMaterial);
+					tuple.Item2.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLightGO.transform.forward);
+					tuple.Item2.SetFloat(ShaderProperties._godrayCloudThreshold_PROPERTY, parentSkyNode.godrayCloudAlphaThreshold);
+				}
 			}
 		}
 		
-		public void OnDestroy()
+		public void Cleanup()
 		{
 			Disable ();
 
@@ -211,6 +296,11 @@ namespace scatterer
 			if (!ReferenceEquals (volumeDepthGO, null))
 			{
 				DestroyImmediate(volumeDepthGO);
+			}
+
+			if (!ReferenceEquals (cloudShadowGO, null))
+			{
+				DestroyImmediate(cloudShadowGO);
 			}
 		}
 	}

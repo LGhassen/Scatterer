@@ -134,6 +134,7 @@
 
 #if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;
+			uniform float _godrayStrength;
 #endif
 			uniform float _openglThreshold;
 			uniform float4x4 _Globals_CameraToWorld;
@@ -224,7 +225,7 @@
 #if defined (GODRAYS_ON)
 				float2 depthUV = i.projPos.xy/i.projPos.w;
 				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
-
+				godrayDepth*=_godrayStrength;
 				worldPos = worldPos - godrayDepth * normalize(worldPos-i._camPos);
 #endif
 
