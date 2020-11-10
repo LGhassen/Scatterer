@@ -8,8 +8,6 @@ namespace scatterer
 {
 	public class ShadowMapCopyCommandBuffer : MonoBehaviour
 	{
-
-		private CommandBuffer m_CopyOnceBuffer;
 		private CommandBuffer copyCascadeCB0, copyCascadeCB1, copyCascadeCB2, copyCascadeCB3;
 		private Light m_Light;
 		bool commandBufferAdded = false;
