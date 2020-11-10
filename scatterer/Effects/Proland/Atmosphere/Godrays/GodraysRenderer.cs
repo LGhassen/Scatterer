@@ -23,6 +23,8 @@ namespace scatterer
 		MeshRenderer cloudShadowMR;
 		Dictionary<ShadowMapPass, List<CommandBuffer>> shadowRenderCommandBuffers = new Dictionary<ShadowMapPass, List<CommandBuffer>> ();
 		List<Tuple<EVEClouds2d,Material>> cloudsShadowsMaterials = new List<Tuple<EVEClouds2d, Material>>();
+		RenderTexture cloudShadowMap;
+		CommandBuffer clearShadowMapCB;
 
 		bool commandBufferAdded = false;
 		
@@ -72,6 +74,7 @@ namespace scatterer
 			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "OCEAN_INTERSECT_ON", "OCEAN_INTERSECT_OFF", parentSkyNode.m_manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders);
 			volumeDepthMaterial.SetFloat ("Rt", parentSkyNode.Rt);
 			volumeDepthMaterial.SetFloat ("Rg", parentSkyNode.Rg);
+			Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "CLOUDSMAP_ON", "CLOUDSMAP_OFF", false);
 
 			volumeDepthGO = new GameObject ("GodraysVolumeDepth "+inputParentSkyNode.m_manager.parentCelestialBody.name);
 			volumeDepthMaterial.renderQueue = 2999; //for debugging only
@@ -140,11 +143,28 @@ namespace scatterer
 							cloudShadowMR.receiveShadows = false;
 							cloudShadowMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 							cloudShadowMR.enabled = false;
+
+							cloudShadowMap = new RenderTexture (2048, 2048, 0, RenderTextureFormat.RHalf); //replace size after
+							cloudShadowMap.useMipMap = false;
+							cloudShadowMap.antiAliasing = 1;
+							cloudShadowMap.filterMode = FilterMode.Point;
+							cloudShadowMap.Create ();
+
+							clearShadowMapCB = new CommandBuffer();
+							clearShadowMapCB.SetRenderTarget(cloudShadowMap);
+							clearShadowMapCB.ClearRenderTarget(false,true,Color.black);
+
+							shadowRenderCommandBuffers[ShadowMapPass.DirectionalCascade0] = new List<CommandBuffer>();
+							shadowRenderCommandBuffers[ShadowMapPass.DirectionalCascade0].Add(clearShadowMapCB);
+
+							Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "CLOUDSMAP_ON", "CLOUDSMAP_OFF", true);
+							volumeDepthMaterial.SetTexture("cloudShadowMap", cloudShadowMap);
 						}
-						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), ShadowMapCopy.RenderTexture, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade0, 0f, 0f, 0.5f, 0.5f);
-						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), ShadowMapCopy.RenderTexture, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade1, 0.5f, 0f, 0.5f, 0.5f);
-						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), ShadowMapCopy.RenderTexture, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade2, 0f, 0.5f, 0.5f, 0.5f);
-						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), ShadowMapCopy.RenderTexture, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade3, 0.5f, 0.5f, 0.5f, 0.5f);
+						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade0, 0f, 0f, 0.5f, 0.5f);
+						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade1, 0.5f, 0f, 0.5f, 0.5f);
+						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade2, 0f, 0.5f, 0.5f, 0.5f);
+						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade3, 0.5f, 0.5f, 0.5f, 0.5f);
+
 						cloudsShadowsMaterials.Add (new Tuple<EVEClouds2d, Material> (clouds2d, cloudShadowDepthMaterial));
 					}
 				}

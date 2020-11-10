@@ -78,7 +78,6 @@ namespace scatterer
 
 		public void OnPreRender()
 		{
-			//it's possible that it's something with the timing of this? maybe it always disables before Kerbin's enables?
 			if (commandBufferAdded)
 				Disable ();
 		}

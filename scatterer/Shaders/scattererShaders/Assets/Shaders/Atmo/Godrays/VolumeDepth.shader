@@ -35,8 +35,10 @@
 
 			#pragma multi_compile DUAL_DEPTH_OFF DUAL_DEPTH_ON
 			#pragma multi_compile OCEAN_INTERSECT_OFF OCEAN_INTERSECT_ON  //enable ocean_intersect only for custom ocean shader
+			#pragma multi_compile CLOUDSMAP_OFF CLOUDSMAP_ON
 
 			sampler2D _ShadowMapTextureCopyScatterer;
+
 
 			sampler2D _CameraDepthTexture;
 			float4x4 CameraToWorld;
@@ -47,6 +49,8 @@
 			float Rg;
 			float Rt;
 			float _experimentalAtmoScale;
+
+			sampler2D cloudShadowMap;
 
 #if defined(DUAL_DEPTH_ON)
 			UNITY_DECLARE_DEPTH_TEXTURE(AdditionalDepthBuffer);
@@ -77,6 +81,7 @@
 				float4 viewPos: TEXCOORD0;
 				float4 projPos : TEXCOORD1;
 				float4 finalWorldPos : TEXCOORD2;
+				float isCloud : TEXCOORD3;
 			};
 
 			v2t vert (appdata v)
@@ -102,23 +107,23 @@
 			{
 				OutputPatchConstant o;
 
-//				bool isVisible = false;
-//
-//				for (int i=0;i<3;i++)
-//				{
-//					float4 clipSpaceOrigin = mul(UNITY_MATRIX_VP, patch[i].worldOriginPos);
-//					float4 clipSpaceEnd    = mul(UNITY_MATRIX_VP, patch[i].worldEndPos);
-//					isVisible = isVisible || intersectsFrustum(clipSpaceOrigin.xyz/clipSpaceOrigin.w, clipSpaceEnd.xyz/clipSpaceEnd.w); //consider this to be working though I'm not sure, maybe pass a color?
-//				}
-//
-//				if (!isVisible)
-//				{
-//					o.edge[0] = 0.0;
-//					o.edge[1] = 0.0;
-//					o.edge[2] = 0.0;
-//					o.inside = 0.0;
-//				}
-//				else
+				bool isVisible = false;
+
+				for (int i=0;i<3;i++)
+				{
+					float4 clipSpaceOrigin = mul(UNITY_MATRIX_VP, patch[i].worldOriginPos);
+					float4 clipSpaceEnd    = mul(UNITY_MATRIX_VP, patch[i].worldEndPos);
+					isVisible = isVisible || intersectsFrustum(clipSpaceOrigin.xyz/clipSpaceOrigin.w, clipSpaceEnd.xyz/clipSpaceEnd.w); //consider this to be working though I'm not sure, maybe pass a color?
+				}
+
+				if (!isVisible)
+				{
+					o.edge[0] = 0.0;
+					o.edge[1] = 0.0;
+					o.edge[2] = 0.0;
+					o.inside = 0.0;
+				}
+				else
 				{
 					float maxTesselationFactor = 64.0;
 
@@ -129,6 +134,10 @@
 					float factor0 = clamp(maxTesselationFactor * 225.0 / distEdge0,1.0,maxTesselationFactor);
 					float factor1 = clamp(maxTesselationFactor * 225.0 / distEdge1,1.0,maxTesselationFactor);
 					float factor2 = clamp(maxTesselationFactor * 225.0 / distEdge2,1.0,maxTesselationFactor);
+
+//					float factor0 = clamp(maxTesselationFactor * 225.0 / distEdge0,4.0,maxTesselationFactor); // min of 4.0 is slooooow
+//					float factor1 = clamp(maxTesselationFactor * 225.0 / distEdge1,4.0,maxTesselationFactor);
+//					float factor2 = clamp(maxTesselationFactor * 225.0 / distEdge2,4.0,maxTesselationFactor);
 
 					//float insideFactor = max(factor0, max(factor1,factor2)); //doesn't seem to be always correct, so try to think about it, think about what causes cracks in this case, it's normal, every triangle's max isn't necessarily the adjacent triangle's max
 
@@ -159,7 +168,14 @@
 
 				float4 finalWorldPos = 0;
 				float4 shadowPos = 0;
-				fixed cascadeIndex = pickMostDetailedCascade (float4(worldPos,1.0), shadowPos, _ShadowMapTextureCopyScatterer);		//only support 4 cascades here
+
+				float isCloud = 0;
+				//only support 4 cascades here
+#if defined(CLOUDSMAP_ON)
+				fixed cascadeIndex = pickMostDetailedCascadeCloud (float4(worldPos,1.0), shadowPos, _ShadowMapTextureCopyScatterer, cloudShadowMap, isCloud);
+#else
+				fixed cascadeIndex = pickMostDetailedCascade (float4(worldPos,1.0), shadowPos, _ShadowMapTextureCopyScatterer);		
+#endif
 
 				float4x4 shadowToWorld = inverseShadowMatricesBuffer[max(cascadeIndex,0)];
 
@@ -174,6 +190,8 @@
 				o.viewPos = float4(UnityWorldToViewPos(finalWorldPos),1.0);
 				o.projPos = ComputeScreenPos(o.pos);
 				o.finalWorldPos = finalWorldPos;
+				o.isCloud = isCloud;
+
 				return o;
 			}
 
@@ -208,7 +226,7 @@
 				float3 viewDir = normalize(i.finalWorldPos.xyz/i.finalWorldPos.w - _WorldSpaceCameraPos);
 				float viewLength = length(i.viewPos.xyz/i.viewPos.w);
 
-				if (zdepth != 0.0) //cap by terrain distance
+				if (zdepth != 1.0) //cap by terrain distance
 				{
 					viewLength = min(depthLength, viewLength);
 				}
@@ -217,12 +235,18 @@
 					//I think here I should take into account optical depth, or use log(depth), seems too dark
 					float skyIntersectDistance = intersectSphereInside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg + _experimentalAtmoScale * (Rt-Rg));
 					viewLength = min(skyIntersectDistance, viewLength);
+
+//					if (i.isCloud > 0.0)
+//					{
+//						viewLength*= 0.3; //this looks nice against the sky but where terrain and shadow meet it looks like shite
+//					}
 				}
 
 #if defined(OCEAN_INTERSECT_ON)  //cap by boundary to ocean
 				float oceanIntersectDistance = intersectSphereOutside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg);
 				viewLength = (oceanIntersectDistance > 0.0) ? min(oceanIntersectDistance, viewLength) : viewLength;
 #endif
+
 				return facing > 0 ? viewLength : -viewLength;
 			}
 			ENDCG
