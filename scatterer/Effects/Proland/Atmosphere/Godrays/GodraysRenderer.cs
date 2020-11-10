@@ -25,6 +25,8 @@ namespace scatterer
 		MeshRenderer cloudShadowMR;
 		Dictionary<ShadowMapPass, List<CommandBuffer>> shadowRenderCommandBuffers = new Dictionary<ShadowMapPass, List<CommandBuffer>> ();
 		List<Tuple<EVEClouds2d,Material>> cloudsShadowsMaterials = new List<Tuple<EVEClouds2d, Material>>();
+
+		bool commandBufferAdded = false;
 		
 		public GodraysRenderer ()
 		{
@@ -119,6 +121,8 @@ namespace scatterer
 			targetCamera = gameObject.GetComponent<Camera> ();
 			targetCamera.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
 
+			commandBufferAdded = true;
+
 			return true;
 		}
 
@@ -181,17 +185,22 @@ namespace scatterer
 
 		public void Enable()
 		{
-			shadowMapCopier.Enable ();
-			targetCamera.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
-
-			Light targetLight = targetLightGO.GetComponent<Light> ();
-
-			foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys)
+			if (!commandBufferAdded)
 			{
-				foreach(CommandBuffer cb in shadowRenderCommandBuffers[pass])
+				shadowMapCopier.Enable ();
+				targetCamera.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
+
+				Light targetLight = targetLightGO.GetComponent<Light> ();
+
+				foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys)
 				{
-					targetLight.AddCommandBuffer(LightEvent.AfterShadowMapPass, cb, pass);
+					foreach (CommandBuffer cb in shadowRenderCommandBuffers[pass])
+					{
+						targetLight.AddCommandBuffer (LightEvent.AfterShadowMapPass, cb, pass);
+					}
 				}
+
+				commandBufferAdded = true;
 			}
 		}
 
@@ -209,11 +218,14 @@ namespace scatterer
 					targetLight.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, cb);
 				}
 			}
+
+			commandBufferAdded = false;
 		}
 
 		void OnPreCull()
 		{
 			//if (volumeDepthMaterial != null && targetCamera != null && targetLight != null) //shouldn't be needed right?
+			if (commandBufferAdded)
 			{
 				volumeDepthMaterial.SetMatrix("CameraToWorld", targetCamera.cameraToWorldMatrix);
 				
