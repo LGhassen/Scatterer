@@ -10,8 +10,26 @@ namespace scattererShaders
 
 	public class CreateAssetBundles
 	{
-		[MenuItem ("Assets/Build AssetBundles")]
+		[MenuItem ("Assets/Build AssetBundles for release")]
 		static void BuildAllAssetBundles ()
+		{
+			BuildTarget[] platforms = { BuildTarget.StandaloneWindows, BuildTarget.StandaloneOSX, BuildTarget.StandaloneLinux64 };
+			string[] platformExts = { "-windows", "-macosx", "-linux" };
+
+			BuildBundles(platforms, platformExts);
+		}
+
+		[MenuItem ("Assets/Build AssetBundles for local dx11")]
+		static void BuildDx11 ()
+		{
+			BuildTarget[] platforms = {BuildTarget.StandaloneWindows};
+			string[] platformExts = { "-windows"};
+
+			BuildBundles(platforms, platformExts);
+		}
+
+
+		static void BuildBundles (BuildTarget[] platforms, string[] platformExts)
 		{
 			// Put the bundles in a folder called "AssetBundles"
 			//var outDir = "Assets/AssetBundles";
@@ -26,8 +44,6 @@ namespace scattererShaders
 
 			var opts = BuildAssetBundleOptions.DeterministicAssetBundle | BuildAssetBundleOptions.ForceRebuildAssetBundle;
 
-			BuildTarget[] platforms = { BuildTarget.StandaloneWindows, BuildTarget.StandaloneOSX, BuildTarget.StandaloneLinux64 };
-			string[] platformExts = { "-windows", "-macosx", "-linux" };
 			for (var i = 0; i < platforms.Length; ++i)
 			{
 				BuildPipeline.BuildAssetBundles(outDir, opts, platforms[i]);
