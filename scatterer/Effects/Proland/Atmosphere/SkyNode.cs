@@ -401,10 +401,6 @@ namespace scatterer
 					//set flag to map EVE volumetrics after a few frames
 					if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 						mapVolumetrics=true;
-
-					//if we have godrays renderer re-enable it
-					if (!ReferenceEquals(godraysRenderer,null))
-						godraysRenderer.Enable();
 				}
 
 				//if we go from local to scaled
@@ -412,10 +408,6 @@ namespace scatterer
 				{
 					//clear volumetrics
 					EVEvolumetrics.Clear();
-
-					//if we have godrays renderer disable it
-					if (!ReferenceEquals(godraysRenderer,null))
-						godraysRenderer.Disable();
 				}
 			}
 			else
