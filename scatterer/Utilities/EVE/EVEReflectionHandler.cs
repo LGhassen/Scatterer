@@ -148,17 +148,14 @@ namespace scatterer
 
 				if (screenSpaceShadow != null)
 				{
-					Utils.LogInfo("Ghassen screenspace shadow identified");
 					shadowMaterial = screenSpaceShadow.GetType().GetField("material", flags).GetValue(screenSpaceShadow) as Material;
 				}
 				else
 				{
-					Utils.LogInfo("Ghassen NOOO screenspace shadow identified");
 					Projector shadowProjector = cloud2dObj.GetType().GetField("ShadowProjector", flags).GetValue(cloud2dObj) as Projector;
 					
 					if (shadowProjector != null && shadowProjector.material != null)
 					{
-						Utils.LogInfo("Ghassen shadowProjector identified");
 						shadowMaterial = shadowProjector.material;
 					}
 				}
