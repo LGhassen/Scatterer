@@ -183,7 +183,8 @@
 
 				if (cascadeIndex < 0.0)
 				{
-					finalWorldPos = float4(_WorldSpaceCameraPos.xyz + lightDirection * 700000,1.0);
+					//finalWorldPos = float4(_WorldSpaceCameraPos.xyz + lightDirection * 700000,1.0); //this works well for stock but breaks with parallax, what gives?
+					finalWorldPos = float4(_WorldSpaceCameraPos.xyz + lightDirection * 500000,1.0);
 				}
 
 				o.pos=UnityWorldToClipPos(finalWorldPos);
