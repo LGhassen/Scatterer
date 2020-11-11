@@ -552,6 +552,7 @@ Shader "Scatterer/OceanWhiteCaps"
 					float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
 					float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(godrayUV,0,0)).r;
 					godrayDepth*=_godrayStrength;
+					godrayDepth = max(godrayDepth,0.0);
 					worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
 #endif
 

@@ -89,7 +89,8 @@
 				v2t o;
 
 				//o.pos = float4(2.0*(v.uv-0.5),0.0,1.0); //try modifying this, clip space goes from -1 to 1, our UVs go from?to?
-				o.pos = float4(3.0*(v.uv-0.5),0.0,1.0); //HOLY FUCK THIS FIXES THE DISAPPEARING CHUNKS WHAT THE FUCK
+				//o.pos = float4(3.0*(v.uv-0.5),0.0,1.0); //HOLY FUCK THIS FIXES THE DISAPPEARING CHUNKS WHAT THE FUCK
+				o.pos = float4(2.9*(v.uv-0.5),0.0,1.0);
 
 				o.worldOriginPos = mul(lightToWorld,o.pos);
 				o.worldEndPos = mul(lightToWorld,float4(o.pos.x,o.pos.y,1.0,1.0));
@@ -103,12 +104,11 @@
 				float inside : SV_InsideTessFactor;
 			};
 
-			OutputPatchConstant constantsFixed(InputPatch<v2t,3> patch)
+			OutputPatchConstant tesselationConstants(InputPatch<v2t,3> patch)
 			{
 				OutputPatchConstant o;
 
 				bool isVisible = false;
-
 				for (int i=0;i<3;i++)
 				{
 					float4 clipSpaceOrigin = mul(UNITY_MATRIX_VP, patch[i].worldOriginPos);
@@ -153,7 +153,7 @@
 			[domain("tri")]
 			[partitioning("integer")]
 			[outputtopology("triangle_cw")]
-			[patchconstantfunc("constantsFixed")]
+			[patchconstantfunc("tesselationConstants")]
 			[outputcontrolpoints(3)]
 			v2t hull(InputPatch<v2t,3> patch, uint id : SV_OutputControlPointID)
 			{

@@ -226,6 +226,7 @@
 				float2 depthUV = i.projPos.xy/i.projPos.w;
 				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
 				godrayDepth*=_godrayStrength;
+				godrayDepth = max(godrayDepth,0.0);
 				worldPos = worldPos - godrayDepth * normalize(worldPos-i._camPos);
 #endif
 

@@ -181,6 +181,7 @@ Shader "Scatterer/SkySphere"
 #if defined (GODRAYS_ON)
 				float2 depthUV = IN.projPos.xy/IN.projPos.w;
 				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
+				godrayDepth = max(godrayDepth,0.0);
 				godrayDepth*=_godrayStrength;
 				scatteringCameraPos = scatteringCameraPos + d * godrayDepth;
 #endif
