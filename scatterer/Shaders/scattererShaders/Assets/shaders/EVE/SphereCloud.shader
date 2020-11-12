@@ -269,7 +269,9 @@ Shader "Scatterer-EVE/Cloud" {
 					float3 scatteringPos = relWorldPos;
 #if defined (GODRAYS_ON) && defined(WORLD_SPACE_ON)
 					float2 depthUV = IN.projPos.xy/IN.projPos.w;
-					scatteringPos -= sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength) * IN.viewDir; //this works but it looks suuuper wrong when outside the cloud layer, to be revised I guess
+					float godrayDepth = sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength);
+					godrayDepth = min(godrayDepth, _godrayStrength * length(scatteringPos - relCameraPos));
+					scatteringPos -= godrayDepth * IN.viewDir; //this works but it looks suuuper wrong when outside the cloud layer, to be revised I guess
 #endif
 					
 					//inScattering from cloud to observer
