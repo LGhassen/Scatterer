@@ -91,9 +91,8 @@ namespace scatterer
 			_mr.receiveShadows = false;
 			_mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			_mr.enabled = false;
-			
-			volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RFloat); //check if we can do half precision
-			//volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to cause issues, seems like the max value a half can be is 65000 (from nsight)
+
+			volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to work if we divide the contents by 100, to keep under half's 65000 limit
 			volumeDepthTexture.useMipMap = false;
 			volumeDepthTexture.antiAliasing = 1; //no need, the depth makes it naturally soft
 			volumeDepthTexture.filterMode = FilterMode.Point;

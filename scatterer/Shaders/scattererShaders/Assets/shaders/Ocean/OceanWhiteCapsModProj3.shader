@@ -108,6 +108,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			#include "OceanBRDF.cginc"
 			#include "OceanDisplacement3.cginc"
 			#include "../ClippingUtils.cginc"
+			#include "../Atmo/Godrays/GodraysCommon.cginc"
 
 			uniform float offScreenVertexStretch;
 
@@ -550,10 +551,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 #if defined (GODRAYS_ON)
 					float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
-					float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(godrayUV,0,0)).r;
-					godrayDepth*=_godrayStrength;
-					godrayDepth = max(godrayDepth,0.0);
-					worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
+					worldPos = worldPos - sampleGodrayDepth(_godrayDepthTexture, godrayUV, _godrayStrength) * normalize(worldPos-_camPos);
 #endif
 
 					float3 inscatter=0.0;float3 extinction=1.0;

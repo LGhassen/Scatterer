@@ -117,6 +117,7 @@
 			#pragma target 3.0
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
+			#include "Godrays/GodraysCommon.cginc"
 
 			//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
@@ -224,10 +225,7 @@
 
 #if defined (GODRAYS_ON)
 				float2 depthUV = i.projPos.xy/i.projPos.w;
-				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
-				godrayDepth*=_godrayStrength;
-				godrayDepth = max(godrayDepth,0.0);
-				worldPos = worldPos - godrayDepth * normalize(worldPos-i._camPos);
+				worldPos = worldPos - sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength) * normalize(worldPos-i._camPos);
 #endif
 
 				inscatter+= InScattering2(i._camPos, worldPos,SUN_DIR,extinction);

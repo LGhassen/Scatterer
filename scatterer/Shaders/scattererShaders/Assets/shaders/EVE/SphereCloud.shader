@@ -71,8 +71,9 @@ Shader "Scatterer-EVE/Cloud" {
 #ifdef SCATTERER_ON
 				#include "../CommonAtmosphere.cginc"
 				#include "../EclipseCommon.cginc"
+				#include "../Atmo/Godrays/GodraysCommon.cginc"
 #endif
-
+				
 				CUBEMAP_DEF_1(_MainTex)
 
 				sampler2D _DetailTex;
@@ -268,9 +269,7 @@ Shader "Scatterer-EVE/Cloud" {
 					float3 scatteringPos = relWorldPos;
 #if defined (GODRAYS_ON) && defined(WORLD_SPACE_ON)
 					float2 depthUV = IN.projPos.xy/IN.projPos.w;
-					float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
-					godrayDepth*=_godrayStrength;
-					scatteringPos -= godrayDepth * IN.viewDir; //this works but it looks suuuper wrong when outside the cloud layer, to be revised I guess
+					scatteringPos -= sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength) * IN.viewDir; //this works but it looks suuuper wrong when outside the cloud layer, to be revised I guess
 #endif
 					
 					//inScattering from cloud to observer

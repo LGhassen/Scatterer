@@ -122,6 +122,7 @@ Shader "Scatterer/SkySphere"
 			#include "../CommonAtmosphere.cginc"
 			#include "../EclipseCommon.cginc"
 			#include "../RingCommon.cginc"
+			#include "Godrays/GodraysCommon.cginc"
 
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
@@ -169,7 +170,6 @@ Shader "Scatterer/SkySphere"
 				return OUT;
 			}
 
-
 			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
 				float3 WSD = _Sun_WorldSunDir;
@@ -180,13 +180,10 @@ Shader "Scatterer/SkySphere"
 				float3 scatteringCameraPos = WCP - IN.planetOrigin;
 #if defined (GODRAYS_ON)
 				float2 depthUV = IN.projPos.xy/IN.projPos.w;
-				float godrayDepth = tex2Dlod(_godrayDepthTexture, float4(depthUV,0,0)).r;
-				godrayDepth = max(godrayDepth,0.0);
-				godrayDepth*=_godrayStrength;
-				scatteringCameraPos = scatteringCameraPos + d * godrayDepth;
+				scatteringCameraPos = scatteringCameraPos + d * sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength);
 #endif
-
 				float3 inscatter = SkyRadiance3(scatteringCameraPos, d, WSD);
+
 				float3 finalColor = inscatter;
 				float eclipseShadow = 1;
 

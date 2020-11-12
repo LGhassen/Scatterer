@@ -32,6 +32,7 @@
 			#include "UnityShadowLibrary.cginc"
 			#include "ShadowVolumeUtils.cginc"
 			#include "../../IntersectCommon.cginc"
+			#include "GodraysCommon.cginc"
 
 			#pragma multi_compile DUAL_DEPTH_OFF DUAL_DEPTH_ON
 			#pragma multi_compile OCEAN_INTERSECT_OFF OCEAN_INTERSECT_ON  //enable ocean_intersect only for custom ocean shader
@@ -207,7 +208,7 @@
 #endif
 
 				float4 depthClipPos = float4(depthUV, zdepth, 1.0);
-				depthClipPos.xyz = 2.0f * depthClipPos.xyz - 1.0f;
+				depthClipPos.xyz = 2.0 * depthClipPos.xyz - 1.0;
 				float4 depthViewPos = mul(unity_CameraInvProjection, depthClipPos);
 
 				float depthLength = length(depthViewPos.xyz/depthViewPos.w);
@@ -215,10 +216,10 @@
 				float zdepth2 = SAMPLE_DEPTH_TEXTURE(AdditionalDepthBuffer, depthUV);
 
 	#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
-				zdepth2 = 1 - zdepth2;
+				zdepth2 = 1.0 - zdepth2;
 	#endif
 				depthClipPos = float4(depthUV, zdepth2, 1.0);
-				depthClipPos.xyz = 2.0f * depthClipPos.xyz - 1.0f;
+				depthClipPos.xyz = 2.0 * depthClipPos.xyz - 1.0;
 				float4 depthViewPos2 = mul(ScattererAdditionalInvProjection, depthClipPos);
 
 				depthLength = (depthLength < 8000) || (zdepth2 == 0.0) ? depthLength : length(depthViewPos2.xyz/depthViewPos2.w);
@@ -243,10 +244,11 @@
 //					}
 				}
 
-#if defined(OCEAN_INTERSECT_ON)  //cap by boundary to ocean
+#if defined(OCEAN_INTERSECT_ON)  //cap by boundary to ocean, not working very well, can still see the outline
 				float oceanIntersectDistance = intersectSphereOutside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg);
 				viewLength = (oceanIntersectDistance > 0.0) ? min(oceanIntersectDistance, viewLength) : viewLength;
 #endif
+				viewLength = writeGodrayToTexture(viewLength);
 
 				return facing > 0 ? viewLength : -viewLength;
 			}
