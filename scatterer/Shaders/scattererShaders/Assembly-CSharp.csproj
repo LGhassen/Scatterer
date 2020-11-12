@@ -132,6 +132,7 @@
      <None Include="Assets\Shaders\Ocean\Caustics\CompositeCausticsGodrays.shader" />
      <None Include="Assets\Shaders\RingCommon.cginc" />
      <None Include="Assets\Shaders\EVE\SphereCloud.shader" />
+     <None Include="Assets\Shaders\Atmo\Godrays\GodraysCommon.cginc" />
      <None Include="Assets\Shaders\Ocean\InitJacobians.shader" />
      <None Include="Assets\Shaders\Ocean\Caustics\GodraysSoftAdd.shader" />
      <None Include="Assets\Shaders\Instancing\Textured With Detail.shader" />

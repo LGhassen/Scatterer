@@ -1,7 +1,15 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+using System.Reflection;
+using System.Runtime;
+using KSP;
+using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
-using System.Collections.Generic;
-using System;
 
 
 namespace scatterer
@@ -30,8 +38,24 @@ namespace scatterer
 		{
 			m_Light = Scatterer.Instance.sunLight;
 			CreateCopyCascadeCBs ();
+			GameEvents.onGameSceneLoadRequested.Add(RecreateForSceneChange);
 		}
-		
+
+		public void RecreateForSceneChange(GameScenes scene)
+		{
+			StartCoroutine (DelayedRecreateForSceneChange());
+		}
+
+		//When scene changes, the resolution of the shadowMap can change so recreate the commandBuffers
+		IEnumerator DelayedRecreateForSceneChange()
+		{
+			for (int i=0; i<3; i++)
+				yield return new WaitForFixedUpdate ();
+
+			Disable ();
+			CreateCopyCascadeCBs();
+		}
+
 		private void CreateCopyCascadeCBs()
 		{
 			copyCascadeCB0 = CreateCopyCascadeCB (ShadowMapCopy.RenderTexture,   0f,   0f, 0.5f, 0.5f);

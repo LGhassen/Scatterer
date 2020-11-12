@@ -94,7 +94,7 @@ namespace scatterer
 
 			volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to work if we divide the contents by 100, to keep under half's 65000 limit
 			volumeDepthTexture.useMipMap = false;
-			volumeDepthTexture.antiAliasing = 1; //no need, the depth makes it naturally soft
+			volumeDepthTexture.antiAliasing = 1;
 			volumeDepthTexture.filterMode = FilterMode.Point;
 			volumeDepthTexture.Create ();
 
