@@ -160,9 +160,9 @@ Shader "Scatterer/OceanWhiteCaps"
 			uniform float _Post_Extinction_Tint;
 			uniform float extinctionThickness;
 
-			//#if defined (REFRACTION_ON)
+			#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 			uniform sampler2D ScattererScreenCopy;   //background texture used for refraction
-			//#endif
+			#endif
 
 			#if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;

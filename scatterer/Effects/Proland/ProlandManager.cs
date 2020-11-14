@@ -175,14 +175,8 @@ namespace scatterer
 				m_oceanNode = (OceanWhiteCaps) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(OceanWhiteCaps));
 				m_oceanNode.Init(this);
 
-				if (Scatterer.Instance.mainSettings.oceanRefraction && Scatterer.Instance.bufferManager.refractionTexture.IsCreated())
-				{
-					Scatterer.Instance.bufferManager.refractionTexture.Create();
-				}
-
 				Utils.LogDebug("Rebuilt Ocean");
 			}
-			
 		}
 
 		public Vector3 getDirectionToSun()

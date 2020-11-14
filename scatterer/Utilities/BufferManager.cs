@@ -9,7 +9,6 @@ namespace scatterer
 	public class BufferManager : MonoBehaviour
 	{
 		public RenderTexture depthTexture;			//full-scene depth texture, from merged built-in depth textures of the two local cameras
-		public RenderTexture refractionTexture;		//textures for the refractions, created once and accessed from here, written to from oceanNode
 		//public RenderTexture occlusionTexture;	//for SSAO and eclipses, for now will just contain a copy of the screenspace shadowmask, probably not necessary
 		Coroutine checkTexturesCoroutine;
 
@@ -29,11 +28,6 @@ namespace scatterer
 				{
 					depthTexture = Utils.CreateTexture ("ScattererDepthTexture", Screen.width, Screen.height,0, RenderTextureFormat.RFloat, false, FilterMode.Point, 1);
 				}
-				
-				if (Scatterer.Instance.mainSettings.useOceanShaders && Scatterer.Instance.mainSettings.oceanRefraction)
-				{
-					refractionTexture = Utils.CreateTexture ("ScattererRefractionTexture", Screen.width, Screen.height,0, RenderTextureFormat.ARGB32,false,FilterMode.Point,1);
-				}
 			}
 		}
 
@@ -45,8 +39,7 @@ namespace scatterer
 			{
 				yield return new WaitForSeconds (10f);
 
-				if ((!Scatterer.Instance.unifiedCameraMode && (!depthTexture || !depthTexture.IsCreated ())) ||
-				    (Scatterer.Instance.mainSettings.useOceanShaders && Scatterer.Instance.mainSettings.oceanRefraction && (!refractionTexture || !refractionTexture.IsCreated ())))
+				if (!Scatterer.Instance.unifiedCameraMode && (!depthTexture || !depthTexture.IsCreated ()))
 				{
 
 					Utils.LogDebug ("BufferRenderingManager: Recreating textures");
@@ -74,11 +67,6 @@ namespace scatterer
 			{
 				depthTexture.Release ();
 				UnityEngine.Object.Destroy (depthTexture);
-			}
-			if (refractionTexture)
-			{
-				refractionTexture.Release ();
-				UnityEngine.Object.Destroy (refractionTexture);
 			}
 			if (!ReferenceEquals(checkTexturesCoroutine,null))
 			{
