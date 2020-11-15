@@ -43,17 +43,9 @@ namespace scatterer
 		public float percentage;
 		public int currentConfigPoint;
 		
-		EncodeFloat encode;
-		
 		[Persistent]
 		public float experimentalAtmoScale=1f;
-		
-		public float oceanSigma = 0.04156494f;
-		public float _Ocean_Threshold = 25f;
 
-		Vector3 sunViewPortPos=Vector3.zero;
-
-		float alt;
 		public float trueAlt;
 		
 		string celestialBodyName;
@@ -202,7 +194,7 @@ namespace scatterer
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses);
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", m_manager.hasOcean);
 
-			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode)
+			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
 			{
 				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
 				if (!godraysRenderer.Init(Scatterer.Instance.sunLight, this))
@@ -372,7 +364,8 @@ namespace scatterer
 				UpdateSunflareExtinctions ();
 			}
 
-			scaledScatteringMaterial.SetFloat (ShaderProperties.renderScattering_PROPERTY, (m_manager.parentCelestialBody.pqsController != null) ? (!m_manager.parentCelestialBody.pqsController.isActive ? 1f : 0f ) : 0f); //not sure this is a good way to do it
+			scaledScatteringMaterial.SetFloat (ShaderProperties.renderScattering_PROPERTY, (m_manager.parentCelestialBody.pqsController != null) ? (!m_manager.parentCelestialBody.pqsController.isActive ? 1f : 0f ) : 1f); //not sure this is a good way to do it
+
 			if (!ReferenceEquals (localScatteringProjector, null))
 			{
 				localScatteringProjector.setInScaledSpace (inScaledSpace);
@@ -463,9 +456,7 @@ namespace scatterer
 			{
 				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 				{
-					alt = Vector3.Distance (Scatterer.Instance.nearCamera.transform.position, parentLocalTransform.position);
-					
-					trueAlt = alt - m_radius;
+					trueAlt = Vector3.Distance (Scatterer.Instance.nearCamera.transform.position, parentLocalTransform.position) - m_radius;
 				}
 				interpolateVariables ();
 
@@ -749,16 +740,11 @@ namespace scatterer
 			m_inscatter.Apply ();
 			m_transmit.Apply ();
 			m_irradiance.Apply ();
-			
-			
-			encode = null;
 		}
 		
 		void loadAndConvertRawFile(string textureName, Texture2D targetTexture2D, int channels)
 		{
-			
-			if(encode==null)
-				encode = new EncodeFloat ();
+			EncodeFloat	encode = new EncodeFloat ();
 			
 			string _file = Utils.GameDataPath + assetPath + "/"+textureName+".raw";
 

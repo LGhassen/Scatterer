@@ -32,7 +32,7 @@ namespace scatterer
 			Misc
 		}
 
-		mainMenuTabs selectedTab = mainMenuTabs.Ocean;
+		mainMenuTabs selectedTab = mainMenuTabs.Scattering;
 
 		public int selectedPlanet = 0;
 		public int selectedConfigPoint = 0;
