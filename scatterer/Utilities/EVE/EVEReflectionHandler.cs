@@ -188,7 +188,7 @@ namespace scatterer
 				Utils.LogDebug("Detected EVE 2d cloud layer for planet: "+body);
 			}
 		}
-
+		
 		public void invokeClouds2dReassign(string celestialBodyName)
 		{
 			const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | 
@@ -212,6 +212,12 @@ namespace scatterer
 					scaledSetter.Invoke (cloud2dObj, new object[] { !cloud2dScaled });
 				
 				scaledSetter.Invoke (cloud2dObj, new object[] { cloud2dScaled });
+
+				//set the radius for use in the scatterer shader to have smooth scattering
+				float radius = (float) cloud2dObj.GetType ().GetField ("radius", flags).GetValue (cloud2dObj);
+				GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
+				cloudmesh.GetComponent < MeshRenderer > ().material.SetFloat("_Radius",radius);
+
 			}
 	}
 

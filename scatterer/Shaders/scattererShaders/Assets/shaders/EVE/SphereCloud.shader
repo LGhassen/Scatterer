@@ -107,6 +107,7 @@ Shader "Scatterer-EVE/Cloud" {
 				uniform float3 _Scatterer_Origin;
 				uniform float extinctionThickness;
 				uniform float _PlanetOpacity; //to smooth transition from/to scaledSpace when using flatScaledSpaceModel
+				float _Radius;
 
 	#if defined (GODRAYS_ON)
 				uniform sampler2D _godrayDepthTexture;
@@ -256,17 +257,17 @@ Shader "Scatterer-EVE/Cloud" {
 	#endif
 
 					float3 relWorldPos=worldPos-worldOrigin;
+					relWorldPos = _Radius * normalize(relWorldPos);
+					
 					float alt = length(relWorldPos);
 					float threshold = Rg * 1.00333333;
 
 					relWorldPos = (alt < threshold) ? normalize(relWorldPos) * (threshold) : relWorldPos;   //artifacts fix (black scattering and overbright skyirradiance) when cloud altitude < Rg *( 1 + 2000/600000)
 
 					float3 relCameraPos=WCP-worldOrigin;
-//
-					float3 groundPos = normalize (relWorldPos) * Rg*1.0008;
-					relWorldPos =  lerp(groundPos,relWorldPos,_PlanetOpacity);
 
 					float3 scatteringPos = relWorldPos;
+
 #if defined (GODRAYS_ON) && defined(WORLD_SPACE_ON)
 					float2 depthUV = IN.projPos.xy/IN.projPos.w;
 					float godrayDepth = sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength);
@@ -279,17 +280,16 @@ Shader "Scatterer-EVE/Cloud" {
 					
                 			//extinction from cloud to observer
 					extinction = getExtinction(relCameraPos, relWorldPos, 1.0, 1.0, 1.0);
-					extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );			
 
 					//extinction of light from sun to cloud
-					extinction*=getSkyExtinction(relWorldPos,_Sun_WorldSunDir);
+					extinction *= getSkyExtinction(relWorldPos,_Sun_WorldSunDir);
+
+					extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
+
+					extinction*= getEclipseShadow(relWorldPos, 20.0 * _Sun_WorldSunDir * Rg, 0.0, Rg, Rg);
 
 					//skyLight
 					float3 skyE = SimpleSkyirradiance(relWorldPos, IN.viewDir, _Sun_WorldSunDir);
-					
-
-
-
 
 	#if defined (PRESERVECLOUDCOLORS_OFF)
 					color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction+ inscatter*cloudScatteringMultiplier+skyE*cloudSkyIrradianceMultiplier), color.a); //not bad
