@@ -1054,7 +1054,9 @@ namespace scatterer
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
 			float lerpedScale = Mathf.Lerp (1f, experimentalAtmoScale, (extinctionPosition.magnitude - m_radius) / 2000f);
 			//hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
-			Scatterer.Instance.sunlightModulatorInstance.modulateByColor (AtmosphereUtils.getExtinction (extinctionPosition, m_manager.getDirectionToSun ().normalized, Rt, Rg, m_transmit, lerpedScale));
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, m_manager.getDirectionToSun ().normalized, Rt, Rg, m_transmit, lerpedScale);
+			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
+			Scatterer.Instance.sunlightModulatorInstance.modulateByColor (extinction);
 		}
 
 		void UpdateSunflareExtinctions ()
