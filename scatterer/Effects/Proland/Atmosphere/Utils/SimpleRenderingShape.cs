@@ -10,7 +10,6 @@ namespace scatterer
 {
 	public class SimpleRenderingShape
 	{
-		
 		GameObject meshContainer;
 
 		public GameObject GameObject { get { return meshContainer; } }

@@ -152,7 +152,6 @@
     <Compile Include="Utilities\Camera\WireFrame.cs" />
     <Compile Include="Utilities\Camera\DepthToDistanceCommandBuffer.cs" />
     <Compile Include="Utilities\Misc\Utils.cs" />
-    <Compile Include="Utilities\Misc\SimpleRenderingShape.cs" />
     <Compile Include="Utilities\Misc\MeshFactory.cs" />
     <Compile Include="Utilities\Occlusion\ShadowMaskCopyCommandBuffer.cs" />
     <Compile Include="Utilities\Occlusion\ShadowRemoveFadeCommandBuffer.cs" />
@@ -184,6 +183,7 @@
     <Compile Include="Utilities\EVE\EVEReflectionHandler.cs" />
     <Compile Include="Utilities\Misc\IcoSphere.cs" />
     <Compile Include="c:\gh\scattererGithub\Scatterer\scatterer\Utilities\Occlusion\ShadowMapCopier.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\SimpleRenderingShape.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

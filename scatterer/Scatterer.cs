@@ -31,12 +31,9 @@ namespace scatterer
 		public SunflareManager sunflareManager;
 		public EVEReflectionHandler eveReflectionHandler;
 		public PlanetshineManager planetshineManager;
-		
-		//runtime stuff
-		//TODO: merge all into lightAndShadowManager?
+
 		DisableAmbientLight ambientLightScript;
 		public SunlightModulator sunlightModulatorInstance;
-		//		public ShadowMaskModulateCommandBuffer shadowMaskModulate;
 
 		public ShadowMapRetrieveCommandBuffer shadowMapRetriever;
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
@@ -81,7 +78,7 @@ namespace scatterer
 			{
 				isActive = true;
 
-				loadSettings ();
+				LoadSettings ();
 				scattererCelestialBodiesManager.Init ();
 
 				guiHandler.Init();
@@ -127,7 +124,7 @@ namespace scatterer
 			Utils.FixKopernicusRingsRenderQueue ();			
 			Utils.FixSunsCoronaRenderQueue ();
 
-			addReflectionProbeFixer ();
+			AddReflectionProbeFixer ();
 
 			if (mainSettings.usePlanetShine)
 			{
@@ -168,10 +165,6 @@ namespace scatterer
 				ambientLightScript = (DisableAmbientLight) scaledSpaceCamera.gameObject.AddComponent (typeof(DisableAmbientLight));
 			}
 
-//			//add shadowmask modulator (adds occlusion to shadows)
-//			shadowMaskModulate = (ShadowMaskModulateCommandBuffer)sunLight.AddComponent (typeof(ShadowMaskModulateCommandBuffer));
-//
-			//add shadow far plane fixer
 			if (!unifiedCameraMode)
 				shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
 
@@ -269,12 +262,6 @@ namespace scatterer
 					Component.Destroy(sunlightModulatorInstance);
 				}
 
-//				if (shadowMaskModulate)
-//				{
-//					shadowMaskModulate.OnDestroy();
-//					Component.Destroy(shadowMaskModulate);
-//				}
-
 				if (shadowMapRetriever)
 				{
 					shadowMapRetriever.OnDestroy();
@@ -322,7 +309,7 @@ namespace scatterer
 				}
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
-				saveSettings();
+				SaveSettings();
 			}
 
 			UnityEngine.Object.Destroy (guiHandler);
@@ -334,13 +321,13 @@ namespace scatterer
 			guiHandler.DrawGui ();
 		}
 		
-		public void loadSettings ()
+		public void LoadSettings ()
 		{
 			mainSettings.loadMainSettings ();
 			pluginData.loadPluginData ();
 			planetsConfigsReader.loadConfigs ();
 
-			// Hack: for mainMenu everything is jumbled, so just attempt to load every planet always
+			// HACK: for mainMenu everything is jumbled, so just attempt to load every planet always
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
 				foreach (ScattererCelestialBody _SCB in planetsConfigsReader.scattererCelestialBodies)
@@ -351,7 +338,7 @@ namespace scatterer
 			}
 		}
 		
-		public void saveSettings ()
+		public void SaveSettings ()
 		{
 			pluginData.savePluginData ();
 			mainSettings.saveMainSettingsIfChanged ();
@@ -392,14 +379,14 @@ namespace scatterer
 			}
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				//if are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
+				// If are in main menu, where there is only 1 camera, affect all cameras to Landscape camera
 				scaledSpaceCamera = Camera.allCameras.Single(_cam  => _cam.name == "Landscape Camera");
 				farCamera = scaledSpaceCamera;
 				nearCamera = scaledSpaceCamera;
 			}
 			else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
 			{
-				//if in trackstation, just to get rid of some nullrefs
+				// If in trackstation, just to get rid of some nullrefs
 				farCamera = scaledSpaceCamera;
 				nearCamera = scaledSpaceCamera;
 			}
@@ -475,7 +462,7 @@ namespace scatterer
 						}
 					}
 
-					//and finally force shadow Casting and receiving on celestial bodies if not already set
+					// And finally force shadow Casting and receiving on celestial bodies if not already set
 					foreach (CelestialBody _sc in scattererCelestialBodiesManager.CelestialBodies)
 					{
 						if (_sc.pqsController)
@@ -496,23 +483,19 @@ namespace scatterer
 				if (_light.gameObject.name == "SunLight")
 				{
 					sunLight = _light;
-					Utils.LogDebug ("Found SunLight");
 				}
 				if (_light.gameObject.name == "Scaledspace SunLight")
 				{
 					scaledSpaceSunLight = _light;
-					Utils.LogDebug ("Found Scaledspace SunLight");
 				}
-
 				if (_light.gameObject.name.Contains ("PlanetLight") || _light.gameObject.name.Contains ("Directional light"))
 				{
 					mainMenuLight = _light;
-					Utils.LogDebug ("Found main menu light");
 				}
 			}
 		}
 
-		public void onRenderTexturesLost()
+		public void OnRenderTexturesLost()
 		{
 			foreach (ScattererCelestialBody _cur in planetsConfigsReader.scattererCelestialBodies)
 			{
@@ -528,7 +511,7 @@ namespace scatterer
 		}
 
 		// Just a dummy gameObject so the reflectionProbeChecker can capture the reflection Camera
-		public void addReflectionProbeFixer()
+		public void AddReflectionProbeFixer()
 		{
 			ReflectionProbeCheckerGO = new GameObject ("Scatterer ReflectionProbeCheckerGO");
 			//ReflectionProbeCheckerGO.transform.parent = nearCamera.transform; //VesselViewer doesn't like this for some reason

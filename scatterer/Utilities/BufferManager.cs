@@ -44,7 +44,7 @@ namespace scatterer
 
 					Utils.LogDebug ("BufferRenderingManager: Recreating textures");
 					CreateTextures ();
-					Scatterer.Instance.onRenderTexturesLost();
+					Scatterer.Instance.OnRenderTexturesLost();
 				}
 			}
 		}
