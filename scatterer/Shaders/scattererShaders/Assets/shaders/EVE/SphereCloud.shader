@@ -50,20 +50,20 @@ Shader "Scatterer-EVE/Cloud" {
 				#pragma vertex vert
 				#pragma fragment frag
 				#define MAG_ONE 1.4142135623730950488016887242097
-//				#pragma multi_compile_fwdbase
 				#pragma multi_compile SOFT_DEPTH_OFF SOFT_DEPTH_ON
 				#pragma multi_compile WORLD_SPACE_OFF WORLD_SPACE_ON
 				#pragma multi_compile MAP_TYPE_1 MAP_TYPE_CUBE_1 MAP_TYPE_CUBE2_1 MAP_TYPE_CUBE6_1
 
-				//scatterer eclipses and ring shadows
+				#pragma multi_compile SCATTERER_OFF SCATTERER_ON
+#ifdef SCATTERER_ON
 				#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-//				#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
+				#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 				#pragma multi_compile PRESERVECLOUDCOLORS_OFF PRESERVECLOUDCOLORS_ON
 				#pragma multi_compile GODRAYS_OFF GODRAYS_ON
-				#pragma multi_compile SCATTERER_OFF SCATTERER_ON
+#endif
 				
 #ifndef MAP_TYPE_CUBE2_1
-#pragma multi_compile ALPHAMAP_N_1 ALPHAMAP_1
+				#pragma multi_compile ALPHAMAP_N_1 ALPHAMAP_1
 #endif
 				#include "alphaMap.cginc"
 				#include "cubeMap.cginc"
@@ -72,6 +72,7 @@ Shader "Scatterer-EVE/Cloud" {
 				#include "../CommonAtmosphere.cginc"
 				#include "../EclipseCommon.cginc"
 				#include "../Atmo/Godrays/GodraysCommon.cginc"
+				#include "../RingCommon.cginc"	
 #endif
 				
 				CUBEMAP_DEF_1(_MainTex)
@@ -104,9 +105,7 @@ Shader "Scatterer-EVE/Cloud" {
 				uniform float cloudScatteringMultiplier;
 				uniform float cloudSkyIrradianceMultiplier;
 				uniform float3 _Sun_WorldSunDir;
-				uniform float3 _Scatterer_Origin;
 				uniform float extinctionThickness;
-				uniform float _PlanetOpacity; //to smooth transition from/to scaledSpace when using flatScaledSpaceModel
 				float _Radius;
 
 	#if defined (GODRAYS_ON)
@@ -114,14 +113,6 @@ Shader "Scatterer-EVE/Cloud" {
 				uniform float _godrayStrength;
 	#endif
 #endif
-
-//			//stuff for kopernicus ring shadows
-//#if defined (SCATTERER_ON) && defined (RINGSHADOW_ON)	
-//			uniform sampler2D ringTexture;
-//			uniform float ringInnerRadius;
-//			uniform float ringOuterRadius;
-//			uniform float3 ringNormal;
-//#endif
 
 				struct appdata_t {
 					float4 vertex : POSITION;
@@ -286,7 +277,7 @@ Shader "Scatterer-EVE/Cloud" {
 
 					extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
 
-					extinction*= getEclipseShadow(relWorldPos, 20.0 * _Sun_WorldSunDir * Rg, 0.0, Rg, Rg);
+					extinction*= getEclipseShadow(relWorldPos, 20.0 * _Sun_WorldSunDir * Rg, 0.0, Rg, Rg); //just the terminator, extinction ignores ground intersection
 
 					//skyLight
 					float3 skyE = SimpleSkyirradiance(relWorldPos, IN.viewDir, _Sun_WorldSunDir);
@@ -294,45 +285,18 @@ Shader "Scatterer-EVE/Cloud" {
 	#if defined (PRESERVECLOUDCOLORS_OFF)
 					color = float4(hdrNoExposure(color.rgb*cloudColorMultiplier*extinction+ inscatter*cloudScatteringMultiplier+skyE*cloudSkyIrradianceMultiplier), color.a); //not bad
 	#else
-					float3 cloudColor = color.rgb*cloudColorMultiplier*extinction*hdrNoExposure(skyE * cloudSkyIrradianceMultiplier);
-					float3 otherColors = hdrNoExposure(inscatter * cloudScatteringMultiplier);
-					
-					color = float4(cloudColor + (float3(1.0,1.0,1.0)-cloudColor)*otherColors, color.a); //basically soft blend
+					float3 cloudColor = color.rgb*cloudColorMultiplier*(extinction+hdrNoExposure(skyE * cloudSkyIrradianceMultiplier));
+					inscatter = hdrNoExposure(inscatter * cloudScatteringMultiplier);
+					color = float4(cloudColor + (float3(1.0,1.0,1.0)-cloudColor)*inscatter, color.a); //basically soft blend
 	#endif					
-
 
 	#if defined (ECLIPSES_ON)				
 					color.rgb*=getEclipseShadows(worldPos);
 	#endif
-		
-///////////////////RING SHADOWS///////////////////////////////			
-//#if defined (RINGSHADOW_ON)
-//				//raycast from atmo to ring plane and find intersection			
-//				float3 ringIntersectPt = LinePlaneIntersection(worldPos, _Sun_WorldSunDir, ringNormal, _Scatterer_Origin);
-//
-//				//draw ring shadow at Rt height for now to coincide with atmo shading
-//				//float3 ringIntersectPt = LinePlaneIntersection(normalize(relWorldPos)*Rt, _Sun_WorldSunDir, ringNormal, float3(0,0,0));
-//
-//				//calculate ring texture position on intersect
-//				float distance = length (ringIntersectPt - _Scatterer_Origin);
-//				float ringTexturePosition = (distance - ringInnerRadius) / (ringOuterRadius - ringInnerRadius); //inner and outer radiuses need are converted to local space coords on plugin side
-//				ringTexturePosition = 1 - ringTexturePosition; //flip to match UVs			
-//
-////				//read 1-alpha of ring texture
-////				float ringShadow = 1- (tex2D(ringTexture, float2 (ringTexturePosition,ringTexturePosition))).a;
-//
-//				float4 ringColor = tex2D(ringTexture, float2 (ringTexturePosition,ringTexturePosition));
-//				float ringShadow = (1-ringColor.a)*((ringColor.x+ringColor.y+ringColor.z)*0.33334);
-//
-//				//don't apply any shadows if intersect point is not between inner and outer radius
-//				ringShadow = (ringTexturePosition > 1 || ringTexturePosition < 0 ) ? 1 : ringShadow;
-//
-//				color.rgb*=ringShadow;
-//#endif
 
-//					OUT.color = lerp(scolor, color, _MinLight);					
-//					color.rgb*= MultiBodyShadow(IN.worldVert, _SunRadius, _SunPos, _ShadowBodies); //causes artifacts with SVE for some reason
-
+	#if defined (RINGSHADOW_ON)
+					color.rgb *= getLinearRingColor(relWorldPos, _Sun_WorldSunDir, 0.0).a;
+	#endif
 					OUT.color = lerp(color, texColor, _MinLight);
 #endif //endif SCATTERER_ON
 
