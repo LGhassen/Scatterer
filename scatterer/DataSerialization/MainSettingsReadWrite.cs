@@ -91,7 +91,6 @@ namespace scatterer
 
 		[Persistent]
 		public Vector3 unifiedCamShadowCascadeSplitsOverride=Vector3.zero;
-
 		
 		[Persistent]
 		public float dualCamShadowsDistance=50000f;
@@ -120,13 +119,13 @@ namespace scatterer
 			UrlDir.UrlConfig[] baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
 			if (baseConfigs.Length == 0)
 			{
-				Utils.LogDebug ("No config file found, check your install");
+				Utils.LogError ("No config file found, check your install");
 				return;
 			}
 			
 			if (baseConfigs.Length > 1)
 			{
-				Utils.LogDebug ("Multiple config files detected, check your install");
+				Utils.LogError ("Multiple config files detected, check your install");
 			}
 			
 			ConfigNode.LoadObjectFromConfig (this, (baseConfigs [0]).config);

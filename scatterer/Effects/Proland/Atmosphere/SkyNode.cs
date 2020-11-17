@@ -137,7 +137,7 @@ namespace scatterer
 
 			InitSkySphere ();
 
-			InitPostprocessMaterial (localScatteringMaterial);
+			InitPostprocessMaterialUniforms (localScatteringMaterial);
 
 			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
 			{
@@ -231,7 +231,7 @@ namespace scatterer
 		{
 			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && !ReferenceEquals(localScatteringProjector,null))
 			{
-				UpdatePostProcessMaterial (localScatteringProjector.projector.material);
+				UpdatePostProcessMaterialUniforms (localScatteringProjector.projector.material);
 			}
 			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
@@ -364,11 +364,11 @@ namespace scatterer
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 			mat.SetVector(ShaderProperties._camForward_PROPERTY, Scatterer.Instance.nearCamera.transform.forward);
 
-			UpdatePostProcessMaterial (mat);
+			UpdatePostProcessMaterialUniforms (mat);
 		}
 		
 
-		public void InitPostprocessMaterial (Material mat)
+		public void InitPostprocessMaterialUniforms (Material mat)
 		{
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
@@ -429,7 +429,7 @@ namespace scatterer
 		}
 
 		
-		public void UpdatePostProcessMaterial (Material mat)
+		public void UpdatePostProcessMaterialUniforms (Material mat)
 		{
 			//all these don't need to be on update, just make it so that the UI sets them
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
@@ -1016,7 +1016,7 @@ namespace scatterer
 					for (int i=0; i<size; i++)
 					{
 						InitUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
-						InitPostprocessMaterial (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
+						InitPostprocessMaterialUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
 
 						Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial, "PRESERVECLOUDCOLORS_ON", "PRESERVECLOUDCOLORS_OFF", EVEIntegration_preserveCloudColors);
 						
@@ -1049,7 +1049,7 @@ namespace scatterer
 				particleMaterial.DisableKeyword ("SCATTERER_OFF");
 			
 				InitUniforms (particleMaterial);
-				InitPostprocessMaterial (particleMaterial);
+				InitPostprocessMaterialUniforms (particleMaterial);
 			
 				Utils.EnableOrDisableShaderKeywords (particleMaterial, "SCATTERER_USE_ORIG_DIR_COLOR_ON", "SCATTERER_USE_ORIG_DIR_COLOR_OFF", Scatterer.Instance.sunlightModulatorInstance);
 			}
@@ -1065,7 +1065,7 @@ namespace scatterer
 				{
 					SetUniforms (clouds2d.Clouds2dMaterial);
 					//if (!inScaledSpace)
-					UpdatePostProcessMaterial (clouds2d.Clouds2dMaterial);
+					UpdatePostProcessMaterialUniforms (clouds2d.Clouds2dMaterial);
 					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, cloudColorMultiplier);
 					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudScatteringMultiplier_PROPERTY, cloudScatteringMultiplier);
 					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudSkyIrradianceMultiplier_PROPERTY, cloudSkyIrradianceMultiplier);
@@ -1082,7 +1082,7 @@ namespace scatterer
 				{
 					//TODO: simplify, take one or the other, doesn't need to be done very frame also
 					SetUniforms (volumetricsMat);
-					UpdatePostProcessMaterial (volumetricsMat);
+					UpdatePostProcessMaterialUniforms (volumetricsMat);
 					volumetricsMat.SetVector (ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
 					volumetricsMat.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier);
 				}
@@ -1122,7 +1122,7 @@ namespace scatterer
 		{
 			if (!ReferenceEquals (localScatteringProjector, null))
 			{
-				InitPostprocessMaterial (localScatteringProjector.projector.material);
+				InitPostprocessMaterialUniforms (localScatteringProjector.projector.material);
 			}
 		}	
 	}

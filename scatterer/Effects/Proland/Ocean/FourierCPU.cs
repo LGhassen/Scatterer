@@ -22,73 +22,7 @@ namespace scatterer
             m_size = size; //must be pow2 num
             m_fsize = (float)m_size;
             m_passes = (int)(Mathf.Log(m_fsize) / Mathf.Log(2.0f));
-//            ComputeButterflyLookupTable();
         }
-
-//        int BitReverse(int i)
-//        {
-//            int j = i;
-//            int Sum = 0;
-//            int W = 1;
-//            int M = m_size / 2;
-//            while (M != 0)
-//            {
-//                j = ((i & M) > M - 1) ? 1 : 0;
-//                Sum += j * W;
-//                W *= 2;
-//                M /= 2;
-//            }
-//            return Sum;
-//        }
-
-//        void ComputeButterflyLookupTable()
-//        {
-//            m_butterflyLookupTable = new float[m_size * m_passes * 4];
-//
-//            for (int i = 0; i < m_passes; i++)
-//            {
-//                int nBlocks = (int)Mathf.Pow(2, m_passes - 1 - i);
-//                int nHInputs = (int)Mathf.Pow(2, i);
-//
-//                for (int j = 0; j < nBlocks; j++)
-//                {
-//                    for (int k = 0; k < nHInputs; k++)
-//                    {
-//                        int i1, i2, j1, j2;
-//                        if (i == 0)
-//                        {
-//                            i1 = j * nHInputs * 2 + k;
-//                            i2 = j * nHInputs * 2 + nHInputs + k;
-//                            j1 = BitReverse(i1);
-//                            j2 = BitReverse(i2);
-//                        }
-//                        else
-//                        {
-//                            i1 = j * nHInputs * 2 + k;
-//                            i2 = j * nHInputs * 2 + nHInputs + k;
-//                            j1 = i1;
-//                            j2 = i2;
-//                        }
-//
-//                        float wr = Mathf.Cos(2.0f * Mathf.PI * (float)(k * nBlocks) / m_fsize);
-//                        float wi = Mathf.Sin(2.0f * Mathf.PI * (float)(k * nBlocks) / m_fsize);
-//
-//                        int offset1 = 4 * (i1 + i * m_size);
-//                        m_butterflyLookupTable[offset1 + 0] = j1;
-//                        m_butterflyLookupTable[offset1 + 1] = j2;
-//                        m_butterflyLookupTable[offset1 + 2] = wr;
-//                        m_butterflyLookupTable[offset1 + 3] = wi;
-//
-//                        int offset2 = 4 * (i2 + i * m_size);
-//                        m_butterflyLookupTable[offset2 + 0] = j1;
-//                        m_butterflyLookupTable[offset2 + 1] = j2;
-//                        m_butterflyLookupTable[offset2 + 2] = -wr;
-//                        m_butterflyLookupTable[offset2 + 3] = -wi;
-//
-//                    }
-//                }
-//            }
-//        }
 
         //Performs two FFTs on two complex numbers packed in a vector4
         Vector4 FFT(Vector2 w, Vector4 input1, Vector4 input2)
@@ -288,29 +222,8 @@ namespace scatterer
 					}
 				}
 			}
-			
-			
+
 			return idx;
 		}
-
-
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

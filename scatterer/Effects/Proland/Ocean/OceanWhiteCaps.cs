@@ -55,8 +55,6 @@ namespace scatterer {
 			
 			CreateMap(ref m_foam0, format, m_foamAnsio, true);
 			CreateMap(ref m_foam1, format, m_foamAnsio, true);
-
-//			CreateMap(ref m_foam1, format, m_foamAnsio, m_manager.GetCore().foamMipMapping);
 			
 			m_foam1.mipMapBias = m_foamMipMapBias;
 			
@@ -91,7 +89,6 @@ namespace scatterer {
 			// Init jacobians (5,6,7)
 			RenderTexture[] buffers567 = new RenderTexture[]{m_fourierBuffer5[1], m_fourierBuffer6[1], m_fourierBuffer7[1]};
 			m_initJacobiansMat.SetFloat (ShaderProperties._T_PROPERTY, t);
-			//RTUtility.MultiTargetBlit(buffers567, m_initJacobiansMat);
 			RTUtility.MultiTargetBlit(buffers567, m_initJacobiansMat, 0);
 		}
 		

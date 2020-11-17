@@ -38,7 +38,7 @@ namespace scatterer {
 	 * Extend the base class OceanNode to provide the data need 
 	 * to create the waves using fourier transform which can then be applied
 	 * to the projected grid handled by the OceanNode.
-	 * All the fourier transforms are performed on the GPU
+	 * All the fourier transforms are performed on the CPU
 	 */
 	public class OceanFFTcpu: OceanNode {
 		
@@ -57,26 +57,14 @@ namespace scatterer {
 		
 		public int m_ansio = 2;
 		
-		//A higher wind speed gives greater swell to the waves
-		[Persistent] public float m_windSpeed = 5.0f;
-		
-		//A lower number means the waves last longer and will build up larger waves
-		[Persistent] public float m_omega = 0.84f;
-		
-		//Size in meters (i.e. in spatial domain) of each grid
-//		[Persistent] 
-		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);
-		
-		//strenght of sideways displacement for each grid
-//		[Persistent]
-		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);
-		
-		//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
-		//		[SerializeField]
-		//		int m_fourierGridSize = 256;
-		public int m_fourierGridSize = 128;
-		
-		//int m_varianceSize = 16;
+
+		[Persistent] public float m_windSpeed = 5.0f;							//A higher wind speed gives greater swell to the waves
+		[Persistent] public float m_omega = 0.84f;								//A lower number means the waves last longer and will build up larger waves
+
+		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);				//Size in meters (i.e. in spatial domain) of each grid
+		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);		//Strength of sideways displacement for each grid
+		public int m_fourierGridSize = 128;										//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
+
 		[Persistent] public int m_varianceSize = 4;
 		
 		float m_fsize;

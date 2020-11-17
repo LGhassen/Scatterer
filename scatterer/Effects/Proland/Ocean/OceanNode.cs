@@ -216,7 +216,7 @@ namespace scatterer
 
 			if (underwaterMode)
 			{
-				m_manager.GetSkyNode ().UpdatePostProcessMaterial (underwaterMaterial);
+				m_manager.GetSkyNode ().UpdatePostProcessMaterialUniforms (underwaterMaterial);
 			}
 
 			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
@@ -314,7 +314,7 @@ namespace scatterer
 				m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 
 			m_oceanMaterial.renderQueue=2501;
-			m_manager.GetSkyNode ().InitPostprocessMaterial (m_oceanMaterial);
+			m_manager.GetSkyNode ().InitPostprocessMaterialUniforms (m_oceanMaterial);
 			
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
 			m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
@@ -341,7 +341,7 @@ namespace scatterer
 		void InitUnderwaterMaterial ()
 		{
 			underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterProjector")]);
-			m_manager.GetSkyNode ().InitPostprocessMaterial (underwaterMaterial);
+			m_manager.GetSkyNode ().InitPostprocessMaterialUniforms (underwaterMaterial);
 			underwaterMaterial.renderQueue = 2502; //draw over fairings which is 2450 and over ocean which is 2501
 			
 			underwaterMaterial.SetFloat ("transparencyDepth", transparencyDepth);

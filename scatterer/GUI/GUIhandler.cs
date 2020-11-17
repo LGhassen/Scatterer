@@ -613,8 +613,6 @@ namespace scatterer
 
 			oceanModularGUI.ClearModules ();
 
-
-
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Surface settings"));
 			oceanModularGUI.AddModule(new GUIModuleVector3("Ocean Upwelling Color", oceanNode, "m_oceanUpwellingColor"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Transparency Depth", oceanNode, "transparencyDepth"));

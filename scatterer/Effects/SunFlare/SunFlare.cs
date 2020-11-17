@@ -1,7 +1,7 @@
 //rendering steps
 //scaledSpaceCamera.OnPrecull -> skynodes update the extinction texture one after one
 //camerahook on the relevant scaledSpace or farCamera -> clear the extinction texture before the next frame
-//						while taking care of keeping it around until the rendering has finished (either nearCamera or scaledCamera)
+//while taking care of keeping it around until the rendering has finished (either nearCamera or scaledCamera)
 
 
 using UnityEngine;

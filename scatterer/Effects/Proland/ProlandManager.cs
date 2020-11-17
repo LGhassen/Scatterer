@@ -13,7 +13,7 @@ using UnityEngine;
 namespace scatterer
 {
 	/*
-	 * A manger to organise what order update functions are called
+	 * A manager to organise what order update functions are called
 	 * Manages all effects taken from Proland (ie Precomputed Scattering and Ocean, maybe one day forests...)
 	 * The class structures from original Proland are kept, with some added Utilities related to scatterer and KSP
 	 * Provides a location for common settings and allows the nodes to access each other

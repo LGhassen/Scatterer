@@ -45,7 +45,7 @@ namespace scatterer
 			}
 			catch (Exception stupid)
 			{
-				Utils.LogDebug("Couldn't load pluginData "+stupid.ToString());
+				Utils.LogError("Couldn't load pluginData "+stupid.ToString());
 			}
 		}
 		
@@ -58,7 +58,7 @@ namespace scatterer
 			}
 			catch (Exception stupid)
 			{
-				Utils.LogDebug("Couldn't save pluginData "+stupid.ToString());
+				Utils.LogError("Couldn't save pluginData "+stupid.ToString());
 			}
 		}
 	}

@@ -42,31 +42,24 @@ namespace scatterer {
 
 		WriteFloat m_writeFloat;
 
-		public float WAVE_CM = 0.23f; // Eq 59
-		
-		public float WAVE_KM = 370.0f; // Eq 59
+		public float WAVE_CM = 0.23f;	// Eq 59
+		public float WAVE_KM = 370.0f;	// Eq 59
+
 		[Persistent] public float AMP = 1.0f;
 		
-		Material m_initSpectrumMat;
-		
-		Material m_initDisplacementMat;
+		Material m_initSpectrumMat, m_initDisplacementMat;
 		
 		public int m_ansio = 2;
 		
-		//A higher wind speed gives greater swell to the waves
-		[Persistent] public float m_windSpeed = 5.0f;
+
+		[Persistent] public float m_windSpeed = 5.0f;							//A higher wind speed gives greater swell to the waves
+		[Persistent] public float m_omega = 0.84f;								//A lower number means the waves last longer and will build up larger waves
+
+		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);				//Size in meters (i.e. in spatial domain) of each grid
+		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);		//strenght of sideways displacement for each grid
 		
-		//A lower number means the waves last longer and will build up larger waves
-		[Persistent] public float m_omega = 0.84f;
-		
-		//Size in meters (i.e. in spatial domain) of each grid
-		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);
-		
-		//strenght of sideways displacement for each grid
-		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);
-		
-		//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
-		public int m_fourierGridSize = 128;
+
+		public int m_fourierGridSize = 128;										//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 		
 		private int m_varianceSize = SystemInfo.supportsComputeShaders ? 16 : 4;
 		
@@ -103,6 +96,7 @@ namespace scatterer {
 		}
 
 		[Persistent] public float maxWaveInteractionShipAltitude = 500.0f;
+
 		private ComputeShader findHeightsShader;
 		private List<PartBuoyancy> partsBuoyancies = new List<PartBuoyancy>();
 		private bool heightsRequestInProgress=false;
@@ -171,8 +165,7 @@ namespace scatterer {
 			return new Vector2((k.x * k.x) * w, (k.y * k.y) * w) * (spectrumX * spectrumX + spectrumY * spectrumY) * 2.0f;
 		}
 		
-		
-		
+
 		/// <summary>
 		/// Iterate over the spectrum and find the variance.
 		/// Use in the BRDF equations.
@@ -214,15 +207,16 @@ namespace scatterer {
 		protected virtual void InitWaveSpectrum(float t)
 		{
 			// init heights (0) and slopes (1,2)
-			RenderTexture[] buffers012 = new RenderTexture[] {
+			RenderTexture[] buffers012 = new RenderTexture[]
+			{
 				m_fourierBuffer0[1], m_fourierBuffer1[1], m_fourierBuffer2[1]
 			};
 			m_initSpectrumMat.SetFloat (ShaderProperties._T_PROPERTY, t);
-			//			RTUtility.MultiTargetBlit(buffers012, m_initSpectrumMat);
 			RTUtility.MultiTargetBlit(buffers012, m_initSpectrumMat, 0);
 			
 			// Init displacement (3,4)
-			RenderTexture[] buffers34 = new RenderTexture[] {
+			RenderTexture[] buffers34 = new RenderTexture[]
+			{
 				m_fourierBuffer3[1], m_fourierBuffer4[1]
 			};
 			m_initDisplacementMat.SetTexture (ShaderProperties._Buffer1_PROPERTY, m_fourierBuffer1[1]);
@@ -257,8 +251,7 @@ namespace scatterer {
 				Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
 				Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
 				
-				//m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);
-				
+				//m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);				
 				m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
 				if (SystemInfo.supportsComputeShaders)
 				{
@@ -287,12 +280,10 @@ namespace scatterer {
 				}
 			}
 
-			//Make sure base class get updated as well
 			base.UpdateNode();
 		}
 		
 		public override void Cleanup()
-			//		protected override void OnDestroy()
 		{
 			base.Cleanup();
 			
@@ -306,8 +297,6 @@ namespace scatterer {
 			m_spectrum23.Release();
 			
 			m_WTable.Release();
-			//m_variance.Release();
-			//			Destroy (m_variance);
 			
 			for (int i = 0; i < 2; i++) {
 				m_fourierBuffer0[i].Release();
@@ -318,7 +307,8 @@ namespace scatterer {
 			}
 		}
 		
-		protected virtual void CreateRenderTextures() {
+		protected virtual void CreateRenderTextures()
+		{
 			
 			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBFloat;
 			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
@@ -341,7 +331,6 @@ namespace scatterer {
 			m_spectrum01 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 			m_spectrum01.filterMode = FilterMode.Point;
 			m_spectrum01.wrapMode = TextureWrapMode.Repeat;
-//			m_spectrum01.enableRandomWrite = false;
 			m_spectrum01.enableRandomWrite = false;
 			m_spectrum01.Create();
 			
@@ -378,10 +367,12 @@ namespace scatterer {
 			
 		}
 		
-		protected void CreateBuffer(ref RenderTexture[] tex, RenderTextureFormat format) {
+		protected void CreateBuffer(ref RenderTexture[] tex, RenderTextureFormat format)
+		{
 			tex = new RenderTexture[2];
 			
-			for (int i = 0; i < 2; i++) {
+			for (int i = 0; i < 2; i++)
+			{
 				tex[i] = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 				tex[i].filterMode = FilterMode.Point;
 				tex[i].wrapMode = TextureWrapMode.Clamp;
@@ -389,7 +380,8 @@ namespace scatterer {
 			}
 		}
 		
-		protected void CreateMap(ref RenderTexture map, RenderTextureFormat format, int ansio, bool useMipMaps) {
+		protected void CreateMap(ref RenderTexture map, RenderTextureFormat format, int ansio, bool useMipMaps)
+		{
 			map = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 			map.filterMode = FilterMode.Trilinear;
 			map.wrapMode = TextureWrapMode.Repeat;
@@ -402,11 +394,13 @@ namespace scatterer {
 			return x * x;
 		}
 		
-		float omega(float k) {
+		float omega(float k)
+		{
 			return Mathf.Sqrt(9.81f * k * (1.0f + sqr(k / WAVE_KM)));
 		} // Eq 24
 		
-		float Spectrum(float kx, float ky, bool omnispectrum) {
+		float Spectrum(float kx, float ky, bool omnispectrum)
+		{
 			//I know this is a big chunk of ugly math but dont worry to much about what it all means
 			//It recreates a statistcally representative model of a wave spectrum in the frequency domain.
 
@@ -462,7 +456,8 @@ namespace scatterer {
 			return AMP * (Bl + Bh) * (1.0f + Delta * Mathf.Cos(2.0f * phi)) / (2.0f * Mathf.PI * sqr(sqr(k))) * tweak; // Eq 67
 		}
 		
-		Vector2 GetSpectrumSample(float i, float j, float lengthScale, float kMin) {
+		Vector2 GetSpectrumSample(float i, float j, float lengthScale, float kMin)
+		{
 			float dk = 2.0f * Mathf.PI / lengthScale;
 			float kx = i * dk;
 			float ky = j * dk;
@@ -482,7 +477,8 @@ namespace scatterer {
 			return result;
 		}
 		
-		float GetSlopeVariance(float kx, float ky, Vector2 spectrumSample) {
+		float GetSlopeVariance(float kx, float ky, Vector2 spectrumSample)
+		{
 			float kSquare = kx * kx + ky * ky;
 			float real = spectrumSample.x;
 			float img = spectrumSample.y;
@@ -490,8 +486,8 @@ namespace scatterer {
 			return kSquare * hSquare * 2.0f;
 		}
 		
-		void GenerateWavesSpectrum() {
-			
+		void GenerateWavesSpectrum()
+		{
 			// Slope variance due to all waves, by integrating over the full spectrum.
 			// Used by the BRDF rendering model
 			float theoreticSlopeVariance = 0.0f;
@@ -516,8 +512,10 @@ namespace scatterer {
 			
 			UnityEngine.Random.seed = 0;
 			
-			for (int x = 0; x < m_fourierGridSize; x++) {
-				for (int y = 0; y < m_fourierGridSize; y++) {
+			for (int x = 0; x < m_fourierGridSize; x++)
+			{
+				for (int y = 0; y < m_fourierGridSize; y++)
+				{
 					idx = x + y * m_fourierGridSize;
 					i = (x >= m_fourierGridSize / 2) ? (float)(x - m_fourierGridSize) : (float) x;
 					j = (y >= m_fourierGridSize / 2) ? (float)(y - m_fourierGridSize) : (float) y;
@@ -546,28 +544,28 @@ namespace scatterer {
 					totalSlopeVariance += GetSlopeVariance(i / m_gridSizes.w, j / m_gridSizes.w, sample34ZW);
 				}
 			}
-			
-			//Write floating point data into render texture
+
 			m_writeFloat.WriteIntoRenderTexture(m_spectrum01, 4, spectrum01);
 			m_writeFloat.WriteIntoRenderTexture(m_spectrum23, 4, spectrum23);
 			
 			if (!SystemInfo.supportsComputeShaders)
 			{
-				//			Compute variance for the BRDF 
-				//			copied from the dx9 project
+				// Compute variance for the BRDF, copied from the dx9 project
 				float slopeVarianceDelta = 0.5f * (theoreticSlopeVariance - totalSlopeVariance);
-				//			
+
 				m_varianceMax = new Vector2 (float.NegativeInfinity, float.NegativeInfinity);
 			
 				Vector2[, , ] variance32bit = new Vector2[m_varianceSize, m_varianceSize, m_varianceSize];
 				Color[] variance8bit = new Color[m_varianceSize * m_varianceSize * m_varianceSize];
-				//			
-				for (int x = 0; x < m_varianceSize; x++) {
-					for (int y = 0; y < m_varianceSize; y++) {
-						for (int z = 0; z < m_varianceSize; z++) {
+
+				for (int x = 0; x < m_varianceSize; x++)
+				{
+					for (int y = 0; y < m_varianceSize; y++)
+					{
+						for (int z = 0; z < m_varianceSize; z++)
+						{
 							variance32bit [x, y, z] = ComputeVariance (slopeVarianceDelta, spectrum01, spectrum23, x, y, z);
-							//problematic line
-						
+
 							if (variance32bit [x, y, z].x > m_varianceMax.x)
 								m_varianceMax.x = variance32bit [x, y, z].x;
 							if (variance32bit [x, y, z].y > m_varianceMax.y)
@@ -576,9 +574,12 @@ namespace scatterer {
 					}
 				}
 			
-				for (int x = 0; x < m_varianceSize; x++) {
-					for (int y = 0; y < m_varianceSize; y++) {
-						for (int z = 0; z < m_varianceSize; z++) {
+				for (int x = 0; x < m_varianceSize; x++)
+				{
+					for (int y = 0; y < m_varianceSize; y++)
+					{
+						for (int z = 0; z < m_varianceSize; z++)
+						{
 							idx = x + y * m_varianceSize + z * m_varianceSize * m_varianceSize;
 						
 							variance8bit [idx] = new Color (variance32bit [x, y, z].x / m_varianceMax.x, variance32bit [x, y, z].y / m_varianceMax.y, 0.0f, 1.0f);
@@ -611,7 +612,6 @@ namespace scatterer {
 				m_varianceShader.Dispatch(0,m_varianceSize/4,m_varianceSize/4,m_varianceSize/4);
 				
 				//Find the maximum value for slope variance
-				
 				ComputeBuffer buffer = new ComputeBuffer(m_varianceSize*m_varianceSize*m_varianceSize, sizeof(float));
 				CBUtility.ReadFromRenderTexture(m_varianceRenderTexture, 1, buffer, ShaderReplacer.Instance.LoadedComputeShaders["ReadData"]);
 				
@@ -628,7 +628,8 @@ namespace scatterer {
 			
 		}
 		
-		void CreateWTable() {
+		void CreateWTable()
+		{
 			//Some values need for the InitWaveSpectrum function can be precomputed
 			Vector2 uv, st;
 			float k1, k2, k3, k4, w1, w2, w3, w4;
@@ -659,8 +660,7 @@ namespace scatterer {
 					
 				}
 			}
-			
-			//Write floating point data into render texture
+
 			m_writeFloat.WriteIntoRenderTexture(m_WTable, 4, table);
 		}
 		
@@ -764,8 +764,6 @@ namespace scatterer {
 
 			partsBuoyancies.Clear ();
 			cameraHeightRequested = false;
-
-			//Utils.LogInfo ("GPU readback latency :" + frameLatencyCounter.ToString ());
 		}
 
 		void RequestAsyncWaterLevelHeights (List<Vector2> positionsList)
