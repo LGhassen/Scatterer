@@ -122,7 +122,6 @@
      <None Include="Assets\Shaders\Ocean\SlopeVariance.compute" />
      <None Include="Assets\Shaders\EVE\alphaMap.cginc" />
      <None Include="Assets\Shaders\Ocean\underwaterPostProcessing32bitViewSpaceDepth.shader" />
-     <None Include="Assets\Shaders\EVE\SphereCloudShadowMap.shader" />
      <None Include="Assets\Shaders\Ocean\InvisibleOcean.shader" />
      <None Include="Assets\Shaders\Ocean\OceanWhiteCapsModProj3.shader" />
      <None Include="Assets\Shaders\Grass\GrassBak.shader" />
@@ -132,9 +131,10 @@
      <None Include="Assets\Shaders\Ocean\Caustics\CompositeCausticsGodrays.shader" />
      <None Include="Assets\Shaders\RingCommon.cginc" />
      <None Include="Assets\Shaders\EVE\SphereCloud.shader" />
-     <None Include="Assets\Shaders\Atmo\Godrays\GodraysCommon.cginc" />
+     <None Include="Assets\Shaders\EVE\SphereCloudShadowMap.shader" />
      <None Include="Assets\Shaders\Ocean\InitJacobians.shader" />
      <None Include="Assets\Shaders\Ocean\Caustics\GodraysSoftAdd.shader" />
+     <None Include="Assets\Shaders\Atmo\Godrays\GodraysCommon.cginc" />
      <None Include="Assets\Shaders\Instancing\Textured With Detail.shader" />
      <None Include="Assets\Shaders\Shadows\FixedScreenSpaceShadows.cginc" />
      <None Include="Assets\Shaders\Occlusion\ModulateShadowMaskWithOcclusion.shader" />
