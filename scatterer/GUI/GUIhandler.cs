@@ -507,7 +507,7 @@ namespace scatterer
 				GUILayout.Label ("Preserve cloud colors*");
 				GUILayout.TextField (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.EVEIntegration_preserveCloudColors.ToString ());
 				if (GUILayout.Button ("Toggle"))
-					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePreserveCloudColors ();
+					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.TogglePreserveCloudColors ();
 				GUILayout.EndHorizontal ();
 				GUIfloat ("Godray alpha threshold* (alpha value above which a cloud casts a godray)", ref godrayCloudAlphaThreshold, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.godrayCloudAlphaThreshold);
 				//								GUIfloat("Volumetrics Scattering Multiplier", ref volumetricsScatteringMultiplier, ref Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsScatteringMultiplier);
@@ -522,7 +522,7 @@ namespace scatterer
 			if (GUILayout.Button ("Set")) {
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimBlend = rimBlend;
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.rimpower = rimpower;
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.TweakStockAtmosphere ();
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
@@ -540,7 +540,7 @@ namespace scatterer
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.specB = specB;
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.shininess = shininess;
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.flattenScaledSpaceMesh = flattenScaledSpaceMesh;
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakStockAtmosphere ();
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.TweakStockAtmosphere ();
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
@@ -548,7 +548,7 @@ namespace scatterer
 			flattenScaledSpaceMesh = (float)(Convert.ToDouble (GUILayout.TextField (flattenScaledSpaceMesh.ToString ("0.000"))));
 			if (GUILayout.Button ("Set")) {
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.flattenScaledSpaceMesh = flattenScaledSpaceMesh;
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.tweakScaledMesh();
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.TweakScaledMesh();
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.EndScrollView ();
@@ -563,7 +563,7 @@ namespace scatterer
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
 			if (GUILayout.Button ("Toggle PostProcessing")) {
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.togglePostProcessing ();
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.TogglePostProcessing ();
 			}
 			GUILayout.EndHorizontal ();
 			//							GUILayout.BeginHorizontal ();
@@ -578,10 +578,10 @@ namespace scatterer
 			//							GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
 			if (GUILayout.Button ("Save atmo")) {
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.saveToConfigNode ();
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.SaveToConfigNode ();
 			}
 			if (GUILayout.Button ("Load atmo")) {
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.loadFromConfigNode ();
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.LoadFromConfigNode ();
 				getSettingsFromSkynode ();
 				loadConfigPoint (selectedConfigPoint);
 			}
@@ -596,9 +596,9 @@ namespace scatterer
 					Scatterer.Instance.eveReflectionHandler.MapEVEClouds ();
 					foreach (ScattererCelestialBody _cel in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies) {
 						if (_cel.active) {
-							_cel.m_manager.m_skyNode.initiateEVEClouds ();
+							_cel.m_manager.m_skyNode.InitEVEClouds ();
 							if (!_cel.m_manager.m_skyNode.inScaledSpace)
-								_cel.m_manager.m_skyNode.mapEVEVolumetrics ();
+								_cel.m_manager.m_skyNode.MapEVEVolumetrics ();
 						}
 					}
 				}

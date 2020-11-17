@@ -44,7 +44,6 @@ uniform float SKY_W;
 uniform float SKY_H;
 uniform float M_PI;
 uniform float3 EARTH_POS;
-uniform float SCALE;
 
 // Rayleigh
 uniform float HR;

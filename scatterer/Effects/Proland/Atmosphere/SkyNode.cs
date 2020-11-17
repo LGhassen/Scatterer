@@ -13,85 +13,44 @@ using KSP.IO;
 
 namespace scatterer
 {
-	/*
-	 *This whole class is overdue one big-ass cleanup
-	 */
 	public class SkyNode: MonoBehaviour
 	{
-		[Persistent]
-		protected string name;
-		public UrlDir.UrlConfig configUrl;
-		
-		SimpleRenderingShape SkySphere;
-		GameObject skySphereGameObject, stockSkyGameObject;
-		MeshRenderer skySphereMeshRenderer, stockScaledPlanetMeshRenderer;
-		Mesh originalScaledMesh, tweakedScaledmesh;
+		[Persistent] protected string name;
 
-		[Persistent]
-		public float flattenScaledSpaceMesh = 0f;
+		[Persistent] public float Rg;	//The radius of the planet
+		[Persistent] public float Rt;	//Radius of the atmosphere
+		[Persistent] float RL;			//RL = Rt + epsilon used to avoid some artifacts due to numerical precision issues in the old Proland code (the one used in scatterer)
+		[Persistent] float HR = 8.0f;	//Half heights for the atmosphere air density (HR) and particle density (HM), this is the height in km that half the particles are found below
+		[Persistent] float HM = 1.2f;
+		[Persistent] Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f); //scatter coefficient for mie
+		[Persistent] Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
+		[Persistent] public float m_mieG = 0.85f; //Asymmetry factor for the mie phase function, a higher number means more light is scattered in the forward direction
 
-		public bool usesCloudIntegration = true;
-		
-		Matrix4x4 castersMatrix1=Matrix4x4.zero;
-		Matrix4x4 castersMatrix2=Matrix4x4.zero;
-		
-		public Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
-		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
-		
-		Vector3 sunPosRelPlanet=Vector3.zero;
+		[Persistent] public string assetPath;
 
-		public float percentage;
-		public int currentConfigPoint;
-		
-		[Persistent]
-		public float experimentalAtmoScale=1f;
+		[Persistent] public float experimentalAtmoScale=1f;
+		[Persistent] public float atmosphereGlobalScale = 1f;
 
-		public float trueAlt;
-		
-		string celestialBodyName;
-		public Transform parentScaledTransform, parentLocalTransform;
+		[Persistent] public float godrayStrength = 0.8f;
+		[Persistent] public float flattenScaledSpaceMesh = 0f;
+		[Persistent] public float rimBlend = 20f;
+		[Persistent] public float rimpower = 600f;
+		[Persistent] public float specR = 0f;
+		[Persistent] public float specG = 0f;
+		[Persistent] public float specB = 0f;
+		[Persistent] public float shininess = 0f;
 
-		GameObject ringObject;
-		float ringInnerRadius, ringOuterRadius;
-		Texture2D ringTexture;
+		[Persistent] public float cloudColorMultiplier=3f;
+		[Persistent] public float cloudScatteringMultiplier=0.2f;
+		[Persistent] public float cloudSkyIrradianceMultiplier=0.05f;
+		[Persistent] public float volumetricsColorMultiplier = 1f;
+		[Persistent] public bool EVEIntegration_preserveCloudColors = false;
+		[Persistent] public float godrayCloudAlphaThreshold = 0.25f;
 
-		bool hasRingObjectAndShadowActivated = false;
+		[Persistent] public List < ConfigPoint > configPoints = new List < ConfigPoint > ();
 
-		public ConfigPoint interpolatedSettings= new ConfigPoint();
-
-		[Persistent]
-		public float cloudColorMultiplier=3f;
-		[Persistent]
-		public float cloudScatteringMultiplier=0.2f;
-		[Persistent]
-		public float cloudSkyIrradianceMultiplier=0.05f;
-		
-		[Persistent]
-		public float volumetricsColorMultiplier = 1f;
-		
-		public bool inScaledSpace = true;
-
-		bool skyNodeInitiated = false;
-
-		public List<Material> EVEvolumetrics = new List<Material>();
-		bool mapVolumetrics=false;
-		int waitCounter=0;
-		
-		public bool postprocessingEnabled = true;
-		
-		float m_radius; // = 600000.0f;
-		//The radius of the planet (Rg), radius of the atmosphere (Rt)
-		[Persistent]
-		public float Rg; // = 600000.0f;
-		[Persistent]
-		public float Rt; // = (64200f/63600f) * 600000.0f;
-		[Persistent]
-		float RL; // = (64210.0f/63600f) * 600000.0f;
-		[Persistent]
-		public float atmosphereGlobalScale = 1f;
-
-		[Persistent]
-		public bool EVEIntegration_preserveCloudColors = false;
+		Texture2D m_inscatter, m_irradiance;
+		public Texture2D m_transmit;
 
 		//Dimensions of the tables
 		const int TRANSMITTANCE_W = 256;
@@ -102,92 +61,59 @@ namespace scatterer
 		const int RES_MU = 128;
 		const int RES_MU_S = 32;
 		const int RES_NU = 8;
-
-		//Half heights for the atmosphere air density (HR) and particle density (HM)
-		//This is the height in km that half the particles are found below
-		[Persistent]
-		float HR = 8.0f;
-		[Persistent]
-		float HM = 1.2f;
-		//scatter coefficient for mie
-		[Persistent]
-		Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f);
-		public Material localScatteringMaterial,m_skyMaterial,scaledScatteringMaterial,sunflareExtinctionMaterial;
-		public AtmosphereProjector localScatteringProjector;
-
-		[Persistent]
-		Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
-		//Asymmetry factor for the mie phase function
-		//A higher number means more light is scattered in the forward direction
-		[Persistent]
-		public float
-			m_mieG = 0.85f;
-		//string m_filePath = "/Proland/Textures/Atmo";
-		public Matrix4x4d m_cameraToScreenMatrix;
 		
-		Texture2D m_inscatter, m_irradiance;
-		public Texture2D m_transmit;
-		
+		string celestialBodyName;
+		public Transform parentScaledTransform, parentLocalTransform;
+
 		public ProlandManager m_manager;
+		public UrlDir.UrlConfig configUrl;
 		
-		[Persistent]
-		public float rimBlend = 20f;
-		[Persistent]
-		public float rimpower = 600f;
-		[Persistent]
-		public float specR = 0f;
-		[Persistent]
-		public float specG = 0f;
-		[Persistent]
-		public float specB = 0f;
-		[Persistent]
-		public float shininess = 0f;
-		[Persistent]
-		public List < ConfigPoint > configPoints = new List < ConfigPoint > ();
-		//public string assetDir;
+		public bool usesCloudIntegration = true;
+		public List<Material> EVEvolumetrics = new List<Material>();
+		bool mappedVolumetrics=false;
+		
+		public float altitude;
+		public float percentage;
+		public int currentConfigPoint;
+		public ConfigPoint interpolatedSettings= new ConfigPoint();
+		public bool inScaledSpace = true;
 
-		[Persistent]
-		public string assetPath;
+		Vector3 sunPosRelPlanet=Vector3.zero;
+		Matrix4x4 castersMatrix1=Matrix4x4.zero;
+		Matrix4x4 castersMatrix2=Matrix4x4.zero;
+		public Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
+		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
 
-		[Persistent]
-		public float godrayStrength = 0.8f;
-
-		[Persistent]
-		public float godrayCloudAlphaThreshold = 0.25f;
-
+		SimpleRenderingShape SkySphere;
+		GameObject skySphereGameObject, stockSkyGameObject;
+		MeshRenderer skySphereMeshRenderer, stockScaledPlanetMeshRenderer;
+		Mesh originalScaledMesh, tweakedScaledmesh;
+		public Material localScatteringMaterial,skyMaterial,scaledScatteringMaterial,sunflareExtinctionMaterial;
+		public AtmosphereProjector localScatteringProjector;
 		public GodraysRenderer godraysRenderer;
+		public bool postprocessingEnabled = true;
+
+		GameObject ringObject;
+		float ringInnerRadius, ringOuterRadius;
+		Texture2D ringTexture;
+		bool hasRingObjectAndShadowActivated = false;
+	
+		bool skyNodeInitiated = false;
 
 		public void Init ()
 		{
-			m_radius = (float) m_manager.GetRadius ();
-			Rt = Rt * (m_radius / Rg);
-			RL = RL * (m_radius / Rg);
-			Rg = m_radius;
-			
-			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
-			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
-			//To get scatterer running in dx9, the texture was packed into a 2D texture. Although dx9 is deprecated now I haven't changed this back
-			m_inscatter = new Texture2D (RES_MU_S * RES_NU, RES_MU * RES_R, TextureFormat.RGBAHalf,false);
-			m_inscatter.wrapMode = TextureWrapMode.Clamp;
-			m_inscatter.filterMode = FilterMode.Bilinear;
-			
-			//Transmittance is responsible for the change in the sun color as it moves. The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-			m_transmit = new Texture2D (TRANSMITTANCE_W, TRANSMITTANCE_H, TextureFormat.RGBAHalf,false);
-			m_transmit.wrapMode = TextureWrapMode.Clamp;
-			m_transmit.filterMode = FilterMode.Bilinear;
-
-			//Irradiance is responsible for the change in light emitted from the sky as the sun moves. The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-			m_irradiance = new Texture2D (SKY_W, SKY_H, TextureFormat.RGBAHalf,false);
-			m_irradiance.wrapMode = TextureWrapMode.Clamp;
-			m_irradiance.filterMode = FilterMode.Bilinear;
+			float celestialBodyRadius = (float) m_manager.GetRadius ();
+			Rt = Rt * (celestialBodyRadius / Rg);
+			RL = RL * (celestialBodyRadius / Rg);
+			Rg = celestialBodyRadius;
 						
-			loadPrecomputedTables ();
+			InitPrecomputedTables ();
 
-			m_skyMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/SkySphere")]);
+			skyMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/SkySphere")]);
 			scaledScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledPlanetScattering")]);
 			localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
 
-			m_skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
+			skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			localScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
@@ -204,12 +130,19 @@ namespace scatterer
 				}
 			}
 
+			if (Scatterer.Instance.mainSettings.useRingShadows)
+			{
+				InitKopernicusRings ();
+			}
+
+			InitSkySphere ();
+
 			InitPostprocessMaterial (localScatteringMaterial);
 
 			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
 			{
 				m_manager.parentCelestialBody.pqsController.isActive = false; 	//sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
-													//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
+																				//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
 			}
 
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
@@ -217,100 +150,8 @@ namespace scatterer
 				localScatteringProjector = new AtmosphereProjector (localScatteringMaterial, parentLocalTransform, Rt);
 			}
 
-			float skySphereSize = 2*(4 * (Rt-Rg) + Rg) / ScaledSpace.ScaleFactor;
-			SkySphere = new SimpleRenderingShape (skySphereSize, m_skyMaterial,true);
-			skySphereGameObject = SkySphere.GameObject;
-
-			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-				skySphereGameObject.layer = 15;
-			else
-				skySphereGameObject.layer = 9;
-
-			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
-			{
-				SkySphereKSCUpdater updater = (SkySphereKSCUpdater) skySphereGameObject.AddComponent(typeof(SkySphereKSCUpdater));
-				updater.parentLocalTransform = parentLocalTransform;
-			}
-			else
-			{
-				skySphereGameObject.transform.position = parentScaledTransform.position;
-				skySphereGameObject.transform.parent = parentScaledTransform;
-			}
-
-			skySphereMeshRenderer = SkySphere.GameObject.GetComponent < MeshRenderer > ();
-			skySphereMeshRenderer.material = m_skyMaterial;
-
-			m_skyMaterial.renderQueue=2999; //this lets modified EVE clouds draw over sky
-			scaledScatteringMaterial.renderQueue=2999;
-
-			skySphereMeshRenderer.enabled = true;
-
-			if (Scatterer.Instance.mainSettings.useRingShadows)
-			{
-				ringObject = GameObject.Find (celestialBodyName + "Ring");
-				if (ringObject)
-				{
-					
-					Utils.LogDebug (" Found ring for " + celestialBodyName);
-
-					Material ringMat = ringObject.GetComponent < MeshRenderer > ().material;
-
-					hasRingObjectAndShadowActivated = true;
-					
-					MonoBehaviour[] scripts = (MonoBehaviour[]) ringObject.GetComponents<MonoBehaviour>();
-					
-					foreach( MonoBehaviour _script in scripts)
-					{						
-						if (_script.GetType().ToString().Contains("Ring")) //production-quality code
-						{
-							const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
-								BindingFlags.Instance | BindingFlags.Static;
-
-							FieldInfo[] fields = _script.GetType().GetFields(flags);
-
-							foreach(FieldInfo fi in fields)
-							{
-								//Utils.Log("fi.Name "+fi.Name+" fi.GetType() "+fi.GetType());
-							}
-							
-							try
-							{
-								ringTexture = _script.GetType().GetField("texture", flags).GetValue(_script) as Texture2D;
-								Utils.LogDebug(" ring texture fetch successful");
-								Utils.LogDebug(" ringTexture.width "+ringTexture.width.ToString());
-								Utils.LogDebug(" ringTexture.height "+ringTexture.height.ToString());
-
-								MeshRenderer ringMR = _script.GetType().GetField("ringMr", flags).GetValue(_script) as MeshRenderer;
-								Utils.LogDebug(" ring MeshRenderer fetch successful");
-
-								ringInnerRadius = ringMR.material.GetFloat("innerRadius");
-								ringOuterRadius = ringMR.material.GetFloat("outerRadius");
-
-								Utils.LogDebug (" ring innerRadius (with parent scale) " + ringInnerRadius.ToString ());
-								Utils.LogDebug (" ring outerRadius (with parent scale) " + ringOuterRadius.ToString ());
-
-								int tiles = (int) _script.GetType().GetField("tiles", flags).GetValue(_script);
-								if (tiles > 0)
-								{
-									throw new Exception("Scatterer doesn't support tiled/thick Kopernicus rings (not implemented)");
-								}
-
-								ringInnerRadius *= 6000; //*6000 to convert to local space size
-								ringOuterRadius *= 6000;
-							}
-							catch (Exception e)
-							{
-								Utils.LogError("Kopernicus ring exception: "+e.ToString());
-								Utils.LogDebug("Disabling ring shadows for "+celestialBodyName);
-								hasRingObjectAndShadowActivated=false;
-							}
-						}
-					}
-				}
-			}
-
-			InitUniforms (m_skyMaterial);
 			InitUniforms (scaledScatteringMaterial);
+			scaledScatteringMaterial.renderQueue=2999;
 
 			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
 			{
@@ -329,7 +170,52 @@ namespace scatterer
 
 				Utils.EnableOrDisableShaderKeywords (sunflareExtinctionMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", m_manager.hasOcean);
 			}
+
+			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
+			
+			TweakStockAtmosphere();
+			if (flattenScaledSpaceMesh != 0f)
+				TweakScaledMesh();
+			AddScaledScatteringMaterialToPlanet();
+			
+			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
+			{
+				InitEVEClouds();
+			}
+			
+			skyNodeInitiated = true;
+			Utils.LogDebug("Skynode initiated for "+celestialBodyName);
 		}
+
+		void InitSkySphere ()
+		{
+			float skySphereSize = 2 * (4 * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor;
+			SkySphere = new SimpleRenderingShape (skySphereSize, skyMaterial, true);
+			skySphereGameObject = SkySphere.GameObject;
+
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+				skySphereGameObject.layer = 15;
+			else
+				skySphereGameObject.layer = 9;
+
+			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			{
+				SkySphereKSCUpdater updater = (SkySphereKSCUpdater)skySphereGameObject.AddComponent (typeof(SkySphereKSCUpdater));
+				updater.parentLocalTransform = parentLocalTransform;
+			}
+			else
+			{
+				skySphereGameObject.transform.position = parentScaledTransform.position;
+				skySphereGameObject.transform.parent = parentScaledTransform;
+			}
+			skySphereMeshRenderer = SkySphere.GameObject.GetComponent<MeshRenderer> ();
+			skySphereMeshRenderer.material = skyMaterial;
+			skySphereMeshRenderer.enabled = true;
+			skyMaterial.renderQueue = 2999; //this lets modified EVE clouds draw over sky
+
+			InitUniforms (skyMaterial);
+		}
+
 		
 		public void OnPreRender()
 		{
@@ -349,7 +235,7 @@ namespace scatterer
 			}
 			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
-				updateEclipseCasters ();
+				UpdateEclipseCasters ();
 			}
 			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
@@ -372,7 +258,7 @@ namespace scatterer
 				localScatteringProjector.updateProjector ();
 			}
 
-			SetUniforms (m_skyMaterial);
+			SetUniforms (skyMaterial);
 			SetUniforms (scaledScatteringMaterial);
 		}
 		
@@ -388,18 +274,16 @@ namespace scatterer
 					inScaledSpace = !m_manager.parentCelestialBody.pqsController.isActive;
 
 
-				//if we go from scaled to local space
-				if (!inScaledSpace && prevState)
+				if (!inScaledSpace && prevState)	//If we go from scaled to local space
 				{
-					//set flag to map EVE volumetrics after a few frames
 					if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
-						mapVolumetrics=true;
+					{
+						StartCoroutine(DelayedMapEVEVolumetrics());
+					}
 				}
 
-				//if we go from local to scaled
-				if (inScaledSpace && !prevState)
+				if (inScaledSpace && !prevState)	//If we go from local to scaled
 				{
-					//clear volumetrics
 					EVEvolumetrics.Clear();
 				}
 			}
@@ -408,69 +292,20 @@ namespace scatterer
 				inScaledSpace = true;
 			}
 
-			//if we need to map volumetrics
-			//wait for a few frames while EVE does its magic
-			//then do the mapping
-			if (mapVolumetrics)
+			if (skyNodeInitiated)
 			{
-				if (waitCounter<10)
-				{
-					waitCounter++;
-				}
-				else
-				{
-					mapVolumetrics=false;
-					waitCounter=0;
-					mapEVEVolumetrics(); //do this last so if it fails we just ignore it
-				}
-			}
-
-			if (!skyNodeInitiated)
-			{
-				m_radius = (float) m_manager.GetRadius ();
-				
-				Rt = (Rt / Rg) * m_radius;
-				RL = (RL / Rg) * m_radius;
-				Rg = m_radius;
-
-				stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
-
-				tweakStockAtmosphere();
-				if (flattenScaledSpaceMesh != 0f)
-					tweakScaledMesh();
-				addScaledScatteringMaterialToPlanet();
-
-				//disable postprocessing and ocean effects for Texture Replacer reflections
-//				DisableEffectsChecker effectsDisabler = atmosphereMesh.AddComponent<DisableEffectsChecker>();
-//				effectsDisabler.manager = m_manager;
-
-				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
-				{
-					initiateEVEClouds();
-				}
-
-				skyNodeInitiated = true;
-				Utils.LogDebug(" Skynode initiated for "+celestialBodyName);
-			}
-			else
-			{
-				if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-				{
-					trueAlt = Vector3.Distance (Scatterer.Instance.nearCamera.transform.position, parentLocalTransform.position) - m_radius;
-				}
-				interpolateVariables ();
+				InterpolateVariables ();
 
 				if (m_manager.hasOcean && !Scatterer.Instance.mainSettings.useOceanShaders)
 				{
-					skySphereMeshRenderer.enabled = (trueAlt>=0f);
-					stockSkyGameObject.SetActive(trueAlt<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
+					skySphereMeshRenderer.enabled = (altitude>=0f);
+					stockSkyGameObject.SetActive(altitude<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
 				}
 			}
 		}
 		
 		public void SetUniforms (Material mat)
 		{
-			//Sets uniforms that this or other gameobjects may need
 			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			mat.SetFloat (ShaderProperties._viewdirOffset_PROPERTY, interpolatedSettings.viewdirOffset);
 			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
@@ -478,7 +313,6 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.extinctionTint_PROPERTY, interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
 			mat.SetFloat (ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
 
-			mat.SetFloat (ShaderProperties.scale_PROPERTY, 1);
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
@@ -510,30 +344,24 @@ namespace scatterer
 
 			if (!ReferenceEquals (godraysRenderer, null))
 			{
-				mat.SetFloat("_godrayStrength", godrayStrength);
+				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
 		}
 		
 		
 		public void SetOceanUniforms (Material mat)
 		{
-			//Sets uniforms that this or other gameobjects may need
 			if (mat == null)
 				return;
 
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
-
 			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
-			
-			mat.SetFloat (ShaderProperties.scale_PROPERTY, 1);
+
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
-			
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
-
 			mat.SetVector(ShaderProperties._camForward_PROPERTY, Scatterer.Instance.nearCamera.transform.forward);
 
 			UpdatePostProcessMaterial (mat);
@@ -547,8 +375,7 @@ namespace scatterer
 			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-			
-			//Consts, best leave these alone
+
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
@@ -574,11 +401,9 @@ namespace scatterer
 
 			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
 
-			//when using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately
-			//instead ocean shader handles scattering internally
-			//when the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
-			//the ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering
-			//this is not needed for stock ocean so disable it
+			//When using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately: Instead ocean shader handles scattering internally
+			//When the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
+			//The ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering, this is not needed for stock ocean so disable it
 			Utils.EnableOrDisableShaderKeywords (mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders);
 
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
@@ -647,7 +472,6 @@ namespace scatterer
 
 		public void InitUniforms (Material mat)
 		{
-			//Init uniforms that this or other gameobjects may need
 			if (mat == null)
 				return;
 			
@@ -658,7 +482,6 @@ namespace scatterer
 			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-			mat.SetFloat (ShaderProperties.scale_PROPERTY, Rg * 1 / m_radius);
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
@@ -676,16 +499,12 @@ namespace scatterer
 			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
 			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
 
-			//ring shadow parameters
 			if (hasRingObjectAndShadowActivated)
 			{
 				Utils.EnableOrDisableShaderKeywords (mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", true);
-
 				mat.SetFloat (ShaderProperties.ringInnerRadius_PROPERTY, ringInnerRadius);
 				mat.SetFloat (ShaderProperties.ringOuterRadius_PROPERTY, ringOuterRadius);
-
 				mat.SetVector (ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
-
 				mat.SetTexture (ShaderProperties.ringTexture_PROPERTY, ringTexture);
 			}
 			else
@@ -693,7 +512,7 @@ namespace scatterer
 				Utils.EnableOrDisableShaderKeywords (mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", false);
 			}
 
-			Utils.EnableOrDisableShaderKeywords (mat, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses);
+			Utils.EnableOrDisableShaderKeywords (mat, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses && HighLogic.LoadedScene != GameScenes.MAINMENU ); //disable bugged eclipses on main menu
 			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
@@ -707,42 +526,57 @@ namespace scatterer
 			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
 		}
 
-		public void togglePostProcessing()
+		public void TogglePostProcessing()
 		{
 			postprocessingEnabled = !postprocessingEnabled;
 		}
 		
-		void loadPrecomputedTables ()
+		void InitPrecomputedTables ()
 		{
-			//load from .half, probably an 8 mb leak every scene change
-			//if no .half file exists, load from .raw file and create .half file
+			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
+			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
+			//To get scatterer running in dx9, the texture was packed into a 2D texture. Although dx9 is deprecated now I haven't changed this back because it works
+			m_inscatter = new Texture2D (RES_MU_S * RES_NU, RES_MU * RES_R, TextureFormat.RGBAHalf,false);
+			m_inscatter.wrapMode = TextureWrapMode.Clamp;
+			m_inscatter.filterMode = FilterMode.Bilinear;
+			
+			//Transmittance is responsible for the change in the sun color as it moves. The raw file is a 2D array of 32 bit floats with a range of 0 to 1
+			m_transmit = new Texture2D (TRANSMITTANCE_W, TRANSMITTANCE_H, TextureFormat.RGBAHalf,false);
+			m_transmit.wrapMode = TextureWrapMode.Clamp;
+			m_transmit.filterMode = FilterMode.Bilinear;
+			
+			//Irradiance is responsible for the change in light emitted from the sky as the sun moves. The raw file is a 2D array of 32 bit floats with a range of 0 to 1
+			m_irradiance = new Texture2D (SKY_W, SKY_H, TextureFormat.RGBAHalf,false);
+			m_irradiance.wrapMode = TextureWrapMode.Clamp;
+			m_irradiance.filterMode = FilterMode.Bilinear;
+
+			//load from .half, if no .half file exists, load from .raw file and create .half file
 			string _file = Utils.GameDataPath + assetPath + "/inscatter.half";
 			if (System.IO.File.Exists(_file))
 				m_inscatter.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
-				loadAndConvertRawFile("inscatter",m_inscatter,4);
+				LoadAndConvertRawFile("inscatter",m_inscatter,4);
 			
 			_file = Utils.GameDataPath + assetPath + "/transmittance.half";
 			
 			if (System.IO.File.Exists(_file))
 				m_transmit.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
-				loadAndConvertRawFile("transmittance",m_transmit,3);
+				LoadAndConvertRawFile("transmittance",m_transmit,3);
 			
 			_file = Utils.GameDataPath + assetPath + "/irradiance.half";
 			
 			if (System.IO.File.Exists(_file))
 				m_irradiance.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
-				loadAndConvertRawFile("irradiance",m_irradiance,3);
-			
-			
+				LoadAndConvertRawFile("irradiance",m_irradiance,3);
+
 			m_inscatter.Apply ();
 			m_transmit.Apply ();
 			m_irradiance.Apply ();
 		}
 		
-		void loadAndConvertRawFile(string textureName, Texture2D targetTexture2D, int channels)
+		void LoadAndConvertRawFile(string textureName, Texture2D targetTexture2D, int channels)
 		{
 			EncodeFloat	encode = new EncodeFloat ();
 			
@@ -785,7 +619,7 @@ namespace scatterer
 		{
 			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange)
 			{
-				saveToConfigNode ();
+				SaveToConfigNode ();
 			}
 
 			if (m_transmit)
@@ -839,7 +673,7 @@ namespace scatterer
 					
 					//volumetrics
 					//if in local mode and mapping is done
-					if (!inScaledSpace && !mapVolumetrics)
+					if (!inScaledSpace && mappedVolumetrics)
 					{
 						size = EVEvolumetrics.Count;
 						
@@ -860,7 +694,7 @@ namespace scatterer
 				parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = originalScaledMesh;
 		}
 
-		public bool loadFromConfigNode ()
+		public bool LoadFromConfigNode ()
 		{
 			ConfigNode cnToLoad = new ConfigNode();
 			ConfigNode[] configNodeArray;
@@ -889,11 +723,11 @@ namespace scatterer
 
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			
-				m_radius = (float)m_manager.GetRadius ();
+				float celestialBodyRadius = (float)m_manager.GetRadius ();
 			
-				Rt = (Rt / Rg) * m_radius;
-				RL = (RL / Rg) * m_radius;
-				Rg = m_radius;
+				Rt = (Rt / Rg) * celestialBodyRadius;
+				RL = (RL / Rg) * celestialBodyRadius;
+				Rg = celestialBodyRadius;
 			}
 			else
 			{
@@ -910,7 +744,7 @@ namespace scatterer
 			return found;
 		}
 		
-		public void saveToConfigNode ()
+		public void SaveToConfigNode ()
 		{
 			ConfigNode[] configNodeArray;
 			bool found = false;
@@ -938,7 +772,7 @@ namespace scatterer
 			}
 		}
 		
-		public void tweakStockAtmosphere ()
+		public void TweakStockAtmosphere ()
 		{
 			for (int i = 0; i < parentScaledTransform.childCount; i++)
 			{
@@ -977,7 +811,7 @@ namespace scatterer
 			}
 		}
 		
-		public void tweakScaledMesh()
+		public void TweakScaledMesh()
 		{
 			if (ReferenceEquals (originalScaledMesh, null))
 			{
@@ -1006,7 +840,7 @@ namespace scatterer
 			parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = tweakedScaledmesh;
 		}
 
-		public void addScaledScatteringMaterialToPlanet ()
+		public void AddScaledScatteringMaterialToPlanet ()
 		{
 			List<Material> mats = stockScaledPlanetMeshRenderer.materials.ToList();
 			mats.RemoveAll (mat => mat.name.Contains("Scatterer/ScaledPlanetScattering")); //clean up old materials
@@ -1015,8 +849,13 @@ namespace scatterer
 			stockScaledPlanetMeshRenderer.materials = mats.ToArray ();
 		}
 
-		public void interpolateVariables ()
+		public void InterpolateVariables ()
 		{
+			if(!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			{
+				altitude = Vector3.Distance (Scatterer.Instance.nearCamera.transform.position, parentLocalTransform.position) - Rg;
+			}
+
 			if ((HighLogic.LoadedScene == GameScenes.MAINMENU) || (HighLogic.LoadedScene == GameScenes.TRACKSTATION) || MapView.MapIsEnabled)
 			{
 				interpolatedSettings.getValuesFrom(configPoints [configPoints.Count - 1]);
@@ -1024,12 +863,12 @@ namespace scatterer
 				return;
 			}
 
-			if (trueAlt <= configPoints [0].altitude)
+			if (altitude <= configPoints [0].altitude)
 			{
 				interpolatedSettings.getValuesFrom(configPoints [0]);
 				currentConfigPoint = 0;	
 			}
-			else if (trueAlt > configPoints [configPoints.Count - 1].altitude) 
+			else if (altitude > configPoints [configPoints.Count - 1].altitude) 
 			{
 				interpolatedSettings.getValuesFrom(configPoints [configPoints.Count - 1]);
 				currentConfigPoint = configPoints.Count;
@@ -1039,9 +878,9 @@ namespace scatterer
 				//TODO, replace this with binary search, implement method directly in configPoints class, which will implement a list of config points
 				for (int j = 1; j < configPoints.Count; j++)
 				{
-					if ((trueAlt > configPoints [j - 1].altitude) && (trueAlt <= configPoints [j].altitude))
+					if ((altitude > configPoints [j - 1].altitude) && (altitude <= configPoints [j].altitude))
 					{
-						percentage = (trueAlt - configPoints [j - 1].altitude) / (configPoints [j].altitude - configPoints [j - 1].altitude);
+						percentage = (altitude - configPoints [j - 1].altitude) / (configPoints [j].altitude - configPoints [j - 1].altitude);
 						interpolatedSettings.interpolateValuesFrom(configPoints [j - 1], configPoints [j], percentage);
 						currentConfigPoint = j;
 					}
@@ -1052,7 +891,7 @@ namespace scatterer
 		void UpdateMainLightExtinction ()
 		{
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
-			float lerpedScale = Mathf.Lerp (1f, experimentalAtmoScale, (extinctionPosition.magnitude - m_radius) / 2000f);
+			float lerpedScale = Mathf.Lerp (1f, experimentalAtmoScale, (extinctionPosition.magnitude - Rg) / 2000f);
 			//hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
 			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, m_manager.getDirectionToSun ().normalized, Rt, Rg, m_transmit, lerpedScale);
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
@@ -1081,7 +920,7 @@ namespace scatterer
 			}
 		}
 
-		void updateEclipseCasters ()
+		void UpdateEclipseCasters ()
 		{
 			float scaleFactor = ScaledSpace.ScaleFactor;
 			sunPosRelPlanet = Vector3.zero;
@@ -1119,7 +958,51 @@ namespace scatterer
 			}
 		}
 
-		public void initiateEVEClouds()
+		void InitKopernicusRings ()
+		{
+			ringObject = GameObject.Find (celestialBodyName + "Ring");
+			if (ringObject) {
+				Utils.LogDebug (" Found ring for " + celestialBodyName);
+				Material ringMat = ringObject.GetComponent<MeshRenderer> ().material;
+				hasRingObjectAndShadowActivated = true;
+				MonoBehaviour[] scripts = (MonoBehaviour[])ringObject.GetComponents<MonoBehaviour> ();
+				foreach (MonoBehaviour _script in scripts) {
+					if (_script.GetType ().ToString ().Contains ("Ring")) {
+						const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
+						FieldInfo[] fields = _script.GetType ().GetFields (flags);
+						foreach (FieldInfo fi in fields) {
+							//Utils.Log("fi.Name "+fi.Name+" fi.GetType() "+fi.GetType());
+						}
+						try {
+							ringTexture = _script.GetType ().GetField ("texture", flags).GetValue (_script) as Texture2D;
+							Utils.LogDebug (" ring texture fetch successful");
+							Utils.LogDebug (" ringTexture.width " + ringTexture.width.ToString ());
+							Utils.LogDebug (" ringTexture.height " + ringTexture.height.ToString ());
+							MeshRenderer ringMR = _script.GetType ().GetField ("ringMr", flags).GetValue (_script) as MeshRenderer;
+							Utils.LogDebug (" ring MeshRenderer fetch successful");
+							ringInnerRadius = ringMR.material.GetFloat ("innerRadius");
+							ringOuterRadius = ringMR.material.GetFloat ("outerRadius");
+							Utils.LogDebug (" ring innerRadius (with parent scale) " + ringInnerRadius.ToString ());
+							Utils.LogDebug (" ring outerRadius (with parent scale) " + ringOuterRadius.ToString ());
+							int tiles = (int)_script.GetType ().GetField ("tiles", flags).GetValue (_script);
+							if (tiles > 0) {
+								throw new Exception ("Scatterer doesn't support tiled/thick Kopernicus rings (not implemented)");
+							}
+							ringInnerRadius *= 6000;
+							//*6000 to convert to local space size
+							ringOuterRadius *= 6000;
+						}
+						catch (Exception e) {
+							Utils.LogError ("Kopernicus ring exception: " + e.ToString ());
+							Utils.LogDebug ("Disabling ring shadows for " + celestialBodyName);
+							hasRingObjectAndShadowActivated = false;
+						}
+					}
+				}
+			}
+		}
+
+		public void InitEVEClouds()
 		{
 			if (!ReferenceEquals (Scatterer.Instance.eveReflectionHandler.EVEinstance, null))
 			{
@@ -1145,8 +1028,18 @@ namespace scatterer
 				}
 			}
 		}
+		
+		IEnumerator DelayedMapEVEVolumetrics()
+		{
+			mappedVolumetrics = false;
 
-		public void mapEVEVolumetrics()
+			for (int i=0; i<5; i++)
+				yield return new WaitForFixedUpdate ();
+			
+			MapEVEVolumetrics();
+		}
+
+		public void MapEVEVolumetrics()
 		{
 			Scatterer.Instance.eveReflectionHandler.mapEVEVolumetrics (celestialBodyName, EVEvolumetrics);
 
@@ -1160,6 +1053,8 @@ namespace scatterer
 			
 				Utils.EnableOrDisableShaderKeywords (particleMaterial, "SCATTERER_USE_ORIG_DIR_COLOR_ON", "SCATTERER_USE_ORIG_DIR_COLOR_OFF", Scatterer.Instance.sunlightModulatorInstance);
 			}
+
+			mappedVolumetrics = true;
 		}
 
 		void UpdateEVECloudMaterials ()
@@ -1181,21 +1076,20 @@ namespace scatterer
 				}
 			}
 			
-			if (!inScaledSpace && !mapVolumetrics)
+			if (!inScaledSpace && mappedVolumetrics)
 			{
 				foreach (Material volumetricsMat in EVEvolumetrics)
 				{
-					//TODO: simplify, take one or the other
+					//TODO: simplify, take one or the other, doesn't need to be done very frame also
 					SetUniforms (volumetricsMat);
 					UpdatePostProcessMaterial (volumetricsMat);
 					volumetricsMat.SetVector (ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
 					volumetricsMat.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier);
-					//doesn't need to be done very frame also
 				}
 			}
 		}
 
-		public void togglePreserveCloudColors()
+		public void TogglePreserveCloudColors()
 		{
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)
 			{
@@ -1211,20 +1105,20 @@ namespace scatterer
 			}
 		}
 
-		public void setCelestialBodyName(string name) {
+		public void SetCelestialBodyName(string name) {
 			celestialBodyName = name;
 		}
 		
-		public void setParentScaledTransform(Transform parentTransform) {
+		public void SetParentScaledTransform(Transform parentTransform) {
 			parentScaledTransform = parentTransform;
 		}
 		
-		public void setParentLocalTransform(Transform parentTransform) {
+		public void SetParentLocalTransform(Transform parentTransform) {
 			parentLocalTransform = parentTransform;
 		}
 
 		//to be called on loss of rendertextures, ie alt-enter
-		public void reInitMaterialUniformsOnRenderTexturesLoss()
+		public void ReInitMaterialUniformsOnRenderTexturesLoss()
 		{
 			if (!ReferenceEquals (localScatteringProjector, null))
 			{

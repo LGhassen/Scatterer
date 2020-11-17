@@ -21,10 +21,6 @@ namespace scatterer
 		private static int _viewdirOffset;
 		public static int atmosphereGlobalScale_PROPERTY { get { return atmosphereGlobalScale; } }
 		private static int atmosphereGlobalScale;
-		public static int scale_PROPERTY { get { return scale; } }
-		private static int scale;
-		public static int _Scale_PROPERTY { get { return _Scale; } }
-		private static int _Scale;
 		public static int Rg_PROPERTY { get { return Rg; } }
 		private static int Rg;
 		public static int Rt_PROPERTY { get { return Rt; } }
@@ -372,14 +368,15 @@ namespace scatterer
 
 		public static int lightToWorld_PROPERTY { get { return lightToWorld; } }
 		private static int lightToWorld;
+		
+		public static int _godrayStrength_PROPERTY { get { return _godrayStrength; } }
+		private static int _godrayStrength;
 
 		private void Awake()
 		{
 			_experimentalAtmoScale = Shader.PropertyToID("_experimentalAtmoScale");
 			_viewdirOffset = Shader.PropertyToID("_viewdirOffset");
 			atmosphereGlobalScale = Shader.PropertyToID("atmosphereGlobalScale");
-			scale = Shader.PropertyToID("scale");
-			_Scale = Shader.PropertyToID("_Scale");
 			Rg = Shader.PropertyToID("Rg");
 			Rt = Shader.PropertyToID("Rt");
 			RL = Shader.PropertyToID("RL");
@@ -540,6 +537,8 @@ namespace scatterer
 			_godrayCloudThreshold = Shader.PropertyToID("_godrayCloudThreshold");
 
 			lightToWorld = Shader.PropertyToID("lightToWorld");
+
+			_godrayStrength = Shader.PropertyToID("_godrayStrength");
 		}
 	}
 }

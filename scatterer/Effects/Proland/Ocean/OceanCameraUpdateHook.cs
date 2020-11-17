@@ -230,8 +230,6 @@ namespace scatterer
 				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.LightDir_PROPERTY, Scatterer.Instance.sunLight.gameObject.transform.forward);
 				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.m_manager.parentLocalTransform.position);
 			}
-			
-			//maybe just update the godray thing here? add an if underwater? it's not super clean though
 		}
 
 		public void OnDestroy()

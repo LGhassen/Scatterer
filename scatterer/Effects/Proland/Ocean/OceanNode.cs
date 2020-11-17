@@ -205,7 +205,7 @@ namespace scatterer
 
 			if (!ReferenceEquals (causticsShadowMaskModulator, null))
 			{
-				causticsShadowMaskModulator.isEnabled = oceanDraw && (m_manager.GetSkyNode().trueAlt < 6000f);
+				causticsShadowMaskModulator.isEnabled = oceanDraw && (m_manager.GetSkyNode().altitude < 6000f);
 				causticsShadowMaskModulator.UpdateCaustics ();
 			}			
 		}

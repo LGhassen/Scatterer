@@ -122,11 +122,11 @@ namespace scatterer
 		{
 			m_skyNode = (SkyNode)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SkyNode));
 			m_skyNode.m_manager = this;
-			m_skyNode.setCelestialBodyName (parentCelestialBody.name);
-			m_skyNode.setParentScaledTransform (parentScaledTransform);
-			m_skyNode.setParentLocalTransform (parentLocalTransform);
+			m_skyNode.SetCelestialBodyName (parentCelestialBody.name);
+			m_skyNode.SetParentScaledTransform (parentScaledTransform);
+			m_skyNode.SetParentLocalTransform (parentLocalTransform);
 			m_skyNode.usesCloudIntegration = usesCloudIntegration;
-			if (m_skyNode.loadFromConfigNode ())
+			if (m_skyNode.LoadFromConfigNode ())
 			{
 				m_skyNode.Init ();
 				if (hasOcean && Scatterer.Instance.mainSettings.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU))

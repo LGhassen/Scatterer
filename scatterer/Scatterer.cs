@@ -68,7 +68,7 @@ namespace scatterer
 			else
 			{
 				//destroy any duplicate instances that may be created by a duplicate install
-				Utils.LogError("Destroying duplicate instance, check your install for duplicate mod folders");
+				Utils.LogError("Destroying duplicate instance, check your install for duplicate scatterer folders, or nested GameData folders");
 				UnityEngine.Object.Destroy(this);
 			}
 
@@ -76,8 +76,6 @@ namespace scatterer
 			Utils.LogInfo ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
 			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
 			Utils.LogInfo ("Compute shader support: " + SystemInfo.supportsComputeShaders.ToString());
-
-
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -520,7 +518,7 @@ namespace scatterer
 			{
 				if (_cur.active)
 				{
-					_cur.m_manager.m_skyNode.reInitMaterialUniformsOnRenderTexturesLoss ();
+					_cur.m_manager.m_skyNode.ReInitMaterialUniformsOnRenderTexturesLoss ();
 					if (_cur.m_manager.hasOcean && mainSettings.useOceanShaders && !_cur.m_manager.m_skyNode.inScaledSpace)
 					{
 						_cur.m_manager.reBuildOcean ();
