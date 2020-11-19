@@ -42,23 +42,18 @@ Shader "Scatterer/sunFlareExtinction"
 				return OUT;
 			}
 
-			float2 GetTransmittanceUV(float r, float mu) {
+			float2 GetTransmittanceUV(float r, float mu)
+			{
 				float uR, uMu;
-				//#ifdef TRANSMITTANCE_NON_LINEAR
 				uR = sqrt((r - Rg) / (Rt - Rg));
 				uMu = atan((mu + 0.15) / (1.0 + 0.15) * tan(1.5)) / 1.5;
-				//#else
-				//    uR = (r - Rg) / (Rt - Rg);
-				//    uMu = (mu + 0.15) / (1.0 + 0.15);
-				//#endif
 				return float2(uMu, uR);
 			}
 
 			float3 Transmittance(float r, float mu) 
 			{
 				float2 uv = GetTransmittanceUV(r, mu);
-				//    			return tex2Dlod(_Sky_Transmittance, float4(uv,0,0)).rgb; //shouldn't need tex2Dlod
-				return tex2D(_Sky_Transmittance, uv).rgb; //shouldn't need tex2Dlod
+				return tex2Dlod(_Sky_Transmittance, float4(uv,0,0)).rgb;
 			}
 
 			float SQRT(float f, float err)
@@ -76,8 +71,9 @@ Shader "Scatterer/sunFlareExtinction"
 				float rMu = dot(camera, viewdir);
 				float mu = rMu / r;
 
+				//float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
 				float deltaSq = SQRT(rMu * rMu - r * r + Rt*Rt,0.000001);
-				//    			float deltaSq = sqrt(rMu * rMu - r * r + Rt*Rt);
+
 
 				float din = max(-rMu - deltaSq, 0.0);
 				if (din > 0.0)
@@ -100,9 +96,9 @@ Shader "Scatterer/sunFlareExtinction"
 
 				float3 extinction = getExtinction(WCP,WSD);
 
-				#if defined (DISABLE_UNDERWATER_ON) //disable when underwater
+#if defined (DISABLE_UNDERWATER_ON) //disable when underwater
 				extinction = (length(WCP) >= Rg ) ? extinction : float4(0.0,0.0,0.0,1.0);
-				#endif
+#endif
 
 				return float4(extinction,1.0);
 			}
