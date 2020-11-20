@@ -70,9 +70,15 @@ namespace scatterer
 
 		public void OnDestroy()
 		{
-			scaledCamera.enabled = false;
-			Component.Destroy (scaledCamera);
-			UnityEngine.Object.Destroy (scaledCameraGO);
+			if (!ReferenceEquals(scaledCamera,null))
+			{
+				Component.Destroy (scaledCamera);
+			}
+
+			if (!ReferenceEquals (scaledCameraGO, null))
+			{
+				UnityEngine.Object.Destroy (scaledCameraGO);
+			}
 		}
 	}
 }
