@@ -77,6 +77,7 @@ namespace scatterer
 		public int currentConfigPoint;
 		public ConfigPoint interpolatedSettings= new ConfigPoint();
 		public bool inScaledSpace = true;
+		PQSEnableDisableNotify pqsEnableDisableNotifier;
 
 		Vector3 sunPosRelPlanet=Vector3.zero;
 		Matrix4x4 castersMatrix1=Matrix4x4.zero;
@@ -177,7 +178,14 @@ namespace scatterer
 			if (flattenScaledSpaceMesh != 0f)
 				TweakScaledMesh();
 			AddScaledScatteringMaterialToPlanet();
-			
+
+			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
+			{
+				GameObject go = new GameObject ();
+				pqsEnableDisableNotifier = go.AddComponent<PQSEnableDisableNotify> ();
+				pqsEnableDisableNotifier.Apply (m_manager.parentCelestialBody.pqsController, this);
+			}
+
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				InitEVEClouds();
@@ -267,25 +275,9 @@ namespace scatterer
 		{
 			if ((m_manager.parentCelestialBody.pqsController != null) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
-				bool prevState = inScaledSpace;
-
-				//Change to scaledSpace only if we aren't in map view, otherwise we can be in the surface but pqsController is inactive
+				//Change to scaledSpace only if we aren't in map view, otherwise we can be in the surface but pqsController is inactive, this is only for ocean craft interactions
 				if (!MapView.MapIsEnabled)
 					inScaledSpace = !m_manager.parentCelestialBody.pqsController.isActive;
-
-
-				if (!inScaledSpace && prevState)	//If we go from scaled to local space
-				{
-					if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
-					{
-						StartCoroutine(DelayedMapEVEVolumetrics());
-					}
-				}
-
-				if (inScaledSpace && !prevState)	//If we go from local to scaled
-				{
-					EVEvolumetrics.Clear();
-				}
 			}
 			else
 			{
@@ -301,6 +293,21 @@ namespace scatterer
 					skySphereMeshRenderer.enabled = (altitude>=0f);
 					stockSkyGameObject.SetActive(altitude<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
 				}
+			}
+		}
+
+		public void SwitchEffectsScaled()
+		{
+			EVEvolumetrics.Clear();
+		}
+
+		public void SwitchEffectsLocal()
+		{
+			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
+			{
+				//really strange but when changing scenes StartCoroutine can return a nullref, even though I check all references
+				try {StartCoroutine(DelayedMapEVEVolumetrics());}
+				catch (Exception){}
 			}
 		}
 		
@@ -645,6 +652,12 @@ namespace scatterer
 			if (localScatteringProjector)
 			{
 				UnityEngine.Object.Destroy (localScatteringProjector);
+			}
+
+			if (!ReferenceEquals (pqsEnableDisableNotifier, null))
+			{
+				pqsEnableDisableNotifier.Remove();
+
 			}
 
 			if (!ReferenceEquals (godraysRenderer, null))
@@ -1004,7 +1017,7 @@ namespace scatterer
 
 		public void InitEVEClouds()
 		{
-			if (!ReferenceEquals (Scatterer.Instance.eveReflectionHandler.EVEinstance, null))
+			if (!ReferenceEquals (Scatterer.Instance.eveReflectionHandler.EVEinstance, null) && Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
 			{
 				try
 				{
@@ -1024,7 +1037,7 @@ namespace scatterer
 				}
 				catch (Exception stupid)
 				{
-					Utils.LogDebug (" Error initiating EVE Clouds on planet: " + celestialBodyName + " Exception returned: " + stupid.ToString ());
+					Utils.LogError ("Error initiating EVE Clouds on planet: " + celestialBodyName + " Exception returned: " + stupid.ToString ());
 				}
 			}
 		}
@@ -1032,10 +1045,8 @@ namespace scatterer
 		IEnumerator DelayedMapEVEVolumetrics()
 		{
 			mappedVolumetrics = false;
-
 			for (int i=0; i<5; i++)
 				yield return new WaitForFixedUpdate ();
-			
 			MapEVEVolumetrics();
 		}
 

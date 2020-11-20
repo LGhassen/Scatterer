@@ -184,6 +184,7 @@
     <Compile Include="Utilities\Misc\IcoSphere.cs" />
     <Compile Include="c:\gh\scattererGithub\Scatterer\scatterer\Utilities\Occlusion\ShadowMapCopier.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\SimpleRenderingShape.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\PQSEnableDisableNotify.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
