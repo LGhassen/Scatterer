@@ -28,13 +28,13 @@
 
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
+			#pragma multi_compile LOCAL_MODE_OFF LOCAL_MODE_ON
 
 			uniform float _Alpha_Global;
 			uniform float extinctionTint;
 			uniform float extinctionThickness;
 			uniform float3 _Sun_WorldSunDir;
 
-			uniform float renderScattering;
 			uniform float flatScaledSpaceModel;
 
 			struct v2f
@@ -48,9 +48,24 @@
 			{
 				v2f OUT;
 				OUT.pos = UnityObjectToClipPos(v.vertex);
+
+#if defined(LOCAL_MODE_ON)
+	#ifdef SHADER_API_D3D11
+				OUT.pos.z = 0.00000000000001;
+	#else
+				OUT.pos.z = 1.0 - 0.00000000000001;
+	#endif
+#endif
+
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz;
-				OUT.pos = (renderScattering == 1.0) ? OUT.pos : float4(2.0, 2.0, 2.0, 1.0); //outside clip space => cull vertex
+
+#if defined(LOCAL_MODE_OFF)
+				OUT.worldPos *= 6000.0;
+				OUT.planetOrigin *= 6000.0;
+#endif
+
+
 				return OUT;
 			}
 
@@ -58,19 +73,22 @@
 			{
 				float3 extinction=0.0;
 
-				float3 WCP = _WorldSpaceCameraPos ;
+				float3 WCP = _WorldSpaceCameraPos;
+
+#if defined(LOCAL_MODE_OFF)
+				WCP*=6000.0;
+#endif
 
 				float3 planetSurfacePosition = IN.worldPos-IN.planetOrigin;
-				float3 planetSurfaceScatteringPosition = (flatScaledSpaceModel == 1.0) ? normalize(planetSurfacePosition) * Rg * 1.0001 : planetSurfacePosition * 6005; //transform to scaledspace here,
-				//6005 instead of 6000 due to precision issues, same with 1.0008
-				extinction = getExtinction((WCP-IN.planetOrigin)*6000, planetSurfaceScatteringPosition, 1.0, 1.0, 1.0);
+				float3 planetSurfaceScatteringPosition = (flatScaledSpaceModel == 1.0) ? normalize(planetSurfacePosition) * Rg * 1.0001 : planetSurfacePosition * (6005.0/6000.0); //1.0001 Rg and 6005*6000 to avoid some precision artifacts
+				extinction = getExtinction((WCP-IN.planetOrigin), planetSurfaceScatteringPosition, 1.0, 1.0, 1.0);
 
 				#if defined (ECLIPSES_ON)	
-				extinction*= getEclipseShadows(IN.worldPos*6000);
+				extinction*= getEclipseShadows(IN.worldPos);
 				#endif
 
 				#if defined (RINGSHADOW_ON)
-				extinction *= getLinearRingColor(IN.worldPos*6000, _Sun_WorldSunDir, IN.planetOrigin*6000).a;
+				extinction *= getLinearRingColor(IN.worldPos, _Sun_WorldSunDir, IN.planetOrigin).a;
 				#endif
 				float average=(extinction.r+extinction.g+extinction.b)/3;
 				extinction = extinctionTint * extinction + (1-extinctionTint) * float3(average,average,average);
@@ -83,7 +101,7 @@
 
 		Pass {  //scattering pass
 
-			ZWrite Off
+			ZWrite On
 			ZTest LEqual
 			Cull Back
 
@@ -105,6 +123,7 @@
 			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
+			#pragma multi_compile LOCAL_MODE_OFF LOCAL_MODE_ON
 
 			//#pragma fragmentoption ARB_precision_hint_nicest
 
@@ -112,8 +131,6 @@
 
 			uniform float3 _Sun_WorldSunDir;
 			uniform float _ScatteringExposure;
-
-			uniform float renderScattering;
 
 			#if defined (PLANETSHINE_ON)
 			uniform float4x4 planetShineSources;
@@ -135,10 +152,21 @@
 				v2f OUT;
 				OUT.pos = UnityObjectToClipPos(v.vertex);
 
+#if defined(LOCAL_MODE_ON)
+	#ifdef SHADER_API_D3D11
+				OUT.pos.z = 0.00000000000001;
+	#else
+				OUT.pos.z = 1.0 - 0.00000000000001;
+	#endif
+#endif
+
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz;
 
-				OUT.pos = (renderScattering == 1.0) ? OUT.pos : float4(2.0, 2.0, 2.0, 1.0); //outside clip space => cull vertex
+#if defined(LOCAL_MODE_OFF)
+				OUT.worldPos *= 6000.0;
+				OUT.planetOrigin *= 6000.0;
+#endif
 				return OUT;
 			}
 
@@ -148,18 +176,20 @@
 				float3 extinction=0.0;
 
 				float3 WCP = _WorldSpaceCameraPos;
+#if defined(LOCAL_MODE_OFF)
+				WCP*=6000.0;
+#endif
 
 				float3 planetSurfacePosition = IN.worldPos-IN.planetOrigin;
-				float3 planetSurfaceScatteringPosition = (flatScaledSpaceModel == 1.0) ? normalize(planetSurfacePosition) * Rg * 1.0001 : planetSurfacePosition * 6005; //transform to scaledspace here,
-				//6005 instead of 6000 due to precision issues, same with 1.0008
-				inscatter= InScattering2((WCP-IN.planetOrigin)*6000, planetSurfaceScatteringPosition, _Sun_WorldSunDir,extinction);
+				float3 planetSurfaceScatteringPosition = (flatScaledSpaceModel == 1.0) ? normalize(planetSurfacePosition) * Rg * 1.0001 : planetSurfacePosition * (6005.0/6000.0); //1.0001 Rg and 6005*6000 to avoid some precision artifacts
+				inscatter= InScattering2((WCP-IN.planetOrigin), planetSurfaceScatteringPosition, _Sun_WorldSunDir,extinction);
 
 				#if defined (ECLIPSES_ON)
-				inscatter *= getEclipseShadows(IN.worldPos*6000);
+				inscatter *= getEclipseShadows(IN.worldPos);
 				#endif
 
 				#if defined (RINGSHADOW_ON)
-				inscatter *= getLinearRingColor(IN.worldPos*6000, _Sun_WorldSunDir, IN.planetOrigin*6000).a;
+				inscatter *= getLinearRingColor(IN.worldPos, _Sun_WorldSunDir, IN.planetOrigin).a;
 				#endif
 
 				///////////////////PLANETSHINE///////////////////////////////						    

@@ -89,6 +89,7 @@ namespace scatterer
 		GameObject stockSkyGameObject;
 		MeshRenderer stockScaledPlanetMeshRenderer;
 		Mesh originalScaledMesh, tweakedScaledmesh;
+		public ScaledScatteringContainer scaledScatteringContainer;
 		public Material localScatteringMaterial,skyMaterial,scaledScatteringMaterial,sunflareExtinctionMaterial;
 		public AtmosphereProjector localScatteringProjector;
 		public GodraysRenderer godraysRenderer;
@@ -139,6 +140,8 @@ namespace scatterer
 			InitSkySphere ();
 
 			InitPostprocessMaterialUniforms (localScatteringMaterial);
+			TweakScaledMesh ();
+			InitScaledScattering ();
 
 			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
 			{
@@ -151,8 +154,7 @@ namespace scatterer
 				localScatteringProjector = new AtmosphereProjector (localScatteringMaterial, parentLocalTransform, Rt);
 			}
 
-			InitUniforms (scaledScatteringMaterial);
-			scaledScatteringMaterial.renderQueue=2999;
+
 
 			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
 			{
@@ -175,9 +177,6 @@ namespace scatterer
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
 			
 			TweakStockAtmosphere();
-			if (flattenScaledSpaceMesh != 0f)
-				TweakScaledMesh();
-			AddScaledScatteringMaterialToPlanet();
 
 			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
 			{
@@ -203,10 +202,22 @@ namespace scatterer
 			if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 				skySphere.SwitchLocalMode ();
 
-			skyMaterial.renderQueue = 2999; //this lets modified EVE clouds draw over sky
+			skyMaterial.renderQueue = 2999;
 			InitUniforms (skyMaterial);
 		}
 
+		public void InitScaledScattering ()
+		{
+			scaledScatteringContainer = new ScaledScatteringContainer (parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh, scaledScatteringMaterial, parentLocalTransform, parentScaledTransform);
+			
+			if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+			{
+				scaledScatteringContainer.SwitchLocalMode ();
+			}
+			
+			scaledScatteringMaterial.renderQueue = 2998;
+			InitUniforms (scaledScatteringMaterial);
+		}
 		
 		public void OnPreRender()
 		{
@@ -241,7 +252,7 @@ namespace scatterer
 				UpdateSunflareExtinctions ();
 			}
 
-			scaledScatteringMaterial.SetFloat (ShaderProperties.renderScattering_PROPERTY, (m_manager.parentCelestialBody.pqsController != null) ? (!m_manager.parentCelestialBody.pqsController.isActive ? 1f : 0f ) : 1f); //not sure this is a good way to do it
+			scaledScatteringContainer.MeshRenderer.enabled = stockScaledPlanetMeshRenderer.enabled;
 
 			if (!ReferenceEquals (localScatteringProjector, null))
 			{
@@ -282,12 +293,14 @@ namespace scatterer
 		public void SwitchEffectsScaled()
 		{
 			skySphere.SwitchScaledMode ();
+			scaledScatteringContainer.SwitchScaledMode ();
 			EVEvolumetrics.Clear();
 		}
 
 		public void SwitchEffectsLocal()
 		{
 			skySphere.SwitchLocalMode();
+			scaledScatteringContainer.SwitchLocalMode ();
 
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
@@ -633,6 +646,9 @@ namespace scatterer
 			if (!ReferenceEquals (skySphere, null))
 				skySphere.Cleanup ();
 
+			if (!ReferenceEquals (scaledScatteringContainer, null))
+				scaledScatteringContainer.Cleanup ();
+
 			if (localScatteringProjector)
 			{
 				UnityEngine.Object.Destroy (localScatteringProjector);
@@ -834,15 +850,6 @@ namespace scatterer
 			tweakedScaledmesh.RecalculateBounds ();
 			
 			parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = tweakedScaledmesh;
-		}
-
-		public void AddScaledScatteringMaterialToPlanet ()
-		{
-			List<Material> mats = stockScaledPlanetMeshRenderer.materials.ToList();
-			mats.RemoveAll (mat => mat.name.Contains("Scatterer/ScaledPlanetScattering")); //clean up old materials
-
-			mats.Add (scaledScatteringMaterial);
-			stockScaledPlanetMeshRenderer.materials = mats.ToArray ();
 		}
 
 		public void InterpolateVariables ()

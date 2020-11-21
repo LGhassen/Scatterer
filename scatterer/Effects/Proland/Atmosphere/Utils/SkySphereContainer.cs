@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace scatterer
 {
-	public class SkySphereContainer
+	public class SkySphereContainer : MonoBehaviour
 	{
 		GameObject skySphereGO;
 		MeshRenderer skySphereMR;
@@ -66,21 +66,23 @@ namespace scatterer
 		{
 			skySphereGO.layer = 15;
 
-			skySphereGO.transform.position = parentLocalTransform.position;
-			skySphereGO.transform.parent = parentLocalTransform;
+			skySphereGO.transform.parent = null;
 
+			skySphereGO.transform.position = parentLocalTransform.position;
 			skySphereGO.transform.localScale = new Vector3(ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor);
+			skySphereGO.transform.parent = parentLocalTransform;
 
 			Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", true);
 		}
 		
 		public void SwitchScaledMode()
 		{
-			skySphereGO.transform.localScale = Vector3.one;
-
 			skySphereGO.layer = 9;
 
+			skySphereGO.transform.parent = null;
+
 			skySphereGO.transform.position = parentScaledTransform.position;
+			skySphereGO.transform.localScale = Vector3.one;
 			skySphereGO.transform.parent = parentScaledTransform;
 
 			Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", false);

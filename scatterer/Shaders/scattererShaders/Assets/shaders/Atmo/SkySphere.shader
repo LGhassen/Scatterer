@@ -45,6 +45,15 @@ Shader "Scatterer/SkySphere"
 				v2f OUT;
 				//v.vertex.xyz*= (_experimentalExtinctionScale * (Rt-Rg)+ Rg) / Rt;
 				OUT.pos = UnityObjectToClipPos(v.vertex);
+
+#if defined (LOCAL_SKY_ON)
+	#ifdef SHADER_API_D3D11
+				OUT.pos.z = 0.0;
+	#else
+				OUT.pos.z = 1.0;
+	#endif
+#endif
+
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
 				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz;
 #if defined (LOCAL_SKY_OFF)
@@ -169,6 +178,15 @@ Shader "Scatterer/SkySphere"
 				v2f OUT;
 				v.vertex.xyz*= (_experimentalAtmoScale * (Rt-Rg)+ Rg) / Rt;
 				outpos = UnityObjectToClipPos(v.vertex);
+
+#if defined (LOCAL_SKY_ON)
+	#ifdef SHADER_API_D3D11
+				outpos.z = 0.0;
+	#else
+				outpos.z = 1.0;
+	#endif
+#endif
+
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
 
 
