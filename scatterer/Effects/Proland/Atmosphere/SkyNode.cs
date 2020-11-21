@@ -833,7 +833,7 @@ namespace scatterer
 
 			tweakedScaledmesh = (Mesh)Instantiate (originalScaledMesh);
 			
-			double scaledRadius = m_manager.GetRadius () / (6000d * parentScaledTransform.localScale.x);
+			double scaledRadius = m_manager.GetRadius () / (ScaledSpace.ScaleFactor * parentScaledTransform.localScale.x);
 			
 			Vector3[] verts = tweakedScaledmesh.vertices;
 			
@@ -964,7 +964,7 @@ namespace scatterer
 				//i.e light doesn't come from the center of the planet but follows the lit side
 				//1/4 of the way from center to surface should be fine
 				Vector3d offsetPos = m_manager.planetshineSources [i].body.position + 0.25 * m_manager.planetshineSources [i].body.Radius * (m_manager.sunCelestialBody.position - m_manager.planetshineSources [i].body.position).normalized;
-				sourcePosRelPlanet = Vector3.Scale (offsetPos - m_manager.parentCelestialBody.GetTransform ().position, new Vector3d (6000f, 6000f, 6000f));
+				sourcePosRelPlanet = Vector3.Scale (offsetPos - m_manager.parentCelestialBody.GetTransform ().position, new Vector3d (ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor));
 				planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y, sourcePosRelPlanet.z, m_manager.planetshineSources [i].isSun ? 1.0f : 0.0f));
 				float intensity = m_manager.planetshineSources [i].intensity;
 				planetShineRGBMatrix.SetRow (i, new Vector4 (m_manager.planetshineSources [i].color.x, m_manager.planetshineSources [i].color.y, m_manager.planetshineSources [i].color.z, intensity));
@@ -1001,9 +1001,9 @@ namespace scatterer
 							if (tiles > 0) {
 								throw new Exception ("Scatterer doesn't support tiled/thick Kopernicus rings (not implemented)");
 							}
-							ringInnerRadius *= 6000;
+							ringInnerRadius *= ScaledSpace.ScaleFactor;
 							//*6000 to convert to local space size
-							ringOuterRadius *= 6000;
+							ringOuterRadius *= ScaledSpace.ScaleFactor;
 						}
 						catch (Exception e) {
 							Utils.LogError ("Kopernicus ring exception: " + e.ToString ());

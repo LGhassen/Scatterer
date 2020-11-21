@@ -67,7 +67,7 @@ namespace scatterer
 					if (!_aSource.isSun)
 						LocalPlanetShineLight.GetComponent<Light> ().cookie = planetShineCookieCubeMap;
 					//LocalPlanetShineLight.GetComponent<Light>().range=1E9f;
-					LocalPlanetShineLight.GetComponent<Light> ().range = _aSource.scaledRange * 6000;
+					LocalPlanetShineLight.GetComponent<Light> ().range = _aSource.scaledRange * ScaledSpace.ScaleFactor;
 					LocalPlanetShineLight.GetComponent<Light> ().color = new Color (_aSource.color.x, _aSource.color.y, _aSource.color.z);
 					LocalPlanetShineLight.GetComponent<Light> ().cullingMask = 557591;
 					LocalPlanetShineLight.GetComponent<Light> ().shadows = LightShadows.Soft;
