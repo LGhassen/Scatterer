@@ -22,6 +22,8 @@ Shader "Scatterer/SkySphere"
 
 			#include "../CommonAtmosphere.cginc"
 
+			#pragma multi_compile LOCAL_SKY_OFF LOCAL_SKY_ON
+
 			uniform float _Alpha_Global;
 			uniform float _Extinction_Tint;
 			uniform float extinctionMultiplier;
@@ -44,7 +46,10 @@ Shader "Scatterer/SkySphere"
 				//v.vertex.xyz*= (_experimentalExtinctionScale * (Rt-Rg)+ Rg) / Rt;
 				OUT.pos = UnityObjectToClipPos(v.vertex);
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
-				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz * 6000; //all calculations are done in localSpace
+				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz;
+#if defined (LOCAL_SKY_OFF)
+				OUT.planetOrigin *= 6000;  //all calculations are done in localSpace
+#endif
 				return OUT;
 			}
 
@@ -53,8 +58,13 @@ Shader "Scatterer/SkySphere"
 
 				float3 extinction = float3(1,1,1);
 
-				float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords			    
-				float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);  //viewdir
+				float3 WCP = _WorldSpaceCameraPos;
+
+#if defined (LOCAL_SKY_OFF)
+				WCP *= 6000;
+#endif
+
+				float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);
 
 				//Rt=Rg+(Rt-Rg)*_experimentalExtinctionScale;
 
@@ -129,6 +139,7 @@ Shader "Scatterer/SkySphere"
 			#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
+			#pragma multi_compile LOCAL_SKY_OFF LOCAL_SKY_ON
 
 			uniform float _Alpha_Global;
 
@@ -140,16 +151,14 @@ Shader "Scatterer/SkySphere"
 			uniform float4x4 planetShineRGB;
 #endif
 
-#if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;
 			uniform float _godrayStrength;
-#endif
 
 			struct v2f 
 			{
 				float3 worldPos : TEXCOORD0;
 				float3 planetOrigin: TEXCOORD1;
-#if defined (GODRAYS_ON)
+#if defined(GODRAYS_ON) && defined(LOCAL_SKY_ON)
 				float4 projPos  : TEXCOORD2;
 #endif
 			};
@@ -161,9 +170,14 @@ Shader "Scatterer/SkySphere"
 				v.vertex.xyz*= (_experimentalAtmoScale * (Rt-Rg)+ Rg) / Rt;
 				outpos = UnityObjectToClipPos(v.vertex);
 				OUT.worldPos = mul(unity_ObjectToWorld, v.vertex);
-				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz * 6000;  //all calculations are done in localSpace
 
-#if defined (GODRAYS_ON)
+
+				OUT.planetOrigin = mul (unity_ObjectToWorld, float4(0,0,0,1)).xyz;
+#if defined (LOCAL_SKY_OFF)
+				OUT.planetOrigin *= 6000;  //all calculations are done in localSpace
+#endif
+
+#if defined(GODRAYS_ON) && defined(LOCAL_SKY_ON)
 				OUT.projPos = ComputeScreenPos(outpos);
 #endif
 
@@ -173,12 +187,16 @@ Shader "Scatterer/SkySphere"
 			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
 				float3 WSD = _Sun_WorldSunDir;
-				float3 WCP = _WorldSpaceCameraPos * 6000; //unity supplied, converted from ScaledSpace to localSpace coords
+				float3 WCP = _WorldSpaceCameraPos;
 
-				float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);  //viewdir computed from scaledSpace
+#if defined (LOCAL_SKY_OFF)
+				WCP *= 6000;
+#endif
+
+				float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);
 
 				float3 scatteringCameraPos = WCP - IN.planetOrigin;
-#if defined (GODRAYS_ON)
+#if defined(GODRAYS_ON) && defined(LOCAL_SKY_ON)
 				float2 depthUV = IN.projPos.xy/IN.projPos.w;
 				scatteringCameraPos = scatteringCameraPos + d * sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength);
 #endif

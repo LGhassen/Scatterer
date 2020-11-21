@@ -15,11 +15,13 @@ namespace scatterer
 
 		public override void OnSphereInactive()
 		{
+			if (targetSkyNode!=null)
 				targetSkyNode.SwitchEffectsScaled ();
 		}
 
 		public override void OnSphereActive()
 		{
+			if (targetSkyNode!=null)
 				targetSkyNode.SwitchEffectsLocal ();
 		}
 		
@@ -31,7 +33,11 @@ namespace scatterer
 				this.transform.parent = pqs.transform;
 				this.requirements = PQS.ModiferRequirements.Default;
 				this.modEnabled = true;
-				this.order = 100;
+				this.order += 10;
+
+				this.transform.localPosition = Vector3.zero;
+				this.transform.localRotation = Quaternion.identity;
+				this.transform.localScale = Vector3.one;
 
 				targetSkyNode = inSkyNode;
 			}
@@ -39,9 +45,6 @@ namespace scatterer
 		
 		public void Remove()
 		{
-			this.sphere = null;
-			this.transform.parent = null;
-			this.modEnabled = false;
 			gameObject.DestroyGameObject();
 		}
 	}

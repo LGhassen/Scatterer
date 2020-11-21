@@ -85,9 +85,9 @@ namespace scatterer
 		public Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
 		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
 
-		SimpleRenderingShape SkySphere;
-		GameObject skySphereGameObject, stockSkyGameObject;
-		MeshRenderer skySphereMeshRenderer, stockScaledPlanetMeshRenderer;
+		SkySphereContainer skySphere;
+		GameObject stockSkyGameObject;
+		MeshRenderer stockScaledPlanetMeshRenderer;
 		Mesh originalScaledMesh, tweakedScaledmesh;
 		public Material localScatteringMaterial,skyMaterial,scaledScatteringMaterial,sunflareExtinctionMaterial;
 		public AtmosphereProjector localScatteringProjector;
@@ -198,29 +198,12 @@ namespace scatterer
 		void InitSkySphere ()
 		{
 			float skySphereSize = 2 * (4 * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor;
-			SkySphere = new SimpleRenderingShape (skySphereSize, skyMaterial, true);
-			skySphereGameObject = SkySphere.GameObject;
+			skySphere = new SkySphereContainer (skySphereSize, skyMaterial, parentLocalTransform, parentScaledTransform);
 
-			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-				skySphereGameObject.layer = 15;
-			else
-				skySphereGameObject.layer = 9;
+			if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+				skySphere.SwitchLocalMode ();
 
-			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
-			{
-				SkySphereKSCUpdater updater = (SkySphereKSCUpdater)skySphereGameObject.AddComponent (typeof(SkySphereKSCUpdater));
-				updater.parentLocalTransform = parentLocalTransform;
-			}
-			else
-			{
-				skySphereGameObject.transform.position = parentScaledTransform.position;
-				skySphereGameObject.transform.parent = parentScaledTransform;
-			}
-			skySphereMeshRenderer = SkySphere.GameObject.GetComponent<MeshRenderer> ();
-			skySphereMeshRenderer.material = skyMaterial;
-			skySphereMeshRenderer.enabled = true;
 			skyMaterial.renderQueue = 2999; //this lets modified EVE clouds draw over sky
-
 			InitUniforms (skyMaterial);
 		}
 
@@ -290,7 +273,7 @@ namespace scatterer
 
 				if (m_manager.hasOcean && !Scatterer.Instance.mainSettings.useOceanShaders)
 				{
-					skySphereMeshRenderer.enabled = (altitude>=0f);
+					skySphere.MeshRenderer.enabled = (altitude>=0f);
 					stockSkyGameObject.SetActive(altitude<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
 				}
 			}
@@ -298,11 +281,14 @@ namespace scatterer
 
 		public void SwitchEffectsScaled()
 		{
+			skySphere.SwitchScaledMode ();
 			EVEvolumetrics.Clear();
 		}
 
 		public void SwitchEffectsLocal()
 		{
+			skySphere.SwitchLocalMode();
+
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				//really strange but when changing scenes StartCoroutine can return a nullref, even though I check all references
@@ -644,10 +630,8 @@ namespace scatterer
 				UnityEngine.Object.Destroy (m_inscatter);
 			}
 
-//			UnityEngine.Object.Destroy(atmosphereMesh);
-
-			Component.Destroy (skySphereMeshRenderer);
-			UnityEngine.Object.Destroy (skySphereGameObject);
+			if (!ReferenceEquals (skySphere, null))
+				skySphere.Cleanup ();
 
 			if (localScatteringProjector)
 			{
@@ -657,7 +641,6 @@ namespace scatterer
 			if (!ReferenceEquals (pqsEnableDisableNotifier, null))
 			{
 				pqsEnableDisableNotifier.Remove();
-
 			}
 
 			if (!ReferenceEquals (godraysRenderer, null))
