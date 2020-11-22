@@ -46,17 +46,8 @@ namespace scatterer
 			else
 				skySphereGO.layer = 9;
 
-			//I think this won't be needed anymore, but test with kerbal konstructs to make sure tsunami bug doesn't come back
-//			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
-//			{
-//				SkySphereKSCUpdater updater = (SkySphereKSCUpdater)skySphereGO.AddComponent (typeof(SkySphereKSCUpdater));
-//				updater.parentLocalTransform = inParentLocalTransform;
-//			}
-//			else
-			{
-				skySphereGO.transform.position = inParentScaledTransform.position;
-				skySphereGO.transform.parent = inParentScaledTransform;
-			}
+			skySphereGO.transform.position = inParentScaledTransform.position;
+			skySphereGO.transform.parent = inParentScaledTransform;
 
 			parentScaledTransform = inParentScaledTransform;
 			parentLocalTransform = inParentLocalTransform;

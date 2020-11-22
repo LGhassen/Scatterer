@@ -227,7 +227,7 @@ namespace scatterer
 
 		public void OnPreCull()
 		{
-			if (!MapView.MapIsEnabled && Scatterer.Instance.nearCamera && !m_manager.m_skyNode.inScaledSpace)
+			if (!MapView.MapIsEnabled && Scatterer.Instance.nearCamera && m_manager.m_skyNode.simulateOceanInteraction)
 			{
 				updateNonCameraSpecificUniforms(m_oceanMaterial);
 			}

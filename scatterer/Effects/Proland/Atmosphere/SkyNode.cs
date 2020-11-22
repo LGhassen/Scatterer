@@ -76,8 +76,7 @@ namespace scatterer
 		public float percentage;
 		public int currentConfigPoint;
 		public ConfigPoint interpolatedSettings= new ConfigPoint();
-		public bool inScaledSpace = true;
-		PQSEnableDisableNotify pqsEnableDisableNotifier;
+		public bool inScaledSpace = true, simulateOceanInteraction=false;
 
 		Vector3 sunPosRelPlanet=Vector3.zero;
 		Matrix4x4 castersMatrix1=Matrix4x4.zero;
@@ -178,13 +177,6 @@ namespace scatterer
 			
 			TweakStockAtmosphere();
 
-			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
-			{
-				GameObject go = new GameObject ();
-				pqsEnableDisableNotifier = go.AddComponent<PQSEnableDisableNotify> ();
-				pqsEnableDisableNotifier.Apply (m_manager.parentCelestialBody.pqsController, this);
-			}
-
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				InitEVEClouds();
@@ -200,6 +192,7 @@ namespace scatterer
 			skySphere = new SkySphereContainer (skySphereSize, skyMaterial, parentLocalTransform, parentScaledTransform);
 
 			if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+			{
 				skySphere.SwitchLocalMode ();
 			}
 			else
@@ -285,13 +278,31 @@ namespace scatterer
 		{
 			if ((m_manager.parentCelestialBody.pqsController != null) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
-				//Change to scaledSpace only if we aren't in map view, otherwise we can be in the surface but pqsController is inactive, this is only for ocean craft interactions
+				bool previousState = inScaledSpace;
+
+				inScaledSpace = !m_manager.parentCelestialBody.pqsController.isActive;
+
+				//if we go from scaled to local space
+				if (!inScaledSpace && previousState)
+				{
+					SwitchEffectsLocal();
+				}
+				
+				//if we go from local to scaled
+				if (inScaledSpace && !previousState)
+				{
+					SwitchEffectsScaled();
+				}
+
+
+				//For wave interactions, consider we are in scaledSpace only if we aren't in map view, otherwise we can be in the surface but pqsController is inactive
 				if (!MapView.MapIsEnabled)
-					inScaledSpace = !m_manager.parentCelestialBody.pqsController.isActive;
+					simulateOceanInteraction = m_manager.parentCelestialBody.pqsController.isActive;
 			}
 			else
 			{
 				inScaledSpace = true;
+				simulateOceanInteraction = false;
 			}
 
 			if (skyNodeInitiated)
@@ -308,15 +319,23 @@ namespace scatterer
 
 		public void SwitchEffectsScaled()
 		{
-			skySphere.SwitchScaledMode ();
-			scaledScatteringContainer.SwitchScaledMode ();
+			Utils.LogInfo ("Skynode switch effects to scaled mode");
+
+			if (!ReferenceEquals(skySphere,null))
+				skySphere.SwitchScaledMode ();
+			if (!ReferenceEquals(scaledScatteringContainer,null))
+				scaledScatteringContainer.SwitchScaledMode ();
 			EVEvolumetrics.Clear();
 		}
 
 		public void SwitchEffectsLocal()
 		{
-			skySphere.SwitchLocalMode();
-			scaledScatteringContainer.SwitchLocalMode ();
+			Utils.LogInfo ("Skynode switch effects to local mode");
+
+			if (!ReferenceEquals(skySphere,null))
+				skySphere.SwitchLocalMode();
+			if (!ReferenceEquals(scaledScatteringContainer,null))
+				scaledScatteringContainer.SwitchLocalMode ();
 
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
@@ -672,11 +691,6 @@ namespace scatterer
 			if (localScatteringProjector)
 			{
 				UnityEngine.Object.Destroy (localScatteringProjector);
-			}
-
-			if (!ReferenceEquals (pqsEnableDisableNotifier, null))
-			{
-				pqsEnableDisableNotifier.Remove();
 			}
 
 			if (!ReferenceEquals (godraysRenderer, null))

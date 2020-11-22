@@ -139,7 +139,6 @@
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmospherePQS.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereProjector.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereUtils.cs" />
-    <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereKSCUpdater.cs" />
     <Compile Include="Effects\Proland\ProlandManager.cs" />
     <Compile Include="Utilities\BufferManager.cs" />
     <Compile Include="Scatterer.cs" />
@@ -183,8 +182,8 @@
     <Compile Include="Utilities\EVE\EVEReflectionHandler.cs" />
     <Compile Include="Utilities\Misc\IcoSphere.cs" />
     <Compile Include="c:\gh\scattererGithub\Scatterer\scatterer\Utilities\Occlusion\ShadowMapCopier.cs" />
-    <Compile Include="Effects\Proland\Atmosphere\Utils\PQSEnableDisableNotify.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereContainer.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\ScaledScatteringContainer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

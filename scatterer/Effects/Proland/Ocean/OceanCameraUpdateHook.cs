@@ -24,7 +24,7 @@ namespace scatterer
 		public void OnWillRenderObject()
 		{
 			Camera cam = Camera.current;
-			if (!cam || MapView.MapIsEnabled || oceanNode.m_manager.m_skyNode.inScaledSpace)
+			if (!cam || MapView.MapIsEnabled || !oceanNode.m_manager.m_skyNode.simulateOceanInteraction)
 				return;
 
 			updateCameraSpecificUniforms (oceanNode.m_oceanMaterial, cam);

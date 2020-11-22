@@ -228,7 +228,7 @@ namespace scatterer {
 
 		public override void UpdateNode()
 		{
-			if (!m_manager.m_skyNode.inScaledSpace && (!MapView.MapIsEnabled || (findHeightsShader != null)))
+			if (!m_manager.m_skyNode.inScaledSpace || (m_manager.m_skyNode.simulateOceanInteraction && (findHeightsShader != null)))
 			{
 				//keep within low float exponents, otherwise we lose precision
 				float t = (float)(Planetarium.GetUniversalTime() % 100000.0);
@@ -695,7 +695,7 @@ namespace scatterer {
 		//FixedUpdate is responsible for physics, we do the part displacement here
 		public void FixedUpdate()
 		{
-			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null && !m_manager.GetSkyNode().inScaledSpace)
+			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null && m_manager.GetSkyNode().simulateOceanInteraction)
 			{
 				if (!heightsRequestInProgress)
 				{
