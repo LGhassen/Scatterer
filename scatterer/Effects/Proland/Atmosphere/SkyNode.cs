@@ -261,7 +261,8 @@ namespace scatterer
 				UpdateSunflareExtinctions ();
 			}
 
-			scaledScatteringContainer.MeshRenderer.enabled = stockScaledPlanetMeshRenderer.enabled;
+			if (!ReferenceEquals(scaledScatteringContainer,null))
+				scaledScatteringContainer.MeshRenderer.enabled = stockScaledPlanetMeshRenderer.enabled;
 
 			if (!ReferenceEquals (localScatteringProjector, null))
 			{

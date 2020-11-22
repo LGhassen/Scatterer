@@ -261,9 +261,6 @@ namespace scatterer
 		public static int _PlanetWorldPos_PROPERTY { get { return _PlanetWorldPos; } }
 		private static int _PlanetWorldPos;
 		
-		public static int renderScattering_PROPERTY { get { return renderScattering; } }
-		private static int renderScattering;
-		
 		public static int extinctionTint_PROPERTY { get { return extinctionTint; } }
 		private static int extinctionTint;
 		
@@ -494,7 +491,6 @@ namespace scatterer
 			cloudScatteringMultiplier = Shader.PropertyToID("cloudScatteringMultiplier");
 			cloudSkyIrradianceMultiplier = Shader.PropertyToID("cloudSkyIrradianceMultiplier");
 			_PlanetWorldPos = Shader.PropertyToID("_PlanetWorldPos");
-			renderScattering = Shader.PropertyToID("renderScattering");
 			extinctionTint = Shader.PropertyToID("extinctionTint");
 			_SkyExposure = Shader.PropertyToID("_SkyExposure");
 			_camForward = Shader.PropertyToID("_camForward");
