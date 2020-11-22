@@ -258,6 +258,12 @@ namespace scatterer
 			{
 				localScatteringProjector.setInScaledSpace (inScaledSpace);
 				localScatteringProjector.updateProjector ();
+
+				if (m_manager.parentCelestialBody.pqsController != null)
+				{
+					float planetOpactiy = m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
+					localScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, (planetOpactiy > 0f) ? 1 : 0);
+				}
 			}
 
 			SetUniforms (skyMaterial);

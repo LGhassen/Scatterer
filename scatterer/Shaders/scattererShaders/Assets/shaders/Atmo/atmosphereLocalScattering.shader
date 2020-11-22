@@ -105,7 +105,8 @@
 			//Cull Front
 			Cull Back
 			ZTest LEqual
-			ZWrite Off
+
+			ZWrite [_ZwriteVariable]
 
 			Blend OneMinusDstColor One //soft additive
 			//Blend SrcAlpha OneMinusSrcAlpha //alpha
