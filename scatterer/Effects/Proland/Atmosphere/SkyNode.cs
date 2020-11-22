@@ -201,6 +201,11 @@ namespace scatterer
 
 			if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 				skySphere.SwitchLocalMode ();
+			}
+			else
+			{
+				skySphere.SwitchScaledMode ();
+			}
 
 			skyMaterial.renderQueue = 2999;
 			InitUniforms (skyMaterial);
@@ -213,6 +218,10 @@ namespace scatterer
 			if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
 				scaledScatteringContainer.SwitchLocalMode ();
+			}
+			else
+			{
+				scaledScatteringContainer.SwitchScaledMode ();
 			}
 			
 			scaledScatteringMaterial.renderQueue = 2998;
@@ -650,10 +659,14 @@ namespace scatterer
 			}
 
 			if (!ReferenceEquals (skySphere, null))
+			{
 				skySphere.Cleanup ();
+			}
 
 			if (!ReferenceEquals (scaledScatteringContainer, null))
+			{
 				scaledScatteringContainer.Cleanup ();
+			}
 
 			if (localScatteringProjector)
 			{

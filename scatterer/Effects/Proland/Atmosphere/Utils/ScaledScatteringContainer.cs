@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace scatterer
 {
-	public class ScaledScatteringContainer : MonoBehaviour
+	public class ScaledScatteringContainer
 	{
 		GameObject scaledScatteringGO;
 		MeshRenderer scaledScatteringMR;
@@ -29,7 +29,7 @@ namespace scatterer
 			scaledScatteringGO.transform.parent = parentScaledTransform;
 			
 			MeshFilter skySphereMF = scaledScatteringGO.AddComponent<MeshFilter>();
-			skySphereMF.mesh = (Mesh)Instantiate (planetMesh);
+			skySphereMF.mesh = (Mesh) Mesh.Instantiate (planetMesh);
 			
 			scaledScatteringMR = scaledScatteringGO.AddComponent<MeshRenderer>();
 			scaledScatteringMR.sharedMaterial = material;
@@ -77,13 +77,14 @@ namespace scatterer
 		
 		public void Cleanup()
 		{
+			if (!ReferenceEquals (scaledScatteringMR, null))
+			{
+				scaledScatteringMR.enabled = false;
+				UnityEngine.Component.Destroy (scaledScatteringMR);
+			}
+
 			if (!ReferenceEquals (scaledScatteringGO, null))
-				scaledScatteringGO.DestroyGameObject ();
-		}
-		
-		public void OnDestroy()
-		{
-			Cleanup ();
+				UnityEngine.Object.Destroy(scaledScatteringGO);
 		}
 	}
 }

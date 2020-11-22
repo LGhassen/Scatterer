@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace scatterer
 {
-	public class SkySphereContainer : MonoBehaviour
+	public class SkySphereContainer
 	{
 		GameObject skySphereGO;
 		MeshRenderer skySphereMR;
@@ -95,13 +95,14 @@ namespace scatterer
 
 		public void Cleanup()
 		{
-			if (!ReferenceEquals (skySphereGO, null))
-				skySphereGO.DestroyGameObject ();
-		}
+			if (!ReferenceEquals (skySphereMR, null))
+			{
+				skySphereMR.enabled = false;
+				UnityEngine.Component.Destroy (skySphereMR);
+			}
 
-		public void OnDestroy()
-		{
-			Cleanup ();
+			if (!ReferenceEquals (skySphereGO, null))
+				UnityEngine.Object.Destroy(skySphereGO);
 		}
 	}
 }
