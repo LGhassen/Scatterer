@@ -23,11 +23,8 @@ namespace scatterer
 
 			scaledScatteringGO = new GameObject ();
 
-			scaledScatteringGO.transform.localScale = parentScaledTransform.localScale;
-			scaledScatteringGO.transform.position = parentScaledTransform.position;
-			scaledScatteringGO.transform.rotation = parentScaledTransform.localRotation;
-			scaledScatteringGO.transform.parent = parentScaledTransform;
-			
+			scaledScatteringGO.transform.SetParent (parentScaledTransform, false);
+
 			MeshFilter skySphereMF = scaledScatteringGO.AddComponent<MeshFilter>();
 			skySphereMF.mesh = (Mesh) Mesh.Instantiate (planetMesh);
 			
@@ -44,18 +41,13 @@ namespace scatterer
 			else
 				scaledScatteringGO.layer = 10;
 		}
-
-		//To recheck if this renders or not on localCamera, I think it does but position, scale and renderqueue might be wrong
+		
 		public void SwitchLocalMode()
 		{
 			scaledScatteringGO.layer = 15;
 
-			scaledScatteringGO.transform.parent = null;
-
 			scaledScatteringGO.transform.localScale = parentScaledTransform.localScale * ScaledSpace.ScaleFactor;
 
-			scaledScatteringGO.transform.position = parentLocalTransform.position;
-			scaledScatteringGO.transform.rotation = parentScaledTransform.localRotation;
 			scaledScatteringGO.transform.parent = parentLocalTransform;
 			
 			Utils.EnableOrDisableShaderKeywords (scaledScatteringMR.sharedMaterial, "LOCAL_MODE_ON", "LOCAL_MODE_OFF", true);
@@ -65,12 +57,11 @@ namespace scatterer
 		{
 			scaledScatteringGO.layer = 10;
 
-			scaledScatteringGO.transform.parent = null;
+			scaledScatteringGO.transform.localScale = Vector3.one;
+			scaledScatteringGO.transform.localPosition = Vector3.zero;
+			scaledScatteringGO.transform.localRotation = Quaternion.identity;
 
-			scaledScatteringGO.transform.localScale = parentScaledTransform.localScale;
-			scaledScatteringGO.transform.position = parentScaledTransform.position;
-			scaledScatteringGO.transform.rotation = parentScaledTransform.localRotation;
-			scaledScatteringGO.transform.parent = parentScaledTransform;
+			scaledScatteringGO.transform.SetParent(parentScaledTransform, false);
 			
 			Utils.EnableOrDisableShaderKeywords (scaledScatteringMR.sharedMaterial, "LOCAL_MODE_ON", "LOCAL_MODE_OFF", false);
 		}

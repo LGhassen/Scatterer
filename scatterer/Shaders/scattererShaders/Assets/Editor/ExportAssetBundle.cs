@@ -19,6 +19,15 @@ namespace scattererShaders
 			BuildBundles(platforms, platformExts);
 		}
 
+		[MenuItem ("Assets/Build AssetBundles for local openGL")]
+		static void BuildOpenGL ()
+		{
+			BuildTarget[] platforms = {BuildTarget.StandaloneLinux64};
+			string[] platformExts = { "-linux"};
+
+			BuildBundles(platforms, platformExts);
+		}
+
 		[MenuItem ("Assets/Build AssetBundles for local dx11")]
 		static void BuildDx11 ()
 		{
