@@ -223,6 +223,7 @@ namespace scatterer
 
 			if (selectedTab == mainMenuTabs.Scattering)
 			{
+				GUI.contentColor = Scatterer.Instance.unifiedCameraMode && SystemInfo.supportsComputeShaders ? Color.white : Color.gray;
 				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (D3D11 only)(recommend enabling long distance shadows)");
 				if(Scatterer.Instance.mainSettings.useGodrays)
 				{
