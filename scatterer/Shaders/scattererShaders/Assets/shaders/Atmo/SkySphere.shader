@@ -46,11 +46,14 @@ Shader "Scatterer/SkySphere"
 				//v.vertex.xyz*= (_experimentalExtinctionScale * (Rt-Rg)+ Rg) / Rt;
 				OUT.pos = UnityObjectToClipPos(v.vertex);
 
+				//this is a hack to make the sky and scaledScattering "fill in" for the local scattering when it gets cut off bu the limited clip plane
+				//essentially render both scaled scattering and sky at max depth and check the z-buffer, that way only render where localScattering hasn't rendered
 #if defined (LOCAL_SKY_ON)
 	#ifdef SHADER_API_D3D11
 				OUT.pos.z = 0.0;
 	#else
-				OUT.pos.z = 1.0;
+				OUT.pos.z = OUT.pos.w;
+				OUT.pos = ( _ProjectionParams.y > 200.0 ) ? OUT.pos : float4(2.0,2.0,2.0,1.0); //cull on near camera on OpenGL
 	#endif
 #endif
 
@@ -165,6 +168,7 @@ Shader "Scatterer/SkySphere"
 
 			struct v2f 
 			{
+				float4 pos : SV_POSITION;
 				float3 worldPos : TEXCOORD0;
 				float3 planetOrigin: TEXCOORD1;
 #if defined(GODRAYS_ON) && defined(LOCAL_SKY_ON)
@@ -172,18 +176,18 @@ Shader "Scatterer/SkySphere"
 #endif
 			};
 
-
-			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
+			v2f vert(appdata_base v)
 			{
 				v2f OUT;
 				v.vertex.xyz*= (_experimentalAtmoScale * (Rt-Rg)+ Rg) / Rt;
-				outpos = UnityObjectToClipPos(v.vertex);
+				OUT.pos = UnityObjectToClipPos(v.vertex);
 
 #if defined (LOCAL_SKY_ON)
 	#ifdef SHADER_API_D3D11
-				outpos.z = 0.0;
+				OUT.pos.z = 0.0;
 	#else
-				outpos.z = 1.0;
+				OUT.pos.z = OUT.pos.w;
+				OUT.pos = ( _ProjectionParams.y > 200.0 ) ? OUT.pos : float4(2.0,2.0,2.0,1.0); //cull on near camera on OpenGL
 	#endif
 #endif
 
@@ -196,13 +200,12 @@ Shader "Scatterer/SkySphere"
 #endif
 
 #if defined(GODRAYS_ON) && defined(LOCAL_SKY_ON)
-				OUT.projPos = ComputeScreenPos(outpos);
+				OUT.projPos = ComputeScreenPos(OUT.pos);
 #endif
-
 				return OUT;
 			}
 
-			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
+			float4 frag(v2f IN) : SV_Target
 			{
 				float3 WSD = _Sun_WorldSunDir;
 				float3 WCP = _WorldSpaceCameraPos;
@@ -272,7 +275,7 @@ Shader "Scatterer/SkySphere"
 				#endif
 				///////////////////////////////////////////////////////////	
 
-				return float4(_Alpha_Global*dither(hdr(finalColor,_SkyExposure), screenPos),1.0);	
+				return float4(_Alpha_Global*dither(hdr(finalColor,_SkyExposure), IN.pos),1.0);	
 			}
 			ENDCG
 		}

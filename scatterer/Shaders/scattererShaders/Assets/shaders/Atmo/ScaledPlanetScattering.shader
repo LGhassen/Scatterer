@@ -49,11 +49,14 @@
 				v2f OUT;
 				OUT.pos = UnityObjectToClipPos(v.vertex);
 
+				//this is a hack to make the scaledScattering "fill in" for the local scattering when it gets cut off bu the limited clip plane
+				//essentially render both scaled scattering and sky at max depth and check the z-buffer, that way only render where localScattering hasn't rendered
 #if defined(LOCAL_MODE_ON)
 	#ifdef SHADER_API_D3D11
 				OUT.pos.z = 0.00000000000001;
 	#else
-				OUT.pos.z = 1.0 - 0.00000000000001;
+				OUT.pos.z = (1.0 - 0.00000000000001) * OUT.pos.w;
+				OUT.pos = ( _ProjectionParams.y > 200.0 ) ? OUT.pos : float4(2.0,2.0,2.0,1.0); //cull on near camera on OpenGL
 	#endif
 #endif
 
@@ -156,7 +159,8 @@
 	#ifdef SHADER_API_D3D11
 				OUT.pos.z = 0.00000000000001;
 	#else
-				OUT.pos.z = 1.0 - 0.00000000000001;
+				OUT.pos.z = (1.0 - 0.00000000000001) * OUT.pos.w;
+				OUT.pos = ( _ProjectionParams.y > 200.0 ) ? OUT.pos : float4(2.0,2.0,2.0,1.0); //cull on near camera on OpenGL
 	#endif
 #endif
 
