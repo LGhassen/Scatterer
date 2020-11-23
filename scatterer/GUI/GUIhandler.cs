@@ -224,7 +224,7 @@ namespace scatterer
 			if (selectedTab == mainMenuTabs.Scattering)
 			{
 				GUI.contentColor = Scatterer.Instance.unifiedCameraMode && SystemInfo.supportsComputeShaders ? Color.white : Color.gray;
-				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (D3D11 only)(recommend enabling long distance shadows)");
+				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (Requires unified camera, Directx11 only)(recommend long distance shadows)");
 				if(Scatterer.Instance.mainSettings.useGodrays)
 				{
 					//Godrays tesselation placeholder
@@ -249,7 +249,9 @@ namespace scatterer
 							Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Secondary lights compatibility (huge performance hit when lights on)");
 							Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCaustics, "Underwater caustics");
 							Scatterer.Instance.mainSettings.oceanLightRays = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanLightRays, "Underwater light rays (requires ocean surface shadows)");
-							Scatterer.Instance.mainSettings.oceanCraftWaveInteractions = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions, "Waves interact with ships (Kraken risk, requires compute shaders)");
+
+							GUI.contentColor = SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders ? Color.white : Color.gray;
+							Scatterer.Instance.mainSettings.oceanCraftWaveInteractions = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions, "Waves interact with ships (Requires asyncGPU readback, Directx11 only)");
 						}
 						GUILayout.EndVertical();
 					}

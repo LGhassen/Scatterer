@@ -73,6 +73,7 @@ namespace scatterer
 			Utils.LogInfo ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
 			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
 			Utils.LogInfo ("Compute shader support: " + SystemInfo.supportsComputeShaders.ToString());
+			Utils.LogInfo ("Async GPU readback support " + SystemInfo.supportsAsyncGPUReadback.ToString());
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
