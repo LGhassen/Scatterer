@@ -552,8 +552,7 @@ namespace scatterer
 			if (GUILayout.Button ("Set")) {
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.flattenScaledSpaceMesh = flattenScaledSpaceMesh;
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.TweakScaledMesh();
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.scaledScatteringContainer.Cleanup();
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.InitScaledScattering();
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.scaledScatteringContainer.ApplyNewMesh(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh);
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.EndScrollView ();

@@ -41,7 +41,14 @@ namespace scatterer
 			else
 				scaledScatteringGO.layer = 10;
 		}
-		
+
+		public void ApplyNewMesh(Mesh planetMesh)
+		{
+			MeshFilter skySphereMF = scaledScatteringGO.GetComponent<MeshFilter>();
+			skySphereMF.mesh.Clear ();
+			skySphereMF.mesh = (Mesh) Mesh.Instantiate (planetMesh);
+		}
+
 		public void SwitchLocalMode()
 		{
 			scaledScatteringGO.layer = 15;
