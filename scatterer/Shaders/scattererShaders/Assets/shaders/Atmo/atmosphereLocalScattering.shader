@@ -226,7 +226,9 @@
 
 #if defined (GODRAYS_ON)
 				float2 depthUV = i.projPos.xy/i.projPos.w;
-				worldPos = worldPos - sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength) * normalize(worldPos-i._camPos);
+				float godrayDepth = sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength * pow(_PlanetOpacity,10.0));
+				worldPos  -= 0.5 * godrayDepth * normalize(worldPos-i._camPos);
+				i._camPos += 0.5 * godrayDepth * normalize(worldPos-i._camPos);
 #endif
 
 				inscatter+= InScattering2(i._camPos, worldPos,SUN_DIR,extinction);

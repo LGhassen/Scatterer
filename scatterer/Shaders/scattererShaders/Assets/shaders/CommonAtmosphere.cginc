@@ -826,7 +826,6 @@ float3 SimpleSkyirradiance(float3 worldP, float3 worldN, float3 worldS)
 	return skyE;
 }
 
-
 //InScattering with modified atmo heights
 float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 extinction) {
 	// single scattered sunlight between two points
@@ -844,15 +843,12 @@ float3 InScattering2(float3 camera, float3 _point, float3 sunDir, out float3 ext
 	viewdir = normalize(viewdir);
 
 	float r = length(camera);
-	//    if (r < 0.9 * Rg) {
-	//        camera.y += Rg;
-	//        _point.y += Rg;
-	//        r = length(camera);
-	//    }
-
-	camera.y += (r < 0.9 * Rg) ? Rg : 0.0;
-	_point.y += (r < 0.9 * Rg) ? Rg : 0.0;
-	r = (r < 0.9 * Rg) ? length(camera) : r;
+	if (r < 0.9 * Rg)
+	{
+	        camera.y += Rg;
+	        _point.y += Rg;
+	        r = length(camera);
+	}
 
 	float rMu = dot(camera, viewdir);
 	float mu = rMu / r;
