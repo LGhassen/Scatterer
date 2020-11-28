@@ -54,8 +54,9 @@ namespace scatterer
 			scaledScatteringGO.layer = 15;
 
 			scaledScatteringGO.transform.localScale = parentScaledTransform.localScale * ScaledSpace.ScaleFactor;
+			scaledScatteringGO.transform.localPosition = Vector3.zero;
 
-			scaledScatteringGO.transform.parent = parentLocalTransform;
+			scaledScatteringGO.transform.SetParent(parentLocalTransform, false);
 			
 			Utils.EnableOrDisableShaderKeywords (scaledScatteringMR.sharedMaterial, "LOCAL_MODE_ON", "LOCAL_MODE_OFF", true);
 		}
