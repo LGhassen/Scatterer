@@ -17,8 +17,8 @@ namespace scatterer
 		[Persistent]
 		public bool integrateWithEVEClouds=true;
 
-		[Persistent]
-		public bool integrateEVECloudsGodrays=true;
+//		[Persistent]
+//		public bool integrateEVECloudsGodrays=true;
 		
 		[Persistent]
 		public bool overrideNearClipPlane=false;
@@ -153,7 +153,7 @@ namespace scatterer
 				(OldConfig.autosavePlanetSettingsOnSceneChange != autosavePlanetSettingsOnSceneChange ||
 				 OldConfig.disableAmbientLight != disableAmbientLight ||
 				 OldConfig.integrateWithEVEClouds != integrateWithEVEClouds ||
-				 OldConfig.integrateEVECloudsGodrays != integrateEVECloudsGodrays ||
+//				 OldConfig.integrateEVECloudsGodrays != integrateEVECloudsGodrays ||
 				 OldConfig.overrideNearClipPlane != overrideNearClipPlane ||
 				 OldConfig.nearClipPlane != nearClipPlane ||
 				 OldConfig.useOceanShaders != useOceanShaders ||

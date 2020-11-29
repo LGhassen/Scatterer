@@ -19,12 +19,12 @@ namespace scatterer
 		GameObject volumeDepthGO;
 		public RenderTexture volumeDepthTexture;
 
-		GameObject cloudShadowGO;
-		MeshRenderer cloudShadowMR;
+//		GameObject cloudShadowGO;
+//		MeshRenderer cloudShadowMR;
 		Dictionary<ShadowMapPass, List<CommandBuffer>> shadowRenderCommandBuffers = new Dictionary<ShadowMapPass, List<CommandBuffer>> ();
 		List<Tuple<EVEClouds2d,Material>> cloudsShadowsMaterials = new List<Tuple<EVEClouds2d, Material>>();
-		RenderTexture cloudShadowMap;
-		CommandBuffer clearShadowMapCB;
+//		RenderTexture cloudShadowMap;
+//		CommandBuffer clearShadowMapCB;
 
 		bool commandBufferAdded = false;
 		
@@ -98,10 +98,10 @@ namespace scatterer
 			volumeDepthTexture.filterMode = FilterMode.Point;
 			volumeDepthTexture.Create ();
 
-			if (Scatterer.Instance.mainSettings.integrateEVECloudsGodrays)
-			{
-				InitCloudShadowCommandBuffers ();
-			}
+//			if (Scatterer.Instance.mainSettings.integrateEVECloudsGodrays)
+//			{
+//				InitCloudShadowCommandBuffers ();
+//			}
 
 			//world to shadow matrices aren't exposed in the C# api so we can't compute the shadow to world matrices from them
 			//since they are exposed in shaders we use a compute shader to do it
@@ -120,77 +120,77 @@ namespace scatterer
 			return true;
 		}
 
-		void InitCloudShadowCommandBuffers ()
-		{
-			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey (parentSkyNode.m_manager.parentCelestialBody.name))
-			{
-				foreach (EVEClouds2d clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [parentSkyNode.m_manager.parentCelestialBody.name])
-				{
-					if (clouds2d.CloudShadowMaterial != null)
-					{
-						Material cloudShadowDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer-EVE/CloudShadowMap"]);
-						cloudShadowDepthMaterial.CopyKeywordsFrom (clouds2d.CloudShadowMaterial);
-						if (cloudShadowGO == null)
-						{
-							cloudShadowGO = GameObject.CreatePrimitive (PrimitiveType.Sphere);
-							GameObject.Destroy (cloudShadowGO.GetComponent<Collider> ());
-							MeshFilter cloudShadowMF = cloudShadowGO.GetComponent<MeshFilter> ();
-							cloudShadowMF.mesh.Clear ();
-							cloudShadowMF.mesh = IcoSphere.CreateIcoSphereMesh ();
-							cloudShadowMR = cloudShadowGO.GetComponent<MeshRenderer> ();
-							cloudShadowGO.transform.parent = parentSkyNode.m_manager.parentCelestialBody.transform;
-							cloudShadowMR.receiveShadows = false;
-							cloudShadowMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-							cloudShadowMR.enabled = false;
-
-							cloudShadowMap = new RenderTexture (2048, 2048, 0, RenderTextureFormat.RHalf); //replace size after
-							cloudShadowMap.useMipMap = false;
-							cloudShadowMap.antiAliasing = 1;
-							cloudShadowMap.filterMode = FilterMode.Point;
-							cloudShadowMap.Create ();
-
-							clearShadowMapCB = new CommandBuffer();
-							clearShadowMapCB.SetRenderTarget(cloudShadowMap);
-							clearShadowMapCB.ClearRenderTarget(false,true,Color.black);
-
-							shadowRenderCommandBuffers[ShadowMapPass.DirectionalCascade0] = new List<CommandBuffer>();
-							shadowRenderCommandBuffers[ShadowMapPass.DirectionalCascade0].Add(clearShadowMapCB);
-
-							Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "CLOUDSMAP_ON", "CLOUDSMAP_OFF", true);
-							volumeDepthMaterial.SetTexture("cloudShadowMap", cloudShadowMap);
-						}
-						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade0, 0f, 0f, 0.5f, 0.5f);
-						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade1, 0.5f, 0f, 0.5f, 0.5f);
-						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade2, 0f, 0.5f, 0.5f, 0.5f);
-						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade3, 0.5f, 0.5f, 0.5f, 0.5f);
-
-						cloudsShadowsMaterials.Add (new Tuple<EVEClouds2d, Material> (clouds2d, cloudShadowDepthMaterial));
-					}
-				}
-			}
-		}
+//		void InitCloudShadowCommandBuffers ()
+//		{
+//			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey (parentSkyNode.m_manager.parentCelestialBody.name))
+//			{
+//				foreach (EVEClouds2d clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [parentSkyNode.m_manager.parentCelestialBody.name])
+//				{
+//					if (clouds2d.CloudShadowMaterial != null)
+//					{
+//						Material cloudShadowDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer-EVE/CloudShadowMap"]);
+//						cloudShadowDepthMaterial.CopyKeywordsFrom (clouds2d.CloudShadowMaterial);
+//						if (cloudShadowGO == null)
+//						{
+//							cloudShadowGO = GameObject.CreatePrimitive (PrimitiveType.Sphere);
+//							GameObject.Destroy (cloudShadowGO.GetComponent<Collider> ());
+//							MeshFilter cloudShadowMF = cloudShadowGO.GetComponent<MeshFilter> ();
+//							cloudShadowMF.mesh.Clear ();
+//							cloudShadowMF.mesh = IcoSphere.CreateIcoSphereMesh ();
+//							cloudShadowMR = cloudShadowGO.GetComponent<MeshRenderer> ();
+//							cloudShadowGO.transform.parent = parentSkyNode.m_manager.parentCelestialBody.transform;
+//							cloudShadowMR.receiveShadows = false;
+//							cloudShadowMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+//							cloudShadowMR.enabled = false;
+//
+//							cloudShadowMap = new RenderTexture (2048, 2048, 0, RenderTextureFormat.RHalf); //replace size after
+//							cloudShadowMap.useMipMap = false;
+//							cloudShadowMap.antiAliasing = 1;
+//							cloudShadowMap.filterMode = FilterMode.Point;
+//							cloudShadowMap.Create ();
+//
+//							clearShadowMapCB = new CommandBuffer();
+//							clearShadowMapCB.SetRenderTarget(cloudShadowMap);
+//							clearShadowMapCB.ClearRenderTarget(false,true,Color.black);
+//
+//							shadowRenderCommandBuffers[ShadowMapPass.DirectionalCascade0] = new List<CommandBuffer>();
+//							shadowRenderCommandBuffers[ShadowMapPass.DirectionalCascade0].Add(clearShadowMapCB);
+//
+//							Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "CLOUDSMAP_ON", "CLOUDSMAP_OFF", true);
+//							volumeDepthMaterial.SetTexture("cloudShadowMap", cloudShadowMap);
+//						}
+//						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade0, 0f, 0f, 0.5f, 0.5f);
+//						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade1, 0.5f, 0f, 0.5f, 0.5f);
+//						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade2, 0f, 0.5f, 0.5f, 0.5f);
+//						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade3, 0.5f, 0.5f, 0.5f, 0.5f);
+//
+//						cloudsShadowsMaterials.Add (new Tuple<EVEClouds2d, Material> (clouds2d, cloudShadowDepthMaterial));
+//					}
+//				}
+//			}
+//		}
 		
-		void RenderObjectInCustomCascade(Light targetLight, RenderTexture rt, MeshRenderer mr, Material mat , ShadowMapPass passMask, float startX, float startY, float width, float height)
-		{
-			CommandBuffer cloudShadowDepthCB = new CommandBuffer();
-			Rect cascadeRect = new Rect ((int)(startX * rt.width), (int)(startY * rt.height), (int)(width * rt.width), (int)(height * rt.height));
-
-			cloudShadowDepthCB.SetRenderTarget(rt);
-			cloudShadowDepthCB.EnableScissorRect(cascadeRect);
-			cloudShadowDepthCB.SetViewport(cascadeRect);
-			cloudShadowDepthCB.DrawRenderer(mr, mat);
-			cloudShadowDepthCB.DisableScissorRect();
-
-			if (shadowRenderCommandBuffers.ContainsKey (passMask))
-			{
-				shadowRenderCommandBuffers[passMask].Add(cloudShadowDepthCB);
-			}
-			else
-			{
-				shadowRenderCommandBuffers[passMask] = new List<CommandBuffer>();
-				shadowRenderCommandBuffers[passMask].Add(cloudShadowDepthCB);
-			}
-		}
+//		void RenderObjectInCustomCascade(Light targetLight, RenderTexture rt, MeshRenderer mr, Material mat , ShadowMapPass passMask, float startX, float startY, float width, float height)
+//		{
+//			CommandBuffer cloudShadowDepthCB = new CommandBuffer();
+//			Rect cascadeRect = new Rect ((int)(startX * rt.width), (int)(startY * rt.height), (int)(width * rt.width), (int)(height * rt.height));
+//
+//			cloudShadowDepthCB.SetRenderTarget(rt);
+//			cloudShadowDepthCB.EnableScissorRect(cascadeRect);
+//			cloudShadowDepthCB.SetViewport(cascadeRect);
+//			cloudShadowDepthCB.DrawRenderer(mr, mat);
+//			cloudShadowDepthCB.DisableScissorRect();
+//
+//			if (shadowRenderCommandBuffers.ContainsKey (passMask))
+//			{
+//				shadowRenderCommandBuffers[passMask].Add(cloudShadowDepthCB);
+//			}
+//			else
+//			{
+//				shadowRenderCommandBuffers[passMask] = new List<CommandBuffer>();
+//				shadowRenderCommandBuffers[passMask].Add(cloudShadowDepthCB);
+//			}
+//		}
 
 		public void EnableRenderingForFrame()
 		{
@@ -331,10 +331,10 @@ namespace scatterer
 				DestroyImmediate(volumeDepthGO);
 			}
 
-			if (!ReferenceEquals (cloudShadowGO, null))
-			{
-				DestroyImmediate(cloudShadowGO);
-			}
+//			if (!ReferenceEquals (cloudShadowGO, null))
+//			{
+//				DestroyImmediate(cloudShadowGO);
+//			}
 		}
 	}
 }

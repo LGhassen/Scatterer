@@ -366,10 +366,10 @@ namespace scatterer
 			else if (selectedTab == mainMenuTabs.EVEintegration)
 			{
 				Scatterer.Instance.mainSettings.integrateWithEVEClouds = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateWithEVEClouds, "Integrate effects with EVE clouds (may require restart)");
-				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)
-				{
-					Scatterer.Instance.mainSettings.integrateEVECloudsGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateEVECloudsGodrays, "EVE clouds cast godrays (require godrays)");
-				}
+//				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)
+//				{
+//					Scatterer.Instance.mainSettings.integrateEVECloudsGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.integrateEVECloudsGodrays, "EVE clouds cast godrays (require godrays)");
+//				}
 			}
 			else if (selectedTab == mainMenuTabs.Misc)
 			{
