@@ -191,13 +191,16 @@ namespace scatterer
 			float skySphereSize = 2 * (4 * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor;
 			skySphere = new SkySphereContainer (skySphereSize, skyMaterial, parentLocalTransform, parentScaledTransform);
 
-			if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 			{
-				skySphere.SwitchLocalMode ();
-			}
-			else
-			{
-				skySphere.SwitchScaledMode ();
+				if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+				{
+					skySphere.SwitchLocalMode ();
+				}
+				else
+				{
+					skySphere.SwitchScaledMode ();
+				}
 			}
 
 			skyMaterial.renderQueue = 2999;
@@ -207,14 +210,17 @@ namespace scatterer
 		public void InitScaledScattering ()
 		{
 			scaledScatteringContainer = new ScaledScatteringContainer (parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh, scaledScatteringMaterial, parentLocalTransform, parentScaledTransform);
-			
-			if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+
+			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 			{
-				scaledScatteringContainer.SwitchLocalMode ();
-			}
-			else
-			{
-				scaledScatteringContainer.SwitchScaledMode ();
+				if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+				{
+					scaledScatteringContainer.SwitchLocalMode ();
+				}
+				else
+				{
+					scaledScatteringContainer.SwitchScaledMode ();
+				}
 			}
 			
 			scaledScatteringMaterial.renderQueue = 2998;
