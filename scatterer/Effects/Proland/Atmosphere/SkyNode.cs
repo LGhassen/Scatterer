@@ -45,7 +45,7 @@ namespace scatterer
 		[Persistent] public float cloudSkyIrradianceMultiplier=0.05f;
 		[Persistent] public float volumetricsColorMultiplier = 1f;
 		[Persistent] public bool EVEIntegration_preserveCloudColors = false;
-		[Persistent] public float godrayCloudAlphaThreshold = 0.25f;
+//		[Persistent] public float godrayCloudAlphaThreshold = 0.25f;
 
 		[Persistent] public List < ConfigPoint > configPoints = new List < ConfigPoint > ();
 

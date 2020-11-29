@@ -56,7 +56,7 @@ namespace scatterer
 		float openglThreshold = 10f;
 
 		float godrayStrength = 1.0f;
-		float godrayCloudAlphaThreshold = 0.1f;
+//		float godrayCloudAlphaThreshold = 0.1f;
 
 		float extinctionThickness = 1f;
 		float skyExtinctionTint = 1f;
@@ -512,7 +512,7 @@ namespace scatterer
 				if (GUILayout.Button ("Toggle"))
 					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.TogglePreserveCloudColors ();
 				GUILayout.EndHorizontal ();
-				GUIfloat ("Godray alpha threshold* (alpha value above which a cloud casts a godray)", ref godrayCloudAlphaThreshold, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.godrayCloudAlphaThreshold);
+//				GUIfloat ("Godray alpha threshold* (alpha value above which a cloud casts a godray)", ref godrayCloudAlphaThreshold, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.godrayCloudAlphaThreshold);
 				//								GUIfloat("Volumetrics Scattering Multiplier", ref volumetricsScatteringMultiplier, ref Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsScatteringMultiplier);
 				//								GUIfloat("Volumetrics Sky irradiance Multiplier", ref volumetricsSkyIrradianceMultiplier, ref Core.Instance.planetsListReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.volumetricsSkyIrradianceMultiplier);
 			}
@@ -845,7 +845,7 @@ namespace scatterer
 			//			volumetricsSkyIrradianceMultiplier = skyNode.volumetricsSkyIrradianceMultiplier;
 
 			godrayStrength = skyNode.godrayStrength;
-			godrayCloudAlphaThreshold = skyNode.godrayCloudAlphaThreshold;
+//			godrayCloudAlphaThreshold = skyNode.godrayCloudAlphaThreshold;
 		}
 		
 		public void loadConfigPoint (int point)

@@ -21,8 +21,8 @@ namespace scatterer
 
 //		GameObject cloudShadowGO;
 //		MeshRenderer cloudShadowMR;
-		Dictionary<ShadowMapPass, List<CommandBuffer>> shadowRenderCommandBuffers = new Dictionary<ShadowMapPass, List<CommandBuffer>> ();
-		List<Tuple<EVEClouds2d,Material>> cloudsShadowsMaterials = new List<Tuple<EVEClouds2d, Material>>();
+//		Dictionary<ShadowMapPass, List<CommandBuffer>> shadowRenderCommandBuffers = new Dictionary<ShadowMapPass, List<CommandBuffer>> ();
+//		List<Tuple<EVEClouds2d,Material>> cloudsShadowsMaterials = new List<Tuple<EVEClouds2d, Material>>();
 //		RenderTexture cloudShadowMap;
 //		CommandBuffer clearShadowMapCB;
 
@@ -202,13 +202,13 @@ namespace scatterer
 
 				Light targetLight = targetLightGO.GetComponent<Light> ();
 
-				foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys)
-				{
-					foreach (CommandBuffer cb in shadowRenderCommandBuffers[pass])
-					{
-						targetLight.AddCommandBuffer (LightEvent.AfterShadowMapPass, cb, pass);
-					}
-				}
+//				foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys)
+//				{
+//					foreach (CommandBuffer cb in shadowRenderCommandBuffers[pass])
+//					{
+//						targetLight.AddCommandBuffer (LightEvent.AfterShadowMapPass, cb, pass);
+//					}
+//				}
 
 				commandBufferAdded = true;
 			}
@@ -220,13 +220,13 @@ namespace scatterer
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
 				
-				Light targetLight = targetLightGO.GetComponent<Light> ();
-				
-				foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys) {
-					foreach (CommandBuffer cb in shadowRenderCommandBuffers[pass]) {
-						targetLight.RemoveCommandBuffer (LightEvent.AfterShadowMapPass, cb);
-					}
-				}
+//				Light targetLight = targetLightGO.GetComponent<Light> ();
+//				
+//				foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys) {
+//					foreach (CommandBuffer cb in shadowRenderCommandBuffers[pass]) {
+//						targetLight.RemoveCommandBuffer (LightEvent.AfterShadowMapPass, cb);
+//					}
+//				}
 				commandBufferAdded = false;
 			}
 
@@ -295,12 +295,12 @@ namespace scatterer
 				volumeDepthMaterial.SetFloat(ShaderProperties._experimentalAtmoScale_PROPERTY,parentSkyNode.experimentalAtmoScale);
 				volumeDepthMaterial.SetVector (ShaderProperties._planetPos_PROPERTY, parentSkyNode.parentLocalTransform.position);
 
-				foreach(Tuple<EVEClouds2d, Material> tuple in cloudsShadowsMaterials)
-				{
-					tuple.Item2.CopyPropertiesFromMaterial(tuple.Item1.CloudShadowMaterial);
-					tuple.Item2.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLightGO.transform.forward);
-					tuple.Item2.SetFloat(ShaderProperties._godrayCloudThreshold_PROPERTY, parentSkyNode.godrayCloudAlphaThreshold);
-				}
+//				foreach(Tuple<EVEClouds2d, Material> tuple in cloudsShadowsMaterials)
+//				{
+//					tuple.Item2.CopyPropertiesFromMaterial(tuple.Item1.CloudShadowMaterial);
+//					tuple.Item2.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLightGO.transform.forward);
+//					tuple.Item2.SetFloat(ShaderProperties._godrayCloudThreshold_PROPERTY, parentSkyNode.godrayCloudAlphaThreshold);
+//				}
 			}
 		}
 
