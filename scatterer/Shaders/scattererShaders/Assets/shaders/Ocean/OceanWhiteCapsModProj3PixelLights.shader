@@ -159,14 +159,19 @@
 			uniform float _Post_Extinction_Tint;
 			uniform float extinctionThickness;
 
-			//#if defined (REFRACTION_ON)
+			#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 			uniform sampler2D ScattererScreenCopy;   //background texture used for refraction
-			//#endif
+			#endif
 
-#if defined (PLANETSHINE_ON)
+			#if defined (GODRAYS_ON)
+			uniform sampler2D _godrayDepthTexture;
+			uniform float _godrayStrength;
+			#endif
+
+			#if defined (PLANETSHINE_ON)
 			uniform float4x4 planetShineSources;
 			uniform float4x4 planetShineRGB;
-#endif
+			#endif
 
 			struct v2f 
 			{
@@ -185,7 +190,7 @@
 				float4 vert = v.vertex;
 				vert.xy *= offScreenVertexStretch;
 
-				float2 u = OceanPos(vert, _Globals_ScreenToCamera, t, cameraDir, oceanDir);		//camera dir is viewing direction in camera space
+				float2 u = OceanPos(vert, _Globals_ScreenToCamera, t, cameraDir, oceanDir);	//camera dir is viewing direction in camera space
 				float2 dux = OceanPos(vert + float4(_Ocean_ScreenGridSize.x, 0.0, 0.0, 0.0), _Globals_ScreenToCamera) - u;
 				float2 duy = OceanPos(vert + float4(0.0, _Ocean_ScreenGridSize.y, 0.0, 0.0), _Globals_ScreenToCamera) - u;
 
@@ -212,11 +217,11 @@
 				float3x3 otoc = _Ocean_OceanToCamera;
 				float tClamped = clamp(t*0.25, 0.0, 1.0);
 
-#if defined (UNDERWATER_ON)
+				#if defined (UNDERWATER_ON)
 				dP = lerp(float3(0.0,0.0,0.1),dP,tClamped);  //prevents projected grid intersecting near plane
-#else
+				#else
 				dP = lerp(float3(0.0,0.0,-0.1),dP,tClamped);  //prevents projected grid intersecting near plane
-#endif
+				#endif
 				float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);   //position in camera space
 				float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
@@ -238,7 +243,7 @@
 				float3 result = float3(0,0,0);
 
 				float3 reflectedAngle=reflect(-V,N);
-				reflectedAngle.z=max(reflectedAngle.z,0.0);										//hack to avoid unsightly black pixels from downwards reflections
+				reflectedAngle.z=max(reflectedAngle.z,0.0);	//hack to avoid unsightly black pixels from downwards reflections
 				result = SkyRadiance3(earthP,reflectedAngle, sunDir);
 
 				return result;
@@ -361,46 +366,46 @@
 				SunRadianceAndSkyIrradiance(earthP, N, L, sunL, skyE);
 
 				half shadowTerm = 1.0;
-#if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
+				#if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
 				shadowTerm = getOceanShadow (IN.worldPos, -IN.viewPos.z);
-#endif
+				#endif
 
-#if defined (UNDERWATER_ON)
+				#if defined (UNDERWATER_ON)
 				float fresnel = 1-fresnel_dielectric(V, N, 1/refractionIndex);   //1.0/1.33 = 0.75 approx index of air/index of water
 				Lsky = fresnel * RefractedSky(V, N, L, earthP);
 
-#else	//if not underwater
+				#else	//if not underwater
 
 				float fresnel = MeanFresnel(V, N, sigmaSq);
-	#if defined (SKY_REFLECTIONS_ON)
+				#if defined (SKY_REFLECTIONS_ON)
 				float3 camOceanP = normalize(float3(0.0, 0.0, radius)) * (radius + 10.0);
-				Lsky = fresnel * (ReflectedSky(V, N, L, earthP) * lerp(0.5,1.0,shadowTerm) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07));   		   //accurate sky reflection
-	#else
-				Lsky = fresnel * (skyE / M_PI * lerp(0.5,1.0,shadowTerm) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07)); 		   					   //sky irradiance only
-	#endif
-#endif
+				Lsky = fresnel * (ReflectedSky(V, N, L, earthP) * lerp(0.5,1.0,shadowTerm) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07));	//accurate sky reflection
+				#else
+				Lsky = fresnel * (skyE / M_PI * lerp(0.5,1.0,shadowTerm) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07));	//sky irradiance only
+				#endif
+				#endif
 
 				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL * shadowTerm;
 				//float3 Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * (skyE / M_PI);
 				float3 Lsea =   0.98 * (1.0 - fresnel) * _Ocean_Color * (skyE / M_PI) * lerp(0.3,1.0,shadowTerm);
 
-#if defined (UNDERWATER_ON)
+				#if defined (UNDERWATER_ON)
 				float3 ocColor = _sunColor * oceanColor(reflect(-V,N),L,float3(0.0,0.0,1.0)); //reflected ocean color from underwater
 				float waterLightExtinction = length(getSkyExtinction(earthP, L));
 				Lsea = hdrNoExposure(waterLightExtinction * ocColor) * lerp(0.8,1.0,shadowTerm);
-#endif
+				#endif
 
 				float oceanDistance = length(IN.viewPos);
 
 				//depth stuff
-#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
+				#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				float2 depthUV = IN.screenPos.xy / IN.screenPos.w;
 
-	#if defined (UNDERWATER_ON)
+				#if defined (UNDERWATER_ON)
 				float2 uv = depthUV.xy + (N.xy)*0.025 * float2(1.0,10.0);
-	#else
+				#else
 				float2 uv = depthUV.xy + N.xy*0.025;
-	#endif
+				#endif
 
 				float fragDistance = getScattererFragDistance(uv);
 				float depth= fragDistance - oceanDistance; //water depth, ie viewing ray distance in water
@@ -409,16 +414,16 @@
 				fragDistance = getScattererFragDistance(uv);
 				depth= fragDistance - oceanDistance;
 
-	#if !defined (UNDERWATER_ON)
+				#if !defined (UNDERWATER_ON)
 				depth=lerp(depth,transparencyDepth,clamp((oceanDistance-1000.0)/5000.0,0.0,1.0)); //fade out refractions and transparency at distance, to hide swirly artifacts of low precision
-	#endif
+				#endif
 				float outAlpha=lerp(0.0,1.0,depth/transparencyDepth);
 				outAlpha = (depth < -0.5) ? 1.0 : outAlpha;   //fix black edge around antialiased terrain in front of ocean
 				_Ocean_WhiteCapStr=lerp(shoreFoam,_Ocean_WhiteCapStr, clamp(depth*0.2,0.0,1.0));
 				_Ocean_WhiteCapStr= (depth <= 0.0) ? 0.0 : _Ocean_WhiteCapStr; //fixes white outline around objects in front of the ocean
-#else
+				#else
 				float outAlpha=1.0;
-#endif
+				#endif
 
 				float clampFactor= clamp(oceanDistance/alphaRadius,0.0,1.0); //factor to clamp whitecaps
 
@@ -439,17 +444,17 @@
 				float3 l = (sunL * (max(dot(N, L), 0.0)) + skyE + UNITY_LIGHTMODEL_AMBIENT.rgb * 30) / M_PI;
 				float3 R_ftot = float3(W * l * 0.4)* lerp(0.5,1.0,shadowTerm);
 
-#if defined (UNDERWATER_ON)
+				#if defined (UNDERWATER_ON)
 				float3 surfaceColor = abs(Lsky + Lsea + R_ftot);
-#else
+				#else
 				float3 surfaceColor = abs(Lsun + Lsky + Lsea + R_ftot);
-#endif
+				#endif
 				float LsunTotal   = Lsun;
 				float R_ftotTotal = R_ftot;
 				float LseaTotal   = Lsea;
 				float LskyTotal   = Lsky;
 
-#if defined (PLANETSHINE_ON)
+				#if defined (PLANETSHINE_ON)
 				for (int i=0; i<4; ++i)
 				{
 				if (planetShineRGB[i].w == 0) break;
@@ -457,11 +462,11 @@
 				L=normalize(planetShineSources[i].xyz);
 				SunRadianceAndSkyIrradiance(earthP, N, L, sunL, skyE);
 
-	#if defined (SKY_REFLECTIONS_ON)
+				#if defined (SKY_REFLECTIONS_ON)
 				Lsky = fresnel * ReflectedSky(V, N, L, earthP);   //planet, accurate sky reflections
-	#else
+				#else
 				Lsky = fresnel * skyE / M_PI; 		   //planet, sky irradiance only
-	#endif				
+				#endif
 
 				Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL;
 				Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * skyE / M_PI;
@@ -481,23 +486,23 @@
 				LseaTotal   += Lsea;
 				LskyTotal   += Lsky;
 			}
-#endif
+				#endif
 
 			bool insideClippingRange = oceanFragmentInsideOfClippingRange(-IN.viewPos.z/IN.viewPos.w);
 
-#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
+			#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 			outAlpha = max(hdr(LsunTotal + R_ftotTotal,_ScatteringExposure), fresnel+outAlpha) ; //seems about perfect
 			outAlpha = min(outAlpha, 1.0);
 
-	#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
+			#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
 			float3 backGrnd = tex2D(ScattererScreenCopy, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
-	#else
+			#else
 			float3 backGrnd = tex2D(ScattererScreenCopy, uv );
-	#endif
-#endif
+			#endif
+			#endif
 
 
-#if defined (UNDERWATER_ON)
+			#if defined (UNDERWATER_ON)
 
 			float3 transmittance =  Lsky+R_ftot;
 			//float3 transmittance =  LskyTotal+R_ftotTotal; //causes gray sky idk why
@@ -507,10 +512,10 @@
 
 			//consider not using transmittance but instead background texture, change the refraction angle to have something matching what you would see from underwater
 
-	#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
+			#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 			backGrnd+=hdr(R_ftotTotal,_ScatteringExposure)*(1-backGrnd); //make foam visible from below as well
 			finalColor = (fragDistance < 750000.0) ? backGrnd : finalColor;
-	#endif
+			#endif
 
 			float3 Vworld = mul ( _Globals_OceanToWorld, float4(V,0.0));
 			float3 Lworld = mul ( _Globals_OceanToWorld, float4(L,0.0));
@@ -528,12 +533,12 @@
 			finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
 			return float4(dither(finalColor, screenPos),insideClippingRange);
-#else
-	#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
+			#else
+			#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 			float3 finalColor = lerp(backGrnd, hdr(surfaceColor,_ScatteringExposure), outAlpha);  //refraction on and not underwater
-	#else
+			#else
 			float3 finalColor = hdr(surfaceColor,_ScatteringExposure);  //refraction on and not underwater
-	#endif
+			#endif
 
 			if (_PlanetOpacity == 1.0)
 			{
@@ -542,6 +547,12 @@
 				float3 _camPos = _WorldSpaceCameraPos - _planetPos;
 
 				float minDistance = length(worldPos-_camPos);
+
+			#if defined (GODRAYS_ON)
+			float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
+			worldPos = worldPos - sampleGodrayDepth(_godrayDepthTexture, godrayUV, _godrayStrength) * normalize(worldPos-_camPos);
+			#endif
+
 				float3 inscatter=0.0;float3 extinction=1.0;
 				inscatter = InScattering2(_camPos, worldPos,SUN_DIR,extinction);
 
@@ -559,14 +570,14 @@
 				finalColor = inscatter*(1-finalColor) + finalColor;
 			}
 
-
 			insideClippingRange = (outAlpha == 1.0) ? 1.0 : insideClippingRange;     //if no transparency -> render normally, if transparency play with the overlap to hide seams between cameras
 			return float4(dither(finalColor,screenPos), _PlanetOpacity*insideClippingRange);
-#endif
+			#endif
 		}
 
 		ENDCG
 	}
+
 
 	Pass   //forward Add
 	{
