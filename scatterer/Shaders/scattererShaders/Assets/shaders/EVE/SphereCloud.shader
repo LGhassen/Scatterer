@@ -33,6 +33,7 @@ Shader "Scatterer-EVE/Cloud" {
 		//AlphaTest Greater 0
 		//ColorMask RGB
 		Cull Off
+		ZWrite Off
 		Lighting On
 
 		SubShader {
