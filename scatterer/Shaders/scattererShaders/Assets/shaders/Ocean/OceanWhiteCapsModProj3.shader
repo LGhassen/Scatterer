@@ -146,6 +146,9 @@ Shader "Scatterer/OceanWhiteCaps"
 			uniform float _PlanetOpacity;  //to fade out the ocean when PQS is fading out
 			uniform float _ScatteringExposure;
 
+			uniform float _Alpha_Global;
+			uniform float _SkyExposure;
+
 			uniform float2 _VarianceMax;
 
 			uniform float darknessDepth;
@@ -312,11 +315,12 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL * shadowTerm;
 
 #if defined (UNDERWATER_ON)
-				float3 surfaceColor = abs(Lsky + Lsea + R_ftot);
+				float3 surfaceColor = hdr(abs(Lsea + R_ftot),_ScatteringExposure);
 #else
-				float3 surfaceColor = abs(Lsun + Lsky + Lsea + R_ftot);
+				float3 surfaceColor = hdr(abs(Lsun + Lsea + R_ftot),_ScatteringExposure);
+				Lsky = _Alpha_Global*hdr(Lsky,_SkyExposure);
+				surfaceColor = surfaceColor + (1.0-surfaceColor) * Lsky;
 #endif
-
 				float3 LsunTotal = Lsun; float3 R_ftotTotal = R_ftot; float3 LseaTotal = Lsea; float3 LskyTotal = Lsky;
 #if defined (PLANETSHINE_ON)
 
@@ -337,9 +341,10 @@ Shader "Scatterer/OceanWhiteCaps"
 #endif
 
 #if defined (UNDERWATER_ON)
-
-				float3 transmittance =  hdr(Lsky+R_ftot, _ScatteringExposure);
+				Lsky = _Alpha_Global*hdr(Lsky,_SkyExposure);
+				float3 transmittance =  hdr(R_ftot, _ScatteringExposure);
 				transmittance = clamp(transmittance, float3(0.0,0.0,0.0), float3(1.0,1.0,1.0));
+				transmittance = transmittance + (1.0-transmittance) * Lsky;
 
 				float3 finalColor = lerp(transmittance,Lsea, 1-fresnel);	//consider not using transmittance but instead background texture, change the refraction angle to have something matching what you would see from underwater
 
@@ -367,9 +372,9 @@ Shader "Scatterer/OceanWhiteCaps"
 				return float4(dither(finalColor, screenPos),insideClippingRange);
 #else
 	#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
-				float3 finalColor = lerp(backGrnd, hdr(surfaceColor,_ScatteringExposure), transparencyAlpha);  //refraction on and not underwater
+				float3 finalColor = lerp(backGrnd, surfaceColor, transparencyAlpha);	//refraction on and not underwater
 	#else
-				float3 finalColor = hdr(surfaceColor,_ScatteringExposure);  //refraction on and not underwater
+				float3 finalColor = surfaceColor;  					//refraction off and not underwater
 	#endif
 
 				if (_PlanetOpacity == 1.0)

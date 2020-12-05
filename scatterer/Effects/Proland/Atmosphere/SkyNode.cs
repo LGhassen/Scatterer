@@ -411,6 +411,9 @@ namespace scatterer
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ().normalized);
 			mat.SetVector(ShaderProperties._camForward_PROPERTY, Scatterer.Instance.nearCamera.transform.forward);
 
+			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);			
+			mat.SetFloat (ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
+
 			UpdatePostProcessMaterialUniforms (mat);
 		}
 		
