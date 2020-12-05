@@ -67,10 +67,13 @@ float3 oceanColor(float3 viewDir, float3 lightDir, float3 surfaceDir)
 float getFresnel(float3 V, float3 N, float sigmaSq)
 {
   #if defined (UNDERWATER_ON)
-	return (1.0-fresnel_dielectric(V, N, 1/refractionIndex));
+	float fresnel = 1.0 - fresnel_dielectric(V, N, 1/refractionIndex);
   #else
-	return MeanFresnel(V, N, sigmaSq);
+	float fresnel = MeanFresnel(V, N, sigmaSq);
   #endif
+
+	fresnel = clamp(fresnel,0.0,1.0);
+	return fresnel;
 }
 
 float3 getSkyColor(float fresnel, float3 V, float3 N, float3 L, float3 earthP, float3 skyE, float shadowTerm, float radius)
@@ -120,6 +123,37 @@ float2 getPerturbedUVsAndDepth(float2 depthUV, float3 N, float oceanDistance, ou
 
 	return uv;
 }
+
+float getTransparencyAlpha(float depth)
+{
+	float transparencyAlpha=lerp(0.0,1.0,depth/transparencyDepth);
+	transparencyAlpha = (depth < -0.5) ? 1.0 : transparencyAlpha;   //fix black edge around antialiased terrain in front of ocean
+	return transparencyAlpha;
+}
+
+float adjustWhiteCapStrengthWithDepth(float _Ocean_WhiteCapStr, float shoreFoam, float depth)
+{
+	_Ocean_WhiteCapStr = lerp(shoreFoam,_Ocean_WhiteCapStr, clamp(depth*0.2,0.0,1.0));
+	return ((depth <= 0.0) ? 0.0 : _Ocean_WhiteCapStr); //fixes white outline around objects in front of the ocean
+}
+
+float applyFarWhiteCapStrength(float oceanDistance, float alphaRadius, float _Ocean_WhiteCapStr, float farWhiteCapStr)
+{
+	float clampFactor= clamp(oceanDistance/alphaRadius,0.0,1.0); //factor to clamp whitecaps
+	return(lerp(_Ocean_WhiteCapStr,farWhiteCapStr,clampFactor));
+}
+
+float3 getTotalWhiteCapRadiance(float outWhiteCapStr, float jmx, float jSigma2, float3 sunL, float3 N, float3 L, float3 skyE, float shadowTerm)
+{
+	// get coverage
+	float W = WhitecapCoverage(outWhiteCapStr,jmx,jSigma2);
+
+	// compute and add whitecap radiance
+	float3 l = (sunL * (max(dot(N, L), 0.0)) + skyE + UNITY_LIGHTMODEL_AMBIENT.rgb * 30) / M_PI;
+	return (float3(W * l * 0.4)* lerp(0.5,1.0,shadowTerm));
+}
+
+
 
 void getPlanetShineContribution(out float3 LsunTotal, out float3 R_ftotTotal, out float3 LseaTotal, out float3 LskyTotal)
 {

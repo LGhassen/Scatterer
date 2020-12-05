@@ -301,25 +301,13 @@ Shader "Scatterer/OceanWhiteCaps"
 				float fragDistance, depth;
 				float2 uv = getPerturbedUVsAndDepth(IN.screenPos.xy / IN.screenPos.w, N, oceanDistance, fragDistance, depth);
 
-				//so what is transparencyAlpha used for? actual alpha or alpha between transparency and surface?
-				float transparencyAlpha=lerp(0.0,1.0,depth/transparencyDepth);
-				transparencyAlpha = (depth < -0.5) ? 1.0 : transparencyAlpha;   //fix black edge around antialiased terrain in front of ocean
-				_Ocean_WhiteCapStr=lerp(shoreFoam,_Ocean_WhiteCapStr, clamp(depth*0.2,0.0,1.0));
-				_Ocean_WhiteCapStr= (depth <= 0.0) ? 0.0 : _Ocean_WhiteCapStr; //fixes white outline around objects in front of the ocean
+				_Ocean_WhiteCapStr = adjustWhiteCapStrengthWithDepth(_Ocean_WhiteCapStr, shoreFoam, depth);
+				float transparencyAlpha = getTransparencyAlpha(depth);
 #else
 				float transparencyAlpha=1.0;
 #endif
-
-				float clampFactor= clamp(oceanDistance/alphaRadius,0.0,1.0); //factor to clamp whitecaps
-
-				float outWhiteCapStr=lerp(_Ocean_WhiteCapStr,farWhiteCapStr,clampFactor);
-
-				// get coverage
-				float W = WhitecapCoverage(outWhiteCapStr,jm.x,jSigma2);
-
-				// compute and add whitecap radiance
-				float3 l = (sunL * (max(dot(N, L), 0.0)) + skyE + UNITY_LIGHTMODEL_AMBIENT.rgb * 30) / M_PI;
-				float3 R_ftot = float3(W * l * 0.4)* lerp(0.5,1.0,shadowTerm);
+				float outWhiteCapStr=applyFarWhiteCapStrength(oceanDistance, alphaRadius, _Ocean_WhiteCapStr, farWhiteCapStr);
+				float3 R_ftot = getTotalWhiteCapRadiance(outWhiteCapStr, jm.x, jSigma2, sunL, N, L, skyE, shadowTerm);
 
 				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL * shadowTerm;
 
@@ -328,12 +316,10 @@ Shader "Scatterer/OceanWhiteCaps"
 #else
 				float3 surfaceColor = abs(Lsun + Lsky + Lsea + R_ftot);
 #endif
-				float3 LsunTotal   = Lsun;
-				float3 R_ftotTotal = R_ftot;
-				float3 LseaTotal   = Lsea;
-				float3 LskyTotal   = Lsky;
 
+				float3 LsunTotal = Lsun; float3 R_ftotTotal = R_ftot; float3 LseaTotal = Lsea; float3 LskyTotal = Lsky;
 #if defined (PLANETSHINE_ON)
+
 				getPlanetShineContribution(LsunTotal, R_ftotTotal, LseaTotal, LskyTotal);
 #endif
 
@@ -352,18 +338,16 @@ Shader "Scatterer/OceanWhiteCaps"
 
 #if defined (UNDERWATER_ON)
 
-				float3 transmittance =  Lsky+R_ftot;
-				//float3 transmittance =  LskyTotal+R_ftotTotal; //causes gray sky idk why
+				float3 transmittance =  hdr(Lsky+R_ftot, _ScatteringExposure);
+				transmittance = clamp(transmittance, float3(0.0,0.0,0.0), float3(1.0,1.0,1.0));
 
-				fresnel= clamp(fresnel,0.0,1.0);
-				float3 finalColor = lerp(clamp(hdr(transmittance,_ScatteringExposure),float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)),Lsea, 1-fresnel);
+				float3 finalColor = lerp(transmittance,Lsea, 1-fresnel);	//consider not using transmittance but instead background texture, change the refraction angle to have something matching what you would see from underwater
 
-				//consider not using transmittance but instead background texture, change the refraction angle to have something matching what you would see from underwater
 
-				#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
+	#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				backGrnd+=hdr(R_ftotTotal,_ScatteringExposure)*(1-backGrnd); //make foam visible from below as well
 				finalColor = (fragDistance < 750000.0) ? backGrnd : finalColor;
-				#endif
+	#endif
 
 				float3 Vworld = mul ( _Globals_OceanToWorld, float4(V,0.0));
 				float3 Lworld = mul ( _Globals_OceanToWorld, float4(L,0.0));
