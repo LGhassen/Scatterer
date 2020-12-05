@@ -226,7 +226,7 @@
 
 #if defined (GODRAYS_ON)
 				float2 depthUV = i.projPos.xy/i.projPos.w;
-				float godrayDepth = sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength * pow(_PlanetOpacity,10.0));
+				float godrayDepth = sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength);
 
 				worldPos  -= godrayDepth * normalize(worldPos-i._camPos);
 #endif

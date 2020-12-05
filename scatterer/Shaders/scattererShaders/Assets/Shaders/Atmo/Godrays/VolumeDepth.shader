@@ -197,6 +197,19 @@
 				return o;
 			}
 
+			// optical depth for ray (r,mu) of length d, using analytic formula
+			// (mu=cos(view zenith angle)), intersections with ground ignored
+			// H=height scale of exponential density function
+			float OpticalDepth(float H, float r, float mu, float d)
+			{
+				float a = sqrt((0.5/H)*r);
+				float2 a01 = a*float2(mu, mu + d / r);
+				float2 a01s = sign(a01);
+				float2 a01sq = a01*a01;
+				float x = a01s.y > a01s.x ? exp(a01sq.x) : 0.0;
+				float2 y = a01s / (2.3193*abs(a01) + sqrt(1.52*a01sq + 4.0)) * float2(1.0, exp(-d/H*(d/(2.0*r)+mu)));
+				return sqrt((6.2831*H)*r) * exp((Rg-r)/H) * (x + dot(y, float2(1.0, -1.0)));
+			}
 
 			float4 frag (d2f i, fixed facing : VFACE) : SV_Target
 			{
@@ -227,16 +240,15 @@
 
 				float3 viewDir = normalize(i.finalWorldPos.xyz/i.finalWorldPos.w - _WorldSpaceCameraPos);
 				float viewLength = length(i.viewPos.xyz/i.viewPos.w);
+				float opticalDepthFactor = 0.5; //0.2 for sky, 0.5 for terrain/ocean
 
-				if (zdepth != 1.0) //cap by terrain distance
+				if (zdepth != 1.0)	//cap by terrain distance
 				{
 					viewLength = min(depthLength, viewLength);
 				}
-				else //cap by boundary to atmo
+				else 			//ray going into the sky
 				{
-					//I think here I should take into account optical depth, or use log(depth), seems too dark
-					float skyIntersectDistance = intersectSphereInside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg + _experimentalAtmoScale * (Rt-Rg));
-					viewLength = min(skyIntersectDistance, viewLength);
+					opticalDepthFactor = 0.2; //0.2 for sky, 0.5 for terrain/ocean
 
 //					if (i.isCloud > 0.0)
 //					{
@@ -244,10 +256,19 @@
 //					}
 				}
 
-#if defined(OCEAN_INTERSECT_ON)  //cap by boundary to ocean, not working very well, can still see the outline
+#if defined(OCEAN_INTERSECT_ON)  //cap by boundary to ocean
 				float oceanIntersectDistance = intersectSphereOutside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg);
-				viewLength = (oceanIntersectDistance > 0.0) ? min(oceanIntersectDistance, viewLength) : viewLength;
+
+				if ((oceanIntersectDistance > 0.0) && (oceanIntersectDistance <= viewLength))
+				{
+					viewLength = oceanIntersectDistance;
+					opticalDepthFactor = 0.5; //0.2 for sky, 0.5 for terrain/ocean
+				}
 #endif
+
+				float mu = dot(normalize(_WorldSpaceCameraPos-_planetPos), viewDir);	
+				viewLength = OpticalDepth(_experimentalAtmoScale * (Rt-Rg)*opticalDepthFactor, length(_WorldSpaceCameraPos-_planetPos), mu, viewLength);
+
 				viewLength = writeGodrayToTexture(viewLength);
 
 				return facing > 0 ? viewLength : -viewLength;
