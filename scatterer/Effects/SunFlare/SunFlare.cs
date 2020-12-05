@@ -230,10 +230,9 @@ namespace scatterer
 
 		public void updateProperties()
 		{
-			sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint
-				(ScaledSpace.LocalToScaledSpace(source.transform.position));
+			sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint (sourceScaledTransform.position);
 
-			float dist = (float) (Scatterer.Instance.scaledSpaceCamera.transform.position - ScaledSpace.LocalToScaledSpace (source.transform.position))
+			float dist = (float) (Scatterer.Instance.scaledSpaceCamera.transform.position - sourceScaledTransform.position)
 				.magnitude;
 
 			sunGlareScale = dist / 2266660f * Scatterer.Instance.scaledSpaceCamera.fieldOfView / 60f;
@@ -260,13 +259,13 @@ namespace scatterer
 				if(!hitStatus)
 				{
 					hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position,
-					                             (ScaledSpace.LocalToScaledSpace(source.transform.position)- Scatterer.Instance.scaledSpaceCamera.transform.position)
+					                             (sourceScaledTransform.position - Scatterer.Instance.scaledSpaceCamera.transform.position)
 					                             .normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 				}
 			}
 			else
 			{
-				hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position, (ScaledSpace.LocalToScaledSpace(source.transform.position)
+				hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position, (sourceScaledTransform.position
 				                                                                           - Scatterer.Instance.transform.position).normalized,out hit, Mathf.Infinity, (int)((1 << 10)));
 			}
 
