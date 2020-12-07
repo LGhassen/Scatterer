@@ -31,6 +31,8 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine.Rendering;
 
+using System.Reflection;
+
 namespace scatterer {
 	/*
 	 * Extend the base class OceanNode to provide the data need 
@@ -105,6 +107,12 @@ namespace scatterer {
 		ComputeBuffer positionsBuffer, heightsBuffer;
 		int frameLatencyCounter = 1;
 
+		private bool paused = false;
+		KSP.UI.Screens.AltimeterSliderButtons altimeterRecoveryButton;
+		private bool altimeterRecoveryButtonOverriden = false;
+		MethodInfo recoveryButtonSetUnlockMethod;
+		object[] setUnlockParametersArray;
+
 		public override void Init(ProlandManager manager)
 		{
 			base.Init(manager);
@@ -149,7 +157,6 @@ namespace scatterer {
 			
 			m_initDisplacementMat.SetVector (ShaderProperties._InverseGridSizes_PROPERTY, m_inverseGridSizes);
 
-
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
@@ -157,6 +164,30 @@ namespace scatterer {
 			if (SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders && Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{
 				findHeightsShader = ShaderReplacer.Instance.LoadedComputeShaders ["FindHeights"];
+
+				if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
+				{
+					GameEvents.onGamePause.Add (ForcePauseMenuSaving);
+					GameEvents.onGameUnpause.Add(UnPause);
+					
+					KSP.UI.Screens.AltimeterSliderButtons[] sliderButtons = Resources.FindObjectsOfTypeAll<KSP.UI.Screens.AltimeterSliderButtons>();
+					if (sliderButtons.Length > 0)
+					{
+						altimeterRecoveryButton = sliderButtons[0];
+						
+						BindingFlags Flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
+						
+						recoveryButtonSetUnlockMethod = altimeterRecoveryButton.GetType().GetMethod("setUnlock", Flags);
+						if (recoveryButtonSetUnlockMethod == null)
+						{
+							Utils.LogError("No setUnlock method found in AltimeterSliderButtons");
+							altimeterRecoveryButton = null;
+							return;
+						}
+						
+						setUnlockParametersArray = new object[] { 2 }; //The state for unlocking the altimeterSliderButtons
+					}
+				}
 			}
 		}
 		
@@ -305,6 +336,13 @@ namespace scatterer {
 				m_fourierBuffer3[i].Release();
 				m_fourierBuffer4[i].Release();
 			}
+
+			if (SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders && Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
+			{
+				GameEvents.onGamePause.Remove (ForcePauseMenuSaving);
+				GameEvents.onGamePause.Remove (UnPause);
+			}
+
 		}
 		
 		protected virtual void CreateRenderTextures()
@@ -691,12 +729,57 @@ namespace scatterer {
 			}
 			return Sum;
 		}
+
+		public void ForcePauseMenuSaving()
+		{
+			if (!paused && FlightGlobals.ActiveVessel != null && (FlightGlobals.ActiveVessel.altitude <= Mathf.Abs(maxWaveInteractionShipAltitude))
+			    && (FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR) && (FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED)
+			    && (FlightGlobals.ActiveVessel.srf_velocity.sqrMagnitude < Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity * Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity))
+			{
+				Utils.LogInfo("Overriding pasue menu recovery and save options");
+				paused = true;
+				FlightGlobals.ActiveVessel.srf_velocity = Vector3d.zero;
+							
+				PauseMenu.Display ();
+
+			}
+		}
 		
+		public void UnPause()
+		{
+			paused = false;
+		}
+
 		//FixedUpdate is responsible for physics, we do the part displacement here
 		public void FixedUpdate()
 		{
 			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null && m_manager.GetSkyNode().simulateOceanInteraction)
 			{
+				if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity && !paused && FlightGlobals.ActiveVessel != null)
+				{
+					if ((altimeterRecoveryButton!=null) && (FlightGlobals.ActiveVessel.altitude <= Mathf.Abs(maxWaveInteractionShipAltitude))
+					    && (FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR) && (FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED)
+					    && (FlightGlobals.ActiveVessel.srf_velocity.sqrMagnitude < Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity * Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity))
+					{
+						FlightGlobals.ActiveVessel.srf_velocity = Vector3d.zero;
+						
+						if (!altimeterRecoveryButton.led.IsOn || (altimeterRecoveryButton.led.color != KSP.UI.Screens.LED.colorIndices.green))
+						{
+							Utils.LogInfo("Overriding recovery button");
+							recoveryButtonSetUnlockMethod.Invoke(altimeterRecoveryButton, setUnlockParametersArray);
+							altimeterRecoveryButton.StopAllCoroutines();
+							altimeterRecoveryButtonOverriden = true;
+						}
+					}
+					else if (altimeterRecoveryButtonOverriden)
+					{
+						Utils.LogInfo("Restoring recovery button");
+						altimeterRecoveryButton.StartCoroutine("UnlockRecovery", FlightGlobals.ActiveVessel);
+						altimeterRecoveryButton.StartCoroutine("UnlockReturnToKSC",FlightGlobals.ActiveVessel);
+						altimeterRecoveryButtonOverriden=false;
+					}
+				}
+
 				if (!heightsRequestInProgress)
 				{
 					ApplyWaterLevelHeights ();
@@ -744,6 +827,8 @@ namespace scatterer {
 		
 		void ApplyWaterLevelHeights ()
 		{
+			//partBuoyancy has no way to override the force direction (it uses -g direction directly) however, maybe do a parent addforce at position with the buoyancy effective position with the normal? will always be hacky probably
+
 			if (cameraHeightRequested)
 			{
 				waterHeightAtCameraPosition = heights[heights.Length-1];
@@ -756,8 +841,6 @@ namespace scatterer {
 					if (!ReferenceEquals (partsBuoyancies [i], null))
 					{
 						partsBuoyancies [i].waterLevel = heights [i];
-						partsBuoyancies [i].wasSplashed = partsBuoyancies [i].splashed;
-						partsBuoyancies [i].slow = true;
 					}
 				}
 			}

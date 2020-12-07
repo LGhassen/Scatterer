@@ -252,6 +252,49 @@ namespace scatterer
 
 							GUI.contentColor = SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders ? Color.white : Color.gray;
 							Scatterer.Instance.mainSettings.oceanCraftWaveInteractions = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions, "Waves interact with ships (Requires asyncGPU readback, Directx11 only)");
+							if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
+							{
+								GUILayout.BeginHorizontal ();
+								{
+									GUILayout.Label ("\t");
+									GUILayout.BeginVertical();
+									{
+										Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance, "Override water crash tolerance");
+										if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance)
+										{
+											GUILayout.BeginHorizontal ();
+											GUILayout.Label ("Crash tolerance (default is 1.2)");
+											Scatterer.Instance.mainSettings.buoyancyCrashToleranceMultOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.buoyancyCrashToleranceMultOverride.ToString ("00.00")));
+											GUILayout.EndHorizontal ();
+										}
+										
+										Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag, "Override water drag");
+										if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag)
+										{
+											GUILayout.BeginHorizontal ();
+											GUILayout.Label ("Drag scalar (default is 4.5)");
+											Scatterer.Instance.mainSettings.buoyancyWaterDragScalarOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.buoyancyWaterDragScalarOverride.ToString ("00.00")));
+											GUILayout.EndHorizontal ();
+											
+											GUILayout.BeginHorizontal ();
+											GUILayout.Label ("Angular drag scalar (default is 0.001");
+											Scatterer.Instance.mainSettings.buoyancyWaterAngularDragScalarOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.buoyancyWaterAngularDragScalarOverride.ToString ("0.0000000")));
+											GUILayout.EndHorizontal ();
+										}
+										
+										Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity, "Override max water recovery velocity");
+										if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
+										{
+											GUILayout.BeginHorizontal ();
+											GUILayout.Label ("Maximum recovery velocity (default is 0.3)");
+											Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity.ToString ("00.00")));
+											GUILayout.EndHorizontal ();
+										}
+									}
+									GUILayout.EndVertical();
+								}
+								GUILayout.EndHorizontal ();
+							}
 						}
 						GUILayout.EndVertical();
 					}

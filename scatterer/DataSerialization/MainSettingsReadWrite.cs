@@ -42,7 +42,28 @@ namespace scatterer
 		public bool oceanLightRays = true;
 		
 		[Persistent]
-		public bool oceanCraftWaveInteractions = false;
+		public bool oceanCraftWaveInteractions = true;
+
+		[Persistent]
+		public bool oceanCraftWaveInteractionsOverrideWaterCrashTolerance = true;
+		
+		[Persistent]
+		public float buoyancyCrashToleranceMultOverride=1.2f * 3f;
+
+		[Persistent]
+		public bool oceanCraftWaveInteractionsOverrideDrag = true;
+
+		[Persistent]
+		public float buoyancyWaterDragScalarOverride=4.5f / 3f;
+
+		[Persistent]
+		public float buoyancyWaterAngularDragScalarOverride=0.001f / 3f;
+
+		[Persistent]
+		public bool oceanCraftWaveInteractionsOverrideRecoveryVelocity = true;
+
+		[Persistent]
+		public float waterMaxRecoveryVelocity = 5f;
 		
 		[Persistent]
 		public bool oceanPixelLights = false;
@@ -161,7 +182,16 @@ namespace scatterer
 				 OldConfig.oceanSkyReflections != oceanSkyReflections ||
 				 OldConfig.oceanCaustics != oceanCaustics ||
 				 OldConfig.oceanLightRays != oceanLightRays ||
+
 				 OldConfig.oceanCraftWaveInteractions != oceanCraftWaveInteractions ||
+				 OldConfig.oceanCraftWaveInteractionsOverrideWaterCrashTolerance != oceanCraftWaveInteractionsOverrideWaterCrashTolerance || 
+				 OldConfig.buoyancyCrashToleranceMultOverride != buoyancyCrashToleranceMultOverride || 
+				 OldConfig.oceanCraftWaveInteractionsOverrideDrag != oceanCraftWaveInteractionsOverrideDrag || 
+				 OldConfig.buoyancyWaterDragScalarOverride != buoyancyWaterDragScalarOverride || 
+				 OldConfig.buoyancyWaterAngularDragScalarOverride != buoyancyWaterAngularDragScalarOverride || 
+				 OldConfig.oceanCraftWaveInteractionsOverrideRecoveryVelocity != oceanCraftWaveInteractionsOverrideRecoveryVelocity || 
+				 OldConfig.waterMaxRecoveryVelocity != waterMaxRecoveryVelocity || 
+
 				 OldConfig.oceanPixelLights != oceanPixelLights ||
 				 OldConfig.fullLensFlareReplacement != fullLensFlareReplacement ||
 				 OldConfig.sunlightExtinction != sunlightExtinction ||

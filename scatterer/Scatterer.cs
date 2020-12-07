@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0700")]
+[assembly:AssemblyVersion("0.0701")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -53,7 +53,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0700 dev";
+		public string versionNumber = "0.0701 dev";
 
 		void Awake ()
 		{
@@ -180,7 +180,23 @@ namespace scatterer
 				sunlightModulatorInstance = (SunlightModulator) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
 			}
 
+			if (mainSettings.useOceanShaders && mainSettings.oceanCraftWaveInteractions && SystemInfo.supportsComputeShaders && SystemInfo.supportsAsyncGPUReadback)
+			{
+				if (mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance)
+				{
+					PhysicsGlobals.BuoyancyCrashToleranceMult = mainSettings.buoyancyCrashToleranceMultOverride;
+				}
+
+				if (mainSettings.oceanCraftWaveInteractionsOverrideDrag)
+				{
+					PhysicsGlobals.BuoyancyWaterDragTimer = -10.0; //disabled because ti's bs doesn't really disable it?
+					PhysicsGlobals.BuoyancyWaterDragScalar = mainSettings.buoyancyWaterDragScalarOverride;
+					PhysicsGlobals.BuoyancyWaterAngularDragScalar = mainSettings.buoyancyWaterAngularDragScalarOverride;
+				}
+			}
+
 			coreInitiated = true;
+
 			Utils.LogDebug("Core setup done");
 		}
 
