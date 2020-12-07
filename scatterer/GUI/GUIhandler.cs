@@ -624,6 +624,7 @@ namespace scatterer
 			oceanModularGUI.AddModule(new GUIModuleFloat("Shore/shallow foam strength", oceanNode, "shoreFoam"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength (m_farWhiteCapStr)", oceanNode, "m_farWhiteCapStr"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength radius (alphaRadius)", oceanNode, "alphaRadius"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Sky reflection strength", oceanNode, "skyReflectionStrength"));
 
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Underwater Settings"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Refraction Index", oceanNode, "refractionIndex"));

@@ -72,6 +72,9 @@ namespace scatterer
 		[Persistent]
 		public float refractionIndex = 1.33f;
 
+		[Persistent]
+		public float skyReflectionStrength = 1f;
+
 		public bool isUnderwater = false;
 		bool underwaterMode = false;
 
@@ -324,7 +327,8 @@ namespace scatterer
 			m_oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(m_manager.GetRadius()));
 
 			m_oceanMaterial.SetFloat (ShaderProperties.alphaRadius_PROPERTY, alphaRadius);
-			
+
+			m_oceanMaterial.SetFloat ("skyReflectionStrength", skyReflectionStrength);
 			m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex); //these don't need to be updated every frame
 			m_oceanMaterial.SetFloat ("transparencyDepth", transparencyDepth);
 			m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);
