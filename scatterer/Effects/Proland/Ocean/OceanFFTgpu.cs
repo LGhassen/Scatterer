@@ -806,7 +806,8 @@ namespace scatterer {
 					{
 						if (!ReferenceEquals (part.partBuoyancy, null))
 						{
-							Vector3 relativePartPos = part.partBuoyancy.transform.position - Scatterer.Instance.nearCamera.transform.position;
+							//To be more accurate I'd need to take ceter of buoyancy and transform it to worldPos but that would add a matrix multiply for every part, which I'm not about to do
+							Vector3 relativePartPos = part.transform.position - Scatterer.Instance.nearCamera.transform.position;
 							Vector2 oceanPos = new Vector2 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x, Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y);
 							positionsList.Add (oceanPos);
 							partsBuoyanciesList.Add (part.partBuoyancy);
