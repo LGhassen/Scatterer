@@ -387,7 +387,15 @@ Shader "Scatterer/OceanWhiteCaps"
 
 #if defined (GODRAYS_ON)
 					float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
-					worldPos = worldPos - sampleGodrayDepth(_godrayDepthTexture, godrayUV, _godrayStrength) * normalize(worldPos-_camPos);
+					float godrayDepth = 0.0;
+					godrayDepth = sampleGodrayDepth(_godrayDepthTexture, godrayUV, 1.0);
+
+					//trying to find the optical depth from the terrain level
+					float muTerrain = dot(normalize(worldPos), normalize(_camPos - worldPos));
+
+					godrayDepth = _godrayStrength * DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(worldPos), muTerrain, godrayDepth, 100000.0);
+
+					worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
 #endif
 
 					float3 inscatter=0.0;float3 extinction=1.0;

@@ -76,11 +76,11 @@ Shader "Scatterer/SkySphere"
 				WCP *= 6000;
 #endif
 
-				float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);
+				float3 viewDir = normalize(IN.worldPos-_WorldSpaceCameraPos);
 
 				//Rt=Rg+(Rt-Rg)*_experimentalExtinctionScale;
 
-				float3 viewdir=normalize(d);
+				float3 viewdir=normalize(viewDir);
 				float3 camera=WCP - IN.planetOrigin;
 
 				float r = length(camera);
@@ -214,14 +214,28 @@ Shader "Scatterer/SkySphere"
 				WCP *= 6000;
 #endif
 
-				float3 d = normalize(IN.worldPos-_WorldSpaceCameraPos);
+				float3 viewDir = normalize(IN.worldPos-_WorldSpaceCameraPos);
 
 				float3 scatteringCameraPos = WCP - IN.planetOrigin;
 #if defined(GODRAYS_ON) && defined(LOCAL_SKY_ON)
 				float2 depthUV = IN.projPos.xy/IN.projPos.w;
-				scatteringCameraPos = scatteringCameraPos + d * sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength);
+				float godrayDepth = 0.0;
+
+				godrayDepth = sampleGodrayDepth(_godrayDepthTexture, depthUV, 1.0);
+
+				//trying to find the optical depth from the camera level, should probably remove these from the boundary of the atmo and not the camera level?
+				float muCamera = dot(normalize(_WorldSpaceCameraPos - IN.planetOrigin), viewDir);
+
+				godrayDepth = DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(_WorldSpaceCameraPos - IN.planetOrigin), muCamera, godrayDepth, 500000.0);
+				//cap by 0.3*distance to atmo boundary
+				float skyIntersectDistance =  intersectSphereInside(_WorldSpaceCameraPos, viewDir, IN.planetOrigin, Rg + _experimentalAtmoScale * (Rt-Rg));
+				godrayDepth = min(0.3 * skyIntersectDistance, godrayDepth);
+
+				godrayDepth *= _godrayStrength;
+
+				scatteringCameraPos = scatteringCameraPos + viewDir * godrayDepth ;
 #endif
-				float3 inscatter = SkyRadiance3(scatteringCameraPos, d, WSD);
+				float3 inscatter = SkyRadiance3(scatteringCameraPos, viewDir, WSD);
 
 				float3 finalColor = inscatter;
 				float eclipseShadow = 1;
@@ -230,11 +244,11 @@ Shader "Scatterer/SkySphere"
 				//necessary for eclipses, ring shadows and planetshine
 				float3 worldPos;
 #if defined (PLANETSHINE_ON) || defined (ECLIPSES_ON) || defined (RINGSHADOW_ON)
-				float interSectPt= intersectSphereInside(WCP,d,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
+				float interSectPt= intersectSphereInside(WCP,viewDir,IN.planetOrigin,Rt);//*_rimQuickFixMultiplier
 
 				if (interSectPt != -1)
 				{
-					worldPos = WCP + d * interSectPt;
+				worldPos = WCP + viewDir * interSectPt;
 				}
 #endif
 
@@ -268,7 +282,7 @@ Shader "Scatterer/SkySphere"
 						intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[i].xyz - worldPos),WSD)),0);
 					}
 
-					inscatter2+=SkyRadiance3(WCP - IN.planetOrigin, d, normalize(planetShineSources[i].xyz)) *planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
+					inscatter2+=SkyRadiance3(WCP - IN.planetOrigin, viewDir, normalize(planetShineSources[i].xyz)) *planetShineRGB[i].xyz*planetShineRGB[i].w*intensity;
 				}
 
 				finalColor+=inscatter2;

@@ -226,9 +226,16 @@
 
 #if defined (GODRAYS_ON)
 				float2 depthUV = i.projPos.xy/i.projPos.w;
-				float godrayDepth = sampleGodrayDepth(_godrayDepthTexture, depthUV, _godrayStrength);
+				float godrayDepth = 0.0;
 
-				worldPos  -= godrayDepth * normalize(worldPos-i._camPos);
+				godrayDepth = sampleGodrayDepth(_godrayDepthTexture, depthUV, 1.0);
+
+				//trying to find the optical depth from the terrain level
+				float muTerrain = dot(normalize(i.worldPos.xyz/i.worldPos.w - _planetPos), normalize(_WorldSpaceCameraPos - i.worldPos.xyz/i.worldPos.w));
+
+				godrayDepth = _godrayStrength * DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(i.worldPos.xyz/i.worldPos.w - _planetPos), muTerrain, godrayDepth, 100000.0);
+
+				worldPos -= godrayDepth * normalize(worldPos-i._camPos);
 #endif
 
 				inscatter+= InScattering2(i._camPos, worldPos,SUN_DIR,extinction);

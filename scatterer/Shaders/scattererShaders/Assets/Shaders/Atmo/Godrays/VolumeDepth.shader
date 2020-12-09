@@ -240,21 +240,19 @@
 
 				float3 viewDir = normalize(i.finalWorldPos.xyz/i.finalWorldPos.w - _WorldSpaceCameraPos);
 				float viewLength = length(i.viewPos.xyz/i.viewPos.w);
-				float opticalDepthFactor = 0.5; //0.2 for sky, 0.5 for terrain/ocean
 
 				if (zdepth != 1.0)	//cap by terrain distance
 				{
 					viewLength = min(depthLength, viewLength);
 				}
-				else 			//ray going into the sky
-				{
-					opticalDepthFactor = 0.2; //0.2 for sky, 0.5 for terrain/ocean
+//				else 			//ray going into the sky
+//				{
 
 //					if (i.isCloud > 0.0)
 //					{
 //						viewLength*= 0.3; //this looks nice against the sky but where terrain and shadow meet it looks like shite
 //					}
-				}
+//				}
 
 #if defined(OCEAN_INTERSECT_ON)  //cap by boundary to ocean
 				float oceanIntersectDistance = intersectSphereOutside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg);
@@ -262,12 +260,10 @@
 				if ((oceanIntersectDistance > 0.0) && (oceanIntersectDistance <= viewLength))
 				{
 					viewLength = oceanIntersectDistance;
-					opticalDepthFactor = 0.5; //0.2 for sky, 0.5 for terrain/ocean
 				}
 #endif
-
-				float mu = dot(normalize(_WorldSpaceCameraPos-_planetPos), viewDir);	
-				viewLength = OpticalDepth(_experimentalAtmoScale * (Rt-Rg)*opticalDepthFactor, length(_WorldSpaceCameraPos-_planetPos), mu, viewLength);
+				float mu = dot(normalize(_WorldSpaceCameraPos-_planetPos), viewDir);
+				viewLength = OpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(_WorldSpaceCameraPos-_planetPos), mu, viewLength);
 
 				viewLength = writeGodrayToTexture(viewLength);
 

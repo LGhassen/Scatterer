@@ -237,6 +237,41 @@ float OpticalDepth(float H, float r, float mu, float d)
 }
 
 
+//search algorithm to find approx distance from optical depth
+float DistanceFromOpticalDepth(float H, float r, float mu, float targetOpticalDepth, float maxLength)
+{
+	if (targetOpticalDepth == 0.0)
+		return 0.0;
+
+	float minDistance = 0; //maybe also init this with the targetOpticalDepth?
+	float maxDistance = maxLength;
+
+	float mid = 0.5 * (maxDistance + minDistance);
+	float depth = OpticalDepth(H, r, mu, mid);
+
+	int maxIterations = 12;
+	int iteration = 0;
+
+	while ((abs(depth - targetOpticalDepth) > 1 ) && (iteration < maxIterations))
+	{
+		if (depth >= targetOpticalDepth)
+		{
+			maxDistance = mid;
+		}
+		else
+		{
+			minDistance = mid;
+		}
+
+		mid = 0.5 * (maxDistance + minDistance);
+		depth = OpticalDepth(H, r, mu, mid); //move this up and remove the init one
+
+		iteration++;
+	}
+
+	return mid;
+}
+
 //Same as above but normalizes relative to radius
 float OpticalDepthNormalized(float H, float r, float mu, float d)
 {
