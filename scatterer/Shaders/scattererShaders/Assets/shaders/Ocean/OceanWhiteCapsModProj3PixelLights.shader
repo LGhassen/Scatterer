@@ -396,7 +396,7 @@
 					//trying to find the optical depth from the terrain level
 					float muTerrain = dot(normalize(worldPos), normalize(_camPos - worldPos));
 
-					godrayDepth = _godrayStrength * DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(worldPos), muTerrain, godrayDepth, 100000.0);
+					godrayDepth = _godrayStrength * DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(worldPos), muTerrain, godrayDepth, minDistance);
 
 					worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
 			#endif
