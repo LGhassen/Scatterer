@@ -236,6 +236,8 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				OUT.viewPos = screenP;
 
+				outpos	= (_PlanetOpacity == 0.0) ? float4(2.0, 2.0, 2.0, 1.0) : outpos; //cull when completely transparent
+
 				return OUT;
 			}
 
