@@ -36,6 +36,14 @@ namespace scatterer
 				if (cam.name=="Reflection Probes Camera")
 				{
 					camToFixer[cam] = (ReflectionProbeFixer) cam.gameObject.AddComponent(typeof(ReflectionProbeFixer));
+
+					//Grab the reflection probe and set it's distance to 100km so reflections no longer disappear when using cameraTools stationary camera
+					ReflectionProbe[] probes = Resources.FindObjectsOfTypeAll<ReflectionProbe> ();
+					foreach (ReflectionProbe _probe in probes)
+					{
+						_probe.size= new Vector3(100000f,100000f,100000f);
+					}
+
 					Utils.LogDebug("Added reflection probe fixer to "+cam.name);
 				}
 				else
