@@ -38,6 +38,7 @@ namespace scatterer
 		public CelestialBody sunCelestialBody;
 		public List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
 		public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
+		public Light mainSunLight;
 		
 
 		public void Init(ScattererCelestialBody scattererBody)
@@ -49,7 +50,20 @@ namespace scatterer
 			hasOcean = scattererBody.hasOcean;
 			
 			sunCelestialBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
-			
+
+			if (scattererBody.mainSunCelestialBody == "Sun")
+				mainSunLight = Scatterer.Instance.sunLight;
+			else
+			{
+				mainSunLight = Scatterer.Instance.lights.SingleOrDefault (_light => _light.gameObject.name == scattererBody.mainSunCelestialBody);
+
+				if (ReferenceEquals (mainSunLight, null))
+				{
+					Utils.LogError ("No light found for " + scattererBody.mainSunCelestialBody + " for body " + parentCelestialBody.name + ". Defaulting to main sunlight, godrays, lightrays and caustics may look wrong, check your Kopernicus configuration.");
+					mainSunLight = Scatterer.Instance.sunLight;
+				}
+			}
+
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
 					parentScaledTransform = Utils.GetMainMenuObject(scattererBody.celestialBody).transform;

@@ -25,7 +25,7 @@ namespace scatterer
 		}
 
 		public bool Init(string causticsTexturePath,Vector2 causticsLayer1Scale,Vector2 causticsLayer1Speed,Vector2 causticsLayer2Scale,
-		                 Vector2 causticsLayer2Speed, float causticsMultiply, float causticsMinBrightness, float oceanRadius, float blurDepth)
+		                 Vector2 causticsLayer2Speed, float causticsMultiply, float causticsMinBrightness, float oceanRadius, float blurDepth, Light inputSunlight)
 		{
 
 			if (string.IsNullOrEmpty (causticsTexturePath) || !System.IO.File.Exists (Utils.GameDataPath+causticsTexturePath))
@@ -58,7 +58,7 @@ namespace scatterer
 				CausticsShadowMaskModulateMaterial.EnableKeyword ("SPHERE_PLANET");
 				CausticsShadowMaskModulateMaterial.DisableKeyword ("FLAT_PLANET"); //for testing in unity editor only, obviously, Kerbin is not flat I swear
 
-				sunLight = Scatterer.Instance.sunLight;
+				sunLight = inputSunlight;
 
 				m_Buffer = new CommandBuffer ();
 				m_Buffer.name = "CausticsShadowMaskmodulate";			

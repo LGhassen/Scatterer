@@ -167,9 +167,9 @@ namespace scatterer
 			if (Scatterer.Instance.mainSettings.oceanCaustics && (HighLogic.LoadedScene == GameScenes.FLIGHT))
 			{
 				//why doesn't this work with IVA camera? do they have a separate light?
-				causticsShadowMaskModulator = (CausticsShadowMaskModulate) Scatterer.Instance.sunLight.gameObject.AddComponent (typeof(CausticsShadowMaskModulate));
+				causticsShadowMaskModulator = (CausticsShadowMaskModulate) m_manager.mainSunLight.gameObject.AddComponent (typeof(CausticsShadowMaskModulate));
 				if(!causticsShadowMaskModulator.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
-				                                     causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth))
+				                                     causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth, m_manager.mainSunLight))
 				{
 					UnityEngine.Object.DestroyImmediate (causticsShadowMaskModulator);
 					causticsShadowMaskModulator = null;

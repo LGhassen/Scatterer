@@ -215,19 +215,24 @@ namespace scatterer
 				
 				oceanMaterial.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, oceanNode.m_manager.m_skyNode.planetShineRGBMatrix);
 			}
-			
+
+			Matrix4x4 worldToLightMatrix = oceanNode.m_manager.mainSunLight.transform.worldToLocalMatrix;
+			worldToLightMatrix.m03 = oceanNode.m_manager.parentCelestialBody.transform.position.x;
+			worldToLightMatrix.m13 = oceanNode.m_manager.parentCelestialBody.transform.position.y;
+			worldToLightMatrix.m23 = oceanNode.m_manager.parentCelestialBody.transform.position.z;
+
 			if (!ReferenceEquals (oceanNode.causticsShadowMaskModulator, null))
 			{
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
-				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, Scatterer.Instance.sunLight.gameObject.transform.worldToLocalMatrix);
+				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, worldToLightMatrix);
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.m_manager.parentLocalTransform.position);
 			}
 
 			if (!ReferenceEquals (oceanNode.causticsLightRaysRenderer, null))
 			{
 				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
-				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, Scatterer.Instance.sunLight.gameObject.transform.worldToLocalMatrix);
-				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.LightDir_PROPERTY, Scatterer.Instance.sunLight.gameObject.transform.forward);
+				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, worldToLightMatrix);
+				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.LightDir_PROPERTY, oceanNode.m_manager.mainSunLight.transform.forward);
 				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.m_manager.parentLocalTransform.position);
 			}
 		}

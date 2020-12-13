@@ -44,6 +44,7 @@ namespace scatterer
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
 		
 		public Light sunLight,scaledSpaceSunLight, mainMenuLight;
+		public Light[] lights;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
 
 		//classic SQUAD
@@ -229,7 +230,6 @@ namespace scatterer
 			}
 		} 
 
-
 		void OnDestroy ()
 		{
 			if (isActive)
@@ -363,7 +363,6 @@ namespace scatterer
 
 		void SetupMainCameras()
 		{
-			Camera[] cams = Camera.allCameras;
 			scaledSpaceCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera ScaledSpace");
 			farCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 01");
 			nearCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "Camera 00");
@@ -494,7 +493,7 @@ namespace scatterer
 
 		void FindSunlights ()
 		{
-			Light[] lights = (Light[])Light.FindObjectsOfType (typeof(Light));
+			lights = (Light[])Light.FindObjectsOfType (typeof(Light));
 			foreach (Light _light in lights)
 			{
 				if (_light.gameObject.name == "SunLight")
