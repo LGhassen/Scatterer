@@ -122,6 +122,7 @@ namespace scatterer
 		private Material downscaleDepthMaterial;
 		bool isInitialized = false;
 		bool renderingEnabled = false;
+		Light targetLight;
 		
 		public CausticsLightRaysCameraScript ()
 		{
@@ -206,6 +207,8 @@ namespace scatterer
 			//copy to screen
 			commandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, compositeLightRaysMaterial);
 
+			targetLight = oceanNodeIn.m_manager.mainSunLight;
+
 			isInitialized = true;
 		}
 		
@@ -222,7 +225,7 @@ namespace scatterer
 				// If we use sunglightExtinction, reuse already computed extinction color
 				if (Scatterer.Instance.mainSettings.sunlightExtinction)
 				{
-					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, Scatterer.Instance.sunlightModulatorInstance.LastModulateColor);
+					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, SunlightModulator.GetLastModulateColor(targetLight));
 				}
 
 				renderingEnabled = true;

@@ -14,26 +14,50 @@ namespace scatterer
 {
 	public class SunlightModulator : MonoBehaviour
 	{
-		Color originalColor;
-		Color modulateColor, lastModulateColor;
+		public static void ModulateByAttenuation(Light light, float inAttenuation) //called by skynode, ie scaledSpaceCamera onPreCull
+		{
+			FindOrCreateModulator (light).ModulateByAttenuation (inAttenuation);
+		}
+		
+		public static void ModulateByColor(Light light, Color inColor)
+		{
+			FindOrCreateModulator (light).ModulateByColor (inColor);
+		}
 
-		public Color LastModulateColor {
-			get {
-				return lastModulateColor;
+		public static Color GetLastModulateColor(Light light)
+		{
+			return FindOrCreateModulator (light).lastModulateColor;
+		}
+
+		private static SunlightModulator FindOrCreateModulator(Light light)
+		{
+			if (modulatorsDictionary.ContainsKey (light))
+				return modulatorsDictionary [light];
+			else
+			{
+				modulatorsDictionary[light] = (SunlightModulator) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
+				modulatorsDictionary[light].Init(light);
+				return modulatorsDictionary[light];
 			}
 		}
+
+		private static Dictionary<Light, SunlightModulator> modulatorsDictionary = new Dictionary<Light, SunlightModulator> ();
+		
+		Color originalColor;
+		Color modulateColor, lastModulateColor;
 
 		Light sunLight;
 		bool applyModulation = false;
 		SunlightModulatorPreRenderHook  preRenderHook;
 		SunlightModulatorPostRenderHook postRenderHook;
 		
-		private void Awake()
+		public void Init(Light light)
 		{
-			sunLight = Scatterer.Instance.sunLight;
+			sunLight = light;
 			preRenderHook = (SunlightModulatorPreRenderHook) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(SunlightModulatorPreRenderHook));
+			preRenderHook.Init (this);
 			postRenderHook = (SunlightModulatorPostRenderHook) Scatterer.Instance.nearCamera.gameObject.AddComponent(typeof(SunlightModulatorPostRenderHook)); //less than optimal, doesn't affect internalCamera
-																																						  //but also the issue is that internalCamera
+			postRenderHook.Init (this);																														   //but also the issue is that internalCamera
 		}
 
 		public void OnPreCull() //added to scaledSpaceCamera, called before any calls from skyNode or oceanNode
@@ -41,19 +65,19 @@ namespace scatterer
 			storeOriginalColor ();
 		}
 
-		public void storeOriginalColor()    //may not be necessary every frame?
+		private void storeOriginalColor()    //may not be necessary every frame?
 		{
 			originalColor = sunLight.color;
 			//Utils.Log ("store original color " + originalColor.ToString ());
 		}
 
-		public void modulateByAttenuation(float inAttenuation) //called by skynode, ie scaledSpaceCamera onPreCull
+		private void ModulateByAttenuation(float inAttenuation) //called by skynode, ie scaledSpaceCamera onPreCull
 		{
 			modulateColor *= inAttenuation;
 			applyModulation = true;
 		}
 
-		public void modulateByColor(Color inColor)
+		private void ModulateByColor(Color inColor)
 		{
 			modulateColor *= inColor;
 			applyModulation = true;

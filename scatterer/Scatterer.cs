@@ -33,7 +33,6 @@ namespace scatterer
 		public PlanetshineManager planetshineManager;
 
 		DisableAmbientLight ambientLightScript;
-		public SunlightModulator sunlightModulatorInstance;
 
 		public ShadowMapRetrieveCommandBuffer shadowMapRetriever;
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
@@ -176,11 +175,6 @@ namespace scatterer
 				MapView.MapIsEnabled = false;
 			}
 
-			if (mainSettings.sunlightExtinction || (mainSettings.underwaterLightDimming && mainSettings.useOceanShaders))
-			{
-				sunlightModulatorInstance = (SunlightModulator) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
-			}
-
 			if (mainSettings.useOceanShaders && mainSettings.oceanCraftWaveInteractions && SystemInfo.supportsComputeShaders && SystemInfo.supportsAsyncGPUReadback)
 			{
 				if (mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance)
@@ -271,12 +265,6 @@ namespace scatterer
 				{
 					sunflareManager.Cleanup();
 					UnityEngine.Component.Destroy(sunflareManager);
-				}
-
-				if (!ReferenceEquals(sunlightModulatorInstance,null))
-				{
-					sunlightModulatorInstance.OnDestroy();
-					Component.Destroy(sunlightModulatorInstance);
 				}
 
 				if (shadowMapRetriever)

@@ -14,13 +14,20 @@ namespace scatterer
 {
 	public class SunlightModulatorPostRenderHook : MonoBehaviour
 	{
+		SunlightModulator targetModulator;
+
 		public SunlightModulatorPostRenderHook ()
 		{
 		}
 
+		public void Init(SunlightModulator target)
+		{
+			targetModulator = target;
+		}
+
 		public void OnPostRender()
 		{
-			Scatterer.Instance.sunlightModulatorInstance.restoreOriginalColor ();
+			targetModulator.restoreOriginalColor ();
 		}
 	}
 }

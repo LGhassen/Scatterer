@@ -941,7 +941,7 @@ namespace scatterer
 			//hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
 			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, m_manager.getDirectionToSun ().normalized, Rt, Rg, m_transmit, lerpedScale);
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
-			Scatterer.Instance.sunlightModulatorInstance.modulateByColor (extinction);
+			SunlightModulator.ModulateByColor (m_manager.mainSunLight, extinction);
 		}
 
 		void UpdateSunflareExtinctions ()
@@ -1095,7 +1095,7 @@ namespace scatterer
 				InitUniforms (particleMaterial);
 				InitPostprocessMaterialUniforms (particleMaterial);
 			
-				Utils.EnableOrDisableShaderKeywords (particleMaterial, "SCATTERER_USE_ORIG_DIR_COLOR_ON", "SCATTERER_USE_ORIG_DIR_COLOR_OFF", Scatterer.Instance.sunlightModulatorInstance);
+				Utils.EnableOrDisableShaderKeywords (particleMaterial, "SCATTERER_USE_ORIG_DIR_COLOR_ON", "SCATTERER_USE_ORIG_DIR_COLOR_OFF", Scatterer.Instance.mainSettings.sunlightExtinction);
 			}
 
 			mappedVolumetrics = true;
