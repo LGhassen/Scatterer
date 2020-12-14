@@ -1,8 +1,8 @@
 ﻿Shader "Scatterer/SimpleDepthTexture" {
 	SubShader {
-		Tags { "RenderType"="Opaque" "IgnoreProjector" = "True"}
+		Tags { "RenderType"="Opaque" "IgnoreProjector" = "True" "ForceNoShadowCasting" = "False"}
 		Pass {
-			Tags { "RenderType"="Opaque" "IgnoreProjector" = "True"}
+			Tags { "RenderType"="Opaque" "IgnoreProjector" = "True" "ForceNoShadowCasting" = "False"}
 			CGPROGRAM
 
 			#pragma vertex vert

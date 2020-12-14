@@ -21,8 +21,8 @@ namespace scatterer
 
 		public RenderTexture depthTexture;
 		Shader depthShader;
-
-		LightShadows shadowBackup;
+		
+		UnityEngine.ShadowQuality shadowBackup;
 
 		public PartialDepthBuffer ()
 		{
@@ -56,11 +56,8 @@ namespace scatterer
 		{
 			UpdateClipPlanes ();
 
-			if (Scatterer.Instance.sunLight != null)
-			{
-				shadowBackup = Scatterer.Instance.sunLight.shadows;
-				Scatterer.Instance.sunLight.shadows = LightShadows.None;
-			}
+			shadowBackup = QualitySettings.shadows;
+			QualitySettings.shadows = UnityEngine.ShadowQuality.Disable;
 
 			depthCamera.targetTexture = depthTexture;
 			depthCamera.RenderWithShader(depthShader, "RenderType"); //doesn't fire camera events (doesn't pick up EVE planetLight commandbuffers), still fires events for shadowMask
@@ -68,10 +65,7 @@ namespace scatterer
 			Shader.SetGlobalMatrix (ShaderProperties.ScattererAdditionalInvProjection_PROPERTY, depthCamera.projectionMatrix.inverse);
 			Shader.SetGlobalTexture (ShaderProperties.AdditionalDepthBuffer_PROPERTY, depthTexture);
 
-			if (Scatterer.Instance.sunLight != null)
-			{
-				Scatterer.Instance.sunLight.shadows = shadowBackup;
-			}
+			QualitySettings.shadows = shadowBackup;
 		}
 
 		// Adjusts nearClipPlane to cover minimum shadow Distance we are going for
