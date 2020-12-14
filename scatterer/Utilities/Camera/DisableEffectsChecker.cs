@@ -31,14 +31,22 @@ namespace scatterer
 			if (!cam)
 				return;
 
-			// TODO: find solutions for the Reflection Probes Camera mess, seriously squad? local and scaledScenery in the same culling mask?
-			if (!camToEffectsDisablerDictionary.ContainsKey(cam) && ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera")))
+			if (!camToEffectsDisablerDictionary.ContainsKey(cam))
 			{
-				camToEffectsDisablerDictionary[cam] = (DisableEffectsForReflectionsCamera) cam.gameObject.AddComponent(typeof(DisableEffectsForReflectionsCamera));
-				camToEffectsDisablerDictionary[cam].manager = manager;
-
-				Utils.LogDebug("Post-processing and ocean effects disabled from reflections Camera "+cam.name);
+				if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))
+				{
+					camToEffectsDisablerDictionary[cam] = (DisableEffectsForReflectionsCamera) cam.gameObject.AddComponent(typeof(DisableEffectsForReflectionsCamera));
+					camToEffectsDisablerDictionary[cam].manager = manager;
+					
+					Utils.LogDebug("Ocean effects disabled from reflections Camera "+cam.name);
+				}
+				else
+				{
+					//we add it anyway to avoid doing a string compare
+					camToEffectsDisablerDictionary[cam] = null;
+				}
 			}
+
 
 		}
 

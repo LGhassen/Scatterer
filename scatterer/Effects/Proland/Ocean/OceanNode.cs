@@ -77,6 +77,7 @@ namespace scatterer
 
 		public bool isUnderwater = false;
 		bool underwaterMode = false;
+		bool oceanDraw = true;
 
 		public int numGrids;
 		Mesh[] m_screenGrids;
@@ -150,6 +151,8 @@ namespace scatterer
 			oceanCameraProjectionMatModifier.oceanNode = this;
 
 			waterGameObjects[0].AddComponent<ScreenCopierNotifier>();
+			DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
+			disableEffectsChecker.manager = this.m_manager;
 
 			InitUnderwaterMaterial ();
 
@@ -190,11 +193,11 @@ namespace scatterer
 
 		public virtual void UpdateNode ()
 		{
-			bool oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace && (planetOpacity > 0f);
+			oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace && (planetOpacity > 0f);
 
 			foreach (MeshRenderer _mr in waterMeshRenderers)
 			{
-				_mr.enabled= oceanDraw;
+				_mr.enabled = oceanDraw;
 			}
 
 			isUnderwater = height < waterHeightAtCameraPosition;
@@ -518,7 +521,7 @@ namespace scatterer
 		{
 			for (int i=0; i < numGrids; i++)
 			{
-				waterMeshRenderers[i].enabled=enabled;
+				waterMeshRenderers[i].enabled=enabled && oceanDraw;
 			}
 		}
 	}
