@@ -62,6 +62,8 @@ namespace scatterer
 					Utils.LogError ("No light found for " + scattererBody.mainSunCelestialBody + " for body " + parentCelestialBody.name + ". Defaulting to main sunlight, godrays, lightrays and caustics may look wrong, check your Kopernicus configuration.");
 					mainSunLight = Scatterer.Instance.sunLight;
 				}
+				else
+					Scatterer.Instance.SetShadowsForLight(mainSunLight);
 			}
 
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)

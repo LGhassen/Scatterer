@@ -430,32 +430,7 @@ namespace scatterer
 					Utils.LogDebug ("Set shadow distance: " + QualitySettings.shadowDistance.ToString ());
 					Utils.LogDebug ("Number of shadow cascades detected " + QualitySettings.shadowCascades.ToString ());
 
-					if (sunLight)
-					{
-						//fixes checkerboard artifacts aka shadow acne
-						float bias = unifiedCameraMode ? mainSettings.unifiedCamShadowNormalBiasOverride : mainSettings.dualCamShadowNormalBiasOverride;
-						float normalBias = unifiedCameraMode ? mainSettings.unifiedCamShadowBiasOverride : mainSettings.dualCamShadowBiasOverride;
-
-						if (bias > 0f)
-							sunLight.shadowBias = bias;
-
-						if (normalBias > 0f)
-							sunLight.shadowNormalBias = normalBias;
-
-						int customRes = unifiedCameraMode ? mainSettings.unifiedCamShadowResolutionOverride : mainSettings.dualCamShadowResolutionOverride;
-						if (customRes!=0)
-						{
-							if (Utils.IsPowerOfTwo(customRes))
-							{
-								Utils.LogDebug("Setting shadowmap resolution to: "+customRes.ToString());
-								sunLight.shadowCustomResolution = customRes;
-							}
-							else
-							{
-								Utils.LogError("Selected shadowmap resolution not a power of 2: "+customRes.ToString());
-							}
-						}
-					}
+					SetShadowsForLight (sunLight);
 
 					// And finally force shadow Casting and receiving on celestial bodies if not already set
 					foreach (CelestialBody _sc in scattererCelestialBodiesManager.CelestialBodies)
@@ -465,6 +440,33 @@ namespace scatterer
 							_sc.pqsController.meshCastShadows = true;
 							_sc.pqsController.meshRecieveShadows = true;
 						}
+					}
+				}
+			}
+		}
+
+		public void SetShadowsForLight (Light light)
+		{
+			if (light && mainSettings.terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+			{
+				//fixes checkerboard artifacts aka shadow acne
+				float bias = unifiedCameraMode ? mainSettings.unifiedCamShadowNormalBiasOverride : mainSettings.dualCamShadowNormalBiasOverride;
+				float normalBias = unifiedCameraMode ? mainSettings.unifiedCamShadowBiasOverride : mainSettings.dualCamShadowBiasOverride;
+				if (bias > 0f)
+					light.shadowBias = bias;
+				if (normalBias > 0f)
+					light.shadowNormalBias = normalBias;
+				int customRes = unifiedCameraMode ? mainSettings.unifiedCamShadowResolutionOverride : mainSettings.dualCamShadowResolutionOverride;
+				if (customRes != 0)
+				{
+					if (Utils.IsPowerOfTwo (customRes))
+					{
+						Utils.LogDebug ("Setting shadowmap resolution to: " + customRes.ToString () + " on " + light.name);
+						light.shadowCustomResolution = customRes;
+					}
+					else
+					{
+						Utils.LogError ("Selected shadowmap resolution not a power of 2: " + customRes.ToString ());
 					}
 				}
 			}
