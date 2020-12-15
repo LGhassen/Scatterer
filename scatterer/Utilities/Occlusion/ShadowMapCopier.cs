@@ -20,27 +20,33 @@ namespace scatterer
 		private Light m_Light;
 		bool commandBufferAdded = false;
 
-		private static ShadowMapCopier instance;
+		private static Dictionary<Light, ShadowMapCopier> instances = new Dictionary<Light, ShadowMapCopier>();
 
-		public static ShadowMapCopier Instance
+		public static void RequestShadowMapCopy(Light light)
 		{
-			get
+			if (instances.ContainsKey (light))
 			{
-				if (instance==null)
-				{
-					instance = ScaledCamera.Instance.galaxyCamera.gameObject.AddComponent<ShadowMapCopier>();
-				}
-				return instance;
+				instances[light].RequestShadowMapCopy();
+			}
+			else
+			{
+				instances[light] = ScaledCamera.Instance.galaxyCamera.gameObject.AddComponent<ShadowMapCopier>();
+				instances[light].Init(light);
+				instances[light].RequestShadowMapCopy();
 			}
 		}
-		
+
 		public ShadowMapCopier ()
 		{
-			m_Light = Scatterer.Instance.sunLight;
+		}
+
+		public void Init (Light light)
+		{
+			m_Light = light;
 			CreateCopyCascadeCBs ();
 			GameEvents.onGameSceneLoadRequested.Add(RecreateForSceneChange);
 		}
-
+		
 		public void RecreateForSceneChange(GameScenes scene)
 		{
 			StartCoroutine (DelayedRecreateForSceneChange());
@@ -106,8 +112,8 @@ namespace scatterer
 				Disable ();
 		}
 
-		public void RequestShadowMapCopy()
-		{
+		private void RequestShadowMapCopy()
+		{	
 			if (!commandBufferAdded)
 				Enable ();
 		}
@@ -146,7 +152,8 @@ namespace scatterer
 
 		private static void CreateTexture()
 		{
-			renderTexture = new RenderTexture ((int) Scatterer.Instance.sunLight.shadowCustomResolution, (int) Scatterer.Instance.sunLight.shadowCustomResolution, 0, RenderTextureFormat.RHalf); //QualitySettings return 2x2? Try anyway, RFloat may not be right, shadowMaps may use half? check with nsight
+			//I think we can leave it because they all should have the same custom resolution anyway
+			renderTexture = new RenderTexture ((int) Scatterer.Instance.sunLight.shadowCustomResolution, (int) Scatterer.Instance.sunLight.shadowCustomResolution, 0, RenderTextureFormat.RHalf);
 			renderTexture.useMipMap = false;
 			renderTexture.antiAliasing = 1;
 			renderTexture.filterMode = FilterMode.Point;

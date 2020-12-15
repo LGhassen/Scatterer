@@ -124,7 +124,7 @@ namespace scatterer
 			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
 			{
 				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
-				if (!godraysRenderer.Init(Scatterer.Instance.sunLight, this))
+				if (!godraysRenderer.Init(m_manager.mainSunLight, this))
 				{
 					Component.Destroy (godraysRenderer);
 					godraysRenderer = null;

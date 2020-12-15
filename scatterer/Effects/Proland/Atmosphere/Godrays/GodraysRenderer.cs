@@ -9,7 +9,7 @@ namespace scatterer
 	{
 		SkyNode parentSkyNode;
 		Camera targetCamera;
-		GameObject targetLightGO;
+		Light targetLight;
 
 		ComputeBuffer inverseShadowMatricesBuffer;
 		ComputeShader inverseShadowMatricesComputeShader;
@@ -67,7 +67,7 @@ namespace scatterer
 				return false;
 			}
 
-			targetLightGO = inputLight.gameObject;
+			targetLight = inputLight;
 			parentSkyNode = inputParentSkyNode;
 
 			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "DUAL_DEPTH_ON", "DUAL_DEPTH_OFF", (Scatterer.Instance.unifiedCameraMode && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowsDistance > 8000f)));
@@ -159,10 +159,10 @@ namespace scatterer
 //							Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "CLOUDSMAP_ON", "CLOUDSMAP_OFF", true);
 //							volumeDepthMaterial.SetTexture("cloudShadowMap", cloudShadowMap);
 //						}
-//						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade0, 0f, 0f, 0.5f, 0.5f);
-//						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade1, 0.5f, 0f, 0.5f, 0.5f);
-//						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade2, 0f, 0.5f, 0.5f, 0.5f);
-//						RenderObjectInCustomCascade (targetLightGO.GetComponent<Light> (), cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade3, 0.5f, 0.5f, 0.5f, 0.5f);
+//						RenderObjectInCustomCascade (targetLight, cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade0, 0f, 0f, 0.5f, 0.5f);
+//						RenderObjectInCustomCascade (targetLight, cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade1, 0.5f, 0f, 0.5f, 0.5f);
+//						RenderObjectInCustomCascade (targetLight, cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade2, 0f, 0.5f, 0.5f, 0.5f);
+//						RenderObjectInCustomCascade (targetLight, cloudShadowMap, cloudShadowMR, cloudShadowDepthMaterial, ShadowMapPass.DirectionalCascade3, 0.5f, 0.5f, 0.5f, 0.5f);
 //
 //						cloudsShadowsMaterials.Add (new Tuple<EVEClouds2d, Material> (clouds2d, cloudShadowDepthMaterial));
 //					}
@@ -196,11 +196,9 @@ namespace scatterer
 		{
 			if (!commandBufferAdded)
 			{
-				ShadowMapCopier.Instance.RequestShadowMapCopy();
+				ShadowMapCopier.RequestShadowMapCopy(targetLight);
 
 				targetCamera.AddCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
-
-				Light targetLight = targetLightGO.GetComponent<Light> ();
 
 //				foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys)
 //				{
@@ -219,9 +217,7 @@ namespace scatterer
 			if (commandBufferAdded)
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
-				
-//				Light targetLight = targetLightGO.GetComponent<Light> ();
-//				
+
 //				foreach (ShadowMapPass pass in shadowRenderCommandBuffers.Keys) {
 //					foreach (CommandBuffer cb in shadowRenderCommandBuffers[pass]) {
 //						targetLight.RemoveCommandBuffer (LightEvent.AfterShadowMapPass, cb);
@@ -244,9 +240,9 @@ namespace scatterer
 
 				//Calculate light's bounding Box englobing camera's frustum up to the shadows distance
 				//The idea is to create a "projector" from the light's PoV, which is essentially a bounding box cover the whole range from near clip plance to the shadows, so we can project into the scene
-				Vector3 lightDirForward = targetLightGO.transform.forward.normalized;
-				Vector3 lightDirRight = targetLightGO.transform.right.normalized;
-				Vector3 lightDirUp = targetLightGO.transform.up.normalized;
+				Vector3 lightDirForward = targetLight.transform.forward.normalized;
+				Vector3 lightDirRight = targetLight.transform.right.normalized;
+				Vector3 lightDirUp = targetLight.transform.up.normalized;
 				
 				Vector3[] frustumCornersNear = new Vector3[4];
 				Vector3[] frustumCornersFar = new Vector3[4];
@@ -254,18 +250,25 @@ namespace scatterer
 				//the corners appear to be in camera Space even though the documentation says in world Space
 				targetCamera.CalculateFrustumCorners(new Rect(0, 0, 1, 1), targetCamera.nearClipPlane, Camera.MonoOrStereoscopicEye.Mono, frustumCornersNear);
 				targetCamera.CalculateFrustumCorners(new Rect(0, 0, 1, 1), QualitySettings.shadowDistance, Camera.MonoOrStereoscopicEye.Mono, frustumCornersFar);
-				
+
+				//Kopernicus lights have the same position as their suns, so they are impossibly far, replace their position with something closer to get a useable matrix
+				Matrix4x4 worldToLocalMatrix = parentSkyNode.m_manager.mainSunLight.transform.worldToLocalMatrix;
+				worldToLocalMatrix.m03 = Scatterer.Instance.nearCamera.transform.position.x;
+				worldToLocalMatrix.m13 = Scatterer.Instance.nearCamera.transform.position.y;
+				worldToLocalMatrix.m23 = Scatterer.Instance.nearCamera.transform.position.z;
+
+
 				//now, calculate the corners positions in light Space
 				List<Vector3> frustumCornersInLightSpace = new List<Vector3>();
 				
 				foreach(Vector3 corner in frustumCornersNear)
 				{
-					frustumCornersInLightSpace.Add(targetLightGO.transform.worldToLocalMatrix.MultiplyPoint(targetCamera.transform.localToWorldMatrix.MultiplyPoint(corner)));
+					frustumCornersInLightSpace.Add(worldToLocalMatrix.MultiplyPoint(targetCamera.transform.localToWorldMatrix.MultiplyPoint(corner)));
 				}
 				
 				foreach(Vector3 corner in frustumCornersFar)
 				{
-					frustumCornersInLightSpace.Add(targetLightGO.transform.worldToLocalMatrix.MultiplyPoint(targetCamera.transform.localToWorldMatrix.MultiplyPoint(corner)));
+					frustumCornersInLightSpace.Add(worldToLocalMatrix.MultiplyPoint(targetCamera.transform.localToWorldMatrix.MultiplyPoint(corner)));
 				}
 
 				Bounds bounds = GeometryUtility.CalculateBounds(frustumCornersInLightSpace.ToArray(), Matrix4x4.identity);
@@ -282,15 +285,15 @@ namespace scatterer
 					bounds.center.z+bounds.extents.z);
 				
 				shadowProjectionMatrix = GL.GetGPUProjectionMatrix(shadowProjectionMatrix, false);
-				
+
 				//Transformation from world into our "shadow space" matrix
-				Matrix4x4 VP = shadowProjectionMatrix * targetLightGO.transform.worldToLocalMatrix;
+				Matrix4x4 VP = shadowProjectionMatrix * worldToLocalMatrix;
 				
 				//And inverse transformation from "shadow space" into world used to create our mesh
 				Matrix4x4 lightToWorld = VP.inverse;
 
 				volumeDepthMaterial.SetMatrix(ShaderProperties.lightToWorld_PROPERTY, lightToWorld);
-				volumeDepthMaterial.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLightGO.transform.forward);
+				volumeDepthMaterial.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLight.transform.forward);
 
 				volumeDepthMaterial.SetFloat(ShaderProperties._experimentalAtmoScale_PROPERTY,parentSkyNode.experimentalAtmoScale);
 				volumeDepthMaterial.SetVector (ShaderProperties._planetPos_PROPERTY, parentSkyNode.parentLocalTransform.position);
@@ -298,7 +301,7 @@ namespace scatterer
 //				foreach(Tuple<EVEClouds2d, Material> tuple in cloudsShadowsMaterials)
 //				{
 //					tuple.Item2.CopyPropertiesFromMaterial(tuple.Item1.CloudShadowMaterial);
-//					tuple.Item2.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLightGO.transform.forward);
+//					tuple.Item2.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLight.transform.forward);
 //					tuple.Item2.SetFloat(ShaderProperties._godrayCloudThreshold_PROPERTY, parentSkyNode.godrayCloudAlphaThreshold);
 //				}
 			}

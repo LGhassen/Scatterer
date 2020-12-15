@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0701")]
+[assembly:AssemblyVersion("0.0720")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -52,7 +52,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0701 dev";
+		public string versionNumber = "0.0720";
 
 		void Awake ()
 		{
