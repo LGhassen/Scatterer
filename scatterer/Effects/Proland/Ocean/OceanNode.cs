@@ -154,6 +154,13 @@ namespace scatterer
 			DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
 			disableEffectsChecker.manager = this.m_manager;
 
+			if (Scatterer.Instance.mainSettings.shadowsOnOcean)
+			{
+				ShadowMapRetrieveCommandBuffer retriever = m_manager.mainSunLight.gameObject.GetComponent<ShadowMapRetrieveCommandBuffer>();
+				if (ReferenceEquals(retriever,null))
+					m_manager.mainSunLight.gameObject.AddComponent (typeof(ShadowMapRetrieveCommandBuffer));
+			}
+
 			InitUnderwaterMaterial ();
 
 			underwaterProjector = new AtmosphereProjector(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius);

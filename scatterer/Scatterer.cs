@@ -33,8 +33,7 @@ namespace scatterer
 		public PlanetshineManager planetshineManager;
 
 		DisableAmbientLight ambientLightScript;
-
-		public ShadowMapRetrieveCommandBuffer shadowMapRetriever;
+		
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		public TweakShadowCascades shadowCascadeTweaker;
 		public PartialDepthBuffer partialUnifiedCameraDepthBuffer;
@@ -267,12 +266,6 @@ namespace scatterer
 					UnityEngine.Component.Destroy(sunflareManager);
 				}
 
-				if (shadowMapRetriever)
-				{
-					shadowMapRetriever.OnDestroy();
-					Component.Destroy(shadowMapRetriever);
-				}
-
 				if (shadowFadeRemover)
 				{
 					shadowFadeRemover.OnDestroy();
@@ -429,8 +422,6 @@ namespace scatterer
 																						//Seems like I lack the correct variables to determine which shadow path to take
 																						//also try without the transparent tag
 					}
-
-					shadowMapRetriever = (ShadowMapRetrieveCommandBuffer) sunLight.gameObject.AddComponent (typeof(ShadowMapRetrieveCommandBuffer));
 				}
 
 				if (mainSettings.terrainShadows)
