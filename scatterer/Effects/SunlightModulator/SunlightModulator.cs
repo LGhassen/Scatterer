@@ -12,27 +12,29 @@ using KSP.IO;
 
 namespace scatterer
 {
-	public class SunlightModulator : MonoBehaviour
+	public class SunlightModulatorsManager : MonoBehaviour
 	{
-		public static void ModulateByAttenuation(Light light, float inAttenuation) //called by skynode, ie scaledSpaceCamera onPreCull
+		public void ModulateByAttenuation(Light light, float inAttenuation)
 		{
 			FindOrCreateModulator (light).ModulateByAttenuation (inAttenuation);
 		}
 		
-		public static void ModulateByColor(Light light, Color inColor)
+		public void ModulateByColor(Light light, Color inColor)
 		{
 			FindOrCreateModulator (light).ModulateByColor (inColor);
 		}
-
-		public static Color GetLastModulateColor(Light light)
+		
+		public Color GetLastModulateColor(Light light)
 		{
 			return FindOrCreateModulator (light).lastModulateColor;
 		}
-
-		private static SunlightModulator FindOrCreateModulator(Light light)
+		
+		private SunlightModulator FindOrCreateModulator(Light light)
 		{
 			if (modulatorsDictionary.ContainsKey (light))
+			{
 				return modulatorsDictionary [light];
+			}
 			else
 			{
 				modulatorsDictionary[light] = (SunlightModulator) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunlightModulator));
@@ -40,16 +42,33 @@ namespace scatterer
 				return modulatorsDictionary[light];
 			}
 		}
-
-		private static Dictionary<Light, SunlightModulator> modulatorsDictionary = new Dictionary<Light, SunlightModulator> ();
 		
-		Color originalColor;
-		Color modulateColor, lastModulateColor;
+		private Dictionary<Light, SunlightModulator> modulatorsDictionary = new Dictionary<Light, SunlightModulator> ();
+
+		public void Cleanup()
+		{
+			OnDestroy ();
+		}
+
+		public void OnDestroy()
+		{
+			foreach (SunlightModulator modulator in modulatorsDictionary.Values)
+			{
+				Component.DestroyImmediate(modulator);
+			}
+		}
+	}
+
+	public class SunlightModulator : MonoBehaviour
+	{
+		Color originalColor, modulateColor;
+		public Color lastModulateColor;
 
 		Light sunLight;
 		bool applyModulation = false;
-		SunlightModulatorPreRenderHook  preRenderHook;
-		SunlightModulatorPostRenderHook postRenderHook;
+		bool originalColorStored = false;
+		public SunlightModulatorPreRenderHook  preRenderHook;
+		public SunlightModulatorPostRenderHook postRenderHook;
 		
 		public void Init(Light light)
 		{
@@ -57,7 +76,7 @@ namespace scatterer
 			preRenderHook = (SunlightModulatorPreRenderHook) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(SunlightModulatorPreRenderHook));
 			preRenderHook.Init (this);
 			postRenderHook = (SunlightModulatorPostRenderHook) Scatterer.Instance.nearCamera.gameObject.AddComponent(typeof(SunlightModulatorPostRenderHook)); //less than optimal, doesn't affect internalCamera
-			postRenderHook.Init (this);																														   //but also the issue is that internalCamera
+			postRenderHook.Init (this);	
 		}
 
 		public void OnPreCull() //added to scaledSpaceCamera, called before any calls from skyNode or oceanNode
@@ -65,19 +84,22 @@ namespace scatterer
 			storeOriginalColor ();
 		}
 
-		private void storeOriginalColor()    //may not be necessary every frame?
+		private void storeOriginalColor() //may not be necessary every frame?
 		{
-			originalColor = sunLight.color;
-			//Utils.Log ("store original color " + originalColor.ToString ());
+			if (sunLight.color != Color.black)
+			{
+				originalColor = sunLight.color;
+				originalColorStored = true;
+			}
 		}
 
-		private void ModulateByAttenuation(float inAttenuation) //called by skynode, ie scaledSpaceCamera onPreCull
+		public void ModulateByAttenuation(float inAttenuation) //called by skynode, ie scaledSpaceCamera onPreCull
 		{
 			modulateColor *= inAttenuation;
 			applyModulation = true;
 		}
 
-		private void ModulateByColor(Color inColor)
+		public void ModulateByColor(Color inColor)
 		{
 			modulateColor *= inColor;
 			applyModulation = true;
@@ -85,7 +107,7 @@ namespace scatterer
 
 		public void applyColorModulation()  //called by hook on farCamera onPreRender
 		{
-			if (applyModulation)
+			if (applyModulation && originalColorStored)
 			{
 				sunLight.color = modulateColor * originalColor;
 				lastModulateColor = sunLight.color;
@@ -97,7 +119,7 @@ namespace scatterer
 		
 		public void restoreOriginalColor()  //called by hook on nearCamera/IVAcamera onPostRender  //may not be necessary every frame?
 		{
-			if (applyModulation)
+			if (applyModulation && originalColorStored)
 			{
 				sunLight.color = originalColor;
 				applyModulation = false;

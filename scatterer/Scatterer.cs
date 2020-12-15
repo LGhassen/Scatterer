@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0720")]
+[assembly:AssemblyVersion("0.0721")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -33,6 +33,7 @@ namespace scatterer
 		public PlanetshineManager planetshineManager;
 
 		DisableAmbientLight ambientLightScript;
+		public SunlightModulatorsManager sunlightModulatorsManagerInstance;
 		
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		public TweakShadowCascades shadowCascadeTweaker;
@@ -52,7 +53,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0720";
+		public string versionNumber = "0.0721";
 
 		void Awake ()
 		{
@@ -174,6 +175,11 @@ namespace scatterer
 				MapView.MapIsEnabled = false;
 			}
 
+			if (mainSettings.sunlightExtinction || (mainSettings.underwaterLightDimming && mainSettings.useOceanShaders))
+			{
+				sunlightModulatorsManagerInstance = new SunlightModulatorsManager();
+			}
+
 			if (mainSettings.useOceanShaders && mainSettings.oceanCraftWaveInteractions && SystemInfo.supportsComputeShaders && SystemInfo.supportsAsyncGPUReadback)
 			{
 				if (mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance)
@@ -227,6 +233,11 @@ namespace scatterer
 		{
 			if (isActive)
 			{
+				if (!ReferenceEquals(sunlightModulatorsManagerInstance,null))
+				{
+					sunlightModulatorsManagerInstance.Cleanup();
+				}
+
 				if(!ReferenceEquals(planetshineManager,null))
 				{
 					planetshineManager.CleanUp();
@@ -258,7 +269,6 @@ namespace scatterer
 					if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.Destroy (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
 				}
-
 
 				if (!ReferenceEquals(sunflareManager,null))
 				{

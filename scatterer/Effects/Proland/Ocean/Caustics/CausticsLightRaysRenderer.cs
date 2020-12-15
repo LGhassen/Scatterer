@@ -225,7 +225,7 @@ namespace scatterer
 				// If we use sunglightExtinction, reuse already computed extinction color
 				if (Scatterer.Instance.mainSettings.sunlightExtinction)
 				{
-					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, SunlightModulator.GetLastModulateColor(targetLight));
+					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, Scatterer.Instance.sunlightModulatorsManagerInstance.GetLastModulateColor(targetLight));
 				}
 
 				renderingEnabled = true;

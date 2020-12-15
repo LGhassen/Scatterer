@@ -451,7 +451,7 @@ namespace scatterer
 				{
 					finalDim*=causticsUnderwaterLightBoost; //replace by caustics multiplier
 				}
-				SunlightModulator.ModulateByAttenuation(m_manager.mainSunLight, finalDim);
+				Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByAttenuation(m_manager.mainSunLight, finalDim);
 			}	
 		}
 

@@ -29,6 +29,11 @@ namespace scatterer
 		{
 			targetModulator.applyColorModulation ();
 		}
+
+		public void OnDestroy()
+		{
+			targetModulator.preRenderHook = null;
+		}
 	}
 }
 

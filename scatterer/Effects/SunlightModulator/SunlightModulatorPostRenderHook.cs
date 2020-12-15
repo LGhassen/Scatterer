@@ -29,6 +29,11 @@ namespace scatterer
 		{
 			targetModulator.restoreOriginalColor ();
 		}
+
+		public void OnDestroy()
+		{
+			targetModulator.postRenderHook = null;
+		}
 	}
 }
 

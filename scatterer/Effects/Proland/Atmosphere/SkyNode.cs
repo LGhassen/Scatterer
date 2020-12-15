@@ -941,7 +941,8 @@ namespace scatterer
 			//hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
 			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, m_manager.getDirectionToSun ().normalized, Rt, Rg, m_transmit, lerpedScale);
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
-			SunlightModulator.ModulateByColor (m_manager.mainSunLight, extinction);
+			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (m_manager.mainSunLight, extinction);
+
 		}
 
 		void UpdateSunflareExtinctions ()
