@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0721")]
+[assembly:AssemblyVersion("0.0722")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -53,7 +53,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0721";
+		public string versionNumber = "0.0722";
 
 		void Awake ()
 		{
@@ -462,9 +462,9 @@ namespace scatterer
 				//fixes checkerboard artifacts aka shadow acne
 				float bias = unifiedCameraMode ? mainSettings.unifiedCamShadowNormalBiasOverride : mainSettings.dualCamShadowNormalBiasOverride;
 				float normalBias = unifiedCameraMode ? mainSettings.unifiedCamShadowBiasOverride : mainSettings.dualCamShadowBiasOverride;
-				if (bias > 0f)
+				if (bias != 0f)
 					light.shadowBias = bias;
-				if (normalBias > 0f)
+				if (normalBias != 0f)
 					light.shadowNormalBias = normalBias;
 				int customRes = unifiedCameraMode ? mainSettings.unifiedCamShadowResolutionOverride : mainSettings.dualCamShadowResolutionOverride;
 				if (customRes != 0)

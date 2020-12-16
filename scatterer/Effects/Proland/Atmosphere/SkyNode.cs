@@ -463,7 +463,7 @@ namespace scatterer
 			else
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f);
 
-			mat.SetVector (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
 
 			float camerasOverlap = 0f;
 			if (!Scatterer.Instance.unifiedCameraMode)
@@ -567,7 +567,7 @@ namespace scatterer
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
 			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, m_manager.flatScaledSpaceModel ? 1f : 0f );
-			mat.SetVector (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
 
 			if (!ReferenceEquals (godraysRenderer, null))
 			{

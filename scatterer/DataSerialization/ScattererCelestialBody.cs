@@ -11,7 +11,7 @@ namespace scatterer
 		[Persistent] public float loadDistance;
 		[Persistent] public float unloadDistance;
 		[Persistent] public string mainSunCelestialBody;
-		[Persistent] public Vector3 sunColor=Vector3.one;
+		[Persistent] public Color sunColor = Color.white;
 		[Persistent] public bool hasOcean;
 		[Persistent] public bool usesCloudIntegration;
 		[Persistent] public List<string> eclipseCasters=new List<string> {};
