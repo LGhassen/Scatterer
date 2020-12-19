@@ -14,7 +14,6 @@ namespace scatterer
 {
 	public class SunflareManager : MonoBehaviour
 	{
-		public List<string> sunflaresList=new List<string> {};
 		public List<SunFlare> scattererSunFlares = new List<SunFlare>();	
 
 		public SunflareManager ()

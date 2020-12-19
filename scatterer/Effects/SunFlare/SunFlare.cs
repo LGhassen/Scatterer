@@ -20,8 +20,7 @@ namespace scatterer
 {
 	public class SunFlare : MonoBehaviour
 	{	
-		[Persistent]
-		public string assetPath;
+		public ConfigNode configNodeToLoad;
 
 		public Material sunglareMaterial;
 
@@ -48,69 +47,23 @@ namespace scatterer
 
 		Mesh screenMesh;
 		GameObject sunflareGameObject;
+		
+		public int syntaxVersion = 1;
 
-		[Persistent]
-		float sunGlareFadeDistance = 250000;
-		[Persistent]
-		float ghostFadeDistance = 13500000;
+		//Syntax V1 settings
+		SunflareSettingsV1 settingsV1;
 
-		//input settings
-		[Persistent]
-		Vector3 flareSettings = Vector3.zero;
-		[Persistent]
-		Vector3 spikesSettings = Vector3.zero;
-	
-		[Persistent]
-		List<Vector4> ghost1SettingsList1=new List<Vector4>{};
-		[Persistent]
-		List<Vector4> ghost1SettingsList2=new List<Vector4>{};
-
-		[Persistent]
-		List<Vector4> ghost2SettingsList1=new List<Vector4>{};
-		[Persistent]
-		List<Vector4> ghost2SettingsList2=new List<Vector4>{};
-
-		[Persistent]
-		List<Vector4> ghost3SettingsList1=new List<Vector4>{};
-		[Persistent]
-		List<Vector4> ghost3SettingsList2=new List<Vector4>{};
-
-		[Persistent]
-		public Vector3 flareColor = Vector3.one;
+		//Syntax V2 settings
+		SunflareSettingsV2 settingsV2;
 
 
 		public void start()
 		{
-			LoadConfigNode ();
+			LoadSettings ();
 
 			sunglareMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/sunFlare"]);
 			sunglareMaterial.SetOverrideTag ("IGNOREPROJECTOR", "True");
 			sunglareMaterial.SetOverrideTag ("IgnoreProjector", "True");
-
-			//Size is loaded automatically from the files
-			sunSpikes = new Texture2D (1, 1);
-			sunFlare = new Texture2D (1, 1);
-			sunGhost1 = new Texture2D (1, 1);
-			sunGhost2 = new Texture2D (1, 1);
-			sunGhost3 = new Texture2D (1, 1);
-			
-			sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "sunSpikes.png")));
-			sunSpikes.wrapMode = TextureWrapMode.Clamp;
-			sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "sunFlare.png")));
-			sunFlare.wrapMode = TextureWrapMode.Clamp;
-			sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "Ghost1.png")));
-			sunGhost1.wrapMode = TextureWrapMode.Clamp;
-			sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "Ghost2.png")));
-			sunGhost2.wrapMode = TextureWrapMode.Clamp;
-			sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + assetPath, "Ghost3.png")));
-			sunGhost3.wrapMode = TextureWrapMode.Clamp;
-
-//			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
-			sunglareMaterial.SetTexture ("sunSpikes", sunSpikes);
-			sunglareMaterial.SetTexture ("sunFlare", sunFlare);
-			sunglareMaterial.SetTexture ("sunGhost1", sunGhost1);
-			sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
-			sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
 
 			Utils.EnableOrDisableShaderKeywords (sunglareMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
 
@@ -154,65 +107,6 @@ namespace scatterer
 			
 			sunflareGameObject.layer = 10; //start in scaledspace
 
-			//didn't want to serialize the matrices directly as the result is pretty unreadable
-			//sorry about the mess, I'll make a cleaner way later
-			//ghost 1
-			Matrix4x4 ghost1Settings1 = Matrix4x4.zero;
-			for (int i=0; i<ghost1SettingsList1.Count; i++)
-			{
-				ghost1Settings1.SetRow(i,ghost1SettingsList1[i]);
-			}
-			Matrix4x4 ghost1Settings2 = Matrix4x4.zero;
-			for (int i=0; i<ghost1SettingsList2.Count; i++)
-			{
-				ghost1Settings2.SetRow(i,ghost1SettingsList2[i]);
-			}
-
-			//ghost 2
-			Matrix4x4 ghost2Settings1 = Matrix4x4.zero;
-			for (int i=0; i<ghost2SettingsList1.Count; i++)
-			{
-				ghost2Settings1.SetRow(i,ghost2SettingsList1[i]);
-			}
-			Matrix4x4 ghost2Settings2 = Matrix4x4.zero;
-			for (int i=0; i<ghost2SettingsList2.Count; i++)
-			{
-				ghost2Settings2.SetRow(i,ghost2SettingsList2[i]);
-			}
-
-			//ghost 3
-			Matrix4x4 ghost3Settings1 = Matrix4x4.zero;
-			for (int i=0; i<ghost3SettingsList1.Count; i++)
-			{
-				ghost3Settings1.SetRow(i,ghost3SettingsList1[i]);
-			}
-			Matrix4x4 ghost3Settings2 = Matrix4x4.zero;
-			for (int i=0; i<ghost3SettingsList2.Count; i++)
-			{
-				ghost3Settings2.SetRow(i,ghost3SettingsList2[i]);
-			}
-
-			extinctionTexture = new RenderTexture (4, 4, 0, RenderTextureFormat.ARGB32);
-			extinctionTexture.antiAliasing = 1;
-			extinctionTexture.filterMode = FilterMode.Point;
-			extinctionTexture.Create ();
-
-			sunglareMaterial.SetVector ("flareSettings", flareSettings);
-			sunglareMaterial.SetVector ("spikesSettings", spikesSettings);
-
-			sunglareMaterial.SetMatrix ("ghost1Settings1", ghost1Settings1);
-			sunglareMaterial.SetMatrix ("ghost1Settings2", ghost1Settings2);
-
-			sunglareMaterial.SetMatrix ("ghost2Settings1", ghost2Settings1);
-			sunglareMaterial.SetMatrix ("ghost2Settings2", ghost2Settings2);
-
-			sunglareMaterial.SetMatrix ("ghost3Settings1", ghost3Settings1);
-			sunglareMaterial.SetMatrix ("ghost3Settings2", ghost3Settings2);
-
-			sunglareMaterial.SetTexture ("extinctionTexture", extinctionTexture);
-
-			sunglareMaterial.SetVector ("flareColor", flareColor);
-
 			scaledCameraHook = (SunflareCameraHook) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
 			scaledCameraHook.flare = this;
 			scaledCameraHook.useDbufferOnCamera = 0f;
@@ -222,6 +116,89 @@ namespace scatterer
 				nearCameraHook = (SunflareCameraHook)Scatterer.Instance.nearCamera.gameObject.AddComponent (typeof(SunflareCameraHook));
 				nearCameraHook.flare = this;
 				nearCameraHook.useDbufferOnCamera = 1f;
+			}
+
+			if (syntaxVersion == 1)
+			{
+
+				//Size is loaded automatically from the files
+				sunSpikes = new Texture2D (1, 1);
+				sunFlare = new Texture2D (1, 1);
+				sunGhost1 = new Texture2D (1, 1);
+				sunGhost2 = new Texture2D (1, 1);
+				sunGhost3 = new Texture2D (1, 1);
+			
+				sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunSpikes.png")));
+				sunSpikes.wrapMode = TextureWrapMode.Clamp;
+				sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunFlare.png")));
+				sunFlare.wrapMode = TextureWrapMode.Clamp;
+				sunGhost1.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost1.png")));
+				sunGhost1.wrapMode = TextureWrapMode.Clamp;
+				sunGhost2.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost2.png")));
+				sunGhost2.wrapMode = TextureWrapMode.Clamp;
+				sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost3.png")));
+				sunGhost3.wrapMode = TextureWrapMode.Clamp;
+			
+				//			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
+				sunglareMaterial.SetTexture ("sunSpikes", sunSpikes);
+				sunglareMaterial.SetTexture ("sunFlare", sunFlare);
+				sunglareMaterial.SetTexture ("sunGhost1", sunGhost1);
+				sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
+				sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
+			
+				//didn't want to serialize the matrices directly as the result is pretty unreadable
+				//sorry about the mess, I'll make a cleaner way later
+				//ghost 1
+				Matrix4x4 ghost1Settings1 = Matrix4x4.zero;
+				for (int i=0; i<settingsV1.ghost1SettingsList1.Count; i++) {
+					ghost1Settings1.SetRow (i, settingsV1.ghost1SettingsList1 [i]);
+				}
+				Matrix4x4 ghost1Settings2 = Matrix4x4.zero;
+				for (int i=0; i<settingsV1.ghost1SettingsList2.Count; i++) {
+					ghost1Settings2.SetRow (i, settingsV1.ghost1SettingsList2 [i]);
+				}
+			
+				//ghost 2
+				Matrix4x4 ghost2Settings1 = Matrix4x4.zero;
+				for (int i=0; i<settingsV1.ghost2SettingsList1.Count; i++) {
+					ghost2Settings1.SetRow (i, settingsV1.ghost2SettingsList1 [i]);
+				}
+				Matrix4x4 ghost2Settings2 = Matrix4x4.zero;
+				for (int i=0; i<settingsV1.ghost2SettingsList2.Count; i++) {
+					ghost2Settings2.SetRow (i, settingsV1.ghost2SettingsList2 [i]);
+				}
+			
+				//ghost 3
+				Matrix4x4 ghost3Settings1 = Matrix4x4.zero;
+				for (int i=0; i<settingsV1.ghost3SettingsList1.Count; i++) {
+					ghost3Settings1.SetRow (i, settingsV1.ghost3SettingsList1 [i]);
+				}
+				Matrix4x4 ghost3Settings2 = Matrix4x4.zero;
+				for (int i=0; i<settingsV1.ghost3SettingsList2.Count; i++) {
+					ghost3Settings2.SetRow (i, settingsV1.ghost3SettingsList2 [i]);
+				}
+			
+				extinctionTexture = new RenderTexture (4, 4, 0, RenderTextureFormat.ARGB32);
+				extinctionTexture.antiAliasing = 1;
+				extinctionTexture.filterMode = FilterMode.Point;
+				extinctionTexture.Create ();
+			
+				sunglareMaterial.SetVector ("flareSettings", settingsV1.flareSettings);
+				sunglareMaterial.SetVector ("spikesSettings", settingsV1.spikesSettings);
+			
+				sunglareMaterial.SetMatrix ("ghost1Settings1", ghost1Settings1);
+				sunglareMaterial.SetMatrix ("ghost1Settings2", ghost1Settings2);
+			
+				sunglareMaterial.SetMatrix ("ghost2Settings1", ghost2Settings1);
+				sunglareMaterial.SetMatrix ("ghost2Settings2", ghost2Settings2);
+			
+				sunglareMaterial.SetMatrix ("ghost3Settings1", ghost3Settings1);
+				sunglareMaterial.SetMatrix ("ghost3Settings2", ghost3Settings2);
+			
+				sunglareMaterial.SetTexture ("extinctionTexture", extinctionTexture);
+			
+				sunglareMaterial.SetVector ("flareColor", settingsV1.flareColor);
+
 			}
 
 			Utils.LogDebug ("Added custom sun flare for "+sourceName);
@@ -235,18 +212,21 @@ namespace scatterer
 			float dist = (float) (Scatterer.Instance.scaledSpaceCamera.transform.position - sourceScaledTransform.position)
 				.magnitude;
 
-			sunGlareScale = dist / 2266660f * Scatterer.Instance.scaledSpaceCamera.fieldOfView / 60f;
+			if (syntaxVersion == 1)
+			{
+				sunGlareScale = dist / 2266660f * Scatterer.Instance.scaledSpaceCamera.fieldOfView / 60f;
 
-			//if dist > 1.25*sunglareFadeDistance -->1
-			//if dist < 0.25*sunglareFadeDistance -->0
-			//else values smoothstepped in between
-			sunGlareFade = Mathf.SmoothStep(0,1,(dist/sunGlareFadeDistance)-0.25f);
+				//if dist > 1.25*sunglareFadeDistance -->1
+				//if dist < 0.25*sunglareFadeDistance -->0
+				//else values smoothstepped in between
+				sunGlareFade = Mathf.SmoothStep (0, 1, (dist / settingsV1.sunGlareFadeDistance) - 0.25f);
 
-			//if dist < 0.5 * ghostFadeDistance -->1
-			//if dist > 1.5 * ghostFadeDistance -->0
-			//else values smoothstepped in between
-			ghostFade = Mathf.SmoothStep(0,1,(dist-0.5f*ghostFadeDistance)/(ghostFadeDistance));
-			ghostFade = 1 - ghostFade;
+				//if dist < 0.5 * ghostFadeDistance -->1
+				//if dist > 1.5 * ghostFadeDistance -->0
+				//else values smoothstepped in between
+				ghostFade = Mathf.SmoothStep (0, 1, (dist - 0.5f * settingsV1.ghostFadeDistance) / (settingsV1.ghostFadeDistance));
+				ghostFade = 1 - ghostFade;
+			}
 
 			hitStatus=false;
 			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
@@ -350,18 +330,48 @@ namespace scatterer
 			}
 		}
 
-		public void LoadConfigNode ()
+		public void LoadSettings ()
 		{
-			ConfigNode cnToLoad = new ConfigNode ();
+			configNodeToLoad = new ConfigNode ();
 			foreach (ConfigNode _cn in Scatterer.Instance.planetsConfigsReader.sunflareConfigs)
 			{
-				if (_cn.TryGetNode(sourceName, ref cnToLoad))
+				if (_cn.TryGetNode(sourceName, ref configNodeToLoad))
 				{
 					Utils.LogDebug("Sunflare config found for "+sourceName);
 					break;
 				}
-			}	
-			ConfigNode.LoadObjectFromConfig (this, cnToLoad);
+			}
+
+			if (configNodeToLoad.HasValue ("syntaxVersion"))
+			{
+				if (configNodeToLoad.TryGetValue("syntaxVersion", ref syntaxVersion) && ((syntaxVersion == 1) || (syntaxVersion == 2)))
+				{
+					Utils.LogDebug ("Sunflare syntax version: " + syntaxVersion.ToString ());
+				}
+				else
+				{
+					Utils.LogDebug ("Invalid sunflare syntax version found: "+ configNodeToLoad.GetValue ("syntaxVersion") +", defaulting to version 1 for retro-compatibility");
+					syntaxVersion = 1;
+				}
+			}
+			else
+			{
+				Utils.LogDebug ("No sunflare syntax version found, defaulting to version 1 for retro-compatibility");
+				syntaxVersion = 1;
+			}
+
+			if (syntaxVersion == 1)
+			{
+				settingsV1 = new SunflareSettingsV1();
+				ConfigNode.LoadObjectFromConfig (settingsV1, configNodeToLoad);
+			}
+			else
+			{
+				settingsV2 = new SunflareSettingsV2();
+				ConfigNode.LoadObjectFromConfig (settingsV2, configNodeToLoad);
+			}
+
+
 		}
 
 		public void Configure(CelestialBody source, string sourceName, Transform sourceScaledTransform)
@@ -371,6 +381,9 @@ namespace scatterer
 			this.sourceScaledTransform = sourceScaledTransform;
 		}
 
-
+//		public void ApplyFromUI()
+//		{
+//
+//		}
 	}
 }

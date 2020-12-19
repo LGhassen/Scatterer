@@ -20,6 +20,7 @@ namespace scatterer
 
 		public bool visible = false;
 		public bool mainOptions=false;
+		public bool sunflareOptions=false;
 
 		enum mainMenuTabs
 		{
@@ -81,6 +82,14 @@ namespace scatterer
 		//other stuff
 		float atmosphereGlobalScale = 1000f;
 
+		//sunflare stuff
+		String[] sunflareStrings;
+
+		int selSunflareGridInt = 0;
+		bool editingSunflare = false;
+		string sunflareText = "";
+		private Vector2 sunflareScrollPosition = new Vector2();
+
 		ModularGUI oceanModularGUI = new ModularGUI();
 
 		public GUIhandler ()
@@ -133,33 +142,99 @@ namespace scatterer
 			
 			else if (Scatterer.Instance.isActive)
 			{
-				DrawPlanetSelectionHeader ();
-
-				if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active)
+				//button planet settings or sunflares?
+				GUILayout.BeginHorizontal ();
+				if (GUILayout.Button ("Planet settings"))
 				{
-					configPointsCnt = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
+					sunflareOptions = false;
+				}					
+				if (GUILayout.Button ("Sunflare settings"))
+				{
+					sunflareStrings = new string[Scatterer.Instance.sunflareManager.scattererSunFlares.Count];
 					
-					GUILayout.BeginHorizontal ();
-					if (GUILayout.Button ("Atmosphere settings"))
+					for (int i=0; i<Scatterer.Instance.sunflareManager.scattererSunFlares.Count; i++)
 					{
-						displayOceanSettings = false;
-					}					
-					if (GUILayout.Button ("Ocean settings"))
-					{
-						displayOceanSettings = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean;
+						sunflareStrings[i]=Scatterer.Instance.sunflareManager.scattererSunFlares[i].sourceName;
 					}
-					GUILayout.EndHorizontal ();					
 
-					if (!displayOceanSettings)
-					{
-						DrawAtmosphereGUI ();
-					}
-					else
-					{
-						DrawOceanGUI ();
-					}
+					sunflareOptions = true;
+				}
+				GUILayout.EndHorizontal ();
+
+				if (!sunflareOptions)
+				{
+					DrawPlanetSelectionHeader ();
 					
-					DrawSharedFooterGUI ();
+					if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active)
+					{
+						configPointsCnt = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configPoints.Count;
+						
+						GUILayout.BeginHorizontal ();
+						if (GUILayout.Button ("Atmosphere settings"))
+						{
+							displayOceanSettings = false;
+						}					
+						if (GUILayout.Button ("Ocean settings"))
+						{
+							displayOceanSettings = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean;
+						}
+						GUILayout.EndHorizontal ();			
+						
+						if (!displayOceanSettings)
+						{
+							DrawAtmosphereGUI ();
+						}
+						else
+						{
+							DrawOceanGUI ();
+						}
+						
+						DrawSharedFooterGUI ();
+					}
+				}
+				else
+				{
+					GUILayout.BeginVertical ();
+					selSunflareGridInt = GUILayout.SelectionGrid (selSunflareGridInt, sunflareStrings, 1);
+					if (GUILayout.Button ("Edit Selected"))
+					{
+						sunflareText = string.Copy(Scatterer.Instance.sunflareManager.scattererSunFlares [selSunflareGridInt].configNodeToLoad.ToString());
+						editingSunflare = true;
+					}
+					GUILayout.EndVertical ();
+					
+					if (editingSunflare)
+					{
+						sunflareScrollPosition = GUILayout.BeginScrollView(sunflareScrollPosition, false, true, GUILayout.MinHeight(300));				
+						sunflareText = GUILayout.TextArea(sunflareText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+						GUILayout.EndScrollView();
+						
+						GUILayout.BeginHorizontal ();
+						
+						if (GUILayout.Button("Reimport"))
+						{
+							sunflareText = string.Copy(Scatterer.Instance.sunflareManager.scattererSunFlares [selSunflareGridInt].configNodeToLoad.ToString());
+						}
+						
+						if (GUILayout.Button("Apply"))
+						{
+							ConfigNode node = ConfigNode.Parse(sunflareText);
+							//need a way to handle syntaxV1 and syntaxV2
+							//Scatterer.Instance.sunflareManager.scattererSunFlares [selSunflareGridInt].ApplyFromUI(node);
+						}
+						
+						if (GUILayout.Button("Copy to clipboard"))
+						{
+							GUIUtility.systemCopyBuffer = sunflareText;
+						}
+						
+						if (GUILayout.Button ("Print to Log"))
+						{
+							Utils.LogInfo("Sunflare config print to log:\r\n"+sunflareText);
+						}
+						
+						GUILayout.EndHorizontal ();
+					}
 				}
 			}
 			else
