@@ -21,7 +21,7 @@ namespace scatterer
 			parentScaledTransform = inParentScaledTransform;
 			parentLocalTransform = inParentLocalTransform;
 
-			scaledScatteringGO = new GameObject ();
+			scaledScatteringGO = new GameObject ("Scatterer scaled atmo");
 
 			scaledScatteringGO.transform.SetParent (parentScaledTransform, false);
 
