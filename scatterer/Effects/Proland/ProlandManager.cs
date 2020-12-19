@@ -202,7 +202,7 @@ namespace scatterer
 				return (Scatterer.Instance.mainMenuLight.gameObject.transform.forward*(-1));
 			}
 			else
-				return (sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position);			
+				return (sunCelestialBody.GetTransform().position - parentCelestialBody.GetTransform().position).normalized;			
 		}
 
 		public Vector3 getDirectionToCelestialBody(CelestialBody target)

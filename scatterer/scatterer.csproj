@@ -184,6 +184,7 @@
     <Compile Include="c:\gh\scattererGithub\Scatterer\scatterer\Utilities\Occlusion\ShadowMapCopier.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\ScaledScatteringContainer.cs" />
+    <Compile Include="Utilities\LinxAndPoodmundStartupFix.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
