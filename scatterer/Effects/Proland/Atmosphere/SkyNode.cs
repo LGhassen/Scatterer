@@ -1036,7 +1036,7 @@ namespace scatterer
 								throw new Exception ("Scatterer doesn't support tiled/thick Kopernicus rings (not implemented)");
 							}
 							ringInnerRadius *= ScaledSpace.ScaleFactor;
-							//*6000 to convert to local space size
+							ringInnerRadius = Mathf.Max(ringInnerRadius,(float)(m_manager.m_radius)* (1f + 10f/600000f)); //prevent inner ring radius from intersecting planet's radius because that's stupid and it breaks the shader
 							ringOuterRadius *= ScaledSpace.ScaleFactor;
 						}
 						catch (Exception e) {
