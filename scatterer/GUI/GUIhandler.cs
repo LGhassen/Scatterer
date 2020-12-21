@@ -298,8 +298,8 @@ namespace scatterer
 
 			if (selectedTab == mainMenuTabs.Scattering)
 			{
-				GUI.contentColor = Scatterer.Instance.unifiedCameraMode && SystemInfo.supportsComputeShaders ? Color.white : Color.gray;
-				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (Requires unified camera, Directx11 only)(recommend long distance shadows)");
+				GUI.contentColor = Scatterer.Instance.unifiedCameraMode && SystemInfo.supportsComputeShaders && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0)? Color.white : Color.gray;
+				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (Requires unified camera, long-distance shadows and shadowMapResolution ovveride, Directx11 only)");
 				if(Scatterer.Instance.mainSettings.useGodrays)
 				{
 					//Godrays tesselation placeholder

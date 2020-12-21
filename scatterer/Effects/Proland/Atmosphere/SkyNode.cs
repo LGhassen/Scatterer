@@ -121,7 +121,8 @@ namespace scatterer
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses);
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", m_manager.hasOcean);
 
-			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
+			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (m_manager.parentCelestialBody.pqsController, null)
+			    && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
 			{
 				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
 				if (!godraysRenderer.Init(m_manager.mainSunLight, this))
