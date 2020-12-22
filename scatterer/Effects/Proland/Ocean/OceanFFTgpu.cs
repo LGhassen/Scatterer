@@ -169,23 +169,26 @@ namespace scatterer {
 				{
 					GameEvents.onGamePause.Add (ForcePauseMenuSaving);
 					GameEvents.onGameUnpause.Add(UnPause);
-					
-					KSP.UI.Screens.AltimeterSliderButtons[] sliderButtons = Resources.FindObjectsOfTypeAll<KSP.UI.Screens.AltimeterSliderButtons>();
-					if (sliderButtons.Length > 0)
+
+					if (m_manager.parentCelestialBody.isHomeWorld)
 					{
-						altimeterRecoveryButton = sliderButtons[0];
-						
-						BindingFlags Flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
-						
-						recoveryButtonSetUnlockMethod = altimeterRecoveryButton.GetType().GetMethod("setUnlock", Flags);
-						if (recoveryButtonSetUnlockMethod == null)
+						KSP.UI.Screens.AltimeterSliderButtons[] sliderButtons = Resources.FindObjectsOfTypeAll<KSP.UI.Screens.AltimeterSliderButtons>();
+						if (sliderButtons.Length > 0)
 						{
-							Utils.LogError("No setUnlock method found in AltimeterSliderButtons");
-							altimeterRecoveryButton = null;
-							return;
+							altimeterRecoveryButton = sliderButtons[0];
+							
+							BindingFlags Flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
+							
+							recoveryButtonSetUnlockMethod = altimeterRecoveryButton.GetType().GetMethod("setUnlock", Flags);
+							if (recoveryButtonSetUnlockMethod == null)
+							{
+								Utils.LogError("No setUnlock method found in AltimeterSliderButtons");
+								altimeterRecoveryButton = null;
+								return;
+							}
+							
+							setUnlockParametersArray = new object[] { 2 }; //The state for unlocking the altimeterSliderButtons
 						}
-						
-						setUnlockParametersArray = new object[] { 2 }; //The state for unlocking the altimeterSliderButtons
 					}
 				}
 			}

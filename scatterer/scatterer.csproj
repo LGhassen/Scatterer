@@ -187,6 +187,7 @@
     <Compile Include="Utilities\LinxAndPoodmundStartupFix.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV1.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV2.cs" />
+    <Compile Include="DataSerialization\QualityPresetsLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
