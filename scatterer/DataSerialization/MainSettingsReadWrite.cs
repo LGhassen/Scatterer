@@ -28,7 +28,7 @@ namespace scatterer
 		
 		[Persistent]
 		public bool useOceanShaders = true;
-		
+
 		[Persistent]
 		public bool shadowsOnOcean = true;
 		
@@ -39,7 +39,7 @@ namespace scatterer
 		public bool oceanCaustics = true;
 
 		[Persistent]
-		public bool oceanLightRays = true;
+		public bool oceanLightRays = false;
 		
 		[Persistent]
 		public bool oceanCraftWaveInteractions = true;
@@ -93,10 +93,10 @@ namespace scatterer
 		public bool d3d11ShadowFix = true;
 
 		[Persistent]
-		public bool useGodrays = true;
+		public bool useGodrays = false;
 
 		[Persistent]
-		public bool terrainShadows = true;
+		public bool terrainShadows = false;
 
 		[Persistent]
 		public float unifiedCamShadowsDistance=50000f;
@@ -108,7 +108,7 @@ namespace scatterer
 		public float unifiedCamShadowBiasOverride=0.125f;
 
 		[Persistent]
-		public int unifiedCamShadowResolutionOverride=4096;
+		public int unifiedCamShadowResolutionOverride=0;
 
 		[Persistent]
 		public Vector3 unifiedCamShadowCascadeSplitsOverride=Vector3.zero;
@@ -130,10 +130,12 @@ namespace scatterer
 
 		[Persistent]
 		public bool useDithering = true;
-
 		
 		[Persistent]
-		public int m_fourierGridSize = 128;
+		public int m_fourierGridSize = 64;
+
+		[Persistent]
+		public int oceanMeshResolution = 8;
 		
 		public void loadMainSettings ()
 		{
@@ -215,8 +217,9 @@ namespace scatterer
 				 OldConfig.dualCamShadowBiasOverride != dualCamShadowBiasOverride ||
 				 OldConfig.dualCamShadowCascadeSplitsOverride != dualCamShadowCascadeSplitsOverride ||
 				 OldConfig.dualCamShadowResolutionOverride != dualCamShadowResolutionOverride ||
-
-				 OldConfig.m_fourierGridSize != m_fourierGridSize);
+				 
+				 OldConfig.m_fourierGridSize != m_fourierGridSize||
+				 OldConfig.oceanMeshResolution != oceanMeshResolution);
 			
 			if (configChanged)
 			{
