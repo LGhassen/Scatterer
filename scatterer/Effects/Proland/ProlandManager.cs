@@ -55,7 +55,7 @@ namespace scatterer
 				mainSunLight = Scatterer.Instance.sunLight;
 			else
 			{
-				mainSunLight = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject !=null) && _light.gameObject.name == scattererBody.mainSunCelestialBody );
+				mainSunLight = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject !=null) && (_light.gameObject.name == scattererBody.mainSunCelestialBody));
 
 				if (ReferenceEquals (mainSunLight, null))
 				{

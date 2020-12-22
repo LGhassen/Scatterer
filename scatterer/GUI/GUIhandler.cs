@@ -808,13 +808,13 @@ namespace scatterer
 
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Waves physical model settings"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Wave amplitude (AMP)", oceanNode, "AMP"));
-			oceanModularGUI.AddModule(new GUIModuleFloat("Wind Speed", oceanNode, "m_windSpeed"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Wind Speed (m/s)", oceanNode, "m_windSpeed"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Omega (inverse wave age)", oceanNode, "m_omega"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Off screen vertex coverage (Increase with big waves)", oceanNode, "offScreenVertexStretch"));
 
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Performance settings"));
-			oceanModularGUI.AddModule(new GUIModuleInt("Ocean mesh resolution (pixels covered by a mesh quad, lower is better)", oceanNode, "m_resolution"));
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Current fourierGridSize (change from KSC menu): " + Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ()));
+			oceanModularGUI.AddModule (new GUIModuleLabel ("Current mesh resolution (change from KSC menu): " + Scatterer.Instance.mainSettings.oceanMeshResolution.ToString ()));
 		}
 
 		void DrawOceanGUI ()

@@ -53,8 +53,7 @@ namespace scatterer
 		[Persistent]
 		public Vector3 m_UnderwaterColor = new Vector3 (0.1f, 0.75f, 0.8f);
 
-		//Size of each grid in the projected grid. (number of pixels on screen)		
-		[Persistent]
+		//Size of each grid in the projected grid. (number of pixels on screen)
 		public int m_resolution = 4;
 
 		[Persistent]
@@ -139,6 +138,7 @@ namespace scatterer
 
 		public virtual void Init (ProlandManager manager)
 		{
+			m_resolution = Scatterer.Instance.mainSettings.oceanMeshResolution;
 			m_manager = manager;
 			loadFromConfigNode ();
 
