@@ -810,6 +810,7 @@ namespace scatterer
 			oceanModularGUI.AddModule(new GUIModuleFloat("Wave amplitude (AMP)", oceanNode, "AMP"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Wind Speed (m/s)", oceanNode, "m_windSpeed"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Omega (inverse wave age)", oceanNode, "m_omega"));
+			oceanModularGUI.AddModule(new GUIModuleFloat("Gravity (m/s², set to 0 for auto)", oceanNode, "m_gravity"));
 			oceanModularGUI.AddModule(new GUIModuleFloat("Off screen vertex coverage (Increase with big waves)", oceanNode, "offScreenVertexStretch"));
 
 			oceanModularGUI.AddModule (new GUIModuleLabel ("Performance settings"));

@@ -56,6 +56,7 @@ namespace scatterer {
 
 		[Persistent] public float m_windSpeed = 5.0f;							//A higher wind speed gives greater swell to the waves
 		[Persistent] public float m_omega = 0.84f;								//A lower number means the waves last longer and will build up larger waves
+		[Persistent] public float m_gravity = 9.81f;
 
 		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);				//Size in meters (i.e. in spatial domain) of each grid
 		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);		//strenght of sideways displacement for each grid
@@ -116,6 +117,11 @@ namespace scatterer {
 		public override void Init(ProlandManager manager)
 		{
 			base.Init(manager);
+
+			if (m_gravity == 0f)
+			{
+				m_gravity = (float)(m_manager.parentCelestialBody.GeeASL * 9.81d);
+			}
 		
 			m_initSpectrumMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
 			m_initDisplacementMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitDisplacement")]);
@@ -437,7 +443,7 @@ namespace scatterer {
 		
 		float omega(float k)
 		{
-			return Mathf.Sqrt(9.81f * k * (1.0f + sqr(k / WAVE_KM)));
+			return Mathf.Sqrt(m_gravity * k * (1.0f + sqr(k / WAVE_KM)));
 		} // Eq 24
 		
 		float Spectrum(float kx, float ky, bool omnispectrum)
@@ -455,11 +461,11 @@ namespace scatterer {
 			float c = omega(k) / k;
 			
 			// spectral peak
-			float kp = 9.81f * sqr(m_omega / U10); // after Eq 3
+			float kp = m_gravity * sqr(m_omega / U10); // after Eq 3
 			float cp = omega(kp) / kp;
 			
 			// friction velocity
-			float z0 = 3.7e-5f * sqr(U10) / 9.81f * Mathf.Pow(U10 / cp, 0.9f); // Eq 66
+			float z0 = 3.7e-5f * sqr(U10) / m_gravity * Mathf.Pow(U10 / cp, 0.9f); // Eq 66
 			float u_star = 0.41f * U10 / Mathf.Log(10.0f / z0); // Eq 60
 			
 			float Lpm = Mathf.Exp(-5.0f / 4.0f * sqr(kp / k)); // after Eq 3
@@ -689,10 +695,10 @@ namespace scatterer {
 					k3 = (st * m_inverseGridSizes.z).magnitude;
 					k4 = (st * m_inverseGridSizes.w).magnitude;
 					
-					w1 = Mathf.Sqrt(9.81f * k1 * (1.0f + k1 * k1 / (WAVE_KM * WAVE_KM)));
-					w2 = Mathf.Sqrt(9.81f * k2 * (1.0f + k2 * k2 / (WAVE_KM * WAVE_KM)));
-					w3 = Mathf.Sqrt(9.81f * k3 * (1.0f + k3 * k3 / (WAVE_KM * WAVE_KM)));
-					w4 = Mathf.Sqrt(9.81f * k4 * (1.0f + k4 * k4 / (WAVE_KM * WAVE_KM)));
+					w1 = Mathf.Sqrt(m_gravity * k1 * (1.0f + k1 * k1 / (WAVE_KM * WAVE_KM)));
+					w2 = Mathf.Sqrt(m_gravity * k2 * (1.0f + k2 * k2 / (WAVE_KM * WAVE_KM)));
+					w3 = Mathf.Sqrt(m_gravity * k3 * (1.0f + k3 * k3 / (WAVE_KM * WAVE_KM)));
+					w4 = Mathf.Sqrt(m_gravity * k4 * (1.0f + k4 * k4 / (WAVE_KM * WAVE_KM)));
 					
 					table[(x + y * m_fourierGridSize) * 4 + 0] = w1;
 					table[(x + y * m_fourierGridSize) * 4 + 1] = w2;
