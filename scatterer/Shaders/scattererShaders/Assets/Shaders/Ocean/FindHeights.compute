@@ -40,7 +40,7 @@ float2 SampleDisplacement(float2 oceanPos)
 [numthreads(1,1,1)]
 void CSMain (uint id : SV_DispatchThreadID)
 {
-    float pecisionRequired = 0.02;
+    float precisionRequired = 0.02;
 
 	float2 currentPosition = positions[id];
 	float2 displacement = SampleDisplacement (currentPosition);
@@ -48,7 +48,7 @@ void CSMain (uint id : SV_DispatchThreadID)
 
 	for (int i = 0; i < 40; i++)
 	{
-		if (length(resultingPosition - positions[id]) <= pecisionRequired)
+		if (length(resultingPosition - positions[id]) <= precisionRequired)
 			break;
 
 		float2 newPosition = currentPosition - (resultingPosition - positions[id]);

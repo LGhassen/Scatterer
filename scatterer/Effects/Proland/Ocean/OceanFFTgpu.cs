@@ -51,8 +51,7 @@ namespace scatterer {
 		
 		Material m_initSpectrumMat, m_initDisplacementMat;
 		
-		public int m_ansio = 2;
-		
+		public int mapsAniso = 9;
 
 		[Persistent] public float m_windSpeed = 5.0f;							//A higher wind speed gives greater swell to the waves
 		[Persistent] public float m_omega = 0.84f;								//A lower number means the waves last longer and will build up larger waves
@@ -356,16 +355,15 @@ namespace scatterer {
 		
 		protected virtual void CreateRenderTextures()
 		{
-			
-			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBFloat;
+			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBHalf;
 			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
 			
 			//These texture hold the actual data use in the ocean renderer
-			CreateMap(ref m_map0, mapFormat, m_ansio, true);
-			CreateMap(ref m_map1, mapFormat, m_ansio, true);
-			CreateMap(ref m_map2, mapFormat, m_ansio, true);
-			CreateMap(ref m_map3, mapFormat, m_ansio, true);
-			CreateMap(ref m_map4, mapFormat, m_ansio, true);
+			CreateMap(ref m_map0, mapFormat, mapsAniso, true);
+			CreateMap(ref m_map1, mapFormat, mapsAniso, true);
+			CreateMap(ref m_map2, mapFormat, mapsAniso, true);
+			CreateMap(ref m_map3, mapFormat, mapsAniso, true);
+			CreateMap(ref m_map4, mapFormat, mapsAniso, true);
 			
 			//These textures are used to perform the fourier transform
 			CreateBuffer(ref m_fourierBuffer0, format); //heights

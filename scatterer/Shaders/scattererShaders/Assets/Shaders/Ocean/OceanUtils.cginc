@@ -83,8 +83,6 @@ float3 getSkyColor(float fresnel, float3 V, float3 N, float3 L, float3 earthP, f
 	return (fresnel * RefractedSky(V, N, L, earthP));
   #else
     #if defined (SKY_REFLECTIONS_ON)
-	float3 camOceanP = normalize(float3(0.0, 0.0, radius)) * (radius + 10.0);
-
 	float3 skyColor = lerp(skyE / M_PI, ReflectedSky(V, N, L, earthP), skyReflectionStrength);			//mix accurate sky reflection and sky irradiance
 
 	return (fresnel * (skyColor * lerp(0.5,1.0,shadowTerm) + (UNITY_LIGHTMODEL_AMBIENT.rgb*0.07)));

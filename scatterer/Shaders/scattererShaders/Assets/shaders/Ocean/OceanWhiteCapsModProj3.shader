@@ -237,11 +237,6 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				outpos	= (_PlanetOpacity == 0.0) ? float4(2.0, 2.0, 2.0, 1.0) : outpos; //cull when completely transparent
 
-				//Initialize the largest, 5-km wide grid here, for slight performance savings
-				//causes artifacts at higher wind/wave settings so not worth it
-//				OUT.slopesX = Tex2DGrad(_Ocean_Map1, u / _Ocean_GridSizes.x, dux / _Ocean_GridSizes.z, duy / _Ocean_GridSizes.z, _Ocean_MapSize).xy;
-//				OUT.jm1 = Tex2DGrad(_Ocean_Foam0, u / _Ocean_GridSizes.x, dux / _Ocean_GridSizes.z, duy / _Ocean_GridSizes.z, _Ocean_MapSize).xy;
-
 				float3 earthP = normalize(oceanP + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
 
 				float3 sunL, skyE;
@@ -263,7 +258,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				float3 V = normalize(oceanCamera - oceanP);
 
-				float2 slopes = 0.0;
+				float2 slopes = float2(0,0);
 				slopes += tex2D(_Ocean_Map1, u / _Ocean_GridSizes.x).xy;
 				slopes += tex2D(_Ocean_Map1, u / _Ocean_GridSizes.y).zw;
 				slopes += tex2D(_Ocean_Map2, u / _Ocean_GridSizes.z).xy;

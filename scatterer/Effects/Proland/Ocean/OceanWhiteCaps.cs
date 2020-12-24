@@ -14,8 +14,6 @@ namespace scatterer {
 		[Persistent]
 		protected string name;
 		
-		public int m_foamAnsio = 9;
-		
 		public float m_foamMipMapBias = -2.0f;
 		
 		[Persistent] public float m_whiteCapStr = 0.1f;
@@ -51,10 +49,10 @@ namespace scatterer {
 		
 		protected override void CreateRenderTextures()
 		{
-			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
+			RenderTextureFormat format = RenderTextureFormat.ARGBHalf;
 			
-			CreateMap(ref m_foam0, format, m_foamAnsio, true);
-			CreateMap(ref m_foam1, format, m_foamAnsio, true);
+			CreateMap(ref m_foam0, format, mapsAniso, true);
+			CreateMap(ref m_foam1, format, mapsAniso, true);
 			
 			m_foam1.mipMapBias = m_foamMipMapBias;
 			
