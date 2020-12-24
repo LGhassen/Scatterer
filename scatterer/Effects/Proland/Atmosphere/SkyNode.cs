@@ -865,6 +865,16 @@ namespace scatterer
 				sharedMaterial.SetColor ("_SpecColor", new Color (specR / 100f, specG / 100f, specB / 100f));
 				sharedMaterial.SetFloat ("_Shininess", shininess / 100f);
 			}
+
+			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
+			{
+				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.surfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.fallbackMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.lowQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.mediumQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.highQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.ultraQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+			}
 		}
 		
 		public void TweakScaledMesh()
