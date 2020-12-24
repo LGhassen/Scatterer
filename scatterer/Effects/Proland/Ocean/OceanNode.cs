@@ -145,7 +145,7 @@ namespace scatterer
 			InitOceanMaterial ();
 
 			//Worth moving to projected Grid Class?
-			CreateProjectedGrid ();
+			CreateProjectedGridMeshes (true);
 
 			oceanCameraProjectionMatModifier = waterGameObjects[0].AddComponent<OceanCameraUpdateHook>();
 			oceanCameraProjectionMatModifier.oceanNode = this;
@@ -246,10 +246,10 @@ namespace scatterer
 			}
 		}
 
-		void CreateProjectedGrid ()
+		void CreateProjectedGridMeshes (bool use32BitIndexMesh)
 		{
 			//Create the projected grid. The resolution is the size in pixels
-			//of each square in the grid. If the squares are small the size of
+			//of each square in the grid. If not using 32-bit index meshes, the verts of
 			//the mesh will exceed the max verts for a mesh in Unity. In this case
 			//split the mesh up into smaller meshes.
 			m_resolution = Mathf.Max (1, m_resolution);
@@ -258,9 +258,10 @@ namespace scatterer
 			int NY = Screen.height / m_resolution;
 			numGrids = 1;
 
-			const int MAX_VERTS = 65000; //The number of meshes need to make a grid of this resolution
+			const int MAX_VERTS = 65000; //The number of meshes need to make a grid of this resolution, if not using 32-bit index meshes
 
-			if (NX * NY > MAX_VERTS) {
+			if (!use32BitIndexMesh && (NX * NY > MAX_VERTS))
+			{
 				numGrids += (NX * NY) / MAX_VERTS;
 			}
 			m_screenGrids = new Mesh[numGrids];
@@ -273,7 +274,10 @@ namespace scatterer
 			for (int i = 0; i < numGrids; i++)
 			{
 				NY = Screen.height / numGrids / m_resolution;
-				m_screenGrids [i] = MeshFactory.MakePlane (NX, NY, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
+				if (use32BitIndexMesh)
+					m_screenGrids [i] = MeshFactory.MakePlane32BitIndexFormat (NX, NY, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
+				else
+					m_screenGrids [i] = MeshFactory.MakePlane (NX, NY, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
 				m_screenGrids [i].bounds = new Bounds (Vector3.zero, new Vector3 (1e8f, 1e8f, 1e8f));
 				waterGameObjects [i] = new GameObject ();
 				waterGameObjects [i].transform.parent = m_manager.parentCelestialBody.transform;
@@ -290,7 +294,7 @@ namespace scatterer
 				waterMeshRenderers [i].enabled = true;
 			}
 		}
-		
+
 		void InitOceanMaterial ()
 		{
 			if (Scatterer.Instance.mainSettings.oceanPixelLights)
