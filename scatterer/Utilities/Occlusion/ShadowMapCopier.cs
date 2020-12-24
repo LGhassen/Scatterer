@@ -16,7 +16,7 @@ namespace scatterer
 {
 	public class ShadowMapCopier : MonoBehaviour
 	{
-		private CommandBuffer copyCascadeCB0, copyCascadeCB1, copyCascadeCB2, copyCascadeCB3;
+		private CommandBuffer copyCascadeCB0, copyCascadeCB1, copyCascadeCB2, copyCascadeCB3, textureCopyBuffer;
 		private Light m_Light;
 		bool commandBufferAdded = false;
 
@@ -43,7 +43,7 @@ namespace scatterer
 		public void Init (Light light)
 		{
 			m_Light = light;
-			CreateCopyCascadeCBs ();
+			CreateTextureCopyCB ();
 			GameEvents.onGameSceneLoadRequested.Add(RecreateForSceneChange);
 		}
 		
@@ -59,9 +59,17 @@ namespace scatterer
 				yield return new WaitForFixedUpdate ();
 
 			Disable ();
-			CreateCopyCascadeCBs();
+			CreateTextureCopyCB ();
 		}
 
+		//Adds one one commandbuffer which does an optimized pixel-by-pixel texture copy
+		private void CreateTextureCopyCB()
+		{
+			textureCopyBuffer = new CommandBuffer();
+			textureCopyBuffer.CopyTexture (BuiltinRenderTextureType.CurrentActive, ShadowMapCopy.RenderTexture);
+		}
+
+		//These are adapted for copying one cascade and then rendering other stuff on top, like clouds, however since I'm going to render them separately, better do a fast copytexture
 		private void CreateCopyCascadeCBs()
 		{
 			copyCascadeCB0 = CreateCopyCascadeCB (ShadowMapCopy.RenderTexture,   0f,   0f, 0.5f, 0.5f);
@@ -85,10 +93,7 @@ namespace scatterer
 
 		public void Disable()
 		{
-			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB0);
-			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB1);
-			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB2);
-			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB3);
+			m_Light.RemoveCommandBuffer(LightEvent.AfterShadowMap, textureCopyBuffer);
 
 			commandBufferAdded = false;
 		}
@@ -97,10 +102,7 @@ namespace scatterer
 		{
 			if (!commandBufferAdded)
 			{
-				m_Light.AddCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB0, ShadowMapPass.DirectionalCascade0);
-				m_Light.AddCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB1, ShadowMapPass.DirectionalCascade1);
-				m_Light.AddCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB2, ShadowMapPass.DirectionalCascade2);
-				m_Light.AddCommandBuffer(LightEvent.AfterShadowMapPass, copyCascadeCB3, ShadowMapPass.DirectionalCascade3);
+				m_Light.AddCommandBuffer(LightEvent.AfterShadowMap, textureCopyBuffer);
 
 				commandBufferAdded = true;
 			}
@@ -153,7 +155,7 @@ namespace scatterer
 		private static void CreateTexture()
 		{
 			//I think we can leave it because they all should have the same custom resolution anyway
-			renderTexture = new RenderTexture ((int) Scatterer.Instance.sunLight.shadowCustomResolution, (int) Scatterer.Instance.sunLight.shadowCustomResolution, 0, RenderTextureFormat.RHalf);
+			renderTexture = new RenderTexture ((int) Scatterer.Instance.sunLight.shadowCustomResolution, (int) Scatterer.Instance.sunLight.shadowCustomResolution, 0, RenderTextureFormat.Shadowmap);
 			renderTexture.useMipMap = false;
 			renderTexture.antiAliasing = 1;
 			renderTexture.filterMode = FilterMode.Point;

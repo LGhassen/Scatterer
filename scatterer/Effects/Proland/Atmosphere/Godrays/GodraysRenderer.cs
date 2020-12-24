@@ -113,6 +113,8 @@ namespace scatterer
 
 			shadowVolumeCB.SetRenderTarget(volumeDepthTexture);
 			shadowVolumeCB.ClearRenderTarget(false, true, Color.black, 1f);
+			shadowVolumeCB.SetShadowSamplingMode (ShadowMapCopy.RenderTexture, ShadowSamplingMode.RawDepth);
+
 			shadowVolumeCB.DrawRenderer (_mr, volumeDepthMaterial);
 
 			targetCamera = gameObject.GetComponent<Camera> ();

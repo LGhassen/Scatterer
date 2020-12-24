@@ -14,6 +14,7 @@ namespace scatterer
 	{
 		//sorry about this huge wall
 		//I wrote a script to take care of the whole thing
+		//And by script I mean a regex
 
 		public static int _experimentalAtmoScale_PROPERTY { get { return _experimentalAtmoScale; } }
 		private static int _experimentalAtmoScale;
