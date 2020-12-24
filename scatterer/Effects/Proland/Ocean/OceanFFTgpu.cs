@@ -51,7 +51,7 @@ namespace scatterer {
 		
 		Material m_initSpectrumMat, m_initDisplacementMat;
 		
-		public int mapsAniso = 9;
+		public int mapsAniso = 2;
 
 		[Persistent] public float m_windSpeed = 5.0f;							//A higher wind speed gives greater swell to the waves
 		[Persistent] public float m_omega = 0.84f;								//A lower number means the waves last longer and will build up larger waves

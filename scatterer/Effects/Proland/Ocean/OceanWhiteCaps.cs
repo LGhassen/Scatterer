@@ -24,6 +24,8 @@ namespace scatterer {
 		
 		RenderTexture[] m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7;
 
+		int foamAniso = 9;
+
 		RenderTexture m_foam0, m_foam1;
 
 		public override void Init(ProlandManager manager)
@@ -51,8 +53,8 @@ namespace scatterer {
 		{
 			RenderTextureFormat format = RenderTextureFormat.ARGBHalf;
 			
-			CreateMap(ref m_foam0, format, mapsAniso, true);
-			CreateMap(ref m_foam1, format, mapsAniso, true);
+			CreateMap(ref m_foam0, format, foamAniso, true);
+			CreateMap(ref m_foam1, format, foamAniso, true);
 			
 			m_foam1.mipMapBias = m_foamMipMapBias;
 			
