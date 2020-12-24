@@ -378,7 +378,7 @@ namespace scatterer
 								Scatterer.Instance.mainSettings.m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ())));
 								GUILayout.EndHorizontal ();
 								GUILayout.BeginHorizontal ();
-								GUILayout.Label ("Mesh resolution (pixels covered by a mesh quad, lower is better)");
+								GUILayout.Label ("Mesh resolution (pixels covered by a mesh quad, lower is better but slower)");
 								Scatterer.Instance.mainSettings.oceanMeshResolution = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.oceanMeshResolution.ToString ())));
 								GUILayout.EndHorizontal ();
 								Scatterer.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanSkyReflections, "Sky reflections");

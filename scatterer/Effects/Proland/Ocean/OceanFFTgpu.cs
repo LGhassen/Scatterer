@@ -356,7 +356,7 @@ namespace scatterer {
 		protected virtual void CreateRenderTextures()
 		{
 			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBHalf;
-			RenderTextureFormat format = RenderTextureFormat.ARGBFloat;
+			RenderTextureFormat format = RenderTextureFormat.ARGBHalf;
 			
 			//These texture hold the actual data use in the ocean renderer
 			CreateMap(ref m_map0, mapFormat, mapsAniso, true);
