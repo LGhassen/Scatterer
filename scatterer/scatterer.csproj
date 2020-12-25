@@ -137,7 +137,6 @@
     <Compile Include="Effects\Proland\Ocean\Utils\WriteFloat.cs" />
     <Compile Include="Effects\Proland\Atmosphere\SkyNode.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmospherePQS.cs" />
-    <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereProjector.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereUtils.cs" />
     <Compile Include="Effects\Proland\ProlandManager.cs" />
     <Compile Include="Utilities\BufferManager.cs" />
@@ -188,6 +187,9 @@
     <Compile Include="Effects\SunFlare\SunflareSettingsV1.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV2.cs" />
     <Compile Include="DataSerialization\QualityPresetsLoader.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\AbstractLocalAtmosphereContainer.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\ScreenSpaceScatteringContainer.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereProjectorContainer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

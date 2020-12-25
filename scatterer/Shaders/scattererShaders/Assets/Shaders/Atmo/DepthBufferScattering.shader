@@ -20,6 +20,7 @@
 			#pragma target 3.0
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
+			#include "../DepthCommon.cginc"
 
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 			//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
@@ -38,13 +39,11 @@
 			uniform float _Post_Extinction_Tint;
 			uniform float extinctionThickness;
 
-			uniform sampler2D _customDepthTexture;
 #if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;
 #endif
 			uniform float _openglThreshold;
 
-			uniform sampler2D _CameraDepthTexture;
 			uniform sampler2D ScattererScreenCopy;
 			float4x4 CameraToWorld;
 
@@ -89,99 +88,19 @@
 				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
 
 				if (zdepth == 0.0)
-					return float4(0.0,0.0,0.0,0.0);
+					discard;
 
-//				if (uv.x > 0.5)
-//				{
-//					return float4(zdepth,0.0,0.0,1.0);
-					float zdepth2 = zdepth;
-			#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
-					zdepth2 = 1 - zdepth2;
-			#endif
+				float3 invDepthWorldPos = getWorldPosFromDepth(uv, zdepth, CameraToWorld); //get the inaccurate worldPosition using the inverse projection method
 
-					float4 clipPos1 = float4(uv, zdepth2, 1.0);
-					clipPos1.xyz = 2.0f * clipPos1.xyz - 1.0f;
-					float4 camPos = mul(unity_CameraInvProjection, clipPos1);
+				invDepthWorldPos = invDepthWorldPos - _WorldSpaceCameraPos.xyz;
+				float invDepthLength = length(invDepthWorldPos);
+				float3 worldViewDir = invDepthWorldPos / invDepthLength;
 
-					float4 absWorldPos = mul(CameraToWorld,camPos);
-					absWorldPos/=absWorldPos.w;
-//					if (uv.x > 0.5)
-//					{
-//						//return float4(normalize(absWorldPos.xyz - _WorldSpaceCameraPos.xyz),1.0);
-//						float dist = length(absWorldPos.xyz - _WorldSpaceCameraPos.xyz);
-//						return float4(dist/100000.0,dist/100000.0,dist/100000.0,1.0);
-//					}
+				//now refine the inaccurate distance
+				//TODO: disable this outside of dx11
+				float distance = getRefinedDistanceFromDepth(invDepthLength, zdepth, worldViewDir);
 
-					float3 worldViewDir = normalize(absWorldPos.xyz - _WorldSpaceCameraPos.xyz);
-//				}
-
-				//here's the plan, using current viewDir do a search for the target distance that would give us the same value as the zdepth from texture
-				//max distance is farclip plane * angle
-				//min distance is nearclip plane
-				//iterate, 15 iterations gets you 2^15=32768 which gets you a precision of 750000/32768=22 fucking meters
-				//so we need the camera view direction, an arbitrary distance here
-				//-> for each iteration, calculate camera position -> calculate clip position -> compare zdepth or 1-zdepth, whatever
-
-//				return float4(i.camViewDir,1.0); //seems to be working
-
-				int maxIterations = 30;
-				int iteration = 0;
-
-				float maxSearchDistance = _ProjectionParams.z * 2.0; //replace by correct angle etc //try to init these from the normal depth buffer thingy
-//				float maxSearchDistance = _ProjectionParams.z; //replace by correct angle etc
-				float minSearchDistance = _ProjectionParams.y;
-
-
-//				float mid = minSearchDistance; //with this zdepth is 1.0
-//				float mid = maxSearchDistance; //with this zdepth is 0.0, so it's correct
-				float mid = 0;
-				float3 camPosition = float3(0.0,0.0,0.0);
-				float3 worldPos0 = float3(0.0,0.0,0.0);
-				float4 clipPos = float4(0.0,0.0,0.0,1.0);
-				float depth = -10.0;
-
-//				return float4(depth,0.0,0.0,1.0);
-
-				while ((iteration < maxIterations) && (depth != zdepth))
-				{
-					mid = 0.5 * (maxSearchDistance + minSearchDistance);
-
-					worldPos0 = _WorldSpaceCameraPos + worldViewDir * mid;
-
-					clipPos = mul(UNITY_MATRIX_VP, float4(worldPos0,1.0));
-					depth = clipPos.z/clipPos.w;
-
-					if (depth < zdepth)
-					{
-						maxSearchDistance = mid;
-					}
-					else// if (depth > zdepth)
-					{
-						minSearchDistance = mid;
-					}
-
-					iteration++;
-				}
-
-				//return float4(mid/100000.0,mid/100000.0,mid/100000.0,1.0); //we seem to be overestimating distances
-
-//				return float4(mid / 10000.0,0.0,0.0,1.0); //we know it works until here
-
-//				float3 camPos = mid * i.camViewDir; //position in camera space
-//
-////				return float4(length(camPos) / 10000.0, 0.0, 0.0, 1.0); //works
-//
-//				float4 absoluteWorldPos = mul(CameraToWorld,float4(camPos,1.0));
-//				absoluteWorldPos/=absoluteWorldPos.w;
-//
-//				return float4(normalize(absoluteWorldPos.xyz - _WorldSpaceCameraPos.xyz),1.0);
-
-//				float3 worldPos = absoluteWorldPos.xyz - _planetPos; //worldPos relative to planet origin
-
-				float3 worldPos = i.camPosRelPlanet .xyz + worldViewDir * abs(mid); //worldPos relative to planet origin
-
-
-//				return float4(length(worldPos - i.camPosRelPlanet) / 10000.0, 0.0, 0.0, 1.0);
+				float3 worldPos = i.camPosRelPlanet .xyz + worldViewDir * abs(distance); //worldPos relative to planet origin
 
 				float3 groundPos = normalize (worldPos) * Rg*1.0008;
 				float Rt2 = Rg + (Rt - Rg) * _experimentalAtmoScale;
