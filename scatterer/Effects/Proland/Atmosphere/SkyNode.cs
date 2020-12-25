@@ -90,7 +90,7 @@ namespace scatterer
 		Mesh originalScaledMesh, tweakedScaledmesh;
 		public ScaledScatteringContainer scaledScatteringContainer;
 		public Material localScatteringMaterial,skyMaterial,scaledScatteringMaterial,sunflareExtinctionMaterial;
-		public AtmosphereProjector localScatteringProjector;
+		public AbstractLocalAtmosphereContainer localScatteringContainer;
 		public GodraysRenderer godraysRenderer;
 		public bool postprocessingEnabled = true;
 
@@ -112,7 +112,8 @@ namespace scatterer
 
 			skyMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/SkySphere")]);
 			scaledScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledPlanetScattering")]);
-			localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
+			//localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
+			localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthBufferScattering")]);
 
 			skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
@@ -151,7 +152,8 @@ namespace scatterer
 
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
-				localScatteringProjector = new AtmosphereProjector (localScatteringMaterial, parentLocalTransform, Rt);
+				//localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt);
+				localScatteringContainer = new  ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt);
 			}
 
 
@@ -240,9 +242,9 @@ namespace scatterer
 
 		public void UpdateGraphicsUniforms()
 		{
-			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && !ReferenceEquals(localScatteringProjector,null))
+			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && !ReferenceEquals(localScatteringContainer,null))
 			{
-				UpdatePostProcessMaterialUniforms (localScatteringProjector.projector.material);
+				UpdatePostProcessMaterialUniforms (localScatteringContainer.material);
 			}
 			if (Scatterer.Instance.mainSettings.useEclipses)
 			{
@@ -264,10 +266,10 @@ namespace scatterer
 			if (!ReferenceEquals(scaledScatteringContainer,null))
 				scaledScatteringContainer.MeshRenderer.enabled = stockScaledPlanetMeshRenderer.enabled;
 
-			if (!ReferenceEquals (localScatteringProjector, null))
+			if (!ReferenceEquals (localScatteringContainer, null))
 			{
-				localScatteringProjector.setInScaledSpace (inScaledSpace);
-				localScatteringProjector.updateProjector ();
+				localScatteringContainer.setInScaledSpace (inScaledSpace);
+				localScatteringContainer.updateContainer ();
 
 				if (m_manager.parentCelestialBody.pqsController != null)
 				{
@@ -698,9 +700,9 @@ namespace scatterer
 				scaledScatteringContainer.Cleanup ();
 			}
 
-			if (localScatteringProjector)
+			if (localScatteringContainer)
 			{
-				UnityEngine.Object.Destroy (localScatteringProjector);
+				UnityEngine.Object.Destroy (localScatteringContainer);
 			}
 
 			if (!ReferenceEquals (godraysRenderer, null))
@@ -1176,9 +1178,9 @@ namespace scatterer
 		//to be called on loss of rendertextures, ie alt-enter
 		public void ReInitMaterialUniformsOnRenderTexturesLoss()
 		{
-			if (!ReferenceEquals (localScatteringProjector, null))
+			if (!ReferenceEquals (localScatteringContainer, null))
 			{
-				InitPostprocessMaterialUniforms (localScatteringProjector.projector.material);
+				InitPostprocessMaterialUniforms (localScatteringContainer.material);
 			}
 		}	
 	}

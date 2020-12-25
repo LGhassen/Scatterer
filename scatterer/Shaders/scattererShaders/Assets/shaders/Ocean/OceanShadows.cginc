@@ -99,6 +99,7 @@ half getOceanSoftShadow(float4 worldPos, float viewPosZ)
 	float3 receiverPlaneDepthBias = 0.0;
 #endif
 
+	//why is this slower than the ragular shadow? maybe change this to 3x3?
     half shadow = ScattererSampleShadowmap_PCF7x7(coord, receiverPlaneDepthBias);
     //shadow = lerp(_LightShadowData.r, 1.0f, shadow); //min strength/intensity, not used for ocean
 
@@ -109,6 +110,7 @@ half getOceanSoftShadow(float4 worldPos, float viewPosZ)
     half4 z4 = (float4(viewPosZ,viewPosZ,viewPosZ,viewPosZ) - _LightSplitsNear) / (_LightSplitsFar - _LightSplitsNear);
     half alpha = dot(z4 * cascadeWeights, half4(1,1,1,1));
 
+	//why is it slow? maybe remove this?
     UNITY_BRANCH
         if (alpha > 1 - UNITY_CASCADE_BLEND_DISTANCE)
         {

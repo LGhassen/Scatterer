@@ -63,7 +63,7 @@ namespace scatterer {
 
 		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);				//Size in meters (i.e. in spatial domain) of each grid
 		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);		//Strength of sideways displacement for each grid
-		public int m_fourierGridSize = 128;										//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
+		public int m_fourierGridSize = 64;										//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
 		[Persistent] public int m_varianceSize = 4;
 		

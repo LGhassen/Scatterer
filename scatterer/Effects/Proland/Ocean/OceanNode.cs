@@ -86,7 +86,7 @@ namespace scatterer
 		MeshFilter[] waterMeshFilters;
 
 		//TODO: merge AtmosphereProjector class and it's material, make material public, rename AtmosphereProjector to LocalEffectProjector
-		public AtmosphereProjector underwaterProjector;
+		public AtmosphereProjectorContainer underwaterProjector;
 		Material underwaterMaterial;
 
 		public Vector3 offsetVector3{
@@ -163,7 +163,7 @@ namespace scatterer
 
 			InitUnderwaterMaterial ();
 
-			underwaterProjector = new AtmosphereProjector(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius);
+			underwaterProjector = new AtmosphereProjectorContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius);
 			underwaterProjector.setActivated(false);
 
 			//dimming
@@ -375,21 +375,21 @@ namespace scatterer
 			if (underwaterMode) //switch to over water
 			{
 				underwaterProjector.setActivated(false);
-				underwaterProjector.updateProjector ();
+				underwaterProjector.updateContainer ();
 				m_oceanMaterial.EnableKeyword("UNDERWATER_OFF");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_ON");
-				if (!ReferenceEquals(m_manager.GetSkyNode().localScatteringProjector,null))
-					m_manager.GetSkyNode().localScatteringProjector.setUnderwater(false);
+				if (!ReferenceEquals(m_manager.GetSkyNode().localScatteringContainer,null))
+					m_manager.GetSkyNode().localScatteringContainer.setUnderwater(false);
 
 			}
 			else   //switch to underwater 
 			{
 				underwaterProjector.setActivated(true);
-				underwaterProjector.updateProjector ();
+				underwaterProjector.updateContainer ();
 				m_oceanMaterial.EnableKeyword("UNDERWATER_ON");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_OFF");
-				if (!ReferenceEquals(m_manager.GetSkyNode().localScatteringProjector,null))
-					m_manager.GetSkyNode().localScatteringProjector.setUnderwater(true);
+				if (!ReferenceEquals(m_manager.GetSkyNode().localScatteringContainer,null))
+					m_manager.GetSkyNode().localScatteringContainer.setUnderwater(true);
 			}
 
 			underwaterMode = !underwaterMode;

@@ -119,6 +119,7 @@
      <None Include="Assets\Shaders\OldOrUnused\SkyScaledBox.shader" />
      <None Include="Assets\Shaders\Atmo\Godrays\ShadowVolumeUtils.cginc" />
      <None Include="Assets\Shaders\DepthTexture\ShadowVolumeDepth - Copy.shader" />
+     <None Include="Assets\Shaders\Atmo\DepthBufferScattering.shader" />
      <None Include="Assets\Shaders\Grass\Grass.shader" />
      <None Include="Assets\Shaders\Ocean\SlopeVariance.compute" />
      <None Include="Assets\Shaders\EVE\alphaMap.cginc" />
