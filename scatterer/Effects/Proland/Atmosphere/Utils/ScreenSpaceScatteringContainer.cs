@@ -49,7 +49,7 @@ namespace scatterer
 				if (!cam)
 					return;
 
-				ScreenCopyCommandBuffer.EnableScatteringScreenAndDepthCopyForFrame(cam);
+				RenderingCommandBufferHandler.EnableScatteringScreenAndDepthCopyForFrame(cam); //add also some conditions so that if the ocean exists -> copy depth as well to the target
 			}
 		}
 	}

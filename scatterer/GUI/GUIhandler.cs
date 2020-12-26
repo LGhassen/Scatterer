@@ -360,8 +360,24 @@ namespace scatterer
 			GUILayout.EndHorizontal ();
 			if (selectedIndividualSettingsTab == IndividualSettingsTabs.Scattering) {
 				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (Requires unified camera, long-distance shadows and shadowMapResolution ovveride, Directx11 only)");
-				if (Scatterer.Instance.mainSettings.useGodrays) {
+				if (Scatterer.Instance.mainSettings.useGodrays)
+				{
 					//Godrays tesselation placeholder
+				}
+				Scatterer.Instance.mainSettings.useDepthBufferMode = !GUILayout.Toggle (!Scatterer.Instance.mainSettings.useDepthBufferMode, "Use projector mode (Slower, less compatible but supports MSAA");
+				Scatterer.Instance.mainSettings.useDepthBufferMode = GUILayout.Toggle (Scatterer.Instance.mainSettings.useDepthBufferMode, "Use depth buffer mode (Recommended: Faster, better compatible with Parallax and trees/scatters, disables MSAA)");
+				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
+				{
+					GUILayout.Label ("Antialiasing:");
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label ("\t");
+					GUILayout.BeginVertical ();
+					{
+						GUILayout.Label ("Use TAA");
+						GUILayout.Label ("Use SMAA");
+					}
+					GUILayout.EndVertical ();
+					GUILayout.EndHorizontal ();
 				}
 			}
 			else

@@ -96,6 +96,9 @@ namespace scatterer
 		public bool useGodrays = false;
 
 		[Persistent]
+		public bool useDepthBufferMode = true;
+
+		[Persistent]
 		public bool terrainShadows = false;
 
 		[Persistent]
@@ -203,6 +206,7 @@ namespace scatterer
 				 OldConfig.useRingShadows != useRingShadows ||
 				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
 				 OldConfig.useGodrays != useGodrays ||
+				 OldConfig.useDepthBufferMode != useDepthBufferMode ||
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.useDithering != useDithering ||
 

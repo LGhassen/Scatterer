@@ -70,10 +70,11 @@
 				"RenderType"="Transparent"
 				"IgnoreProjector"="True"}
 
-		Pass   
+		Pass
 		{
 
-			Tags { "Queue" = "Geometry+100"
+			Tags { "LightMode" = "MainPass"
+					"Queue" = "Geometry+100"
 					"RenderType"="Transparent"
 					"IgnoreProjector"="True"}
 

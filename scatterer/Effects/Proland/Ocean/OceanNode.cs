@@ -155,8 +155,12 @@ namespace scatterer
 			oceanRenderingHook.targetMaterial = m_oceanMaterial;
 			oceanRenderingHook.targetRenderer = waterMeshRenderers [0];
 
-			//DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
-			//disableEffectsChecker.manager = this.m_manager;
+			//we still need this but only for pixel lights, regular rendering uses the commandBuffer which ignores the reflection probe and TRR camera
+			if (Scatterer.Instance.mainSettings.oceanPixelLights)
+			{
+				DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
+				disableEffectsChecker.manager = this.m_manager;
+			}
 
 			if (Scatterer.Instance.mainSettings.shadowsOnOcean)
 			{
@@ -291,9 +295,17 @@ namespace scatterer
 				waterMeshFilters [i].mesh = m_screenGrids [i];
 				waterGameObjects [i].layer = 15;
 				waterMeshRenderers [i] = waterGameObjects [i].AddComponent<MeshRenderer> ();
-//				waterMeshRenderers [i].sharedMaterial = m_oceanMaterial;
-//				waterMeshRenderers [i].material = m_oceanMaterial;
-				waterMeshRenderers [i].material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
+
+				if (Scatterer.Instance.mainSettings.oceanPixelLights)
+				{
+					m_oceanMaterial.SetPass (1); //Disable the main pass so we can render it with our commandbuffer. Pixel light passes render after scattering in depth buffer mode, and before scattering in projector mode
+					waterMeshRenderers [i].sharedMaterial = m_oceanMaterial;
+					waterMeshRenderers [i].material = m_oceanMaterial;
+				}
+				else
+				{
+					waterMeshRenderers [i].material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
+				}
 				waterMeshRenderers [i].receiveShadows = Scatterer.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable);
 				waterMeshRenderers [i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 				waterMeshRenderers [i].enabled = true;
@@ -335,7 +347,7 @@ namespace scatterer
 			if (!Scatterer.Instance.unifiedCameraMode)
 				m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 
-			m_oceanMaterial.renderQueue=2501;
+			m_oceanMaterial.renderQueue=2502;
 			m_manager.GetSkyNode ().InitPostprocessMaterialUniforms (m_oceanMaterial);
 			
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);

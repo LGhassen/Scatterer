@@ -110,6 +110,7 @@
      <None Include="Assets\Shaders\KSP\LightingKSP.cginc" />
      <None Include="Assets\Shaders\Ocean\OceanBRDF.cginc" />
      <None Include="Assets\Shaders\Ocean\WhiteCapsPrecompute0.shader" />
+     <None Include="Assets\Shaders\Ocean\OceanWhiteCapsModProj3VertexSearch.shader" />
      <None Include="Assets\Shaders\CommonAtmosphere.cginc" />
      <None Include="Assets\Shaders\Instancing\DeferredShading.shader" />
      <None Include="Assets\Shaders\OldOrUnused\AtmosphereNew.cginc" />

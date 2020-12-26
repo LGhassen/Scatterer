@@ -172,7 +172,6 @@
     <Compile Include="Utilities\Camera\DisableEffectsForReflectionsCamera.cs" />
     <Compile Include="Utilities\Camera\ReflectionProbeFixer.cs" />
     <Compile Include="Utilities\Camera\ReflectionProbeChecker.cs" />
-    <Compile Include="Utilities\Camera\ScreenCopyCommandBuffer.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\CBUtility.cs" />
     <Compile Include="Effects\Proland\Ocean\Caustics\CausticsLightRaysRenderer.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanCameraUpdateHook.cs" />
@@ -190,6 +189,7 @@
     <Compile Include="Effects\Proland\Atmosphere\Utils\ScreenSpaceScatteringContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereProjectorContainer.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanRenderingHook.cs" />
+    <Compile Include="Utilities\Camera\ScreenCopyCommandBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

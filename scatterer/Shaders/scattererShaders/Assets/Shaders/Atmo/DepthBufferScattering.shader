@@ -1,10 +1,10 @@
 ﻿Shader "Scatterer/DepthBufferScattering" {
 	SubShader {
-		Tags {"Queue" = "Transparent-498" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+		Tags {"Queue" = "Transparent-499" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 
 		//merged scattering+extinction pass
 		Pass {
-			Tags {"Queue" = "Transparent-498" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
+			Tags {"Queue" = "Transparent-499" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 
 			//Cull Front
 			Cull Off
@@ -74,8 +74,7 @@
 #if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)
 				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, -1.0 , 1.0);
 #else
-				//outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, 0.0 , 1.0); //sure about this? test in ogl also
-				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, 0.5 , 1.0); //sure about this? test in ogl also
+				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, 0.0 , 1.0);
 #endif
 				o.camPosRelPlanet = _WorldSpaceCameraPos - _planetPos;
 				o.screenPos = ComputeScreenPos(outpos);
@@ -86,22 +85,28 @@
 			half4 frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
 				float2 uv = i.screenPos.xy / i.screenPos.w;
+
+				//Do this only on dx11?
+				uv.y = 1.0 -uv.y;
+
 				float zdepth = tex2Dlod(ScattererDepthCopy, float4(uv,0,0));
-//				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
-				 
 
 				if (zdepth == 0.0)
 					discard;
 
-				float3 invDepthWorldPos = getWorldPosFromDepth(uv, zdepth, CameraToWorld); //get the inaccurate worldPosition using the inverse projection method
+				float3 invDepthWorldPos = getWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld); //get the inaccurate worldPosition using the inverse projection method
 
 				invDepthWorldPos = invDepthWorldPos - _WorldSpaceCameraPos.xyz;
 				float invDepthLength = length(invDepthWorldPos);
 				float3 worldViewDir = invDepthWorldPos / invDepthLength;
 
 				//now refine the inaccurate distance
-				//TODO: disable this outside of dx11
-				float distance = getRefinedDistanceFromDepth(invDepthLength, zdepth, worldViewDir);
+				//TODO: remove this from openGL
+				float distance = invDepthLength;
+				if (distance > 8000.0) //with this optimization 0.72 ms at KSC vs 0.87ms without, if I remove the refinement code completely takes 0.67 ms, I guess check what to do so you don't recompute the extinction, plus there is the horizon double sampling thing
+				{
+					distance = getRefinedDistanceFromDepth(invDepthLength, zdepth, worldViewDir);
+				}
 
 				float3 worldPos = i.camPosRelPlanet .xyz + worldViewDir * abs(distance); //worldPos relative to planet origin
 
@@ -113,7 +118,7 @@
 
 				worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
-				float3 backGrnd = tex2Dlod(ScattererScreenCopy, float4(uv.x, 1.0 -uv.y,0.0,0.0));
+				float3 backGrnd = tex2Dlod(ScattererScreenCopy, float4(uv.x, uv.y,0.0,0.0));
 
 				float3 extinction = getExtinction(i.camPosRelPlanet, worldPos, 1.0, 1.0, 1.0); //same function as in inscattering2 or different?
 				float average=(extinction.r+extinction.g+extinction.b)/3;

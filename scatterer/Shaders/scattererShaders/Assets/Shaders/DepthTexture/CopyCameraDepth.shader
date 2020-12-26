@@ -25,6 +25,8 @@
 				v2f o = (v2f)0;
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.uv = v.texcoord;
+							
+				o.uv.y = (_ProjectionParams.x == 1.0) ? o.uv.y : 1.0 - o.uv.y ;
 
 				return o;
 			}
@@ -59,6 +61,8 @@
 				v2f o = (v2f)0;
 				o.pos = UnityObjectToClipPos(v.vertex);
 				o.uv = v.texcoord;
+
+				o.uv.y = (_ProjectionParams.x == 1.0) ? o.uv.y : 1.0 - o.uv.y ;
 
 				return o;
 			}

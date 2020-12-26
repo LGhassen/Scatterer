@@ -112,8 +112,12 @@ namespace scatterer
 
 			skyMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/SkySphere")]);
 			scaledScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledPlanetScattering")]);
-			//localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
-			localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthBufferScattering")]);
+
+			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
+				localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthBufferScattering")]);
+			else
+				localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
+
 
 			skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
@@ -152,8 +156,11 @@ namespace scatterer
 
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
-				//localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt);
-				localScatteringContainer = new  ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt);
+				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
+					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt);
+				else
+					localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt);
+
 			}
 
 

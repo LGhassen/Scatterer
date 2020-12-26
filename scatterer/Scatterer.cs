@@ -70,10 +70,11 @@ namespace scatterer
 			}
 
 			Utils.LogInfo ("Version:"+versionNumber);
-			Utils.LogInfo ("Running on " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
-			Utils.LogInfo ("Game resolution " + Screen.width.ToString() + "x" +Screen.height.ToString());
+			Utils.LogInfo ("Running on: " + SystemInfo.graphicsDeviceVersion + " on " +SystemInfo.operatingSystem);
+			Utils.LogInfo ("Game resolution: " + Screen.width.ToString() + "x" +Screen.height.ToString());
 			Utils.LogInfo ("Compute shader support: " + SystemInfo.supportsComputeShaders.ToString());
-			Utils.LogInfo ("Async GPU readback support " + SystemInfo.supportsAsyncGPUReadback.ToString());
+			Utils.LogInfo ("Async GPU readback support: " + SystemInfo.supportsAsyncGPUReadback.ToString());
+			Utils.LogInfo ("Using depth buffer mode: " + mainSettings.useDepthBufferMode.ToString());
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -95,6 +96,8 @@ namespace scatterer
 					{
 						ShaderReplacer.Instance.replaceEVEshaders();
 					}
+
+					QualitySettings.antiAliasing = mainSettings.useDepthBufferMode ? 0 : GameSettings.ANTI_ALIASING;
 				}
 			} 
 

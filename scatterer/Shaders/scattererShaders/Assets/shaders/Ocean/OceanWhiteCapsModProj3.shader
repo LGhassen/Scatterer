@@ -161,7 +161,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			uniform float extinctionThickness;
 
 			#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
-			uniform sampler2D ScattererScreenCopy;   //background texture used for refraction
+			uniform sampler2D ScattererScreenCopyBeforeOcean;   //background texture used for refraction
 			#endif
 
 			#if defined (GODRAYS_ON)
@@ -226,6 +226,10 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
 				outpos = mul(UNITY_MATRIX_P, screenP);
+				//outpos.y = (_ProjectionParams.x < 0) ? -outpos.y : outpos.y; //looks like this works but something wrong with the depth?
+				//before I added this it worked but everything was flipped upside down, but ztesting and transparency both work with the scene I'm seeing
+				//after I add this, ztesting doesn't seem to work anymore can't even see the ocean? can't see any depth written to z buffer
+				//fix this after you fix the C# so you can reload shader in-game
 
 				OUT.oceanU = u;
 				OUT.oceanP = oceanP;
@@ -348,9 +352,9 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 backGrnd = 0.0;
 
 		#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
-				backGrnd = tex2D(ScattererScreenCopy, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
+				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
 		#else
-				backGrnd = tex2D(ScattererScreenCopy, uv );
+				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
 		#endif
 #endif
 
