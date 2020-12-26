@@ -46,6 +46,7 @@ namespace scatterer
 		public ProlandManager m_manager;
 
 		public Material m_oceanMaterial;
+		OceanRenderingHook oceanRenderingHook;
 
 		[Persistent]
 		public Vector3 m_oceanUpwellingColor = new Vector3 (0.0039f, 0.0156f, 0.047f);
@@ -150,9 +151,12 @@ namespace scatterer
 			oceanCameraProjectionMatModifier = waterGameObjects[0].AddComponent<OceanCameraUpdateHook>();
 			oceanCameraProjectionMatModifier.oceanNode = this;
 
-			waterGameObjects[0].AddComponent<ScreenCopierNotifier>();
-			DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
-			disableEffectsChecker.manager = this.m_manager;
+			oceanRenderingHook = waterGameObjects[0].AddComponent<OceanRenderingHook>();
+			oceanRenderingHook.targetMaterial = m_oceanMaterial;
+			oceanRenderingHook.targetRenderer = waterMeshRenderers [0];
+
+			//DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
+			//disableEffectsChecker.manager = this.m_manager;
 
 			if (Scatterer.Instance.mainSettings.shadowsOnOcean)
 			{
@@ -287,8 +291,9 @@ namespace scatterer
 				waterMeshFilters [i].mesh = m_screenGrids [i];
 				waterGameObjects [i].layer = 15;
 				waterMeshRenderers [i] = waterGameObjects [i].AddComponent<MeshRenderer> ();
-				waterMeshRenderers [i].sharedMaterial = m_oceanMaterial;
-				waterMeshRenderers [i].material = m_oceanMaterial;
+//				waterMeshRenderers [i].sharedMaterial = m_oceanMaterial;
+//				waterMeshRenderers [i].material = m_oceanMaterial;
+				waterMeshRenderers [i].material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
 				waterMeshRenderers [i].receiveShadows = Scatterer.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable);
 				waterMeshRenderers [i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 				waterMeshRenderers [i].enabled = true;
@@ -437,6 +442,11 @@ namespace scatterer
 			{
 				causticsLightRaysRenderer.OnDestroy();
 				UnityEngine.Object.Destroy (causticsLightRaysRenderer);
+			}
+
+			if (!ReferenceEquals (null, oceanRenderingHook))
+			{
+				Component.Destroy(oceanRenderingHook);
 			}
 		}
 

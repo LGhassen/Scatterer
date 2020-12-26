@@ -45,6 +45,7 @@
 			uniform float _openglThreshold;
 
 			uniform sampler2D ScattererScreenCopy;
+			uniform sampler2D ScattererDepthCopy;
 			float4x4 CameraToWorld;
 
 			//            //eclipse uniforms
@@ -85,7 +86,9 @@
 			half4 frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
 				float2 uv = i.screenPos.xy / i.screenPos.w;
-				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
+				float zdepth = tex2Dlod(ScattererDepthCopy, float4(uv,0,0));
+//				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
+				 
 
 				if (zdepth == 0.0)
 					discard;
@@ -110,7 +113,7 @@
 
 				worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
-				float3 backGrnd = tex2Dlod(ScattererScreenCopy, float4(uv,0.0,0.0));
+				float3 backGrnd = tex2Dlod(ScattererScreenCopy, float4(uv.x, 1.0 -uv.y,0.0,0.0));
 
 				float3 extinction = getExtinction(i.camPosRelPlanet, worldPos, 1.0, 1.0, 1.0); //same function as in inscattering2 or different?
 				float average=(extinction.r+extinction.g+extinction.b)/3;

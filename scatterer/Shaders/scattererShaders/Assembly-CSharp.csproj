@@ -94,6 +94,7 @@
      <None Include="Assets\Shaders\Ocean\OceanDisplacement3.cginc" />
      <None Include="Assets\Shaders\EVE\GeometryCloudVolumeParticle.shader" />
      <None Include="Assets\Shaders\Ocean\OceanWhiteCapsModProj3PixelLights.shader" />
+     <None Include="Assets\Shaders\DepthTexture\CopyCameraDepth.shader" />
      <None Include="Assets\Shaders\Atmo\atmosphereLocalScattering.shader" />
      <None Include="Assets\Shaders\Atmo\SkySphere.shader" />
      <None Include="Assets\Shaders\Shadows\LongDistanceScreenSpaceShadows.shader" />

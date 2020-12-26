@@ -17,12 +17,12 @@ namespace scatterer
 	{
 		private static Dictionary<Camera,ScreenCopyCommandBuffer> CameraToScreenCopyCommandBuffer = new Dictionary<Camera,ScreenCopyCommandBuffer>();
 		
-		public static void EnableForThisFrame(Camera cam)
+		public static void EnableOceanScreenCopyForFrame(Camera cam)
 		{
 			if (CameraToScreenCopyCommandBuffer.ContainsKey (cam))
 			{
 				if(CameraToScreenCopyCommandBuffer[cam])
-					CameraToScreenCopyCommandBuffer[cam].EnableForThisFrame();
+					CameraToScreenCopyCommandBuffer[cam].EnableOceanScreenCopyForFrame();
 			}
 			else
 			{
@@ -32,12 +32,28 @@ namespace scatterer
 					CameraToScreenCopyCommandBuffer[cam] = (ScreenCopyCommandBuffer) cam.gameObject.AddComponent(typeof(ScreenCopyCommandBuffer));
 			}
 		}
+
+		public static void EnableScatteringScreenAndDepthCopyForFrame(Camera cam)
+		{
+			if (CameraToScreenCopyCommandBuffer.ContainsKey (cam))
+			{
+				if(CameraToScreenCopyCommandBuffer[cam])
+					CameraToScreenCopyCommandBuffer[cam].EnableScatteringScreenAndDepthCopyForFrame();
+			}
+			else
+			{
+				//reflection probe should be fine here?
+				CameraToScreenCopyCommandBuffer[cam] = (ScreenCopyCommandBuffer) cam.gameObject.AddComponent(typeof(ScreenCopyCommandBuffer));
+			}
+		}
 		
-		bool renderingEnabled = false;
+		bool oceanRenderingEnabled = false;
+		bool scatteringRenderingEnabled = false;
 		bool isInitialized = false;
 		private Camera targetCamera;
-		private CommandBuffer copyCommandBuffer;
-		private RenderTexture copyRenderTexture;
+		private CommandBuffer colorCopyCommandBuffer, colorAndDepthCopyCommandBuffer;
+		private RenderTexture colorCopyRenderTexture, depthCopyRenderTexture;
+		private Material copyCameraDepthMaterial;
 		
 		public ScreenCopyCommandBuffer ()
 		{
@@ -45,36 +61,82 @@ namespace scatterer
 		
 		public void Initialize()
 		{
+			copyCameraDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/CopyCameraDepth"]);
 			targetCamera = GetComponent<Camera> ();
-			
-			if (!ReferenceEquals(targetCamera.activeTexture ,null))
-			{
-				copyRenderTexture = new RenderTexture (targetCamera.activeTexture.width, targetCamera.activeTexture.height, 0, RenderTextureFormat.ARGB32);
-				copyRenderTexture.anisoLevel = 1;
-				copyRenderTexture.antiAliasing = 1;
-				copyRenderTexture.volumeDepth = 0;
-				copyRenderTexture.useMipMap = false;
-				copyRenderTexture.autoGenerateMips = false;
-				copyRenderTexture.Create ();
 
-				copyCommandBuffer = new CommandBuffer();
-				copyCommandBuffer.name = "Scatterer Screen Copy CommandBuffer";
-				copyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, copyRenderTexture);
-				
-				copyCommandBuffer.SetGlobalTexture ("ScattererScreenCopy", copyRenderTexture);
-				
-				isInitialized = true;
-				//Utils.Log ("ScreenCopyCommandBuffer initialized successfully!!!");
+			int width, height;
+
+			if (!ReferenceEquals (targetCamera.activeTexture, null))
+			{
+				width = targetCamera.activeTexture.width;
+				height = targetCamera.activeTexture.height;
 			}
+			else
+			{
+				width = Screen.width;
+				height = Screen.height;
+			}
+
+			colorCopyRenderTexture = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
+			colorCopyRenderTexture.anisoLevel = 1;
+			colorCopyRenderTexture.antiAliasing = 1;
+			colorCopyRenderTexture.volumeDepth = 0;
+			colorCopyRenderTexture.useMipMap = false;
+			colorCopyRenderTexture.autoGenerateMips = false;
+			colorCopyRenderTexture.Create ();
+			
+			colorCopyCommandBuffer = new CommandBuffer();
+			colorCopyCommandBuffer.name = "Scatterer Screen Color Copy CommandBuffer";
+			colorCopyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
+			colorCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopy", colorCopyRenderTexture);
+
+			depthCopyRenderTexture = new RenderTexture(width, height, 32, RenderTextureFormat.Depth);
+			depthCopyRenderTexture.anisoLevel = 1;
+			depthCopyRenderTexture.antiAliasing = 1;
+			depthCopyRenderTexture.volumeDepth = 0;
+			depthCopyRenderTexture.useMipMap = false;
+			depthCopyRenderTexture.autoGenerateMips = false;
+			depthCopyRenderTexture.filterMode = FilterMode.Point;
+			depthCopyRenderTexture.depth = 32;
+			depthCopyRenderTexture.Create();		
+			
+			colorAndDepthCopyCommandBuffer = new CommandBuffer();
+			colorAndDepthCopyCommandBuffer.name = "Scatterer Screen Color and Depth Copy CommandBuffer";
+
+			colorAndDepthCopyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
+
+			//blit by itself draws a quad with zwite off, here I use a material which has zwrite on and outputs to depth
+			//source: support.unity.com/hc/en-us/articles/115000229323-Graphics-Blit-does-not-copy-RenderTexture-depth
+			colorAndDepthCopyCommandBuffer.Blit (null, depthCopyRenderTexture, copyCameraDepthMaterial, 0); //alright this works, so you're supposed to do this, then render the ocean to this color buffer and depth buffer
+																											//then use depth buffer for scattering and render to the screen using the same color buffer the ocean rendered into, and also write out the new depth, done!
+																											//when scattering renders alone it gets simplified, these steps get removed and there is no depth to write
+
+			//colorAndDepthCopyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, depthCopyRenderTexture, copyCameraDepthMaterial, 1); 	//try this which takes a maintex, nope does fuckall
+//			colorAndDepthCopyCommandBuffer.Blit (BuiltinRenderTextureType.Depth, depthCopyRenderTexture, copyCameraDepthMaterial, 1); 			//try again with this, doesn't work either
+
+			colorAndDepthCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopy", colorCopyRenderTexture);
+			colorAndDepthCopyCommandBuffer.SetGlobalTexture ("ScattererDepthCopy",  depthCopyRenderTexture);
+			
+			isInitialized = true;
 		}
 		
-		public void EnableForThisFrame()
+		public void EnableOceanScreenCopyForFrame()
 		{
-			if (!renderingEnabled && isInitialized)
+			if (!oceanRenderingEnabled && isInitialized)
 			{
-				//Utils.LogInfo ("ScreenCopyCommandBuffer rendering for this frame on camera "+targetCamera.name);
-				targetCamera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, copyCommandBuffer);
-				renderingEnabled = true;
+				targetCamera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, colorCopyCommandBuffer);	//both afterForwardOpaque and beforeForwardAlpha happen between 2500 and 2501							
+				oceanRenderingEnabled = true;															//will have to make the ocean add it's commandbuffer to afterForwardOpaque, but after requesting enable
+																										//and then have the scattering request a screen+depth copy after the ocean, using afterForwardAlpha, then scattering can render at renderqueue 2501,
+																										//some of their stupid elements like kerbals, flags and whatnot I have to manually modify the renderqueue I guess
+			}
+		}
+
+		public void EnableScatteringScreenAndDepthCopyForFrame()
+		{
+			if (!scatteringRenderingEnabled && isInitialized)
+			{
+				targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, colorAndDepthCopyCommandBuffer);
+				scatteringRenderingEnabled = true;
 			}
 		}
 		
@@ -84,22 +146,37 @@ namespace scatterer
 			{
 				Initialize ();
 			}
-			else if (renderingEnabled)
+			else
 			{
-				//Utils.LogInfo ("ScreenCopyCommandBuffer rendering finished, disabling on Camera "+targetCamera.name);
-				targetCamera.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, copyCommandBuffer);
-				renderingEnabled = false;
+				if (oceanRenderingEnabled)
+				{
+					targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, colorCopyCommandBuffer);
+					oceanRenderingEnabled = false;
+				}
+				if (scatteringRenderingEnabled)
+				{
+					targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardAlpha, colorAndDepthCopyCommandBuffer);
+					scatteringRenderingEnabled = false;
+				}
 			}
 		}
 		
 		public void OnDestroy ()
 		{
-			//Utils.Log ("OnDestroy called on ScreenCopyCommandBuffer");
-			if (!ReferenceEquals(targetCamera,null) && !ReferenceEquals(copyCommandBuffer,null))
+			if (!ReferenceEquals(targetCamera,null))
 			{
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, copyCommandBuffer);
-				copyRenderTexture.Release();
-				renderingEnabled = false;
+				if (!ReferenceEquals(colorCopyCommandBuffer,null))
+				{
+					targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, colorCopyCommandBuffer);
+					colorCopyRenderTexture.Release();
+					oceanRenderingEnabled = false;
+				}
+				if (!ReferenceEquals(colorAndDepthCopyCommandBuffer,null))
+				{
+					targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardAlpha, colorAndDepthCopyCommandBuffer);
+					depthCopyRenderTexture.Release();
+					scatteringRenderingEnabled = false;
+				}
 			}
 		}
 	}

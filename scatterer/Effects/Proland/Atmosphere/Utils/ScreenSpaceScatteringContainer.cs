@@ -44,23 +44,12 @@ namespace scatterer
 			{
 				material.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, Camera.current.cameraToWorldMatrix);
 
-				//set directions of frustum corners in world space
-				//used to reconstruct world pos from view-space depth
-//
-//				Vector3 topLeft 	= Camera.current.ViewportToWorldPoint(new Vector3(0f,1f,Camera.current.farClipPlane)) - Camera.current.transform.position;
-//				Vector3 topRight	= Camera.current.ViewportToWorldPoint(new Vector3(1f,1f,Camera.current.farClipPlane)) - Camera.current.transform.position;
-//				Vector3 bottomRight = Camera.current.ViewportToWorldPoint(new Vector3(1f,0f,Camera.current.farClipPlane)) - Camera.current.transform.position;
-//				Vector3 bottomLeft 	= Camera.current.ViewportToWorldPoint(new Vector3(0f,0f,Camera.current.farClipPlane)) - Camera.current.transform.position;
-//				
-//				Matrix4x4 _frustumCorners = Matrix4x4.identity;				
-//				{
-//					_frustumCorners.SetRow (0, bottomLeft); 
-//					_frustumCorners.SetRow (1, bottomRight);		
-//					_frustumCorners.SetRow (2, topLeft);
-//					_frustumCorners.SetRow (3, topRight);	
-//				}
-//				
-//				material.SetMatrix ("scattererFrustumCorners", _frustumCorners);
+				Camera cam = Camera.current;
+				
+				if (!cam)
+					return;
+
+				ScreenCopyCommandBuffer.EnableScatteringScreenAndDepthCopyForFrame(cam);
 			}
 		}
 	}
