@@ -464,7 +464,7 @@ namespace scatterer
 			//When using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately: Instead ocean shader handles scattering internally
 			//When the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
 			//The ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering, this is not needed for stock ocean so disable it
-			Utils.EnableOrDisableShaderKeywords (mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders);
+			Utils.EnableOrDisableShaderKeywords (mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && m_manager.hasOcean);
 
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 

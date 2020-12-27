@@ -17,6 +17,7 @@ namespace scatterer
 		public Material material;
 		
 		MeshRenderer scatteringMR;
+		public bool hasOcean = false;
 		
 		public void Init()
 		{
@@ -49,7 +50,8 @@ namespace scatterer
 
 				material.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, cam.cameraToWorldMatrix);
 
-				ScreenCopyCommandBuffer.EnableScatteringScreenAndDepthCopyForFrame(cam); //this needs to be modified to do the screen copy if there is no ocean, but that's easy I guess
+				if (!hasOcean)
+					ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
 			}
 		}
 	}
@@ -81,6 +83,7 @@ namespace scatterer
 			screenSpaceScattering.material = atmosphereMaterial;
 			screenSpaceScattering.material.CopyKeywordsFrom (atmosphereMaterial);
 
+			screenSpaceScattering.hasOcean = manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders;
 			screenSpaceScattering.Init();
 		}
 

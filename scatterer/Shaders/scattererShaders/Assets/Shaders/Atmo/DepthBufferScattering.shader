@@ -42,8 +42,12 @@
 #endif
 			uniform float _openglThreshold;
 
+#if defined (CUSTOM_OCEAN_ON)
 			uniform sampler2D ScattererScreenCopy;
 			uniform sampler2D ScattererDepthCopy;
+#else
+			uniform sampler2D ScattererScreenCopyBeforeOcean;
+#endif
 			float4x4 CameraToWorld;
 
 			//            //eclipse uniforms
@@ -91,10 +95,13 @@
 			{
 				float2 uv = i.screenPos.xy / i.screenPos.w;
 
-				//Do this only on dx11?
+#if defined (CUSTOM_OCEAN_ON)
 				uv.y = 1.0 -uv.y;
-
 				float zdepth = tex2Dlod(ScattererDepthCopy, float4(uv,0,0));
+#else
+				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
+				uv.y = 1.0 -uv.y;
+#endif
 
 				if (zdepth == 0.0)
 					discard;
@@ -123,7 +130,11 @@
 
 				worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
+#if defined (CUSTOM_OCEAN_ON)
 				float3 backGrnd = tex2Dlod(ScattererScreenCopy, float4(uv.x, uv.y,0.0,0.0));
+#else
+				float3 backGrnd = tex2Dlod(ScattererScreenCopyBeforeOcean, float4(uv.x, uv.y,0.0,0.0));
+#endif
 
 				float3 extinction = getExtinction(i.camPosRelPlanet, worldPos, 1.0, 1.0, 1.0); //same function as in inscattering2 or different?
 				float average=(extinction.r+extinction.g+extinction.b)/3;

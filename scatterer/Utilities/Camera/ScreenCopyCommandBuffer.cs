@@ -15,12 +15,8 @@ namespace scatterer
 {
 	public class ScreenCopyCommandBuffer : MonoBehaviour
 	{
-		//maybe these don't need to be static, or at least need to be thrown out on scene changes, in any case try KSC screen, because after screen changes this stuff becomes invalid
-		//yep, that was it! add event to clean them up or clean up the design, put everything back how it was but expose the target color and depth textures
-		//I vote to put everything back, I can't think straight, I'm tired
 		private static Dictionary<Camera,ScreenCopyCommandBuffer> CameraToCommandBufferHandler = new Dictionary<Camera,ScreenCopyCommandBuffer>();
-
-		//and also this will only work for one ocean, if you go to another planet the mr and mat don't change, so really extract this and move it back to ocean hook ok?
+		
 		public static void EnableScreenCopyForFrame(Camera cam)
 		{
 			if (CameraToCommandBufferHandler.ContainsKey (cam))
@@ -30,7 +26,7 @@ namespace scatterer
 			}
 			else
 			{
-				if ((cam.name=="Reflection Probes Camera"))  //in depth buffer mode screen still needs to be copied for reflection probes so think about it
+				if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))
 					CameraToCommandBufferHandler[cam] = null;
 				else
 				{
@@ -41,20 +37,6 @@ namespace scatterer
 			}
 		}
 
-		public static void EnableScatteringScreenAndDepthCopyForFrame(Camera cam)
-		{
-//			if (CameraToCommandBufferHandler.ContainsKey (cam))
-//			{
-//				if(CameraToCommandBufferHandler[cam])
-//					CameraToCommandBufferHandler[cam].EnableScatteringScreenAndDepthCopyForFrame();
-//			}
-//			else
-//			{
-//				//reflection probe should be fine here?
-//				CameraToCommandBufferHandler[cam] = (ScreenCopyCommandBuffer) cam.gameObject.AddComponent(typeof(ScreenCopyCommandBuffer));
-//			}
-		}
-		
 		bool isEnabled = false;
 		bool isInitialized = false;
 		private Camera targetCamera;
@@ -108,16 +90,6 @@ namespace scatterer
 			}
 		}
 
-//		//what's the point of this if we have the ocean?
-//		public void EnableScatteringScreenAndDepthCopyForFrame()
-//		{
-//			if (!scatteringRenderingEnabled && isInitialized)
-//			{
-//				targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, colorAndDepthCopyCommandBuffer);
-//				scatteringRenderingEnabled = true;
-//			}
-//		}
-		
 		void OnPostRender()
 		{
 			if (!isInitialized)
@@ -131,11 +103,6 @@ namespace scatterer
 					targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, screenCopyCommandBuffer);
 					isEnabled = false;
 				}
-//				if (scatteringRenderingEnabled)
-//				{
-//					targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardAlpha, colorAndDepthCopyCommandBuffer);
-//					scatteringRenderingEnabled = false;
-//				}
 			}
 		}
 		
@@ -149,12 +116,6 @@ namespace scatterer
 					colorCopyRenderTexture.Release();
 					isEnabled = false;
 				}
-//				if (!ReferenceEquals(colorAndDepthCopyCommandBuffer,null))
-//				{
-//					targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardAlpha, colorAndDepthCopyCommandBuffer);
-//					depthCopyRenderTexture.Release();
-//					scatteringRenderingEnabled = false;
-//				}
 			}
 		}
 	}
