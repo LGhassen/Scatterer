@@ -208,7 +208,7 @@ namespace scatterer
 
 		public virtual void UpdateNode ()
 		{
-			oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace && (planetOpacity > 0f);
+			oceanDraw = !MapView.MapIsEnabled && !m_manager.m_skyNode.inScaledSpace;
 
 			foreach (MeshRenderer _mr in waterMeshRenderers)
 			{
