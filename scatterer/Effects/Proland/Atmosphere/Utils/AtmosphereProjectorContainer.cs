@@ -7,7 +7,7 @@ namespace scatterer
 	{
 		public Projector projector = null;
 
-		public AtmosphereProjectorContainer (Material atmosphereMaterial, Transform parentTransform, float Rt) : base (atmosphereMaterial, parentTransform, Rt)
+		public AtmosphereProjectorContainer (Material atmosphereMaterial, Transform parentTransform, float Rt, ProlandManager parentManager) : base (atmosphereMaterial, parentTransform, Rt, parentManager)
 		{
 			scatteringGO =  new GameObject("Scatterer atmosphere projector "+atmosphereMaterial.name);
 						

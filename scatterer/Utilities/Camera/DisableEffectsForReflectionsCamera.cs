@@ -27,9 +27,12 @@ namespace scatterer
 		//and scatteringProjector not disabling correctly
 		public void OnPreCull()
 		{
-			//the projector conflicts with underwaterProjector I guess, also, we need it for reflections when ascending to orbit
-//			if (!ReferenceEquals(null,manager.GetSkyNode ().localScatteringProjector))
-//				manager.GetSkyNode ().localScatteringProjector.setActivated(false);
+			if (Scatterer.Instance.mainSettings.useDepthBufferMode && !ReferenceEquals (null, manager.GetSkyNode ().localScatteringContainer))
+			{
+				manager.GetSkyNode ().localScatteringContainer.setActivated (false);
+				manager.GetSkyNode ().localScatteringContainer.updateContainer();
+			}
+
 			if (!ReferenceEquals (manager.GetOceanNode (), null))
 			{
 				manager.GetOceanNode ().setWaterMeshrenderersEnabled (false);
@@ -38,8 +41,8 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
-//			if (!ReferenceEquals (null, manager.GetSkyNode ().localScatteringProjector))
-//				manager.GetSkyNode ().localScatteringProjector.setActivated (true);
+			if (Scatterer.Instance.mainSettings.useDepthBufferMode && !ReferenceEquals (null, manager.GetSkyNode ().localScatteringContainer))
+				manager.GetSkyNode ().localScatteringContainer.setActivated (true);
 			if (!ReferenceEquals(manager.GetOceanNode (),null))
 				manager.GetOceanNode ().setWaterMeshrenderersEnabled (true);
 		}

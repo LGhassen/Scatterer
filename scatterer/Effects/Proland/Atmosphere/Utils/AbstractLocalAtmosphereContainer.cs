@@ -17,10 +17,12 @@ namespace scatterer
 		protected bool underwater = false;
 		protected bool activated = true;
 		public Material material;
+		public ProlandManager manager;
 
-		public AbstractLocalAtmosphereContainer (Material atmosphereMaterial, Transform parentTransform, float Rt)
+		public AbstractLocalAtmosphereContainer (Material atmosphereMaterial, Transform parentTransform, float Rt, ProlandManager parentManager)
 		{
 			material = atmosphereMaterial;
+			manager = parentManager;
 		}
 
 		public void setActivated (bool pEnabled)

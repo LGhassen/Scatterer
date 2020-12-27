@@ -16,17 +16,17 @@ namespace scatterer
 	{
 		public Material material;
 		
-		MeshRenderer shadowMR;
+		MeshRenderer scatteringMR;
 		
 		public void Init()
 		{
-			shadowMR = gameObject.GetComponent<MeshRenderer>();
+			scatteringMR = gameObject.GetComponent<MeshRenderer>();
 			material.SetOverrideTag("IgnoreProjector", "True");
-			shadowMR.sharedMaterial = material;
+			scatteringMR.sharedMaterial = material;
 			
-			shadowMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			shadowMR.receiveShadows = false;
-			shadowMR.enabled = true;
+			scatteringMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			scatteringMR.receiveShadows = false;
+			scatteringMR.enabled = true;
 
 			GetComponent<MeshFilter>().mesh.bounds = new Bounds (Vector4.zero, new Vector3 (Mathf.Infinity, Mathf.Infinity, Mathf.Infinity));
 			
@@ -35,21 +35,21 @@ namespace scatterer
 		
 		public void SetActive(bool active)
 		{
-			shadowMR.enabled = active;
+			scatteringMR.enabled = active;
 		}
-		
+
 		void OnWillRenderObject()
 		{
 			if (material != null)
 			{
-				material.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, Camera.current.cameraToWorldMatrix);
-
 				Camera cam = Camera.current;
 				
 				if (!cam)
 					return;
 
-				RenderingCommandBufferHandler.EnableScatteringScreenAndDepthCopyForFrame(cam); //add also some conditions so that if the ocean exists -> copy depth as well to the target
+				material.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, cam.cameraToWorldMatrix);
+
+				ScreenCopyCommandBuffer.EnableScatteringScreenAndDepthCopyForFrame(cam); //this needs to be modified to do the screen copy if there is no ocean, but that's easy I guess
 			}
 		}
 	}
@@ -58,16 +58,23 @@ namespace scatterer
 	{
 		ScreenSpaceScattering screenSpaceScattering;
 
-		public ScreenSpaceScatteringContainer (Material atmosphereMaterial, Transform parentTransform, float Rt) : base (atmosphereMaterial, parentTransform, Rt)
+		public ScreenSpaceScatteringContainer (Material atmosphereMaterial, Transform parentTransform, float Rt, ProlandManager parentManager) : base (atmosphereMaterial, parentTransform, Rt, parentManager)
 		{
 			scatteringGO = GameObject.CreatePrimitive(PrimitiveType.Quad);
 			scatteringGO.name = "Scatterer screenspace scattering " + atmosphereMaterial.name;
 			GameObject.Destroy (scatteringGO.GetComponent<Collider> ());
 			scatteringGO.transform.localScale = Vector3.one;
 
+			//for now just disable this from reflection probe because no idea how to add the effect on it, no access to depth buffer and I don't feel like the perf hit would be worth to enable it
+			//this will be handled by the ocean if it is present
+			if (!manager.hasOcean || !Scatterer.Instance.mainSettings.useOceanShaders)
+			{
+				DisableEffectsChecker disableEffectsChecker = scatteringGO.AddComponent<DisableEffectsChecker> ();
+				disableEffectsChecker.manager = this.manager;
+			}
+
 			screenSpaceScattering = scatteringGO.AddComponent<ScreenSpaceScattering>();
 
-			//or just parent to the near camera
 			scatteringGO.transform.position = parentTransform.position;
 			scatteringGO.transform.parent   = parentTransform;
 			
@@ -80,7 +87,7 @@ namespace scatterer
 		public override void updateContainer ()
 		{
 			bool isEnabled = !underwater && !inScaledSpace && activated;
-			screenSpaceScattering.enabled = isEnabled;
+			screenSpaceScattering.SetActive(isEnabled);
 			scatteringGO.SetActive(isEnabled);
 		}
 

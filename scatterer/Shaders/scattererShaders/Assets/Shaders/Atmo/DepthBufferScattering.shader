@@ -2,7 +2,6 @@
 	SubShader {
 		Tags {"Queue" = "Transparent-499" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 
-		//merged scattering+extinction pass
 		Pass {
 			Tags {"Queue" = "Transparent-499" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 

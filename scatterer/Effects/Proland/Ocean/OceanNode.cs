@@ -155,12 +155,8 @@ namespace scatterer
 			oceanRenderingHook.targetMaterial = m_oceanMaterial;
 			oceanRenderingHook.targetRenderer = waterMeshRenderers [0];
 
-			//we still need this but only for pixel lights, regular rendering uses the commandBuffer which ignores the reflection probe and TRR camera
-			if (Scatterer.Instance.mainSettings.oceanPixelLights)
-			{
-				DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
-				disableEffectsChecker.manager = this.m_manager;
-			}
+			DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
+			disableEffectsChecker.manager = this.m_manager;
 
 			if (Scatterer.Instance.mainSettings.shadowsOnOcean)
 			{
@@ -171,7 +167,7 @@ namespace scatterer
 
 			InitUnderwaterMaterial ();
 
-			underwaterProjector = new AtmosphereProjectorContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius);
+			underwaterProjector = new AtmosphereProjectorContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius, m_manager);
 			underwaterProjector.setActivated(false);
 
 			//dimming
