@@ -96,9 +96,9 @@ namespace scatterer
 					{
 						ShaderReplacer.Instance.replaceEVEshaders();
 					}
-
-					QualitySettings.antiAliasing = mainSettings.useDepthBufferMode ? 0 : GameSettings.ANTI_ALIASING;
 				}
+
+				QualitySettings.antiAliasing = mainSettings.useDepthBufferMode ? 0 : GameSettings.ANTI_ALIASING;
 			} 
 
 			if (isActive)
