@@ -35,6 +35,7 @@ namespace scatterer
 				else
 				{
 					ScreenCopyCommandBuffer handler = (ScreenCopyCommandBuffer) cam.gameObject.AddComponent(typeof(ScreenCopyCommandBuffer));
+					handler.Initialize();
 					CameraToCommandBufferHandler[cam] = handler;
 				}
 			}

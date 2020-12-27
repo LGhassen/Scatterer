@@ -72,7 +72,8 @@ Shader "Scatterer/OceanWhiteCaps"
 		Pass   
 		{
 
-			Tags { "Queue" = "Geometry+100"
+			Tags { "LightMode" = "MainPass"
+					"Queue" = "Geometry+100"
 					"RenderType"="Transparent"
 					"IgnoreProjector"="True"}
 
@@ -98,6 +99,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			#pragma multi_compile SCATTERER_MERGED_DEPTH_ON SCATTERER_MERGED_DEPTH_OFF
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
+			#pragma multi_compile DEPTH_BUFFER_MODE_OFF DEPTH_BUFFER_MODE_ON
 			//#pragma multi_compile SCATTERING_ON SCATTERING_OFF
 
 			#include "../CommonAtmosphere.cginc"
@@ -226,10 +228,10 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
 				outpos = mul(UNITY_MATRIX_P, screenP);
-				//outpos.y = (_ProjectionParams.x < 0) ? -outpos.y : outpos.y; //looks like this works but something wrong with the depth?
-				//before I added this it worked but everything was flipped upside down, but ztesting and transparency both work with the scene I'm seeing
-				//after I add this, ztesting doesn't seem to work anymore can't even see the ocean? can't see any depth written to z buffer
-				//fix this after you fix the C# so you can reload shader in-game
+
+#if defined (DEPTH_BUFFER_MODE_ON)
+				outpos.y =  (_ProjectionParams.x < 0.0 ) ? -outpos.y : outpos.y;
+#endif
 
 				OUT.oceanU = u;
 				OUT.oceanP = oceanP;
@@ -253,8 +255,6 @@ Shader "Scatterer/OceanWhiteCaps"
 
 			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
-
-				//float3 L = _Ocean_SunDir;
 				float2 u = IN.oceanU;
 				float3 oceanP = IN.oceanP;
 
@@ -314,7 +314,13 @@ Shader "Scatterer/OceanWhiteCaps"
 
 #if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				float fragDistance, depth;
-				float2 uv = getPerturbedUVsAndDepth(IN.screenPos.xy / IN.screenPos.w, N, oceanDistance, fragDistance, depth);
+				float2 uv = IN.screenPos.xy / IN.screenPos.w;
+
+#if defined (DEPTH_BUFFER_MODE_OFF)
+				uv.y = 1.0 - uv.y;
+#endif
+
+				uv = getPerturbedUVsAndDepth(uv, N, oceanDistance, fragDistance, depth);
 
 				_Ocean_WhiteCapStr = adjustWhiteCapStrengthWithDepth(_Ocean_WhiteCapStr, shoreFoam, depth);
 				float transparencyAlpha = getTransparencyAlpha(depth);
@@ -351,11 +357,16 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				float3 backGrnd = 0.0;
 
-		#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
-				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
-		#else
+	#if defined (DEPTH_BUFFER_MODE_ON)
 				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
-		#endif
+	#else
+			#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
+					backGrnd = tex2D(ScattererScreenCopyBeforeOcean, (_ProjectionParams.x == 1.0) ? uv : float2(uv.x,1.0-uv.y) );
+			#else
+					backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
+			#endif
+	#endif
+
 #endif
 
 #if defined (UNDERWATER_ON)
@@ -395,6 +406,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 finalColor = surfaceColor;  					//refraction off and not underwater
 	#endif
 
+#if defined (DEPTH_BUFFER_MODE_OFF)
 				if (_PlanetOpacity == 1.0)
 				{
 					float3 worldPos= IN.worldPos - _planetPos;
@@ -403,7 +415,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 					float minDistance = length(worldPos-_camPos);
 
-#if defined (GODRAYS_ON)
+	#if defined (GODRAYS_ON)
 					float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
 					float godrayDepth = 0.0;
 					godrayDepth = sampleGodrayDepth(_godrayDepthTexture, godrayUV, 1.0);
@@ -414,7 +426,7 @@ Shader "Scatterer/OceanWhiteCaps"
 					godrayDepth = _godrayStrength * DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(worldPos), muTerrain, godrayDepth, minDistance);
 
 					worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
-#endif
+	#endif
 
 					float3 inscatter=0.0;float3 extinction=1.0;
 					inscatter = InScattering2(_camPos, worldPos,SUN_DIR,extinction);
@@ -432,6 +444,7 @@ Shader "Scatterer/OceanWhiteCaps"
 					finalColor*= extinction;
 					finalColor = inscatter*(1-finalColor) + finalColor;
 				}
+#endif
 
 				insideClippingRange = (transparencyAlpha == 1.0) ? 1.0 : insideClippingRange;     //if no transparency -> render normally, if transparency play with the overlap to hide seams between cameras
 				return float4(dither(finalColor,screenPos), _PlanetOpacity*insideClippingRange);

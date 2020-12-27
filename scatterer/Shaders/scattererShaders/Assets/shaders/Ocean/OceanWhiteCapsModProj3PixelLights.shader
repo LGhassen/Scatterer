@@ -70,7 +70,7 @@
 				"RenderType"="Transparent"
 				"IgnoreProjector"="True"}
 
-		Pass
+		Pass   
 		{
 
 			Tags { "LightMode" = "MainPass"
@@ -100,6 +100,7 @@
 			#pragma multi_compile SCATTERER_MERGED_DEPTH_ON SCATTERER_MERGED_DEPTH_OFF
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
+			#pragma multi_compile DEPTH_BUFFER_MODE_OFF DEPTH_BUFFER_MODE_ON
 			//#pragma multi_compile SCATTERING_ON SCATTERING_OFF
 
 			#include "../CommonAtmosphere.cginc"
@@ -163,7 +164,7 @@
 			uniform float extinctionThickness;
 
 			#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
-			uniform sampler2D ScattererScreenCopy;   //background texture used for refraction
+			uniform sampler2D ScattererScreenCopyBeforeOcean;   //background texture used for refraction
 			#endif
 
 			#if defined (GODRAYS_ON)
@@ -178,12 +179,14 @@
 
 			struct v2f 
 			{
-				//float4  pos : SV_POSITION;
-				float2  oceanU : TEXCOORD0;
-				float3  oceanP : TEXCOORD1;
-				float4 	screenPos : TEXCOORD2;
-				float4 	worldPos : TEXCOORD3;
-				float4  viewPos  :TEXCOORD4;
+				//float4 pos : SV_POSITION;
+				float2 oceanU	: TEXCOORD0;
+				float3 oceanP	: TEXCOORD1;
+				float4 screenPos: TEXCOORD2;
+				float4 worldPos	: TEXCOORD3;
+				float4 viewPos	: TEXCOORD4;
+				float3 sunL	: TEXCOORD5;
+				float3 skyE	: TEXCOORD6;
 			};
 
 			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
@@ -199,20 +202,17 @@
 
 				float3 dP = float3(0, 0, _Ocean_HeightOffset);
 
-				if(duy.x != 0.0 || duy.y != 0.0) 
+				if(duy.x != 0.0 || duy.y != 0.0)
 				{
-					float4 GRID_SIZES = _Ocean_GridSizes;
-					float4 CHOPPYNESS = _Ocean_Choppyness;
-
-					dP.z += Tex2DGrad(_Ocean_Map0, u / GRID_SIZES.x, dux / GRID_SIZES.x, duy / GRID_SIZES.x, _Ocean_MapSize).x;
-					dP.z += Tex2DGrad(_Ocean_Map0, u / GRID_SIZES.y, dux / GRID_SIZES.y, duy / GRID_SIZES.y, _Ocean_MapSize).y;
-					dP.z += Tex2DGrad(_Ocean_Map0, u / GRID_SIZES.z, dux / GRID_SIZES.z, duy / GRID_SIZES.z, _Ocean_MapSize).z;
-					dP.z += Tex2DGrad(_Ocean_Map0, u / GRID_SIZES.w, dux / GRID_SIZES.w, duy / GRID_SIZES.w, _Ocean_MapSize).w;
-
-					dP.xy += CHOPPYNESS.x * Tex2DGrad(_Ocean_Map3, u / GRID_SIZES.x, dux / GRID_SIZES.x, duy / GRID_SIZES.x, _Ocean_MapSize).xy;
-					dP.xy += CHOPPYNESS.y * Tex2DGrad(_Ocean_Map3, u / GRID_SIZES.y, dux / GRID_SIZES.y, duy / GRID_SIZES.y, _Ocean_MapSize).zw;
-					dP.xy += CHOPPYNESS.z * Tex2DGrad(_Ocean_Map4, u / GRID_SIZES.z, dux / GRID_SIZES.z, duy / GRID_SIZES.z, _Ocean_MapSize).xy;
-					dP.xy += CHOPPYNESS.w * Tex2DGrad(_Ocean_Map4, u / GRID_SIZES.w, dux / GRID_SIZES.w, duy / GRID_SIZES.w, _Ocean_MapSize).zw;
+					dP.z += Tex2DGrad(_Ocean_Map0, u / _Ocean_GridSizes.x, dux / _Ocean_GridSizes.x, duy / _Ocean_GridSizes.x, _Ocean_MapSize).x;
+					dP.z += Tex2DGrad(_Ocean_Map0, u / _Ocean_GridSizes.y, dux / _Ocean_GridSizes.y, duy / _Ocean_GridSizes.y, _Ocean_MapSize).y;
+					dP.z += Tex2DGrad(_Ocean_Map0, u / _Ocean_GridSizes.z, dux / _Ocean_GridSizes.z, duy / _Ocean_GridSizes.z, _Ocean_MapSize).z;
+					dP.z += Tex2DGrad(_Ocean_Map0, u / _Ocean_GridSizes.w, dux / _Ocean_GridSizes.w, duy / _Ocean_GridSizes.w, _Ocean_MapSize).w;
+					//
+					dP.xy += _Ocean_Choppyness.x * Tex2DGrad(_Ocean_Map3, u / _Ocean_GridSizes.x, dux / _Ocean_GridSizes.x, duy / _Ocean_GridSizes.x, _Ocean_MapSize).xy;
+					dP.xy += _Ocean_Choppyness.y * Tex2DGrad(_Ocean_Map3, u / _Ocean_GridSizes.y, dux / _Ocean_GridSizes.y, duy / _Ocean_GridSizes.y, _Ocean_MapSize).zw;
+					dP.xy += _Ocean_Choppyness.z * Tex2DGrad(_Ocean_Map4, u / _Ocean_GridSizes.z, dux / _Ocean_GridSizes.z, duy / _Ocean_GridSizes.z, _Ocean_MapSize).xy;
+					dP.xy += _Ocean_Choppyness.w * Tex2DGrad(_Ocean_Map4, u / _Ocean_GridSizes.w, dux / _Ocean_GridSizes.w, duy / _Ocean_GridSizes.w, _Ocean_MapSize).zw;
 				}
 
 				v2f OUT;
@@ -221,7 +221,7 @@
 				float tClamped = clamp(t*0.25, 0.0, 1.0);
 
 				#if defined (UNDERWATER_ON)
-				dP = lerp(float3(0.0,0.0,0.1),dP,tClamped);  //prevents projected grid intersecting near plane
+				dP = lerp(float3(0.0,0.0,0.1),dP,tClamped);   //prevents projected grid intersecting near plane
 				#else
 				dP = lerp(float3(0.0,0.0,-0.1),dP,tClamped);  //prevents projected grid intersecting near plane
 				#endif
@@ -229,6 +229,10 @@
 				float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
 				outpos = mul(UNITY_MATRIX_P, screenP);
+
+				#if defined (DEPTH_BUFFER_MODE_ON)
+				outpos.y =  (_ProjectionParams.x < 0.0 ) ? -outpos.y : outpos.y;
+				#endif
 
 				OUT.oceanU = u;
 				OUT.oceanP = oceanP;
@@ -240,14 +244,18 @@
 
 				outpos	= (_PlanetOpacity == 0.0) ? float4(2.0, 2.0, 2.0, 1.0) : outpos; //cull when completely transparent
 
+				float3 earthP = normalize(oceanP + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
+
+				float3 sunL, skyE;
+				SunRadianceAndSkyIrradiance(earthP, float3(0.0,0.0,1.0), _Ocean_SunDir, sunL, skyE);
+				OUT.sunL = sunL;
+				OUT.skyE = skyE;
+
 				return OUT;
 			}
 
 			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
 			{
-
-				float3 L = _Ocean_SunDir;
-				float radius = _Ocean_Radius;
 				float2 u = IN.oceanU;
 				float3 oceanP = IN.oceanP;
 
@@ -261,7 +269,7 @@
 				slopes += tex2D(_Ocean_Map2, u / _Ocean_GridSizes.z).xy;
 				slopes += tex2D(_Ocean_Map2, u / _Ocean_GridSizes.w).zw;
 
-				slopes -= oceanP.xy / (radius + oceanP.z);
+				slopes -= oceanP.xy / (_Ocean_Radius + oceanP.z);
 
 				float3 N = normalize(float3(-slopes.x, -slopes.y, 1.0));
 
@@ -285,13 +293,14 @@
 				float2 jm2 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.y).zw;
 				float2 jm3 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.z).xy;
 				float2 jm4 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.w).zw;
+
 				float2 jm  = jm1+jm2+jm3+jm4;
 				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
 
-				float3 earthP = normalize(oceanP + float3(0.0, 0.0, radius)) * (radius + 10.0);
+				float3 earthP = normalize(oceanP + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
 
-				float3 sunL, skyE, Lsky;
-				SunRadianceAndSkyIrradiance(earthP, N, L, sunL, skyE);
+				float3 sunL = IN.sunL;
+				float3 skyE = IN.skyE;
 
 				half shadowTerm = 1.0;
 				#if defined (OCEAN_SHADOWS_HARD) || defined (OCEAN_SHADOWS_SOFT)
@@ -299,14 +308,20 @@
 				#endif
 
 				float fresnel = getFresnel(V, N, sigmaSq);
-				Lsky = getSkyColor(fresnel, V, N, L, earthP, skyE, shadowTerm, radius);
-				float3 Lsea = getOceanColor(fresnel, V, N, L, earthP, skyE, shadowTerm);
+				float3 Lsky = getSkyColor(fresnel, V, N, _Ocean_SunDir, earthP, skyE, shadowTerm, _Ocean_Radius);
+				float3 Lsea = getOceanColor(fresnel, V, N, _Ocean_SunDir, earthP, skyE, shadowTerm);
 
 				float oceanDistance = length(IN.viewPos);
 
 				#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				float fragDistance, depth;
-				float2 uv = getPerturbedUVsAndDepth(IN.screenPos.xy / IN.screenPos.w, N, oceanDistance, fragDistance, depth);
+				float2 uv = IN.screenPos.xy / IN.screenPos.w;
+
+				#if defined (DEPTH_BUFFER_MODE_OFF)
+				uv.y = 1.0 - uv.y;
+				#endif
+
+				uv = getPerturbedUVsAndDepth(uv, N, oceanDistance, fragDistance, depth);
 
 				_Ocean_WhiteCapStr = adjustWhiteCapStrengthWithDepth(_Ocean_WhiteCapStr, shoreFoam, depth);
 				float transparencyAlpha = getTransparencyAlpha(depth);
@@ -314,9 +329,9 @@
 				float transparencyAlpha=1.0;
 				#endif
 				float outWhiteCapStr=applyFarWhiteCapStrength(oceanDistance, alphaRadius, _Ocean_WhiteCapStr, farWhiteCapStr);
-				float3 R_ftot = getTotalWhiteCapRadiance(outWhiteCapStr, jm.x, jSigma2, sunL, N, L, skyE, shadowTerm);
+				float3 R_ftot = getTotalWhiteCapRadiance(outWhiteCapStr, jm.x, jSigma2, sunL, N, _Ocean_SunDir, skyE, shadowTerm);
 
-				float3 Lsun = ReflectedSunRadiance(L, V, N, sigmaSq) * sunL * shadowTerm;
+				float3 Lsun = ReflectedSunRadiance(_Ocean_SunDir, V, N, sigmaSq) * sunL * shadowTerm;
 
 				#if defined (UNDERWATER_ON)
 				float3 surfaceColor = hdr(abs(Lsea + R_ftot),_ScatteringExposure);
@@ -331,17 +346,28 @@
 				getPlanetShineContribution(LsunTotal, R_ftotTotal, LseaTotal, LskyTotal);
 				#endif
 
+				#if SHADER_API_D3D11
+				bool insideClippingRange = true;
+				#else
 				bool insideClippingRange = oceanFragmentInsideOfClippingRange(-IN.viewPos.z/IN.viewPos.w);
+				#endif
 
 				#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				transparencyAlpha = max(hdr(LsunTotal + R_ftotTotal,_ScatteringExposure), fresnel+transparencyAlpha) ; //seems about perfect
 				transparencyAlpha = min(transparencyAlpha, 1.0);
 
-				#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
-				float3 backGrnd = tex2D(ScattererScreenCopy, (_ProjectionParams.x == 1.0) ? float2(uv.x,1.0-uv.y): uv  );
+				float3 backGrnd = 0.0;
+
+				#if defined (DEPTH_BUFFER_MODE_ON)
+				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
 				#else
-				float3 backGrnd = tex2D(ScattererScreenCopy, uv );
+				#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
+				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, (_ProjectionParams.x == 1.0) ? uv : float2(uv.x,1.0-uv.y) );
+				#else
+				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
 				#endif
+				#endif
+
 				#endif
 
 				#if defined (UNDERWATER_ON)
@@ -359,13 +385,13 @@
 				#endif
 
 				float3 Vworld = mul ( _Globals_OceanToWorld, float4(V,0.0));
-				float3 Lworld = mul ( _Globals_OceanToWorld, float4(L,0.0));
+				float3 Lworld = mul ( _Globals_OceanToWorld, float4(_Ocean_SunDir,0.0));
 
-				float3 earthCamPos = normalize(float3(_Ocean_CameraPos.xy,0.0) + float3(0.0, 0.0, radius)) * (radius + 10.0);
+				float3 earthCamPos = normalize(float3(_Ocean_CameraPos.xy,0.0) + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
 
 				float underwaterDepth = lerp(1.0,0.0,-_Ocean_CameraPos.z / darknessDepth);
 
-				float waterLightExtinction = length(getSkyExtinction(earthCamPos, L));
+				float waterLightExtinction = length(getSkyExtinction(earthCamPos, _Ocean_SunDir));
 				float3 _camPos = _WorldSpaceCameraPos - _planetPos;
 
 				float3 oceanCol = underwaterDepth * hdrNoExposure(waterLightExtinction * _sunColor * oceanColor(-Vworld,Lworld,normalize(_camPos))); //add planetshine loop here over Ls
@@ -381,43 +407,45 @@
 				float3 finalColor = surfaceColor;  					//refraction off and not underwater
 				#endif
 
+				#if defined (DEPTH_BUFFER_MODE_OFF)
 				if (_PlanetOpacity == 1.0)
 				{
-					float3 worldPos= IN.worldPos - _planetPos;
-					worldPos = (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
-					float3 _camPos = _WorldSpaceCameraPos - _planetPos;
+				float3 worldPos= IN.worldPos - _planetPos;
+				worldPos = (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
+				float3 _camPos = _WorldSpaceCameraPos - _planetPos;
 
-					float minDistance = length(worldPos-_camPos);
+				float minDistance = length(worldPos-_camPos);
 
-			#if defined (GODRAYS_ON)
-					float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
-					float godrayDepth = 0.0;
-					godrayDepth = sampleGodrayDepth(_godrayDepthTexture, godrayUV, 1.0);
+				#if defined (GODRAYS_ON)
+				float2 godrayUV = IN.screenPos.xy / IN.screenPos.w;
+				float godrayDepth = 0.0;
+				godrayDepth = sampleGodrayDepth(_godrayDepthTexture, godrayUV, 1.0);
 
-					//trying to find the optical depth from the terrain level
-					float muTerrain = dot(normalize(worldPos), normalize(_camPos - worldPos));
+				//trying to find the optical depth from the terrain level
+				float muTerrain = dot(normalize(worldPos), normalize(_camPos - worldPos));
 
-					godrayDepth = _godrayStrength * DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(worldPos), muTerrain, godrayDepth, minDistance);
+				godrayDepth = _godrayStrength * DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(worldPos), muTerrain, godrayDepth, minDistance);
 
-					worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
-			#endif
+				worldPos = worldPos - godrayDepth * normalize(worldPos-_camPos);
+				#endif
 
-					float3 inscatter=0.0;float3 extinction=1.0;
-					inscatter = InScattering2(_camPos, worldPos,SUN_DIR,extinction);
+				float3 inscatter=0.0;float3 extinction=1.0;
+				inscatter = InScattering2(_camPos, worldPos,SUN_DIR,extinction);
 
-					inscatter*= (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ; //somehow the shader compiler for OpenGL behaves differently around braces            				
-					inscatter = hdr(inscatter,_ScatteringExposure) *_global_alpha;
+				inscatter*= (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ; //somehow the shader compiler for OpenGL behaves differently around braces            				
+				inscatter = hdr(inscatter,_ScatteringExposure) *_global_alpha;
 
-					float average=(extinction.r+extinction.g+extinction.b)/3;
+				float average=(extinction.r+extinction.g+extinction.b)/3;
 
-					//lerped manually because of an issue with opengl or whatever
-					extinction = _Post_Extinction_Tint * extinction + (1-_Post_Extinction_Tint) * float3(average,average,average);
+				//lerped manually because of an issue with opengl or whatever
+				extinction = _Post_Extinction_Tint * extinction + (1-_Post_Extinction_Tint) * float3(average,average,average);
 
-					extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
+				extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
 
-					finalColor*= extinction;
-					finalColor = inscatter*(1-finalColor) + finalColor;
+				finalColor*= extinction;
+				finalColor = inscatter*(1-finalColor) + finalColor;
 				}
+				#endif
 
 				insideClippingRange = (transparencyAlpha == 1.0) ? 1.0 : insideClippingRange;     //if no transparency -> render normally, if transparency play with the overlap to hide seams between cameras
 				return float4(dither(finalColor,screenPos), _PlanetOpacity*insideClippingRange);

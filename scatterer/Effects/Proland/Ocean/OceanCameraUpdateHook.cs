@@ -19,6 +19,12 @@ namespace scatterer
 
 		Matrix4x4 cameraToScreen,screenToCamera;
 		Matrix4x4d m_oldlocalToOcean = Matrix4x4d.Identity ();
+		bool renderToTexture = false;
+
+		public OceanCameraUpdateHook()
+		{
+			renderToTexture = Scatterer.Instance.mainSettings.useDepthBufferMode;
+		}
 
 		// Whenever any camera will render us, call the method which updates the material with the right params
 		public void OnWillRenderObject()
@@ -34,7 +40,7 @@ namespace scatterer
 
 		public void updateCameraSpecificUniforms (Material oceanMaterial, Camera inCamera)
 		{
-			cameraToScreen = GL.GetGPUProjectionMatrix (inCamera.projectionMatrix,false);
+			cameraToScreen = GL.GetGPUProjectionMatrix (inCamera.projectionMatrix,renderToTexture);
 			screenToCamera = cameraToScreen.inverse;
 			
 			oceanNode.m_oceanMaterial.SetMatrix (ShaderProperties._Globals_CameraToScreen_PROPERTY, cameraToScreen);

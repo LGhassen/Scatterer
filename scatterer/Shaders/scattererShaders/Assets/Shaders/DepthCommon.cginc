@@ -5,6 +5,8 @@ uniform sampler2D _customDepthTexture;
 
 float3 getViewSpacePosFromDepth(float2 uv)
 {
+	uv.y = 1.0 - uv.y;
+
 	float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
 
 	#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)

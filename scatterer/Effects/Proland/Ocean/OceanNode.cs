@@ -314,6 +314,7 @@ namespace scatterer
 
 		void InitOceanMaterial ()
 		{
+			// TODO: merge these two now that we don't need separate files
 			if (Scatterer.Instance.mainSettings.oceanPixelLights)
 			{
 				m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/OceanWhiteCapsPixelLights")]);
@@ -339,6 +340,8 @@ namespace scatterer
 			}
 
 			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "DEPTH_BUFFER_MODE_ON", "DEPTH_BUFFER_MODE_OFF", Scatterer.Instance.mainSettings.useDepthBufferMode);
+
 
 			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			
