@@ -242,8 +242,8 @@ namespace scatterer
 
 			planetOpacity = 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
 			m_oceanMaterial.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, planetOpacity);
-			
-			m_oceanMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
+
+			m_oceanMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, Scatterer.Instance.mainSettings.useDepthBufferMode || (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
 		}
 
 		public void OnPreCull()

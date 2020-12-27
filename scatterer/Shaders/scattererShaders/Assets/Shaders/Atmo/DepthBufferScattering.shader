@@ -9,7 +9,6 @@
 			//Cull Front
 			Cull Off
 			ZTest Off
-			ZWrite Off
 
 			//Blend OneMinusDstColor One //soft additive
 			Blend SrcAlpha OneMinusSrcAlpha //traditional alpha-blending
@@ -82,7 +81,14 @@
 				return o;
 			}
 
-			half4 frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
+			//this needs to only be done if rendering with an ocean
+			struct fout
+			{
+				float4 color : COLOR;
+				float depth : DEPTH;
+			};
+
+			fout frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS)
 			{
 				float2 uv = i.screenPos.xy / i.screenPos.w;
 
@@ -182,7 +188,10 @@
 				//composite background with inscatter, soft-blend it
 				backGrnd+= (1.0 - backGrnd) * dither(inscatter,screenPos);
 
-				return float4(backGrnd,1.0);
+				fout output;
+				output.color = float4(backGrnd,1.0);
+				output.depth = zdepth;	//this needs to only be done if rendering with an ocean
+				return output;
 			}
 			ENDCG
 		}
