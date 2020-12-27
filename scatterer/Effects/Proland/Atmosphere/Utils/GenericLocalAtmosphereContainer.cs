@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace scatterer
 {
-	public abstract class AbstractLocalAtmosphereContainer : MonoBehaviour
+	public abstract class GenericLocalAtmosphereContainer : MonoBehaviour
 	{	
 		protected GameObject scatteringGO = null;
 		protected bool inScaledSpace = false;
@@ -19,7 +19,7 @@ namespace scatterer
 		public Material material;
 		public ProlandManager manager;
 
-		public AbstractLocalAtmosphereContainer (Material atmosphereMaterial, Transform parentTransform, float Rt, ProlandManager parentManager)
+		public GenericLocalAtmosphereContainer (Material atmosphereMaterial, Transform parentTransform, float Rt, ProlandManager parentManager)
 		{
 			material = atmosphereMaterial;
 			manager = parentManager;

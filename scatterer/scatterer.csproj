@@ -185,11 +185,11 @@
     <Compile Include="Effects\SunFlare\SunflareSettingsV1.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV2.cs" />
     <Compile Include="DataSerialization\QualityPresetsLoader.cs" />
-    <Compile Include="Effects\Proland\Atmosphere\Utils\AbstractLocalAtmosphereContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\ScreenSpaceScatteringContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereProjectorContainer.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanRenderingHook.cs" />
     <Compile Include="Utilities\Camera\ScreenCopyCommandBuffer.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\GenericLocalAtmosphereContainer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

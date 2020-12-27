@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace scatterer
 {
-	public class AtmosphereProjectorContainer : AbstractLocalAtmosphereContainer
+	public class AtmosphereProjectorContainer : GenericLocalAtmosphereContainer
 	{
 		public Projector projector = null;
 

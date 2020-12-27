@@ -56,7 +56,7 @@ namespace scatterer
 		}
 	}
 
-	public class ScreenSpaceScatteringContainer : AbstractLocalAtmosphereContainer
+	public class ScreenSpaceScatteringContainer : GenericLocalAtmosphereContainer
 	{
 		ScreenSpaceScattering screenSpaceScattering;
 

@@ -80,6 +80,7 @@
      <None Include="Assets\Shaders\DecodeEncode\WriteToFloat.shader" />
      <None Include="Assets\Shaders\EVE\GeometryCloudVolumeParticleToTexture.shader" />
      <None Include="Assets\Shaders\Ocean\Caustics\CausticsGodraysRaymarch.shader" />
+     <None Include="Assets\Shaders\Ocean\UnderwaterDepthBuffer.shader" />
      <None Include="Assets\Shaders\EVE\old\SphereCloud.shader" />
      <None Include="Assets\Shaders\Atmo\mergedAtmosphereLocalScattering.shader" />
      <None Include="Assets\Shaders\Shadows\FixedScreenSpaceShadows.shader" />

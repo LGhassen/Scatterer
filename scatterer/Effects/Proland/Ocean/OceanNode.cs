@@ -85,9 +85,8 @@ namespace scatterer
 		GameObject[] waterGameObjects;
 		public MeshRenderer[] waterMeshRenderers;
 		MeshFilter[] waterMeshFilters;
-
-		//TODO: merge AtmosphereProjector class and it's material, make material public, rename AtmosphereProjector to LocalEffectProjector
-		public AtmosphereProjectorContainer underwaterProjector;
+		
+		public GenericLocalAtmosphereContainer underwaterScattering;
 		Material underwaterMaterial;
 
 		public Vector3 offsetVector3{
@@ -167,8 +166,13 @@ namespace scatterer
 
 			InitUnderwaterMaterial ();
 
-			underwaterProjector = new AtmosphereProjectorContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius, m_manager);
-			underwaterProjector.setActivated(false);
+			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
+				underwaterScattering = new ScreenSpaceScatteringContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius, m_manager);
+			else
+				underwaterScattering = new AtmosphereProjectorContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius, m_manager);
+
+			underwaterScattering.setActivated(false);
+			underwaterScattering.updateContainer ();
 
 			//dimming
 			//TODO: maybe this can be changed, instead of complicated hooks on the Camera, add it to the light, like causticsShadowMaskModulate?
@@ -213,7 +217,7 @@ namespace scatterer
 
 			isUnderwater = height < waterHeightAtCameraPosition;
 
-			underwaterProjector.projector.enabled = isUnderwater;
+			underwaterScattering.setActivated(isUnderwater);
 
 			if (underwaterMode ^ isUnderwater)
 			{
@@ -374,7 +378,11 @@ namespace scatterer
 		
 		void InitUnderwaterMaterial ()
 		{
-			underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterProjector")]);
+			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
+				underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterDepthBuffer")]);
+			else
+				underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterProjector")]);
+
 			m_manager.GetSkyNode ().InitPostprocessMaterialUniforms (underwaterMaterial);
 			underwaterMaterial.renderQueue = 2502; //draw over fairings which is 2450 and over ocean which is 2501
 			
@@ -390,8 +398,8 @@ namespace scatterer
 		{
 			if (underwaterMode) //switch to over water
 			{
-				underwaterProjector.setActivated(false);
-				underwaterProjector.updateContainer ();
+				underwaterScattering.setActivated(false);
+				underwaterScattering.updateContainer ();
 				m_oceanMaterial.EnableKeyword("UNDERWATER_OFF");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_ON");
 				if (!ReferenceEquals(m_manager.GetSkyNode().localScatteringContainer,null))
@@ -400,8 +408,8 @@ namespace scatterer
 			}
 			else   //switch to underwater 
 			{
-				underwaterProjector.setActivated(true);
-				underwaterProjector.updateContainer ();
+				underwaterScattering.setActivated(true);
+				underwaterScattering.updateContainer ();
 				m_oceanMaterial.EnableKeyword("UNDERWATER_ON");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_OFF");
 				if (!ReferenceEquals(m_manager.GetSkyNode().localScatteringContainer,null))
@@ -438,9 +446,9 @@ namespace scatterer
 			if (underwaterDimmingHook)
 				Component.Destroy (underwaterDimmingHook);
 			
-			if (!ReferenceEquals(null,underwaterProjector))
+			if (!ReferenceEquals(null,underwaterScattering))
 			{
-				UnityEngine.Object.Destroy (underwaterProjector);
+				UnityEngine.Object.Destroy (underwaterScattering);
 			}
 
 			if (!ReferenceEquals(null,causticsShadowMaskModulator))

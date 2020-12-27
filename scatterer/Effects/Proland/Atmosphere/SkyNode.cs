@@ -90,7 +90,7 @@ namespace scatterer
 		Mesh originalScaledMesh, tweakedScaledmesh;
 		public ScaledScatteringContainer scaledScatteringContainer;
 		public Material localScatteringMaterial,skyMaterial,scaledScatteringMaterial,sunflareExtinctionMaterial;
-		public AbstractLocalAtmosphereContainer localScatteringContainer;
+		public GenericLocalAtmosphereContainer localScatteringContainer;
 		public GodraysRenderer godraysRenderer;
 		public bool postprocessingEnabled = true;
 

@@ -5,7 +5,6 @@
 		Pass {
 			Tags {"Queue" = "Transparent-499" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 
-			//Cull Front
 			Cull Off
 			ZTest Off
 
@@ -85,6 +84,7 @@
 			}
 
 			//this needs to only be done if rendering with an ocean
+			//doesn't hurt either way so whatever
 			struct fout
 			{
 				float4 color : COLOR;
