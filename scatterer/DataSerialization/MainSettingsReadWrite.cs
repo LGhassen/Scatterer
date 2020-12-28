@@ -99,6 +99,9 @@ namespace scatterer
 		public bool useDepthBufferMode = true;
 
 		[Persistent]
+		public bool mergeDepthPrePass = false;
+
+		[Persistent]
 		public bool terrainShadows = false;
 
 		[Persistent]
@@ -207,6 +210,7 @@ namespace scatterer
 				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
 				 OldConfig.useGodrays != useGodrays ||
 				 OldConfig.useDepthBufferMode != useDepthBufferMode ||
+				 OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.useDithering != useDithering ||
 

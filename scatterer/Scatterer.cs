@@ -41,6 +41,7 @@ namespace scatterer
 
 		//probably move these to buffer rendering manager
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
+		public DepthPrePassMerger nearDepthPassMerger;
 		
 		public Light sunLight,scaledSpaceSunLight, mainMenuLight;
 		public Light[] lights;
@@ -296,6 +297,9 @@ namespace scatterer
 				if (nearDepthCommandbuffer)
 					Component.Destroy (nearDepthCommandbuffer);
 
+				if (nearDepthPassMerger)
+					Component.Destroy (nearDepthPassMerger);
+
 				if (bufferManager)
 				{
 					bufferManager.OnDestroy();
@@ -365,6 +369,12 @@ namespace scatterer
 			{
 				Utils.LogInfo("Running in unified camera mode");
 				unifiedCameraMode = true;
+
+				if (mainSettings.useDepthBufferMode && mainSettings.mergeDepthPrePass)
+				{
+					Utils.LogInfo("Adding nearDepthPassMerger");
+					nearDepthPassMerger = (DepthPrePassMerger) nearCamera.gameObject.AddComponent<DepthPrePassMerger>();
+				}
 			}
 
 			if (scaledSpaceCamera && nearCamera)

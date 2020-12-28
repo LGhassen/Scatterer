@@ -368,6 +368,7 @@ namespace scatterer
 				Scatterer.Instance.mainSettings.useDepthBufferMode = GUILayout.Toggle (Scatterer.Instance.mainSettings.useDepthBufferMode, "Use depth buffer mode (Recommended: Faster, better compatible with Parallax and trees/scatters, disables MSAA)");
 				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
 				{
+					Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
 					GUILayout.Label ("Antialiasing:");
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("\t");
