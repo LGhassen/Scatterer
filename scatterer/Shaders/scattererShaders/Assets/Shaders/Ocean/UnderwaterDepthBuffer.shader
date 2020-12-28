@@ -73,20 +73,10 @@ Shader "Scatterer/UnderwaterScatterDepthBuffer" {
 				uv.y = 1.0 - uv.y;
 				float zdepth = tex2Dlod(ScattererDepthCopy, float4(uv,0,0));
 
-				float3 invDepthWorldPos = getWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld); //get the inaccurate worldPosition using the inverse projection method
+				float3 worldPosRelCam = getPreciseWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld) - _WorldSpaceCameraPos;
 
-				invDepthWorldPos = invDepthWorldPos - _WorldSpaceCameraPos.xyz;
-				float invDepthLength = length(invDepthWorldPos);
-				float3 worldViewDir = invDepthWorldPos / invDepthLength;
-
-				//now refine the inaccurate distance
-				//TODO: remove this from openGL
-				float fragDistance = invDepthLength;
-				if (fragDistance > 8000.0) //with this optimization 0.72 ms at KSC vs 0.87ms without, if I remove the refinement code completely takes 0.67 ms, I guess check what to do so you don't recompute the extinction, plus there is the horizon double sampling thing
-				{
-					fragDistance = getRefinedDistanceFromDepth(invDepthLength, zdepth, worldViewDir);
-				}
-
+				float fragDistance = length(worldPosRelCam);
+				float3 worldViewDir = worldPosRelCam / fragDistance;
 
 				float3 _camPos = _WorldSpaceCameraPos - _planetPos;
 				float underwaterDepth = Rg - length(_camPos);

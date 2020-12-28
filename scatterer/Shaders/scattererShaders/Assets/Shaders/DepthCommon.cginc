@@ -64,8 +64,35 @@ float3 getWorldPosFromDepth(float2 uv, float zdepth, float4x4 CameraToWorld)
 	return (worldPos.xyz/worldPos.w);
 }
 
+//hybrid method using the depth from the ray method and the direction from the invprojection method
+//seems to work pretty well
+//could be optimized further by moving the raydirection calculation to the vertex shader
+float3 getPreciseWorldPosFromDepth(float2 uv, float zdepth, float4x4 CameraToWorld)
+{
+	float depth = Linear01Depth(zdepth);
+
+#if defined(UNITY_REVERSED_Z)
+	zdepth = 1 - zdepth;
+#endif
+
+	float4 clipPos = float4(uv, zdepth, 1.0);
+	clipPos.xyz = 2.0f * clipPos.xyz - 1.0f;
+	float4 camPos = mul(unity_CameraInvProjection, clipPos);
+	camPos.xyz /= camPos.w;
+
+	float3 rayDirection = normalize(camPos.xyz);
+
+	float3 cameraForwardDir = float3(0,0,-1);
+	float aa = dot(rayDirection, cameraForwardDir);
+
+	camPos.xyz = rayDirection * depth/aa * _ProjectionParams.z;
+
+	float4 worldPos = mul(CameraToWorld,float4(camPos.xyz,1.0));
+	return (worldPos.xyz/worldPos.w);
+}
+
 //Refines the inaccurate worldPos from invprojection with a search algorithm
-//If this is still too expensive to do in all the shaders, consider having a separate shader do this at 1/4 res then upsample it with near depth
+//While this gives good results, it is no longer needed, the hybrid ray/projmatrix method is faster and gives similar precision
 float getRefinedDistanceFromDepth(float unrefinedDistance, float zdepth, float3 worldViewDir)
 {
 	//maybe scale these based on distance?
@@ -77,7 +104,6 @@ float getRefinedDistanceFromDepth(float unrefinedDistance, float zdepth, float3 
 	float minSearchDistance = unrefinedDistance * 0.70;
 
 	float mid = 0;
-	float3 camPosition = float3(0.0,0.0,0.0);
 	float3 worldPos0 = float3(0.0,0.0,0.0);
 	float4 clipPos = float4(0.0,0.0,0.0,1.0);
 	float depth = -10.0;

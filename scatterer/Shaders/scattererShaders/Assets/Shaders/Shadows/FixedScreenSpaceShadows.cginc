@@ -108,18 +108,6 @@ inline float3 computeCameraSpacePosFromDepthAndInvProjMat(v2f i)
     return camPos.xyz;
 }
 
-// Z buffer to linear 0..1 depth
-// An attempt to simplify this method with some assumptions to gain some precision, insufficient precision in the end
-inline float Linear01DepthModified( float z )
-{
-	//zbufferParams: far/near, 1-near/far?, x/far  , y/far
-
-    //return 1.0 / (_ZBufferParams.x * z + _ZBufferParams.y);
-    //return 1.0 / ( _ProjectionParams.z/_ProjectionParams.y * z + _ZBufferParams.y);
-    //return 1.0 / ( _ProjectionParams.z/_ProjectionParams.y * z + (1.0 - _ProjectionParams.y/_ProjectionParams.z ) );
-    return (_ProjectionParams.y / ( _ProjectionParams.z * z ));   // simplifies to this expression, but still broken and flickery
-}
-
 /**
 * Get camera space coord from depth and info from VS
 */

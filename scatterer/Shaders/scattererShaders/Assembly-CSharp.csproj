@@ -116,6 +116,7 @@
      <None Include="Assets\Shaders\Instancing\DeferredShading.shader" />
      <None Include="Assets\Shaders\OldOrUnused\AtmosphereNew.cginc" />
      <None Include="Assets\Shaders\DepthTexture\DownscaleDepth.shader" />
+     <None Include="Assets\Shaders\Shadows\DoublePrecisionEmulation.cginc" />
      <None Include="Assets\Shaders\SunFlare\SunFlare.shader" />
      <None Include="Assets\Shaders\SunFlare\SunFlareExtinction.shader" />
      <None Include="Assets\Shaders\Instancing\My Lightmapping.cginc" />

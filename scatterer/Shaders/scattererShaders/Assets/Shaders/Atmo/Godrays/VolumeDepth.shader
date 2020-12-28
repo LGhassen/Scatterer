@@ -34,14 +34,19 @@
 			#include "../../IntersectCommon.cginc"
 			#include "GodraysCommon.cginc"
 
-			#pragma multi_compile DUAL_DEPTH_OFF DUAL_DEPTH_ON
-			#pragma multi_compile OCEAN_INTERSECT_OFF OCEAN_INTERSECT_ON  //enable ocean_intersect only for custom ocean shader
+			//if no ocean -> use camera depth buffer: OCEAN_INTERSECT_OFF
+			//if ocean and in depth buffer mode -> use ocean depth buffer: OCEAN_INTERSECT_DEPTH
+			//if ocean and in projector mode -> use analytical ocean intersect: OCEAN_INTERSECT_ANALYTICAL
+			#pragma multi_compile OCEAN_INTERSECT_OFF OCEAN_INTERSECT_DEPTH OCEAN_INTERSECT_ANALYTICAL 
 			#pragma multi_compile CLOUDSMAP_OFF CLOUDSMAP_ON
 
 			sampler2D _ShadowMapTextureCopyScatterer;
 
-
+#if defined(OCEAN_INTERSECT_OFF) || defined(OCEAN_INTERSECT_ANALYTICAL)
 			sampler2D _CameraDepthTexture;
+#elif defined(OCEAN_INTERSECT_DEPTH)
+			sampler2D ScattererDepthCopy;
+#endif
 			float4x4 CameraToWorld;
 
 			float3 lightDirection;
@@ -52,11 +57,6 @@
 			float _experimentalAtmoScale;
 
 			sampler2D cloudShadowMap;
-
-#if defined(DUAL_DEPTH_ON)
-			UNITY_DECLARE_DEPTH_TEXTURE(AdditionalDepthBuffer);
-			float4x4  ScattererAdditionalInvProjection;
-#endif
 
 			StructuredBuffer<float4x4> inverseShadowMatricesBuffer;
 
@@ -214,7 +214,15 @@
 			float4 frag (d2f i, fixed facing : VFACE) : SV_Target
 			{
 				float2 depthUV = i.projPos.xy/i.projPos.w;
+
+
+#if defined(OCEAN_INTERSECT_OFF) || defined(OCEAN_INTERSECT_ANALYTICAL)
 				float zdepth = tex2Dlod(_CameraDepthTexture, float4(depthUV,0,0));
+#elif defined(OCEAN_INTERSECT_DEPTH)
+				float zdepth = tex2Dlod(ScattererDepthCopy, float4(depthUV,0,0));
+#endif
+
+				float depth = Linear01Depth(zdepth);
 
 #ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
 				zdepth = 1 - zdepth;
@@ -224,19 +232,16 @@
 				depthClipPos.xyz = 2.0 * depthClipPos.xyz - 1.0;
 				float4 depthViewPos = mul(unity_CameraInvProjection, depthClipPos);
 
-				float depthLength = length(depthViewPos.xyz/depthViewPos.w);
-#if defined(DUAL_DEPTH_ON)
-				float zdepth2 = SAMPLE_DEPTH_TEXTURE(AdditionalDepthBuffer, depthUV);
+				depthViewPos.xyz /= depthViewPos.w;
 
-	#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
-				zdepth2 = 1.0 - zdepth2;
-	#endif
-				depthClipPos = float4(depthUV, zdepth2, 1.0);
-				depthClipPos.xyz = 2.0 * depthClipPos.xyz - 1.0;
-				float4 depthViewPos2 = mul(ScattererAdditionalInvProjection, depthClipPos);
+				float3 rayDirection = normalize(depthViewPos.xyz);
 
-				depthLength = (depthLength < 8000) || (zdepth2 == 0.0) ? depthLength : length(depthViewPos2.xyz/depthViewPos2.w);
-#endif
+				float3 cameraForwardDir = float3(0,0,-1);
+				float aa = dot(rayDirection, cameraForwardDir);
+
+				depthViewPos.xyz = rayDirection * depth/aa * _ProjectionParams.z;
+
+				float depthLength = length(depthViewPos.xyz);
 
 				float3 viewDir = normalize(i.finalWorldPos.xyz/i.finalWorldPos.w - _WorldSpaceCameraPos);
 				float viewLength = length(i.viewPos.xyz/i.viewPos.w);
@@ -254,7 +259,7 @@
 //					}
 //				}
 
-#if defined(OCEAN_INTERSECT_ON)  //cap by boundary to ocean
+#if defined(OCEAN_INTERSECT_ANALYTICAL)  //cap by boundary to ocean
 				float oceanIntersectDistance = intersectSphereOutside(_WorldSpaceCameraPos, viewDir, _planetPos, Rg);
 
 				if ((oceanIntersectDistance > 0.0) && (oceanIntersectDistance <= viewLength))

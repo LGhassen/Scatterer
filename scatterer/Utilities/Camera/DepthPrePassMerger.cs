@@ -39,25 +39,8 @@ namespace scatterer
 				depthInitCommandBuffer.name = "Scatterer depth merge commandbuffer";
 				depthInitCommandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, copyCameraDepthMaterial, 1);
 				targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
-				Utils.LogInfo("DepthPrePassMerger Created");
 			}
 		}
-
-//		public void OnPreCull()
-//		{
-//			if (!ReferenceEquals (targetCamera, null) && !ReferenceEquals (depthInitCommandBuffer, null))
-//			{
-//				targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
-//			}
-//		}
-//		
-//		void OnPostRender()
-//		{
-//			if (!ReferenceEquals (targetCamera, null) && !ReferenceEquals (depthInitCommandBuffer, null))
-//			{
-//				targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
-//			}
-//		}
 
 		public void OnDestroy()
 		{

@@ -457,7 +457,7 @@ namespace scatterer
 					}
 					else
 						if (selectedIndividualSettingsTab == IndividualSettingsTabs.Shadows) {
-							Scatterer.Instance.mainSettings.d3d11ShadowFix = GUILayout.Toggle (Scatterer.Instance.mainSettings.d3d11ShadowFix, "1.9+ Directx11 flickering shadows fix (recommended)");
+							Scatterer.Instance.mainSettings.d3d11ShadowFix = GUILayout.Toggle (Scatterer.Instance.mainSettings.d3d11ShadowFix, "1.9+ Directx11 flickering shadows fix (recommended for 1.9, 1.10)");
 							Scatterer.Instance.mainSettings.terrainShadows = GUILayout.Toggle (Scatterer.Instance.mainSettings.terrainShadows, "Long-Distance Terrain shadows (may not reset until game restart)");
 							if (Scatterer.Instance.mainSettings.terrainShadows) {
 								GUILayout.BeginHorizontal ();

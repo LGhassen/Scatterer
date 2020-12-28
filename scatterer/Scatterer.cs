@@ -37,7 +37,6 @@ namespace scatterer
 		
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		public TweakShadowCascades shadowCascadeTweaker;
-		public PartialDepthBuffer partialUnifiedCameraDepthBuffer;
 
 		//probably move these to buffer rendering manager
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
@@ -306,12 +305,6 @@ namespace scatterer
 					Component.Destroy (bufferManager);
 				}
 
-				if (partialUnifiedCameraDepthBuffer)
-				{
-					partialUnifiedCameraDepthBuffer.OnDestroy();
-					Component.Destroy(partialUnifiedCameraDepthBuffer);
-				}
-
 				if (reflectionProbeChecker)
 				{
 					reflectionProbeChecker.OnDestroy ();
@@ -423,8 +416,6 @@ namespace scatterer
 					if ((mainSettings.terrainShadows) && (mainSettings.unifiedCamShadowsDistance > 8000f))
 					{
 						GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/longDistanceScreenSpaceShadows")]);
-						partialUnifiedCameraDepthBuffer = (PartialDepthBuffer) nearCamera.gameObject.AddComponent(typeof(PartialDepthBuffer));
-						partialUnifiedCameraDepthBuffer.Init(nearCamera);
 					}
 					else
 					{

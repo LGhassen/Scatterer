@@ -1,3 +1,6 @@
+// This is no longer used, replaced by new reconstruction method that reconstructs precise world position from the regular depth
+// Class is kept here for reference
+//
 // In 1.9 dx11 we have a unified camera which renders the scene from 0.21 -> 750000
 // As the screen space shadow shader collects shadows using a depth buffer, shadow precision degrades strongly after 8000m shadow distance
 // This class is meant to re-render a partial depth buffer for the scene, starting from where depth precision degrades too much to the max shadow distance

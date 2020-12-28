@@ -105,22 +105,8 @@
 
 				if (zdepth == 0.0)
 					discard;
-
-				float3 invDepthWorldPos = getWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld); //get the inaccurate worldPosition using the inverse projection method
-
-				invDepthWorldPos = invDepthWorldPos - _WorldSpaceCameraPos.xyz;
-				float invDepthLength = length(invDepthWorldPos);
-				float3 worldViewDir = invDepthWorldPos / invDepthLength;
-
-				//now refine the inaccurate distance
-				//TODO: remove this from openGL
-				float distance = invDepthLength;
-				if (distance > 8000.0) //with this optimization 0.72 ms at KSC vs 0.87ms without, if I remove the refinement code completely takes 0.67 ms, I guess check what to do so you don't recompute the extinction, plus there is the horizon double sampling thing
-				{
-					distance = getRefinedDistanceFromDepth(invDepthLength, zdepth, worldViewDir);
-				}
-
-				float3 worldPos = i.camPosRelPlanet .xyz + worldViewDir * abs(distance); //worldPos relative to planet origin
+				
+				float3 worldPos = getPreciseWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld) - _planetPos;  //worldPos relative to planet origin
 
 				float3 groundPos = normalize (worldPos) * Rg*1.0008;
 				float Rt2 = Rg + (Rt - Rg) * _experimentalAtmoScale;
