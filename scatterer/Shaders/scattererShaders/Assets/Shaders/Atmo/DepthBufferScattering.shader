@@ -18,12 +18,13 @@
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
 			#include "../DepthCommon.cginc"
+			#include "Godrays/GodraysCommon.cginc"
 
-			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
-			//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
+//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
+			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 
 			uniform float _global_alpha;
 			uniform float _global_depth;
@@ -38,6 +39,7 @@
 
 #if defined (GODRAYS_ON)
 			uniform sampler2D _godrayDepthTexture;
+			uniform float _godrayStrength;
 #endif
 			uniform float _openglThreshold;
 
@@ -49,18 +51,10 @@
 #endif
 			float4x4 CameraToWorld;
 
-			//            //eclipse uniforms
-			//#if defined (ECLIPSES_ON)			
-			//			uniform float4 sunPosAndRadius; //xyz sun pos w radius
-			//			uniform float4x4 lightOccluders1; //array of light occluders
-			//											 //for each float4 xyz pos w radius
-			//			uniform float4x4 lightOccluders2;
-			//#endif
-
-			#if defined (PLANETSHINE_ON)
+#if defined (PLANETSHINE_ON)
 			uniform float4x4 planetShineSources;
 			uniform float4x4 planetShineRGB;
-			#endif
+#endif
 
 			struct v2f
 			{
@@ -106,9 +100,10 @@
 				if (zdepth == 0.0)
 					discard;
 				
-				float3 worldPos = getPreciseWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld) - _planetPos;  //worldPos relative to planet origin
+				float3 absWorldPos = getPreciseWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld);
+				float3 worldPos = absWorldPos - _planetPos;  //worldPos relative to planet origin
 
-				float3 groundPos = normalize (worldPos) * Rg*1.0008;
+				float3 groundPos = normalize (worldPos) * Rg * 1.0008;
 				float Rt2 = Rg + (Rt - Rg) * _experimentalAtmoScale;
 
 				worldPos = (length(worldPos) < Rt2) ? lerp(groundPos,worldPos,_PlanetOpacity) : worldPos; //fades to flatScaledSpace planet shading to ease the transition to scaledSpace
@@ -155,29 +150,21 @@
 //				}
 //				#endif
 
+#if defined (GODRAYS_ON)
+				float godrayDepth = 0.0;
+
+				godrayDepth = sampleGodrayDepth(_godrayDepthTexture, float2(uv.x,1.0-uv.y), 1.0);
+
+				//trying to find the optical depth from the terrain level
+				float muTerrain = dot(normalize(worldPos), normalize(_WorldSpaceCameraPos - absWorldPos));
+
+				godrayDepth = _godrayStrength * DistanceFromOpticalDepth(_experimentalAtmoScale * (Rt-Rg) * 0.5, length(worldPos), muTerrain, godrayDepth, minDistance);
+
+				worldPos -= godrayDepth * normalize(worldPos-i.camPosRelPlanet);
+#endif
 
 				inscatter+= InScattering2(i.camPosRelPlanet, worldPos,SUN_DIR,extinction);
 				inscatter*= (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ; //somehow the shader compiler for OpenGL behaves differently around braces
-
-//				#if defined (ECLIPSES_ON)				
-//				 				float eclipseShadow = 1;
-//				 							
-//				            	for (int i=0; i<4; ++i)
-//				    			{
-//				        			if (lightOccluders1[i].w <= 0)	break;
-//									eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders1[i].xyz,
-//												   lightOccluders1[i].w, sunPosAndRadius.w)	;
-//								}
-//										
-//								for (int j=0; j<4; ++j)
-//				    			{
-//				        			if (lightOccluders2[j].w <= 0)	break;
-//									eclipseShadow*=getEclipseShadow(worldPos, sunPosAndRadius.xyz,lightOccluders2[j].xyz,
-//												   lightOccluders2[j].w, sunPosAndRadius.w)	;
-//								}
-//				
-//								inscatter*=eclipseShadow;
-//				#endif
 
 				inscatter = hdr(inscatter,_ScatteringExposure) *_global_alpha;
 

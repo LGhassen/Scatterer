@@ -37,16 +37,13 @@
 			//if no ocean -> use camera depth buffer: OCEAN_INTERSECT_OFF
 			//if ocean and in depth buffer mode -> use ocean depth buffer: OCEAN_INTERSECT_DEPTH
 			//if ocean and in projector mode -> use analytical ocean intersect: OCEAN_INTERSECT_ANALYTICAL
-			#pragma multi_compile OCEAN_INTERSECT_OFF OCEAN_INTERSECT_DEPTH OCEAN_INTERSECT_ANALYTICAL 
+			#pragma multi_compile OCEAN_INTERSECT_OFF OCEAN_INTERSECT_ANALYTICAL 
 			#pragma multi_compile CLOUDSMAP_OFF CLOUDSMAP_ON
 
 			sampler2D _ShadowMapTextureCopyScatterer;
 
-#if defined(OCEAN_INTERSECT_OFF) || defined(OCEAN_INTERSECT_ANALYTICAL)
 			sampler2D _CameraDepthTexture;
-#elif defined(OCEAN_INTERSECT_DEPTH)
-			sampler2D ScattererDepthCopy;
-#endif
+
 			float4x4 CameraToWorld;
 
 			float3 lightDirection;
@@ -215,14 +212,9 @@
 			{
 				float2 depthUV = i.projPos.xy/i.projPos.w;
 
-
-#if defined(OCEAN_INTERSECT_OFF) || defined(OCEAN_INTERSECT_ANALYTICAL)
 				float zdepth = tex2Dlod(_CameraDepthTexture, float4(depthUV,0,0));
-#elif defined(OCEAN_INTERSECT_DEPTH)
-				float zdepth = tex2Dlod(ScattererDepthCopy, float4(depthUV,0,0));
-#endif
 
-				float depth = Linear01Depth(zdepth);
+				float linearDepth = Linear01Depth(zdepth);
 
 #ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
 				zdepth = 1 - zdepth;
@@ -239,7 +231,7 @@
 				float3 cameraForwardDir = float3(0,0,-1);
 				float aa = dot(rayDirection, cameraForwardDir);
 
-				depthViewPos.xyz = rayDirection * depth/aa * _ProjectionParams.z;
+				depthViewPos.xyz = rayDirection * linearDepth/aa * _ProjectionParams.z;
 
 				float depthLength = length(depthViewPos.xyz);
 

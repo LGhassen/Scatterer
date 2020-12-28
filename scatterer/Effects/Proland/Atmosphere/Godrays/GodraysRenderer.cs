@@ -70,29 +70,7 @@ namespace scatterer
 			targetLight = inputLight;
 			parentSkyNode = inputParentSkyNode;
 
-			if (Scatterer.Instance.mainSettings.useOceanShaders && parentSkyNode.m_manager.hasOcean)
-			{
-				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-				{
-					volumeDepthMaterial.EnableKeyword("OCEAN_INTERSECT_DEPTH");
-					volumeDepthMaterial.DisableKeyword("OCEAN_INTERSECT_ANALYTICAL");
-					volumeDepthMaterial.DisableKeyword("OCEAN_INTERSECT_OFF");
-				}
-				else
-				{
-					volumeDepthMaterial.DisableKeyword("OCEAN_INTERSECT_DEPTH");
-					volumeDepthMaterial.EnableKeyword("OCEAN_INTERSECT_ANALYTICAL");
-					volumeDepthMaterial.DisableKeyword("OCEAN_INTERSECT_OFF");
-				}
-			}
-			else
-			{
-				volumeDepthMaterial.DisableKeyword("OCEAN_INTERSECT_DEPTH");
-				volumeDepthMaterial.DisableKeyword("OCEAN_INTERSECT_ANALYTICAL");
-				volumeDepthMaterial.EnableKeyword("OCEAN_INTERSECT_OFF");
-			}
-
-			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "OCEAN_INTERSECT_ON", "OCEAN_INTERSECT_OFF", parentSkyNode.m_manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders);
+			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "OCEAN_INTERSECT_ANALYTICAL", "OCEAN_INTERSECT_OFF", parentSkyNode.m_manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders);
 			volumeDepthMaterial.SetFloat ("Rt", parentSkyNode.Rt);
 			volumeDepthMaterial.SetFloat ("Rg", parentSkyNode.Rg);
 			Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "CLOUDSMAP_ON", "CLOUDSMAP_OFF", false);
