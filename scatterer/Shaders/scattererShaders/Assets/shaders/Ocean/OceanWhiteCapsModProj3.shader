@@ -178,7 +178,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 			struct v2f 
 			{
-				//float4 pos : SV_POSITION;
+				float4 pos : SV_POSITION;
 				float2 oceanU	: TEXCOORD0;
 				float3 oceanP	: TEXCOORD1;
 				float4 screenPos: TEXCOORD2;
@@ -188,7 +188,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				float3 skyE	: TEXCOORD6;
 			};
 
-			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
+			v2f vert(appdata_base v)
 			{
 				float t;
 				float3 cameraDir, oceanDir;
@@ -227,17 +227,22 @@ Shader "Scatterer/OceanWhiteCaps"
 				float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);   //position in camera space
 				float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
-				outpos = mul(UNITY_MATRIX_P, screenP);
+				OUT.pos = mul(UNITY_MATRIX_P, screenP);
+
 
 				OUT.oceanU = u;
 				OUT.oceanP = oceanP;
 
-				OUT.screenPos = ComputeScreenPos(outpos);
+				OUT.screenPos = ComputeScreenPos(OUT.pos);
 				OUT.worldPos=mul(_Globals_CameraToWorld , screenP);
 
 				OUT.viewPos = screenP;
+#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
+				OUT.pos	= (_PlanetOpacity == 0.0) ? float4(2.0, 2.0, 2.0, 1.0) : OUT.pos;		//cull when completely transparent
+#else
+				OUT.pos = lerp(float4(2.0, 2.0, 2.0, 1.0), OUT.pos, step(0.001,_PlanetOpacity));	//stupid opengl
+#endif
 
-				outpos	= (_PlanetOpacity == 0.0) ? float4(2.0, 2.0, 2.0, 1.0) : outpos; //cull when completely transparent
 
 				float3 earthP = normalize(oceanP + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
 
@@ -249,7 +254,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				return OUT;
 			}
 
-			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
+			float4 frag(v2f IN) : SV_Target
 			{
 				float2 u = IN.oceanU;
 				float3 oceanP = IN.oceanP;
@@ -393,7 +398,7 @@ Shader "Scatterer/OceanWhiteCaps"
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
 				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
-				return float4(dither(finalColor, screenPos),insideClippingRange);
+				return float4(dither(finalColor, IN.pos),insideClippingRange);
 #else
 	#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				float3 finalColor = lerp(backGrnd, surfaceColor, transparencyAlpha);	//refraction on and not underwater
@@ -442,7 +447,7 @@ Shader "Scatterer/OceanWhiteCaps"
 #endif
 
 				insideClippingRange = (transparencyAlpha == 1.0) ? 1.0 : insideClippingRange;     //if no transparency -> render normally, if transparency play with the overlap to hide seams between cameras
-				return float4(dither(finalColor,screenPos), _PlanetOpacity*insideClippingRange);
+				return float4(dither(finalColor,IN.pos), _PlanetOpacity*insideClippingRange);
 #endif
 			}
 
