@@ -67,9 +67,8 @@
 				v2f o;
 
 #if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)
-				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, -1.0 , 1.0); //this needs to be rechecked for opengl
+				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, -1.0 , 1.0);
 #else
-				//outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, 0.0 , 1.0); //this needs to be rechecked for opengl
 				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y, 0.0 , 1.0);
 #endif
 				o.camPosRelPlanet = _WorldSpaceCameraPos - _planetPos;
@@ -96,13 +95,13 @@
 				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
 #endif
 
-				//this needs to be rechecked for opengl
-				if (_ProjectionParams.x > 0)
-					uv.y = 1.0 - uv.y;
+#if SHADER_API_D3D11 || SHADER_API_D3D || SHADER_API_D3D12
+				if (_ProjectionParams.x > 0) {uv.y = 1.0 - uv.y;}
+				if (zdepth == 0.0) {discard;}
+#else
+				if (zdepth == 1.0) {discard;}
+#endif
 
-				if (zdepth == 0.0)
-					discard;
-				
 				float3 absWorldPos = getPreciseWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld);
 				float3 worldPos = absWorldPos - _planetPos;  //worldPos relative to planet origin
 
