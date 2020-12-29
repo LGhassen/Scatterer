@@ -67,9 +67,10 @@
 				v2f o;
 
 #if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)
-				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, -1.0 , 1.0);
+				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, -1.0 , 1.0); //this needs to be rechecked for opengl
 #else
-				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, 0.0 , 1.0);
+				//outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, 0.0 , 1.0); //this needs to be rechecked for opengl
+				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y, 0.0 , 1.0);
 #endif
 				o.camPosRelPlanet = _WorldSpaceCameraPos - _planetPos;
 				o.screenPos = ComputeScreenPos(outpos);
@@ -90,12 +91,14 @@
 				float2 uv = i.screenPos.xy / i.screenPos.w;
 
 #if defined (CUSTOM_OCEAN_ON)
-				uv.y = 1.0 -uv.y;
 				float zdepth = tex2Dlod(ScattererDepthCopy, float4(uv,0,0));
 #else
 				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
-				uv.y = 1.0 -uv.y;
 #endif
+
+				//this needs to be rechecked for opengl
+				if (_ProjectionParams.x > 0)
+					uv.y = 1.0 - uv.y;
 
 				if (zdepth == 0.0)
 					discard;

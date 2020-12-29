@@ -104,7 +104,7 @@ namespace scatterer
 			if (!Scatterer.Instance.mainSettings.useDepthBufferMode)
 			{
 				rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial, 0, 0); //!!!!!!! //with this there is a line at night on the ocean around the KSC? really weird
+				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial, 0, 0);
 			}
 			else
 			{
@@ -125,6 +125,9 @@ namespace scatterer
 					width = Screen.width;
 					height = Screen.height;
 				}
+
+				targetCamera.forceIntoRenderTexture = true; //do this to force the camera target orientation to always match depth orientation
+															//that way we don't have to worry about flipping them separately
 
 				CreateRenderTextures (width, height);
 
