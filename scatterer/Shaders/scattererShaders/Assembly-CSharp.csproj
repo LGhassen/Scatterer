@@ -99,6 +99,7 @@
      <None Include="Assets\Shaders\Atmo\atmosphereLocalScattering.shader" />
      <None Include="Assets\Shaders\Atmo\SkySphere.shader" />
      <None Include="Assets\Shaders\Shadows\LongDistanceScreenSpaceShadows.shader" />
+     <None Include="Assets\Shaders\AA\CustomTAA.shader" />
      <None Include="Assets\Shaders\Ocean\FindHeights.compute" />
      <None Include="Assets\Shaders\IntersectCommon.cginc" />
      <None Include="Assets\Shaders\Ocean\Caustics\CausticsOcclusion.shader" />

@@ -15,7 +15,7 @@ using UnityEngine.Rendering;
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	public partial class Scatterer: MonoBehaviour
+	public class Scatterer: MonoBehaviour
 	{	
 		private static Scatterer instance;
 		public static Scatterer Instance {get {return instance;}}
@@ -54,6 +54,8 @@ namespace scatterer
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
 		public string versionNumber = "0.0725 dev";
+
+		public TemporalAntiAliasing temporalAA;
 
 		void Awake ()
 		{
@@ -172,6 +174,19 @@ namespace scatterer
 			if (!unifiedCameraMode)
 				shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
 
+			//TODO: change these later to support multiple cameras
+			if (mainSettings.useDepthBufferMode)
+			{
+				if(mainSettings.useTemporalAntiAliasing)
+					temporalAA = nearCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+
+				if(mainSettings.mergeDepthPrePass)
+				{
+					Utils.LogInfo("Adding nearDepthPassMerger");
+					nearDepthPassMerger = (DepthPrePassMerger) nearCamera.gameObject.AddComponent<DepthPrePassMerger>();
+				}
+			}
+
 			//magically fix stupid issues when reverting to space center from map view
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
 			{
@@ -256,8 +271,7 @@ namespace scatterer
 				{
 					ambientLightScript.restoreLight();
 					Component.Destroy(ambientLightScript);
-				}
-				
+				}				
 
 				if (nearCamera)
 				{
@@ -303,6 +317,12 @@ namespace scatterer
 				{
 					bufferManager.OnDestroy();
 					Component.Destroy (bufferManager);
+				}
+
+				if (temporalAA)
+				{
+					temporalAA.Release();
+					Component.Destroy(temporalAA);
 				}
 
 				if (reflectionProbeChecker)
@@ -362,12 +382,6 @@ namespace scatterer
 			{
 				Utils.LogInfo("Running in unified camera mode");
 				unifiedCameraMode = true;
-
-				if (mainSettings.useDepthBufferMode && mainSettings.mergeDepthPrePass)
-				{
-					Utils.LogInfo("Adding nearDepthPassMerger");
-					nearDepthPassMerger = (DepthPrePassMerger) nearCamera.gameObject.AddComponent<DepthPrePassMerger>();
-				}
 			}
 
 			if (scaledSpaceCamera && nearCamera)

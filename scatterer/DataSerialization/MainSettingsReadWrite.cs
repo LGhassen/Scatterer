@@ -102,6 +102,9 @@ namespace scatterer
 		public bool mergeDepthPrePass = false;
 
 		[Persistent]
+		public bool useTemporalAntiAliasing = true;
+
+		[Persistent]
 		public bool terrainShadows = false;
 
 		[Persistent]
@@ -211,6 +214,7 @@ namespace scatterer
 				 OldConfig.useGodrays != useGodrays ||
 				 OldConfig.useDepthBufferMode != useDepthBufferMode ||
 				 OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
+				 OldConfig.useTemporalAntiAliasing  != useTemporalAntiAliasing ||
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.useDithering != useDithering ||
 

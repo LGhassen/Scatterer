@@ -243,7 +243,6 @@ Shader "Scatterer/OceanWhiteCaps"
 				OUT.pos = lerp(float4(2.0, 2.0, 2.0, 1.0), OUT.pos, step(0.001,_PlanetOpacity));	//stupid opengl
 #endif
 
-
 				float3 earthP = normalize(oceanP + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
 
 				float3 sunL, skyE;

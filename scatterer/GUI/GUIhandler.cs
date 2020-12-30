@@ -374,8 +374,8 @@ namespace scatterer
 					GUILayout.Label ("\t");
 					GUILayout.BeginVertical ();
 					{
-						GUILayout.Label ("Use TAA");
-						GUILayout.Label ("Use SMAA");
+						Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Use temporal anti-aliasing");
+						//GUILayout.Label ("Use SMAA");
 					}
 					GUILayout.EndVertical ();
 					GUILayout.EndHorizontal ();

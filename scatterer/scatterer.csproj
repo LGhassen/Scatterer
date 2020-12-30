@@ -191,6 +191,8 @@
     <Compile Include="Utilities\Camera\ScreenCopyCommandBuffer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\GenericLocalAtmosphereContainer.cs" />
     <Compile Include="Utilities\Camera\DepthPrePassMerger.cs" />
+    <Compile Include="Effects\AntiAliasing\Utils\HaltonSeq.cs" />
+    <Compile Include="Effects\AntiAliasing\TemporalAntiAliasing.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -209,5 +211,7 @@
     <Folder Include="GUI\ModularGUI\" />
     <Folder Include="Effects\Proland\Atmosphere\Godrays\" />
     <Folder Include="Utilities\EVE\" />
+    <Folder Include="Effects\AntiAliasing\" />
+    <Folder Include="Effects\AntiAliasing\Utils\" />
   </ItemGroup>
 </Project>
