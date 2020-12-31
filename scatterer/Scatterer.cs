@@ -321,7 +321,7 @@ namespace scatterer
 
 				if (temporalAA)
 				{
-					temporalAA.Release();
+					temporalAA.Cleanup();
 					Component.Destroy(temporalAA);
 				}
 

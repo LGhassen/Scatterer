@@ -123,8 +123,7 @@ namespace scatterer
 			
 			return matrix;
 		}
-
-
+		
 		/// Generates a jittered projection matrix for a given camera.
 		public Matrix4x4 GetJitteredProjectionMatrix(Camera camera)
 		{
@@ -139,9 +138,7 @@ namespace scatterer
 		}
 		
 		
-		/// Prepares the jittered and non jittered projection matrices.
-		/// //What calls this though?
-		/// //From te method render in postProcessing layer, which I will move here
+		/// Prepares the jittered and non jittered projection matrices
 		public void ConfigureJitteredProjectionMatrix()
 		{
 			targetCamera.ResetProjectionMatrix();
@@ -177,9 +174,7 @@ namespace scatterer
 				
 				rt.filterMode = FilterMode.Bilinear;
 				m_HistoryTextures[activeEye][id] = rt;
-				
-				//context.command.BlitFullscreenTriangle(context.source, rt); //this should be just a blit from the screen to RT if I understand correctly
-																			  //I think this is done just to init the history textures
+
 				cmd.Blit(BuiltinRenderTextureType.CameraTarget, rt);
 			}
 			
@@ -203,35 +198,15 @@ namespace scatterer
 			m_HistoryPingPong[activeEye] = ++pp % 2;
 
 			temporalAAMaterial.SetTexture("_HistoryTex", historyRead);
-
 						
 			int pass = (int)Pass.SolverDilate;
-			//m_Mrt[0] = context.destination;			//replace with builtin rt thing?
-//			m_Mrt [0] = new RenderTargetIdentifier (BuiltinRenderTextureType.CameraTarget);
-//			m_Mrt [1] = historyWrite;
+
+			temporalAACommandBuffer.SetGlobalTexture ("_MainTex", new RenderTargetIdentifier (BuiltinRenderTextureType.CameraTarget));
+			temporalAACommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, historyWrite, temporalAAMaterial, pass);
 			
-//			cmd.BlitFullscreenTriangle(context.source, m_Mrt, context.source, sheet, pass); //this should blit the actual TAA shader
-
-			//temporalAACommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, screenCopy);
-			//temporalAACommandBuffer.Blit (screenCopy, m_Mrt, temporalAAMaterial, pass);
-//			temporalAACommandBuffer.Blit (screenCopy, m_Mrt);
-
-			//temporalAACommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, historyWrite, temporalAAMaterial, pass); //this didn't seem to work? not getting main tex?
-
-//			temporalAACommandBuffer.Blit (null, historyWrite, temporalAAMaterial, pass); //this didn't seem to work? not getting main tex?
-
-			temporalAACommandBuffer.SetGlobalTexture ("_MainTex", new RenderTargetIdentifier (BuiltinRenderTextureType.CameraTarget));
-			temporalAACommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, historyWrite);
-
 			temporalAACommandBuffer.SetGlobalTexture ("_MainTex", historyWrite);
-			temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget, temporalAAMaterial, pass);
+			temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
 
-			temporalAACommandBuffer.SetGlobalTexture ("_MainTex", new RenderTargetIdentifier (BuiltinRenderTextureType.CameraTarget));
-			temporalAACommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, historyWrite);
-
-//			temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
-
-			//add commandbuffer to camera thing
 			targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
 
 			m_ResetHistory = false;
@@ -239,13 +214,15 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
-			//remove commandbuffer from camera
 			targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
 		}
 		
-		public void Release()
+		public void Cleanup()
 		{
-			Utils.LogInfo ("Temporal AA release called!");
+			if (!ReferenceEquals(temporalAACommandBuffer,null))
+				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+
+			screenCopy.Release ();
 
 			if (m_HistoryTextures != null)
 			{
@@ -267,12 +244,6 @@ namespace scatterer
 			m_HistoryPingPong[0] = 0;
 
 			ResetHistory();
-
-			screenCopy.Release ();
-
-			if (!ReferenceEquals(temporalAACommandBuffer,null))
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
-
 		}
 	}
 }
