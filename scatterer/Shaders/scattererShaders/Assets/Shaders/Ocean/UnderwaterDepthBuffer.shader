@@ -40,11 +40,11 @@ Shader "Scatterer/UnderwaterScatterDepthBuffer" {
 			{
 				v2f o;
 
-		#if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)
+#if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3) || defined(SHADER_API_GLCORE)
 				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, -1.0 , 1.0);
-		#else
-				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y *_ProjectionParams.x, 0.0 , 1.0);
-		#endif
+#else
+				outpos = float4(2.0 * v.vertex.x, 2.0 * v.vertex.y, 0.0 , 1.0);
+#endif
 				o.screenPos = ComputeScreenPos(outpos);
 
 				float3 _camPos = _WorldSpaceCameraPos - _planetPos;
@@ -70,7 +70,10 @@ Shader "Scatterer/UnderwaterScatterDepthBuffer" {
 			{
 				float2 uv = i.screenPos.xy / i.screenPos.w;
 
-				uv.y = 1.0 - uv.y;
+#if SHADER_API_D3D11 || SHADER_API_D3D || SHADER_API_D3D12
+				if (_ProjectionParams.x > 0) {uv.y = 1.0 - uv.y;}
+#endif
+
 				float zdepth = tex2Dlod(ScattererDepthCopy, float4(uv,0,0));
 
 				float3 worldPosRelCam = getPreciseWorldPosFromDepth(i.screenPos.xy / i.screenPos.w, zdepth, CameraToWorld) - _WorldSpaceCameraPos;
