@@ -21,12 +21,38 @@ float3 getViewSpacePosFromDepth(float2 uv)
 	return camPos.xyz;
 }
 
+float3 getPreciseViewSpacePosFromDepth(float2 uv)
+{
+	uv.y = 1.0 - uv.y;
+
+	float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
+	float depth = Linear01Depth(zdepth);
+
+	#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
+	zdepth = 1 - zdepth;
+	#endif
+
+	float4 clipPos = float4(uv, zdepth, 1.0);
+	clipPos.xyz = 2.0f * clipPos.xyz - 1.0f;
+	float4 camPos = mul(unity_CameraInvProjection, clipPos);
+	camPos.xyz /= camPos.w;
+	camPos.z *= -1;
+
+	float3 rayDirection = normalize(camPos.xyz);
+
+	float3 cameraForwardDir = float3(0,0,1);
+	float aa = dot(rayDirection, cameraForwardDir);
+
+	float3 vposPersp = rayDirection * depth/aa * _ProjectionParams.z;
+	return vposPersp;
+}
+
 float getScattererFragDistance(float2 uv)
 {
 	#if defined (SCATTERER_MERGED_DEPTH_ON)
 	return tex2Dlod(_customDepthTexture, float4(uv,0,0)).r* 750000;
 	#else
-	return length(getViewSpacePosFromDepth(uv).xyz);
+	return length(getPreciseViewSpacePosFromDepth(uv).xyz);
 	#endif
 }
 

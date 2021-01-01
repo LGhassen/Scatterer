@@ -23,12 +23,12 @@ Shader "Scatterer/CausticsOcclusion"
 			CGPROGRAM
 			#include "UnityCG.cginc"
 			#include "Lighting.cginc"
+			#include "../../DepthCommon.cginc"
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma target 3.0
 			#pragma multi_compile SPHERE_PLANET FLAT_PLANET
 
-			uniform sampler2D _CameraDepthTexture;
 			uniform float4x4 CameraToWorld;
 			float4x4 WorldToLight;
 			uniform float3 PlanetOrigin;
@@ -67,24 +67,13 @@ Shader "Scatterer/CausticsOcclusion"
 			{
 				float zdepth = tex2Dlod(_CameraDepthTexture, float4(i.uv,0,0));
 
-#ifdef SHADER_API_D3D11  //#if defined(UNITY_REVERSED_Z)
-        			zdepth = 1 - zdepth;
+#if SHADER_API_D3D11 || SHADER_API_D3D || SHADER_API_D3D12
+				if (zdepth == 0.0) {discard;}
+#else
+				if (zdepth == 1.0) {discard;}
 #endif
 
-    				float4 clipPos = float4(i.uv, zdepth, 1.0);
-    				clipPos.xyz = 2.0f * clipPos.xyz - 1.0f;
-    				float4 camPos = mul(unity_CameraInvProjection, clipPos);
-				float4 worldPos = mul(CameraToWorld,camPos);
-				worldPos/=worldPos.w;
-
-//				camPos.xyz /= camPos.w;
-//				float fragDistance = length(camPos.xyz) / 100.0;
-//				return float4(fragDistance,fragDistance,fragDistance,1.0);
-
-
-//				float worldDist = length(worldPos.xyz) / 1000.0;
-//				worldDist = 1 - worldDist;
-				//return float4(worldDist,worldDist,worldDist,1.0);
+				float3 worldPos = getPreciseWorldPosFromDepth(i.uv, zdepth, CameraToWorld);
 
 				// blur caustics the farther we are from texture
 				float blurFactor = 0.0;
