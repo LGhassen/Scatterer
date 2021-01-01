@@ -31,9 +31,10 @@ namespace scatterer
 			scaledScatteringMR = scaledScatteringGO.AddComponent<MeshRenderer>();
 			scaledScatteringMR.sharedMaterial = material;
 			Utils.EnableOrDisableShaderKeywords (scaledScatteringMR.sharedMaterial, "LOCAL_MODE_ON", "LOCAL_MODE_OFF", false);
-			
+
 			scaledScatteringMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			scaledScatteringMR.receiveShadows = false;
+			scaledScatteringMR.motionVectorGenerationMode = MotionVectorGenerationMode.Camera;
 			scaledScatteringMR.enabled = true;
 			
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)

@@ -44,9 +44,14 @@ namespace scatterer
 		CommandBuffer temporalAACommandBuffer;
 		Material temporalAAMaterial;
 
+		DepthTextureMode originalDepthTextureMode;
+		public bool checkOceanDepth = false;
+		public bool jitterTransparencies = false;
+
 		public TemporalAntiAliasing()
 		{
 			targetCamera = GetComponent<Camera> ();
+			originalDepthTextureMode = targetCamera.depthTextureMode;
 			targetCamera.depthTextureMode = DepthTextureMode.MotionVectors;
 
 			int width, height;
@@ -71,6 +76,7 @@ namespace scatterer
 			screenCopy.Create ();
 
 			temporalAAMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/TemporalAntialiasing")]);
+			Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", false);
 
 			const float kMotionAmplification = 100f * 60f;
 			temporalAAMaterial.SetFloat("_Sharpness", sharpness);
@@ -145,7 +151,7 @@ namespace scatterer
 
 			targetCamera.nonJitteredProjectionMatrix = targetCamera.projectionMatrix;
 			targetCamera.projectionMatrix = GetJitteredProjectionMatrix(targetCamera);
-			targetCamera.useJitteredProjectionMatrixForTransparentRendering = false;
+			targetCamera.useJitteredProjectionMatrixForTransparentRendering = jitterTransparencies;
 
 			temporalAAMaterial.SetVector("_Jitter", jitter);
 		}
@@ -191,8 +197,8 @@ namespace scatterer
 			int activeEye = 0;
 
 			//TODO: move to shader properties
-			//Pass a flag here so it only has to do this if it's a flight camera
-			Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
+			if (checkOceanDepth)
+				Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
 
 			int pp = m_HistoryPingPong[activeEye];
 			RenderTexture historyRead  = CheckHistory(++pp % 2, temporalAACommandBuffer);
@@ -223,6 +229,8 @@ namespace scatterer
 		{
 			if (!ReferenceEquals(temporalAACommandBuffer,null))
 				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeImageEffects, temporalAACommandBuffer);
+
+			targetCamera.depthTextureMode = originalDepthTextureMode;
 
 			screenCopy.Release ();
 

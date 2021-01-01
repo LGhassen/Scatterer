@@ -39,6 +39,7 @@ namespace scatterer
 
 			skySphereMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			skySphereMR.receiveShadows = false;
+			skySphereMR.motionVectorGenerationMode = MotionVectorGenerationMode.Camera;
 			skySphereMR.enabled = true;
 
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)

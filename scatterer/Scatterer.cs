@@ -55,7 +55,7 @@ namespace scatterer
 		public bool unifiedCameraMode = false;
 		public string versionNumber = "0.0725 dev";
 
-		public TemporalAntiAliasing temporalAA;
+		public List<TemporalAntiAliasing> temporalAAs = new List<TemporalAntiAliasing>();
 
 		void Awake ()
 		{
@@ -99,9 +99,12 @@ namespace scatterer
 						ShaderReplacer.Instance.replaceEVEshaders();
 					}
 				}
+			}
 
-				QualitySettings.antiAliasing = mainSettings.useDepthBufferMode ? 0 : GameSettings.ANTI_ALIASING;
-			} 
+			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+			{
+				QualitySettings.antiAliasing = 0;
+			}
 
 			if (isActive)
 			{
@@ -154,12 +157,30 @@ namespace scatterer
 				}
 			}
 
-			//TODO: change these later to support multiple cameras
-			//TODO: also remove the loadedSceneIsFlight thing
-			if (mainSettings.useDepthBufferMode && HighLogic.LoadedSceneIsFlight)
+			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
 			{
 				if(mainSettings.useTemporalAntiAliasing)
-					temporalAA = nearCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+				{
+					TemporalAntiAliasing nearAA, farAA, scaledAA;
+					nearAA = nearCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+					nearAA.checkOceanDepth = mainSettings.useOceanShaders;
+					temporalAAs.Add(nearAA);
+
+					if (!unifiedCameraMode && farCamera)
+					{
+						farAA = farCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+						farAA.checkOceanDepth = mainSettings.useOceanShaders;
+						temporalAAs.Add(farAA);
+					}
+
+					//doesn't seem to hurt performance more
+					scaledAA = scaledSpaceCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+					scaledAA.jitterTransparencies = true;
+					temporalAAs.Add(scaledAA);
+
+
+					//and IVA camera?
+				}
 				
 				if(mainSettings.mergeDepthPrePass)
 				{
@@ -320,10 +341,13 @@ namespace scatterer
 					Component.Destroy (bufferManager);
 				}
 
-				if (temporalAA)
+				foreach (TemporalAntiAliasing temporalAA in temporalAAs)
 				{
-					temporalAA.Cleanup();
-					Component.Destroy(temporalAA);
+					if (temporalAA)
+					{
+						temporalAA.Cleanup();
+						Component.Destroy(temporalAA);
+					}
 				}
 
 				if (reflectionProbeChecker)
@@ -335,6 +359,11 @@ namespace scatterer
 				if (ReflectionProbeCheckerGO)
 				{
 					UnityEngine.GameObject.Destroy (ReflectionProbeCheckerGO);
+				}
+
+				if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+				{
+					QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
 				}
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
