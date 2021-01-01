@@ -52,7 +52,7 @@ namespace scatterer
 		{
 			targetCamera = GetComponent<Camera> ();
 			originalDepthTextureMode = targetCamera.depthTextureMode;
-			targetCamera.depthTextureMode = DepthTextureMode.MotionVectors;
+			targetCamera.depthTextureMode = DepthTextureMode.Depth | DepthTextureMode.MotionVectors;
 
 			int width, height;
 			

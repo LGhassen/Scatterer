@@ -178,8 +178,8 @@ namespace scatterer
 					scaledAA.jitterTransparencies = true;
 					temporalAAs.Add(scaledAA);
 
-
-					//and IVA camera?
+					//and IVA camera
+					GameEvents.OnCameraChange.Add(AddTAAToInternalCamera);
 				}
 				
 				if(mainSettings.mergeDepthPrePass)
@@ -187,6 +187,7 @@ namespace scatterer
 					Utils.LogInfo("Adding nearDepthPassMerger");
 					nearDepthPassMerger = (DepthPrePassMerger) nearCamera.gameObject.AddComponent<DepthPrePassMerger>();
 				}
+
 			}
 
 			if ((mainSettings.fullLensFlareReplacement) && (HighLogic.LoadedScene != GameScenes.MAINMENU))
@@ -238,6 +239,23 @@ namespace scatterer
 			coreInitiated = true;
 
 			Utils.LogDebug("Core setup done");
+		}
+
+		public void AddTAAToInternalCamera(CameraManager.CameraMode cameraMode)
+		{
+			if (cameraMode == CameraManager.CameraMode.IVA)
+			{
+				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
+				if (!ReferenceEquals(internalCamera,null))
+				{
+					TemporalAntiAliasing internalTAA = internalCamera.GetComponent<TemporalAntiAliasing>();
+					if(ReferenceEquals(internalTAA,null))
+					{
+						internalTAA = internalCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+						temporalAAs.Add(internalTAA);
+					}
+				}
+			}
 		}
 
 		void Update ()
@@ -364,6 +382,8 @@ namespace scatterer
 				if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
 				{
 					QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
+					if (mainSettings.useTemporalAntiAliasing)
+						GameEvents.OnCameraChange.Remove(AddTAAToInternalCamera);
 				}
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
