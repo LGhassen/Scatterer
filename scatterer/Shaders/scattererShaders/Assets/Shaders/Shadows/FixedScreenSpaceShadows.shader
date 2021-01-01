@@ -1,4 +1,4 @@
-﻿// Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
+﻿// This shader is now deprecated as the long distance version is now better in every way without adding a performance hit
 
 // Essentially a modified version of the unity screenSpace shadow collector shader
 // 1) Always use INV_PROJECTION because it offers better precision than the ray method when far/near ratio is very high

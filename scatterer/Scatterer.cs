@@ -428,14 +428,8 @@ namespace scatterer
 				{
 					QualitySettings.shadowProjection = ShadowProjection.StableFit; //way more resistant to jittering
 					GraphicsSettings.SetShaderMode (BuiltinShaderType.ScreenSpaceShadows, BuiltinShaderMode.UseCustom);
-					if ((mainSettings.terrainShadows) && (mainSettings.unifiedCamShadowsDistance > 8000f))
-					{
-						GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/longDistanceScreenSpaceShadows")]);
-					}
-					else
-					{
-						GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/fixedScreenSpaceShadows")]);
-					}
+
+					GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/customScreenSpaceShadows")]);
 				}
 
 				if (mainSettings.shadowsOnOcean)

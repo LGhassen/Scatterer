@@ -1,6 +1,6 @@
 ﻿// Same as fixedScreenSpaceShadows shader but uses the enhanced ray/projection method to calculate accurate position
 // Some other experimentes are kept in this file but no longer used: Including dual-depth method, binary search method, double precision method
-Shader "Scatterer/longDistanceScreenSpaceShadows" {
+Shader "Scatterer/customScreenSpaceShadows" {
 Properties {
     _ShadowMapTexture ("", any) = "" {}
     _ODSWorldTexture("", 2D) = "" {}
