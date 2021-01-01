@@ -23,6 +23,9 @@ namespace scatterer
 		bool pqsEnabledOnScattererPlanet = false;
 		public bool isPQSEnabledOnScattererPlanet{get{return pqsEnabledOnScattererPlanet;}}
 
+		bool customOceanEnabledOnScattererPlanet = false;
+		public bool isCustomOceanEnabledOnScattererPlanet{get{return customOceanEnabledOnScattererPlanet;}}
+
 		public CelestialBody[] CelestialBodies;
 
 		public ScattererCelestialBodiesManager ()
@@ -46,6 +49,7 @@ namespace scatterer
 		{
 			pqsEnabledOnScattererPlanet = false;
 			underwater = false;
+			customOceanEnabledOnScattererPlanet = false;
 
 			foreach (ScattererCelestialBody scattererCelestialBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
@@ -76,7 +80,9 @@ namespace scatterer
 								if (!scattererCelestialBody.m_manager.m_skyNode.inScaledSpace) {
 									pqsEnabledOnScattererPlanet = true;
 								}
-								if (!ReferenceEquals (scattererCelestialBody.m_manager.GetOceanNode (), null) && pqsEnabledOnScattererPlanet) {
+								if (!ReferenceEquals (scattererCelestialBody.m_manager.GetOceanNode (), null) && pqsEnabledOnScattererPlanet)
+								{
+									customOceanEnabledOnScattererPlanet = true;
 									underwater = scattererCelestialBody.m_manager.GetOceanNode ().isUnderwater;
 								}
 							}

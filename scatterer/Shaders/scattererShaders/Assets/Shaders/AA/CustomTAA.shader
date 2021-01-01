@@ -1,4 +1,6 @@
-﻿Shader "Scatterer/TemporalAntialiasing" {
+﻿// Modified TAA shader to not blur out the scatterer ocean
+
+Shader "Scatterer/TemporalAntialiasing" {
 	SubShader {
 		Tags {"Queue" = "Transparent-499" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 
@@ -17,6 +19,8 @@
 			#pragma target 3.0
 			#include "UnityCG.cginc"
 
+			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
+
 			sampler2D _MainTex;
 			float4 _MainTex_TexelSize;
 
@@ -26,6 +30,10 @@
 			float4 _CameraDepthTexture_TexelSize;
 
 			sampler2D _CameraMotionVectorsTexture;
+
+#if defined (CUSTOM_OCEAN_ON)
+			uniform sampler2D ScattererDepthCopy;
+#endif
 
 			float2 _Jitter;
 			float4 _FinalBlendParameters; // x: static, y: dynamic, z: motion amplification
@@ -116,8 +124,6 @@
 
 				float4 color = tex2Dlod(_MainTex, float4(uv,0.0,0.0));
 
-//				return color;
-
 				float4 topLeft = tex2D(_MainTex, (uv - k * 0.5));
 				float4 bottomRight = tex2D(_MainTex, (uv + k * 0.5));
 
@@ -149,6 +155,16 @@
 					_FinalBlendParameters.y, _FinalBlendParameters.x
 				);
 
+#if defined (CUSTOM_OCEAN_ON)
+				float oceanDepth = tex2Dlod(ScattererDepthCopy, float4(uv,0,0));
+				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
+
+				if (oceanDepth != zdepth)
+				{					
+					weight*= 0.35; //seems to be the best of both worlds, still antialiases but doesn't blur the ocean much
+				}
+#endif
+
 				color = lerp(color, history, weight);
 				color = clamp(color, 0.0, HALF_MAX_MINUS1);
 
@@ -159,12 +175,6 @@
 			{
 				float2 uv = i.screenPos.xy / i.screenPos.w;
 
-#if defined (CUSTOM_OCEAN_ON)
-				float zdepth = tex2Dlod(ScattererDepthCopy, float4(uv,0,0));
-#else
-				float zdepth = tex2Dlod(_CameraDepthTexture, float4(uv,0,0));
-#endif
-
 #if SHADER_API_D3D11 || SHADER_API_D3D || SHADER_API_D3D12
 				if (_ProjectionParams.x > 0) {uv.y = 1.0 - uv.y;}
 #endif
@@ -172,9 +182,6 @@
 				float2 motion = tex2Dlod(_CameraMotionVectorsTexture, float4(closest,0.0,0.0)).xy;
 
 				return Solve(motion, uv);
-
-				return float4(1.0,0.0,0.0,1.0);
-
 			}
 			ENDCG
 		}

@@ -154,6 +154,20 @@ namespace scatterer
 				}
 			}
 
+			//TODO: change these later to support multiple cameras
+			//TODO: also remove the loadedSceneIsFlight thing
+			if (mainSettings.useDepthBufferMode && HighLogic.LoadedSceneIsFlight)
+			{
+				if(mainSettings.useTemporalAntiAliasing)
+					temporalAA = nearCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+				
+				if(mainSettings.mergeDepthPrePass)
+				{
+					Utils.LogInfo("Adding nearDepthPassMerger");
+					nearDepthPassMerger = (DepthPrePassMerger) nearCamera.gameObject.AddComponent<DepthPrePassMerger>();
+				}
+			}
+
 			if ((mainSettings.fullLensFlareReplacement) && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 			{
 				sunflareManager = new SunflareManager();
@@ -173,19 +187,6 @@ namespace scatterer
 
 			if (!unifiedCameraMode)
 				shadowFadeRemover = (ShadowRemoveFadeCommandBuffer)nearCamera.gameObject.AddComponent (typeof(ShadowRemoveFadeCommandBuffer));
-
-			//TODO: change these later to support multiple cameras
-			if (mainSettings.useDepthBufferMode)
-			{
-				if(mainSettings.useTemporalAntiAliasing)
-					temporalAA = nearCamera.gameObject.AddComponent<TemporalAntiAliasing>();
-
-				if(mainSettings.mergeDepthPrePass)
-				{
-					Utils.LogInfo("Adding nearDepthPassMerger");
-					nearDepthPassMerger = (DepthPrePassMerger) nearCamera.gameObject.AddComponent<DepthPrePassMerger>();
-				}
-			}
 
 			//magically fix stupid issues when reverting to space center from map view
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)

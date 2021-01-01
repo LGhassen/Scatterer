@@ -20,8 +20,8 @@ namespace scatterer
 	{
 		public float jitterSpread = 0.75f;				//The diameter (in texels) inside which jitter samples are spread. Smaller values result in crisper but more aliased output, while larger values result in more stable, but blurrier, output. Range(0.1f, 1f)
 		public float sharpness = 0.25f;					//Controls the amount of sharpening applied to the color buffer. High values may introduce dark-border artifacts. Range(0f, 3f)
-		public float stationaryBlending = 0.95f;		//The blend coefficient for a stationary fragment. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
-		public float motionBlending = 0.85f;			//The blend coefficient for a fragment with significant motion. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
+		public float stationaryBlending = 0.90f;		//The blend coefficient for a stationary fragment. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
+		public float motionBlending = 0.65f;			//The blend coefficient for a fragment with significant motion. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
 
 		public Vector2 jitter { get; private set; }		// The current jitter amount
 		public int sampleIndex { get; private set; }	// The current sample index
@@ -190,7 +190,9 @@ namespace scatterer
 
 			int activeEye = 0;
 
-			//maybe we can set the ocean params here if we need to not AA the ocean, check instance etc
+			//TODO: move to shader properties
+			//Pass a flag here so it only has to do this if it's a flight camera
+			Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
 
 			int pp = m_HistoryPingPong[activeEye];
 			RenderTexture historyRead  = CheckHistory(++pp % 2, temporalAACommandBuffer);
@@ -207,20 +209,20 @@ namespace scatterer
 			temporalAACommandBuffer.SetGlobalTexture ("_MainTex", historyWrite);
 			temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
 
-			targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+			targetCamera.AddCommandBuffer (CameraEvent.BeforeImageEffects, temporalAACommandBuffer); //this works but doesn't show up in nsight?
 
 			m_ResetHistory = false;
 		}
 
 		public void OnPostRender()
 		{
-			targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+			targetCamera.RemoveCommandBuffer (CameraEvent.BeforeImageEffects, temporalAACommandBuffer);
 		}
 		
 		public void Cleanup()
 		{
 			if (!ReferenceEquals(temporalAACommandBuffer,null))
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeImageEffects, temporalAACommandBuffer);
 
 			screenCopy.Release ();
 
