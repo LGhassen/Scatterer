@@ -365,19 +365,20 @@ namespace scatterer
 					//Godrays tesselation placeholder
 				}
 				Scatterer.Instance.mainSettings.useDepthBufferMode = !GUILayout.Toggle (!Scatterer.Instance.mainSettings.useDepthBufferMode, "Use projector mode (Slower, less compatible but supports MSAA");
-				Scatterer.Instance.mainSettings.useDepthBufferMode = GUILayout.Toggle (Scatterer.Instance.mainSettings.useDepthBufferMode, "Use depth buffer mode (Recommended: Faster, better compatible with Parallax and trees/scatters, disables MSAA)");
+				Scatterer.Instance.mainSettings.useDepthBufferMode = GUILayout.Toggle (Scatterer.Instance.mainSettings.useDepthBufferMode, "Use depth buffer mode (Recommended: Faster, better compatible with Parallax and trees/scatters, disables MSAA in flight/KSC)");
 				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
 				{
-					Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
-					GUILayout.Label ("Antialiasing:");
 					GUILayout.BeginHorizontal ();
-					GUILayout.Label ("\t");
-					GUILayout.BeginVertical ();
 					{
-						Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Use temporal anti-aliasing");
-						//GUILayout.Label ("Use SMAA");
+						GUILayout.Label ("\t");
+						GUILayout.BeginVertical ();
+						{
+							Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
+							Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal anti-aliasing");
+							//GUILayout.Label ("Use SMAA");
+						}
+						GUILayout.EndVertical ();
 					}
-					GUILayout.EndVertical ();
 					GUILayout.EndHorizontal ();
 				}
 			}

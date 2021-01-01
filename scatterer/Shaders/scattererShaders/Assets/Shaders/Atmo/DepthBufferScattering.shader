@@ -155,7 +155,7 @@
 #if defined (GODRAYS_ON)
 				float godrayDepth = 0.0;
 
-				godrayDepth = sampleGodrayDepth(_godrayDepthTexture, float2(uv.x,1.0-uv.y), 1.0);
+				godrayDepth = sampleGodrayDepth(_godrayDepthTexture, uv, 1.0);
 
 				//trying to find the optical depth from the terrain level
 				float muTerrain = dot(normalize(worldPos), normalize(_WorldSpaceCameraPos - absWorldPos));
