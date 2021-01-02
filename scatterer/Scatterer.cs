@@ -87,12 +87,18 @@ namespace scatterer
 
 				guiHandler.Init();
 
+				if (mainSettings.useOceanShaders)
+				{
+					OceanUtils.removeStockOceansIfNotDone();
+				}
+				else
+				{
+					OceanUtils.restoreOceansIfNeeded();
+				}
+
 				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 				{
-					if (mainSettings.useOceanShaders)
-					{
-						OceanUtils.removeStockOceans();
-					}
+
 					
 					if (mainSettings.integrateWithEVEClouds)
 					{

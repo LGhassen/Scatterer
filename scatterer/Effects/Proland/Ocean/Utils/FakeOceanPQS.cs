@@ -10,6 +10,7 @@ namespace scatterer
 	public class FakeOceanPQS : PQSMod
 	{
 		bool coroutineStarted = false;
+		Material originalOceanMaterial;
 
 		IEnumerator StopSphereCoroutine()
 		{
@@ -42,6 +43,13 @@ namespace scatterer
 				this.modEnabled = true;
 				this.order = 0;
 
+				originalOceanMaterial = pqs.surfaceMaterial;
+
+				Material invisibleOceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
+				invisibleOceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
+				invisibleOceanMaterial.SetOverrideTag ("ForceNoShadowCasting", "True");
+				pqs.surfaceMaterial = invisibleOceanMaterial;
+
 				sphere.StopAllCoroutines ();
 				sphere.DeactivateSphere();
 			}
@@ -50,6 +58,8 @@ namespace scatterer
 		public void Remove()
 		{
 			this.StopAllCoroutines ();
+			sphere.surfaceMaterial = originalOceanMaterial;
+
 			gameObject.DestroyGameObject ();
 		}
 	}

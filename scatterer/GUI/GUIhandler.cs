@@ -384,7 +384,7 @@ namespace scatterer
 			}
 			else
 				if (selectedIndividualSettingsTab == IndividualSettingsTabs.Ocean) {
-					Scatterer.Instance.mainSettings.useOceanShaders = GUILayout.Toggle (Scatterer.Instance.mainSettings.useOceanShaders, "Ocean shaders (may require game restart on change)");
+					Scatterer.Instance.mainSettings.useOceanShaders = GUILayout.Toggle (Scatterer.Instance.mainSettings.useOceanShaders, "Ocean shaders");
 					if (Scatterer.Instance.mainSettings.useOceanShaders) {
 						GUILayout.BeginHorizontal ();
 						{
