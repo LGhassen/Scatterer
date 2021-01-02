@@ -28,7 +28,6 @@ namespace scatterer
 
 			Utils.LogInfo ("targetCamera.depthTextureMode " + targetCamera.depthTextureMode.ToString ());
 
-//			if (targetCamera.depthTextureMode == DepthTextureMode.Depth)
 			if (QualitySettings.antiAliasing == 0)
 			{
 				if (targetCamera.depthTextureMode == DepthTextureMode.None)

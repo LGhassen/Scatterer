@@ -21,8 +21,8 @@ Shader "Scatterer/TemporalAntialiasing" {
 
 			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
 
-			sampler2D _MainTex;
-			float4 _MainTex_TexelSize;
+			sampler2D _ScreenColor;
+			float4 _ScreenColor_TexelSize;
 
 			sampler2D _HistoryTex;
 
@@ -119,13 +119,13 @@ Shader "Scatterer/TemporalAntialiasing" {
 
 			float4 Solve(float2 motion, float2 texcoord)
 			{
-				const float2 k = _MainTex_TexelSize.xy;
+				const float2 k = _ScreenColor_TexelSize.xy;
 				float2 uv = texcoord - _Jitter;
 
-				float4 color = tex2Dlod(_MainTex, float4(uv,0.0,0.0));
+				float4 color = tex2Dlod(_ScreenColor, float4(uv,0.0,0.0));
 
-				float4 topLeft = tex2D(_MainTex, (uv - k * 0.5));
-				float4 bottomRight = tex2D(_MainTex, (uv + k * 0.5));
+				float4 topLeft = tex2D(_ScreenColor, (uv - k * 0.5));
+				float4 bottomRight = tex2D(_ScreenColor, (uv + k * 0.5));
 
 				float4 corners = 4.0 * (topLeft + bottomRight) - 2.0 * color;
 

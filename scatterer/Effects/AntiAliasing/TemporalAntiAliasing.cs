@@ -20,8 +20,9 @@ namespace scatterer
 	{
 		public float jitterSpread = 0.75f;				//The diameter (in texels) inside which jitter samples are spread. Smaller values result in crisper but more aliased output, while larger values result in more stable, but blurrier, output. Range(0.1f, 1f)
 		public float sharpness = 0.25f;					//Controls the amount of sharpening applied to the color buffer. High values may introduce dark-border artifacts. Range(0f, 3f)
+//		public float stationaryBlending = 0.95f;		//The blend coefficient for a stationary fragment. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
 		public float stationaryBlending = 0.90f;		//The blend coefficient for a stationary fragment. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
-		public float motionBlending = 0.65f;			//The blend coefficient for a fragment with significant motion. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
+		public float motionBlending = 0.45f;			//The blend coefficient for a fragment with significant motion. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
 
 		public Vector2 jitter { get; private set; }		// The current jitter amount
 		public int sampleIndex { get; private set; }	// The current sample index
@@ -36,7 +37,6 @@ namespace scatterer
 		// Ping-pong between two history textures as we can't read & write the same target in the same pass
 		const int k_NumEyes = 1; const int k_NumHistoryTextures = 2;
 		RenderTexture[][] m_HistoryTextures = new RenderTexture[k_NumEyes][];
-		RenderTexture screenCopy;
 		
 		int[] m_HistoryPingPong = new int [k_NumEyes];
 
@@ -51,29 +51,11 @@ namespace scatterer
 		public TemporalAntiAliasing()
 		{
 			targetCamera = GetComponent<Camera> ();
+
 			originalDepthTextureMode = targetCamera.depthTextureMode;
 			targetCamera.depthTextureMode = DepthTextureMode.Depth | DepthTextureMode.MotionVectors;
 
-			int width, height;
-			
-			if (!ReferenceEquals (targetCamera.activeTexture, null))
-			{
-				width = targetCamera.activeTexture.width;
-				height = targetCamera.activeTexture.height;
-			}
-			else
-			{
-				width = Screen.width;
-				height = Screen.height;
-			}
-
-			screenCopy = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
-			screenCopy.anisoLevel = 1;
-			screenCopy.antiAliasing = 1;
-			screenCopy.volumeDepth = 0;
-			screenCopy.useMipMap = false;
-			screenCopy.autoGenerateMips = false;
-			screenCopy.Create ();
+			targetCamera.forceIntoRenderTexture = true;
 
 			temporalAAMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/TemporalAntialiasing")]);
 			Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", false);
@@ -174,7 +156,20 @@ namespace scatterer
 			{
 				RenderTexture.ReleaseTemporary(rt);
 
-				rt = RenderTexture.GetTemporary (screenCopy.width, screenCopy.height, 0, RenderTextureFormat.ARGB32);
+				int width, height;
+				
+				if (!ReferenceEquals (targetCamera.activeTexture, null))
+				{
+					width = targetCamera.activeTexture.width;
+					height = targetCamera.activeTexture.height;
+				}
+				else
+				{
+					width = Screen.width;
+					height = Screen.height;
+				}
+
+				rt = RenderTexture.GetTemporary (width, height, 0, RenderTextureFormat.ARGB32);
 
 				GenerateHistoryName(rt, id);
 				
@@ -209,30 +204,27 @@ namespace scatterer
 						
 			int pass = (int)Pass.SolverDilate;
 
-			temporalAACommandBuffer.SetGlobalTexture ("_MainTex", new RenderTargetIdentifier (BuiltinRenderTextureType.CameraTarget));
-			temporalAACommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, historyWrite, temporalAAMaterial, pass);
-			
-			temporalAACommandBuffer.SetGlobalTexture ("_MainTex", historyWrite);
+			temporalAACommandBuffer.SetGlobalTexture ("_ScreenColor", BuiltinRenderTextureType.CameraTarget);
+			temporalAACommandBuffer.Blit (null, historyWrite, temporalAAMaterial, pass);
+
 			temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
 
-			targetCamera.AddCommandBuffer (CameraEvent.BeforeImageEffects, temporalAACommandBuffer); //this works but doesn't show up in nsight?
+			targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer); // BeforeImageEffects doesn't work well
 
 			m_ResetHistory = false;
 		}
 
 		public void OnPostRender()
 		{
-			targetCamera.RemoveCommandBuffer (CameraEvent.BeforeImageEffects, temporalAACommandBuffer);
+			targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
 		}
 		
 		public void Cleanup()
 		{
 			if (!ReferenceEquals(temporalAACommandBuffer,null))
-				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeImageEffects, temporalAACommandBuffer);
+				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
 
 			targetCamera.depthTextureMode = originalDepthTextureMode;
-
-			screenCopy.Release ();
 
 			if (m_HistoryTextures != null)
 			{
