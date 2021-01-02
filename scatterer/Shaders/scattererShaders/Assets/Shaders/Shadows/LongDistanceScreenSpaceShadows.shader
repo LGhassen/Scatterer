@@ -145,6 +145,13 @@ inline float3 computeCameraSpacePosFromDepthAndVSInfoDoublePrecision(v2f i)
 inline float3 computeCameraSpacePosFromLinearDepthAndInvProjMat(v2f i)
 {
 	float zdepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv.xy);
+
+#if SHADER_API_D3D11 || SHADER_API_D3D || SHADER_API_D3D12
+	if (zdepth == 0.0) {discard;}
+#else
+	if (zdepth == 1.0) {discard;}
+#endif
+
 	float depth = Linear01Depth(zdepth);
 
 	//float3 rayDirection = normalize(i.ray); //this ray is imprecise and can't be trusted
