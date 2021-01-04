@@ -181,14 +181,15 @@ fixed4 frag_pcfSoft(v2f i) : SV_Target
     fixed4 cascadeWeights = GET_CASCADE_WEIGHTS(wpos, vpos.z);
     float4 coord = GET_SHADOW_COORDINATES(wpos, cascadeWeights);
     	
-//    float zdepth2 = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv.xy);
-//    float3 receiverPlaneDepthBias = float3(0.0,0.0,0.5*Linear01Depth(zdepth2));	//my best or worst hack yet?
-//											//seems to fix all issues, no peter-panning either
-//											//perfect for 5000 shadowDistance
-//											//Holds up to 8000-9000 shadow distance and gets swimmy after
-											//No longer needed with new depth reconstruction method
+    float zdepth2 = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv.xy);
 
-	float3 receiverPlaneDepthBias = float3(0.0,0.0,0.0);
+
+//    float3 receiverPlaneDepthBias = float3(0.0,0.0,0.5*Linear01Depth(zdepth2));	//my best or worst hack yet?
+											//seems to fix all issues, no peter-panning either
+											//perfect for 5000 shadowDistance
+											//Holds up to 8000-9000 shadow distance and gets swimmy after
+
+     float3 receiverPlaneDepthBias = float3(0.0,0.0,2.0 * Linear01Depth(zdepth2));	//With the new hybrid reconstruction method this isn't needed anymore but what Parallax renders to depth buffer is slightly offset so use agressive bias
 
 #ifdef UNITY_USE_RECEIVER_PLANE_BIAS
     // Reveiver plane depth bias: need to calculate it based on shadow coordinate

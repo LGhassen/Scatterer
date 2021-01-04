@@ -109,7 +109,7 @@ inline float3 computeEnhancedCameraSpacePosFromDepthAndInvProjMat(v2f i)
 }
 
 //after implementing this it seems like this isn't even the source of the issue, but rather the ray direction that unity passes, good job unity wtf
-inline float Linear01DepthDoublePrecision( float z )
+inline float2 Linear01DepthDoublePrecision( float z )
 {
 	//return 1.0 / (_ZBufferParams.x * z + _ZBufferParams.y);
 
@@ -118,7 +118,7 @@ inline float Linear01DepthDoublePrecision( float z )
 
 	float2 doubleResultLower = ds_add(doubleZBufferParamsY, doubleWhateverElse);
 	float2 doubleResult = ds_div(ds_set(1.0), doubleResultLower);
-	return doubleResult.x;
+	return doubleResult;
 }
 
 //This is the same ray method but calculations are done in emulated double precision
