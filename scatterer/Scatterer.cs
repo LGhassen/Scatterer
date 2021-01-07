@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0725")]
+[assembly:AssemblyVersion("0.0750")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -53,9 +53,9 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0725 dev";
+		public string versionNumber = "0.0750 dev";
 
-		public List<TemporalAntiAliasing> temporalAAs = new List<TemporalAntiAliasing>();
+		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
 		void Awake ()
 		{
@@ -165,27 +165,49 @@ namespace scatterer
 
 			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
 			{
-				if(mainSettings.useTemporalAntiAliasing)
+				if(mainSettings.useSubpixelMorphologicalAntialiasing)
+				{
+					SubpixelMorphologicalAntialiasing nearAA, farAA, scaledAA;
+					nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+					nearAA.quality = (SubpixelMorphologicalAntialiasing.Quality) mainSettings.smaaQuality;
+					antiAliasingScripts.Add(nearAA);
+					
+					if (!unifiedCameraMode && farCamera)
+					{
+						farAA = farCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+						farAA.quality = (SubpixelMorphologicalAntialiasing.Quality) mainSettings.smaaQuality;
+						antiAliasingScripts.Add(farAA);
+					}
+
+					scaledAA = scaledSpaceCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+					scaledAA.quality = (SubpixelMorphologicalAntialiasing.Quality) mainSettings.smaaQuality;
+					antiAliasingScripts.Add(scaledAA);
+					
+					//and IVA camera
+					GameEvents.OnCameraChange.Add(AddSMAAToInternalCamera);
+				}
+				else if(mainSettings.useTemporalAntiAliasing)
 				{
 					TemporalAntiAliasing nearAA, farAA, scaledAA;
+
 					nearAA = nearCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 					nearAA.checkOceanDepth = mainSettings.useOceanShaders;
-					temporalAAs.Add(nearAA);
+					antiAliasingScripts.Add(nearAA);
 
 					if (!unifiedCameraMode && farCamera)
 					{
 						farAA = farCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 						farAA.checkOceanDepth = mainSettings.useOceanShaders;
-						temporalAAs.Add(farAA);
+						antiAliasingScripts.Add(farAA);
 					}
 
 					//doesn't seem to hurt performance more
 					scaledAA = scaledSpaceCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 					scaledAA.jitterTransparencies = true;
-					temporalAAs.Add(scaledAA);
+					antiAliasingScripts.Add(scaledAA);
 
 					//and IVA camera
-					GameEvents.OnCameraChange.Add(AddTAAToInternalCamera);
+					GameEvents.OnCameraChange.Add(AddAAToInternalCamera);
 				}
 				
 				if(mainSettings.mergeDepthPrePass)
@@ -193,7 +215,6 @@ namespace scatterer
 					Utils.LogInfo("Adding nearDepthPassMerger");
 					nearDepthPassMerger = (DepthPrePassMerger) nearCamera.gameObject.AddComponent<DepthPrePassMerger>();
 				}
-
 			}
 
 			if ((mainSettings.fullLensFlareReplacement) && (HighLogic.LoadedScene != GameScenes.MAINMENU))
@@ -245,23 +266,6 @@ namespace scatterer
 			coreInitiated = true;
 
 			Utils.LogDebug("Core setup done");
-		}
-
-		public void AddTAAToInternalCamera(CameraManager.CameraMode cameraMode)
-		{
-			if (cameraMode == CameraManager.CameraMode.IVA)
-			{
-				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
-				if (!ReferenceEquals(internalCamera,null))
-				{
-					TemporalAntiAliasing internalTAA = internalCamera.GetComponent<TemporalAntiAliasing>();
-					if(ReferenceEquals(internalTAA,null))
-					{
-						internalTAA = internalCamera.gameObject.AddComponent<TemporalAntiAliasing>();
-						temporalAAs.Add(internalTAA);
-					}
-				}
-			}
 		}
 
 		void Update ()
@@ -365,7 +369,7 @@ namespace scatterer
 					Component.Destroy (bufferManager);
 				}
 
-				foreach (TemporalAntiAliasing temporalAA in temporalAAs)
+				foreach (SubpixelMorphologicalAntialiasing temporalAA in antiAliasingScripts)
 				{
 					if (temporalAA)
 					{
@@ -385,11 +389,17 @@ namespace scatterer
 					UnityEngine.GameObject.Destroy (ReflectionProbeCheckerGO);
 				}
 
-				if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+				if (mainSettings.useDepthBufferMode)
 				{
 					QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
-					if (mainSettings.useTemporalAntiAliasing)
-						GameEvents.OnCameraChange.Remove(AddTAAToInternalCamera);
+
+					if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+					{
+						if(mainSettings.useSubpixelMorphologicalAntialiasing)
+							GameEvents.OnCameraChange.Remove(AddSMAAToInternalCamera);
+						else if (mainSettings.useTemporalAntiAliasing)
+							GameEvents.OnCameraChange.Remove(AddAAToInternalCamera);
+					}
 				}
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
@@ -605,6 +615,43 @@ namespace scatterer
 			_mr.receiveShadows = false;
 			_mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			_mr.enabled = true;
+		}
+
+		
+		public void AddAAToInternalCamera(CameraManager.CameraMode cameraMode)
+		{
+			if (cameraMode == CameraManager.CameraMode.IVA)
+			{
+				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
+				if (!ReferenceEquals(internalCamera,null))
+				{
+					TemporalAntiAliasing internalTAA = internalCamera.GetComponent<TemporalAntiAliasing>();
+					if(ReferenceEquals(internalTAA,null))
+					{
+						internalTAA = internalCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+						antiAliasingScripts.Add(internalTAA);
+					}
+				}
+			}
+		}
+
+		
+		public void AddSMAAToInternalCamera(CameraManager.CameraMode cameraMode)
+		{
+			if (cameraMode == CameraManager.CameraMode.IVA)
+			{
+				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
+				if (!ReferenceEquals(internalCamera,null))
+				{
+					SubpixelMorphologicalAntialiasing internalSMAA = internalCamera.GetComponent<SubpixelMorphologicalAntialiasing>();
+					if(ReferenceEquals(internalSMAA,null))
+					{
+						internalSMAA = internalCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+						internalSMAA.quality = (SubpixelMorphologicalAntialiasing.Quality) mainSettings.smaaQuality;
+						antiAliasingScripts.Add(internalSMAA);
+					}
+				}
+			}
 		}
 
 	}

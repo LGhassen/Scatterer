@@ -18,6 +18,7 @@ namespace scatterer
 		private static ShaderReplacer instance;
 		public Dictionary<string, Shader> LoadedShaders = new Dictionary<string, Shader>();
 		public Dictionary<string, ComputeShader> LoadedComputeShaders = new Dictionary<string, ComputeShader>();
+		public Dictionary<string, Texture> LoadedTextures = new Dictionary<string, Texture>();
 		string path;
 
 		Dictionary<string, Shader> EVEshaderDictionary;
@@ -88,7 +89,14 @@ namespace scatterer
 					//Utils.LogInfo ("Compute shader "+computeShader.name+" loaded.");
 					LoadedComputeShaders.Add(computeShader.name, computeShader);
 				}
-				
+
+				Texture[] textures = bundle.LoadAllAssets<Texture>();
+
+				foreach (Texture texture in textures)
+				{
+					LoadedTextures.Add(texture.name, texture);
+				}
+
 				bundle.Unload(false); // unload the raw asset bundle
 				www.Dispose();
 			}

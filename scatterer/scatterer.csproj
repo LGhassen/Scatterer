@@ -193,6 +193,9 @@
     <Compile Include="Utilities\Camera\DepthPrePassMerger.cs" />
     <Compile Include="Effects\AntiAliasing\Utils\HaltonSeq.cs" />
     <Compile Include="Effects\AntiAliasing\TemporalAntiAliasing.cs" />
+    <Compile Include="Utilities\Light\ShadowModifier.cs" />
+    <Compile Include="Effects\AntiAliasing\SubpixelMorphologicalAntialiasing.cs" />
+    <Compile Include="Effects\AntiAliasing\GenericAntiAliasing.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

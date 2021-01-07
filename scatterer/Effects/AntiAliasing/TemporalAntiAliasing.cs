@@ -13,10 +13,11 @@ using UnityEngine.Rendering;
 
 namespace scatterer
 {
+	// Not recommended in KSP, setting a custom camera projection matrix in Unity causes shadowmaps to flicker with high far/near clipplanes ratio
 	// Temporal anti-aliasing from Unity post-processing stack V2
-	// To be modified to not blur the ocean, removed dependency on other postprocessing classes I don't need here so we can initialize and make everything work by just adding this to a camera
+	// Modified to not blur the ocean, removed dependency on other postprocessing classes I don't need here so we can initialize and make everything work by just adding this to a camera
 	// Generating motion vectors for the ocean is both expensive and unnecessary so we should just not apply TAA on the ocean, otherwise it would just blur it without proper motion vectors
-	public class TemporalAntiAliasing : MonoBehaviour
+	public class TemporalAntiAliasing : GenericAntiAliasing
 	{
 		public float jitterSpread = 0.75f;				//The diameter (in texels) inside which jitter samples are spread. Smaller values result in crisper but more aliased output, while larger values result in more stable, but blurrier, output. Range(0.1f, 1f)
 		public float sharpness = 0.25f;					//Controls the amount of sharpening applied to the color buffer. High values may introduce dark-border artifacts. Range(0f, 3f)
@@ -219,7 +220,7 @@ namespace scatterer
 			targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
 		}
 		
-		public void Cleanup()
+		public override void Cleanup()
 		{
 			if (!ReferenceEquals(temporalAACommandBuffer,null))
 				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);

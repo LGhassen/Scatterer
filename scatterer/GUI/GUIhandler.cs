@@ -374,8 +374,18 @@ namespace scatterer
 						GUILayout.BeginVertical ();
 						{
 							Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
-							Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal anti-aliasing");
-							//GUILayout.Label ("Use SMAA");
+							Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing, "Subpixel Morphological Antialiasing (SMAA, recommended)")  && !Scatterer.Instance.mainSettings.useTemporalAntiAliasing;
+							if (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing)
+							{
+								GUILayout.BeginHorizontal ();
+								{
+									GUILayout.Label ("SMAA quality (0:fast,1:medium,2:high)");
+									Scatterer.Instance.mainSettings.smaaQuality = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.smaaQuality.ToString ()))),0f,2f);
+								}
+								GUILayout.EndHorizontal ();
+							}
+
+							Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal Antialiasing (Not recommended, causes shadow flickering from some angles)") && !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
 						}
 						GUILayout.EndVertical ();
 					}
