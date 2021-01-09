@@ -219,7 +219,7 @@ namespace scatterer
 					
 					if (editingSunflare)
 					{
-						sunflareScrollPosition = GUILayout.BeginScrollView(sunflareScrollPosition, false, true, GUILayout.MinHeight(300));				
+						sunflareScrollPosition = GUILayout.BeginScrollView(sunflareScrollPosition, false, true, GUILayout.MinHeight(Scatterer.Instance.pluginData.scrollSectionHeight + 100));
 						sunflareText = GUILayout.TextArea(sunflareText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 						GUILayout.EndScrollView();
 						
@@ -233,8 +233,9 @@ namespace scatterer
 						if (GUILayout.Button("Apply"))
 						{
 							ConfigNode node = ConfigNode.Parse(sunflareText);
-							//need a way to handle syntaxV1 and syntaxV2
-							//Scatterer.Instance.sunflareManager.scattererSunFlares [selSunflareGridInt].ApplyFromUI(node);
+							Utils.LogInfo("Applying sunflare config from UI:\r\n"+sunflareText);
+							Scatterer.Instance.sunflareManager.scattererSunFlares [selSunflareGridInt].ApplyFromUI(node.GetNode("Sun"));
+
 						}
 						
 						if (GUILayout.Button("Copy to clipboard"))

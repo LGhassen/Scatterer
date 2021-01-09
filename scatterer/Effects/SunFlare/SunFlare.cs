@@ -19,7 +19,7 @@ using KSP.IO;
 namespace scatterer
 {
 	public class SunFlare : MonoBehaviour
-	{	
+	{
 		public ConfigNode configNodeToLoad;
 
 		public Material sunglareMaterial;
@@ -72,7 +72,7 @@ namespace scatterer
 				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 					sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferManager.depthTexture);
 				else
-					sunglareMaterial.SetTexture ("_customDepthTexture", Texture2D.whiteTexture);
+					sunglareMaterial.SetTexture ("_customDepthTexture", Texture2D.whiteTexture);	//keep this in mind for when doing multiple points check and ditching raycast
 			}
 
 			sunglareMaterial.renderQueue = 3100;
@@ -118,16 +118,22 @@ namespace scatterer
 				nearCameraHook.useDbufferOnCamera = 1f;
 			}
 
+			ApplySunflareConfig ();
+
+			Utils.LogDebug ("Added custom sun flare for "+sourceName);
+
+		}
+
+		void ApplySunflareConfig ()
+		{
 			if (syntaxVersion == 1)
 			{
-
 				//Size is loaded automatically from the files
 				sunSpikes = new Texture2D (1, 1);
 				sunFlare = new Texture2D (1, 1);
 				sunGhost1 = new Texture2D (1, 1);
 				sunGhost2 = new Texture2D (1, 1);
 				sunGhost3 = new Texture2D (1, 1);
-			
 				sunSpikes.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunSpikes.png")));
 				sunSpikes.wrapMode = TextureWrapMode.Clamp;
 				sunFlare.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunFlare.png")));
@@ -138,71 +144,56 @@ namespace scatterer
 				sunGhost2.wrapMode = TextureWrapMode.Clamp;
 				sunGhost3.LoadImage (System.IO.File.ReadAllBytes (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost3.png")));
 				sunGhost3.wrapMode = TextureWrapMode.Clamp;
-			
 				//			sunglareMaterial.SetTexture ("_Sun_Glare", sunGlare);
 				sunglareMaterial.SetTexture ("sunSpikes", sunSpikes);
 				sunglareMaterial.SetTexture ("sunFlare", sunFlare);
 				sunglareMaterial.SetTexture ("sunGhost1", sunGhost1);
 				sunglareMaterial.SetTexture ("sunGhost2", sunGhost2);
 				sunglareMaterial.SetTexture ("sunGhost3", sunGhost3);
-			
 				//didn't want to serialize the matrices directly as the result is pretty unreadable
 				//sorry about the mess, I'll make a cleaner way later
 				//ghost 1
 				Matrix4x4 ghost1Settings1 = Matrix4x4.zero;
-				for (int i=0; i<settingsV1.ghost1SettingsList1.Count; i++) {
+				for (int i = 0; i < settingsV1.ghost1SettingsList1.Count; i++) {
 					ghost1Settings1.SetRow (i, settingsV1.ghost1SettingsList1 [i]);
 				}
 				Matrix4x4 ghost1Settings2 = Matrix4x4.zero;
-				for (int i=0; i<settingsV1.ghost1SettingsList2.Count; i++) {
+				for (int i = 0; i < settingsV1.ghost1SettingsList2.Count; i++) {
 					ghost1Settings2.SetRow (i, settingsV1.ghost1SettingsList2 [i]);
 				}
-			
 				//ghost 2
 				Matrix4x4 ghost2Settings1 = Matrix4x4.zero;
-				for (int i=0; i<settingsV1.ghost2SettingsList1.Count; i++) {
+				for (int i = 0; i < settingsV1.ghost2SettingsList1.Count; i++) {
 					ghost2Settings1.SetRow (i, settingsV1.ghost2SettingsList1 [i]);
 				}
 				Matrix4x4 ghost2Settings2 = Matrix4x4.zero;
-				for (int i=0; i<settingsV1.ghost2SettingsList2.Count; i++) {
+				for (int i = 0; i < settingsV1.ghost2SettingsList2.Count; i++) {
 					ghost2Settings2.SetRow (i, settingsV1.ghost2SettingsList2 [i]);
 				}
-			
 				//ghost 3
 				Matrix4x4 ghost3Settings1 = Matrix4x4.zero;
-				for (int i=0; i<settingsV1.ghost3SettingsList1.Count; i++) {
+				for (int i = 0; i < settingsV1.ghost3SettingsList1.Count; i++) {
 					ghost3Settings1.SetRow (i, settingsV1.ghost3SettingsList1 [i]);
 				}
 				Matrix4x4 ghost3Settings2 = Matrix4x4.zero;
-				for (int i=0; i<settingsV1.ghost3SettingsList2.Count; i++) {
+				for (int i = 0; i < settingsV1.ghost3SettingsList2.Count; i++) {
 					ghost3Settings2.SetRow (i, settingsV1.ghost3SettingsList2 [i]);
 				}
-			
 				extinctionTexture = new RenderTexture (4, 4, 0, RenderTextureFormat.ARGB32);
 				extinctionTexture.antiAliasing = 1;
 				extinctionTexture.filterMode = FilterMode.Point;
 				extinctionTexture.Create ();
-			
 				sunglareMaterial.SetVector ("flareSettings", settingsV1.flareSettings);
 				sunglareMaterial.SetVector ("spikesSettings", settingsV1.spikesSettings);
-			
 				sunglareMaterial.SetMatrix ("ghost1Settings1", ghost1Settings1);
 				sunglareMaterial.SetMatrix ("ghost1Settings2", ghost1Settings2);
-			
 				sunglareMaterial.SetMatrix ("ghost2Settings1", ghost2Settings1);
 				sunglareMaterial.SetMatrix ("ghost2Settings2", ghost2Settings2);
-			
 				sunglareMaterial.SetMatrix ("ghost3Settings1", ghost3Settings1);
 				sunglareMaterial.SetMatrix ("ghost3Settings2", ghost3Settings2);
-			
 				sunglareMaterial.SetTexture ("extinctionTexture", extinctionTexture);
-			
 				sunglareMaterial.SetVector ("flareColor", settingsV1.flareColor);
-
 			}
-
-			Utils.LogDebug ("Added custom sun flare for "+sourceName);
-
 		}
 
 		public void updateProperties()
@@ -330,6 +321,13 @@ namespace scatterer
 			}
 		}
 
+		public void Configure(CelestialBody source, string sourceName, Transform sourceScaledTransform)
+		{
+			this.source = source;
+			this.sourceName = sourceName;
+			this.sourceScaledTransform = sourceScaledTransform;
+		}
+
 		public void LoadSettings ()
 		{
 			configNodeToLoad = new ConfigNode ();
@@ -342,15 +340,23 @@ namespace scatterer
 				}
 			}
 
-			if (configNodeToLoad.HasValue ("syntaxVersion"))
+			//if !configNodeToLoad
+			//TODO: handle not found sunflare config case
+
+			LoadSettingsFromConfigNode (configNodeToLoad);
+		}
+
+		void LoadSettingsFromConfigNode (ConfigNode node)
+		{
+			if (node.HasValue ("syntaxVersion"))
 			{
-				if (configNodeToLoad.TryGetValue("syntaxVersion", ref syntaxVersion) && ((syntaxVersion == 1) || (syntaxVersion == 2)))
+				if (node.TryGetValue ("syntaxVersion", ref syntaxVersion) && ((syntaxVersion == 1) || (syntaxVersion == 2)))
 				{
 					Utils.LogDebug ("Sunflare syntax version: " + syntaxVersion.ToString ());
 				}
 				else
 				{
-					Utils.LogDebug ("Invalid sunflare syntax version found: "+ configNodeToLoad.GetValue ("syntaxVersion") +", defaulting to version 1 for retro-compatibility");
+					Utils.LogDebug ("Invalid sunflare syntax version found: " + node.GetValue ("syntaxVersion") + ", defaulting to version 1 for retro-compatibility");
 					syntaxVersion = 1;
 				}
 			}
@@ -359,31 +365,26 @@ namespace scatterer
 				Utils.LogDebug ("No sunflare syntax version found, defaulting to version 1 for retro-compatibility");
 				syntaxVersion = 1;
 			}
-
 			if (syntaxVersion == 1)
 			{
-				settingsV1 = new SunflareSettingsV1();
-				ConfigNode.LoadObjectFromConfig (settingsV1, configNodeToLoad);
+				settingsV1 = new SunflareSettingsV1 ();
+				ConfigNode.LoadObjectFromConfig (settingsV1, node);
+
 			}
 			else
 			{
-				settingsV2 = new SunflareSettingsV2();
-				ConfigNode.LoadObjectFromConfig (settingsV2, configNodeToLoad);
+				settingsV2 = new SunflareSettingsV2 ();
+				ConfigNode.LoadObjectFromConfig (settingsV2, node);
 			}
-
-
 		}
 
-		public void Configure(CelestialBody source, string sourceName, Transform sourceScaledTransform)
+
+
+		public void ApplyFromUI(ConfigNode node)
 		{
-			this.source = source;
-			this.sourceName = sourceName;
-			this.sourceScaledTransform = sourceScaledTransform;
+			LoadSettingsFromConfigNode (node);
+			configNodeToLoad = node;
+			ApplySunflareConfig ();
 		}
-
-//		public void ApplyFromUI()
-//		{
-//
-//		}
 	}
 }
