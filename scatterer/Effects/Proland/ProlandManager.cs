@@ -27,7 +27,7 @@ namespace scatterer
 		
 		public double m_radius = 600000.0f;
 		
-		OceanWhiteCaps m_oceanNode;
+		OceanFFTgpu m_oceanNode;
 		public SkyNode m_skyNode;
 
 		public Color sunColor;
@@ -147,7 +147,11 @@ namespace scatterer
 				m_skyNode.Init ();
 				if (hasOcean && Scatterer.Instance.mainSettings.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 				{
-					m_oceanNode = (OceanWhiteCaps)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(OceanWhiteCaps));
+					if (Scatterer.Instance.mainSettings.oceanFoam)
+						m_oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
+					else
+						m_oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanFFTgpu));
+
 					m_oceanNode.Init (this);
 				}
 			}
@@ -188,7 +192,11 @@ namespace scatterer
 				Component.Destroy(m_oceanNode);
 				UnityEngine.Object.Destroy(m_oceanNode);
 
-				m_oceanNode = (OceanWhiteCaps) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(OceanWhiteCaps));
+				if (Scatterer.Instance.mainSettings.oceanFoam)
+					m_oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
+				else
+					m_oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanFFTgpu));
+
 				m_oceanNode.Init(this);
 
 				Utils.LogDebug("Rebuilt Ocean");
@@ -214,7 +222,7 @@ namespace scatterer
 			return m_radius;
 		}
 
-		public OceanWhiteCaps GetOceanNode() {
+		public OceanFFTgpu GetOceanNode() {
 			return m_oceanNode;
 		}
 		

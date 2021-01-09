@@ -30,6 +30,12 @@ namespace scatterer
 		public bool useOceanShaders = true;
 
 		[Persistent]
+		public bool oceanFoam = true;
+
+		[Persistent]
+		public bool oceanTransparencyAndRefractions = true;
+
+		[Persistent]
 		public bool shadowsOnOcean = true;
 		
 		[Persistent]
@@ -195,6 +201,9 @@ namespace scatterer
 				 OldConfig.overrideNearClipPlane != overrideNearClipPlane ||
 				 OldConfig.nearClipPlane != nearClipPlane ||
 				 OldConfig.useOceanShaders != useOceanShaders ||
+				 OldConfig.oceanFoam != oceanFoam ||
+				 OldConfig.oceanTransparencyAndRefractions != oceanTransparencyAndRefractions ||
+
 				 OldConfig.shadowsOnOcean != shadowsOnOcean ||
 				 OldConfig.oceanSkyReflections != oceanSkyReflections ||
 				 OldConfig.oceanCaustics != oceanCaustics ||

@@ -101,6 +101,7 @@
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 			#pragma multi_compile DEPTH_BUFFER_MODE_OFF DEPTH_BUFFER_MODE_ON
+			#pragma multi_compile FOAM_OFF FOAM_ON
 			//#pragma multi_compile SCATTERING_ON SCATTERING_OFF
 
 			#include "../CommonAtmosphere.cginc"
@@ -179,7 +180,7 @@
 
 			struct v2f 
 			{
-				//float4 pos : SV_POSITION;
+				float4 pos : SV_POSITION;
 				float2 oceanU	: TEXCOORD0;
 				float3 oceanP	: TEXCOORD1;
 				float4 screenPos: TEXCOORD2;
@@ -189,7 +190,7 @@
 				float3 skyE	: TEXCOORD6;
 			};
 
-			v2f vert(appdata_base v, out float4 outpos: SV_POSITION)
+			v2f vert(appdata_base v)
 			{
 				float t;
 				float3 cameraDir, oceanDir;
@@ -228,21 +229,21 @@
 				float4 screenP = float4(t * cameraDir + mul(otoc, dP), 1.0);   //position in camera space
 				float3 oceanP = t * oceanDir + dP + float3(0.0, 0.0, _Ocean_CameraPos.z);
 
-				outpos = mul(UNITY_MATRIX_P, screenP);
+				OUT.pos = mul(UNITY_MATRIX_P, screenP);
 
-				#if defined (DEPTH_BUFFER_MODE_ON)
-				outpos.y =  (_ProjectionParams.x < 0.0 ) ? -outpos.y : outpos.y;
-				#endif
 
 				OUT.oceanU = u;
 				OUT.oceanP = oceanP;
 
-				OUT.screenPos = ComputeScreenPos(outpos);
+				OUT.screenPos = ComputeScreenPos(OUT.pos);
 				OUT.worldPos=mul(_Globals_CameraToWorld , screenP);
 
 				OUT.viewPos = screenP;
-
-				outpos	= (_PlanetOpacity == 0.0) ? float4(2.0, 2.0, 2.0, 1.0) : outpos; //cull when completely transparent
+				#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
+				OUT.pos	= (_PlanetOpacity == 0.0) ? float4(2.0, 2.0, 2.0, 1.0) : OUT.pos;		//cull when completely transparent
+				#else
+				OUT.pos = lerp(float4(2.0, 2.0, 2.0, 1.0), OUT.pos, step(0.001,_PlanetOpacity));	//stupid opengl
+				#endif
 
 				float3 earthP = normalize(oceanP + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
 
@@ -254,7 +255,7 @@
 				return OUT;
 			}
 
-			float4 frag(v2f IN, UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
+			float4 frag(v2f IN) : SV_Target
 			{
 				float2 u = IN.oceanU;
 				float3 oceanP = IN.oceanP;
@@ -288,6 +289,7 @@
 
 				sigmaSq = max(sigmaSq, 2e-5);
 
+				#if defined (FOAM_ON)
 				// extract mean and variance of the jacobian matrix determinant
 				float2 jm1 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.x).xy;
 				float2 jm2 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.y).zw;
@@ -296,6 +298,7 @@
 
 				float2 jm  = jm1+jm2+jm3+jm4;
 				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
+				#endif
 
 				float3 earthP = normalize(oceanP + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
 
@@ -317,10 +320,9 @@
 				float fragDistance, depth;
 				float2 uv = IN.screenPos.xy / IN.screenPos.w;
 
-				#if defined (DEPTH_BUFFER_MODE_OFF)
+				#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
 				uv.y = 1.0 - uv.y;
 				#endif
-
 				uv = getPerturbedUVsAndDepth(uv, N, oceanDistance, fragDistance, depth);
 
 				_Ocean_WhiteCapStr = adjustWhiteCapStrengthWithDepth(_Ocean_WhiteCapStr, shoreFoam, depth);
@@ -328,8 +330,12 @@
 				#else
 				float transparencyAlpha=1.0;
 				#endif
+
+				float3 R_ftot = float3(0.0,0.0,0.0);
+#if defined (FOAM_ON)
 				float outWhiteCapStr=applyFarWhiteCapStrength(oceanDistance, alphaRadius, _Ocean_WhiteCapStr, farWhiteCapStr);
-				float3 R_ftot = getTotalWhiteCapRadiance(outWhiteCapStr, jm.x, jSigma2, sunL, N, _Ocean_SunDir, skyE, shadowTerm);
+				R_ftot = getTotalWhiteCapRadiance(outWhiteCapStr, jm.x, jSigma2, sunL, N, _Ocean_SunDir, skyE, shadowTerm);
+#endif
 
 				float3 Lsun = ReflectedSunRadiance(_Ocean_SunDir, V, N, sigmaSq) * sunL * shadowTerm;
 
@@ -358,15 +364,15 @@
 
 				float3 backGrnd = 0.0;
 
-				#if defined (DEPTH_BUFFER_MODE_ON)
-				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
-				#else
+				//	#if defined (DEPTH_BUFFER_MODE_ON)
+				//				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
+				//	#else
 				#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
 				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, (_ProjectionParams.x == 1.0) ? uv : float2(uv.x,1.0-uv.y) );
 				#else
 				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
 				#endif
-				#endif
+				//	#endif
 
 				#endif
 
@@ -399,7 +405,7 @@
 				finalColor= clamp(finalColor, float3(0.0,0.0,0.0),float3(1.0,1.0,1.0));
 				finalColor= lerp(finalColor, oceanCol, min(length(oceanCamera - oceanP)/transparencyDepth,1.0));
 
-				return float4(dither(finalColor, screenPos),insideClippingRange);
+				return float4(dither(finalColor, IN.pos),insideClippingRange);
 				#else
 				#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				float3 finalColor = lerp(backGrnd, surfaceColor, transparencyAlpha);	//refraction on and not underwater
@@ -448,7 +454,7 @@
 				#endif
 
 				insideClippingRange = (transparencyAlpha == 1.0) ? 1.0 : insideClippingRange;     //if no transparency -> render normally, if transparency play with the overlap to hide seams between cameras
-				return float4(dither(finalColor,screenPos), _PlanetOpacity*insideClippingRange);
+				return float4(dither(finalColor,IN.pos), _PlanetOpacity*insideClippingRange);
 				#endif
 			}
 
@@ -470,7 +476,9 @@
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
+
 			#pragma multi_compile_fwdadd
+//			#pragma multi_compile FOAM_OFF FOAM_ON
 
 			#include "../Utility.cginc"
 			//#include "AtmosphereNew.cginc"
@@ -639,20 +647,22 @@
 
 				float3 Lsea = RefractedSeaRadiance(V, N, sigmaSq) * _Ocean_Color * atten;
 
-				// extract mean and variance of the jacobian matrix determinant
-				float2 jm1 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.x).xy;
-				float2 jm2 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.y).zw;
-				float2 jm3 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.z).xy;
-				float2 jm4 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.w).zw;
-				float2 jm  = jm1+jm2+jm3+jm4;
-				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
-
-				// get coverage
-				float W = WhitecapCoverage(outWhiteCapStr,jm.x,jSigma2);
-
-				// compute and add whitecap radiance
-				//				float3 l = (atten * (max(dot(N, L), 0.0))) / M_PI;
-				//				float3 R_ftot = float3(W * l * 0.4);
+//#if defined (FOAM_ON)
+//				// extract mean and variance of the jacobian matrix determinant
+//				float2 jm1 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.x).xy;
+//				float2 jm2 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.y).zw;
+//				float2 jm3 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.z).xy;
+//				float2 jm4 = tex2D(_Ocean_Foam1, u / _Ocean_GridSizes.w).zw;
+//				float2 jm  = jm1+jm2+jm3+jm4;
+//				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
+//
+//				// get coverage
+//				float W = WhitecapCoverage(outWhiteCapStr,jm.x,jSigma2);
+//
+//				// compute and add whitecap radiance
+//				//				float3 l = (atten * (max(dot(N, L), 0.0))) / M_PI;
+//				//				float3 R_ftot = float3(W * l * 0.4);
+//#endif
 
 				//float3 surfaceColor = (Lsun + Lsky + Lsea + R_ftot) * _LightColor0.rgb;
 				float3 surfaceColor = (Lsun + Lsky + Lsea) * _LightColor0.rgb;

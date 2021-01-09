@@ -100,6 +100,7 @@ Shader "Scatterer/OceanWhiteCaps"
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 			#pragma multi_compile DEPTH_BUFFER_MODE_OFF DEPTH_BUFFER_MODE_ON
+			#pragma multi_compile FOAM_OFF FOAM_ON
 			//#pragma multi_compile SCATTERING_ON SCATTERING_OFF
 
 			#include "../CommonAtmosphere.cginc"
@@ -287,6 +288,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				sigmaSq = max(sigmaSq, 2e-5);
 
+#if defined (FOAM_ON)
 				// extract mean and variance of the jacobian matrix determinant
 				float2 jm1 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.x).xy;
 				float2 jm2 = tex2D(_Ocean_Foam0, u / _Ocean_GridSizes.y).zw;
@@ -295,6 +297,7 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				float2 jm  = jm1+jm2+jm3+jm4;
 				float jSigma2 = max(jm.y - (jm1.x*jm1.x + jm2.x*jm2.x + jm3.x*jm3.x + jm4.x*jm4.x), 0.0);
+#endif
 
 				float3 earthP = normalize(oceanP + float3(0.0, 0.0, _Ocean_Radius)) * (_Ocean_Radius + 10.0);
 
@@ -326,8 +329,11 @@ Shader "Scatterer/OceanWhiteCaps"
 #else
 				float transparencyAlpha=1.0;
 #endif
+				float3 R_ftot = float3(0.0,0.0,0.0);
+#if defined (FOAM_ON)
 				float outWhiteCapStr=applyFarWhiteCapStrength(oceanDistance, alphaRadius, _Ocean_WhiteCapStr, farWhiteCapStr);
-				float3 R_ftot = getTotalWhiteCapRadiance(outWhiteCapStr, jm.x, jSigma2, sunL, N, _Ocean_SunDir, skyE, shadowTerm);
+				R_ftot = getTotalWhiteCapRadiance(outWhiteCapStr, jm.x, jSigma2, sunL, N, _Ocean_SunDir, skyE, shadowTerm);
+#endif
 
 				float3 Lsun = ReflectedSunRadiance(_Ocean_SunDir, V, N, sigmaSq) * sunL * shadowTerm;
 

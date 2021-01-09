@@ -6,26 +6,15 @@ namespace scatterer {
 	 * Extend the OceanFFT node to also generate ocean white caps.
 	 */
 	public class OceanWhiteCaps: OceanFFTgpu {
-		
-		Material m_initJacobiansMat;
-		
-		Material m_whiteCapsPrecomputeMat;
 
 		[Persistent]
 		protected string name;
-		
-		public float m_foamMipMapBias = -2.0f;
-		
-		[Persistent] public float m_whiteCapStr = 0.1f;
 
-		[Persistent] public float shoreFoam = 1.0f;
+		Material m_initJacobiansMat;		
+		Material m_whiteCapsPrecomputeMat;
 
-		[Persistent] public float m_farWhiteCapStr = 0.1f;
-		
-		RenderTexture[] m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7;
-
-		int foamAniso = 9;
-
+		RenderTexture[] m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7;		
+		int foamAniso = 9;		
 		RenderTexture m_foam0, m_foam1;
 
 		public override void Init(ProlandManager manager)
@@ -47,6 +36,8 @@ namespace scatterer {
 			m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Foam1_PROPERTY, m_foam1);
 			
 			m_oceanMaterial.SetFloat (ShaderProperties.shoreFoam_PROPERTY, shoreFoam);
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "FOAM_ON", "FOAM_OFF", true);
+
 		}
 		
 		protected override void CreateRenderTextures()

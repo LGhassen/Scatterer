@@ -29,7 +29,8 @@ namespace scatterer
 
 			updateCameraSpecificUniforms (oceanNode.m_oceanMaterial, cam);
 
-			Utils.EnableOrDisableShaderKeywords (oceanNode.m_oceanMaterial, "REFRACTIONS_AND_TRANSPARENCY_ON", "REFRACTIONS_AND_TRANSPARENCY_OFF", (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera));
+			Utils.EnableOrDisableShaderKeywords (oceanNode.m_oceanMaterial, "REFRACTIONS_AND_TRANSPARENCY_ON", "REFRACTIONS_AND_TRANSPARENCY_OFF",
+			                                     Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions && (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera));
 		}
 
 		public void updateCameraSpecificUniforms (Material oceanMaterial, Camera inCamera)

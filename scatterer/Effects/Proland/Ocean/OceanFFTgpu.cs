@@ -112,6 +112,12 @@ namespace scatterer {
 		MethodInfo recoveryButtonSetUnlockMethod;
 		object[] setUnlockParametersArray;
 
+		// These are all oceanWhiteCaps settings but I add them here so they don't mess up serialization of gui
+		public float m_foamMipMapBias = -2.0f;		
+		[Persistent] public float m_whiteCapStr = 0.1f;		
+		[Persistent] public float shoreFoam = 1.0f;		
+		[Persistent] public float m_farWhiteCapStr = 0.1f;
+
 		public override void Init(ProlandManager manager)
 		{
 			base.Init(manager);
@@ -164,6 +170,8 @@ namespace scatterer {
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_MapSize_PROPERTY, new Vector2(m_fsize, m_fsize));
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
+
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "FOAM_ON", "FOAM_OFF", false);
 
 			if (SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders && Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{

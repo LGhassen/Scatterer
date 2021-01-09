@@ -410,6 +410,8 @@ namespace scatterer
 								GUILayout.Label ("Mesh resolution (pixels covered by a mesh quad, lower is better but slower)");
 								Scatterer.Instance.mainSettings.oceanMeshResolution = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.oceanMeshResolution.ToString ())));
 								GUILayout.EndHorizontal ();
+								Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions, "Transparency and refractions");
+								Scatterer.Instance.mainSettings.oceanFoam = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanFoam, "Foam");
 								Scatterer.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanSkyReflections, "Sky reflections");
 								Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle (Scatterer.Instance.mainSettings.shadowsOnOcean, "Surface receives shadows");
 								Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Secondary lights compatibility (huge performance hit when lights on)");
@@ -799,7 +801,7 @@ namespace scatterer
 
 		public void buildOceanGUI()
 		{
-			OceanWhiteCaps oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
+			OceanFFTgpu oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
 
 			oceanModularGUI.ClearModules ();
 
@@ -849,7 +851,7 @@ namespace scatterer
 
 		void DrawOceanGUI ()
 		{
-			OceanWhiteCaps oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
+			OceanFFTgpu oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ();
 			//GUItoggle("Toggle ocean", ref stockOcean);
 			_scroll2 = GUILayout.BeginScrollView (_scroll2, false, true, GUILayout.Width (400), GUILayout.Height (Scatterer.Instance.pluginData.scrollSectionHeight + 100));
 			{

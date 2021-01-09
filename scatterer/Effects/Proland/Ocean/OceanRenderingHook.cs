@@ -35,7 +35,8 @@ namespace scatterer
 				return;
 			
 			// Enable screen copying for this frame
-			ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
+			if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions)
+				ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
 
 			// Render ocean MeshRenderer for this frame
 			// If projector mode render directly to screen
