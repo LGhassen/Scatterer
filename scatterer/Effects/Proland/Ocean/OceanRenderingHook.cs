@@ -35,7 +35,7 @@ namespace scatterer
 				return;
 			
 			// Enable screen copying for this frame
-			if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions)
+			if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions && (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera))
 				ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
 
 			// Render ocean MeshRenderer for this frame
@@ -138,8 +138,6 @@ namespace scatterer
 				//blit by itself draws a quad with zwite off, use a material with zwrite on and outputs to depth
 				//source: support.unity.com/hc/en-us/articles/115000229323-Graphics-Blit-does-not-copy-RenderTexture-depth
 				rendererCommandBuffer.Blit (null, depthCopyRenderTexture, copyCameraDepthMaterial, 0);
-
-				//!!!!!!! //with this there is a line at night on the ocean around the KSC? really weird
 
 				//draw ocean renderer
 				rendererCommandBuffer.SetRenderTarget(new RenderTargetIdentifier(oceanRenderTexture), new RenderTargetIdentifier(depthCopyRenderTexture));
