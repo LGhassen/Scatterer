@@ -9,7 +9,6 @@
 		Tags { "RenderType"="Opaque" }
 		LOD 100
 
-
 		Pass
 		{
 
@@ -39,10 +38,12 @@
 			//if ocean and in projector mode -> use analytical ocean intersect: OCEAN_INTERSECT_ANALYTICAL
 			#pragma multi_compile OCEAN_INTERSECT_OFF OCEAN_INTERSECT_ANALYTICAL 
 			#pragma multi_compile CLOUDSMAP_OFF CLOUDSMAP_ON
+			#pragma multi_compile DOWNSCALE_DEPTH_OFF DOWNSCALE_DEPTH_ON
 
 			sampler2D _ShadowMapTextureCopyScatterer;
 
 			sampler2D _CameraDepthTexture;
+			float4 _CameraDepthTexture_TexelSize;
 
 			float4x4 CameraToWorld;
 
@@ -208,11 +209,37 @@
 				return sqrt((6.2831*H)*r) * exp((Rg-r)/H) * (x + dot(y, float2(1.0, -1.0)));
 			}
 
+			//gets the min depth for surrounding 4 depth texels, in downscaled case
+			float getMinDepth(float2 uv)
+			{
+				float2 texelSize = 0.5 * _CameraDepthTexture_TexelSize.xy;
+				float2 taps[4] = { float2(uv + float2(-1,-1)*texelSize), float2(uv + float2(-1,1)*texelSize),
+						   float2(uv + float2(1,-1)*texelSize),  float2(uv + float2(1,1)*texelSize)  };
+
+				float depth1 = tex2D(_CameraDepthTexture, taps[0]).r;
+				float depth2 = tex2D(_CameraDepthTexture, taps[1]).r;
+				float depth3 = tex2D(_CameraDepthTexture, taps[2]).r;
+				float depth4 = tex2D(_CameraDepthTexture, taps[3]).r;
+
+				//Only return zero if all samples are zero, otherwise return the smallest which isn't zero
+				float result = depth4;
+				result = (result == 0.0) || (depth3 == 0.0) ? max(result, depth3) : min (result,depth3);
+				result = (result == 0.0) || (depth2 == 0.0) ? max(result, depth2) : min (result,depth2);
+				result = (result == 0.0) || (depth1 == 0.0) ? max(result, depth1) : min (result,depth1);
+
+				return result;
+			}
+
 			float4 frag (d2f i, fixed facing : VFACE) : SV_Target
 			{
+
 				float2 depthUV = i.projPos.xy/i.projPos.w;
 
+#if defined(DOWNSCALE_DEPTH_ON)
+				float zdepth = getMinDepth(depthUV);
+#else
 				float zdepth = tex2Dlod(_CameraDepthTexture, float4(depthUV,0,0));
+#endif
 
 				float linearDepth = Linear01Depth(zdepth);
 

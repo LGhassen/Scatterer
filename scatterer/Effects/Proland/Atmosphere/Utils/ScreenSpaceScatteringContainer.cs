@@ -20,11 +20,12 @@ namespace scatterer
 		
 		MeshRenderer scatteringMR;
 		public bool hasOcean = false;
+		bool quarterRes = false;
 
 		//Dictionary to check if we added the ScatteringCommandBuffer to the camera
 		private Dictionary<Camera,ScatteringCommandBuffer> cameraToScatteringCommandBuffer = new Dictionary<Camera,ScatteringCommandBuffer>();
 		
-		public void Init()
+		public void Init(bool inQuarterRes)
 		{
 			scatteringMR = gameObject.GetComponent<MeshRenderer>();
 			material.SetOverrideTag("IgnoreProjector", "True");
@@ -37,6 +38,8 @@ namespace scatterer
 			GetComponent<MeshFilter>().mesh.bounds = new Bounds (Vector4.zero, new Vector3 (Mathf.Infinity, Mathf.Infinity, Mathf.Infinity));
 			
 			gameObject.layer = (int) 15;
+
+			quarterRes = inQuarterRes;
 		}
 		
 		public void SetActive(bool active)
@@ -77,7 +80,7 @@ namespace scatterer
 						ScatteringCommandBuffer scatteringCommandBuffer = (ScatteringCommandBuffer) cam.gameObject.AddComponent(typeof(ScatteringCommandBuffer));
 						scatteringCommandBuffer.targetRenderer = scatteringMR;
 						scatteringCommandBuffer.targetMaterial = material;
-						scatteringCommandBuffer.Initialize(hasOcean);
+						scatteringCommandBuffer.Initialize(hasOcean, quarterRes);
 						scatteringCommandBuffer.EnableForThisFrame();
 						
 						cameraToScatteringCommandBuffer[cam] = scatteringCommandBuffer;
@@ -101,7 +104,7 @@ namespace scatterer
 		private RenderTexture downscaledRenderTexture0, downscaledRenderTexture1, downscaledDepthRenderTexture;
 		private Material downscaleDepthMaterial, compositeScatteringMaterial;
 		
-		public void Initialize(bool inHasOcean)
+		public void Initialize(bool inHasOcean, bool quarterRes)
 		{
 			targetCamera = GetComponent<Camera> ();
 			
@@ -109,7 +112,7 @@ namespace scatterer
 			rendererCommandBuffer.name = "Scattererer screen-space scattering CommandBuffer";
 
 			//if no depth downscaling, render directly to screen
-			if (!Scatterer.Instance.mainSettings.quarterResScattering)
+			if (!quarterRes)
 			{
 				rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
 				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial, 0, 0); //pass 0 render to screen
@@ -234,7 +237,7 @@ namespace scatterer
 	{
 		ScreenSpaceScattering screenSpaceScattering;
 
-		public ScreenSpaceScatteringContainer (Material atmosphereMaterial, Transform parentTransform, float Rt, ProlandManager parentManager) : base (atmosphereMaterial, parentTransform, Rt, parentManager)
+		public ScreenSpaceScatteringContainer (Material atmosphereMaterial, Transform parentTransform, float Rt, ProlandManager parentManager, bool quarterRes) : base (atmosphereMaterial, parentTransform, Rt, parentManager)
 		{
 			scatteringGO = GameObject.CreatePrimitive(PrimitiveType.Quad);
 			scatteringGO.name = "Scatterer screenspace scattering " + atmosphereMaterial.name;
@@ -259,7 +262,7 @@ namespace scatterer
 			screenSpaceScattering.material.CopyKeywordsFrom (atmosphereMaterial);
 
 			screenSpaceScattering.hasOcean = manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders;
-			screenSpaceScattering.Init();
+			screenSpaceScattering.Init(quarterRes);
 		}
 
 		public override void updateContainer ()

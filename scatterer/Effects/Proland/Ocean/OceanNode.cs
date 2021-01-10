@@ -167,7 +167,7 @@ namespace scatterer
 			InitUnderwaterMaterial ();
 
 			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-				underwaterScattering = new ScreenSpaceScatteringContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius, m_manager);
+				underwaterScattering = new ScreenSpaceScatteringContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius, m_manager, false);	//this shouldn't need quarter res as it isn't expensive
 			else
 				underwaterScattering = new AtmosphereProjectorContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius, m_manager);
 

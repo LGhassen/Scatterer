@@ -74,6 +74,9 @@ namespace scatterer
 			volumeDepthMaterial.SetFloat ("Rt", parentSkyNode.Rt);
 			volumeDepthMaterial.SetFloat ("Rg", parentSkyNode.Rg);
 			Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "CLOUDSMAP_ON", "CLOUDSMAP_OFF", false);
+			//Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "DOWNSCALE_DEPTH_ON", "DOWNSCALE_DEPTH_OFF", Scatterer.Instance.mainSettings.quarterResScattering);
+			Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "DOWNSCALE_DEPTH_ON", "DOWNSCALE_DEPTH_OFF", false);
+
 
 			volumeDepthGO = new GameObject ("GodraysVolumeDepth "+inputParentSkyNode.m_manager.parentCelestialBody.name);
 			volumeDepthMaterial.renderQueue = 2999; //for debugging only
@@ -91,7 +94,12 @@ namespace scatterer
 			_mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			_mr.enabled = false;
 
-			volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to work if we divide the contents by 100, to keep under half's 65000 limit
+			//disabled quarter res because I haven't fixed it for the sky and probably the perf hit from finding nearest depth in sky shader isn't worth it
+//			if (Scatterer.Instance.mainSettings.quarterResScattering)
+//				volumeDepthTexture = new RenderTexture (Screen.width / 2, Screen.height / 2, 0, RenderTextureFormat.RHalf);
+//			else
+				volumeDepthTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.RHalf); //seems to work if we divide the contents by 100, to keep under half's 65000 limit
+
 			volumeDepthTexture.useMipMap = false;
 			volumeDepthTexture.antiAliasing = 1;
 			volumeDepthTexture.filterMode = FilterMode.Point;
