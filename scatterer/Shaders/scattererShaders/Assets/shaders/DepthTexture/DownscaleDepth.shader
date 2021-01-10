@@ -46,7 +46,7 @@
 				//float result = min(depth1, min(depth2, min(depth3, depth4))); //takes min depth, for reverse Z equivalent to taking farthest, may or may not be better for depth discontinuities, test both
 				//good but should eliminate samples with depth 0.0
 
-//				//Only return zero if all samples are zero, otherwise return the smalles which isn't zero
+//				//Only return zero if all samples are zero, otherwise return the smallest which isn't zero
 				float result = depth4;
 				result = (result == 0.0) || (depth3 == 0.0) ? max(result, depth3) : min (result,depth3);
 				result = (result == 0.0) || (depth2 == 0.0) ? max(result, depth2) : min (result,depth2);

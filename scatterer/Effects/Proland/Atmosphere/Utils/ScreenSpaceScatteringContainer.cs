@@ -114,6 +114,7 @@ namespace scatterer
 			//if no depth downscaling, render directly to screen
 			if (!quarterRes)
 			{
+				targetMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean ? 1 : 0);
 				rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
 				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial, 0, 0); //pass 0 render to screen
 			}
@@ -122,6 +123,7 @@ namespace scatterer
 				downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]);
 				compositeScatteringMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeDownscaledScattering")]);
 				Utils.EnableOrDisableShaderKeywords(compositeScatteringMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", inHasOcean);
+				compositeScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean ? 1 : 0);
 				
 				int width, height;
 				

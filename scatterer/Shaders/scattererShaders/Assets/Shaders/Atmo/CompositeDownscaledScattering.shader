@@ -7,6 +7,7 @@
 
 			Cull Off
 			ZTest Off
+			ZWrite [_ZwriteVariable]
 
 			Blend SrcAlpha OneMinusSrcAlpha //traditional alpha-blending
 
@@ -62,13 +63,13 @@
 
 				return o;
 			}
-
-			//this needs to only be done if rendering with an ocean
-			//doesn't hurt either way so whatever
+				
 			struct fout
 			{
 				float4 color : COLOR;
+#if defined (CUSTOM_OCEAN_ON)
 				float depth  : DEPTH;
+#endif
 			};
 
 			void UpdateNearestSample(	inout float MinDist,
@@ -154,7 +155,9 @@
 
 				fout output;
 				output.color = float4(backGrnd,1.0);
+#if defined (CUSTOM_OCEAN_ON)
 				output.depth = zdepth;			//this needs to only be done if rendering with an ocean
+#endif
 				return output;
 			}
 			ENDCG

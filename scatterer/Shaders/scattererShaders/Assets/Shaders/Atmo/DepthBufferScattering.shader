@@ -7,6 +7,7 @@
 
 			Cull Off
 			ZTest Off
+			ZWrite [_ZwriteVariable]
 
 			//Blend OneMinusDstColor One //soft additive
 			Blend SrcAlpha OneMinusSrcAlpha //traditional alpha-blending
@@ -78,11 +79,13 @@
 			}
 
 			//this needs to only be done if rendering with an ocean
-			//doesn't hurt either way so whatever
+			//probably hurts performance on low-spec machines so disable it
 			struct fout
 			{
 				float4 color : COLOR;
+#if defined (CUSTOM_OCEAN_ON)
 				float depth : DEPTH;
+#endif
 			};
 
 			fout frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS)
@@ -175,7 +178,9 @@
 
 				fout output;
 				output.color = float4(backGrnd,1.0);
+#if defined (CUSTOM_OCEAN_ON)
 				output.depth = zdepth;	//this needs to only be done if rendering with an ocean
+#endif
 				return output;
 			}
 			ENDCG
@@ -186,6 +191,7 @@
 
 			Cull Off
 			ZTest Off
+			ZWrite Off
 
 			//Blend OneMinusDstColor One //soft additive
 			//Blend SrcAlpha OneMinusSrcAlpha //traditional alpha-blending
