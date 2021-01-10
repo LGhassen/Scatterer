@@ -111,12 +111,11 @@
 #endif
 
 				//find low res depth texture texel size
-				float2 lowResTexelSize = 2.0 * fullresDepthTexture_TexelSize;
-				float depthTreshold =  0.01; //play with this?
+				float2 lowResTexelSize = ScattererDownscaledScatteringDepth_TexelSize.xy;
 
 				float2 lowResUV = uv; 
 
-				float MinDist = 1.e8f;
+				float MinDist = 1.0;
 
 				float2 UV00 = lowResUV - 0.5 * lowResTexelSize;
 				float2 NearestUV = UV00;
