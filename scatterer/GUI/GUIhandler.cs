@@ -374,6 +374,7 @@ namespace scatterer
 						GUILayout.Label ("\t");
 						GUILayout.BeginVertical ();
 						{
+							Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering and godrays in 1/4 resolution (speedup)");
 							Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
 							Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing, "Subpixel Morphological Antialiasing (SMAA, recommended)")  && !Scatterer.Instance.mainSettings.useTemporalAntiAliasing;
 							if (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing)

@@ -77,7 +77,6 @@ namespace scatterer
 		}
 	}
 
-	//this stuff now needs to be handled by the renderingcommandbuffer handler
 	public class OceanCommandBuffer : MonoBehaviour
 	{
 		bool renderingEnabled = false;
@@ -87,10 +86,6 @@ namespace scatterer
 		
 		private Camera targetCamera;
 		private CommandBuffer rendererCommandBuffer;
-		
-		// We'll want to add a command buffer on any camera that renders us,
-		// so have a dictionary of them.
-		private Dictionary<Camera,CommandBuffer> m_Cameras = new Dictionary<Camera,CommandBuffer>();
 
 		private RenderTexture oceanRenderTexture, depthCopyRenderTexture;
 		private Material copyCameraDepthMaterial;
@@ -111,8 +106,6 @@ namespace scatterer
 			{
 				// If depth buffer mode render to separate buffer so we can have the ocean's color and depth to be used by the scattering shader
 				copyCameraDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/CopyCameraDepth"]);
-
-				targetCamera = GetComponent<Camera> ();
 				
 				int width, height;
 				
@@ -143,7 +136,6 @@ namespace scatterer
 				rendererCommandBuffer.SetRenderTarget(new RenderTargetIdentifier(oceanRenderTexture), new RenderTargetIdentifier(depthCopyRenderTexture));
 				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial,0, 0); 	//this doesn't work with pixel lights so render only the main pass here and render pixel lights the regular way
 																							//they will render on top of depth buffer scattering but that's not a noticeable issue, especially since ocean lights are soft additive
-
 				
 				//then set the textures for the scattering shader
 				rendererCommandBuffer.SetGlobalTexture ("ScattererScreenCopy", oceanRenderTexture);
@@ -176,7 +168,8 @@ namespace scatterer
 		{
 			if (!renderingEnabled)
 			{
-				targetCamera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, rendererCommandBuffer);
+				targetCamera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, rendererCommandBuffer); //ocean renders on afterforward opaque, local scattering (with it's depth downscale) can render and copy to screen on afterForwardAlpha I guess
+																									  //also test with custom camera mods, though all should work?
 				renderingEnabled = true;
 			}
 		}
@@ -195,8 +188,13 @@ namespace scatterer
 			if (!ReferenceEquals(targetCamera,null) && !ReferenceEquals(rendererCommandBuffer,null))
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, rendererCommandBuffer);
-				depthCopyRenderTexture.Release();
-				oceanRenderTexture.Release();
+
+				if (!ReferenceEquals(depthCopyRenderTexture,null))
+					depthCopyRenderTexture.Release();
+				
+				if (!ReferenceEquals(oceanRenderTexture,null))
+					oceanRenderTexture.Release();
+
 				renderingEnabled = false;
 			}
 		}

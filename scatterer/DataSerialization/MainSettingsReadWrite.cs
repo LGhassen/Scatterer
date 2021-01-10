@@ -108,6 +108,9 @@ namespace scatterer
 		public bool mergeDepthPrePass = false;
 
 		[Persistent]
+		public bool quarterResScattering = true;
+
+		[Persistent]
 		public bool useSubpixelMorphologicalAntialiasing = true;
 
 		[Persistent]
@@ -229,6 +232,7 @@ namespace scatterer
 				 OldConfig.useGodrays != useGodrays ||
 				 OldConfig.useDepthBufferMode != useDepthBufferMode ||
 				 OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
+				 OldConfig.quarterResScattering != quarterResScattering ||
 				 OldConfig.useSubpixelMorphologicalAntialiasing != useSubpixelMorphologicalAntialiasing ||
 				 OldConfig.smaaQuality != smaaQuality ||
 				 OldConfig.useTemporalAntiAliasing  != useTemporalAntiAliasing ||
