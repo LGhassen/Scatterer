@@ -70,6 +70,7 @@ namespace scatterer
 
 			LoadedShaders.Clear ();
 			LoadedComputeShaders.Clear ();
+			LoadedTextures.Clear ();
 
 			using (WWW www = new WWW("file://"+shaderspath))
 			{

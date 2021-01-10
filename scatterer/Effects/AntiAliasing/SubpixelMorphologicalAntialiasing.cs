@@ -68,8 +68,10 @@ namespace scatterer
 
 			SMAAMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/SubpixelMorphologicalAntialiasing")]);
 
-			areaTex = (Texture2D) ShaderReplacer.Instance.LoadedTextures ["AreaTex"];
-			searchTex = (Texture2D) ShaderReplacer.Instance.LoadedTextures ["SearchTex"];
+			if (ReferenceEquals(areaTex,null))
+				areaTex = (Texture2D) ShaderReplacer.Instance.LoadedTextures ["AreaTex"];
+			if (ReferenceEquals (searchTex, null))
+				searchTex = (Texture2D)ShaderReplacer.Instance.LoadedTextures ["SearchTex"];
 
 			SMAAMaterial.SetTexture("_AreaTex"  , areaTex);
 			SMAAMaterial.SetTexture("_SearchTex", searchTex);
