@@ -45,6 +45,7 @@ namespace scatterer
 		public Light sunLight,scaledSpaceSunLight, mainMenuLight;
 		public Light[] lights;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
+		static float originalShadowDistance = 0f;
 
 		//classic SQUAD
 		ReflectionProbeChecker reflectionProbeChecker;
@@ -452,16 +453,18 @@ namespace scatterer
 
 			if (scaledSpaceCamera && nearCamera)
 			{
-				//move these to be used only with long-distance shadows?
-				if (!unifiedCameraMode && (mainSettings.dualCamShadowCascadeSplitsOverride != Vector3.zero))
+				if (mainSettings.terrainShadows)
 				{
-					shadowCascadeTweaker = (TweakShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakShadowCascades));
-					shadowCascadeTweaker.Init(mainSettings.dualCamShadowCascadeSplitsOverride);
-				}
-				else if (unifiedCameraMode && (mainSettings.unifiedCamShadowCascadeSplitsOverride != Vector3.zero))
-				{
-					shadowCascadeTweaker = (TweakShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakShadowCascades));
-					shadowCascadeTweaker.Init(mainSettings.unifiedCamShadowCascadeSplitsOverride);
+					if (!unifiedCameraMode && (mainSettings.dualCamShadowCascadeSplitsOverride != Vector3.zero))
+					{
+						shadowCascadeTweaker = (TweakShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakShadowCascades));
+						shadowCascadeTweaker.Init(mainSettings.dualCamShadowCascadeSplitsOverride);
+					}
+					else if (unifiedCameraMode && (mainSettings.unifiedCamShadowCascadeSplitsOverride != Vector3.zero))
+					{
+						shadowCascadeTweaker = (TweakShadowCascades) Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(TweakShadowCascades));
+						shadowCascadeTweaker.Init(mainSettings.unifiedCamShadowCascadeSplitsOverride);
+					}
 				}
 				
 				if (mainSettings.overrideNearClipPlane)
@@ -514,6 +517,11 @@ namespace scatterer
 
 				if (mainSettings.terrainShadows)
 				{
+					if (originalShadowDistance == 0f)
+					{
+						originalShadowDistance = QualitySettings.shadowDistance;
+					}
+
 					QualitySettings.shadowDistance = unifiedCameraMode ? mainSettings.unifiedCamShadowsDistance : mainSettings.dualCamShadowsDistance;
 					Utils.LogDebug ("Set shadow distance: " + QualitySettings.shadowDistance.ToString ());
 					Utils.LogDebug ("Number of shadow cascades detected " + QualitySettings.shadowCascades.ToString ());
@@ -528,6 +536,17 @@ namespace scatterer
 							_sc.pqsController.meshCastShadows = true;
 							_sc.pqsController.meshRecieveShadows = true;
 						}
+					}
+				}
+				else
+				{
+					DisableCustomShadowResForLight (sunLight);
+
+					if (originalShadowDistance != 0f)
+					{
+						Utils.LogDebug("Restore original shadow distance: "+originalShadowDistance.ToString());
+						QualitySettings.shadowDistance = originalShadowDistance;;
+						originalShadowDistance = 0f;
 					}
 				}
 			}
@@ -557,6 +576,16 @@ namespace scatterer
 						Utils.LogError ("Selected shadowmap resolution not a power of 2: " + customRes.ToString ());
 					}
 				}
+				else
+					light.shadowCustomResolution = 0;
+			}
+		}
+
+		public void DisableCustomShadowResForLight (Light light)
+		{
+			if (light && !mainSettings.terrainShadows && (HighLogic.LoadedScene != GameScenes.MAINMENU))
+			{
+				light.shadowCustomResolution = 0;
 			}
 		}
 

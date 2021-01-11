@@ -63,7 +63,13 @@ namespace scatterer
 					mainSunLight = Scatterer.Instance.sunLight;
 				}
 				else
-					Scatterer.Instance.SetShadowsForLight(mainSunLight);
+				{
+					if (Scatterer.Instance.mainSettings.terrainShadows)
+						Scatterer.Instance.SetShadowsForLight(mainSunLight);
+					else
+						Scatterer.Instance.DisableCustomShadowResForLight(mainSunLight);
+				}
+					
 			}
 
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
