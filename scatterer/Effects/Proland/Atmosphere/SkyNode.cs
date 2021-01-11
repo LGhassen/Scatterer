@@ -278,7 +278,7 @@ namespace scatterer
 				localScatteringContainer.setInScaledSpace (inScaledSpace);
 				localScatteringContainer.updateContainer ();
 
-				if (m_manager.parentCelestialBody.pqsController != null)
+				if (m_manager.parentCelestialBody.pqsController != null && !Scatterer.Instance.mainSettings.useDepthBufferMode)
 				{
 					float planetOpactiy = m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
 					localScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, (planetOpactiy > 0f) ? 1 : 0);
