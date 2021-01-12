@@ -22,7 +22,7 @@ namespace scatterer
 		enum Pass { EdgeDetection = 0, BlendWeights = 3, NeighborhoodBlending = 6 }
 		public enum Quality { Low = 0, Medium = 1, High = 2 }
 		
-		public Quality quality = Quality.High;
+		Quality quality;
 
 		RenderTexture flip, flop;
 		static Texture2D areaTex, searchTex;
@@ -75,7 +75,9 @@ namespace scatterer
 
 			SMAAMaterial.SetTexture("_AreaTex"  , areaTex);
 			SMAAMaterial.SetTexture("_SearchTex", searchTex);
-			
+
+			quality = (Quality)((Int32) Mathf.Clamp( (float) Scatterer.Instance.mainSettings.smaaQuality,1f,2f));
+
 			SMAACommandBuffer = new CommandBuffer ();
 		}
 

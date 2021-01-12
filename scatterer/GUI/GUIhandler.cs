@@ -381,8 +381,8 @@ namespace scatterer
 							{
 								GUILayout.BeginHorizontal ();
 								{
-									GUILayout.Label ("SMAA quality (0:fast,1:medium,2:high)");
-									Scatterer.Instance.mainSettings.smaaQuality = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.smaaQuality.ToString ()))),0f,2f);
+									GUILayout.Label ("SMAA quality (1:normal,2:high)");
+									Scatterer.Instance.mainSettings.smaaQuality = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.smaaQuality.ToString ()))),1f,2f);
 								}
 								GUILayout.EndHorizontal ();
 							}

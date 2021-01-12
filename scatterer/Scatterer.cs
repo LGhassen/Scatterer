@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0760")]
+[assembly:AssemblyVersion("0.0761")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -54,7 +54,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0760 dev";
+		public string versionNumber = "0.0761 dev";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
@@ -168,24 +168,11 @@ namespace scatterer
 			{
 				if(mainSettings.useSubpixelMorphologicalAntialiasing)
 				{
-					SubpixelMorphologicalAntialiasing nearAA, farAA, scaledAA;
-					nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-					nearAA.quality = (SubpixelMorphologicalAntialiasing.Quality) mainSettings.smaaQuality;
+					SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
 					antiAliasingScripts.Add(nearAA);
 					
-					if (!unifiedCameraMode && farCamera)
-					{
-						farAA = farCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-						farAA.quality = (SubpixelMorphologicalAntialiasing.Quality) mainSettings.smaaQuality;
-						antiAliasingScripts.Add(farAA);
-					}
-
-					scaledAA = scaledSpaceCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-					scaledAA.quality = (SubpixelMorphologicalAntialiasing.Quality) mainSettings.smaaQuality;
-					antiAliasingScripts.Add(scaledAA);
-					
-					//and IVA camera
-					GameEvents.OnCameraChange.Add(AddSMAAToInternalCamera);
+					//On camera change change apply to new camera
+					GameEvents.OnCameraChange.Add(SMAAOnCameraChange);
 				}
 				else if(mainSettings.useTemporalAntiAliasing)
 				{
@@ -370,12 +357,12 @@ namespace scatterer
 					Component.Destroy (bufferManager);
 				}
 
-				foreach (SubpixelMorphologicalAntialiasing temporalAA in antiAliasingScripts)
+				foreach (SubpixelMorphologicalAntialiasing AA in antiAliasingScripts)
 				{
-					if (temporalAA)
+					if (AA)
 					{
-						temporalAA.Cleanup();
-						Component.Destroy(temporalAA);
+						AA.Cleanup();
+						Component.Destroy(AA);
 					}
 				}
 
@@ -397,7 +384,7 @@ namespace scatterer
 					if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
 					{
 						if(mainSettings.useSubpixelMorphologicalAntialiasing)
-							GameEvents.OnCameraChange.Remove(AddSMAAToInternalCamera);
+							GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
 						else if (mainSettings.useTemporalAntiAliasing)
 							GameEvents.OnCameraChange.Remove(AddAAToInternalCamera);
 					}
@@ -665,21 +652,32 @@ namespace scatterer
 		}
 
 		
-		public void AddSMAAToInternalCamera(CameraManager.CameraMode cameraMode)
+		public void SMAAOnCameraChange(CameraManager.CameraMode cameraMode)
 		{
+			foreach (SubpixelMorphologicalAntialiasing AA in antiAliasingScripts)
+			{
+				if (AA) { AA.Cleanup(); Component.Destroy(AA);}
+			}
+			antiAliasingScripts.Clear ();
+
 			if (cameraMode == CameraManager.CameraMode.IVA)
 			{
 				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
 				if (!ReferenceEquals(internalCamera,null))
 				{
-					SubpixelMorphologicalAntialiasing internalSMAA = internalCamera.GetComponent<SubpixelMorphologicalAntialiasing>();
-					if(ReferenceEquals(internalSMAA,null))
-					{
-						internalSMAA = internalCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-						internalSMAA.quality = (SubpixelMorphologicalAntialiasing.Quality) mainSettings.smaaQuality;
-						antiAliasingScripts.Add(internalSMAA);
-					}
+					SubpixelMorphologicalAntialiasing internalSMAA = internalCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+					antiAliasingScripts.Add(internalSMAA);
 				}
+			}
+			else if (cameraMode == CameraManager.CameraMode.Flight)
+			{
+				SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+				antiAliasingScripts.Add(nearAA);
+			}
+			else if (cameraMode == CameraManager.CameraMode.Map)
+			{
+				SubpixelMorphologicalAntialiasing ScaledAA = scaledSpaceCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+				antiAliasingScripts.Add(ScaledAA);
 			}
 		}
 
