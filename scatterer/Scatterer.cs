@@ -357,7 +357,7 @@ namespace scatterer
 					Component.Destroy (bufferManager);
 				}
 
-				foreach (SubpixelMorphologicalAntialiasing AA in antiAliasingScripts)
+				foreach (GenericAntiAliasing AA in antiAliasingScripts)
 				{
 					if (AA)
 					{
@@ -383,9 +383,7 @@ namespace scatterer
 
 					if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
 					{
-						if(mainSettings.useSubpixelMorphologicalAntialiasing)
 							GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
-						else if (mainSettings.useTemporalAntiAliasing)
 							GameEvents.OnCameraChange.Remove(AddAAToInternalCamera);
 					}
 				}
