@@ -9,7 +9,6 @@
 			ZTest Off
 			ZWrite [_ZwriteVariable]
 
-			//Blend OneMinusDstColor One //soft additive
 			Blend SrcAlpha OneMinusSrcAlpha //traditional alpha-blending
 
 			CGPROGRAM
@@ -22,7 +21,7 @@
 			#include "Godrays/GodraysCommon.cginc"
 
 //			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
+//			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
 			#pragma multi_compile DITHERING_OFF DITHERING_ON
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
@@ -112,7 +111,6 @@
 				float Rt2 = Rg + (Rt - Rg) * _experimentalAtmoScale;
 
 				worldPos = (length(worldPos) < Rt2) ? lerp(groundPos,worldPos,_PlanetOpacity) : worldPos; //fades to flatScaledSpace planet shading to ease the transition to scaledSpace
-				//this wasn't applied in extinction shader, not sure if it will be an issue
 
 				worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
@@ -121,41 +119,14 @@
 #else
 				float3 backGrnd = tex2Dlod(ScattererScreenCopyBeforeOcean, float4(uv.x, uv.y,0.0,0.0));
 #endif
-
-				float3 extinction = getExtinction(i.camPosRelPlanet, worldPos, 1.0, 1.0, 1.0); //same function as in inscattering2 or different?
-				float average=(extinction.r+extinction.g+extinction.b)/3;
-
-				//lerped manually because of an issue with opengl or whatever
-				extinction = _Post_Extinction_Tint * extinction + (1-_Post_Extinction_Tint) * float3(average,average,average);
-
-				extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
-
-				//composite backGround by extinction
-				backGrnd*=extinction;
-
 				float minDistance = length(worldPos-i.camPosRelPlanet);
 				float3 inscatter=0.0;
-				extinction=1.0;
-
-//				//TODO: put planetshine stuff in callable function
-//				#if defined (PLANETSHINE_ON)
-//				for (int j=0; j<4;++j)
-//				{
-//				if (planetShineRGB[j].w == 0) break;
-//
-//				float intensity=1;  
-//				if (planetShineSources[j].w != 1.0f)
-//				{
-//				intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[j].xyz - worldPos),SUN_DIR)),0); //if source is not a sun compute intensity of light from angle to light source
-//				//totally made up formula by eyeballing it
-//				}
-//
-//				inscatter+=InScattering2(i.camPosRelPlanet, worldPos, normalize(planetShineSources[j].xyz),extinction)  //lot of potential extinction recomputations here
-//				*planetShineRGB[j].xyz*planetShineRGB[j].w*intensity;
-//				}
-//				#endif
+				float3 extinction=1.0;
 
 #if defined (GODRAYS_ON)
+				//extinction of the full distance to the terrain, not just the lit part when factoring in godrays
+				float3 fullSegmentExtinction = getExtinction(i.camPosRelPlanet, worldPos, 1.0, 1.0, 1.0);
+
 				float godrayDepth = 0.0;
 
 				godrayDepth = sampleGodrayDepth(_godrayDepthTexture, uv, 1.0);
@@ -172,6 +143,20 @@
 				inscatter*= (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ; //somehow the shader compiler for OpenGL behaves differently around braces
 
 				inscatter = hdr(inscatter,_ScatteringExposure) *_global_alpha;
+
+#if defined (GODRAYS_ON)
+				extinction = fullSegmentExtinction;
+#endif
+
+				float extinctionAverage=(extinction.r+extinction.g+extinction.b)/3;
+
+				//lerped manually because of an issue with opengl or whatever
+				extinction = _Post_Extinction_Tint * extinction + (1-_Post_Extinction_Tint) * float3(extinctionAverage,extinctionAverage,extinctionAverage);
+
+				extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
+
+				//composite backGround by extinction
+				backGrnd*=extinction;
 
 				//composite background with inscatter, soft-blend it
 				backGrnd+= (1.0 - backGrnd) * dither(inscatter,screenPos);
@@ -193,9 +178,6 @@
 			ZTest Off
 			ZWrite Off
 
-			//Blend OneMinusDstColor One //soft additive
-			//Blend SrcAlpha OneMinusSrcAlpha //traditional alpha-blending
-
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
@@ -206,8 +188,7 @@
 			#include "Godrays/GodraysCommon.cginc"
 
 			//			#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
-			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
-			#pragma multi_compile DITHERING_OFF DITHERING_ON
+			//			#pragma multi_compile PLANETSHINE_OFF PLANETSHINE_ON
 			#pragma multi_compile GODRAYS_OFF GODRAYS_ON
 
 			uniform float _global_alpha;
@@ -228,13 +209,6 @@
 			uniform float _openglThreshold;
 
 			uniform sampler2D ScattererDownscaledScatteringDepth;
-
-//#if defined (CUSTOM_OCEAN_ON)
-//			uniform sampler2D ScattererScreenCopy;
-//			uniform sampler2D ScattererDepthCopy;
-//#else
-//			uniform sampler2D ScattererScreenCopyBeforeOcean;
-//#endif
 
 			float4x4 CameraToWorld;
 
@@ -272,6 +246,8 @@
 
 			fout frag(v2f i, UNITY_VPOS_TYPE screenPos : VPOS)
 			{
+				fout output;
+
 				float2 uv = i.screenPos.xy / i.screenPos.w;
 
 				float zdepth = tex2Dlod(ScattererDownscaledScatteringDepth, float4(uv,0,0));
@@ -290,45 +266,16 @@
 				float Rt2 = Rg + (Rt - Rg) * _experimentalAtmoScale;
 
 				worldPos = (length(worldPos) < Rt2) ? lerp(groundPos,worldPos,_PlanetOpacity) : worldPos; //fades to flatScaledSpace planet shading to ease the transition to scaledSpace
-				//this wasn't applied in extinction shader, not sure if it will be an issue
+															  //this wasn't applied in extinction shader, not sure if it will be an issue
 
 				worldPos= (length(worldPos) < (Rg + _openglThreshold)) ? (Rg + _openglThreshold) * normalize(worldPos) : worldPos ; //artifacts fix
 
-				float3 extinction = getExtinction(i.camPosRelPlanet, worldPos, 1.0, 1.0, 1.0); //same function as in inscattering2 or different?
-				float average=(extinction.r+extinction.g+extinction.b)/3;
-
-				//lerped manually because of an issue with opengl or whatever
-				extinction = _Post_Extinction_Tint * extinction + (1-_Post_Extinction_Tint) * float3(average,average,average);
-
-				extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
-
-				fout output;
-				output.col0 = float4(0.0,0.0,0.0,extinction.r);
-				output.col1 = float4(extinction.g,extinction.b,1.0,1.0);
-
 				float minDistance = length(worldPos-i.camPosRelPlanet);
-				float3 inscatter=0.0;
-				extinction=1.0;
-
-				//				//TODO: put planetshine stuff in callable function
-				//				#if defined (PLANETSHINE_ON)
-				//				for (int j=0; j<4;++j)
-				//				{
-				//				if (planetShineRGB[j].w == 0) break;
-				//
-				//				float intensity=1;  
-				//				if (planetShineSources[j].w != 1.0f)
-				//				{
-				//				intensity = 0.57f*max((0.75-dot(normalize(planetShineSources[j].xyz - worldPos),SUN_DIR)),0); //if source is not a sun compute intensity of light from angle to light source
-				//				//totally made up formula by eyeballing it
-				//				}
-				//
-				//				inscatter+=InScattering2(i.camPosRelPlanet, worldPos, normalize(planetShineSources[j].xyz),extinction)  //lot of potential extinction recomputations here
-				//				*planetShineRGB[j].xyz*planetShineRGB[j].w*intensity;
-				//				}
-				//				#endif
 
 #if defined (GODRAYS_ON)
+				//extinction of the full distance to the terrain, not just the lit part when factoring in godrays
+				float3 fullSegmentExtinction = getExtinction(i.camPosRelPlanet, worldPos, 1.0, 1.0, 1.0);
+
 				float godrayDepth = 0.0;
 
 				godrayDepth = sampleGodrayDepth(_godrayDepthTexture, uv, 1.0);
@@ -340,13 +287,30 @@
 
 				worldPos -= godrayDepth * normalize(worldPos-i.camPosRelPlanet);
 #endif
+				float3 inscatter=0.0;
+				float3 extinction=1.0;
 
 				inscatter+= InScattering2(i.camPosRelPlanet, worldPos,SUN_DIR,extinction);
 				inscatter*= (minDistance <= _global_depth) ? (1 - exp(-1 * (4 * minDistance / _global_depth))) : 1.0 ; //somehow the shader compiler for OpenGL behaves differently around braces
 
 				inscatter = hdr(inscatter,_ScatteringExposure) *_global_alpha;
 
-				output.col0.rgb = dither(inscatter,screenPos);
+				output.col0.rgb = inscatter;
+
+#if defined (GODRAYS_ON)
+				extinction = fullSegmentExtinction;
+#endif
+
+				float extinctionAverage=(extinction.r+extinction.g+extinction.b)/3;
+
+				//lerped manually because of an issue with opengl or whatever
+				extinction = _Post_Extinction_Tint * extinction + (1-_Post_Extinction_Tint) * float3(extinctionAverage,extinctionAverage,extinctionAverage);
+
+				extinction= max(float3(0.0,0.0,0.0), (float3(1.0,1.0,1.0)*(1-extinctionThickness) + extinctionThickness*extinction) );
+
+				output.col0.a = extinction.r;
+				output.col1 = float4(extinction.g,extinction.b,1.0,1.0);
+
 				return output;
 			}
 			ENDCG

@@ -17,8 +17,6 @@
 			#pragma target 3.0
 			#include "UnityCG.cginc"
 			#include "../CommonAtmosphere.cginc"
-			#include "../DepthCommon.cginc"
-			#include "Godrays/GodraysCommon.cginc"
 
 			#pragma multi_compile CUSTOM_OCEAN_OFF CUSTOM_OCEAN_ON
 
@@ -37,6 +35,7 @@
 			#define fullresDepthTexture ScattererDepthCopy;
 			#define fullresDepthTexture_TexelSize ScattererDepthCopy_TexelSize;
 #else
+			uniform sampler2D _CameraDepthTexture;
 			float4 _CameraDepthTexture_TexelSize;
 
 			#define fullresDepthTexture _CameraDepthTexture;
@@ -151,7 +150,7 @@
 				backGrnd*=extinction;
 
 				//composite background with inscatter, soft-blend it
-				backGrnd+= (1.0 - backGrnd) * inscatter;
+				backGrnd+= (1.0 - backGrnd) * dither(inscatter, screenPos);
 
 				fout output;
 				output.color = float4(backGrnd,1.0);
