@@ -107,7 +107,9 @@ namespace scatterer
 		public void Initialize(bool inHasOcean, bool quarterRes)
 		{
 			targetCamera = GetComponent<Camera> ();
-			
+
+			targetCamera.depthTextureMode = targetCamera.depthTextureMode | DepthTextureMode.Depth;
+
 			rendererCommandBuffer = new CommandBuffer();
 			rendererCommandBuffer.name = "Scattererer screen-space scattering CommandBuffer";
 
