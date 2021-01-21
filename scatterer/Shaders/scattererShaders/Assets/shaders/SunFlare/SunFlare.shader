@@ -8,7 +8,6 @@
 
 	uniform float sunGlareScale;
 	uniform float sunGlareFade;
-	uniform float ghostFade;
 
 	uniform sampler2D sunSpikes;
 	uniform sampler2D sunFlare;
@@ -59,7 +58,7 @@
 
 		OUT.pos = float4(v.vertex.xy, 1.0, 1.0);
 
-		OUT.pos = (renderSunFlare == 1.0) && (_ProjectionParams.y < 200.0) && (renderOnCurrentCamera == 1.0) && (drawFlare ==1.0) ? OUT.pos : float4(2.0,2.0,2.0,1.0);	//if we don't need to render the sunflare, cull vertexes by placing them outside clip space
+		OUT.pos = (settings.x > 0.0) && (renderSunFlare == 1.0) && (_ProjectionParams.y < 200.0) && (renderOnCurrentCamera == 1.0) && (drawFlare ==1.0) ? OUT.pos : float4(2.0,2.0,2.0,1.0);	//if we don't need to render the sunflare, cull vertexes by placing them outside clip space
 		//also use near plane to not render on far camera
 		OUT.uv = v.texcoord.xy;
 
@@ -82,7 +81,7 @@
 		float3 color : TEXCOORD1;
 	};
 
-	v2g ghostVertexShader (appdata_base v, float3 sunViewPortPos)
+	v2g ghostVertexShader (appdata_base v, float3 sunViewPortPos, float ghostFade)
 	{
 		v2g OUT;
 
@@ -219,9 +218,11 @@
 			#pragma fragment frag
 			#pragma glsl
 
+			uniform float ghost1Fade;
+
 			v2g vert(appdata_base v)
 			{
-				return ghostVertexShader(v, sunViewPortPos);
+				return ghostVertexShader(v, sunViewPortPos, ghost1Fade);
 			}
 
 			[maxvertexcount(24)]
@@ -254,9 +255,11 @@
 			#pragma fragment frag
 			#pragma glsl
 
+			uniform float ghost2Fade;
+
 			v2g vert(appdata_base v)
 			{
-				return ghostVertexShader(v, sunViewPortPos);
+				return ghostVertexShader(v, sunViewPortPos, ghost2Fade);
 			}
 
 			[maxvertexcount(24)]
@@ -289,9 +292,11 @@
 			#pragma fragment frag
 			#pragma glsl
 
+			uniform float ghost3Fade;
+
 			v2g vert(appdata_base v)
 			{
-				return ghostVertexShader(v, sunViewPortPos);
+				return ghostVertexShader(v, sunViewPortPos, ghost3Fade);
 			}
 				
 			[maxvertexcount(24)]

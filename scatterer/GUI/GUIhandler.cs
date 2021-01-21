@@ -219,7 +219,7 @@ namespace scatterer
 					
 					if (editingSunflare)
 					{
-						sunflareScrollPosition = GUILayout.BeginScrollView(sunflareScrollPosition, false, true, GUILayout.MinHeight(Scatterer.Instance.pluginData.scrollSectionHeight + 100));
+						sunflareScrollPosition = GUILayout.BeginScrollView(sunflareScrollPosition, false, true, GUILayout.Width(800) ,GUILayout.MinHeight(Scatterer.Instance.pluginData.scrollSectionHeight + 100));
 						sunflareText = GUILayout.TextArea(sunflareText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 						GUILayout.EndScrollView();
 						

@@ -295,8 +295,14 @@ namespace scatterer
 		public static int sunGlareFade_PROPERTY { get { return sunGlareFade; } }
 		private static int sunGlareFade;
 		
-		public static int ghostFade_PROPERTY { get { return ghostFade; } }
-		private static int ghostFade;
+		public static int ghost1Fade_PROPERTY { get { return ghost1Fade; } }
+		private static int ghost1Fade;
+
+		public static int ghost2Fade_PROPERTY { get { return ghost2Fade; } }
+		private static int ghost2Fade;
+
+		public static int ghost3Fade_PROPERTY { get { return ghost3Fade; } }
+		private static int ghost3Fade;
 		
 		public static int _ButterFlyLookUp_PROPERTY { get { return _ButterFlyLookUp; } }
 		private static int _ButterFlyLookUp;
@@ -504,7 +510,9 @@ namespace scatterer
 			aspectRatio = Shader.PropertyToID("aspectRatio");
 			sunGlareScale = Shader.PropertyToID("sunGlareScale");
 			sunGlareFade = Shader.PropertyToID("sunGlareFade");
-			ghostFade = Shader.PropertyToID("ghostFade");
+			ghost1Fade = Shader.PropertyToID("ghost1Fade");
+			ghost2Fade = Shader.PropertyToID("ghost2Fade");
+			ghost3Fade = Shader.PropertyToID("ghost3Fade");
 			_ButterFlyLookUp = Shader.PropertyToID("_ButterFlyLookUp");
 			_ReadBuffer0 = Shader.PropertyToID("_ReadBuffer0");
 			_ReadBuffer1 = Shader.PropertyToID("_ReadBuffer1");

@@ -19,8 +19,7 @@ namespace scatterer
 		public float sunGlareFadeDistance = 250000;
 		[Persistent]
 		public float ghostFadeDistance = 13500000;
-		
-		//input settings
+
 		[Persistent]
 		public Vector3 flareSettings = Vector3.zero;
 		[Persistent]
