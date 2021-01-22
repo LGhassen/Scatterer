@@ -29,7 +29,8 @@ namespace scatterer
 		{
 			foreach (ScattererCelestialBody sctBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
-				if (sctBody.hasOcean) {
+				if (sctBody.hasOcean)
+				{
 					bool removed = false;
 					var celBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
 					if (celBody == null) {
@@ -44,7 +45,7 @@ namespace scatterer
 							PQS ocean = pqs.ChildSpheres [0];
 							if (ocean != null)
 							{
-								GameObject go = new GameObject ("Scatterer stock ocean disabler");
+								GameObject go = new GameObject ("Scatterer stock ocean disabler "+sctBody.celestialBodyName);
 								FakeOceanPQS fakeOcean = go.AddComponent<FakeOceanPQS> ();
 								fakeOcean.Apply (ocean);
 								
@@ -79,6 +80,23 @@ namespace scatterer
 				oceanRemoved = false;
 
 				Utils.LogDebug ("Stock oceans restored");
+			}
+		}
+		
+		public static void restoreOceanForBody(ScattererCelestialBody sctBody)
+		{
+			if (oceanRemoved && sctBody.hasOcean)
+			{
+				GameObject go = GameObject.Find ("Scatterer stock ocean disabler "+sctBody.celestialBodyName);
+				if (!ReferenceEquals(go,null))
+				{
+					FakeOceanPQS fake = go.GetComponent<FakeOceanPQS>();
+					if (!ReferenceEquals(fake,null))
+					{
+						fake.Remove ();
+						Component.Destroy(fake);
+					}
+				}
 			}
 		}
 	}

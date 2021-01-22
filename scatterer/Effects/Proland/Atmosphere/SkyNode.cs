@@ -796,7 +796,7 @@ namespace scatterer
 			}
 			else
 			{
-				Utils.LogDebug(" Atmosphere config not found for: "+celestialBodyName);
+				Utils.LogError(" Atmosphere config not found for: "+celestialBodyName);
 				Utils.LogDebug(" Removing "+celestialBodyName +" from planets list");
 
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Remove(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == celestialBodyName));

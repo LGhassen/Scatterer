@@ -101,11 +101,19 @@ namespace scatterer
 
 								scattererCelestialBody.m_manager = new ProlandManager ();
 								scattererCelestialBody.m_manager.Init (scattererCelestialBody);
-								scattererCelestialBody.active = true;
-								Scatterer.Instance.guiHandler.selectedConfigPoint = 0;
-								Scatterer.Instance.guiHandler.displayOceanSettings = false;
-								Scatterer.Instance.guiHandler.selectedPlanet = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (scattererCelestialBody);
-								Scatterer.Instance.guiHandler.getSettingsFromSkynode ();
+								scattererCelestialBody.active = true;							
+
+								if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Contains(scattererCelestialBody))
+								{
+									Scatterer.Instance.guiHandler.selectedConfigPoint = 0;
+									Scatterer.Instance.guiHandler.displayOceanSettings = false;
+									Scatterer.Instance.guiHandler.selectedPlanet = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (scattererCelestialBody);
+									Scatterer.Instance.guiHandler.getSettingsFromSkynode ();
+								}
+								else
+								{
+									throw new Exception("Planet already removed from planets list");
+								}
 
 								if (!ReferenceEquals (scattererCelestialBody.m_manager.GetOceanNode (), null))
 								{
@@ -116,9 +124,8 @@ namespace scatterer
 							}
 							catch (Exception exception)
 							{
-
 								if (HighLogic.LoadedScene != GameScenes.MAINMENU)
-									Utils.LogError ("Effects couldn't be loaded for " + scattererCelestialBody.celestialBodyName + " because of exception: " + exception.ToString ());
+									Utils.LogError ("Effects couldn't be loaded for " + scattererCelestialBody.celestialBodyName + ", " + exception.ToString ());
 
 								try
 								{
@@ -128,6 +135,10 @@ namespace scatterer
 								{
 									Utils.LogDebug ("manager couldn't be removed for " + scattererCelestialBody.celestialBodyName + " because of exception: " + exception2.ToString ());
 								}
+
+								if (HighLogic.LoadedScene != GameScenes.MAINMENU)
+									OceanUtils.restoreOceanForBody(scattererCelestialBody);
+
 								Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Remove (scattererCelestialBody);
 								if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 									Utils.LogDebug ("" + scattererCelestialBody.celestialBodyName + " removed from active planets.");

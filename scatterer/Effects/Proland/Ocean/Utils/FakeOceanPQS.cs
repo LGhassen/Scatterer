@@ -59,6 +59,7 @@ namespace scatterer
 		{
 			this.StopAllCoroutines ();
 			sphere.surfaceMaterial = originalOceanMaterial;
+			sphere.StartUpSphere ();
 
 			gameObject.DestroyGameObject ();
 		}
