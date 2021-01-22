@@ -612,24 +612,33 @@ namespace scatterer
 
 			//load from .half, if no .half file exists, load from .raw file and create .half file
 			string _file = Utils.GameDataPath + assetPath + "/inscatter.half";
-			if (System.IO.File.Exists(_file))
+			if (System.IO.File.Exists (_file))
 				m_inscatter.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
-				LoadAndConvertRawFile("inscatter",m_inscatter,4);
+			{
+				Utils.LogDebug("File "+_file+" not found, attempting to load .raw file");
+				LoadAndConvertRawFile ("inscatter", m_inscatter, 4);
+			}
 			
 			_file = Utils.GameDataPath + assetPath + "/transmittance.half";
 			
 			if (System.IO.File.Exists(_file))
 				m_transmit.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
+			{
+				Utils.LogDebug("File "+_file+" not found, attempting to load .raw file");
 				LoadAndConvertRawFile("transmittance",m_transmit,3);
+			}
 			
 			_file = Utils.GameDataPath + assetPath + "/irradiance.half";
 			
 			if (System.IO.File.Exists(_file))
 				m_irradiance.LoadRawTextureData (System.IO.File.ReadAllBytes (_file));
 			else
+			{
+				Utils.LogDebug("File "+_file+" not found, attempting to load .raw file");
 				LoadAndConvertRawFile("irradiance",m_irradiance,3);
+			}
 
 			m_inscatter.Apply ();
 			m_transmit.Apply ();
@@ -644,9 +653,10 @@ namespace scatterer
 
 			if (!System.IO.File.Exists(_file))
 			{
-				Utils.LogDebug(" no "+textureName+".raw or "+textureName+".half file found for "
-				          +celestialBodyName);
-				return;
+				Utils.LogError("File "+_file+" not found");
+				Utils.LogError("No "+textureName+".raw or "+textureName+".half file found for "
+				          +celestialBodyName+" atmosphere cannot be loaded");
+				throw new Exception("Atmosphere files not found");
 			}
 			
 			RenderTexture activeRT = RenderTexture.active;
@@ -669,7 +679,7 @@ namespace scatterer
 			byte[] bytes = targetTexture2D .GetRawTextureData();
 			System.IO.File.WriteAllBytes(_file ,bytes);
 			
-			Utils.LogDebug (" Converted "+textureName+".raw to "+textureName+".half");
+			Utils.LogDebug ("Converted "+textureName+".raw to "+textureName+".half");
 			
 			UnityEngine.Object.Destroy (tempRT);
 			bytes = null;
