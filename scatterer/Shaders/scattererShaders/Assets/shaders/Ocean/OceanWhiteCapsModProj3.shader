@@ -378,10 +378,10 @@ Shader "Scatterer/OceanWhiteCaps"
 				Lsky = _Alpha_Global*hdr(Lsky,_SkyExposure);
 				float3 transmittance =  hdr(R_ftot, _ScatteringExposure);
 				transmittance = clamp(transmittance, float3(0.0,0.0,0.0), float3(1.0,1.0,1.0));
-				transmittance = transmittance + (1.0-transmittance) * Lsky;
+				transmittance = transmittance + (1.0-transmittance) * Lsky;			    //consider not using transmittance but instead background texture, change the refraction angle to have something matching what you would see from underwater
 
-				float3 finalColor = lerp(transmittance,Lsea, 1-fresnel);	//consider not using transmittance but instead background texture, change the refraction angle to have something matching what you would see from underwater
-
+				float3 finalColor = (1.0 - fresnel) * Lsea;
+				finalColor+=clamp(transmittance * fresnel,float3(0.0,0.0,0.0),float3(1.0,1.0,1.0)); //somehow doing lerp directly breaks opengl
 
 	#if defined (REFRACTIONS_AND_TRANSPARENCY_ON)
 				backGrnd+=hdr(R_ftotTotal,_ScatteringExposure)*(1-backGrnd); //make foam visible from below as well
