@@ -119,7 +119,7 @@ namespace scatterer
 			shadowVolumeCB.DispatchCompute(inverseShadowMatricesComputeShader, 0, 4, 1, 1);
 
 			shadowVolumeCB.SetRenderTarget(volumeDepthTexture);
-			shadowVolumeCB.ClearRenderTarget(false, true, Color.black, 1f);
+			//shadowVolumeCB.ClearRenderTarget(false, true, Color.black, 1f); //do this after rendering
 			shadowVolumeCB.SetShadowSamplingMode (ShadowMapCopy.RenderTexture, ShadowSamplingMode.RawDepth);
 
 			shadowVolumeCB.DrawRenderer (_mr, volumeDepthMaterial);
@@ -232,6 +232,12 @@ namespace scatterer
 //						targetLight.RemoveCommandBuffer (LightEvent.AfterShadowMapPass, cb);
 //					}
 //				}
+
+				RenderTexture rt=RenderTexture.active;
+				RenderTexture.active= volumeDepthTexture;
+				GL.Clear(false,true,Color.black, 1f);
+				RenderTexture.active=rt;
+
 				commandBufferAdded = false;
 			}
 
