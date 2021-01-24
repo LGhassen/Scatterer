@@ -166,6 +166,19 @@ namespace scatterer
 
 			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
 			{
+				if(mainSettings.useSubpixelMorphologicalAntialiasing || mainSettings.useTemporalAntiAliasing)
+				{
+					//cleanup any forgotten/glitched AA scripts
+					foreach (GenericAntiAliasing AA in Resources.FindObjectsOfTypeAll(typeof(GenericAntiAliasing)))
+					{
+						if (AA)
+						{
+							AA.Cleanup();
+							Component.Destroy(AA);
+						}
+					}
+				}
+
 				if(mainSettings.useSubpixelMorphologicalAntialiasing)
 				{
 					SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();

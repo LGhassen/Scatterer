@@ -112,8 +112,13 @@ namespace scatterer
 		
 		public override void Cleanup()
 		{
+			SMAAMaterial = null;
+
 			if (!ReferenceEquals(SMAACommandBuffer,null))
+			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer);
+				SMAACommandBuffer.Clear();
+			}
 			
 			if (!ReferenceEquals (flip, null))
 				flip.Release ();

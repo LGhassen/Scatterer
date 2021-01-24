@@ -360,7 +360,7 @@ namespace scatterer
 			}
 			GUILayout.EndHorizontal ();
 			if (selectedIndividualSettingsTab == IndividualSettingsTabs.Scattering) {
-				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (Requires unified camera, long-distance shadows and shadowMapResolution ovveride, Directx11 only)");
+				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (Requires unified camera, long-distance shadows and shadowMapResolution override, Directx11 only)");
 				if (Scatterer.Instance.mainSettings.useGodrays)
 				{
 					//Godrays tesselation placeholder
