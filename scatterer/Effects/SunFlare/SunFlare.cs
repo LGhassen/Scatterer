@@ -505,7 +505,15 @@ namespace scatterer
 
 		void LoadAndSetTexture (string textureName, Texture2D texture, string path)
 		{
-			texture.LoadImage (System.IO.File.ReadAllBytes (path));
+			if (Path.GetExtension(path) == ".dds")
+			{
+				texture = Utils.LoadDDSTexture(System.IO.File.ReadAllBytes (path),path);
+			}
+			else
+			{
+				texture.LoadImage (System.IO.File.ReadAllBytes (path));
+			}
+
 			texture.wrapMode = TextureWrapMode.Clamp;
 			sunglareMaterial.SetTexture (textureName, texture);
 		}
