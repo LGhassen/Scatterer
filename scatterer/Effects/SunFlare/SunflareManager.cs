@@ -14,7 +14,7 @@ namespace scatterer
 {
 	public class SunflareManager : MonoBehaviour
 	{
-		public List<SunFlare> scattererSunFlares = new List<SunFlare>();	
+		public Dictionary<String, SunFlare> scattererSunFlares = new Dictionary<String, SunFlare>();
 
 		public SunflareManager ()
 		{
@@ -22,36 +22,38 @@ namespace scatterer
 
 		public void Init()
 		{
-			Utils.DisableStockSunflares ();
-
-			foreach (string sunflareBody in Scatterer.Instance.planetsConfigsReader.sunflares)
+			foreach (ConfigNode _sunflareConfigs in Scatterer.Instance.planetsConfigsReader.sunflareConfigs)
 			{
-				SunFlare customSunFlare = (SunFlare)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunFlare));
-				try
+				foreach (ConfigNode _cn in _sunflareConfigs.GetNodes())
 				{
-					customSunFlare.Configure(Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == sunflareBody),
-					                         sunflareBody,Utils.GetScaledTransform (sunflareBody));
-					customSunFlare.start ();
-					scattererSunFlares.Add (customSunFlare);
-				}
-				catch (Exception exception)
-				{
-					Utils.LogDebug ("Custom sunflare cannot be added to " + sunflareBody + " " + exception.ToString ());
-					Component.Destroy (customSunFlare);
-					UnityEngine.Object.Destroy (customSunFlare);
-					if (scattererSunFlares.Contains (customSunFlare))
+					if (scattererSunFlares.ContainsKey(_cn.name))
+						continue;
+					
+					SunFlare customSunFlare = (SunFlare)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunFlare));
+					try
 					{
-						scattererSunFlares.Remove (customSunFlare);
+						customSunFlare.Configure(Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _cn.name),
+						                         _cn.name,Utils.GetScaledTransform (_cn.name), _cn);
+						customSunFlare.start ();
+						scattererSunFlares.Add (_cn.name, customSunFlare);
 					}
-					continue;
+					catch (Exception exception)
+					{
+						Utils.LogDebug ("Custom sunflare cannot be added to " + _cn.name + " " + exception.ToString ());
+						Component.Destroy (customSunFlare);
+						UnityEngine.Object.Destroy (customSunFlare);
+						continue;
+					}
 				}
 			}
+
+			DisableStockSunflares ();
 		}
 		
 		//TODO: decouple and let every sunflare update itself, based on the GameObject it is linked to?
 		public void UpdateFlares()
 		{
-			foreach (SunFlare customSunFlare in scattererSunFlares)
+			foreach (SunFlare customSunFlare in scattererSunFlares.Values)
 			{
 				customSunFlare.Update();
 			}
@@ -59,16 +61,40 @@ namespace scatterer
 
 		public void Cleanup()
 		{
-			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
+			ReenableStockSunflares ();
+
+			foreach (SunFlare customSunFlare in scattererSunFlares.Values)
 			{
-				foreach (SunFlare customSunFlare in scattererSunFlares)
+				customSunFlare.CleanUp();
+				Component.Destroy (customSunFlare);
+			}
+		}
+		
+		void DisableStockSunflares ()
+		{
+			global::SunFlare[] stockFlares = (global::SunFlare[])global::SunFlare.FindObjectsOfType (typeof(global::SunFlare));
+			foreach (global::SunFlare _flare in stockFlares)
+			{
+				if (scattererSunFlares.ContainsKey (_flare.sun.name))
 				{
-					customSunFlare.CleanUp();
-					Component.Destroy (customSunFlare);
+					Utils.LogDebug ("Disabling stock sunflare for " + _flare.sun.name);
+					_flare.sunFlare.enabled = false;
+					_flare.enabled = false;
+					_flare.gameObject.SetActive (false);
 				}
 			}
-
-			Utils.ReenableStockSunflares ();
+		}
+		
+		void ReenableStockSunflares ()
+		{
+			global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
+			foreach(global::SunFlare _flare in stockFlares)
+			{						
+				if (scattererSunFlares.ContainsKey (_flare.sun.name))
+				{
+					_flare.sunFlare.enabled=true;
+				}
+			}
 		}
 	}
 }

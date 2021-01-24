@@ -58,36 +58,6 @@ namespace scatterer
 			Debug.LogError("[Scatterer][Error] " + log);
 		}
 
-		public static void DisableStockSunflares ()
-		{
-			//disable stock sun flares
-			global::SunFlare[] stockFlares = (global::SunFlare[])global::SunFlare.FindObjectsOfType (typeof(global::SunFlare));
-			foreach (global::SunFlare _flare in stockFlares)
-			{
-				if (Scatterer.Instance.planetsConfigsReader.sunflares.Contains (_flare.sun.name))
-				{
-					Utils.LogDebug ("Disabling stock sunflare for " + _flare.sun.name);
-					_flare.sunFlare.enabled = false;
-					_flare.enabled = false;
-					_flare.gameObject.SetActive (false);
-				}
-			}
-		}
-		
-		public static void ReenableStockSunflares ()
-		{
-			//re-enable stock sun flares
-			global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
-			foreach(global::SunFlare _flare in stockFlares)
-			{						
-				if (Scatterer.Instance.planetsConfigsReader.sunflares.Contains(_flare.sun.name))
-				{
-					_flare.sunFlare.enabled=true;
-				}
-			}
-		}
-
-
 		public static GameObject GetMainMenuObject(CelestialBody celestialBody)
 		{
 			string name = celestialBody.isHomeWorld ? "Kerbin" : celestialBody.name;

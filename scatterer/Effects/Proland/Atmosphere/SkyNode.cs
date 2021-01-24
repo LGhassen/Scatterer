@@ -977,7 +977,7 @@ namespace scatterer
 
 		void UpdateSunflareExtinctions ()
 		{
-			foreach (SunFlare customSunFlare in Scatterer.Instance.sunflareManager.scattererSunFlares)
+			foreach (SunFlare customSunFlare in Scatterer.Instance.sunflareManager.scattererSunFlares.Values)
 			{
 				sunflareExtinctionMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
 				sunflareExtinctionMaterial.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);

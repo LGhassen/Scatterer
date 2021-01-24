@@ -14,9 +14,6 @@ namespace scatterer
 		[Persistent]
 		public List<PlanetShineLightSource> celestialLightSourcesData=new List<PlanetShineLightSource> {};
 
-		[Persistent]
-		public List<string> sunflares=new List<string> {};
-
 		public ConfigNode[] sunflareConfigs;
 		public UrlDir.UrlConfig[] baseConfigs,atmoConfigs,oceanConfigs;
 

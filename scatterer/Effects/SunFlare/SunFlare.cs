@@ -294,28 +294,16 @@ namespace scatterer
 			}
 		}
 
-		public void Configure(CelestialBody source, string sourceName, Transform sourceScaledTransform)
+		public void Configure(CelestialBody source, string sourceName, Transform sourceScaledTransform, ConfigNode configNodeToLoad)
 		{
 			this.source = source;
 			this.sourceName = sourceName;
 			this.sourceScaledTransform = sourceScaledTransform;
+			this.configNodeToLoad = configNodeToLoad;
 		}
 
 		public void LoadSettings ()
 		{
-			configNodeToLoad = new ConfigNode ();
-			foreach (ConfigNode _cn in Scatterer.Instance.planetsConfigsReader.sunflareConfigs)
-			{
-				if (_cn.TryGetNode(sourceName, ref configNodeToLoad))
-				{
-					Utils.LogDebug("Sunflare config found for "+sourceName);
-					break;
-				}
-			}
-
-			//if !configNodeToLoad
-			//TODO: handle not found sunflare config case
-
 			LoadSettingsFromConfigNode (configNodeToLoad);
 		}
 

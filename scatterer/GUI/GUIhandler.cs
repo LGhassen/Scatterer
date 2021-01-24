@@ -167,7 +167,7 @@ namespace scatterer
 						
 						for (int i=0; i<Scatterer.Instance.sunflareManager.scattererSunFlares.Count; i++)
 						{
-							sunflareStrings[i]=Scatterer.Instance.sunflareManager.scattererSunFlares[i].sourceName;
+							sunflareStrings[i] = Scatterer.Instance.sunflareManager.scattererSunFlares.ElementAt(i).Value.sourceName;
 						}
 						
 						sunflareOptions = true;
@@ -212,7 +212,7 @@ namespace scatterer
 					selSunflareGridInt = GUILayout.SelectionGrid (selSunflareGridInt, sunflareStrings, 1);
 					if (GUILayout.Button ("Edit Selected"))
 					{
-						sunflareText = string.Copy(Scatterer.Instance.sunflareManager.scattererSunFlares [selSunflareGridInt].configNodeToLoad.ToString());
+						sunflareText = string.Copy(Scatterer.Instance.sunflareManager.scattererSunFlares.ElementAt(selSunflareGridInt).Value.configNodeToLoad.ToString());
 						editingSunflare = true;
 					}
 					GUILayout.EndVertical ();
@@ -227,14 +227,14 @@ namespace scatterer
 						
 						if (GUILayout.Button("Reimport"))
 						{
-							sunflareText = string.Copy(Scatterer.Instance.sunflareManager.scattererSunFlares [selSunflareGridInt].configNodeToLoad.ToString());
+							sunflareText = string.Copy(Scatterer.Instance.sunflareManager.scattererSunFlares.ElementAt(selSunflareGridInt).Value.configNodeToLoad.ToString());
 						}
 						
 						if (GUILayout.Button("Apply"))
 						{
 							ConfigNode node = ConfigNode.Parse(sunflareText);
 							Utils.LogInfo("Applying sunflare config from UI:\r\n"+sunflareText);
-							Scatterer.Instance.sunflareManager.scattererSunFlares [selSunflareGridInt].ApplyFromUI(node.GetNode("Sun"));
+							Scatterer.Instance.sunflareManager.scattererSunFlares.ElementAt(selSunflareGridInt).Value.ApplyFromUI(node.GetNode("Sun"));
 
 						}
 						
