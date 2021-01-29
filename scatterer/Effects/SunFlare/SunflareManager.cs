@@ -22,13 +22,19 @@ namespace scatterer
 
 		public void Init()
 		{
+			StartCoroutine (InitCoroutine());
+		}
+
+
+		IEnumerator InitCoroutine()
+		{
 			foreach (ConfigNode _sunflareConfigs in Scatterer.Instance.planetsConfigsReader.sunflareConfigs)
 			{
 				foreach (ConfigNode _cn in _sunflareConfigs.GetNodes())
 				{
 					if (scattererSunFlares.ContainsKey(_cn.name))
 						continue;
-					
+
 					SunFlare customSunFlare = (SunFlare)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunFlare));
 					try
 					{
@@ -44,9 +50,9 @@ namespace scatterer
 						UnityEngine.Object.Destroy (customSunFlare);
 						continue;
 					}
+					yield return new WaitForFixedUpdate ();
 				}
 			}
-
 			DisableStockSunflares ();
 		}
 		
@@ -61,6 +67,8 @@ namespace scatterer
 
 		public void Cleanup()
 		{
+			StopAllCoroutines ();
+
 			ReenableStockSunflares ();
 
 			foreach (SunFlare customSunFlare in scattererSunFlares.Values)
