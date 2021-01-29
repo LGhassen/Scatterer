@@ -485,7 +485,7 @@ namespace scatterer
 			Matrix4x4 ghostSettings2 = Matrix4x4.zero;
 			for (int i = 4; (i < ghostSettings.instances.Count) && (i < 8); i++)
 			{
-				ghostSettings2.SetRow (i, new Vector4 (ghostSettings.instances [i].intensityMultiplier, ghostSettings.instances [i].displayAspectRatio, 1f / ghostSettings.instances [i].scale, ghostSettings.instances [i].sunToScreenCenterPosition));
+				ghostSettings2.SetRow (i-4, new Vector4 (ghostSettings.instances [i].intensityMultiplier, ghostSettings.instances [i].displayAspectRatio, 1f / ghostSettings.instances [i].scale, ghostSettings.instances [i].sunToScreenCenterPosition));
 			}
 			sunglareMaterial.SetMatrix (shaderParam1, ghostSettings1);
 			sunglareMaterial.SetMatrix (shaderParam2, ghostSettings2);
