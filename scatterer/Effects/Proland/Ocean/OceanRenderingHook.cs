@@ -72,7 +72,8 @@ namespace scatterer
 		{
 			foreach (OceanCommandBuffer oceanCommandBuffer in cameraToOceanCommandBuffer.Values)
 			{
-				Component.Destroy(oceanCommandBuffer);
+				if (!ReferenceEquals(oceanCommandBuffer,null))
+					Component.Destroy(oceanCommandBuffer);
 			}
 		}
 	}
@@ -185,7 +186,7 @@ namespace scatterer
 		
 		public void OnDestroy ()
 		{
-			if (!ReferenceEquals(targetCamera,null) && !ReferenceEquals(rendererCommandBuffer,null))
+			if (targetCamera && !ReferenceEquals(rendererCommandBuffer,null))
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, rendererCommandBuffer);
 

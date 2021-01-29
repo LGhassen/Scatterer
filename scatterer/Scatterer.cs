@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0761")]
+[assembly:AssemblyVersion("0.0766")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -28,7 +28,7 @@ namespace scatterer
 		
 		public ScattererCelestialBodiesManager scattererCelestialBodiesManager = new ScattererCelestialBodiesManager ();
 		public BufferManager bufferManager;
-		public SunflareManager sunflareManager;
+		public SunflareManager sunflareManager; GameObject sunflareManagerGO;
 		public EVEReflectionHandler eveReflectionHandler;
 		public PlanetshineManager planetshineManager;
 
@@ -54,7 +54,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0761 dev";
+		public string versionNumber = "0.0766 dev";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
@@ -220,7 +220,8 @@ namespace scatterer
 
 			if ((mainSettings.fullLensFlareReplacement) && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 			{
-				sunflareManager = new SunflareManager();
+				sunflareManagerGO = new GameObject("Scatterer sunflare manager");
+				sunflareManager = sunflareManagerGO.AddComponent<SunflareManager>();
 				sunflareManager.Init();
 			}
 
@@ -342,6 +343,7 @@ namespace scatterer
 				{
 					sunflareManager.Cleanup();
 					UnityEngine.Component.Destroy(sunflareManager);
+					GameObject.Destroy(sunflareManagerGO);
 				}
 
 				if (shadowFadeRemover)

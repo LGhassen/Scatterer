@@ -219,7 +219,7 @@ namespace scatterer
 		
 		public void OnDestroy ()
 		{
-			if (!ReferenceEquals(targetCamera,null) && !ReferenceEquals(rendererCommandBuffer,null))
+			if (targetCamera && !ReferenceEquals(rendererCommandBuffer,null))
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
 
