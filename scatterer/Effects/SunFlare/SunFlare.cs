@@ -27,6 +27,8 @@ namespace scatterer
 		public string sourceName;
 		public Transform sourceScaledTransform;
 
+		static Dictionary<string, Texture2D> texturesDictionary = new Dictionary<string, Texture2D> ();
+
 		//Size is loaded automatically from the files
 		Texture2D sunSpikes = new Texture2D (1, 1);
 		Texture2D sunFlare  = new Texture2D (1, 1);
@@ -493,13 +495,22 @@ namespace scatterer
 
 		void LoadAndSetTexture (string textureName, Texture2D texture, string path)
 		{
-			if (Path.GetExtension(path) == ".dds")
+			if (texturesDictionary.ContainsKey (path))
 			{
-				texture = Utils.LoadDDSTexture(System.IO.File.ReadAllBytes (path),path);
+				texture = texturesDictionary[path];
 			}
 			else
 			{
-				texture.LoadImage (System.IO.File.ReadAllBytes (path));
+				if (Path.GetExtension(path) == ".dds")
+				{
+					texture = Utils.LoadDDSTexture(System.IO.File.ReadAllBytes (path),path);
+				}
+				else
+				{
+					texture.LoadImage (System.IO.File.ReadAllBytes (path));
+				}
+
+				texturesDictionary[path] = texture;
 			}
 
 			texture.wrapMode = TextureWrapMode.Clamp;
