@@ -67,7 +67,8 @@ namespace scatterer
 
 		public void Cleanup()
 		{
-			StopAllCoroutines ();
+			if (this)
+				StopAllCoroutines();
 
 			ReenableStockSunflares ();
 
