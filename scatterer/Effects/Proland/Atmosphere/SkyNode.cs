@@ -404,6 +404,8 @@ namespace scatterer
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
+
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
 		}
 		
 		
@@ -529,6 +531,8 @@ namespace scatterer
 			{
 				mat.SetFloat("_godrayStrength", godrayStrength);
 			}
+
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
 		}
 
 		public void InitUniforms (Material mat)

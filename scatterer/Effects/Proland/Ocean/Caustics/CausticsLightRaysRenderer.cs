@@ -123,7 +123,7 @@ namespace scatterer
 		bool isInitialized = false;
 		bool renderingEnabled = false;
 		Light targetLight;
-		Color mainSunColor;
+		private OceanNode oceanNode;
 		
 		public CausticsLightRaysCameraScript ()
 		{
@@ -176,13 +176,11 @@ namespace scatterer
 			downscaledDepthRT2.autoGenerateMips = false;
 			downscaledDepthRT2.filterMode = FilterMode.Point;
 			downscaledDepthRT2.Create();
-
-			mainSunColor = oceanNodeIn.m_manager.sunColor;
 			
 			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]);
 			compositeLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeCausticsGodrays")]);
 			compositeLightRaysMaterial.SetTexture ("LightRaysTexture", targetRT);
-			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, mainSunColor);
+			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNodeIn.m_manager.sunColor);
 			compositeLightRaysMaterial.SetVector ("_Underwater_Color", oceanNodeIn.m_UnderwaterColor);
 
 			commandBuffer = new CommandBuffer();
@@ -210,6 +208,7 @@ namespace scatterer
 			commandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, compositeLightRaysMaterial);
 
 			targetLight = oceanNodeIn.m_manager.mainSunLight;
+			oceanNode = oceanNodeIn;
 
 			isInitialized = true;
 		}
@@ -224,10 +223,10 @@ namespace scatterer
 				float warpTime = (TimeWarp.CurrentRate > 1) ? (float) Planetarium.GetUniversalTime() : 0f;
 				CausticsLightRaysMaterial.SetFloat (ShaderProperties.warpTime_PROPERTY, warpTime);
 
-				// If we use sunglightExtinction, reuse already computed extinction color
+				// If we use sunlightExtinction, reuse already computed extinction color
 				if (Scatterer.Instance.mainSettings.sunlightExtinction)
 				{
-					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, mainSunColor * Scatterer.Instance.sunlightModulatorsManagerInstance.GetLastModulateColor(targetLight));
+					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNode.m_manager.sunColor * Scatterer.Instance.sunlightModulatorsManagerInstance.GetLastModulateColor(targetLight));
 				}
 
 				renderingEnabled = true;

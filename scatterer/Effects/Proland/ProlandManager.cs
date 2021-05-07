@@ -39,10 +39,12 @@ namespace scatterer
 		public List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
 		public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
 		public Light mainSunLight;
+		public ScattererCelestialBody scattererCelestialBody;
 		
 
 		public void Init(ScattererCelestialBody scattererBody)
 		{
+			scattererCelestialBody = scattererBody;
 			parentCelestialBody = scattererBody.celestialBody;
 			sunColor=scattererBody.sunColor;
 			flatScaledSpaceModel = scattererBody.flatScaledSpaceModel;

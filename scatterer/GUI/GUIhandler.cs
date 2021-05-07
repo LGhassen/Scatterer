@@ -50,6 +50,7 @@ namespace scatterer
 		private Vector2 _scroll2;
 		public bool displayOceanSettings = false;
 
+		Vector3 sunColor=Vector3.one;
 		float experimentalAtmoScale=1f;
 		float viewdirOffset=0f;
 
@@ -668,6 +669,7 @@ namespace scatterer
 				GUIfloat ("Point altitude", ref pointAltitude, ref _cur.altitude);
 				_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width (400), GUILayout.Height (Scatterer.Instance.pluginData.scrollSectionHeight));
 				GUILayout.Label ("(settings with a * are global and not cfgPoint dependent)");
+
 				GUILayout.Label ("Atmo");
 				GUIfloat ("ExperimentalAtmoScale*", ref experimentalAtmoScale, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.experimentalAtmoScale);
 				GUIfloat ("AtmosphereGlobalScale*", ref atmosphereGlobalScale, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.atmosphereGlobalScale);
@@ -744,6 +746,10 @@ namespace scatterer
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.scaledScatteringContainer.ApplyNewMesh(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh);
 			}
 			GUILayout.EndHorizontal ();
+
+			GUILayout.Label ("Misc");
+			GUIColorNoButton("Sunlight color (Not saved automatically, save manually to PlanetsList)", ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.sunColor);
+
 			GUILayout.EndScrollView ();
 			GUILayout.BeginHorizontal ();
 			if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.currentConfigPoint == 0)
@@ -782,6 +788,8 @@ namespace scatterer
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.LoadFromConfigNode ();
 				getSettingsFromSkynode ();
 				loadConfigPoint (selectedConfigPoint);
+				//Restore sun color, hacky I know
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.sunColor = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.scattererCelestialBody.sunColor;
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
@@ -994,6 +1002,18 @@ namespace scatterer
 			target.y = float.Parse (GUILayout.TextField (target.y.ToString ("0.0000")));
 			target.z = float.Parse (GUILayout.TextField (target.z.ToString ("0.0000")));
 
+			GUILayout.EndHorizontal ();
+		}
+
+		public void GUIColorNoButton (string label, ref Color target)
+		{
+			GUILayout.BeginHorizontal ();
+			GUILayout.Label (label);
+			
+			target.r = float.Parse (GUILayout.TextField (target.r.ToString ("0.0000")));
+			target.g = float.Parse (GUILayout.TextField (target.g.ToString ("0.0000")));
+			target.b = float.Parse (GUILayout.TextField (target.b.ToString ("0.0000")));
+			
 			GUILayout.EndHorizontal ();
 		}
 		
