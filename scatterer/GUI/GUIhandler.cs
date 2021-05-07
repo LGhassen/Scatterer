@@ -365,7 +365,7 @@ namespace scatterer
 				{
 					//Godrays tesselation placeholder
 				}
-				Scatterer.Instance.mainSettings.useDepthBufferMode = !GUILayout.Toggle (!Scatterer.Instance.mainSettings.useDepthBufferMode, "Use projector mode (Slower, less compatible but supports MSAA");
+				Scatterer.Instance.mainSettings.useDepthBufferMode = !GUILayout.Toggle (!Scatterer.Instance.mainSettings.useDepthBufferMode, "Use projector mode (Slower, less compatible but supports MSAA)");
 				Scatterer.Instance.mainSettings.useDepthBufferMode = GUILayout.Toggle (Scatterer.Instance.mainSettings.useDepthBufferMode, "Use depth buffer mode (Recommended: Faster, better compatible with Parallax and trees/scatters, disables MSAA in flight/KSC)");
 				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
 				{
@@ -770,8 +770,13 @@ namespace scatterer
 			//							}
 			//							GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button ("Save atmo")) {
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.SaveToConfigNode ();
+
+			if (!Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.isConfigModuleManagerPatch)
+			{
+				if (GUILayout.Button ("Save atmo"))
+				{
+					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.SaveToConfigNode ();
+				}
 			}
 			if (GUILayout.Button ("Load atmo")) {
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.LoadFromConfigNode ();
@@ -781,7 +786,12 @@ namespace scatterer
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (".cfg file used:");
-			GUILayout.TextField (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configUrl.parent.url);
+
+			GUIStyle guiStyle = new GUIStyle(GUI.skin.textArea);
+			if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.isConfigModuleManagerPatch)
+				guiStyle.normal.textColor = Color.red;
+
+			GUILayout.TextField (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.isConfigModuleManagerPatch ? "ModuleManager patch detected, saving disabled" : Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.configUrl.parent.url, guiStyle);
 			GUILayout.EndHorizontal ();
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds) {
 				GUILayout.BeginHorizontal ();
@@ -867,9 +877,15 @@ namespace scatterer
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button ("Save ocean")) {
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().saveToConfigNode ();
+
+			if (!Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.m_skyNode.isConfigModuleManagerPatch)
+			{
+				if (GUILayout.Button ("Save ocean"))
+				{
+					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().saveToConfigNode ();
+				}
 			}
+
 			if (GUILayout.Button ("Load ocean")) {
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].m_manager.GetOceanNode ().loadFromConfigNode ();
 				buildOceanGUI ();

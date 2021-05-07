@@ -67,6 +67,7 @@ namespace scatterer
 
 		public ProlandManager m_manager;
 		public UrlDir.UrlConfig configUrl;
+		public bool isConfigModuleManagerPatch = true;
 		
 		public bool usesCloudIntegration = true;
 		public List<Material> EVEvolumetrics = new List<Material>();
@@ -687,7 +688,7 @@ namespace scatterer
 		
 		public void Cleanup ()
 		{
-			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange)
+			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange && !isConfigModuleManagerPatch)
 			{
 				SaveToConfigNode ();
 			}
@@ -803,6 +804,19 @@ namespace scatterer
 				Rt = (Rt / Rg) * celestialBodyRadius;
 				RL = (RL / Rg) * celestialBodyRadius;
 				Rg = celestialBodyRadius;
+
+				//compare parentConfigNode with the one on disk to determine if it's a ModuleManager Patch
+				string parentConfigNodePath = Utils.GameDataPath + configUrl.parent.url +".cfg";
+				if (System.IO.File.Exists(parentConfigNodePath))
+				{
+					ConfigNode cnParentFromFile = ConfigNode.Load(Utils.GameDataPath + configUrl.parent.url +".cfg");
+
+					if (cnParentFromFile.HasNode("Scatterer_atmosphere"))
+					{
+						int comparisonResult = configUrl.config.ToString().CompareTo(cnParentFromFile.GetNode("Scatterer_atmosphere").ToString());
+						isConfigModuleManagerPatch = (comparisonResult != 0);
+					}
+				}
 			}
 			else
 			{

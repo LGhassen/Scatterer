@@ -186,10 +186,9 @@ namespace scatterer
 				Component.Destroy(m_oceanNode);
 			}
 		}
-		
-		
-		//this fixes the alt-enter bug the really stupid way but it's fast and simple so it'll do
-		//Do we still need this to fix alt-enter or any rendertexture lost?
+
+		//TODO: change this so that it takes the new configNode and that's all? May not be possible depending on if it needs to recreate lightraysRenderer and stuff
+		//Therefor add an option to init from configNode? yep
 		public void reBuildOcean()
 		{
 			if (!ReferenceEquals(m_oceanNode,null))
