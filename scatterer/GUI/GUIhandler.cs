@@ -308,6 +308,13 @@ namespace scatterer
 			{
 				qualityPresetsStrings = QualityPresetsLoader.GetPresetsList ();
 				currentPreset = QualityPresetsLoader.FindPresetOfCurrentSettings(Scatterer.Instance.mainSettings);
+
+				int index = qualityPresetsStrings.IndexOf(currentPreset);
+
+				if (index != -1)
+				{
+					selQualityPresetInt = index;
+				}
 			}
 			else
 			{
