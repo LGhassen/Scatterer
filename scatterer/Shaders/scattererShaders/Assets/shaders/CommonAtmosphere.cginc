@@ -208,19 +208,6 @@ float3 Transmittance(float r, float mu)
 	//#endif
 }
 
-float3 Transmittance(float r, float mu, float Rt0)
-{
-	// transmittance(=transparency) of atmosphere for infinite ray (r,mu)
-	// (mu=cos(view zenith angle)), intersections with ground ignored
-	float uR, uMu;
-	uR = sqrt((r - Rg) / (Rt0 - Rg));
-	uMu = atan((mu + 0.15) / (1.0 + 0.15) * tan(1.5)) / 1.5;
-	//#if !defined(SHADER_API_OPENGL)
-	return tex2Dlod (_Transmittance, float4(uMu, uR,0.0,0.0)).rgb;
-	//#else
-	//    return tex2D (_Transmittance, float2(uMu, uR)).rgb;
-	//#endif
-}
 
 // optical depth for ray (r,mu) of length d, using analytic formula
 // (mu=cos(view zenith angle)), intersections with ground ignored
@@ -236,6 +223,13 @@ float OpticalDepth(float H, float r, float mu, float d)
 	return sqrt((6.2831*H)*r) * exp((Rg-r)/H) * (x + dot(y, float2(1.0, -1.0)));
 }
 
+// transmittance(=transparency) of atmosphere for ray (r,mu) of length d
+// (mu=cos(view zenith angle)), intersections with ground ignored
+// uses analytic formula instead of transmittance texture
+float3 AnalyticTransmittance(float r, float mu, float d)
+{
+	return exp(- betaR * OpticalDepth(HR * _experimentalAtmoScale, r, mu, d) - betaMEx * OpticalDepth(HM * _experimentalAtmoScale, r, mu, d));
+}
 
 //search algorithm to find approx distance from optical depth
 float DistanceFromOpticalDepth(float H, float r, float mu, float targetOpticalDepth, float maxLength)
@@ -272,37 +266,6 @@ float DistanceFromOpticalDepth(float H, float r, float mu, float targetOpticalDe
 	}
 
 	return mid;
-}
-
-//Same as above but normalizes relative to radius
-float OpticalDepthNormalized(float H, float r, float mu, float d)
-{
-	float Rg1 = 6000000.0;
-	r = r * Rg1 / Rg;
-	d = d * Rg1 / Rg;
-
-	float a = sqrt((0.5/H)*r);
-	float2 a01 = a*float2(mu, mu + d / r);
-	float2 a01s = sign(a01);
-	float2 a01sq = a01*a01;
-	float x = a01s.y > a01s.x ? exp(a01sq.x) : 0.0;
-	float2 y = a01s / (2.3193*abs(a01) + sqrt(1.52*a01sq + 4.0)) * float2(1.0, exp(-d/H*(d/(2.0*r)+mu)));
-	return sqrt((6.2831*H)*r) * exp((Rg1-r)/H) * (x + dot(y, float2(1.0, -1.0)));
-}
-
-
-// transmittance(=transparency) of atmosphere for ray (r,mu) of length d
-// (mu=cos(view zenith angle)), intersections with ground ignored
-// uses analytic formula instead of transmittance texture
-float3 AnalyticTransmittance(float r, float mu, float d)
-{
-	return exp(- betaR * OpticalDepth(HR * _experimentalAtmoScale, r, mu, d) - betaMEx * OpticalDepth(HM * _experimentalAtmoScale, r, mu, d));
-}
-
-//same as above but normalizes relative to radius
-float3 AnalyticTransmittanceNormalized(float r, float mu, float d)
-{
-	return exp(- betaR * OpticalDepthNormalized(HR * _experimentalAtmoScale, r, mu, d) - betaMEx * OpticalDepthNormalized(HM * _experimentalAtmoScale, r, mu, d));
 }
 
 //the extinction part extracted from the inscattering function
@@ -365,69 +328,9 @@ float3 getExtinction(float3 camera, float3 _point, float shaftWidth, float scale
 	return extinction;
 }
 
-//the extinction part extracted from the inscattering function
-//this is for objects in atmo, computed using analyticTransmittance (better precision and less artifacts) or the precomputed transmittance table
-float3 getExtinctionNormalized(float3 camera, float3 _point, float shaftWidth, float scaleCoeff, float irradianceFactor)
-{
-	float3 extinction = float3(1, 1, 1);
-	float3 viewdir = _point - camera;
-	float d = length(viewdir) * scaleCoeff;
-	viewdir = viewdir / d;
-	/////////////////////experimental block begin
-	float RtResized = Rg + (Rt - Rg) * _experimentalAtmoScale;
-	//                viewdir.x += _viewdirOffset;
-	viewdir = normalize(viewdir);
-	/////////////////////experimental block end
-	float r = length(camera) * scaleCoeff;
-
-	if (r < 0.9 * Rg) {
-		camera.y += Rg;
-		r = length(camera) * scaleCoeff;
-	}
-
-	float rMu = dot(camera, viewdir);
-	float mu = rMu / r;
-
-	float dSq = rMu * rMu - r * r + RtResized*RtResized;
-	float deltaSq = sqrt(dSq);
-
-	float din = max(-rMu - deltaSq, 0.0);
-
-	if (din > 0.0 && din < d)
-	{
-		rMu += din;
-		mu = rMu / RtResized;
-		r = RtResized;
-		d -= din;
-	}
-	if (r <= RtResized && dSq >= 0.0) 
-	{ 
-		//    	if (r < Rg + 1600.0)
-		//    	{
-		//    		// avoids imprecision problems in aerial perspective near ground
-		//    		//Not sure if necessary with extinction
-		//        	float f = (Rg + 1600.0) / r;
-		//        	r = r * f;
-		//    	}
-
-		r = (r < Rg + 1600.0) ? (Rg + 1600.0) : r;
-
-		//set to analyticTransmittance only atm
-		#if defined (useAnalyticTransmittance)
-		extinction = min(AnalyticTransmittanceNormalized(r, mu, d), 1.0);
-		#endif
-	}	
-	else
-	{	//if out of atmosphere
-		extinction = float3(1,1,1);
-	}
-
-	return extinction;
-}
-
 //Extinction for a ray going all the way to the end of the atmosphere
 //i.e an infinite ray
-//for clouds so no analyticTransmittance required
+//for clouds so no analyticTransmittance required, may change this to use analytic transmittance so that everything is consistent
 float3 getSkyExtinction(float3 camera, float3 viewdir) //instead of camera this is the cloud position
 {
 	float3 extinction = float3(1,1,1);
@@ -474,9 +377,15 @@ float3 getSkyExtinction(float3 camera, float3 viewdir) //instead of camera this 
 	return extinction;
 }
 
+float3 sunsetExtinction(float3 camera)
+{
+	return(getSkyExtinction(camera,SUN_DIR));
+}
+
 //Extinction for a ray going all the way to the end of the atmosphere
 //i.e an infinite ray
 //with analyticTransmittance
+//doesn't seem to be used
 float3 getSkyExtinctionAnaLyticTransmittance(float3 camera, float3 viewdir) //instead of camera this is the cloud position
 {
 	float3 extinction = float3(1,1,1);
@@ -525,130 +434,9 @@ float3 getSkyExtinctionAnaLyticTransmittance(float3 camera, float3 viewdir) //in
 	//    				return lerp (float3(0,0,0),extinction,index);
 
 	return extinction;
-
-
-
 }
 
-//Extinction for a ray going all the way to the end of the atmosphere
-//i.e an infinite ray
-//lerped between transmittance and analyticTransmittance to fix the unsmooth terminators
-float3 getSkyExtinctionLerped(float3 camera, float3 viewdir) //instead of camera this is the cloud position
-{
-	float3 extinction = float3(1,1,1);
-
-	float RtResized=Rg+(Rt-Rg)*_experimentalAtmoScale;
-
-	float r = length(camera);
-	float rMu = dot(camera, viewdir);
-	float mu = rMu / r;
-
-	float dSq = rMu * rMu - r * r + RtResized*RtResized;
-	float deltaSq = sqrt(dSq);
-
-	float din = max(-rMu - deltaSq, 0.0);
-	if (din > 0.0)
-	{
-		camera += din * viewdir;
-		rMu += din;
-		mu = rMu / RtResized;
-		r = RtResized;
-	}
-
-	extinction = Transmittance(r, mu);
-
-	float distInAtmo = abs(intersectSphereInside(camera,viewdir,float3(0,0,0),RtResized));
-	float3 analyticExtinction = AnalyticTransmittance(r, mu, distInAtmo);
-
-	if (r > RtResized || dSq < 0.0) 
-	{
-		extinction = float3(1,1,1);
-	} 				
-
-	extinction = lerp(analyticExtinction, extinction, length(extinction));
-
-	//return mu < -sqrt(1.0 - (Rg / r) * (Rg / r)) ? float3(0,0,0) : extinction;
-
-	float terminatorAngle = -sqrt(1.0 - (Rg / r) * (Rg / r));
-	//return mu < terminatorAngle ? float3(0,0,0) : extinction;
-
-	float index= (mu - (terminatorAngle - cloudTerminatorSmooth)) / (2*cloudTerminatorSmooth);
-
-	if (index>1)
-		return extinction;
-	else if (index < 0)
-		return float3(0,0,0);
-	else
-		return lerp (float3(0,0,0),extinction,index);
-
-	return extinction;
-
-
-
-}
-
-float3 sunsetExtinction(float3 camera)
-{
-	return(getSkyExtinction(camera,SUN_DIR));
-}
-
-////analytic extinction from sun to cloud
-//float3 getSkyExtinctionAnalytic(float3 camera, float3 viewdir)
-//{
-//    float3 extinction = float3(1, 1, 1);
-//    
-//    /////////////////////experimental block begin
-//    float Rt0=Rt;
-//    Rt = Rg + (Rt - Rg) * _experimentalAtmoScale;
-//    //                viewdir.x += _viewdirOffset;
-//    /////////////////////experimental block end
-//    float r = length(camera);
-//    
-//    if (r < 0.9 * Rg) {
-//        camera.y += Rg;
-//        r = length(camera);
-//    }
-//    
-//    float rMu = dot(camera, viewdir);
-//    float mu = rMu / r;
-//
-//    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt, 0.000001);
-////    float deltaSq = sqrt(rMu * rMu - r * r + Rt * Rt);
-//    
-//    float din = max(-rMu - deltaSq, 0.0);
-//    
-//    if (din > 0.0 && din < d)
-//    {
-//        rMu += din;
-//        mu = rMu / Rt;
-//        r = Rt;
-//        d -= din;
-//    }
-//	if (r <= Rt)
-//    { 
-//    	if (r < Rg + 1600.0)
-//    	{
-//    		// avoids imprecision problems in aerial perspective near ground
-//    		//Not sure if necessary with extinction
-//        	float f = (Rg + 1600.0) / r;
-//        	r = r * f;
-//    	}
-//        
-//    	//set to analyticTransmittance only atm
-//    	#if defined (useAnalyticTransmittance)
-//    	extinction = min(AnalyticTransmittance(r, mu, d), 1.0);
-//    	#endif
-//    }	
-//	else
-//    {	//if out of atmosphere
-//        extinction = float3(1,1,1);
-//    }
-//
-//    return extinction;
-//}
-
-
-float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 extinction)//, float shaftWidth)
+float3 SkyRadiance2(float3 camera, float3 viewdir, float3 sundir, out float3 extinction)
 {
 	extinction = float3(1,1,1);
 	float3 result = float3(0,0,0);
@@ -808,7 +596,7 @@ float3 SkyIrradiance(float r, float muS)
 
 // transmittance(=transparency) of atmosphere for infinite ray (r,mu)
 // (mu=cos(view zenith angle)), or zero if ray intersects ground
-
+// Change to analytic?
 float3 TransmittanceWithShadow(float r, float mu) 
 {
 	return mu < -sqrt(1.0 - (Rg / r) * (Rg / r)) ? float3(0,0,0) : Transmittance(r, mu);

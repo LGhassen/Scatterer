@@ -107,7 +107,8 @@ Shader "Scatterer/SkySphere"
 					return float4(1.0,1.0,1.0,1.0);
 				} 
 
-				extinction = Transmittance(r, mu);    			
+				extinction = Transmittance(r, mu);			//this doesn't scale correctly as the view angle would have to be adjusted in a non-trivial way, and even then, intersections with the ground in the precomputed radius won't be adjusted for
+															//Best to switch to analyticTransmittance, with scaling of HR and HM with experimentalAtmoScale, and rescaling HR and HM when applying config to the scaled Body		
 
 				float average=(extinction.r+extinction.g+extinction.b)/3;
 				extinction = _Extinction_Tint * extinction + (1-_Extinction_Tint) * float3(average,average,average);

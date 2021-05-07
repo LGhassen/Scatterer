@@ -76,7 +76,6 @@
      <None Include="Assets\Shaders\EVE\old\noiseSimplex.cginc" />
      <None Include="Assets\Shaders\EVE\old\CloudVolumeParticle.shader" />
      <None Include="Assets\Shaders\Ocean\Fourier.shader" />
-     <None Include="Assets\Shaders\OldOrUnused\SkyScaledBoxScaled.shader" />
      <None Include="Assets\Shaders\DecodeEncode\WriteToFloat.shader" />
      <None Include="Assets\Shaders\EVE\GeometryCloudVolumeParticleToTexture.shader" />
      <None Include="Assets\Shaders\Ocean\Caustics\CausticsGodraysRaymarch.shader" />
@@ -121,7 +120,6 @@
      <None Include="Assets\Shaders\SunFlare\SunFlare.shader" />
      <None Include="Assets\Shaders\SunFlare\SunFlareExtinction.shader" />
      <None Include="Assets\Shaders\Instancing\My Lightmapping.cginc" />
-     <None Include="Assets\Shaders\OldOrUnused\SkyScaledBox.shader" />
      <None Include="Assets\Shaders\Atmo\Godrays\ShadowVolumeUtils.cginc" />
      <None Include="Assets\Shaders\DepthTexture\ShadowVolumeDepth - Copy.shader" />
      <None Include="Assets\Shaders\Atmo\DepthBufferScattering.shader" />
