@@ -94,9 +94,10 @@ namespace scatterer
 		String[] sunflareStrings;
 
 		int selSunflareGridInt = 0;
+		private Vector2 sunflareListScrollPosition = new Vector2();
 		bool editingSunflare = false;
 		string sunflareText = "";
-		private Vector2 sunflareScrollPosition = new Vector2();
+		private Vector2 sunflareEditScrollPosition = new Vector2();
 		
 		String[] qualityPresetsStrings;
 		string currentPreset;
@@ -210,7 +211,9 @@ namespace scatterer
 				else
 				{
 					GUILayout.BeginVertical ();
+					sunflareListScrollPosition = GUILayout.BeginScrollView(sunflareListScrollPosition, false, true, GUILayout.MinHeight(100));
 					selSunflareGridInt = GUILayout.SelectionGrid (selSunflareGridInt, sunflareStrings, 1);
+					GUILayout.EndScrollView();
 					if (GUILayout.Button ("Edit Selected"))
 					{
 						sunflareText = string.Copy(Scatterer.Instance.sunflareManager.scattererSunFlares.ElementAt(selSunflareGridInt).Value.configNodeToLoad.ToString());
@@ -220,7 +223,7 @@ namespace scatterer
 					
 					if (editingSunflare)
 					{
-						sunflareScrollPosition = GUILayout.BeginScrollView(sunflareScrollPosition, false, true, GUILayout.Width(800) ,GUILayout.MinHeight(Scatterer.Instance.pluginData.scrollSectionHeight + 100));
+						sunflareEditScrollPosition = GUILayout.BeginScrollView(sunflareEditScrollPosition, false, true, GUILayout.Width(600) ,GUILayout.MinHeight(Scatterer.Instance.pluginData.scrollSectionHeight + 100));
 						sunflareText = GUILayout.TextArea(sunflareText, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 						GUILayout.EndScrollView();
 						
