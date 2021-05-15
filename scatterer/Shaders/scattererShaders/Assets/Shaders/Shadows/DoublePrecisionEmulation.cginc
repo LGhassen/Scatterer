@@ -138,3 +138,33 @@ float2 ds_div (float2 dsa, float2 dsb) {
 
 	return dsc;
 }
+
+
+float2 ds_sqrt (float2 dsa) {
+	float2 dsb;
+
+	float t1, t2, t3;
+	float2 f, s0, s1;
+
+	if (dsa.x == 0.0)
+	{
+		return float2(0.0,0.0);
+	}
+
+	t1 = div_frc(1.0, sqrt(dsa.x));
+	t2 = times_frc(dsa.x, t1);
+
+	s0 = ds_mul(ds_set(t2),ds_set(t2));
+	s1 = ds_sub(dsa, s0);
+
+	t3 = times_frc(0.5, times_frc(s1.x,t1));
+
+	s0.x = t2;
+	s0.y = 0.0;
+	s1.x = t3;
+	s1.y = 0.0;
+
+	dsb = ds_add(s0, s1);
+
+	return dsb;
+}

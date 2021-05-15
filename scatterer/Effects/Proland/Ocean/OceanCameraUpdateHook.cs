@@ -55,10 +55,18 @@ namespace scatterer
 			                                           ctol1.m10, ctol1.m11, ctol1.m12, ctol1.m13,
 			                                           ctol1.m20, ctol1.m21, ctol1.m22, ctol1.m23,
 			                                           ctol1.m30, ctol1.m31, ctol1.m32, ctol1.m33);
-			
-			Vector3d translation = oceanNode.m_manager.parentLocalTransform.position;
-			
-			
+
+			Vector3d translation;
+
+			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			{
+				translation = oceanNode.m_manager.parentLocalTransform.position;	//have to use this in space center or get the tsunami bug
+			}
+			else
+			{
+				translation = oceanNode.m_manager.parentCelestialBody.position;		//more precise, especially with RSS, but breaks a bit in KSC
+			}
+
 			Matrix4x4d worldToLocal = new Matrix4x4d(1, 0, 0, -translation.x,
 			                                         0, 1, 0, -translation.y,
 			                                         0, 0, 1, -translation.z,
