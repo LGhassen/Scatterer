@@ -1114,7 +1114,13 @@ namespace scatterer
 						InitPostprocessMaterialUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
 
 						Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial, "PRESERVECLOUDCOLORS_ON", "PRESERVECLOUDCOLORS_OFF", EVEIntegration_preserveCloudColors);
-						
+
+						if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+						{
+							//Wrongly defined to ON in mainmenu by EVE, causing messed up extinction calculations
+							Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial, "WORLD_SPACE_ON", "WORLD_SPACE_OFF", false);
+						}
+
 					}
 				}
 				catch (Exception stupid)

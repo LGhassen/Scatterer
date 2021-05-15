@@ -60,7 +60,8 @@ Shader "Scatterer-EVE/Cloud" {
 				#pragma multi_compile ECLIPSES_OFF ECLIPSES_ON
 				#pragma multi_compile RINGSHADOW_OFF RINGSHADOW_ON
 				#pragma multi_compile PRESERVECLOUDCOLORS_OFF PRESERVECLOUDCOLORS_ON
-				#pragma multi_compile GODRAYS_OFF GODRAYS_ON
+				//#pragma multi_compile GODRAYS_OFF GODRAYS_ON
+				#define GODRAYS_OFF
 #endif
 				
 #ifndef MAP_TYPE_CUBE2_1
