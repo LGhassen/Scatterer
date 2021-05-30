@@ -67,7 +67,7 @@ namespace scatterer
 						if (distanceToCamera > scattererCelestialBody.unloadDistance && (distanceToShip > scattererCelestialBody.unloadDistance || distanceToShip == 0f))
 						{
 							scattererCelestialBody.m_manager.OnDestroy ();
-							UnityEngine.Object.Destroy (scattererCelestialBody.m_manager);
+							UnityEngine.Object.DestroyImmediate (scattererCelestialBody.m_manager);
 							scattererCelestialBody.m_manager = null;
 							scattererCelestialBody.active = false;
 							callCollector = true;
@@ -214,9 +214,10 @@ namespace scatterer
 				if (scattererCelestialBody.active)
 				{
 					scattererCelestialBody.m_manager.OnDestroy ();
-					UnityEngine.Object.Destroy (scattererCelestialBody.m_manager);
+					UnityEngine.Object.DestroyImmediate (scattererCelestialBody.m_manager);
 					scattererCelestialBody.m_manager = null;
 					scattererCelestialBody.active = false;
+					Utils.LogDebug ("Effects unloaded for " + scattererCelestialBody.celestialBodyName);
 				}
 			}
 		}

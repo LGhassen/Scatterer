@@ -180,12 +180,12 @@ namespace scatterer
 			if (!ReferenceEquals(m_skyNode,null))
 			{
 				m_skyNode.Cleanup();
-				Component.Destroy(m_skyNode);
+				Component.DestroyImmediate(m_skyNode);
 			}
 			
 			if (!ReferenceEquals(m_oceanNode,null)) {
 				m_oceanNode.Cleanup();
-				Component.Destroy(m_oceanNode);
+				Component.DestroyImmediate(m_oceanNode);
 			}
 		}
 

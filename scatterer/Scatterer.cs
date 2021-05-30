@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0770")]
+[assembly:AssemblyVersion("0.0771")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -54,7 +54,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0770";
+		public string versionNumber = "0.0771 dev";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
@@ -69,7 +69,7 @@ namespace scatterer
 			{
 				//destroy any duplicate instances that may be created by a duplicate install
 				Utils.LogError("Destroying duplicate instance, check your install for duplicate scatterer folders, or nested GameData folders");
-				UnityEngine.Object.Destroy(this);
+				UnityEngine.Object.DestroyImmediate(this);
 			}
 
 			Utils.LogInfo ("Version:"+versionNumber);
@@ -81,6 +81,7 @@ namespace scatterer
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
+
 				isActive = true;
 
 				LoadSettings ();
@@ -172,7 +173,7 @@ namespace scatterer
 						if (AA)
 						{
 							AA.Cleanup();
-							Component.Destroy(AA);
+							Component.DestroyImmediate(AA);
 						}
 					}
 				}
@@ -309,7 +310,7 @@ namespace scatterer
 				if(!ReferenceEquals(planetshineManager,null))
 				{
 					planetshineManager.CleanUp();
-					Component.Destroy(planetshineManager);
+					Component.DestroyImmediate(planetshineManager);
 				}
 
 				if (!ReferenceEquals(scattererCelestialBodiesManager,null))
@@ -320,54 +321,54 @@ namespace scatterer
 				if (ambientLightScript)
 				{
 					ambientLightScript.restoreLight();
-					Component.Destroy(ambientLightScript);
+					Component.DestroyImmediate(ambientLightScript);
 				}				
 
 				if (nearCamera)
 				{
 					if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
-						Component.Destroy (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
+						Component.DestroyImmediate (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
 					
 					
 					if (farCamera && farCamera.gameObject.GetComponent (typeof(Wireframe)))
-						Component.Destroy (farCamera.gameObject.GetComponent (typeof(Wireframe)));
+						Component.DestroyImmediate (farCamera.gameObject.GetComponent (typeof(Wireframe)));
 					
 					
 					if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
-						Component.Destroy (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
+						Component.DestroyImmediate (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
 				}
 
 				if (!ReferenceEquals(sunflareManager,null))
 				{
 					sunflareManager.Cleanup();
-					UnityEngine.Component.Destroy(sunflareManager);
-					GameObject.Destroy(sunflareManagerGO);
+					UnityEngine.Component.DestroyImmediate(sunflareManager);
+					GameObject.DestroyImmediate(sunflareManagerGO);
 				}
 
 				if (shadowFadeRemover)
 				{
 					shadowFadeRemover.OnDestroy();
-					Component.Destroy(shadowFadeRemover);
+					Component.DestroyImmediate(shadowFadeRemover);
 				}
 
 				if (shadowCascadeTweaker)
 				{
-					Component.Destroy(shadowCascadeTweaker);
+					Component.DestroyImmediate(shadowCascadeTweaker);
 				}
 
 				if (farDepthCommandbuffer)
-					Component.Destroy (farDepthCommandbuffer);
+					Component.DestroyImmediate (farDepthCommandbuffer);
 				
 				if (nearDepthCommandbuffer)
-					Component.Destroy (nearDepthCommandbuffer);
+					Component.DestroyImmediate (nearDepthCommandbuffer);
 
 				if (nearDepthPassMerger)
-					Component.Destroy (nearDepthPassMerger);
+					Component.DestroyImmediate (nearDepthPassMerger);
 
 				if (bufferManager)
 				{
 					bufferManager.OnDestroy();
-					Component.Destroy (bufferManager);
+					Component.DestroyImmediate (bufferManager);
 				}
 
 				foreach (GenericAntiAliasing AA in antiAliasingScripts)
@@ -375,19 +376,19 @@ namespace scatterer
 					if (AA)
 					{
 						AA.Cleanup();
-						Component.Destroy(AA);
+						Component.DestroyImmediate(AA);
 					}
 				}
 
 				if (reflectionProbeChecker)
 				{
 					reflectionProbeChecker.OnDestroy ();
-					Component.Destroy (reflectionProbeChecker);
+					Component.DestroyImmediate (reflectionProbeChecker);
 				}
 
 				if (ReflectionProbeCheckerGO)
 				{
-					UnityEngine.GameObject.Destroy (ReflectionProbeCheckerGO);
+					UnityEngine.GameObject.DestroyImmediate (ReflectionProbeCheckerGO);
 				}
 
 				if (mainSettings.useDepthBufferMode)
@@ -405,7 +406,7 @@ namespace scatterer
 				SaveSettings();
 			}
 
-			UnityEngine.Object.Destroy (guiHandler);
+			UnityEngine.Object.DestroyImmediate (guiHandler);
 			
 		}
 
@@ -667,7 +668,7 @@ namespace scatterer
 		{
 			foreach (SubpixelMorphologicalAntialiasing AA in antiAliasingScripts)
 			{
-				if (AA) { AA.Cleanup(); Component.Destroy(AA);}
+				if (AA) { AA.Cleanup(); Component.DestroyImmediate(AA);}
 			}
 			antiAliasingScripts.Clear ();
 

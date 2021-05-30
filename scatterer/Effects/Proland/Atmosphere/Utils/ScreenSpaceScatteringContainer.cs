@@ -49,7 +49,7 @@ namespace scatterer
 
 		void OnWillRenderObject()
 		{
-			if (material != null)
+			if (scatteringMR.enabled && material != null)
 			{
 				Camera cam = Camera.current;
 				
@@ -87,6 +87,19 @@ namespace scatterer
 					}
 				}
 			}
+		}
+
+		public void Cleanup()
+		{
+			foreach (var camBuffer in cameraToScatteringCommandBuffer)
+			{
+				if (!ReferenceEquals(camBuffer.Value,null))
+				{
+					camBuffer.Value.Cleanup();
+					Component.DestroyImmediate(camBuffer.Value);
+				}
+			}
+
 		}
 	}
 
@@ -217,11 +230,13 @@ namespace scatterer
 			}
 		}
 		
-		public void OnDestroy ()
+		public void Cleanup ()
 		{
 			if (targetCamera && !ReferenceEquals(rendererCommandBuffer,null))
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
+				rendererCommandBuffer = null;
+				renderingEnabled = true;
 
 				if (!ReferenceEquals(downscaledDepthRenderTexture,null))
 					downscaledDepthRenderTexture.Release();
@@ -231,8 +246,6 @@ namespace scatterer
 
 				if (!ReferenceEquals(downscaledRenderTexture1,null))
 					downscaledRenderTexture1.Release();
-
-				renderingEnabled = false;
 			}
 		}
 	}
@@ -244,7 +257,7 @@ namespace scatterer
 		public ScreenSpaceScatteringContainer (Material atmosphereMaterial, Transform parentTransform, float Rt, ProlandManager parentManager, bool quarterRes) : base (atmosphereMaterial, parentTransform, Rt, parentManager)
 		{
 			scatteringGO = GameObject.CreatePrimitive(PrimitiveType.Quad);
-			scatteringGO.name = "Scatterer screenspace scattering " + atmosphereMaterial.name;
+			scatteringGO.name = "Scatterer screenspace scattering " + parentManager.parentCelestialBody.name;
 			GameObject.Destroy (scatteringGO.GetComponent<Collider> ());
 			scatteringGO.transform.localScale = Vector3.one;
 
@@ -276,7 +289,7 @@ namespace scatterer
 			scatteringGO.SetActive(isEnabled);
 		}
 
-		~ScreenSpaceScatteringContainer()
+		public override void OnDestroy ()
 		{
 			setActivated (false);
 			if(!ReferenceEquals(scatteringGO,null))
@@ -288,8 +301,9 @@ namespace scatterer
 						scatteringGO.transform.parent = null;
 					}
 				}
-				
-				Component.Destroy(screenSpaceScattering);
+
+				screenSpaceScattering.Cleanup();
+				Component.DestroyImmediate(screenSpaceScattering);
 				GameObject.DestroyImmediate(scatteringGO);
 				screenSpaceScattering = null;
 				scatteringGO = null;

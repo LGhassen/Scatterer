@@ -37,7 +37,7 @@ namespace scatterer
 			scatteringGO.SetActive(isEnabled);
 		}
 
-		~AtmosphereProjectorContainer()
+		public override void OnDestroy ()
 		{
 			setActivated (false);
 			if(!ReferenceEquals(scatteringGO,null))

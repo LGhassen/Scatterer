@@ -342,6 +342,8 @@ namespace scatterer
 				skySphere.SwitchScaledMode ();
 			if (!ReferenceEquals(scaledScatteringContainer,null))
 				scaledScatteringContainer.SwitchScaledMode ();
+			if (!ReferenceEquals(localScatteringContainer,null))
+				localScatteringContainer.setActivated(false);
 			EVEvolumetrics.Clear();
 		}
 
@@ -353,6 +355,8 @@ namespace scatterer
 				skySphere.SwitchLocalMode();
 			if (!ReferenceEquals(scaledScatteringContainer,null))
 				scaledScatteringContainer.SwitchLocalMode ();
+			if (!ReferenceEquals(localScatteringContainer,null))
+				localScatteringContainer.setActivated(true);
 
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
@@ -699,17 +703,17 @@ namespace scatterer
 
 			if (m_transmit)
 			{
-				UnityEngine.Object.Destroy (m_transmit);
+				UnityEngine.Object.DestroyImmediate (m_transmit);
 			}
 
 			if (m_irradiance)
 			{
-				UnityEngine.Object.Destroy (m_irradiance);
+				UnityEngine.Object.DestroyImmediate (m_irradiance);
 			}
 
 			if (m_inscatter)
 			{
-				UnityEngine.Object.Destroy (m_inscatter);
+				UnityEngine.Object.DestroyImmediate (m_inscatter);
 			}
 
 			if (!ReferenceEquals (skySphere, null))
@@ -722,9 +726,9 @@ namespace scatterer
 				scaledScatteringContainer.Cleanup ();
 			}
 
-			if (localScatteringContainer)
+			if (!ReferenceEquals (localScatteringContainer, null))
 			{
-				UnityEngine.Object.Destroy (localScatteringContainer);
+				localScatteringContainer.OnDestroy();
 			}
 
 			if (!ReferenceEquals (godraysRenderer, null))

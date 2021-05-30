@@ -171,6 +171,7 @@ namespace scatterer
 			else
 				underwaterScattering = new AtmosphereProjectorContainer(underwaterMaterial,m_manager.parentLocalTransform,(float)m_manager.m_radius, m_manager);
 
+			underwaterScattering.setInScaledSpace(false);
 			underwaterScattering.setActivated(false);
 			underwaterScattering.updateContainer ();
 
@@ -420,9 +421,7 @@ namespace scatterer
 		}
 
 		public virtual void Cleanup ()
-		{
-			Utils.LogDebug ("ocean node Cleanup");
-			
+		{	
 			if (oceanCameraProjectionMatModifier)
 			{
 				oceanCameraProjectionMatModifier.OnDestroy ();
@@ -448,7 +447,7 @@ namespace scatterer
 			
 			if (!ReferenceEquals(null,underwaterScattering))
 			{
-				UnityEngine.Object.Destroy (underwaterScattering);
+				underwaterScattering.OnDestroy();
 			}
 
 			if (!ReferenceEquals(null,causticsShadowMaskModulator))

@@ -90,11 +90,13 @@ namespace scatterer
 			if (!ReferenceEquals (skySphereMR, null))
 			{
 				skySphereMR.enabled = false;
-				UnityEngine.Component.Destroy (skySphereMR);
+				UnityEngine.Component.DestroyImmediate (skySphereMR);
 			}
 
 			if (!ReferenceEquals (skySphereGO, null))
-				UnityEngine.Object.Destroy(skySphereGO);
+			{
+				UnityEngine.Object.DestroyImmediate(skySphereGO);
+			}
 		}
 	}
 }

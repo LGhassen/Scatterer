@@ -10,12 +10,12 @@ using UnityEngine;
 
 namespace scatterer
 {
-	public abstract class GenericLocalAtmosphereContainer : MonoBehaviour
+	public abstract class GenericLocalAtmosphereContainer
 	{	
 		protected GameObject scatteringGO = null;
-		protected bool inScaledSpace = false;
+		protected bool inScaledSpace = true;
 		protected bool underwater = false;
-		protected bool activated = true;
+		protected bool activated = false;
 		public Material material;
 		public ProlandManager manager;
 
@@ -41,5 +41,7 @@ namespace scatterer
 		}
 		
 		public abstract void updateContainer ();
+
+		public abstract void OnDestroy ();
 	}
 }
