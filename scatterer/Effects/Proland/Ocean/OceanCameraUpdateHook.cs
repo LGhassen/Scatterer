@@ -226,9 +226,12 @@ namespace scatterer
 			}
 
 			Matrix4x4 worldToLightMatrix = oceanNode.m_manager.mainSunLight.transform.worldToLocalMatrix;
-			worldToLightMatrix.m03 = oceanNode.m_manager.parentCelestialBody.transform.position.x;
-			worldToLightMatrix.m13 = oceanNode.m_manager.parentCelestialBody.transform.position.y;
-			worldToLightMatrix.m23 = oceanNode.m_manager.parentCelestialBody.transform.position.z;
+			if (oceanNode.m_manager.parentCelestialBody.transform.position.sqrMagnitude < oceanNode.m_manager.mainSunLight.transform.position.sqrMagnitude)
+			{
+				worldToLightMatrix.m03 = oceanNode.m_manager.parentCelestialBody.transform.position.x;
+				worldToLightMatrix.m13 = oceanNode.m_manager.parentCelestialBody.transform.position.y;
+				worldToLightMatrix.m23 = oceanNode.m_manager.parentCelestialBody.transform.position.z;
+			}
 
 			if (!ReferenceEquals (oceanNode.causticsShadowMaskModulator, null))
 			{

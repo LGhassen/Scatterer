@@ -108,6 +108,7 @@
      <None Include="Assets\Shaders\AA\SMAA.cginc" />
      <None Include="Assets\Shaders\Ocean\UnderwaterProjector.shader" />
      <None Include="Assets\Shaders\Atmo\Godrays\VolumeDepth.shader" />
+     <None Include="Assets\Shaders\Ocean\Caustics\CompositeCausticsGodrays.shader" />
      <None Include="Assets\Shaders\RingCommon.cginc" />
      <None Include="Assets\Shaders\EVE\SphereCloud.shader" />
      <None Include="Assets\Shaders\EVE\SphereCloudShadowMap.shader" />

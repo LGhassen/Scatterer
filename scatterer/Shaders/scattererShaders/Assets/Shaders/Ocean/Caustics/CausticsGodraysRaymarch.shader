@@ -32,26 +32,27 @@
 			#include "../../CommonAtmosphere.cginc"
 
 			float4x4 CameraToWorld;
-			uniform float4x4 WorldToLight;
-			uniform float3 LightDir;
-			uniform float3 PlanetOrigin;
-			uniform float oceanRadius;
-			uniform float transparencyDepth;
-			uniform float lightRaysStrength;
+			float4x4 WorldToLight;
+
+			float3 LightDir;
+			float3 PlanetOrigin;
+			float oceanRadius;
+			float transparencyDepth;
+			float lightRaysStrength;
 
 			sampler2D _CausticsTexture;
 
-			uniform float2 layer1Scale;
-			uniform float2 layer1Speed;
+			float2 layer1Scale;
+			float2 layer1Speed;
 
-			uniform float2 layer2Scale;
-			uniform float2 layer2Speed;
+			float2 layer2Scale;
+			float2 layer2Speed;
 
-			uniform float causticsBlurDepth;
+			float causticsBlurDepth;
 
-			uniform float warpTime;
+			float warpTime;
 
-			uniform sampler2D ScattererDownscaledDepth;
+			sampler2D ScattererDownscaledDepth;
 			float4 ScattererDownscaledDepth_TexelSize;
 
 			struct v2f

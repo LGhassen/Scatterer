@@ -24,29 +24,31 @@ Shader "Scatterer/CausticsOcclusion"
 			#include "UnityCG.cginc"
 			#include "Lighting.cginc"
 			#include "../../DepthCommon.cginc"
+
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma target 3.0
 			#pragma multi_compile SPHERE_PLANET FLAT_PLANET
 
-			uniform float4x4 CameraToWorld;
+			float4x4 CameraToWorld;
 			float4x4 WorldToLight;
-			uniform float3 PlanetOrigin;
-			uniform float oceanRadius;
+
+			float3 PlanetOrigin;
+			float oceanRadius;
 
 			sampler2D _CausticsTexture;
 
-			uniform float2 layer1Scale;
-			uniform float2 layer1Speed;
+			float2 layer1Scale;
+			float2 layer1Speed;
 
-			uniform float2 layer2Scale;
-			uniform float2 layer2Speed;
+			float2 layer2Scale;
+			float2 layer2Speed;
 
-			uniform float causticsMultiply;
-			uniform float causticsMinBrightness;
-			uniform float causticsBlurDepth;
+			float causticsMultiply;
+			float causticsMinBrightness;
+			float causticsBlurDepth;
 
-			uniform float warpTime;
+			float warpTime;
 
 			struct v2f 
 			{
@@ -58,7 +60,7 @@ Shader "Scatterer/CausticsOcclusion"
 			{
     			v2f OUT;
     			OUT.pos = UnityObjectToClipPos(v.vertex);
-				OUT.uv = ComputeScreenPos(OUT.pos);
+			OUT.uv = ComputeScreenPos(OUT.pos);
 
     			return OUT;
 			}

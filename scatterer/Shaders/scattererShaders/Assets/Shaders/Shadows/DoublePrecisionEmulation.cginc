@@ -168,3 +168,92 @@ float2 ds_sqrt (float2 dsa) {
 
 	return dsb;
 }
+
+
+// Couldn't get this to work
+// Sets B to the integer part of the DS number A and sets C equal to the
+// fractional part of A.  Note that if A = -3.3, then B = -3 and C = -0.3.
+float4 ds_infr(float2 dsa) {
+	int ic;
+	float2 dsb, dsc, con, f, s0, s1;
+	float t47, t23;
+
+	t47 = pow(2,47);
+	t23 = pow(2,23);
+
+	con = float2(t47, t23); //not sure about this, data operator
+
+	if (dsa.x == 0.0)
+		return 0.0;
+
+	//omitted dsa < 2^47 check here, should be fine
+
+	f = float2(1.0,0.0);
+
+	if (dsa.x > 0.0)
+	{
+		s0 = ds_add(dsa, con);
+		dsb = ds_sub(s0,con);
+		ic = ds_cmp(dsa, dsb);
+
+		if (ic >= 0.0)
+		{
+			dsc = ds_sub(dsa,dsb);
+		}
+		else
+		{
+			s1 = ds_sub(dsb,f);
+			dsb = s1;
+			dsc = ds_sub(dsa,dsb);
+		}
+	}
+	else
+	{
+		s0 = ds_sub(dsa,con);
+		dsb = ds_add(s0,con);
+		ic = ds_cmp(dsa,dsb);
+		if (ic <= 0.0)
+		{
+			dsc = ds_sub(dsa,dsb);
+		}
+		else
+		{
+			s1 = ds_add(dsb,f);
+			dsb = s1;
+			dsc = ds_sub(dsa,dsb);
+		}
+	}
+
+	return float4(dsb, dsc);
+}
+
+//Couldn't get this to work either, maybe something wrong with t47 and t23?
+//   This sets B equal to the integer nearest to the DS number A.
+float2 dsn_int (float2 dsa)
+{
+	float2 dsb, con, s0;
+	float t47, t23;
+
+	t47 = pow(2,47);
+	t23 = pow(2,23);
+
+	con = float2(t47, t23); //not sure about this, data operator, it may do something low-level, in which case this is screwed
+
+	if (dsa.x == 0.0)
+	{
+		return float2(0.0,0.0);
+	}
+
+	if (dsa.x > 0.0)
+	{
+		s0  = ds_add(dsa, con);
+		dsb = ds_sub(s0, con);
+	}
+	else
+	{
+		s0  = ds_sub(dsa,con);
+		dsb = ds_add(s0,con);
+	}
+
+	return dsb;
+}
