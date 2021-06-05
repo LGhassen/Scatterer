@@ -167,7 +167,6 @@
     <Compile Include="GUI\ModularGUI\GUIModuleVector4.cs" />
     <Compile Include="GUI\ModularGUI\GUIModuleLabel.cs" />
     <Compile Include="GUI\ModularGUI\GUIModuleString.cs" />
-    <Compile Include="Utilities\Camera\PartialDepthBuffer.cs" />
     <Compile Include="Utilities\Camera\TweakShadowCascades.cs" />
     <Compile Include="Utilities\Camera\DisableEffectsForReflectionsCamera.cs" />
     <Compile Include="Utilities\Camera\ReflectionProbeFixer.cs" />

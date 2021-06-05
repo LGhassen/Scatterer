@@ -362,16 +362,11 @@ Shader "Scatterer/OceanWhiteCaps"
 
 				float3 backGrnd = 0.0;
 
-//	#if defined (DEPTH_BUFFER_MODE_ON)
-//				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
-//	#else
 			#if SHADER_API_D3D11 || SHADER_API_D3D9 || SHADER_API_D3D || SHADER_API_D3D12
-					backGrnd = tex2D(ScattererScreenCopyBeforeOcean, (_ProjectionParams.x == 1.0) ? uv : float2(uv.x,1.0-uv.y) );
+				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, (_ProjectionParams.x == 1.0) ? uv : float2(uv.x,1.0-uv.y) );
 			#else
-					backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
+				backGrnd = tex2D(ScattererScreenCopyBeforeOcean, uv );
 			#endif
-//	#endif
-
 #endif
 
 #if defined (UNDERWATER_ON)

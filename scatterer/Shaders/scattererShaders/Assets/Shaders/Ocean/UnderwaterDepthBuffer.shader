@@ -1,5 +1,4 @@
-﻿
-Shader "Scatterer/UnderwaterScatterDepthBuffer" {
+﻿Shader "Scatterer/UnderwaterScatterDepthBuffer" {
 	SubShader {
 		Tags {"Queue" = "Transparent-499" "IgnoreProjector" = "True" "RenderType" = "Transparent"}
 

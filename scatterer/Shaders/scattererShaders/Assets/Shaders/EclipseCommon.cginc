@@ -2,7 +2,6 @@
 uniform float4x4 lightOccluders1; //array of light occluders
 uniform float4x4 lightOccluders2; //for each float4 xyz pos w radius
 
-
 //Source:   wikibooks.org/wiki/GLSL_Programming/Unity/Soft_Shadows_of_Spheres
 //I believe space engine also uses the same approach because the eclipses look the same ;)
 float getEclipseShadow(float3 worldPos, float3 worldLightPos,float3 occluderSpherePosition,
