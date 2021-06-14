@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0771")]
+[assembly:AssemblyVersion("0.0772")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -54,7 +54,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0771 dev";
+		public string versionNumber = "0.0772 dev";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
@@ -644,7 +644,6 @@ namespace scatterer
 			_mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			_mr.enabled = true;
 		}
-
 		
 		public void AddAAToInternalCamera(CameraManager.CameraMode cameraMode)
 		{
@@ -662,7 +661,6 @@ namespace scatterer
 				}
 			}
 		}
-
 		
 		public void SMAAOnCameraChange(CameraManager.CameraMode cameraMode)
 		{

@@ -164,8 +164,6 @@ namespace scatterer
 
 			}
 
-
-
 			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
 			{
 				sunflareExtinctionMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer/sunFlareExtinction"]);
@@ -311,7 +309,6 @@ namespace scatterer
 					SwitchEffectsScaled();
 				}
 
-
 				//For wave interactions, consider we are in scaledSpace only if we aren't in map view, otherwise we can be in the surface but pqsController is inactive
 				if (!MapView.MapIsEnabled)
 					simulateOceanInteraction = m_manager.parentCelestialBody.pqsController.isActive;
@@ -336,7 +333,7 @@ namespace scatterer
 
 		public void SwitchEffectsScaled()
 		{
-			Utils.LogInfo ("Skynode switch effects to scaled mode");
+			Utils.LogInfo ("Skynode switch effects to scaled mode: "+m_manager.parentCelestialBody.name);
 
 			if (!ReferenceEquals(skySphere,null))
 				skySphere.SwitchScaledMode ();
@@ -349,7 +346,7 @@ namespace scatterer
 
 		public void SwitchEffectsLocal()
 		{
-			Utils.LogInfo ("Skynode switch effects to local mode");
+			Utils.LogInfo ("Skynode switch effects to local mode "+m_manager.parentCelestialBody.name);
 
 			if (!ReferenceEquals(skySphere,null))
 				skySphere.SwitchLocalMode();

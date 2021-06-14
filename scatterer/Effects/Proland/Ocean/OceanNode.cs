@@ -96,9 +96,8 @@ namespace scatterer
 		}
 
 		public double height = 0;
-		public Vector3d2 m_Offset = Vector3d2.Zero ();
-		public Vector3d2 offset;
-		public Vector3d2 ux, uy, uz, oo;
+		public Vector3d2 m_Offset = Vector3d2.Zero();
+		public Vector3d2 offset = Vector3d2.Zero(), ux=Vector3d2.Zero(), uy=Vector3d2.Zero(), uz=Vector3d2.Zero(), oo=Vector3d2.Zero();
 
 		OceanCameraUpdateHook oceanCameraProjectionMatModifier;
 		UnderwaterDimmingHook underwaterDimmingHook;
