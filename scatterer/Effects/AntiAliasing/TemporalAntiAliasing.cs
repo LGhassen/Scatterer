@@ -247,6 +247,8 @@ namespace scatterer
 			m_HistoryPingPong[0] = 0;
 
 			ResetHistory();
+
+			targetCamera.ResetProjectionMatrix();
 		}
 	}
 }
