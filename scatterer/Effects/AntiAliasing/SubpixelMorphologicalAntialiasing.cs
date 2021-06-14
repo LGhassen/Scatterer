@@ -26,6 +26,7 @@ namespace scatterer
 
 		RenderTexture flip, flop;
 		static Texture2D areaTex, searchTex;
+		bool initialized = false;
 
 		public SubpixelMorphologicalAntialiasing()
 		{
@@ -76,38 +77,37 @@ namespace scatterer
 			SMAAMaterial.SetTexture("_AreaTex"  , areaTex);
 			SMAAMaterial.SetTexture("_SearchTex", searchTex);
 
-			quality = (Quality)((Int32) Mathf.Clamp( (float) Scatterer.Instance.mainSettings.smaaQuality,1f,2f));
+			quality = (Quality)((Int32) Mathf.Clamp( (float) Scatterer.Instance.mainSettings.smaaQuality,1f,2f));	//limit to 1 and 2, 1 and 2 are image-based. 0 is depth-based and would make performance worse by having to run for each camera's depth
 
 			SMAACommandBuffer = new CommandBuffer ();
 		}
 
 		public void OnPreCull()
 		{
+			if (!initialized)
+			{
+				SMAACommandBuffer.Clear ();
+			
+				SMAACommandBuffer.SetRenderTarget (flop);
+				SMAACommandBuffer.ClearRenderTarget (false, true, Color.clear);
+			
+				SMAACommandBuffer.SetRenderTarget (flip);
+				SMAACommandBuffer.ClearRenderTarget (false, true, Color.clear);
+			
+				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", BuiltinRenderTextureType.CameraTarget);
 
-			SMAACommandBuffer.Clear ();
+				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.EdgeDetection + (int)quality);		//screen to flip with edge detection
 			
-			SMAACommandBuffer.SetRenderTarget (flop);
-			SMAACommandBuffer.ClearRenderTarget (false, true, Color.clear);
+				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", flip);
+				SMAACommandBuffer.Blit (null, flop, SMAAMaterial, (int)Pass.BlendWeights + (int)quality);		//flip to flop with blendweights
+				SMAACommandBuffer.SetGlobalTexture ("_BlendTex", flop);
+				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", BuiltinRenderTextureType.CameraTarget);
+				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.NeighborhoodBlending);				//neighborhood blending to flip
+				SMAACommandBuffer.Blit (flip, BuiltinRenderTextureType.CameraTarget);							//blit back to screen
 			
-			SMAACommandBuffer.SetRenderTarget (flip);
-			SMAACommandBuffer.ClearRenderTarget (false, true, Color.clear);
-			
-			SMAACommandBuffer.SetGlobalTexture ("_MainTexture", BuiltinRenderTextureType.CameraTarget);
-			SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.EdgeDetection + (int)quality);		//screen to flip with edge detection
-			
-			SMAACommandBuffer.SetGlobalTexture ("_MainTexture", flip);
-			SMAACommandBuffer.Blit (null, flop, SMAAMaterial, (int)Pass.BlendWeights + (int)quality);		//flip to flop with blendweights
-			SMAACommandBuffer.SetGlobalTexture("_BlendTex", flop);
-			SMAACommandBuffer.SetGlobalTexture ("_MainTexture", BuiltinRenderTextureType.CameraTarget);
-			SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.NeighborhoodBlending);				//neighborhood blending to flip
-			SMAACommandBuffer.Blit (flip, BuiltinRenderTextureType.CameraTarget);							//blit back to screen
-			
-			targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer); 				// BeforeImageEffects doesn't work well so use this
-		}
-
-		public void OnPostRender()
-		{
-			targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer);
+				targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer); 				// BeforeImageEffects doesn't work well so use this
+				initialized = true;
+			}
 		}
 		
 		public override void Cleanup()
