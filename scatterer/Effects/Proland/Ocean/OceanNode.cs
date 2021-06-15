@@ -288,6 +288,7 @@ namespace scatterer
 					m_screenGrids [i] = MeshFactory.MakePlane (NX, NY, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
 				m_screenGrids [i].bounds = new Bounds (Vector3.zero, new Vector3 (1e8f, 1e8f, 1e8f));
 				waterGameObjects [i] = new GameObject ();
+				waterGameObjects [i].transform.position = m_manager.parentCelestialBody.transform.position;
 				waterGameObjects [i].transform.parent = m_manager.parentCelestialBody.transform;
 				//might be redundant
 				waterMeshFilters [i] = waterGameObjects [i].AddComponent<MeshFilter> ();
