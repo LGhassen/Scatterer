@@ -169,8 +169,7 @@ namespace scatterer
 		{
 			if (!renderingEnabled)
 			{
-				targetCamera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, rendererCommandBuffer); //ocean renders on afterforward opaque, local scattering (with it's depth downscale) can render and copy to screen on afterForwardAlpha I guess
-																									  //also test with custom camera mods, though all should work?
+				targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer); //ocean renders on AfterImageEffectsOpaque, local scattering (with it's depth downscale) can render and copy to screen on afterForwardAlpha
 				renderingEnabled = true;
 			}
 		}
@@ -179,7 +178,7 @@ namespace scatterer
 		{
 			if (renderingEnabled)
 			{
-				targetCamera.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, rendererCommandBuffer);
+				targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer);
 				renderingEnabled = false;
 			}
 		}
@@ -188,7 +187,7 @@ namespace scatterer
 		{
 			if (targetCamera && !ReferenceEquals(rendererCommandBuffer,null))
 			{
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, rendererCommandBuffer);
+				targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer);
 
 				if (!ReferenceEquals(depthCopyRenderTexture,null))
 					depthCopyRenderTexture.Release();

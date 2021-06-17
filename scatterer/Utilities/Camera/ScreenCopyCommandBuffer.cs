@@ -85,7 +85,7 @@ namespace scatterer
 		{
 			if (!isEnabled && isInitialized)
 			{
-				targetCamera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, screenCopyCommandBuffer);
+				targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
 				isEnabled = true;
 			}
 		}
@@ -100,7 +100,7 @@ namespace scatterer
 			{
 				if (isEnabled)
 				{
-					targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, screenCopyCommandBuffer);
+					targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
 					isEnabled = false;
 				}
 			}
@@ -112,7 +112,7 @@ namespace scatterer
 			{
 				if (!ReferenceEquals(screenCopyCommandBuffer,null))
 				{
-					targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, screenCopyCommandBuffer);
+					targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
 					colorCopyRenderTexture.Release();
 					isEnabled = false;
 				}

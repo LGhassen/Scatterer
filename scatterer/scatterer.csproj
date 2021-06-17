@@ -180,7 +180,6 @@
     <Compile Include="c:\gh\scattererGithub\Scatterer\scatterer\Utilities\Occlusion\ShadowMapCopier.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\ScaledScatteringContainer.cs" />
-    <Compile Include="Utilities\LinxAndPoodmundStartupFix.cs" />
     <Compile Include="DataSerialization\QualityPresetsLoader.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\ScreenSpaceScatteringContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereProjectorContainer.cs" />
@@ -194,6 +193,7 @@
     <Compile Include="Effects\AntiAliasing\GenericAntiAliasing.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV2.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV1.cs" />
+    <Compile Include="Utilities\VsyncStartupFix.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

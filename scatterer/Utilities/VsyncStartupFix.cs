@@ -6,7 +6,7 @@ using UnityEngine;
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.Instantly, false)]
-	public class LinxAndPoodmundStartupFix : MonoBehaviour
+	public class VsyncStartupFix : MonoBehaviour
 	{
 		public void Start()
 		{
