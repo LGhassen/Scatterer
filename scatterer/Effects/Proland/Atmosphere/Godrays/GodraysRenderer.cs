@@ -70,7 +70,7 @@ namespace scatterer
 			targetLight = inputLight;
 			parentSkyNode = inputParentSkyNode;
 
-			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "OCEAN_INTERSECT_ANALYTICAL", "OCEAN_INTERSECT_OFF", parentSkyNode.m_manager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders);
+			Utils.EnableOrDisableShaderKeywords (volumeDepthMaterial, "OCEAN_INTERSECT_ANALYTICAL", "OCEAN_INTERSECT_OFF", parentSkyNode.prolandManager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders);
 			volumeDepthMaterial.SetFloat ("Rt", parentSkyNode.Rt);
 			volumeDepthMaterial.SetFloat ("Rg", parentSkyNode.Rg);
 			Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "CLOUDSMAP_ON", "CLOUDSMAP_OFF", false);
@@ -78,7 +78,7 @@ namespace scatterer
 			Utils.EnableOrDisableShaderKeywords(volumeDepthMaterial, "DOWNSCALE_DEPTH_ON", "DOWNSCALE_DEPTH_OFF", false);
 
 
-			volumeDepthGO = new GameObject ("GodraysVolumeDepth "+inputParentSkyNode.m_manager.parentCelestialBody.name);
+			volumeDepthGO = new GameObject ("GodraysVolumeDepth "+inputParentSkyNode.prolandManager.parentCelestialBody.name);
 			volumeDepthMaterial.renderQueue = 2999; //for debugging only
 			volumeDepthGO.layer = 15;
 
@@ -131,9 +131,9 @@ namespace scatterer
 
 //		void InitCloudShadowCommandBuffers ()
 //		{
-//			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey (parentSkyNode.m_manager.parentCelestialBody.name))
+//			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey (parentSkyNode.prolandManager.parentCelestialBody.name))
 //			{
-//				foreach (EVEClouds2d clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [parentSkyNode.m_manager.parentCelestialBody.name])
+//				foreach (EVEClouds2d clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [parentSkyNode.prolandManager.parentCelestialBody.name])
 //				{
 //					if (clouds2d.CloudShadowMaterial != null)
 //					{
@@ -147,7 +147,7 @@ namespace scatterer
 //							cloudShadowMF.mesh.Clear ();
 //							cloudShadowMF.mesh = IcoSphere.CreateIcoSphereMesh ();
 //							cloudShadowMR = cloudShadowGO.GetComponent<MeshRenderer> ();
-//							cloudShadowGO.transform.parent = parentSkyNode.m_manager.parentCelestialBody.transform;
+//							cloudShadowGO.transform.parent = parentSkyNode.prolandManager.parentCelestialBody.transform;
 //							cloudShadowMR.receiveShadows = false;
 //							cloudShadowMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 //							cloudShadowMR.enabled = false;
@@ -267,7 +267,7 @@ namespace scatterer
 				targetCamera.CalculateFrustumCorners(new Rect(0, 0, 1, 1), QualitySettings.shadowDistance, Camera.MonoOrStereoscopicEye.Mono, frustumCornersFar);
 
 				//Kopernicus lights have the same position as their suns, so they are impossibly far, replace their position with something closer to get a useable matrix
-				Matrix4x4 worldToLocalMatrix = parentSkyNode.m_manager.mainSunLight.transform.worldToLocalMatrix;
+				Matrix4x4 worldToLocalMatrix = parentSkyNode.prolandManager.mainSunLight.transform.worldToLocalMatrix;
 				worldToLocalMatrix.m03 = Scatterer.Instance.nearCamera.transform.position.x;
 				worldToLocalMatrix.m13 = Scatterer.Instance.nearCamera.transform.position.y;
 				worldToLocalMatrix.m23 = Scatterer.Instance.nearCamera.transform.position.z;

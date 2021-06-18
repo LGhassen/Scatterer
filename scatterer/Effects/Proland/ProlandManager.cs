@@ -27,8 +27,8 @@ namespace scatterer
 		
 		public double m_radius = 600000.0f;
 		
-		OceanFFTgpu m_oceanNode;
-		public SkyNode m_skyNode;
+		OceanFFTgpu oceanNode;
+		public SkyNode skyNode;
 
 		public Color sunColor;
 		public CelestialBody parentCelestialBody;
@@ -38,9 +38,9 @@ namespace scatterer
 		public CelestialBody sunCelestialBody;
 		public List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
 		public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
+
 		public Light mainSunLight;
 		public ScattererCelestialBody scattererCelestialBody;
-		
 
 		public void Init(ScattererCelestialBody scattererBody)
 		{
@@ -51,7 +51,7 @@ namespace scatterer
 			usesCloudIntegration = scattererBody.usesCloudIntegration;
 			hasOcean = scattererBody.hasOcean;
 			
-			sunCelestialBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
+			sunCelestialBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
 
 			if (scattererBody.mainSunCelestialBody == "Sun")
 				mainSunLight = Scatterer.Instance.sunLight;
@@ -113,7 +113,7 @@ namespace scatterer
 		{
 			if (Scatterer.Instance.mainSettings.useEclipses) {
 				for (int k = 0; k < scattererBody.eclipseCasters.Count; k++) {
-					var cc = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.eclipseCasters [k]);
+					var cc = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.eclipseCasters [k]);
 					if (cc == null)
 						Utils.LogDebug ("Eclipse caster " + scattererBody.eclipseCasters [k] + " not found for " + scattererBody.celestialBodyName);
 					else {
@@ -128,7 +128,7 @@ namespace scatterer
 		{
 			if (Scatterer.Instance.mainSettings.usePlanetShine) {
 				for (int k = 0; k < scattererBody.planetshineSources.Count; k++) {
-					var cc = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.planetshineSources [k].bodyName);
+					var cc = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.planetshineSources [k].bodyName);
 					if (cc == null)
 						Utils.LogDebug ("planetshine source " + scattererBody.planetshineSources [k].bodyName + " not found for " + scattererBody.celestialBodyName);
 					else {
@@ -144,48 +144,48 @@ namespace scatterer
 
 		void InitSkyAndOceanNodes ()
 		{
-			m_skyNode = (SkyNode)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SkyNode));
-			m_skyNode.m_manager = this;
-			m_skyNode.SetCelestialBodyName (parentCelestialBody.name);
-			m_skyNode.SetParentScaledTransform (parentScaledTransform);
-			m_skyNode.SetParentLocalTransform (parentLocalTransform);
-			m_skyNode.usesCloudIntegration = usesCloudIntegration;
-			if (m_skyNode.LoadFromConfigNode ())
+			skyNode = (SkyNode)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SkyNode));
+			skyNode.prolandManager = this;
+			skyNode.SetCelestialBodyName (parentCelestialBody.name);
+			skyNode.SetParentScaledTransform (parentScaledTransform);
+			skyNode.SetParentLocalTransform (parentLocalTransform);
+			skyNode.usesCloudIntegration = usesCloudIntegration;
+			if (skyNode.LoadFromConfigNode ())
 			{
-				m_skyNode.Init ();
+				skyNode.Init ();
 				if (hasOcean && Scatterer.Instance.mainSettings.useOceanShaders && (HighLogic.LoadedScene != GameScenes.MAINMENU))
 				{
 					if (Scatterer.Instance.mainSettings.oceanFoam)
-						m_oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
+						oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
 					else
-						m_oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanFFTgpu));
+						oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanFFTgpu));
 
-					m_oceanNode.Init (this);
+					oceanNode.Init (this);
 				}
 			}
 		}
 		
 		public void Update()
 		{	
-			m_skyNode.UpdateNode();
+			skyNode.UpdateNode();
 			
-			if (!ReferenceEquals(m_oceanNode,null))
+			if (!ReferenceEquals(oceanNode,null))
 			{
-				m_oceanNode.UpdateNode();
+				oceanNode.UpdateNode();
 			}
 		}
 		
 		public void OnDestroy()
 		{
-			if (!ReferenceEquals(m_skyNode,null))
+			if (!ReferenceEquals(skyNode,null))
 			{
-				m_skyNode.Cleanup();
-				Component.DestroyImmediate(m_skyNode);
+				skyNode.Cleanup();
+				Component.DestroyImmediate(skyNode);
 			}
 			
-			if (!ReferenceEquals(m_oceanNode,null)) {
-				m_oceanNode.Cleanup();
-				Component.DestroyImmediate(m_oceanNode);
+			if (!ReferenceEquals(oceanNode,null)) {
+				oceanNode.Cleanup();
+				Component.DestroyImmediate(oceanNode);
 			}
 		}
 
@@ -193,18 +193,18 @@ namespace scatterer
 		//Therefor add an option to init from configNode? yep
 		public void reBuildOcean()
 		{
-			if (!ReferenceEquals(m_oceanNode,null))
+			if (!ReferenceEquals(oceanNode,null))
 			{
-				m_oceanNode.Cleanup();
-				Component.Destroy(m_oceanNode);
-				UnityEngine.Object.Destroy(m_oceanNode);
+				oceanNode.Cleanup();
+				Component.Destroy(oceanNode);
+				UnityEngine.Object.Destroy(oceanNode);
 
 				if (Scatterer.Instance.mainSettings.oceanFoam)
-					m_oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
+					oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
 				else
-					m_oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanFFTgpu));
+					oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanFFTgpu));
 
-				m_oceanNode.Init(this);
+				oceanNode.Init(this);
 
 				Utils.LogDebug("Rebuilt Ocean");
 			}
@@ -230,11 +230,11 @@ namespace scatterer
 		}
 
 		public OceanFFTgpu GetOceanNode() {
-			return m_oceanNode;
+			return oceanNode;
 		}
 		
 		public SkyNode GetSkyNode() {
-			return m_skyNode;
+			return skyNode;
 		}
 	}
 }

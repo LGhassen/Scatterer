@@ -71,7 +71,7 @@ namespace scatterer
 			if (isEnabled && oceanNode.isUnderwater)
 			{
 				Camera cam = Camera.current;
-				if (!cam || MapView.MapIsEnabled || oceanNode.m_manager.m_skyNode.inScaledSpace)
+				if (!cam || MapView.MapIsEnabled || oceanNode.prolandManager.skyNode.inScaledSpace)
 					return;
 				
 				if (!CameraToLightRaysScript.ContainsKey (cam))
@@ -180,7 +180,7 @@ namespace scatterer
 			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]);
 			compositeLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeCausticsGodrays")]);
 			compositeLightRaysMaterial.SetTexture ("LightRaysTexture", targetRT);
-			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNodeIn.m_manager.sunColor);
+			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNodeIn.prolandManager.sunColor);
 			compositeLightRaysMaterial.SetVector ("_Underwater_Color", oceanNodeIn.m_UnderwaterColor);
 
 			commandBuffer = new CommandBuffer();
@@ -207,7 +207,7 @@ namespace scatterer
 			//copy to screen
 			commandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, compositeLightRaysMaterial);
 
-			targetLight = oceanNodeIn.m_manager.mainSunLight;
+			targetLight = oceanNodeIn.prolandManager.mainSunLight;
 			oceanNode = oceanNodeIn;
 
 			isInitialized = true;
@@ -226,7 +226,7 @@ namespace scatterer
 				// If we use sunlightExtinction, reuse already computed extinction color
 				if (Scatterer.Instance.mainSettings.sunlightExtinction)
 				{
-					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNode.m_manager.sunColor * Scatterer.Instance.sunlightModulatorsManagerInstance.GetLastModulateColor(targetLight));
+					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNode.prolandManager.sunColor * Scatterer.Instance.sunlightModulatorsManagerInstance.GetLastModulateColor(targetLight));
 				}
 
 				renderingEnabled = true;

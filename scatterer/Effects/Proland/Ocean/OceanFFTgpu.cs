@@ -124,7 +124,7 @@ namespace scatterer {
 
 			if (m_gravity == 0f)
 			{
-				m_gravity = (float)(m_manager.parentCelestialBody.GeeASL * 9.81d);
+				m_gravity = (float)(prolandManager.parentCelestialBody.GeeASL * 9.81d);
 			}
 		
 			m_initSpectrumMat = new Material(ShaderReplacer.Instance.LoadedShaders[ ("Proland/Ocean/InitSpectrum")]);
@@ -182,7 +182,7 @@ namespace scatterer {
 					GameEvents.onGamePause.Add (ForcePauseMenuSaving);
 					GameEvents.onGameUnpause.Add(UnPause);
 
-					if (m_manager.parentCelestialBody.isHomeWorld)
+					if (prolandManager.parentCelestialBody.isHomeWorld)
 					{
 						KSP.UI.Screens.AltimeterSliderButtons[] sliderButtons = Resources.FindObjectsOfTypeAll<KSP.UI.Screens.AltimeterSliderButtons>();
 						if (sliderButtons.Length > 0)
@@ -274,7 +274,7 @@ namespace scatterer {
 
 		public override void UpdateNode()
 		{
-			if (!m_manager.m_skyNode.inScaledSpace || (m_manager.m_skyNode.simulateOceanInteraction && (findHeightsShader != null)))
+			if (!prolandManager.skyNode.inScaledSpace || (prolandManager.skyNode.simulateOceanInteraction && (findHeightsShader != null)))
 			{
 				//keep within low float exponents, otherwise we lose precision
 				float t = (float)(Planetarium.GetUniversalTime() % 100000.0);
@@ -767,7 +767,7 @@ namespace scatterer {
 		//FixedUpdate is responsible for physics, we do the part displacement here
 		public void FixedUpdate()
 		{
-			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null && m_manager.GetSkyNode().simulateOceanInteraction)
+			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null && prolandManager.GetSkyNode().simulateOceanInteraction)
 			{
 				if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity && !paused && FlightGlobals.ActiveVessel != null)
 				{

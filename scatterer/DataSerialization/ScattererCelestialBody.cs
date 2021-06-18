@@ -21,10 +21,9 @@ namespace scatterer
 			
 		public CelestialBody celestialBody;
 		public Transform transform;
-		public bool hasTransform = false;
+		public bool isFound = false;
 		public bool active;
-		public ProlandManager m_manager;
-		public Material originalPlanetMaterialBackup;
+		public ProlandManager prolandManager;
 		
 		public ScattererCelestialBody ()
 		{

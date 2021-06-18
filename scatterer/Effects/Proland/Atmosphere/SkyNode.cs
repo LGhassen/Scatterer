@@ -65,7 +65,7 @@ namespace scatterer
 		string celestialBodyName;
 		public Transform parentScaledTransform, parentLocalTransform;
 
-		public ProlandManager m_manager;
+		public ProlandManager prolandManager;
 		public UrlDir.UrlConfig configUrl;
 		public bool isConfigModuleManagerPatch = true;
 		
@@ -104,7 +104,7 @@ namespace scatterer
 
 		public void Init ()
 		{
-			float celestialBodyRadius = (float) m_manager.GetRadius ();
+			float celestialBodyRadius = (float) prolandManager.GetRadius ();
 			Rt = Rt * (celestialBodyRadius / Rg);
 			RL = RL * (celestialBodyRadius / Rg);
 			Rg = celestialBodyRadius;
@@ -125,13 +125,13 @@ namespace scatterer
 			localScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses);
-			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", m_manager.hasOcean);
+			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);
 
-			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (m_manager.parentCelestialBody.pqsController, null)
+			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null)
 			    && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
 			{
 				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
-				if (!godraysRenderer.Init(m_manager.mainSunLight, this))
+				if (!godraysRenderer.Init(prolandManager.mainSunLight, this))
 				{
 					Component.Destroy (godraysRenderer);
 					godraysRenderer = null;
@@ -149,18 +149,18 @@ namespace scatterer
 			TweakScaledMesh ();
 			InitScaledScattering ();
 
-			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
+			if (!ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null))
 			{
-				m_manager.parentCelestialBody.pqsController.isActive = false; 	//sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
+				prolandManager.parentCelestialBody.pqsController.isActive = false; 	//sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
 																				//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
 			}
 
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
 				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, m_manager, Scatterer.Instance.mainSettings.quarterResScattering && ReferenceEquals (godraysRenderer, null));
+					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && ReferenceEquals (godraysRenderer, null));
 				else
-					localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt, m_manager);
+					localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt, prolandManager);
 
 			}
 
@@ -179,7 +179,7 @@ namespace scatterer
 					sunflareExtinctionMaterial.SetTexture (ShaderProperties.ringTexture_PROPERTY, ringTexture);
 				}
 
-				Utils.EnableOrDisableShaderKeywords (sunflareExtinctionMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", m_manager.hasOcean);
+				Utils.EnableOrDisableShaderKeywords (sunflareExtinctionMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);
 			}
 
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
@@ -202,7 +202,7 @@ namespace scatterer
 
 			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 			{
-				if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+				if (prolandManager.parentCelestialBody.pqsController != null && prolandManager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 				{
 					skySphere.SwitchLocalMode ();
 				}
@@ -222,7 +222,7 @@ namespace scatterer
 
 			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 			{
-				if (m_manager.parentCelestialBody.pqsController != null && m_manager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
+				if (prolandManager.parentCelestialBody.pqsController != null && prolandManager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 				{
 					scaledScatteringContainer.SwitchLocalMode ();
 				}
@@ -277,9 +277,9 @@ namespace scatterer
 				localScatteringContainer.setInScaledSpace (inScaledSpace);
 				localScatteringContainer.updateContainer ();
 
-				if (m_manager.parentCelestialBody.pqsController != null && !Scatterer.Instance.mainSettings.useDepthBufferMode)
+				if (prolandManager.parentCelestialBody.pqsController != null && !Scatterer.Instance.mainSettings.useDepthBufferMode)
 				{
-					float planetOpactiy = m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
+					float planetOpactiy = prolandManager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
 					localScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, (planetOpactiy > 0f) ? 1 : 0);
 				}
 			}
@@ -291,11 +291,11 @@ namespace scatterer
 		
 		public void UpdateNode ()
 		{
-			if ((m_manager.parentCelestialBody.pqsController != null) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			if ((prolandManager.parentCelestialBody.pqsController != null) && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 			{
 				bool previousState = inScaledSpace;
 
-				inScaledSpace = !m_manager.parentCelestialBody.pqsController.isActive;
+				inScaledSpace = !prolandManager.parentCelestialBody.pqsController.isActive;
 
 				//if we go from scaled to local space
 				if (!inScaledSpace && previousState)
@@ -311,7 +311,7 @@ namespace scatterer
 
 				//For wave interactions, consider we are in scaledSpace only if we aren't in map view, otherwise we can be in the surface but pqsController is inactive
 				if (!MapView.MapIsEnabled)
-					simulateOceanInteraction = m_manager.parentCelestialBody.pqsController.isActive;
+					simulateOceanInteraction = prolandManager.parentCelestialBody.pqsController.isActive;
 			}
 			else
 			{
@@ -323,7 +323,7 @@ namespace scatterer
 			{
 				InterpolateVariables ();
 
-				if (m_manager.hasOcean && !Scatterer.Instance.mainSettings.useOceanShaders)
+				if (prolandManager.hasOcean && !Scatterer.Instance.mainSettings.useOceanShaders)
 				{
 					skySphere.MeshRenderer.enabled = (altitude>=0f);
 					stockSkyGameObject.SetActive(altitude<0f); //re-enable stock sky meshrenderer, for compatibility with stock underwater effect
@@ -333,7 +333,7 @@ namespace scatterer
 
 		public void SwitchEffectsScaled()
 		{
-			Utils.LogInfo ("Skynode switch effects to scaled mode: "+m_manager.parentCelestialBody.name);
+			Utils.LogInfo ("Skynode switch effects to scaled mode: "+prolandManager.parentCelestialBody.name);
 
 			if (!ReferenceEquals(skySphere,null))
 				skySphere.SwitchScaledMode ();
@@ -346,7 +346,7 @@ namespace scatterer
 
 		public void SwitchEffectsLocal()
 		{
-			Utils.LogInfo ("Skynode switch effects to local mode "+m_manager.parentCelestialBody.name);
+			Utils.LogInfo ("Skynode switch effects to local mode "+prolandManager.parentCelestialBody.name);
 
 			if (!ReferenceEquals(skySphere,null))
 				skySphere.SwitchLocalMode();
@@ -378,7 +378,7 @@ namespace scatterer
 
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
-			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ());
+			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToSun ());
 
 			mat.SetFloat (ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
@@ -388,7 +388,7 @@ namespace scatterer
 				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
 				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
 				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
-				                                                                       sunPosRelPlanet.z, (float)m_manager.sunCelestialBody.Radius));
+				                                                                       sunPosRelPlanet.z, (float)prolandManager.sunCelestialBody.Radius));
 			}
 			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
@@ -406,7 +406,7 @@ namespace scatterer
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
 
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
 		}
 		
 		
@@ -422,7 +422,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToSun ());
+			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToSun ());
 			mat.SetVector(ShaderProperties._camForward_PROPERTY, Scatterer.Instance.nearCamera.transform.forward);
 
 			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);			
@@ -461,23 +461,23 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
 			
 			
-			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun());
+			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToSun());
 
 			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
 
 			//When using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately: Instead ocean shader handles scattering internally
 			//When the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
 			//The ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering, this is not needed for stock ocean so disable it
-			Utils.EnableOrDisableShaderKeywords (mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && m_manager.hasOcean);
+			Utils.EnableOrDisableShaderKeywords (mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
 
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
-			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
+			if (prolandManager.flatScaledSpaceModel && prolandManager.parentCelestialBody.pqsController)
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
 			else
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f);
 
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
 
 			float camerasOverlap = 0f;
 			if (!Scatterer.Instance.unifiedCameraMode)
@@ -505,12 +505,12 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 			mat.SetFloat (ShaderProperties._global_depth_PROPERTY, interpolatedSettings.postProcessDepth *1000000);
 
-			if (m_manager.flatScaledSpaceModel && m_manager.parentCelestialBody.pqsController)
+			if (prolandManager.flatScaledSpaceModel && prolandManager.parentCelestialBody.pqsController)
 			{
 				if (MapView.MapIsEnabled)
 					mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
 				else
-					mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f - m_manager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY));
+					mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f - prolandManager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY));
 			}
 
 			mat.SetFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, interpolatedSettings.extinctionTint);
@@ -518,7 +518,7 @@ namespace scatterer
 
 			mat.SetFloat (ShaderProperties._openglThreshold_PROPERTY, interpolatedSettings.openglThreshold);
 
-			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, m_manager.getDirectionToSun ());
+			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToSun ());
 			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);
 
 
@@ -533,7 +533,7 @@ namespace scatterer
 				mat.SetFloat("_godrayStrength", godrayStrength);
 			}
 
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
 		}
 
 		public void InitUniforms (Material mat)
@@ -582,8 +582,8 @@ namespace scatterer
 			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
-			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, m_manager.flatScaledSpaceModel ? 1f : 0f );
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, m_manager.sunColor);
+			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, prolandManager.flatScaledSpaceModel ? 1f : 0f );
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
 
 			if (!ReferenceEquals (godraysRenderer, null))
 			{
@@ -804,7 +804,7 @@ namespace scatterer
 
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			
-				float celestialBodyRadius = (float)m_manager.GetRadius ();
+				float celestialBodyRadius = (float)prolandManager.GetRadius ();
 			
 				Rt = (Rt / Rg) * celestialBodyRadius;
 				RL = (RL / Rg) * celestialBodyRadius;
@@ -830,8 +830,8 @@ namespace scatterer
 
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Remove(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == celestialBodyName));
 
-				m_manager.OnDestroy();
-				UnityEngine.Object.Destroy (m_manager);
+				prolandManager.OnDestroy();
+				UnityEngine.Object.Destroy (prolandManager);
 				UnityEngine.Object.Destroy (this);
 			}
 
@@ -904,14 +904,14 @@ namespace scatterer
 				sharedMaterial.SetFloat ("_Shininess", shininess / 100f);
 			}
 
-			if (!ReferenceEquals (m_manager.parentCelestialBody.pqsController, null))
+			if (!ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null))
 			{
-				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.surfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
-				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.fallbackMaterial,"AERIAL_ON", "AERIAL_OFF", false);
-				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.lowQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
-				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.mediumQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
-				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.highQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
-				Utils.EnableOrDisableShaderKeywords(m_manager.parentCelestialBody.pqsController.ultraQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.surfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.fallbackMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.lowQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.mediumQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.highQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.ultraQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 			}
 		}
 		
@@ -924,7 +924,7 @@ namespace scatterer
 
 			tweakedScaledmesh = (Mesh)Instantiate (originalScaledMesh);
 			
-			double scaledRadius = m_manager.GetRadius () / (ScaledSpace.ScaleFactor * parentScaledTransform.localScale.x);
+			double scaledRadius = prolandManager.GetRadius () / (ScaledSpace.ScaleFactor * parentScaledTransform.localScale.x);
 			
 			Vector3[] verts = tweakedScaledmesh.vertices;
 			
@@ -988,9 +988,9 @@ namespace scatterer
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
 			float lerpedScale = Mathf.Lerp (1f, experimentalAtmoScale, (extinctionPosition.magnitude - Rg) / 2000f);
 			//hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
-			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, m_manager.getDirectionToSun (), Rt, Rg, m_transmit, lerpedScale);
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToSun (), Rt, Rg, m_transmit, lerpedScale);
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
-			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (m_manager.mainSunLight, extinction);
+			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (prolandManager.mainSunLight, extinction);
 
 		}
 
@@ -998,7 +998,7 @@ namespace scatterer
 		{
 			foreach (SunFlare customSunFlare in Scatterer.Instance.sunflareManager.scattererSunFlares.Values)
 			{
-				sunflareExtinctionMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, m_manager.getDirectionToCelestialBody (customSunFlare.source).normalized);
+				sunflareExtinctionMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToCelestialBody (customSunFlare.source).normalized);
 				sunflareExtinctionMaterial.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 
 				if (!MapView.MapIsEnabled)
@@ -1020,19 +1020,19 @@ namespace scatterer
 		{
 			float scaleFactor = ScaledSpace.ScaleFactor;
 			sunPosRelPlanet = Vector3.zero;
-			sunPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (m_manager.sunCelestialBody.transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
+			sunPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.sunCelestialBody.transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
 			castersMatrix1 = Matrix4x4.zero;
 			castersMatrix2 = Matrix4x4.zero;
 			Vector3 casterPosRelPlanet;
-			for (int i = 0; i < Mathf.Min (4, m_manager.eclipseCasters.Count); i++)
+			for (int i = 0; i < Mathf.Min (4, prolandManager.eclipseCasters.Count); i++)
 			{
-				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (m_manager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
-				castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
+				castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
 			}
-			for (int i = 4; i < Mathf.Min (8, m_manager.eclipseCasters.Count); i++)
+			for (int i = 4; i < Mathf.Min (8, prolandManager.eclipseCasters.Count); i++)
 			{
-				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (m_manager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
-				castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)m_manager.eclipseCasters [i].Radius));
+				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
+				castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
 			}
 		}
 
@@ -1040,17 +1040,17 @@ namespace scatterer
 		{
 			planetShineRGBMatrix = Matrix4x4.zero;
 			planetShineSourcesMatrix = Matrix4x4.zero;
-			for (int i = 0; i < Mathf.Min (4, m_manager.planetshineSources.Count); i++)
+			for (int i = 0; i < Mathf.Min (4, prolandManager.planetshineSources.Count); i++)
 			{
 				Vector3 sourcePosRelPlanet;
 				//offset lightsource position to make light follow lit crescent
 				//i.e light doesn't come from the center of the planet but follows the lit side
 				//1/4 of the way from center to surface should be fine
-				Vector3d offsetPos = m_manager.planetshineSources [i].body.position + 0.25 * m_manager.planetshineSources [i].body.Radius * (m_manager.sunCelestialBody.position - m_manager.planetshineSources [i].body.position).normalized;
-				sourcePosRelPlanet = Vector3.Scale (offsetPos - m_manager.parentCelestialBody.GetTransform ().position, new Vector3d (ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor));
-				planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y, sourcePosRelPlanet.z, m_manager.planetshineSources [i].isSun ? 1.0f : 0.0f));
-				float intensity = m_manager.planetshineSources [i].intensity;
-				planetShineRGBMatrix.SetRow (i, new Vector4 (m_manager.planetshineSources [i].color.x, m_manager.planetshineSources [i].color.y, m_manager.planetshineSources [i].color.z, intensity));
+				Vector3d offsetPos = prolandManager.planetshineSources [i].body.position + 0.25 * prolandManager.planetshineSources [i].body.Radius * (prolandManager.sunCelestialBody.position - prolandManager.planetshineSources [i].body.position).normalized;
+				sourcePosRelPlanet = Vector3.Scale (offsetPos - prolandManager.parentCelestialBody.GetTransform ().position, new Vector3d (ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor));
+				planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y, sourcePosRelPlanet.z, prolandManager.planetshineSources [i].isSun ? 1.0f : 0.0f));
+				float intensity = prolandManager.planetshineSources [i].intensity;
+				planetShineRGBMatrix.SetRow (i, new Vector4 (prolandManager.planetshineSources [i].color.x, prolandManager.planetshineSources [i].color.y, prolandManager.planetshineSources [i].color.z, intensity));
 			}
 		}
 
@@ -1085,7 +1085,7 @@ namespace scatterer
 								throw new Exception ("Scatterer doesn't support tiled/thick Kopernicus rings (not implemented)");
 							}
 							ringInnerRadius *= ScaledSpace.ScaleFactor;
-							ringInnerRadius = Mathf.Max(ringInnerRadius,(float)(m_manager.m_radius)* (1f + 10f/600000f)); //prevent inner ring radius from intersecting planet's radius because that's stupid and it breaks the shader
+							ringInnerRadius = Mathf.Max(ringInnerRadius,(float)(prolandManager.m_radius)* (1f + 10f/600000f)); //prevent inner ring radius from intersecting planet's radius because that's stupid and it breaks the shader
 							ringOuterRadius *= ScaledSpace.ScaleFactor;
 						}
 						catch (Exception e) {

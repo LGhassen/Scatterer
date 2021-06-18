@@ -87,7 +87,7 @@ namespace scatterer {
 
 			base.UpdateNode();
 
-			if (!MapView.MapIsEnabled && m_manager.m_skyNode.simulateOceanInteraction)
+			if (!MapView.MapIsEnabled && prolandManager.skyNode.simulateOceanInteraction)
 			{
 				m_fourier.PeformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
 				

@@ -32,9 +32,9 @@ namespace scatterer
 				if (sctBody.hasOcean)
 				{
 					bool removed = false;
-					var celBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
+					var celBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
 					if (celBody == null) {
-						celBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
+						celBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.transformName);
 					}
 					
 					if (celBody != null)

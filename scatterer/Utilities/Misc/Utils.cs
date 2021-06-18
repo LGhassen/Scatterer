@@ -79,7 +79,7 @@ namespace scatterer
 		
 		public static void FixKopernicusRingsRenderQueue ()
 		{
-			foreach (CelestialBody _cb in Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies) {
+			foreach (CelestialBody _cb in FlightGlobals.Bodies) {
 				GameObject ringObject;
 				ringObject = GameObject.Find (_cb.name + "Ring");
 				if (ringObject) {

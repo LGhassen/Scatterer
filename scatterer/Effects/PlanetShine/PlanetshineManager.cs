@@ -46,14 +46,14 @@ namespace scatterer
 			
 			foreach (PlanetShineLightSource _aSource in Scatterer.Instance.planetsConfigsReader.celestialLightSourcesData)
 			{
-				var celBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
+				var celBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.bodyName == _aSource.bodyName);
 				if (celBody)
 				{
 					PlanetShineLight aPsLight = new PlanetShineLight ();
 					aPsLight.isSun = _aSource.isSun;
 					aPsLight.source = celBody;
 					if (!_aSource.isSun)
-						aPsLight.sunCelestialBody = Scatterer.Instance.scattererCelestialBodiesManager.CelestialBodies.SingleOrDefault (_cb => _cb.GetName () == _aSource.mainSunCelestialBody);
+						aPsLight.sunCelestialBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == _aSource.mainSunCelestialBody);
 					GameObject ScaledPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledSpaceSunLight.gameObject);
 					GameObject LocalPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledSpaceSunLight.gameObject);
 					ScaledPlanetShineLight.GetComponent<Light> ().type = LightType.Point;

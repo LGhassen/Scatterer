@@ -528,7 +528,7 @@ namespace scatterer
 					SetShadowsForLight (sunLight);
 
 					// And finally force shadow Casting and receiving on celestial bodies if not already set
-					foreach (CelestialBody _sc in scattererCelestialBodiesManager.CelestialBodies)
+					foreach (CelestialBody _sc in FlightGlobals.Bodies)
 					{
 						if (_sc.pqsController)
 						{
@@ -614,10 +614,10 @@ namespace scatterer
 			{
 				if (_cur.active)
 				{
-					_cur.m_manager.m_skyNode.ReInitMaterialUniformsOnRenderTexturesLoss ();
-					if (_cur.m_manager.hasOcean && mainSettings.useOceanShaders && !_cur.m_manager.m_skyNode.inScaledSpace)
+					_cur.prolandManager.skyNode.ReInitMaterialUniformsOnRenderTexturesLoss ();
+					if (_cur.prolandManager.hasOcean && mainSettings.useOceanShaders && !_cur.prolandManager.skyNode.inScaledSpace)
 					{
-						_cur.m_manager.reBuildOcean ();
+						_cur.prolandManager.reBuildOcean ();
 					}
 				}
 			}

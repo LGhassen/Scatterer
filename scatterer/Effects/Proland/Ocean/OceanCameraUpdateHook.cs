@@ -24,7 +24,7 @@ namespace scatterer
 		public void OnWillRenderObject()
 		{
 			Camera cam = Camera.current;
-			if (!cam || MapView.MapIsEnabled || !oceanNode.m_manager.m_skyNode.simulateOceanInteraction)
+			if (!cam || MapView.MapIsEnabled || !oceanNode.prolandManager.skyNode.simulateOceanInteraction)
 				return;
 
 			updateCameraSpecificUniforms (oceanNode.m_oceanMaterial, cam);
@@ -60,11 +60,11 @@ namespace scatterer
 
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
 			{
-				translation = oceanNode.m_manager.parentLocalTransform.position;	//have to use this in space center or get the tsunami bug
+				translation = oceanNode.prolandManager.parentLocalTransform.position;	//have to use this in space center or get the tsunami bug
 			}
 			else
 			{
-				translation = oceanNode.m_manager.parentCelestialBody.position;		//more precise, especially with RSS, but breaks a bit in KSC
+				translation = oceanNode.prolandManager.parentCelestialBody.position;		//more precise, especially with RSS, but breaks a bit in KSC
 			}
 
 			Matrix4x4d worldToLocal = new Matrix4x4d(1, 0, 0, -translation.x,
@@ -79,7 +79,7 @@ namespace scatterer
 			Vector3d2 cl = new Vector3d2 ();
 			cl = camToLocal * Vector3d2.Zero ();
 			
-			double radius = oceanNode.m_manager.GetRadius ();
+			double radius = oceanNode.prolandManager.GetRadius ();
 			
 			oceanNode.uz = cl.Normalized (); // unit z vector of ocean frame, in local space
 			
@@ -162,7 +162,7 @@ namespace scatterer
 			//			horizon1 = new Vector3d2 (-beta0, -beta1, 0.0);
 			//			horizon2 = new Vector3d2 (beta0 * beta0 - gamma0, 2.0 * (beta0 * beta1 - gamma1), beta1 * beta1 - gamma2);
 			
-			Vector3d2 sunDir = new Vector3d2 (oceanNode.m_manager.getDirectionToSun ());
+			Vector3d2 sunDir = new Vector3d2 (oceanNode.prolandManager.getDirectionToSun ());
 			Vector3d2 oceanSunDir = localToOcean.ToMatrix3x3d () * sunDir;
 			
 			oceanMaterial.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, cameraToWorld .ToMatrix4x4());
@@ -211,7 +211,7 @@ namespace scatterer
 			//I think these should be moved to NonCameraSpecificUniforms
 			if (Scatterer.Instance.mainSettings.usePlanetShine)
 			{
-				Matrix4x4 planetShineSourcesMatrix=oceanNode.m_manager.m_skyNode.planetShineSourcesMatrix;
+				Matrix4x4 planetShineSourcesMatrix=oceanNode.prolandManager.skyNode.planetShineSourcesMatrix;
 				
 				Vector3d2 oceanSunDir2;
 				for (int i=0;i<4;i++)
@@ -222,30 +222,30 @@ namespace scatterer
 				}
 				oceanMaterial.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix); //this can become shared code to not recompute
 				
-				oceanMaterial.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, oceanNode.m_manager.m_skyNode.planetShineRGBMatrix);
+				oceanMaterial.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, oceanNode.prolandManager.skyNode.planetShineRGBMatrix);
 			}
 
-			Matrix4x4 worldToLightMatrix = oceanNode.m_manager.mainSunLight.transform.worldToLocalMatrix;
-			if (oceanNode.m_manager.parentCelestialBody.transform.position.sqrMagnitude < oceanNode.m_manager.mainSunLight.transform.position.sqrMagnitude)
+			Matrix4x4 worldToLightMatrix = oceanNode.prolandManager.mainSunLight.transform.worldToLocalMatrix;
+			if (oceanNode.prolandManager.parentCelestialBody.transform.position.sqrMagnitude < oceanNode.prolandManager.mainSunLight.transform.position.sqrMagnitude)
 			{
-				worldToLightMatrix.m03 = oceanNode.m_manager.parentCelestialBody.transform.position.x;
-				worldToLightMatrix.m13 = oceanNode.m_manager.parentCelestialBody.transform.position.y;
-				worldToLightMatrix.m23 = oceanNode.m_manager.parentCelestialBody.transform.position.z;
+				worldToLightMatrix.m03 = oceanNode.prolandManager.parentCelestialBody.transform.position.x;
+				worldToLightMatrix.m13 = oceanNode.prolandManager.parentCelestialBody.transform.position.y;
+				worldToLightMatrix.m23 = oceanNode.prolandManager.parentCelestialBody.transform.position.z;
 			}
 
 			if (!ReferenceEquals (oceanNode.causticsShadowMaskModulator, null))
 			{
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, worldToLightMatrix);
-				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.m_manager.parentLocalTransform.position);
+				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.prolandManager.parentLocalTransform.position);
 			}
 
 			if (!ReferenceEquals (oceanNode.causticsLightRaysRenderer, null))
 			{
 				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
 				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, worldToLightMatrix);
-				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.LightDir_PROPERTY, oceanNode.m_manager.mainSunLight.transform.forward);
-				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.m_manager.parentLocalTransform.position);
+				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.LightDir_PROPERTY, oceanNode.prolandManager.mainSunLight.transform.forward);
+				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.prolandManager.parentLocalTransform.position);
 			}
 		}
 
