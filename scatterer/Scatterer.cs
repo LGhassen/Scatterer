@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0772")]
+[assembly:AssemblyVersion("0.0780")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -30,7 +30,7 @@ namespace scatterer
 		public BufferManager bufferManager;
 		public SunflareManager sunflareManager; GameObject sunflareManagerGO;
 		public EVEReflectionHandler eveReflectionHandler;
-		public PlanetshineManager planetshineManager;
+		//public PlanetshineManager planetshineManager;
 
 		DisableAmbientLight ambientLightScript;
 		public SunlightModulatorsManager sunlightModulatorsManagerInstance;
@@ -54,7 +54,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0772";
+		public string versionNumber = "0.0780 dev";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
@@ -141,11 +141,11 @@ namespace scatterer
 
 			AddReflectionProbeFixer ();
 
-			if (mainSettings.usePlanetShine)
-			{
-				planetshineManager = new PlanetshineManager();
-				planetshineManager.Init();
-			}
+//			if (mainSettings.usePlanetShine)
+//			{
+//				planetshineManager = new PlanetshineManager();
+//				planetshineManager.Init();
+//			}
 
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
@@ -291,10 +291,10 @@ namespace scatterer
 					sunflareManager.UpdateFlares();
 				}
 
-				if(!ReferenceEquals(planetshineManager,null))
-				{
-					planetshineManager.UpdatePlanetshine();
-				}
+//				if(!ReferenceEquals(planetshineManager,null))
+//				{
+//					planetshineManager.UpdatePlanetshine();
+//				}
 			}
 		} 
 
@@ -307,11 +307,11 @@ namespace scatterer
 					sunlightModulatorsManagerInstance.Cleanup();
 				}
 
-				if(!ReferenceEquals(planetshineManager,null))
-				{
-					planetshineManager.CleanUp();
-					Component.DestroyImmediate(planetshineManager);
-				}
+//				if(!ReferenceEquals(planetshineManager,null))
+//				{
+//					planetshineManager.CleanUp();
+//					Component.DestroyImmediate(planetshineManager);
+//				}
 
 				if (!ReferenceEquals(scattererCelestialBodiesManager,null))
 				{

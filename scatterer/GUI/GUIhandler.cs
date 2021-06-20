@@ -760,6 +760,17 @@ namespace scatterer
 			GUILayout.Label ("Misc");
 			GUIColorNoButton("Sunlight color (Not saved automatically, save manually to PlanetsList)", ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.sunColor);
 
+			int index = 0;
+			foreach (SecondarySun secondarySun in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.secondarySuns)
+			{
+				Vector4 colorVect = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.planetShineRGBMatrix.GetRow(index);
+				Color col = new Color(colorVect.x, colorVect.y, colorVect.z);
+				GUIColorNoButton("Secondary sunlight color "+secondarySun.config.celestialBodyName, ref col);
+				colorVect = new Vector4(col.r, col.g, col.b, colorVect.w);
+				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.planetShineRGBMatrix.SetRow(index, colorVect);
+				index++;
+			}
+
 			GUILayout.EndScrollView ();
 			GUILayout.BeginHorizontal ();
 			if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.currentConfigPoint == 0)

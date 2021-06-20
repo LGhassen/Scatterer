@@ -206,23 +206,24 @@ namespace scatterer
 			oceanMaterial.SetVector (ShaderProperties.sphereDir_PROPERTY, sphereDir.ToVector3 ());
 			oceanMaterial.SetFloat (ShaderProperties.cosTheta_PROPERTY, (float) cosTheta);
 			oceanMaterial.SetFloat (ShaderProperties.sinTheta_PROPERTY, (float) sinTheta);
-			
+
 			//planetshine properties
-			//I think these should be moved to NonCameraSpecificUniforms
-			if (Scatterer.Instance.mainSettings.usePlanetShine)
+			if ((oceanNode.prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
 			{
-				Matrix4x4 planetShineSourcesMatrix=oceanNode.prolandManager.skyNode.planetShineSourcesMatrix;
+				Matrix4x4 planetShineSourcesMatrix=oceanNode.prolandManager.planetShineSourcesMatrix;
 				
 				Vector3d2 oceanSunDir2;
 				for (int i=0;i<4;i++)
 				{
 					Vector4 row = planetShineSourcesMatrix.GetRow(i);
-					oceanSunDir2=localToOcean.ToMatrix3x3d () * new Vector3d2(row.x,row.y,row.z);
-					planetShineSourcesMatrix.SetRow(i,new Vector4((float)oceanSunDir2.x,(float)oceanSunDir2.y,(float)oceanSunDir2.z,row.w));
+					if (row.w != 0f)
+					{
+						oceanSunDir2=localToOcean.ToMatrix3x3d () * new Vector3d2(row.x,row.y,row.z);
+						planetShineSourcesMatrix.SetRow(i,new Vector4((float)oceanSunDir2.x,(float)oceanSunDir2.y,(float)oceanSunDir2.z,row.w));
+					}
 				}
-				oceanMaterial.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix); //this can become shared code to not recompute
-				
-				oceanMaterial.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, oceanNode.prolandManager.skyNode.planetShineRGBMatrix);
+				oceanMaterial.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix);
+				oceanMaterial.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, oceanNode.prolandManager.planetShineRGBMatrix);
 			}
 
 			Matrix4x4 worldToLightMatrix = oceanNode.prolandManager.mainSunLight.transform.worldToLocalMatrix;

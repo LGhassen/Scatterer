@@ -82,8 +82,6 @@ namespace scatterer
 		Vector3 sunPosRelPlanet=Vector3.zero;
 		Matrix4x4 castersMatrix1=Matrix4x4.zero;
 		Matrix4x4 castersMatrix2=Matrix4x4.zero;
-		public Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
-		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
 
 		SkySphereContainer skySphere;
 		GameObject stockSkyGameObject;
@@ -256,10 +254,6 @@ namespace scatterer
 			{
 				UpdateEclipseCasters ();
 			}
-			if (Scatterer.Instance.mainSettings.usePlanetShine)
-			{
-				UpdatePlanetShine ();
-			}
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				UpdateEVECloudMaterials ();
@@ -390,10 +384,10 @@ namespace scatterer
 				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
 				                                                                       sunPosRelPlanet.z, (float)prolandManager.sunCelestialBody.Radius));
 			}
-			if (Scatterer.Instance.mainSettings.usePlanetShine)
+			if ((prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
 			{
-				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix);
-				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, planetShineRGBMatrix);
+				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, prolandManager.planetShineSourcesMatrix);
+				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, prolandManager.planetShineRGBMatrix);
 			}
 
 			if (hasRingObjectAndShadowActivated)
@@ -463,7 +457,7 @@ namespace scatterer
 			
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToSun());
 
-			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
+			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
 
 			//When using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately: Instead ocean shader handles scattering internally
 			//When the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
@@ -522,10 +516,10 @@ namespace scatterer
 			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);
 
 
-			if (Scatterer.Instance.mainSettings.usePlanetShine)
+			if ((prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
 			{
-				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, planetShineSourcesMatrix);
-				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, planetShineRGBMatrix);
+				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, prolandManager.planetShineSourcesMatrix);
+				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, prolandManager.planetShineRGBMatrix);
 			}
 
 			if (!ReferenceEquals (godraysRenderer, null))
@@ -579,7 +573,7 @@ namespace scatterer
 			}
 
 			Utils.EnableOrDisableShaderKeywords (mat, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses && HighLogic.LoadedScene != GameScenes.MAINMENU ); //disable bugged eclipses on main menu
-			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", Scatterer.Instance.mainSettings.usePlanetShine);
+			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
 			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, prolandManager.flatScaledSpaceModel ? 1f : 0f );
@@ -1033,24 +1027,6 @@ namespace scatterer
 			{
 				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
 				castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
-			}
-		}
-
-		void UpdatePlanetShine ()
-		{
-			planetShineRGBMatrix = Matrix4x4.zero;
-			planetShineSourcesMatrix = Matrix4x4.zero;
-			for (int i = 0; i < Mathf.Min (4, prolandManager.planetshineSources.Count); i++)
-			{
-				Vector3 sourcePosRelPlanet;
-				//offset lightsource position to make light follow lit crescent
-				//i.e light doesn't come from the center of the planet but follows the lit side
-				//1/4 of the way from center to surface should be fine
-				Vector3d offsetPos = prolandManager.planetshineSources [i].body.position + 0.25 * prolandManager.planetshineSources [i].body.Radius * (prolandManager.sunCelestialBody.position - prolandManager.planetshineSources [i].body.position).normalized;
-				sourcePosRelPlanet = Vector3.Scale (offsetPos - prolandManager.parentCelestialBody.GetTransform ().position, new Vector3d (ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor));
-				planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y, sourcePosRelPlanet.z, prolandManager.planetshineSources [i].isSun ? 1.0f : 0.0f));
-				float intensity = prolandManager.planetshineSources [i].intensity;
-				planetShineRGBMatrix.SetRow (i, new Vector4 (prolandManager.planetshineSources [i].color.x, prolandManager.planetshineSources [i].color.y, prolandManager.planetshineSources [i].color.z, intensity));
 			}
 		}
 

@@ -38,9 +38,13 @@ namespace scatterer
 		public CelestialBody sunCelestialBody;
 		public List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
 		public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
+		public List<SecondarySun> secondarySuns=new List<SecondarySun> {};
 
 		public Light mainSunLight;
 		public ScattererCelestialBody scattererCelestialBody;
+
+		public Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
+		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
 
 		public void Init(ScattererCelestialBody scattererBody)
 		{
@@ -106,6 +110,8 @@ namespace scatterer
 				m_radius = parentCelestialBody.Radius;
 			}
 
+			InitSecondarySuns ();
+
 			InitSkyAndOceanNodes ();
 		}
 
@@ -166,12 +172,49 @@ namespace scatterer
 		}
 		
 		public void Update()
-		{	
+		{
+			if (secondarySuns.Count > 0)
+			{
+				UpdateSecondarySuns();
+			}
+
 			skyNode.UpdateNode();
 			
 			if (!ReferenceEquals(oceanNode,null))
 			{
 				oceanNode.UpdateNode();
+			}
+		}
+
+		void FindSecondarySuns (ScattererCelestialBody scattererBody)
+		{
+			foreach (SecondarySunConfig sunConfig in scattererBody.secondarySuns) {
+				SecondarySun secondarySun = SecondarySun.FindSecondarySun (sunConfig);
+				if (!ReferenceEquals (secondarySun, null))
+					secondarySuns.Add (secondarySun);
+			}
+		}
+
+		void InitSecondarySuns ()
+		{
+			FindSecondarySuns (scattererCelestialBody);
+
+			planetShineRGBMatrix = Matrix4x4.zero;
+			
+			for (int i = 0; i < Math.Min (4, secondarySuns.Count); i++)
+			{
+				planetShineRGBMatrix.SetRow (i, new Vector4 (secondarySuns[i].config.sunColor.r, secondarySuns[i].config.sunColor.g, secondarySuns[i].config.sunColor.b, 1.0f));
+			}
+		}
+
+		void UpdateSecondarySuns ()
+		{
+			planetShineSourcesMatrix = Matrix4x4.zero;
+
+			for (int i = 0; i < Math.Min (4, secondarySuns.Count); i++)
+			{
+				Vector3 sourcePosRelPlanet = Vector3.Scale (secondarySuns[i].celestialBody.position - parentCelestialBody.GetTransform ().position, new Vector3d (ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor));	//has to be this that is borked
+				planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y, sourcePosRelPlanet.z, 1.0f));
 			}
 		}
 		
