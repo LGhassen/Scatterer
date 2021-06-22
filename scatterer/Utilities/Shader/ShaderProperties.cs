@@ -258,6 +258,9 @@ namespace scatterer
 		
 		public static int cloudSkyIrradianceMultiplier_PROPERTY { get { return cloudSkyIrradianceMultiplier; } }
 		private static int cloudSkyIrradianceMultiplier;
+
+		public static int preserveCloudColors_PROPERTY { get { return preserveCloudColors; } }
+		private static int preserveCloudColors;
 		
 		public static int _PlanetWorldPos_PROPERTY { get { return _PlanetWorldPos; } }
 		private static int _PlanetWorldPos;
@@ -497,6 +500,7 @@ namespace scatterer
 			cloudColorMultiplier = Shader.PropertyToID("cloudColorMultiplier");
 			cloudScatteringMultiplier = Shader.PropertyToID("cloudScatteringMultiplier");
 			cloudSkyIrradianceMultiplier = Shader.PropertyToID("cloudSkyIrradianceMultiplier");
+			preserveCloudColors =  Shader.PropertyToID("preserveCloudColors");
 			_PlanetWorldPos = Shader.PropertyToID("_PlanetWorldPos");
 			extinctionTint = Shader.PropertyToID("extinctionTint");
 			_SkyExposure = Shader.PropertyToID("_SkyExposure");
