@@ -332,7 +332,29 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_SOFT");
 			}
 
-			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
+//			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
+
+			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
+			{
+				m_oceanMaterial.EnableKeyword("DEPTH_BUFFER_MODE_ON");
+				m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
+				m_oceanMaterial.DisableKeyword("PROJECTOR_MODE_GODRAYS");
+			}
+			else
+			{
+				m_oceanMaterial.DisableKeyword("DEPTH_BUFFER_MODE_ON");
+				if (!ReferenceEquals (prolandManager.skyNode.godraysRenderer, null))
+				{
+					m_oceanMaterial.EnableKeyword("PROJECTOR_MODE_GODRAYS");
+					m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
+				}
+				else
+				{
+					m_oceanMaterial.EnableKeyword("PROJECTOR_MODE");
+					m_oceanMaterial.DisableKeyword("PROJECTOR_MODE_GODRAYS");
+				}
+			}
+
 			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "DEPTH_BUFFER_MODE_ON", "DEPTH_BUFFER_MODE_OFF", Scatterer.Instance.mainSettings.useDepthBufferMode);
 
 

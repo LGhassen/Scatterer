@@ -29,8 +29,26 @@ namespace scatterer
 
 			updateCameraSpecificUniforms (oceanNode.m_oceanMaterial, cam);
 
-			Utils.EnableOrDisableShaderKeywords (oceanNode.m_oceanMaterial, "REFRACTIONS_AND_TRANSPARENCY_ON", "REFRACTIONS_AND_TRANSPARENCY_OFF",
-			                                     Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions && (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera));
+			if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions && (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera))
+			{
+				if (Scatterer.Instance.unifiedCameraMode)
+				{
+					oceanNode.m_oceanMaterial.EnableKeyword("REFRACTIONS_AND_TRANSPARENCY_ON");
+					oceanNode.m_oceanMaterial.DisableKeyword("REFRACTIONS_AND_TRANSPARENCY_MERGED_DEPTH");
+				}
+				else
+				{
+					oceanNode.m_oceanMaterial.EnableKeyword("REFRACTIONS_AND_TRANSPARENCY_MERGED_DEPTH");
+					oceanNode.m_oceanMaterial.DisableKeyword("REFRACTIONS_AND_TRANSPARENCY_ON");
+				}
+				oceanNode.m_oceanMaterial.DisableKeyword("REFRACTIONS_AND_TRANSPARENCY_OFF");
+			}
+			else
+			{
+				oceanNode.m_oceanMaterial.EnableKeyword("REFRACTIONS_AND_TRANSPARENCY_OFF");
+				oceanNode.m_oceanMaterial.DisableKeyword("REFRACTIONS_AND_TRANSPARENCY_ON");
+				oceanNode.m_oceanMaterial.DisableKeyword("REFRACTIONS_AND_TRANSPARENCY_MERGED_DEPTH");
+			}
 		}
 
 		public void updateCameraSpecificUniforms (Material oceanMaterial, Camera inCamera)
