@@ -20,9 +20,15 @@ namespace scatterer
 		Material SMAAMaterial;
 
 		enum Pass { EdgeDetection = 0, BlendWeights = 3, NeighborhoodBlending = 6 }
-		public enum Quality { Low = 0, Medium = 1, High = 2 }
+		public enum Quality { DepthMode = 0, Medium = 1, High = 2 }
 		
 		Quality quality;
+
+		public void forceDepthBuffermode()
+		{
+			quality = Quality.DepthMode;
+			initialized = false;
+		}
 
 		RenderTexture flip, flop;
 		static Texture2D areaTex, searchTex;
@@ -78,6 +84,7 @@ namespace scatterer
 			SMAAMaterial.SetTexture("_SearchTex", searchTex);
 
 			quality = (Quality)((Int32) Mathf.Clamp( (float) Scatterer.Instance.mainSettings.smaaQuality,1f,2f));	//limit to 1 and 2, 1 and 2 are image-based. 0 is depth-based and would make performance worse by having to run for each camera's depth
+																													//only use depth mode when we force it for the IVA camera
 
 			SMAACommandBuffer = new CommandBuffer ();
 		}

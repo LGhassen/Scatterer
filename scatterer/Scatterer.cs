@@ -392,14 +392,12 @@ namespace scatterer
 				}
 
 				if (mainSettings.useDepthBufferMode)
-				{
 					QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
 
-					if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
-					{
-							GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
-							GameEvents.OnCameraChange.Remove(AddAAToInternalCamera);
-					}
+				if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+				{
+					GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
+					GameEvents.OnCameraChange.Remove(AddAAToInternalCamera);
 				}
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
@@ -672,10 +670,16 @@ namespace scatterer
 
 			if (cameraMode == CameraManager.CameraMode.IVA)
 			{
+				// Add regular SMAA to flight camera
+				SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+				antiAliasingScripts.Add(nearAA);
+
 				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
 				if (!ReferenceEquals(internalCamera,null))
 				{
+					// Add depth-based SMAA to internal camera, to avoid blurring over cockpit elements and text especially with custom IVAs
 					SubpixelMorphologicalAntialiasing internalSMAA = internalCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
+					internalSMAA.forceDepthBuffermode();
 					antiAliasingScripts.Add(internalSMAA);
 				}
 			}
