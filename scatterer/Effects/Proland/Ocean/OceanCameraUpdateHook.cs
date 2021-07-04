@@ -180,7 +180,7 @@ namespace scatterer
 			//			horizon1 = new Vector3d2 (-beta0, -beta1, 0.0);
 			//			horizon2 = new Vector3d2 (beta0 * beta0 - gamma0, 2.0 * (beta0 * beta1 - gamma1), beta1 * beta1 - gamma2);
 			
-			Vector3d2 sunDir = new Vector3d2 (oceanNode.prolandManager.getDirectionToSun ());
+			Vector3d2 sunDir = new Vector3d2 (oceanNode.prolandManager.getDirectionToMainSun ());
 			Vector3d2 oceanSunDir = localToOcean.ToMatrix3x3d () * sunDir;
 			
 			oceanMaterial.SetMatrix (ShaderProperties._Globals_CameraToWorld_PROPERTY, cameraToWorld .ToMatrix4x4());

@@ -57,25 +57,19 @@ namespace scatterer
 			
 			sunCelestialBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
 
-			if (scattererBody.mainSunCelestialBody == "Sun")
+			mainSunLight = findLight (scattererBody.mainSunCelestialBody);
+
+			if (ReferenceEquals (mainSunLight, null))
+			{
+				Utils.LogError ("No light found for " + scattererBody.mainSunCelestialBody + " for body " + parentCelestialBody.name + ". Defaulting to main sunlight, godrays, lightrays and caustics may look wrong, check your Kopernicus configuration.");
 				mainSunLight = Scatterer.Instance.sunLight;
+			}
 			else
 			{
-				mainSunLight = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject !=null) && (_light.gameObject.name == scattererBody.mainSunCelestialBody));
-
-				if (ReferenceEquals (mainSunLight, null))
-				{
-					Utils.LogError ("No light found for " + scattererBody.mainSunCelestialBody + " for body " + parentCelestialBody.name + ". Defaulting to main sunlight, godrays, lightrays and caustics may look wrong, check your Kopernicus configuration.");
-					mainSunLight = Scatterer.Instance.sunLight;
-				}
+				if (Scatterer.Instance.mainSettings.terrainShadows)
+					Scatterer.Instance.SetShadowsForLight (mainSunLight);
 				else
-				{
-					if (Scatterer.Instance.mainSettings.terrainShadows)
-						Scatterer.Instance.SetShadowsForLight(mainSunLight);
-					else
-						Scatterer.Instance.DisableCustomShadowResForLight(mainSunLight);
-				}
-					
+					Scatterer.Instance.DisableCustomShadowResForLight (mainSunLight);
 			}
 
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
@@ -113,6 +107,14 @@ namespace scatterer
 			InitSecondarySuns ();
 
 			InitSkyAndOceanNodes ();
+		}
+
+		Light findLight (string sunCelestialBody)
+		{
+			if (sunCelestialBody == "Sun")
+				return Scatterer.Instance.sunLight;
+			else
+				return Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == sunCelestialBody));
 		}
 
 		void FindEclipseCasters (ScattererCelestialBody scattererBody)
@@ -188,13 +190,17 @@ namespace scatterer
 
 		void FindSecondarySuns (ScattererCelestialBody scattererBody)
 		{
-			foreach (SecondarySunConfig sunConfig in scattererBody.secondarySuns) {
+			foreach (SecondarySunConfig sunConfig in scattererBody.secondarySuns)
+			{
 				SecondarySun secondarySun = SecondarySun.FindSecondarySun (sunConfig);
 				if (!ReferenceEquals (secondarySun, null))
+				{
+					secondarySun.sunLight = findLight (sunConfig.celestialBodyName);
 					secondarySuns.Add (secondarySun);
+				}
 			}
 		}
-
+		
 		void InitSecondarySuns ()
 		{
 			FindSecondarySuns (scattererCelestialBody);
@@ -253,7 +259,7 @@ namespace scatterer
 			}
 		}
 
-		public Vector3 getDirectionToSun()
+		public Vector3 getDirectionToMainSun()
 		{
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{

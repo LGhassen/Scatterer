@@ -237,7 +237,7 @@ namespace scatterer
 
 			if (!MapView.MapIsEnabled && Scatterer.Instance.mainSettings.sunlightExtinction)
 			{
-				UpdateMainLightExtinction ();
+				UpdateLightExtinctions ();
 			}
 		}
 
@@ -369,7 +369,7 @@ namespace scatterer
 
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
-			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToSun ());
+			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun ());
 
 			mat.SetFloat (ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
@@ -413,7 +413,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.RL_PROPERTY, RL * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToSun ());
+			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun ());
 			mat.SetVector(ShaderProperties._camForward_PROPERTY, Scatterer.Instance.nearCamera.transform.forward);
 
 			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);			
@@ -452,7 +452,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
 			
 			
-			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToSun());
+			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun());
 
 			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
 
@@ -509,7 +509,7 @@ namespace scatterer
 
 			mat.SetFloat (ShaderProperties._openglThreshold_PROPERTY, interpolatedSettings.openglThreshold);
 
-			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToSun ());
+			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun ());
 			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);
 
 
@@ -980,15 +980,24 @@ namespace scatterer
 			}
 		}
 
-		void UpdateMainLightExtinction ()
+		void UpdateLightExtinctions ()
 		{
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
 			float lerpedScale = Mathf.Lerp (1f, experimentalAtmoScale, (extinctionPosition.magnitude - Rg) / 2000f);
 			//hack but keeps the extinction beautiful at sea level, and matches the clouds when you get higher
-			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToSun (), Rt, Rg, m_transmit, lerpedScale);
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg, m_transmit, lerpedScale);
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
 			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (prolandManager.mainSunLight, extinction);
 
+			foreach(SecondarySun secondarySun in prolandManager.secondarySuns)
+			{
+				if (!ReferenceEquals(secondarySun.sunLight, null))
+				{
+					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized, Rt, Rg, m_transmit, lerpedScale);
+					extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
+					Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (secondarySun.sunLight, extinction);
+				}
+			}
 		}
 
 		void UpdateSunflareExtinctions ()
