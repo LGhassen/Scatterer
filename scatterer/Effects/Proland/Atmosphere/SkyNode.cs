@@ -1,15 +1,12 @@
 using UnityEngine;
-using System.Collections;
-using System.IO;
-
 using System;
+using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-
 using KSP.IO;
-
 
 namespace scatterer
 {
@@ -88,7 +85,7 @@ namespace scatterer
 		MeshRenderer stockScaledPlanetMeshRenderer;
 		Mesh originalScaledMesh, tweakedScaledmesh;
 		public ScaledScatteringContainer scaledScatteringContainer;
-		public Material localScatteringMaterial,skyMaterial,scaledScatteringMaterial,sunflareExtinctionMaterial;
+		public Material localScatteringMaterial, skyMaterial, scaledScatteringMaterial, sunflareExtinctionMaterial, scaledEclipseMaterial;
 		public GenericLocalAtmosphereContainer localScatteringContainer;
 		public GodraysRenderer godraysRenderer;
 		public bool postprocessingEnabled = true;
@@ -99,6 +96,7 @@ namespace scatterer
 		bool hasRingObjectAndShadowActivated = false;
 	
 		bool skyNodeInitiated = false;
+		public bool useEclipses = false;
 
 		public void Init ()
 		{
@@ -117,12 +115,12 @@ namespace scatterer
 			else
 				localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
 
-
 			skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			localScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
-			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses);
+			useEclipses = Scatterer.Instance.mainSettings.useEclipses && (prolandManager.eclipseCasters.Count > 0) && HighLogic.LoadedScene != GameScenes.MAINMENU ; //disable bugged eclipses on main menu
+			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);
 
 			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null)
@@ -180,8 +178,18 @@ namespace scatterer
 				Utils.EnableOrDisableShaderKeywords (sunflareExtinctionMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);
 			}
 
+			if (useEclipses || hasRingObjectAndShadowActivated)
+			{
+				scaledEclipseMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/ScaledPlanetEclipse")]);
+				scaledEclipseMaterial.renderQueue = 2001;
+				
+				Utils.EnableOrDisableShaderKeywords (scaledEclipseMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
+				Utils.EnableOrDisableShaderKeywords (scaledEclipseMaterial, "RINGSHADOW_ON", "RINGSHADOW_OFF", hasRingObjectAndShadowActivated);
+				
+				InitUniforms(scaledEclipseMaterial);
+			}
+
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
-			
 			TweakStockAtmosphere();
 
 			InitEVEClouds ();
@@ -247,7 +255,7 @@ namespace scatterer
 			{
 				UpdatePostProcessMaterialUniforms (localScatteringContainer.material);
 			}
-			if (Scatterer.Instance.mainSettings.useEclipses)
+			if (useEclipses)
 			{
 				UpdateEclipseCasters ();
 			}
@@ -277,6 +285,16 @@ namespace scatterer
 
 			SetUniforms (skyMaterial);
 			SetUniforms (scaledScatteringMaterial);
+
+			if (!ReferenceEquals (scaledEclipseMaterial, null))
+			{
+				scaledEclipseMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun ());
+				
+				scaledEclipseMaterial.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
+				scaledEclipseMaterial.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
+				scaledEclipseMaterial.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
+				                                                                                         sunPosRelPlanet.z, (float)prolandManager.sunCelestialBody.Radius));
+			}
 		}
 		
 		
@@ -374,7 +392,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 
-			if (Scatterer.Instance.mainSettings.useEclipses)
+			if (useEclipses)
 			{
 				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
 				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
@@ -571,8 +589,8 @@ namespace scatterer
 				mat.SetFloat ("useRingShadow", 0f);
 			}
 
-			Utils.EnableOrDisableShaderKeywords (mat, "ECLIPSES_ON", "ECLIPSES_OFF", Scatterer.Instance.mainSettings.useEclipses && HighLogic.LoadedScene != GameScenes.MAINMENU ); //disable bugged eclipses on main menu
-			mat.SetFloat ("useEclipses", (Scatterer.Instance.mainSettings.useEclipses && HighLogic.LoadedScene != GameScenes.MAINMENU) ? 1f : 0f);
+			Utils.EnableOrDisableShaderKeywords (mat, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses );
+			mat.SetFloat ("useEclipses", useEclipses ? 1f : 0f);
 
 			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
@@ -688,7 +706,8 @@ namespace scatterer
 		
 		public void Cleanup ()
 		{
-			StopAllCoroutines ();
+			try {StopAllCoroutines ();}
+			catch (Exception){}
 
 			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange && !isConfigModuleManagerPatch)
 			{
@@ -862,43 +881,69 @@ namespace scatterer
 				Utils.LogDebug(" couldn't find config file to save to");
 			}
 		}
-		
-		public void TweakStockAtmosphere ()
+
+		void DisableStockSky ()
 		{
-			for (int i = 0; i < parentScaledTransform.childCount; i++)
-			{
-				if (parentScaledTransform.GetChild (i).gameObject.layer == 9)
-				{
-					if (parentScaledTransform.GetChild (i).gameObject.name=="Atmosphere")
-					{
+			for (int i = 0; i < parentScaledTransform.childCount; i++) {
+				if (parentScaledTransform.GetChild (i).gameObject.layer == 9) {
+					if (parentScaledTransform.GetChild (i).gameObject.name == "Atmosphere") {
 						stockSkyGameObject = parentScaledTransform.GetChild (i).gameObject;
-						stockSkyGameObject.SetActive(false);
+						stockSkyGameObject.SetActive (false);
 						break;
 					}
 				}
 			}
+		}
+		
+		public void TweakStockAtmosphere ()
+		{
+			DisableStockSky ();
+			List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
+			materials.RemoveAll(x => x.shader.name == "Scatterer/ScaledPlanetEclipse");
 
-			Material sharedMaterial = stockScaledPlanetMeshRenderer.sharedMaterial;
-			
-			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
-			sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);
-
-			if (sharedMaterial.shader.name == "Terrain/Scaled Planet (RimAerial) Standard")
+			if (useEclipses)
 			{
-				sharedMaterial.SetColor ("_SpecColor", new Color (specR / 255f, specG / 255f, specB / 255f));
-				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+				// Split the main pass and the additive light passes into separate materials with different renderqueues so we can inject eclipses after the first pass, and make it apply only to the main pass
+				if (materials.Count () == 1)
 				{
-					sharedMaterial.SetFloat ("_Shininess", shininess / 140f); //for some reason still too strong in main menu
+					materials.ElementAt(0).SetShaderPassEnabled("ForwardBase", true);
+					materials.ElementAt(0).SetShaderPassEnabled("ForwardAdd", false);
+
+					materials.Add(Material.Instantiate(materials.ElementAt(0)));
+
+					materials.ElementAt(1).CopyPropertiesFromMaterial(materials.ElementAt(0));
+					materials.ElementAt(1).SetShaderPassEnabled("ForwardBase", false);
+					materials.ElementAt(1).SetShaderPassEnabled("ForwardAdd", true);
+					materials.ElementAt(1).renderQueue = 2002;
+				}
+
+				materials.Add(scaledEclipseMaterial);
+			}
+
+			stockScaledPlanetMeshRenderer.sharedMaterials = materials.ToArray ();
+
+			foreach (Material sharedMaterial in materials)
+			{
+				sharedMaterial.SetFloat (Shader.PropertyToID ("_rimBlend"), rimBlend / 100f);
+				sharedMaterial.SetFloat (Shader.PropertyToID ("_rimPower"), rimpower / 100f);
+				
+				if (sharedMaterial.shader.name == "Terrain/Scaled Planet (RimAerial) Standard")
+				{
+					sharedMaterial.SetColor ("_SpecColor", new Color (specR / 255f, specG / 255f, specB / 255f));
+					if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+					{
+						sharedMaterial.SetFloat ("_Shininess", shininess / 140f); //for some reason still too strong in main menu
+					}
+					else
+					{
+						sharedMaterial.SetFloat ("_Shininess", shininess / 120f);
+					}
 				}
 				else
 				{
-					sharedMaterial.SetFloat ("_Shininess", shininess / 120f);
+					sharedMaterial.SetColor ("_SpecColor", new Color (specR / 100f, specG / 100f, specB / 100f));
+					sharedMaterial.SetFloat ("_Shininess", shininess / 100f);
 				}
-			}
-			else
-			{
-				sharedMaterial.SetColor ("_SpecColor", new Color (specR / 100f, specG / 100f, specB / 100f));
-				sharedMaterial.SetFloat ("_Shininess", shininess / 100f);
 			}
 
 			if (!ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null))
@@ -1021,7 +1066,7 @@ namespace scatterer
 				}
 			}
 		}
-
+		
 		void UpdateEclipseCasters ()
 		{
 			float scaleFactor = ScaledSpace.ScaleFactor;
@@ -1032,7 +1077,7 @@ namespace scatterer
 			Vector3 casterPosRelPlanet;
 			for (int i = 0; i < Mathf.Min (4, prolandManager.eclipseCasters.Count); i++)
 			{
-				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
+				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor)); //wtf is this? this is doing local to scaled and back to local?
 				castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
 			}
 			for (int i = 4; i < Mathf.Min (8, prolandManager.eclipseCasters.Count); i++)

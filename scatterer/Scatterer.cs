@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0781")]
+[assembly:AssemblyVersion("0.0782")]
 namespace scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -42,7 +42,7 @@ namespace scatterer
 		DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
 		public DepthPrePassMerger nearDepthPassMerger;
 		
-		public Light sunLight,scaledSpaceSunLight, mainMenuLight;
+		public Light sunLight, scaledSpaceSunLight, mainMenuLight;
 		public Light[] lights;
 		public Camera farCamera, scaledSpaceCamera, nearCamera;
 		static float originalShadowDistance = 0f;
@@ -54,7 +54,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0781 dev";
+		public string versionNumber = "0.0782 dev";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 

@@ -60,6 +60,7 @@ namespace scatterer
 						if (minDistance > scattererCelestialBody.unloadDistance)
 						{
 							unloadEffectsForBody(scattererCelestialBody);
+							break;
 						}
 						else
 						{
@@ -71,6 +72,7 @@ namespace scatterer
 						if (minDistance < scattererCelestialBody.loadDistance && scattererCelestialBody.transform && scattererCelestialBody.celestialBody)
 						{
 							loadEffectsForBody (scattererCelestialBody);
+							break;
 						}
 					}
 				}
