@@ -13,6 +13,7 @@ namespace scatterer
 		[Persistent] public float unloadDistance;
 		[Persistent] public bool hasOcean;
 		[Persistent] public bool usesCloudIntegration;
+		[Persistent] public bool cloudIntegrationUsesScattererSunColors = false;
 		[Persistent] public bool flatScaledSpaceModel;
 
 		[Persistent] public string mainSunCelestialBody;

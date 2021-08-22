@@ -28,6 +28,11 @@ namespace scatterer
 		{
 			return FindOrCreateModulator (light).lastModulateColor;
 		}
+
+		public Color GetOriginalLightColor(Light light)
+		{
+			return FindOrCreateModulator (light).getOriginalColor();
+		}
 		
 		private SunlightModulator FindOrCreateModulator(Light light)
 		{
@@ -61,7 +66,7 @@ namespace scatterer
 
 	public class SunlightModulator : MonoBehaviour
 	{
-		Color originalColor, modulateColor;
+		Color originalColor = Color.white, modulateColor;
 		public Color lastModulateColor;
 
 		Light sunLight;
@@ -93,6 +98,11 @@ namespace scatterer
 			}
 		}
 
+		public Color getOriginalColor()
+		{
+			return originalColor;
+		}
+
 		public void ModulateByAttenuation(float inAttenuation) //called by skynode, ie scaledSpaceCamera onPreCull
 		{
 			modulateColor *= inAttenuation;
@@ -112,8 +122,6 @@ namespace scatterer
 				sunLight.color = modulateColor * originalColor;
 				lastModulateColor = sunLight.color;
 				modulateColor = Color.white;
-				if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)	//preserve original directional light color to not have double extinction
-					Shader.SetGlobalColor(ShaderProperties.scattererOrigDirectionalColor_PROPERTY,originalColor);
 			}
 		}
 		

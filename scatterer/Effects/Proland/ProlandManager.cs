@@ -23,6 +23,7 @@ namespace scatterer
 		
 		public bool hasOcean = false;
 		public bool usesCloudIntegration = true;
+		public bool cloudIntegrationUsesScattererSunColors = false;
 		public bool flatScaledSpaceModel = false;
 		
 		public double m_radius = 600000.0f;
@@ -44,7 +45,8 @@ namespace scatterer
 		public ScattererCelestialBody scattererCelestialBody;
 
 		public Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
-		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;
+		public Matrix4x4 planetShineRGBMatrix=Matrix4x4.zero;					//Contains the colors set in the scatterer config
+		public Matrix4x4 planetShineOriginalRGBMatrix=Matrix4x4.zero;			//Contains the original colors of the directional lights, if available
 
 		public void Init(ScattererCelestialBody scattererBody)
 		{
@@ -53,6 +55,7 @@ namespace scatterer
 			sunColor=scattererBody.sunColor;
 			flatScaledSpaceModel = scattererBody.flatScaledSpaceModel;
 			usesCloudIntegration = scattererBody.usesCloudIntegration;
+			cloudIntegrationUsesScattererSunColors = scattererBody.cloudIntegrationUsesScattererSunColors;
 			hasOcean = scattererBody.hasOcean;
 			
 			sunCelestialBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
@@ -135,7 +138,8 @@ namespace scatterer
 		void FindPlanetShineSources (ScattererCelestialBody scattererBody)
 		{
 			if (Scatterer.Instance.mainSettings.usePlanetShine) {
-				for (int k = 0; k < scattererBody.planetshineSources.Count; k++) {
+				for (int k = 0; k < scattererBody.planetshineSources.Count; k++)
+				{
 					var cc = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.planetshineSources [k].bodyName);
 					if (cc == null)
 						Utils.LogDebug ("planetshine source " + scattererBody.planetshineSources [k].bodyName + " not found for " + scattererBody.celestialBodyName);
@@ -210,6 +214,10 @@ namespace scatterer
 			for (int i = 0; i < Math.Min (4, secondarySuns.Count); i++)
 			{
 				planetShineRGBMatrix.SetRow (i, new Vector4 (secondarySuns[i].config.sunColor.r, secondarySuns[i].config.sunColor.g, secondarySuns[i].config.sunColor.b, 1.0f));
+				if (secondarySuns[i].sunLight != null)
+					planetShineOriginalRGBMatrix.SetRow (i, new Vector4 (secondarySuns[i].sunLight.color.r,secondarySuns[i].sunLight.color.g,secondarySuns[i].sunLight.color.b, 1.0f));
+				else
+					planetShineOriginalRGBMatrix.SetRow(i, planetShineRGBMatrix.GetRow(i));
 			}
 		}
 
@@ -221,6 +229,14 @@ namespace scatterer
 			{
 				Vector3 sourcePosRelPlanet = Vector3.Scale (secondarySuns[i].celestialBody.position - parentCelestialBody.GetTransform ().position, new Vector3d (ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor));	//has to be this that is borked
 				planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y, sourcePosRelPlanet.z, 1.0f));
+
+				if (!cloudIntegrationUsesScattererSunColors && secondarySuns[i].sunLight != null)
+				{
+					Color actualSunColor = Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(secondarySuns[i].sunLight) : secondarySuns[i].sunLight.color;
+
+					actualSunColor*=secondarySuns[i].sunLight.intensity;
+					planetShineOriginalRGBMatrix.SetRow (i, new Vector4 (actualSunColor.r, actualSunColor.g, actualSunColor.b, 1.0f));
+				}
 			}
 		}
 		

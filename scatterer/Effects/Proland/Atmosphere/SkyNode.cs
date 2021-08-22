@@ -414,8 +414,6 @@ namespace scatterer
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
-
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
 		}
 		
 		
@@ -487,6 +485,8 @@ namespace scatterer
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f);
 
 			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
+			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.sunColor : 
+			              (Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(prolandManager.mainSunLight) * prolandManager.mainSunLight.intensity : prolandManager.mainSunLight.color * prolandManager.mainSunLight.intensity ));
 
 			float camerasOverlap = 0f;
 			if (!Scatterer.Instance.unifiedCameraMode)
@@ -530,19 +530,20 @@ namespace scatterer
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun ());
 			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);
 
+			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.sunColor : 
+			              (Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(prolandManager.mainSunLight) * prolandManager.mainSunLight.intensity : prolandManager.mainSunLight.color * prolandManager.mainSunLight.intensity ));
 
 			if ((prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
 			{
 				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, prolandManager.planetShineSourcesMatrix);
 				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, prolandManager.planetShineRGBMatrix);
+				mat.SetMatrix (ShaderProperties.cloudPlanetShineRGB_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ?  prolandManager.planetShineRGBMatrix : prolandManager.planetShineOriginalRGBMatrix );
 			}
 
 			if (!ReferenceEquals (godraysRenderer, null))
 			{
-				mat.SetFloat("_godrayStrength", godrayStrength);
+				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
-
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
 		}
 
 		public void InitUniforms (Material mat)
@@ -597,6 +598,8 @@ namespace scatterer
 
 			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, prolandManager.flatScaledSpaceModel ? 1f : 0f );
 			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
+			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.sunColor : 
+			              (Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(prolandManager.mainSunLight) * prolandManager.mainSunLight.intensity : prolandManager.mainSunLight.color * prolandManager.mainSunLight.intensity));
 
 			if (!ReferenceEquals (godraysRenderer, null))
 			{
@@ -1184,8 +1187,6 @@ namespace scatterer
 			
 				InitUniforms (particleMaterial);
 				InitPostprocessMaterialUniforms (particleMaterial);
-			
-				Utils.EnableOrDisableShaderKeywords (particleMaterial, "SCATTERER_USE_ORIG_DIR_COLOR_ON", "SCATTERER_USE_ORIG_DIR_COLOR_OFF", Scatterer.Instance.mainSettings.sunlightExtinction);
 			}
 
 			mappedVolumetrics = true;

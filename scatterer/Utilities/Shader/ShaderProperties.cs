@@ -235,6 +235,9 @@ namespace scatterer
 		public static int planetShineRGB_PROPERTY { get { return planetShineRGB; } }
 		private static int planetShineRGB;
 
+		public static int cloudPlanetShineRGB_PROPERTY { get { return cloudPlanetShineRGB; } }
+		private static int cloudPlanetShineRGB;
+
 		public static int _Sky_Transmittance_PROPERTY { get { return _Sky_Transmittance; } }
 		private static int _Sky_Transmittance;
 		
@@ -276,6 +279,9 @@ namespace scatterer
 		
 		public static int _sunColor_PROPERTY { get { return _sunColor; } }
 		private static int _sunColor;
+
+		public static int cloudSunColor_PROPERTY { get { return cloudSunColor; } }
+		private static int cloudSunColor;
 		
 		public static int _ScattererCameraOverlap_PROPERTY { get { return _ScattererCameraOverlap; } }
 		private static int _ScattererCameraOverlap;
@@ -348,9 +354,6 @@ namespace scatterer
 		
 		public static int refractionIndex_PROPERTY { get { return refractionIndex; } }
 		private static int refractionIndex;
-
-		public static int scattererOrigDirectionalColor_PROPERTY { get { return scattererOrigDirectionalColor; } }
-		private static int scattererOrigDirectionalColor;
 		
 		public static int unity_ShadowFadeCenterAndType_PROPERTY { get { return unity_ShadowFadeCenterAndType; } }
 		private static int unity_ShadowFadeCenterAndType;
@@ -492,6 +495,7 @@ namespace scatterer
 			_planetPos = Shader.PropertyToID("_planetPos");
 			planetShineSources = Shader.PropertyToID("planetShineSources");
 			planetShineRGB = Shader.PropertyToID("planetShineRGB");
+			cloudPlanetShineRGB = Shader.PropertyToID("cloudPlanetShineRGB");
 			_Sky_Transmittance = Shader.PropertyToID("_Sky_Transmittance");
 			ringInnerRadius = Shader.PropertyToID("ringInnerRadius");
 			ringOuterRadius = Shader.PropertyToID("ringOuterRadius");
@@ -506,6 +510,7 @@ namespace scatterer
 			_SkyExposure = Shader.PropertyToID("_SkyExposure");
 			_camForward = Shader.PropertyToID("_camForward");
 			_sunColor = Shader.PropertyToID("_sunColor");
+			cloudSunColor = Shader.PropertyToID("cloudSunColor");
 			_ScattererCameraOverlap = Shader.PropertyToID("_ScattererCameraOverlap");
 			flatScaledSpaceModel = Shader.PropertyToID("flatScaledSpaceModel");
 
@@ -533,7 +538,6 @@ namespace scatterer
 			PlanetOrigin = Shader.PropertyToID("PlanetOrigin");
 			refractionIndex = Shader.PropertyToID("refractionIndex");
 
-			scattererOrigDirectionalColor = Shader.PropertyToID("scattererOrigDirectionalColor");
 			unity_ShadowFadeCenterAndType = Shader.PropertyToID("unity_ShadowFadeCenterAndType");
 			_ShadowMapTextureScatterer = Shader.PropertyToID("_ShadowMapTextureScatterer");
 
