@@ -35,7 +35,8 @@ namespace scatterer
 		public CelestialBody parentCelestialBody;
 		public Transform parentScaledTransform;
 		public Transform parentLocalTransform;
-		
+
+		public bool sunsUseIntensityCurves;
 		public CelestialBody sunCelestialBody;
 		public List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
 		public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
@@ -57,6 +58,7 @@ namespace scatterer
 			usesCloudIntegration = scattererBody.usesCloudIntegration;
 			cloudIntegrationUsesScattererSunColors = scattererBody.cloudIntegrationUsesScattererSunColors;
 			hasOcean = scattererBody.hasOcean;
+			sunsUseIntensityCurves = scattererBody.sunsUseIntensityCurves;
 			
 			sunCelestialBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
 
@@ -230,12 +232,18 @@ namespace scatterer
 				Vector3 sourcePosRelPlanet = Vector3.Scale (secondarySuns[i].celestialBody.position - parentCelestialBody.GetTransform ().position, new Vector3d (ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor));	//has to be this that is borked
 				planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y, sourcePosRelPlanet.z, 1.0f));
 
-				if (!cloudIntegrationUsesScattererSunColors && secondarySuns[i].sunLight != null)
+				if (secondarySuns[i].sunLight != null)
 				{
-					Color actualSunColor = Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(secondarySuns[i].sunLight) : secondarySuns[i].sunLight.color;
+					if (sunsUseIntensityCurves)
+					{
+						planetShineRGBMatrix[i,3] = secondarySuns[i].sunLight.intensity;
+					}
 
-					actualSunColor*=secondarySuns[i].sunLight.intensity;
-					planetShineOriginalRGBMatrix.SetRow (i, new Vector4 (actualSunColor.r, actualSunColor.g, actualSunColor.b, 1.0f));
+					if (!cloudIntegrationUsesScattererSunColors)
+					{
+						Color actualSunColor = Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(secondarySuns[i].sunLight) : secondarySuns[i].sunLight.color;
+						planetShineOriginalRGBMatrix.SetRow (i, new Vector4 (actualSunColor.r, actualSunColor.g, actualSunColor.b, secondarySuns[i].sunLight.intensity));
+					}
 				}
 			}
 		}
@@ -300,6 +308,11 @@ namespace scatterer
 		
 		public SkyNode GetSkyNode() {
 			return skyNode;
+		}
+
+		public Color getIntensityModulatedSunColor()
+		{
+			return (sunsUseIntensityCurves ? sunColor * mainSunLight.intensity : sunColor);
 		}
 	}
 }

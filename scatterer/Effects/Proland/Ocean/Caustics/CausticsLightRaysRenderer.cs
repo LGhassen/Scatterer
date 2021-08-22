@@ -180,7 +180,8 @@ namespace scatterer
 			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]);
 			compositeLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeCausticsGodrays")]);
 			compositeLightRaysMaterial.SetTexture ("LightRaysTexture", targetRT);
-			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNodeIn.prolandManager.sunColor);
+
+			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNodeIn.prolandManager.getIntensityModulatedSunColor());
 			compositeLightRaysMaterial.SetVector ("_Underwater_Color", oceanNodeIn.m_UnderwaterColor);
 
 			commandBuffer = new CommandBuffer();
@@ -226,7 +227,7 @@ namespace scatterer
 				// If we use sunlightExtinction, reuse already computed extinction color
 				if (Scatterer.Instance.mainSettings.sunlightExtinction)
 				{
-					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNode.prolandManager.sunColor * Scatterer.Instance.sunlightModulatorsManagerInstance.GetLastModulateColor(targetLight));
+					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNode.prolandManager.getIntensityModulatedSunColor() * Scatterer.Instance.sunlightModulatorsManagerInstance.GetLastModulateColor(targetLight));
 				}
 
 				renderingEnabled = true;

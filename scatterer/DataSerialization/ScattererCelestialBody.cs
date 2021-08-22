@@ -17,6 +17,7 @@ namespace scatterer
 		[Persistent] public bool flatScaledSpaceModel;
 
 		[Persistent] public string mainSunCelestialBody;
+		[Persistent] public bool sunsUseIntensityCurves = false;
 		[Persistent] public Color sunColor = Color.white;
 		[Persistent] public List<string> eclipseCasters=new List<string> {};
 

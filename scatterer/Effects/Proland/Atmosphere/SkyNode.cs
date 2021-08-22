@@ -414,6 +414,8 @@ namespace scatterer
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
+
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
 		}
 		
 		
@@ -484,8 +486,8 @@ namespace scatterer
 			else
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f);
 
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
-			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.sunColor : 
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : 
 			              (Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(prolandManager.mainSunLight) * prolandManager.mainSunLight.intensity : prolandManager.mainSunLight.color * prolandManager.mainSunLight.intensity ));
 
 			float camerasOverlap = 0f;
@@ -530,7 +532,7 @@ namespace scatterer
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun ());
 			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);
 
-			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.sunColor : 
+			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : 
 			              (Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(prolandManager.mainSunLight) * prolandManager.mainSunLight.intensity : prolandManager.mainSunLight.color * prolandManager.mainSunLight.intensity ));
 
 			if ((prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
@@ -544,6 +546,8 @@ namespace scatterer
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
+
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
 		}
 
 		public void InitUniforms (Material mat)
@@ -597,8 +601,8 @@ namespace scatterer
 			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
 			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, prolandManager.flatScaledSpaceModel ? 1f : 0f );
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.sunColor);
-			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.sunColor : 
+			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : 
 			              (Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(prolandManager.mainSunLight) * prolandManager.mainSunLight.intensity : prolandManager.mainSunLight.color * prolandManager.mainSunLight.intensity));
 
 			if (!ReferenceEquals (godraysRenderer, null))
