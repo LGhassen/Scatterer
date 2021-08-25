@@ -49,6 +49,7 @@ namespace scatterer
 		public SecondarySunConfig config;
 		public CelestialBody celestialBody;
 		public Light sunLight = null;
+		public Light scaledSunLight = null;
 		//public List<CelestialBody> eclipseCasters=new List<CelestialBody> {};
 
 		public SecondarySun (SecondarySunConfig inConfig, CelestialBody body)

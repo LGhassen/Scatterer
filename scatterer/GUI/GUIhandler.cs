@@ -758,7 +758,7 @@ namespace scatterer
 			GUILayout.EndHorizontal ();
 
 			GUILayout.Label ("Misc");
-			GUIColorNoButton("Sunlight color (Not saved automatically, save manually to PlanetsList)", ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.sunColor);
+			GUIColorNoButton("Sunlight color "+ Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.mainSunLight.name+ " (Not saved automatically, save manually to PlanetsList)", ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.sunColor);
 
 			int index = 0;
 			foreach (SecondarySun secondarySun in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.secondarySuns)

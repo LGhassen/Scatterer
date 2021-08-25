@@ -42,7 +42,7 @@ namespace scatterer
 		public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
 		public List<SecondarySun> secondarySuns=new List<SecondarySun> {};
 
-		public Light mainSunLight;
+		public Light mainSunLight, mainScaledSunLight;
 		public ScattererCelestialBody scattererCelestialBody;
 
 		public Matrix4x4 planetShineSourcesMatrix=Matrix4x4.zero;
@@ -63,6 +63,7 @@ namespace scatterer
 			sunCelestialBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == scattererBody.mainSunCelestialBody);
 
 			mainSunLight = findLight (scattererBody.mainSunCelestialBody);
+			mainScaledSunLight = findScaledLight (scattererBody.mainSunCelestialBody);
 
 			if (ReferenceEquals (mainSunLight, null))
 			{
@@ -114,12 +115,21 @@ namespace scatterer
 			InitSkyAndOceanNodes ();
 		}
 
+		//TODO: move to utils
 		Light findLight (string sunCelestialBody)
 		{
 			if (sunCelestialBody == "Sun")
 				return Scatterer.Instance.sunLight;
 			else
 				return Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == sunCelestialBody));
+		}
+		
+		Light findScaledLight (string sunCelestialBody)
+		{
+			if (sunCelestialBody == "Sun")
+				return Scatterer.Instance.scaledSpaceSunLight;
+			else
+				return Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == ("Scaledspace SunLight "+sunCelestialBody)));
 		}
 
 		void FindEclipseCasters (ScattererCelestialBody scattererBody)
@@ -202,6 +212,7 @@ namespace scatterer
 				if (!ReferenceEquals (secondarySun, null))
 				{
 					secondarySun.sunLight = findLight (sunConfig.celestialBodyName);
+					secondarySun.scaledSunLight = findScaledLight (sunConfig.celestialBodyName);
 					secondarySuns.Add (secondarySun);
 				}
 			}
@@ -216,8 +227,8 @@ namespace scatterer
 			for (int i = 0; i < Math.Min (4, secondarySuns.Count); i++)
 			{
 				planetShineRGBMatrix.SetRow (i, new Vector4 (secondarySuns[i].config.sunColor.r, secondarySuns[i].config.sunColor.g, secondarySuns[i].config.sunColor.b, 1.0f));
-				if (secondarySuns[i].sunLight != null)
-					planetShineOriginalRGBMatrix.SetRow (i, new Vector4 (secondarySuns[i].sunLight.color.r,secondarySuns[i].sunLight.color.g,secondarySuns[i].sunLight.color.b, 1.0f));
+				if (secondarySuns[i].scaledSunLight != null)
+					planetShineOriginalRGBMatrix.SetRow (i, new Vector4 (secondarySuns[i].scaledSunLight.color.r, secondarySuns[i].scaledSunLight.color.g, secondarySuns[i].scaledSunLight.color.b, 1.0f));
 				else
 					planetShineOriginalRGBMatrix.SetRow(i, planetShineRGBMatrix.GetRow(i));
 			}
@@ -232,17 +243,16 @@ namespace scatterer
 				Vector3 sourcePosRelPlanet = Vector3.Scale (secondarySuns[i].celestialBody.position - parentCelestialBody.GetTransform ().position, new Vector3d (ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor));	//has to be this that is borked
 				planetShineSourcesMatrix.SetRow (i, new Vector4 (sourcePosRelPlanet.x, sourcePosRelPlanet.y, sourcePosRelPlanet.z, 1.0f));
 
-				if (secondarySuns[i].sunLight != null)
+				if (secondarySuns[i].scaledSunLight != null)
 				{
 					if (sunsUseIntensityCurves)
 					{
-						planetShineRGBMatrix[i,3] = secondarySuns[i].sunLight.intensity;
+						planetShineRGBMatrix[i,3] = secondarySuns[i].scaledSunLight.intensity;
 					}
 
 					if (!cloudIntegrationUsesScattererSunColors)
 					{
-						Color actualSunColor = Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(secondarySuns[i].sunLight) : secondarySuns[i].sunLight.color;
-						planetShineOriginalRGBMatrix.SetRow (i, new Vector4 (actualSunColor.r, actualSunColor.g, actualSunColor.b, secondarySuns[i].sunLight.intensity));
+						planetShineOriginalRGBMatrix.SetRow (i, new Vector4 (secondarySuns[i].scaledSunLight.color.r, secondarySuns[i].scaledSunLight.color.g, secondarySuns[i].scaledSunLight.color.b, secondarySuns[i].scaledSunLight.intensity));
 					}
 				}
 			}
@@ -312,7 +322,7 @@ namespace scatterer
 
 		public Color getIntensityModulatedSunColor()
 		{
-			return (sunsUseIntensityCurves ? sunColor * mainSunLight.intensity : sunColor);
+			return (sunsUseIntensityCurves ? sunColor * mainScaledSunLight.intensity : sunColor);
 		}
 	}
 }

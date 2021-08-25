@@ -487,8 +487,7 @@ namespace scatterer
 				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f);
 
 			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
-			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : 
-			              (Scatterer.Instance.mainSettings.sunlightExtinction ? Scatterer.Instance.sunlightModulatorsManagerInstance.GetOriginalLightColor(prolandManager.mainSunLight) * prolandManager.mainSunLight.intensity : prolandManager.mainSunLight.color * prolandManager.mainSunLight.intensity ));
+			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity );
 
 			float camerasOverlap = 0f;
 			if (!Scatterer.Instance.unifiedCameraMode)
