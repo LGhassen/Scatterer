@@ -208,6 +208,9 @@ namespace scatterer
 
 		public virtual void UpdateNode ()
 		{
+			//Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByAttenuation(prolandManager.mainSunLight, 1.5f); //looks like ass
+			//Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByAttenuation(prolandManager.mainSunLight, 1.25f); //make it 50% stronger just to see
+
 			oceanDraw = !MapView.MapIsEnabled && !prolandManager.skyNode.inScaledSpace;
 
 			foreach (MeshRenderer _mr in waterMeshRenderers)
