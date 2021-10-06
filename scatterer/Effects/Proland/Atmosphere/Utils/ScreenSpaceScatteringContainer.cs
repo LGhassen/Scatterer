@@ -216,7 +216,6 @@ namespace scatterer
 		{
 			if (!renderingEnabled)
 			{
-				compositeScatteringMaterial.SetFloat(ShaderProperties._ScatteringExposure_PROPERTY, targetMaterial.GetFloat(ShaderProperties._ScatteringExposure_PROPERTY));
 				targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
 				renderingEnabled = true;
 			}
