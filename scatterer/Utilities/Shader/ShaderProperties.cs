@@ -18,8 +18,6 @@ namespace scatterer
 
 		public static int _experimentalAtmoScale_PROPERTY { get { return _experimentalAtmoScale; } }
 		private static int _experimentalAtmoScale;
-		public static int _viewdirOffset_PROPERTY { get { return _viewdirOffset; } }
-		private static int _viewdirOffset;
 		public static int atmosphereGlobalScale_PROPERTY { get { return atmosphereGlobalScale; } }
 		private static int atmosphereGlobalScale;
 		public static int Rg_PROPERTY { get { return Rg; } }
@@ -168,16 +166,6 @@ namespace scatterer
 		private static int _godrayDepthTexture;
 		public static int M_PI_PROPERTY { get { return M_PI; } }
 		private static int M_PI;
-		public static int Rl_PROPERTY { get { return Rl; } }
-		private static int Rl;
-		public static int RES_R_PROPERTY { get { return RES_R; } }
-		private static int RES_R;
-		public static int RES_MU_PROPERTY { get { return RES_MU; } }
-		private static int RES_MU;
-		public static int RES_MU_S_PROPERTY { get { return RES_MU_S; } }
-		private static int RES_MU_S;
-		public static int RES_NU_PROPERTY { get { return RES_NU; } }
-		private static int RES_NU;
 		public static int SKY_W_PROPERTY { get { return SKY_W; } }
 		private static int SKY_W;
 		public static int SKY_H_PROPERTY { get { return SKY_H; } }
@@ -198,9 +186,6 @@ namespace scatterer
 
 		public static int TRANSMITTANCE_H_PROPERTY { get { return TRANSMITTANCE_H; } }
 		private static int TRANSMITTANCE_H;
-
-		public static int AVERAGE_GROUND_REFLECTANCE_PROPERTY { get { return AVERAGE_GROUND_REFLECTANCE; } }
-		private static int AVERAGE_GROUND_REFLECTANCE;
 
 		public static int _Spectrum01_PROPERTY { get { return _Spectrum01; } }
 		private static int _Spectrum01;
@@ -385,7 +370,6 @@ namespace scatterer
 		private void Awake()
 		{
 			_experimentalAtmoScale = Shader.PropertyToID("_experimentalAtmoScale");
-			_viewdirOffset = Shader.PropertyToID("_viewdirOffset");
 			atmosphereGlobalScale = Shader.PropertyToID("atmosphereGlobalScale");
 			Rg = Shader.PropertyToID("Rg");
 			Rt = Shader.PropertyToID("Rt");
@@ -462,11 +446,6 @@ namespace scatterer
 			_godrayDepthTexture = Shader.PropertyToID("_godrayDepthTexture");
 
 			M_PI = Shader.PropertyToID("M_PI");
-			Rl = Shader.PropertyToID("Rl");
-			RES_R = Shader.PropertyToID("RES_R");
-			RES_MU = Shader.PropertyToID("RES_MU");
-			RES_MU_S = Shader.PropertyToID("RES_MU_S");
-			RES_NU = Shader.PropertyToID("RES_NU");
 			SKY_W = Shader.PropertyToID("SKY_W");
 			SKY_H = Shader.PropertyToID("SKY_H");
 			betaMSca = Shader.PropertyToID("betaMSca");
@@ -477,7 +456,6 @@ namespace scatterer
 
 			TRANSMITTANCE_W = Shader.PropertyToID("TRANSMITTANCE_W");
 			TRANSMITTANCE_H = Shader.PropertyToID("TRANSMITTANCE_H");
-			AVERAGE_GROUND_REFLECTANCE = Shader.PropertyToID("AVERAGE_GROUND_REFLECTANCE");
 
 			_Spectrum01 = Shader.PropertyToID("_Spectrum01");
 			_Spectrum23 = Shader.PropertyToID("_Spectrum23");

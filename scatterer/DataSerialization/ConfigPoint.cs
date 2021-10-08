@@ -18,12 +18,11 @@ namespace scatterer
 		[Persistent] public float extinctionTint;
 
 		[Persistent] public float openglThreshold;
-		[Persistent] public float viewdirOffset;
 
 
 		public ConfigPoint(float inAltitude,float inSkyAlpha,float inSkyExposure,float inPostProcessAlpha,
 		                   float inPostProcessDepth,float inPostProcessExposure,
-		                   float inSkyExtinctionTint, float inOpenglThreshold, float inViewdirOffset, float in_Post_Extinction_Tint,
+		                   float inSkyExtinctionTint, float inOpenglThreshold, float in_Post_Extinction_Tint,
 		                   float inExtinctionThickness)
 		{
 			altitude=inAltitude;
@@ -34,7 +33,6 @@ namespace scatterer
 			scatteringExposure=inPostProcessExposure;
 			skyExtinctionTint=inSkyExtinctionTint;
 			openglThreshold = inOpenglThreshold;
-			viewdirOffset = inViewdirOffset;
 			extinctionTint = in_Post_Extinction_Tint;
 			extinctionThickness = inExtinctionThickness;
 		}
@@ -48,7 +46,6 @@ namespace scatterer
 			scatteringExposure=inConfigPoint.scatteringExposure;
 			skyExtinctionTint=inConfigPoint.skyExtinctionTint;
 			openglThreshold = inConfigPoint.openglThreshold;
-			viewdirOffset = inConfigPoint.viewdirOffset;
 			extinctionTint = inConfigPoint.extinctionTint;
 			extinctionThickness = inConfigPoint.extinctionThickness;
 		}
@@ -62,7 +59,6 @@ namespace scatterer
 			scatteringExposure=Mathf.Lerp(inConfigPoint1.scatteringExposure, inConfigPoint2.scatteringExposure ,x);
 			skyExtinctionTint=Mathf.Lerp(inConfigPoint1.skyExtinctionTint, inConfigPoint2.skyExtinctionTint ,x);
 			openglThreshold = Mathf.Lerp(inConfigPoint1.openglThreshold, inConfigPoint2.openglThreshold ,x);
-			viewdirOffset = Mathf.Lerp(inConfigPoint1.viewdirOffset, inConfigPoint2.viewdirOffset ,x);
 			extinctionTint = Mathf.Lerp(inConfigPoint1.extinctionTint, inConfigPoint2.extinctionTint ,x);
 			extinctionThickness = Mathf.Lerp(inConfigPoint1.extinctionThickness, inConfigPoint2.extinctionThickness ,x);
 		}

@@ -52,7 +52,6 @@ namespace scatterer
 
 		Vector3 sunColor=Vector3.one;
 		float experimentalAtmoScale=1f;
-		float viewdirOffset=0f;
 
 		float rimBlend = 20f;
 		float rimpower = 600f;
@@ -641,7 +640,7 @@ namespace scatterer
 				GUILayout.Label ("New point altitude:");
 				newCfgPtAlt = Convert.ToSingle (GUILayout.TextField (newCfgPtAlt.ToString ()));
 				if (GUILayout.Button ("Add")) {
-					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.configPoints.Insert (selectedConfigPoint + 1, new ConfigPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, skyExtinctionTint / 100, openglThreshold, viewdirOffset, extinctionTint / 100, extinctionThickness));
+					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.configPoints.Insert (selectedConfigPoint + 1, new ConfigPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, skyExtinctionTint / 100, openglThreshold, extinctionTint / 100, extinctionThickness));
 					selectedConfigPoint += 1;
 					configPointsCnt = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.configPoints.Count;
 					loadConfigPoint (selectedConfigPoint);
@@ -696,7 +695,6 @@ namespace scatterer
 				GUIfloat ("Post Processing Alpha", ref postProcessingalpha, ref _cur.postProcessAlpha);
 				GUIfloat ("Post Processing Depth", ref postProcessDepth, ref _cur.postProcessDepth);
 				GUILayout.Label ("Artifact Fixes");
-				GUIfloat ("ViewDirOffset", ref viewdirOffset, ref _cur.viewdirOffset);
 				GUIfloat ("Depth buffer Threshold", ref openglThreshold, ref _cur.openglThreshold);
 				GUILayout.Label ("Godrays");
 				GUIfloat ("Godray strength*", ref godrayStrength, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.godrayStrength);
@@ -1082,7 +1080,6 @@ namespace scatterer
 			
 			experimentalAtmoScale = skyNode.experimentalAtmoScale;
 			atmosphereGlobalScale = skyNode.atmosphereGlobalScale;
-			viewdirOffset = selected.viewdirOffset;
 			
 			cloudColorMultiplier = skyNode.cloudColorMultiplier;
 			cloudScatteringMultiplier = skyNode.cloudScatteringMultiplier;
@@ -1114,7 +1111,6 @@ namespace scatterer
 			pointAltitude = _cur.altitude;
 			
 			openglThreshold = _cur.openglThreshold;
-			viewdirOffset = _cur.viewdirOffset;
 		}
 
 

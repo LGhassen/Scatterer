@@ -145,7 +145,6 @@
     <Compile Include="Utilities\Shader\ShaderProperties.cs" />
     <Compile Include="Utilities\Shader\RenderTypeFixer.cs" />
     <Compile Include="Utilities\Camera\DisableEffectsChecker.cs" />
-    <Compile Include="Effects\Proland\Atmosphere\Utils\EncodeFloat.cs" />
     <Compile Include="Utilities\Camera\DisableAmbientLight.cs" />
     <Compile Include="Utilities\Camera\WireFrame.cs" />
     <Compile Include="Utilities\Camera\DepthToDistanceCommandBuffer.cs" />
@@ -194,6 +193,7 @@
     <Compile Include="Effects\SunFlare\SunflareSettingsV2.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV1.cs" />
     <Compile Include="Utilities\VsyncStartupFix.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Preprocessing\AtmoPreprocessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
@@ -214,5 +214,6 @@
     <Folder Include="Utilities\EVE\" />
     <Folder Include="Effects\AntiAliasing\" />
     <Folder Include="Effects\AntiAliasing\Utils\" />
+    <Folder Include="Effects\Proland\Atmosphere\Preprocessing\" />
   </ItemGroup>
 </Project>
