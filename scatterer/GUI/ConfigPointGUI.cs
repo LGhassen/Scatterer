@@ -209,11 +209,6 @@ namespace scatterer
 			else
 				GUILayout.Label (String.Format ("Current state:{0}% cfgPoint{1} + {2}% cfgPoint{3} ", (int)(100 * (1 - Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.percentage)), Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.currentConfigPoint - 1, (int)(100 * Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.percentage), Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.currentConfigPoint));
 			GUILayout.EndHorizontal ();
-			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button ("Toggle PostProcessing")) {
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.TogglePostProcessing ();
-			}
-			GUILayout.EndHorizontal ();
 			//							GUILayout.BeginHorizontal ();
 			//							if (GUILayout.Button ("toggle sky"))
 			//							{
@@ -250,6 +245,7 @@ namespace scatterer
 			
 			GUILayout.TextField (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.isConfigModuleManagerPatch ? "ModuleManager patch detected, saving disabled" : Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.configUrl.parent.url, guiStyle);
 			GUILayout.EndHorizontal ();
+
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds) {
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button ("Map EVE clouds")) {

@@ -101,13 +101,19 @@ namespace scatterer
 			m_copyIrradianceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyIrradiance")]);
 			copyMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopySlice")]);
 		}
-
+		
 		public static float CalculateRt(float inRg, float inHR, float inHM, Vector3 in_betaR, Vector3 in_BETA_MSca)
 		{
-			float RtHR  =  - 1000f * inHR * Mathf.Log(0.000001f / in_betaR.magnitude);
-			float RtHM  =  - 1000f * inHM * Mathf.Log(0.000001f / in_BETA_MSca.magnitude);
+			float RtHR  =  - 1000f * inHR * Mathf.Log(0.0000001f / in_betaR.magnitude);
+			float RtHM  =  - 1000f * inHM * Mathf.Log(0.0000001f / in_BETA_MSca.magnitude);
 			
 			return inRg + Mathf.Max(RtHR, RtHM);
+		}
+
+		public static void deleteCache()
+		{
+			string cachePath = Utils.GameDataPath + "/ScattererAtmoCache/PluginData";
+			Directory.Delete(cachePath, true);
 		}
 
 		//Hashing may not be a very good idea with floats though
@@ -134,14 +140,14 @@ namespace scatterer
 
 		public void Generate(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inPRECOMPUTED_SCTR_LUT_DIM, string assetPath)
 		{
-			//rescale because reasons
-			Rg = inRG/10f;
-			Rt = inRT/10f;
-			BETA_R = inBETA_R*0.01f;
-			BETA_MSca = inBETA_MSca*0.01f;
+			Rg = inRG;
+			Rt = inRT;
+			BETA_R = inBETA_R*0.001f;
+			BETA_MSca = inBETA_MSca*0.001f;
 			MIE_G = inMIE_G;
-			HR = inHR*100f;
-			HM = inHM*100f;
+			HR = inHR*1000f;
+			HM = inHM*1000f;
+
 			AVERAGE_GROUND_REFLECTANCE = inGRref;
 			m_finished = false;
 			multipleScattering = inMultiple;

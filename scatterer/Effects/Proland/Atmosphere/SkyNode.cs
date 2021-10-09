@@ -16,10 +16,10 @@ namespace scatterer
 
 		public float Rg;	//The radius of the planet
 		public float Rt;	//Radius of the atmosphere, calculated automatically from HR and HM and the scattering factors
-		[Persistent] float HR = 8.0f;	//Half heights for the atmosphere air density (HR) and particle density (HM), this is the height in km that half the particles are found below
-		[Persistent] float HM = 1.2f;
-		[Persistent] Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
-		[Persistent] Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f); //scatter coefficient for mie
+		[Persistent] public float HR = 8.0f;	//Half heights for the atmosphere air density (HR) and particle density (HM), this is the height in km that half the particles are found below
+		[Persistent] public float HM = 1.2f;
+		[Persistent] public Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
+		[Persistent] public Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f); //scatter coefficient for mie
 		[Persistent] public float m_mieG = 0.85f; //Asymmetry factor for the mie phase function, a higher number means more light is scattered in the forward direction
 		[Persistent] public float averageGroundReflectance = 0.1f;
 		[Persistent] public bool multipleScattering = true;
@@ -642,6 +642,61 @@ namespace scatterer
 			m_inscatter.Apply();
 			m_transmit.Apply ();
 			m_irradiance.Apply ();
+		}
+
+		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool fastPreviewMode)
+		{
+			m_betaR = inBETA_R;
+			BETA_MSca = inBETA_MSca;
+			m_mieG = inMIE_G;
+			HR = inHR;
+			HM = inHM;
+			averageGroundReflectance = inGRref;
+			multipleScattering = inMultiple;
+			PRECOMPUTED_SCTR_LUT_DIM = fastPreviewMode ? AtmoPreprocessor.PRECOMPUTED_SCTR_LUT_DIM_PREVIEW : AtmoPreprocessor.PRECOMPUTED_SCTR_LUT_DIM_DEFAULT ;
+
+			InitPrecomputedAtmo ();
+
+			ReinitAllMaterials();
+		}
+
+		void ReinitAllMaterials()
+		{
+			if (!ReferenceEquals(scaledEclipseMaterial,null))
+				InitUniforms(scaledEclipseMaterial);
+			if (!ReferenceEquals(skyMaterial,null))	//need also here to resize the sky sphere thingy
+				InitUniforms(skyMaterial);
+			if (!ReferenceEquals(scaledScatteringMaterial,null))
+				InitUniforms(scaledScatteringMaterial);
+			if (!ReferenceEquals(localScatteringMaterial,null))
+				InitPostprocessMaterialUniforms(localScatteringMaterial);
+			ReInitMaterialUniformsOnRenderTexturesLoss ();
+
+			foreach (Material particleMaterial in EVEvolumetrics)
+			{	
+				InitUniforms (particleMaterial);
+				InitPostprocessMaterialUniforms (particleMaterial);
+			}
+
+			foreach (EVEClouds2d eveClouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName])
+			{
+				InitUniforms (eveClouds2d.Clouds2dMaterial);
+				InitPostprocessMaterialUniforms (eveClouds2d.Clouds2dMaterial);
+			}
+
+			if (!ReferenceEquals(prolandManager.GetOceanNode(),null))
+			{
+				if (!ReferenceEquals(prolandManager.GetOceanNode().m_oceanMaterial,null))
+				{
+					InitUniforms (prolandManager.GetOceanNode().m_oceanMaterial);
+					InitPostprocessMaterialUniforms (prolandManager.GetOceanNode().m_oceanMaterial);
+				}
+
+				if (!ReferenceEquals(prolandManager.GetOceanNode().underwaterMaterial,null))
+				{
+					InitPostprocessMaterialUniforms (prolandManager.GetOceanNode().underwaterMaterial);
+				}
+			}
 		}
 
 		//Also try to make this stay on scene changes and unload/reloads?

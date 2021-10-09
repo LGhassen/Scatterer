@@ -24,10 +24,17 @@ namespace scatterer
 		public int selectedPlanet = 0;
 		bool wireFrame = false;
 
-		public bool displayOceanSettings = false;
+		enum PlanetSettingsTabs
+		{
+			ConfigPoints,
+			Atmo,
+			Ocean
+		}
+		PlanetSettingsTabs selectedPlanetSettingsTab = PlanetSettingsTabs.ConfigPoints;
 
 		MainOptionsGUI mainOptionsGUI = new MainOptionsGUI();
 		ConfigPointGUI configPointGUI = new ConfigPointGUI ();
+		AtmoGUI atmoGUI = new AtmoGUI ();
 		OceanGUI oceanGUI = new OceanGUI ();
 		SunflareGUI sunflareGUI = new SunflareGUI ();
 
@@ -83,12 +90,16 @@ namespace scatterer
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button ("Planet settings"))
 				{
+					windowRect.width = 400;
+					windowRect.height = 40;
 					sunflareOptions = false;
 				}
 				if (Scatterer.Instance.mainSettings.fullLensFlareReplacement && !ReferenceEquals(Scatterer.Instance.sunflareManager,null) && !ReferenceEquals(Scatterer.Instance.sunflareManager.scattererSunFlares,null))
 				{
 					if (GUILayout.Button ("Sunflare settings"))
 					{
+						windowRect.width = 400;
+						windowRect.height = 40;
 						sunflareGUI.InitSunflareGUI();
 						sunflareOptions = true;
 					}
@@ -102,31 +113,47 @@ namespace scatterer
 				else
 				{
 					DrawPlanetSelectionHeader ();
-					
+
+
 					if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active)
 					{	
+
 						GUILayout.BeginHorizontal ();
 						if (GUILayout.Button ("Config points"))
 						{
-							displayOceanSettings = false;
-						}					
-						if (GUILayout.Button ("Ocean settings"))
-						{
-							displayOceanSettings = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean;
+							windowRect.width = 400;
+							windowRect.height = 40;
+							selectedPlanetSettingsTab = PlanetSettingsTabs.ConfigPoints;
 						}
-						GUILayout.EndHorizontal ();			
-						
-						if (!displayOceanSettings)
+						if (GUILayout.Button ("Atmosphere"))
+						{
+							windowRect.width = 300;
+							windowRect.height = 40;
+							selectedPlanetSettingsTab = PlanetSettingsTabs.Atmo;
+						}
+						if (GUILayout.Button ("Ocean") && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
+						{
+							windowRect.width = 400;
+							windowRect.height = 40;
+							selectedPlanetSettingsTab = PlanetSettingsTabs.Ocean;
+						}
+						GUILayout.EndHorizontal ();	
+
+						if (selectedPlanetSettingsTab == PlanetSettingsTabs.ConfigPoints)
 						{
 							configPointGUI.DrawConfigPointGUI(selectedPlanet);
+						}
+						else if (selectedPlanetSettingsTab == PlanetSettingsTabs.Atmo)
+						{
+							atmoGUI.drawAtmoGUI (selectedPlanet);
 						}
 						else
 						{
 							oceanGUI.drawOceanGUI (selectedPlanet);
 						}
-						
-						DrawSharedFooterGUI ();
 					}
+				
+					DrawSharedFooterGUI ();
 				}
 			}
 			else
@@ -134,7 +161,7 @@ namespace scatterer
 				GUILayout.Label (String.Format ("Inactive in tracking station and VAB/SPH"));
 				GUILayout.EndHorizontal ();
 			}
-
+		
 			GUI.DragWindow();
 		}
 
@@ -150,6 +177,7 @@ namespace scatterer
 					selectedPlanet -= 1;
 
 					configPointGUI.loadSettingsForPlanet(selectedPlanet);
+					atmoGUI.loadSettingsForPlanet(selectedPlanet);
 
 					if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
 					{
@@ -162,6 +190,7 @@ namespace scatterer
 				if (selectedPlanet < Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Count - 1) {
 					selectedPlanet += 1;
 					configPointGUI.loadSettingsForPlanet(selectedPlanet);
+					atmoGUI.loadSettingsForPlanet(selectedPlanet);
 
 					if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
 					{
@@ -171,10 +200,10 @@ namespace scatterer
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
-			GUILayout.Label ("Planet loaded:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active.ToString () + "                                Has ocean:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean.ToString ());
+			GUILayout.Label ("Loaded:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active.ToString () + ". Has ocean:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean.ToString ());
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
-			GUILayout.Label ("Load distance:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].loadDistance.ToString () + "                             Unload distance:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
+			GUILayout.Label ("Load distance:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].loadDistance.ToString () + ". Unload distance:" + Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].unloadDistance.ToString ());
 			GUILayout.EndHorizontal ();
 		}
 
@@ -215,9 +244,10 @@ namespace scatterer
 		public void loadPlanet(int planetIndex)
 		{
 			Utils.LogDebug ("Guihandler load planet " + planetIndex.ToString ());
-			displayOceanSettings = false;
+			selectedPlanetSettingsTab = PlanetSettingsTabs.ConfigPoints;
 			selectedPlanet = planetIndex;
 			configPointGUI.loadSettingsForPlanet (selectedPlanet);
+			atmoGUI.loadSettingsForPlanet(selectedPlanet);
 
 			if (!ReferenceEquals (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode(), null))
 			{

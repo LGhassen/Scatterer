@@ -87,7 +87,7 @@ namespace scatterer
 		MeshFilter[] waterMeshFilters;
 		
 		public GenericLocalAtmosphereContainer underwaterScattering;
-		Material underwaterMaterial;
+		public Material underwaterMaterial;
 
 		public Vector3 offsetVector3{
 			get {
