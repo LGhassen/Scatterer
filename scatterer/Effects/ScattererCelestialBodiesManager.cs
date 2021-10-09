@@ -142,18 +142,11 @@ namespace scatterer
 				
 				if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Contains (scattererCelestialBody))
 				{
-					Scatterer.Instance.guiHandler.selectedConfigPoint = 0;
-					Scatterer.Instance.guiHandler.displayOceanSettings = false;
-					Scatterer.Instance.guiHandler.selectedPlanet = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (scattererCelestialBody);
-					Scatterer.Instance.guiHandler.getSettingsFromSkynode ();
+					Scatterer.Instance.guiHandler.loadPlanet(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (scattererCelestialBody));
 				}
 				else
 				{
 					throw new Exception ("Planet already removed from planets list");
-				}
-				if (!ReferenceEquals (scattererCelestialBody.prolandManager.GetOceanNode (), null))
-				{
-					Scatterer.Instance.guiHandler.buildOceanGUI ();	//why is this here?
 				}
 				
 				callCollector = true;
@@ -161,7 +154,7 @@ namespace scatterer
 			}
 			catch (Exception exception)
 			{
-				if (HighLogic.LoadedScene != GameScenes.MAINMENU)
+				if (HighLogic.LoadedScene != GameScenes.MAINMENU || !exception.Message.Contains("No correct main menu object found for "))
 					Utils.LogError ("Effects couldn't be loaded for " + scattererCelestialBody.celestialBodyName + ", " + exception.ToString ());
 				
 				try {

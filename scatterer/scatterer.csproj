@@ -194,6 +194,11 @@
     <Compile Include="Effects\SunFlare\SunflareSettingsV1.cs" />
     <Compile Include="Utilities\VsyncStartupFix.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Preprocessing\AtmoPreprocessor.cs" />
+    <Compile Include="GUI\MainOptionsGUI.cs" />
+    <Compile Include="GUI\SunflareGUI.cs" />
+    <Compile Include="GUI\ConfigPointGUI.cs" />
+    <Compile Include="GUI\OceanGUI.cs" />
+    <Compile Include="GUI\AtmoGUI.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />
