@@ -15,6 +15,8 @@ namespace scatterer
 		public MeshRenderer MeshRenderer { get { return skySphereMR; } }
 
 		Transform parentLocalTransform, parentScaledTransform;
+
+		MeshFilter skySphereMF;
 		
 		public SkySphereContainer(float size, Material material, Transform inParentLocalTransform, Transform inParentScaledTransform)
 		{
@@ -23,7 +25,7 @@ namespace scatterer
 
 			skySphereGO.transform.localScale = Vector3.one;
 			
-			MeshFilter skySphereMF = skySphereGO.GetComponent<MeshFilter>();
+			skySphereMF = skySphereGO.GetComponent<MeshFilter>();
 			Vector3[] verts = skySphereMF.mesh.vertices;
 			for (int i = 0; i < verts.Length; i++)
 			{
@@ -81,8 +83,15 @@ namespace scatterer
 		}
 
 		public void Resize(float size)
-		{
-			skySphereGO.transform.localScale = new Vector3 (size, size, size);
+		{	
+			Vector3[] verts = skySphereMF.mesh.vertices;
+			for (int i = 0; i < verts.Length; i++)
+			{
+				verts[i] *= size;
+			}
+			skySphereMF.mesh.vertices = verts;
+			skySphereMF.mesh.RecalculateBounds();
+			skySphereMF.mesh.RecalculateNormals();
 		}
 
 		public void Cleanup()

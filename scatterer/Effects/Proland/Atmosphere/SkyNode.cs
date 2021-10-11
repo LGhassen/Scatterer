@@ -657,6 +657,9 @@ namespace scatterer
 
 			InitPrecomputedAtmo ();
 
+			float skySphereSize = 2 * (4 * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor;
+			skySphere.Resize (skySphereSize);
+
 			ReinitAllMaterials();
 		}
 
