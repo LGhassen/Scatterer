@@ -29,7 +29,7 @@ namespace scatterer
 			Vector3[] verts = skySphereMF.mesh.vertices;
 			for (int i = 0; i < verts.Length; i++)
 			{
-				verts[i] *= size;
+				verts[i] = verts[i].normalized * size;
 			}
 			skySphereMF.mesh.vertices = verts;
 			skySphereMF.mesh.RecalculateBounds();
@@ -87,7 +87,7 @@ namespace scatterer
 			Vector3[] verts = skySphereMF.mesh.vertices;
 			for (int i = 0; i < verts.Length; i++)
 			{
-				verts[i] *= size;
+				verts[i] = verts[i].normalized * size;
 			}
 			skySphereMF.mesh.vertices = verts;
 			skySphereMF.mesh.RecalculateBounds();
