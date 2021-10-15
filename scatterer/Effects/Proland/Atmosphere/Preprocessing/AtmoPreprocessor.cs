@@ -140,13 +140,20 @@ namespace scatterer
 
 		public void Generate(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inPRECOMPUTED_SCTR_LUT_DIM, string assetPath)
 		{
-			Rg = inRG;
-			Rt = inRT;
-			BETA_R = inBETA_R*0.001f;
-			BETA_MSca = inBETA_MSca*0.001f;
+			//Rescale to a fixed radius which we know never causes issues
+			float referenceRadius = 1000000f;
+			float scaleFactor = referenceRadius / inRG;
+
+			Rg = referenceRadius;
+			Rt = inRT * scaleFactor;
+
+			HR = inHR * 1000f * scaleFactor;
+			HM = inHM * 1000f * scaleFactor;
+
+			BETA_R = inBETA_R * 0.001f / scaleFactor;
+			BETA_MSca = inBETA_MSca * 0.001f / scaleFactor;
+
 			MIE_G = inMIE_G;
-			HR = inHR*1000f;
-			HM = inHM*1000f;
 
 			AVERAGE_GROUND_REFLECTANCE = inGRref;
 			m_finished = false;
