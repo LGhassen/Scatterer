@@ -610,18 +610,13 @@ namespace scatterer
 			m_inscatter.wrapMode = TextureWrapMode.Clamp;
 			m_inscatter.filterMode = FilterMode.Bilinear;
 			
-			//Transmittance is responsible for the change in the sun color as it moves. The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-			m_transmit = new Texture2D (TRANSMITTANCE_W, TRANSMITTANCE_H, TextureFormat.RGBAHalf,false);
-			m_transmit.wrapMode = TextureWrapMode.Clamp;
-			m_transmit.filterMode = FilterMode.Bilinear;
-			
 			//Irradiance is responsible for the change in light emitted from the sky as the sun moves. The raw file is a 2D array of 32 bit floats with a range of 0 to 1
 			m_irradiance = new Texture2D (SKY_W, SKY_H, TextureFormat.RGBAHalf,false);
 			m_irradiance.wrapMode = TextureWrapMode.Clamp;
 			m_irradiance.filterMode = FilterMode.Bilinear;
 
 			//Compute atmo hash and path
-			string cachePath = Utils.GameDataPath + "/ScattererAtmoCache/PluginData";
+			string cachePath = Utils.GameDataPath + "/ScattererAtmosphereCache/PluginData";
 			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius, HR, HM, m_betaR, BETA_MSca);
 			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM);
 			cachePath += "/" + atmohash;
