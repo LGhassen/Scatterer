@@ -1032,7 +1032,7 @@ namespace scatterer
 		void UpdateLightExtinctions ()
 		{
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
-			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg, m_transmit, 1f);
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
 
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
 			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (prolandManager.mainSunLight, extinction);
@@ -1041,7 +1041,7 @@ namespace scatterer
 			{
 				if (!ReferenceEquals(secondarySun.sunLight, null))
 				{
-					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized, Rt, Rg, m_transmit, 1f);
+					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
 					extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);	//consider getting rid of extinction thickness and tint now
 					Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (secondarySun.sunLight, extinction);
 				}

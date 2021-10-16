@@ -13,10 +13,59 @@ using KSP.IO;
 namespace scatterer
 {
 	public static class AtmosphereUtils
-	{
-		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, Texture2D m_transmit, float experimentalAtmoScale)
+	{		
+		private static float Limit(float r, float mu, float Rg, float Rt) 
 		{
-			Rt=Rg+(Rt-Rg)*experimentalAtmoScale;
+			float dout = -r * mu + Mathf.Sqrt(r * r * (mu * mu - 1f) + Rt * Rt);
+			float delta2 = r * r * (mu * mu - 1f) + (Rg) * (Rg);
+			
+			if (delta2 >= 0f) 
+			{ 
+				float din = -r * mu - Mathf.Sqrt(delta2); 
+				if (din >= 0f)
+				{ 
+					dout = Mathf.Min(dout, din); 
+				}
+			} 
+			
+			return dout;
+		}
+
+		// optical depth for ray (r,mu) of length d, using analytic formula
+		// (mu=cos(view zenith angle)), intersections with ground ignored
+		// H=height scale of exponential density function
+		private static float OpticalDepth(float H, float r, float mu, float d, float Rg, float Rt)
+		{
+			float a = Mathf.Sqrt((0.5f/H)*r);
+			Vector2 a01 = a*new Vector2(mu, mu + d / r);
+			Vector2 a01s = new Vector2(Mathf.Sign(a01.x),Mathf.Sign(a01.y));
+			Vector2 a01sq = a01*a01;
+			float x = a01s.y > a01s.x ? Mathf.Exp(a01sq.x) : 0f;
+			Vector2 y = a01s / (2.3193f* new Vector2(Mathf.Abs(a01.x), Mathf.Abs(a01.y)) + new Vector2(Mathf.Sqrt(1.52f*a01sq.x + 4f), Mathf.Sqrt(1.52f*a01sq.y + 4f))) * new Vector2(1f, Mathf.Exp(-d/H*(d/(2f*r)+mu)));
+			return Mathf.Sqrt((6.2831f*H)*r) * Mathf.Exp((Rg-r)/H) * (x + Vector2.Dot(y, new Vector2(1f, -1f)));
+		}
+
+		private static float OpticalDepthToBoundaries(float H, float r, float mu, float Rg, float Rt)
+		{ 
+			float result = 0f;
+			float d = Limit(r, mu, Rg, Rt); 
+			
+			result = OpticalDepth(H, r, mu, d, Rg, Rt);
+			
+			return mu < -Mathf.Sqrt(1f - (Rg / r) * (Rg / r)) ? 1e9f : result; 
+		} 
+		
+		private static Color AnalyticTransmittance(float r, float mu, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx)
+		{
+			Vector3 depth = betaR * OpticalDepthToBoundaries(HR, r, mu, Rg, Rt) + betaMEx * OpticalDepthToBoundaries(HM, r, mu, Rg, Rt);
+			depth.x = Mathf.Clamp (Mathf.Exp (-depth.x), 1e-36f, 1f);
+			depth.y = Mathf.Clamp (Mathf.Exp(-depth.y), 1e-36f, 1f);
+			depth.z = Mathf.Clamp (Mathf.Exp(-depth.z), 1e-36f, 1f);
+			return new Color (depth.x,depth.y,depth.z,1f);
+		} 
+
+		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx)
+		{
 			float r = camera.magnitude;
 			float rMu = Vector3.Dot(camera, viewdir);
 			float mu = rMu / r;
@@ -31,26 +80,10 @@ namespace scatterer
 				mu = rMu / Rt;
 				r = Rt;
 			}
-
-			Color extinction = (r > Rt) ? Color.white : Transmittance(r, mu, Rt, Rg, m_transmit);
+			
+			Color extinction = (r > Rt) ? Color.white : AnalyticTransmittance(r, mu, Rt, Rg, HR, HM, betaR, betaMEx);
 			
 			return extinction;
-		}
-
-		private static Vector2 GetTransmittanceUV(float r, float mu, float Rt, float Rg, Texture2D m_transmit)
-		{
-			float uR, uMu;
-			
-			uR = Mathf.Sqrt(Mathf.Max (0,(r - Rg)) / (Rt - Rg));
-			uMu = Mathf.Atan((mu + 0.15f) / (1.0f + 0.15f) * Mathf.Tan(1.5f)) / 1.5f;
-			
-			return new Vector2(uMu, uR);
-		}
-
-		private static Color Transmittance(float r, float mu, float Rt, float Rg, Texture2D m_transmit)
-		{
-			Vector2 uv = GetTransmittanceUV(r, mu, Rt, Rg, m_transmit);
-			return m_transmit.GetPixelBilinear(uv.x, uv.y);
 		}
 
 		public static Color Hdr(Color L, float exposure) {
