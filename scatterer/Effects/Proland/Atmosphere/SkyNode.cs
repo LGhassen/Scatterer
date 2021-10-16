@@ -50,7 +50,6 @@ namespace scatterer
 
 		Texture3D m_inscatter;
 		Texture2D m_irradiance;
-		public Texture2D m_transmit;	//this should no longer be public and sunflare calculations should switch to analytic transmittance probably
 
 		//Dimensions of the tables
 		const int TRANSMITTANCE_W = 256;
@@ -159,9 +158,7 @@ namespace scatterer
 			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
 			{
 				sunflareExtinctionMaterial = new Material (ShaderReplacer.Instance.LoadedShaders ["Scatterer/sunFlareExtinction"]);
-				sunflareExtinctionMaterial.SetFloat (ShaderProperties.Rg_PROPERTY, Rg);
-				sunflareExtinctionMaterial.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
-				sunflareExtinctionMaterial.SetTexture (ShaderProperties._Sky_Transmittance_PROPERTY, m_transmit);
+				InitUniforms(sunflareExtinctionMaterial);
 
 				if (hasRingObjectAndShadowActivated)
 				{
@@ -281,6 +278,9 @@ namespace scatterer
 
 			SetUniforms (skyMaterial);
 			SetUniforms (scaledScatteringMaterial);
+
+			if (!ReferenceEquals (sunflareExtinctionMaterial, null))
+				SetUniforms (sunflareExtinctionMaterial);
 
 			if (!ReferenceEquals (scaledEclipseMaterial, null))
 			{
@@ -438,7 +438,6 @@ namespace scatterer
 		{
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
-			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 
@@ -547,7 +546,6 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 			
 			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
-			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
@@ -639,11 +637,9 @@ namespace scatterer
 			}
 
 			m_inscatter.SetPixelData (System.IO.File.ReadAllBytes (inscatterPath),0,0);
-			m_transmit.SetPixelData  (System.IO.File.ReadAllBytes (transmittancePath),0,0);
 			m_irradiance.SetPixelData  (System.IO.File.ReadAllBytes (irradiancePath),0,0);
 
 			m_inscatter.Apply();
-			m_transmit.Apply ();
 			m_irradiance.Apply ();
 		}
 
@@ -674,8 +670,11 @@ namespace scatterer
 				InitUniforms(skyMaterial);
 			if (!ReferenceEquals(scaledScatteringMaterial,null))
 				InitUniforms(scaledScatteringMaterial);
+			if (!ReferenceEquals(sunflareExtinctionMaterial,null))
+				InitUniforms(sunflareExtinctionMaterial);
 			if (!ReferenceEquals(localScatteringMaterial,null))
 				InitPostprocessMaterialUniforms(localScatteringMaterial);
+
 			ReInitMaterialUniformsOnRenderTexturesLoss ();
 
 			foreach (Material particleMaterial in EVEvolumetrics)
@@ -719,11 +718,6 @@ namespace scatterer
 			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange && !isConfigModuleManagerPatch)
 			{
 				SaveToConfigNode ();
-			}
-
-			if (m_transmit)
-			{
-				UnityEngine.Object.DestroyImmediate (m_transmit);
 			}
 
 			if (m_irradiance)

@@ -86,7 +86,7 @@ namespace scatterer
 
 		bool m_finished = false;
 
-		const bool WRITE_DEBUG_TEX = false;
+//		#define WRITE_DEBUG_TEX
 		
 		private void InitMaterials()
 		{
@@ -112,7 +112,7 @@ namespace scatterer
 
 		public static void deleteCache()
 		{
-			string cachePath = Utils.GameDataPath + "/ScattererAtmoCache/PluginData";
+			string cachePath = Utils.GameDataPath + "/ScattererAtmosphereCache/PluginData";
 			Directory.Delete(cachePath, true);
 		}
 
@@ -294,8 +294,9 @@ namespace scatterer
 				m_irradiance1Material.SetTexture("transmittanceRead", m_transmittanceT);
 				Graphics.Blit(null, m_deltaET, m_irradiance1Material);
 
-				if(WRITE_DEBUG_TEX)
+				#if(WRITE_DEBUG_TEX)
 					SaveAs8bit(SKY_W, SKY_H, 4, "/deltaE_debug", m_deltaET);
+				#endif
 			} 
 			else if (m_step == 2) // computes single scattering texture deltaS (line 3 in algorithm 4.1), Rayleigh and Mie separated in deltaSR + deltaSM
 			{
@@ -321,11 +322,10 @@ namespace scatterer
 					Graphics.Blit(textureSlice, m_deltaSMT, 0, i);
 				}
 
-				if(WRITE_DEBUG_TEX)
+				#if(WRITE_DEBUG_TEX)
 					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/deltaSR_debug", m_deltaSRT);
-
-				if(WRITE_DEBUG_TEX)
 					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/deltaSM_debug", m_deltaSMT);
+				#endif
 			} 
 			else if (m_step == 3) // copies deltaE into irradiance texture E (line 4 in algorithm 4.1)
 			{
@@ -350,8 +350,9 @@ namespace scatterer
 					Graphics.Blit(textureSlice, m_inscatterT[WRITE], 0, i);
 				}
 
-				if(WRITE_DEBUG_TEX)
+				#if(WRITE_DEBUG_TEX)
 					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/copy_inscatter1_debug",  m_inscatterT[WRITE]);
+				#endif
 
 				RTUtility.Swap(m_inscatterT);
 			} 
@@ -380,8 +381,9 @@ namespace scatterer
 					Graphics.Blit(textureSlice, m_deltaJT, 0, i);
 				}
 
-				if(WRITE_DEBUG_TEX)
+				#if(WRITE_DEBUG_TEX)
 					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/m_deltaJT_debug",  m_deltaJT);
+				#endif
 			} 
 			else if (m_step == 6) // computes deltaE (line 8 in algorithm 4.1)
 			{
@@ -415,8 +417,9 @@ namespace scatterer
 					Graphics.Blit(textureSlice, m_deltaSRT, 0, i);
 				}
 
-				if(WRITE_DEBUG_TEX)
+					#if(WRITE_DEBUG_TEX)
 					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/inscatterN_debug",  m_deltaSRT);
+					#endif
 			} 
 			else if (m_step == 8) // adds deltaE into irradiance texture E (line 10 in algorithm 4.1)
 			{
@@ -448,8 +451,9 @@ namespace scatterer
 					Graphics.Blit(textureSlice, m_inscatterT[WRITE], 0, i);
 				}
 
-				if(WRITE_DEBUG_TEX)
+				#if(WRITE_DEBUG_TEX)
 					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/copyIscatterN_debug",   m_inscatterT[WRITE]);
+				#endif
 
 				RTUtility.Swap(m_inscatterT);
 
@@ -464,11 +468,11 @@ namespace scatterer
 					Directory.CreateDirectory(assetPath);
 
 				// Add an option to clean up old cache files on start?
-				SaveAsHalf(m_transmittanceT, assetPath+"/transmittance");
+				//SaveAsHalf(m_transmittanceT, assetPath+"/transmittance");
 				SaveAsHalf(m_irradianceT[READ], assetPath+"/irradiance");
 				SaveAsHalf(m_inscatterT[READ], assetPath+"/inscatter");
 
-				if(WRITE_DEBUG_TEX)
+				#if(WRITE_DEBUG_TEX)
 				{
 					SaveAs8bit(TRANSMITTANCE_W, TRANSMITTANCE_H, 4, "/transmittance_debug", m_transmittanceT);
 
@@ -476,6 +480,7 @@ namespace scatterer
 
 					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/inscater_debug", m_inscatterT[READ]);
 				}
+				#endif
 			} 
 			else if (m_step == 11) 
 			{
