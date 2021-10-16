@@ -25,6 +25,8 @@ namespace scatterer
 		[Persistent] public bool multipleScattering = true;
 		public bool previewMode = false;
 
+		public float mainMenuScaleFactor = 1f;
+
 		public float experimentalAtmoScale=1f;
 		[Persistent] public float atmosphereGlobalScale = 1f;	//this should probably apply to the radius only now, be very careful about how this is integrated in some uniform inits
 
@@ -447,14 +449,14 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
 			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
 			
-			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
+			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 			
-			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
-			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
+			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
+			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
 			
-			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
-			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
+			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
+			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
 			
 			
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun());
@@ -544,7 +546,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 			
-			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f);
+			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
 			mat.SetTexture (ShaderProperties._Transmittance_PROPERTY, m_transmit);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
@@ -556,10 +558,10 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
 			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
 			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", PRECOMPUTED_SCTR_LUT_DIM);
-			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f);
-			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f);
-			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f);
-			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f) / 0.9f);
+			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
+			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
+			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
+			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
 
 			if (hasRingObjectAndShadowActivated)
 			{
@@ -602,7 +604,7 @@ namespace scatterer
 		void InitPrecomputedAtmo ()
 		{
 			Rg = (float) prolandManager.GetRadius ();
-			Rt = AtmoPreprocessor.CalculateRt (Rg, HR, HM, m_betaR, BETA_MSca);
+			Rt = AtmoPreprocessor.CalculateRt (Rg, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
 
 			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
@@ -622,7 +624,8 @@ namespace scatterer
 
 			//Compute atmo hash and path
 			string cachePath = Utils.GameDataPath + "/ScattererAtmoCache/PluginData";
-			string atmohash = AtmoPreprocessor.GetAtmoHash(Rg, Rt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM);
+			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius, HR, HM, m_betaR, BETA_MSca);
+			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM);
 			cachePath += "/" + atmohash;
 
 			string inscatterPath = cachePath+"/inscatter.half";
@@ -632,7 +635,7 @@ namespace scatterer
 			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (transmittancePath) || !System.IO.File.Exists (irradiancePath))
 			{
 				Utils.LogInfo("No atmosphere cache for "+prolandManager.parentCelestialBody.name+", generating new atmosphere");
-				AtmoPreprocessor.Instance.Generate (Rg, Rt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM, cachePath);
+				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM, cachePath);
 			}
 
 			m_inscatter.SetPixelData (System.IO.File.ReadAllBytes (inscatterPath),0,0);
@@ -825,7 +828,7 @@ namespace scatterer
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			
 				Rg = (float) prolandManager.GetRadius ();
-				Rt = AtmoPreprocessor.CalculateRt (Rg, HR, HM, m_betaR, BETA_MSca);
+				Rt = AtmoPreprocessor.CalculateRt (Rg, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
 
 				//compare parentConfigNode with the one on disk to determine if it's a ModuleManager Patch
 				string parentConfigNodePath = Utils.GameDataPath + configUrl.parent.url +".cfg";

@@ -26,7 +26,8 @@ namespace scatterer
 		public bool cloudIntegrationUsesScattererSunColors = false;
 		public bool flatScaledSpaceModel = false;
 		
-		public double m_radius = 600000.0f;
+		public double m_radius = 600000.0;
+		public float mainMenuScaleFactor = 1f;
 		
 		OceanFFTgpu oceanNode;
 		public SkyNode skyNode;
@@ -101,7 +102,8 @@ namespace scatterer
 					if (_mr)
 					{
 						var sctBodyTransform = ScaledSpace.Instance.transform.FindChild (parentCelestialBody.name);
-						m_radius = (_go.transform.localScale.x / sctBodyTransform.localScale.x) * parentCelestialBody.Radius;
+						mainMenuScaleFactor = (_go.transform.localScale.x / sctBodyTransform.localScale.x);
+						m_radius = mainMenuScaleFactor * parentCelestialBody.Radius;
 					}
 				}
 			}
@@ -174,6 +176,8 @@ namespace scatterer
 			skyNode.SetParentScaledTransform (parentScaledTransform);
 			skyNode.SetParentLocalTransform (parentLocalTransform);
 			skyNode.usesCloudIntegration = usesCloudIntegration;
+			skyNode.mainMenuScaleFactor = mainMenuScaleFactor;
+
 			if (skyNode.LoadFromConfigNode ())
 			{
 				skyNode.Init ();
