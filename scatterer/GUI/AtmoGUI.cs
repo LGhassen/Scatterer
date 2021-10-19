@@ -33,8 +33,6 @@ namespace scatterer
 		SkyNode targetSkyNode;
 		int selPlanet;
 
-		private Vector2 _scroll;
-
 		public AtmoGUI ()
 		{
 		}

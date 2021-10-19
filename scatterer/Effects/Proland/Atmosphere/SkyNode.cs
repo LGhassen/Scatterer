@@ -26,8 +26,7 @@ namespace scatterer
 		public bool previewMode = false;
 
 		public float mainMenuScaleFactor = 1f;
-
-		public float experimentalAtmoScale=1f;
+		
 		[Persistent] public float atmosphereGlobalScale = 1f;	//this should probably apply to the radius only now, be very careful about how this is integrated in some uniform inits
 
 		[Persistent] public float godrayStrength = 0.8f;
@@ -370,7 +369,6 @@ namespace scatterer
 		
 		public void SetUniforms (Material mat)
 		{
-			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
 			mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
 			mat.SetFloat (ShaderProperties.extinctionTint_PROPERTY, interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
@@ -419,7 +417,6 @@ namespace scatterer
 				return;
 
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
-			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
@@ -497,8 +494,6 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
 
-			mat.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
-
 			mat.SetFloat (ShaderProperties._global_alpha_PROPERTY, interpolatedSettings.postProcessAlpha);
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 			mat.SetFloat (ShaderProperties._global_depth_PROPERTY, interpolatedSettings.postProcessDepth *1000000);
@@ -513,8 +508,6 @@ namespace scatterer
 
 			mat.SetFloat (ShaderProperties._Post_Extinction_Tint_PROPERTY, interpolatedSettings.extinctionTint);
 			mat.SetFloat (ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
-
-			mat.SetFloat (ShaderProperties._openglThreshold_PROPERTY, interpolatedSettings.openglThreshold);
 
 			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun ());
 			mat.SetVector (ShaderProperties._planetPos_PROPERTY, parentLocalTransform.position);
@@ -1042,7 +1035,6 @@ namespace scatterer
 			foreach (SunFlare customSunFlare in Scatterer.Instance.sunflareManager.scattererSunFlares.Values)
 			{
 				sunflareExtinctionMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToCelestialBody (customSunFlare.source).normalized);
-				sunflareExtinctionMaterial.SetFloat (ShaderProperties._experimentalAtmoScale_PROPERTY, experimentalAtmoScale);
 
 				if (!MapView.MapIsEnabled)
 					sunflareExtinctionMaterial.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, Scatterer.Instance.nearCamera.transform.position - parentLocalTransform.position);

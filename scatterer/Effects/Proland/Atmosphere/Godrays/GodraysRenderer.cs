@@ -310,7 +310,6 @@ namespace scatterer
 				volumeDepthMaterial.SetMatrix(ShaderProperties.lightToWorld_PROPERTY, lightToWorld);
 				volumeDepthMaterial.SetVector(ShaderProperties.lightDirection_PROPERTY, targetLight.transform.forward);
 
-				volumeDepthMaterial.SetFloat(ShaderProperties._experimentalAtmoScale_PROPERTY,parentSkyNode.experimentalAtmoScale);
 				volumeDepthMaterial.SetVector (ShaderProperties._planetPos_PROPERTY, parentSkyNode.parentLocalTransform.position);
 
 //				foreach(Tuple<EVEClouds2d, Material> tuple in cloudsShadowsMaterials)

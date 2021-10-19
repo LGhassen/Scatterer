@@ -18,7 +18,6 @@ namespace scatterer
 		private Vector2 _scroll;
 
 		Vector3 sunColor=Vector3.one;
-		float experimentalAtmoScale=1f;
 		
 		float rimBlend = 20f;
 		float rimpower = 600f;
@@ -26,8 +25,6 @@ namespace scatterer
 		float cloudScatteringMultiplier=1f;
 		float cloudSkyIrradianceMultiplier = 1f;
 		float volumetricsColorMultiplier=1f;
-
-		float openglThreshold = 10f;
 		
 		float godrayStrength = 1.0f;
 		//		float godrayCloudAlphaThreshold = 0.1f;
@@ -71,7 +68,7 @@ namespace scatterer
 				GUILayout.Label ("New point altitude:");
 				newCfgPtAlt = Convert.ToSingle (GUILayout.TextField (newCfgPtAlt.ToString ()));
 				if (GUILayout.Button ("Add")) {
-					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.configPoints.Insert (selectedConfigPoint + 1, new ConfigPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, skyExtinctionTint / 100, openglThreshold, extinctionTint / 100, extinctionThickness));
+					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.configPoints.Insert (selectedConfigPoint + 1, new ConfigPoint (newCfgPtAlt, alphaGlobal / 100, exposure / 100, postProcessingalpha / 100, postProcessDepth / 10000, postProcessExposure / 100, skyExtinctionTint / 100, extinctionTint / 100, extinctionThickness));
 					selectedConfigPoint += 1;
 					configPointsCnt = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.configPoints.Count;
 					loadConfigPoint (selectedConfigPoint, selectedPlanet);
@@ -111,7 +108,6 @@ namespace scatterer
 				GUILayout.Label ("(settings with a * are global and not cfgPoint dependent)");
 				
 				GUILayout.Label ("Atmo");
-				GUIfloat ("ExperimentalAtmoScale*", ref experimentalAtmoScale, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.experimentalAtmoScale);
 				GUIfloat ("AtmosphereGlobalScale*", ref atmosphereGlobalScale, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.atmosphereGlobalScale);
 				GUILayout.Label ("Sky");
 				GUIfloat ("Sky Exposure", ref exposure, ref _cur.skyExposure);
@@ -124,8 +120,6 @@ namespace scatterer
 				GUILayout.Label ("Post Processing");
 				GUIfloat ("Post Processing Alpha", ref postProcessingalpha, ref _cur.postProcessAlpha);
 				GUIfloat ("Post Processing Depth", ref postProcessDepth, ref _cur.postProcessDepth);
-				GUILayout.Label ("Artifact Fixes");
-				GUIfloat ("Depth buffer Threshold", ref openglThreshold, ref _cur.openglThreshold);
 				GUILayout.Label ("Godrays");
 				GUIfloat ("Godray strength*", ref godrayStrength, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.godrayStrength);
 			}
@@ -286,8 +280,6 @@ namespace scatterer
 			exposure = selected.skyExposure;
 			alphaGlobal = selected.skyAlpha;
 			
-			openglThreshold = selected.openglThreshold;			
-			
 			configPointsCnt = skyNode.configPoints.Count;
 			
 			specR = skyNode.specR;
@@ -302,8 +294,7 @@ namespace scatterer
 			skyExtinctionTint = selected.skyExtinctionTint;
 			
 			extinctionThickness = selected.extinctionThickness;
-			
-			experimentalAtmoScale = skyNode.experimentalAtmoScale;
+
 			atmosphereGlobalScale = skyNode.atmosphereGlobalScale;
 			
 			cloudColorMultiplier = skyNode.cloudColorMultiplier;
@@ -334,8 +325,6 @@ namespace scatterer
 			extinctionThickness = _cur.extinctionThickness;
 			
 			pointAltitude = _cur.altitude;
-			
-			openglThreshold = _cur.openglThreshold;
 		}
 
 		public void GUIfloat (string label, ref float local, ref float target)

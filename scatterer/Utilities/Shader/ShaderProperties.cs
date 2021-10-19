@@ -15,9 +15,7 @@ namespace scatterer
 		//sorry about this huge wall
 		//I wrote a script to take care of the whole thing
 		//And by script I mean a regex
-
-		public static int _experimentalAtmoScale_PROPERTY { get { return _experimentalAtmoScale; } }
-		private static int _experimentalAtmoScale;
+		
 		public static int atmosphereGlobalScale_PROPERTY { get { return atmosphereGlobalScale; } }
 		private static int atmosphereGlobalScale;
 		public static int Rg_PROPERTY { get { return Rg; } }
@@ -82,8 +80,6 @@ namespace scatterer
 		private static int _Post_Extinction_Tint;
 		public static int postExtinctionMultiplier_PROPERTY { get { return postExtinctionMultiplier; } }
 		private static int postExtinctionMultiplier;
-		public static int _openglThreshold_PROPERTY { get { return _openglThreshold; } }
-		private static int _openglThreshold;
 		public static int _ViewProjInv_PROPERTY { get { return _ViewProjInv; } }
 		private static int _ViewProjInv;
 		public static int _camPos_PROPERTY { get { return _camPos; } }
@@ -369,7 +365,6 @@ namespace scatterer
 
 		private void Awake()
 		{
-			_experimentalAtmoScale = Shader.PropertyToID("_experimentalAtmoScale");
 			atmosphereGlobalScale = Shader.PropertyToID("atmosphereGlobalScale");
 			Rg = Shader.PropertyToID("Rg");
 			Rt = Shader.PropertyToID("Rt");
@@ -402,7 +397,6 @@ namespace scatterer
 			_global_depth = Shader.PropertyToID("_global_depth");
 			_Post_Extinction_Tint = Shader.PropertyToID("_Post_Extinction_Tint");
 			postExtinctionMultiplier = Shader.PropertyToID("postExtinctionMultiplier");
-			_openglThreshold = Shader.PropertyToID("_openglThreshold");
 			_ViewProjInv = Shader.PropertyToID("_ViewProjInv");
 			_camPos = Shader.PropertyToID("_camPos");
 			_Ocean_SunDir = Shader.PropertyToID("_Ocean_SunDir");
