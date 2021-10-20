@@ -243,7 +243,6 @@ namespace scatterer
 
 		public void loadPlanet(int planetIndex)
 		{
-			Utils.LogDebug ("Guihandler load planet " + planetIndex.ToString ());
 			selectedPlanetSettingsTab = PlanetSettingsTabs.ConfigPoints;
 			selectedPlanet = planetIndex;
 			configPointGUI.loadSettingsForPlanet (selectedPlanet);
