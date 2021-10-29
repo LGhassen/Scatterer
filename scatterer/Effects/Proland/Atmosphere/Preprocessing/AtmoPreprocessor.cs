@@ -186,7 +186,7 @@ namespace scatterer
 			m_deltaET.Create();
 
 			m_inscatterT[0] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_inscatterT[0].isVolume = true;
+			m_inscatterT[0].dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
 			m_inscatterT[0].enableRandomWrite = true;
 			m_inscatterT[0].volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_inscatterT[0].wrapMode = TextureWrapMode.Clamp;
@@ -194,7 +194,7 @@ namespace scatterer
 			m_inscatterT[0].Create();
 
 			m_inscatterT[1] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_inscatterT[1].isVolume = true;
+			m_inscatterT[1].dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
 			m_inscatterT[1].enableRandomWrite = true;
 			m_inscatterT[1].volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_inscatterT[1].wrapMode = TextureWrapMode.Clamp;
@@ -202,7 +202,7 @@ namespace scatterer
 			m_inscatterT[1].Create();
 
 			m_deltaSRT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaSRT.isVolume = true;
+			m_deltaSRT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
 			m_deltaSRT.enableRandomWrite = true;
 			m_deltaSRT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_deltaSRT.wrapMode = TextureWrapMode.Clamp;
@@ -210,7 +210,7 @@ namespace scatterer
 			m_deltaSRT.Create();
 
 			m_deltaSMT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaSMT.isVolume = true;
+			m_deltaSMT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
 			m_deltaSMT.enableRandomWrite = true;
 			m_deltaSMT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_deltaSMT.wrapMode = TextureWrapMode.Clamp;
@@ -218,7 +218,7 @@ namespace scatterer
 			m_deltaSMT.Create();
 
 			m_deltaJT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaJT.isVolume = true;
+			m_deltaJT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
 			m_deltaJT.enableRandomWrite = true;
 			m_deltaJT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_deltaJT.wrapMode = TextureWrapMode.Clamp;
@@ -227,7 +227,6 @@ namespace scatterer
 
 			//single slice of a 3d texture
 			textureSlice = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			textureSlice.isVolume = false;
 			textureSlice.wrapMode = TextureWrapMode.Clamp;
 			textureSlice.filterMode = FilterMode.Bilinear;
 			textureSlice.Create();
@@ -507,7 +506,7 @@ namespace scatterer
 
 		void SaveAsHalf(RenderTexture rtex, string fileName)
 		{
-			if (rtex.isVolume)
+			if (rtex.dimension == UnityEngine.Rendering.TextureDimension.Tex3D)
 			{
 				RenderTexture tempSlice = new RenderTexture(rtex.width, rtex.height, 0, RenderTextureFormat.ARGBHalf);
 				textureSlice.Create();
