@@ -192,7 +192,9 @@ namespace scatterer
 
 		void InitSkySphere ()
 		{
-			float skySphereSize = 2 * (4 * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor;
+			//float skySphereSize = 2 * (4 * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor; //way excessive
+
+			float skySphereSize = (1.5f * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor;
 			skySphere = new SkySphereContainer (skySphereSize, skyMaterial, parentLocalTransform, parentScaledTransform);
 
 			if (HighLogic.LoadedScene != GameScenes.MAINMENU)

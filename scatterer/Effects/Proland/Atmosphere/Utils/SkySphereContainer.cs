@@ -67,6 +67,8 @@ namespace scatterer
 			skySphereGO.transform.parent = parentLocalTransform;
 
 			Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", true);
+
+			skySphereGO.AddComponent<SkySphereScreenCopy> ();
 		}
 		
 		public void SwitchScaledMode()
@@ -80,6 +82,12 @@ namespace scatterer
 			skySphereGO.transform.parent = parentScaledTransform;
 
 			Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", false);
+
+			var scrCopy = skySphereGO.GetComponent<SkySphereScreenCopy> ();
+
+			if (!ReferenceEquals (null, scrCopy))
+				UnityEngine.Component.DestroyImmediate (scrCopy);
+
 		}
 
 		public void Resize(float size)
@@ -106,6 +114,19 @@ namespace scatterer
 			{
 				UnityEngine.Object.DestroyImmediate(skySphereGO);
 			}
+		}
+	}
+
+	public class SkySphereScreenCopy : MonoBehaviour
+	{
+		void OnWillRenderObject()
+		{
+			Camera cam = Camera.current;
+			
+			if (!cam)
+				return;
+			
+			ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
 		}
 	}
 }
