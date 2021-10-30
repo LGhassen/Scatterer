@@ -146,40 +146,33 @@ namespace scatterer
 				}
 			}
 			GUILayout.EndHorizontal ();
-			if (selectedIndividualSettingsTab == IndividualSettingsTabs.Scattering) {
+			if (selectedIndividualSettingsTab == IndividualSettingsTabs.Scattering)
+			{
 				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (Requires unified camera, long-distance shadows and shadowMapResolution override, Directx11 only)");
 				if (Scatterer.Instance.mainSettings.useGodrays)
 				{
 					//Godrays tesselation placeholder
 				}
-				Scatterer.Instance.mainSettings.useDepthBufferMode = !GUILayout.Toggle (!Scatterer.Instance.mainSettings.useDepthBufferMode, "Use projector mode (Slower, less compatible but supports MSAA)");
-				Scatterer.Instance.mainSettings.useDepthBufferMode = GUILayout.Toggle (Scatterer.Instance.mainSettings.useDepthBufferMode, "Use depth buffer mode (Recommended: Faster, better compatible with Parallax and trees/scatters, disables MSAA in flight/KSC)");
-				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
+
+				Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering in 1/4 resolution (speedup, incompatible and disabled with godrays)");
+				Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
+				
+				Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal Antialiasing (Recommended)") && !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
+				Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing, "Subpixel Morphological Antialiasing (Faster but worse than TAA)")  && !Scatterer.Instance.mainSettings.useTemporalAntiAliasing;
+				if (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing)
 				{
 					GUILayout.BeginHorizontal ();
 					{
-						GUILayout.Label ("\t");
-						GUILayout.BeginVertical ();
-						{
-							Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering in 1/4 resolution (speedup, incompatible and disabled with godrays)");
-							Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
-
-							Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal Antialiasing (Recommended)") && !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
-							Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing, "Subpixel Morphological Antialiasing (Faster but worse than TAA)")  && !Scatterer.Instance.mainSettings.useTemporalAntiAliasing;
-							if (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing)
-							{
-								GUILayout.BeginHorizontal ();
-								{
-									GUILayout.Label ("SMAA quality (1:normal,2:high)");
-									Scatterer.Instance.mainSettings.smaaQuality = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.smaaQuality.ToString ()))),1f,2f);
-								}
-								GUILayout.EndHorizontal ();
-							}
-						}
-						GUILayout.EndVertical ();
+						GUILayout.Label ("SMAA quality (1:normal,2:high)");
+						Scatterer.Instance.mainSettings.smaaQuality = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.smaaQuality.ToString ()))),1f,2f);
 					}
 					GUILayout.EndHorizontal ();
 				}
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Tonemapper (0:disabled,1:bruneton,2:uncharted)");
+				Scatterer.Instance.mainSettings.scatteringTonemapper = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.scatteringTonemapper.ToString ()))),0f,2f);
+				GUILayout.EndHorizontal ();
 			}
 			else if (selectedIndividualSettingsTab == IndividualSettingsTabs.Ocean)
 			{

@@ -597,6 +597,7 @@ namespace scatterer {
 				}
 			}
 
+			//This can be replaced by a texture2D now and the whole thing with a set raw data + apply
 			m_writeFloat.WriteIntoRenderTexture(m_spectrum01, 4, spectrum01);
 			m_writeFloat.WriteIntoRenderTexture(m_spectrum23, 4, spectrum23);
 			

@@ -5,6 +5,10 @@ using System.IO;
 
 namespace scatterer
 {
+
+	//This class is now obsolete and can be replaced with a single blit
+
+
 	/// <summary>
 	/// This class is designed to take 32 bit floating point data and get it into a 2D render texture.
 	/// As there is no way in Unity to load floating point data straight into a render texture (with out dx11) the data for each

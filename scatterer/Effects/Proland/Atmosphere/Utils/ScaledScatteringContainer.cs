@@ -23,6 +23,10 @@ namespace scatterer
 
 			scaledScatteringGO = new GameObject ("Scatterer scaled atmo");
 
+			//if depthBufferMode + new blending etc etc
+			scaledScatteringGO.AddComponent<ScaledScatteringScreenCopy> ();
+			
+
 			scaledScatteringGO.transform.SetParent (parentScaledTransform, false);
 
 			MeshFilter skySphereMF = scaledScatteringGO.AddComponent<MeshFilter>();
@@ -85,6 +89,19 @@ namespace scatterer
 
 			if (!ReferenceEquals (scaledScatteringGO, null))
 				UnityEngine.Object.Destroy(scaledScatteringGO);
+		}
+	}
+
+	public class ScaledScatteringScreenCopy : MonoBehaviour
+	{
+		void OnWillRenderObject()
+		{
+				Camera cam = Camera.current;
+				
+				if (!cam)
+					return;
+
+				ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
 		}
 	}
 }

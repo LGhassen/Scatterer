@@ -101,7 +101,7 @@ namespace scatterer
 		[Persistent]
 		public bool useGodrays = false;
 
-		[Persistent]
+		//[Persistent]
 		public bool useDepthBufferMode = true;
 
 		[Persistent]
@@ -121,6 +121,10 @@ namespace scatterer
 
 		[Persistent]
 		public bool terrainShadows = false;
+
+		//0 - None, 1 - Bruneton, 2 - Uncharted
+		[Persistent]
+		public int scatteringTonemapper = 2;
 
 		[Persistent]
 		public float unifiedCamShadowsDistance=50000f;
@@ -237,6 +241,7 @@ namespace scatterer
 				 OldConfig.smaaQuality != smaaQuality ||
 				 OldConfig.useTemporalAntiAliasing  != useTemporalAntiAliasing ||
 				 OldConfig.terrainShadows != terrainShadows ||
+				 OldConfig.scatteringTonemapper != scatteringTonemapper ||
 				 OldConfig.useDithering != useDithering ||
 
 				 OldConfig.unifiedCamShadowsDistance != unifiedCamShadowsDistance ||

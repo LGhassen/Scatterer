@@ -485,6 +485,8 @@ namespace scatterer
 				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
 			}
 			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
+
+			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
 		}
 
 		
@@ -585,6 +587,8 @@ namespace scatterer
 				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
 			}
 			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
+
+			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
 		}
 
 		public void TogglePostProcessing()
@@ -671,10 +675,13 @@ namespace scatterer
 				InitPostprocessMaterialUniforms (particleMaterial);
 			}
 
-			foreach (EVEClouds2d eveClouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName])
+			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
 			{
-				InitUniforms (eveClouds2d.Clouds2dMaterial);
-				InitPostprocessMaterialUniforms (eveClouds2d.Clouds2dMaterial);
+				foreach (EVEClouds2d eveClouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName])
+				{
+					InitUniforms (eveClouds2d.Clouds2dMaterial);
+					InitPostprocessMaterialUniforms (eveClouds2d.Clouds2dMaterial);
+				}
 			}
 
 			if (!ReferenceEquals(prolandManager.GetOceanNode(),null))
