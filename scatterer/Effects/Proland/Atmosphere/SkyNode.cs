@@ -621,10 +621,9 @@ namespace scatterer
 			cachePath += "/" + atmohash;
 
 			string inscatterPath = cachePath+"/inscatter.half";
-			string transmittancePath = cachePath+"/transmittance.half";
 			string irradiancePath = cachePath+"/irradiance.half";
 
-			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (transmittancePath) || !System.IO.File.Exists (irradiancePath))
+			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (irradiancePath))
 			{
 				Utils.LogInfo("No atmosphere cache for "+prolandManager.parentCelestialBody.name+", generating new atmosphere");
 				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM, cachePath);
