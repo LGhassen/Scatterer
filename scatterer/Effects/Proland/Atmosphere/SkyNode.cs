@@ -47,6 +47,16 @@ namespace scatterer
 
 		[Persistent] public List < ConfigPoint > configPoints = new List < ConfigPoint > ();
 
+		[Persistent] public bool adjustScaledTexture = false;
+
+		[Persistent] public float scaledLandBrightnessAdjust = 1f;
+		[Persistent] public float scaledLandContrastAdjust   = 1f;
+		[Persistent] public float scaledLandSaturationAdjust = 1f;
+				
+		[Persistent] public float scaledOceanBrightnessAdjust = 1f;
+		[Persistent] public float scaledOceanContrastAdjust   = 1f;
+		[Persistent] public float scaledOceanSaturationAdjust = 1f;
+
 		Texture3D m_inscatter;
 		Texture2D m_irradiance;
 
@@ -96,6 +106,9 @@ namespace scatterer
 	
 		bool skyNodeInitiated = false;
 		public bool useEclipses = false;
+
+		Texture originalPlanetTexture;
+		RenderTexture adjustedPlanetTexture;
 
 		public void Init ()
 		{
@@ -183,6 +196,9 @@ namespace scatterer
 
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
 			TweakStockAtmosphere();
+
+			if (adjustScaledTexture)
+				TweakStockScaledTexture ();
 
 			InitEVEClouds ();
 			
@@ -786,6 +802,8 @@ namespace scatterer
 
 			if (!ReferenceEquals(originalScaledMesh,null))
 				parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = originalScaledMesh;
+
+			RestoreStockScaledTexture ();
 		}
 
 		public bool LoadFromConfigNode ()
@@ -948,6 +966,66 @@ namespace scatterer
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.mediumQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.highQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.ultraQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
+			}
+		}
+
+		public void TweakStockScaledTexture ()
+		{
+			List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
+			
+			foreach (Material sharedMaterial in materials)
+			{	
+				if (sharedMaterial.shader.name.Contains("Terrain/Scaled Planet (RimAerial)"))
+				{
+					if (ReferenceEquals(originalPlanetTexture,null))
+						originalPlanetTexture = sharedMaterial.GetTexture("_MainTex");
+
+					if (!ReferenceEquals(originalPlanetTexture,null))
+					{
+						if (ReferenceEquals(adjustedPlanetTexture,null))
+						{
+							adjustedPlanetTexture = new RenderTexture(originalPlanetTexture.width, originalPlanetTexture.height, 0, RenderTextureFormat.ARGB32);
+							adjustedPlanetTexture.name = "ScattererAdjustedPlanetMap";
+							adjustedPlanetTexture.autoGenerateMips = true;
+							adjustedPlanetTexture.Create();
+						}
+
+						Material imageAdjustMat = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledTextureAdjust")]);
+						imageAdjustMat.SetTexture("inputTexture", originalPlanetTexture);
+						
+						imageAdjustMat.SetFloat("_scaledLandBrightnessAdjust", scaledLandBrightnessAdjust);
+						imageAdjustMat.SetFloat("_scaledLandContrastAdjust",   scaledLandContrastAdjust);
+						imageAdjustMat.SetFloat("_scaledLandSaturationAdjust", scaledLandSaturationAdjust);
+
+						imageAdjustMat.SetFloat("_scaledOceanBrightnessAdjust", scaledOceanBrightnessAdjust);
+						imageAdjustMat.SetFloat("_scaledOceanContrastAdjust",   scaledOceanContrastAdjust);
+						imageAdjustMat.SetFloat("_scaledOceanSaturationAdjust", scaledOceanSaturationAdjust);
+
+						Graphics.Blit(originalPlanetTexture, adjustedPlanetTexture, imageAdjustMat);						
+						sharedMaterial.SetTexture("_MainTex", adjustedPlanetTexture);
+					}
+				}
+			}
+		}
+
+		public void RestoreStockScaledTexture ()
+		{
+			if (!ReferenceEquals (originalPlanetTexture, null))
+			{
+				List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
+
+				foreach (Material sharedMaterial in materials)
+				{	
+					if (sharedMaterial.shader.name.Contains("Terrain/Scaled Planet (RimAerial)"))
+					{
+						sharedMaterial.SetTexture("_MainTex", originalPlanetTexture);
+					}
+				}
+			}
+
+			if (!ReferenceEquals (adjustedPlanetTexture, null))
+			{
+				adjustedPlanetTexture.Release();
 			}
 		}
 		

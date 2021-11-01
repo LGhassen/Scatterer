@@ -178,7 +178,41 @@ namespace scatterer
 				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.scaledScatteringContainer.ApplyNewMesh(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh);
 			}
 			GUILayout.EndHorizontal ();
-			
+
+			Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.adjustScaledTexture = GUILayout.Toggle (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.adjustScaledTexture, "Adjust scaled texture");
+
+			if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.adjustScaledTexture)
+			{
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Land (brightness/contrast/saturation)");
+				GUILayout.EndHorizontal ();
+
+				var node = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode;
+
+				GUILayout.BeginHorizontal ();
+				node.scaledLandBrightnessAdjust = (float)(Convert.ToDouble (GUILayout.TextField (node.scaledLandBrightnessAdjust.ToString ("0.00"))));
+				node.scaledLandContrastAdjust = (float)(Convert.ToDouble (GUILayout.TextField (node.scaledLandContrastAdjust.ToString ("0.00"))));
+				node.scaledLandSaturationAdjust = (float)(Convert.ToDouble (GUILayout.TextField (node.scaledLandSaturationAdjust.ToString ("0.00"))));
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Ocean (brightness/contrast/saturation)");
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				node.scaledOceanBrightnessAdjust = (float)(Convert.ToDouble (GUILayout.TextField (node.scaledOceanBrightnessAdjust.ToString ("0.00"))));
+				node.scaledOceanContrastAdjust = (float)(Convert.ToDouble (GUILayout.TextField (node.scaledOceanContrastAdjust.ToString ("0.00"))));
+				node.scaledOceanSaturationAdjust = (float)(Convert.ToDouble (GUILayout.TextField (node.scaledOceanSaturationAdjust.ToString ("0.00"))));
+				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal ();
+				if (GUILayout.Button ("Set")) {
+					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.TweakStockScaledTexture();
+				}
+				GUILayout.EndHorizontal ();
+
+			}
+
 			GUILayout.Label ("Misc");
 			GUIColorNoButton("Sunlight color "+ Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.mainSunLight.name+ " (Not saved automatically, save manually to PlanetsList)", ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.sunColor);
 			
