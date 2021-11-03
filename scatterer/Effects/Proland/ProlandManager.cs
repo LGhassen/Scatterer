@@ -120,18 +120,22 @@ namespace scatterer
 		//TODO: move to utils
 		Light findLight (string sunCelestialBody)
 		{
-			if (sunCelestialBody == "Sun")
-				return Scatterer.Instance.sunLight;
-			else
-				return Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == sunCelestialBody));
+			Light light = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == sunCelestialBody));
+
+			if (ReferenceEquals(light,null) && (sunCelestialBody == "Sun"))
+				light = Scatterer.Instance.sunLight;
+
+			return light;
 		}
 		
 		Light findScaledLight (string sunCelestialBody)
 		{
-			if (sunCelestialBody == "Sun")
-				return Scatterer.Instance.scaledSpaceSunLight;
-			else
-				return Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == ("Scaledspace SunLight "+sunCelestialBody)));
+			Light light = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == ("Scaledspace SunLight "+sunCelestialBody)));
+
+			if (ReferenceEquals(light,null) && (sunCelestialBody == "Sun"))
+				light = Scatterer.Instance.scaledSpaceSunLight;
+			
+			return  Light;
 		}
 
 		void FindEclipseCasters (ScattererCelestialBody scattererBody)
