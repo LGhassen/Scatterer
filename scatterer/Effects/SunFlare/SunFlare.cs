@@ -44,7 +44,13 @@ namespace scatterer
 
 		RaycastHit hit;
 		bool hitStatus=false;
-		bool eclipse=false;
+		bool flareRendering=false;
+
+		public bool FlareRendering {
+			get {
+				return flareRendering;
+			}
+		}
 
 		float sunGlareScale=1;
 		float sunGlareFade=1;
@@ -231,8 +237,8 @@ namespace scatterer
 					sunglareMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 			}
 
-			eclipse = hitStatus;
-			sunglareMaterial.SetFloat(ShaderProperties.renderSunFlare_PROPERTY, (!eclipse && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater ) ? 1.0f : 0.0f);
+			flareRendering = !hitStatus && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater;
+			sunglareMaterial.SetFloat(ShaderProperties.renderSunFlare_PROPERTY, flareRendering ? 1.0f : 0.0f);
 		}	
 
 		public void Update()

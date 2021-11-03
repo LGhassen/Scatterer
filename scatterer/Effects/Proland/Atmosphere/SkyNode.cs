@@ -1135,19 +1135,22 @@ namespace scatterer
 		{
 			foreach (SunFlare customSunFlare in Scatterer.Instance.sunflareManager.scattererSunFlares.Values)
 			{
-				sunflareExtinctionMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToCelestialBody (customSunFlare.source).normalized);
-
-				if (!MapView.MapIsEnabled)
-					sunflareExtinctionMaterial.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, Scatterer.Instance.nearCamera.transform.position - parentLocalTransform.position);
-				else
-					sunflareExtinctionMaterial.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, (Vector3)ScaledSpace.ScaledToLocalSpace (Scatterer.Instance.scaledSpaceCamera.transform.position) - parentLocalTransform.position);
-
-				Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 0);
-
-				if (hasRingObjectAndShadowActivated)
+				if (customSunFlare.FlareRendering)	//not sure if it's worth it to try and add more intelligent culling here, like checking if a ray to the flare intersects the planet/atmo?
 				{
-					sunflareExtinctionMaterial.SetVector (ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
-					Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 1);
+					sunflareExtinctionMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToCelestialBody (customSunFlare.source).normalized);
+					
+					if (!MapView.MapIsEnabled)
+						sunflareExtinctionMaterial.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, Scatterer.Instance.nearCamera.transform.position - parentLocalTransform.position);
+					else
+						sunflareExtinctionMaterial.SetVector (ShaderProperties._Globals_WorldCameraPos_PROPERTY, (Vector3)ScaledSpace.ScaledToLocalSpace (Scatterer.Instance.scaledSpaceCamera.transform.position) - parentLocalTransform.position);
+					
+					Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 0);
+					
+					if (hasRingObjectAndShadowActivated)
+					{
+						sunflareExtinctionMaterial.SetVector (ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
+						Graphics.Blit (null, customSunFlare.extinctionTexture, sunflareExtinctionMaterial, 1);
+					}
 				}
 			}
 		}
