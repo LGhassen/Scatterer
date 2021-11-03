@@ -195,10 +195,9 @@ namespace scatterer
 			}
 
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
-			TweakStockAtmosphere();
 
-			if (adjustScaledTexture)
-				TweakStockScaledTexture ();
+			try {StartCoroutine(DelayedTweakStockPlanet ());}
+			catch (Exception){};
 
 			InitEVEClouds ();
 			
@@ -906,8 +905,26 @@ namespace scatterer
 				}
 			}
 		}
-		
-		public void TweakStockAtmosphere ()
+
+		// Have to delay this, otherwise the eclipse material separation breaks with kopernicus on-demand
+		IEnumerator DelayedTweakStockPlanet()
+		{
+			while (true)
+			{
+				for (int i=0; i<200; i++)
+					yield return new WaitForFixedUpdate ();
+
+				if (!ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
+					break;
+			}
+
+			if (adjustScaledTexture)
+				TweakStockScaledTexture ();
+
+			TweakStockAtmosphere ();
+		}		
+
+		public void TweakStockAtmosphere ()	//move to utils/scaledUtils etc
 		{
 			DisableStockSky ();
 			List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
@@ -969,7 +986,7 @@ namespace scatterer
 			}
 		}
 
-		public void TweakStockScaledTexture ()
+		public void TweakStockScaledTexture () 	//move to utils/scaledUtils etc
 		{
 			List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
 			
@@ -1008,7 +1025,7 @@ namespace scatterer
 			}
 		}
 
-		public void RestoreStockScaledTexture ()
+		public void RestoreStockScaledTexture () 	//move to utils/scaledUtils etc
 		{
 			if (!ReferenceEquals (originalPlanetTexture, null))
 			{
@@ -1029,7 +1046,7 @@ namespace scatterer
 			}
 		}
 		
-		public void TweakScaledMesh()
+		public void TweakScaledMesh() 	//move to utils/scaledUtils etc
 		{
 			if (ReferenceEquals (originalScaledMesh, null))
 			{
