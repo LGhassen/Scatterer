@@ -135,7 +135,7 @@ namespace scatterer
 			if (ReferenceEquals(light,null) && (sunCelestialBody == "Sun"))
 				light = Scatterer.Instance.scaledSpaceSunLight;
 			
-			return  Light;
+			return  light;
 		}
 
 		void FindEclipseCasters (ScattererCelestialBody scattererBody)

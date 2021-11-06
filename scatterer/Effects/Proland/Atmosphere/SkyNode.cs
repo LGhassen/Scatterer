@@ -835,6 +835,8 @@ namespace scatterer
 				Rg = (float) prolandManager.GetRadius ();
 				Rt = AtmoPreprocessor.CalculateRt (Rg, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
 
+				godrayStrength = Mathf.Min(godrayStrength,1.0f);
+
 				//compare parentConfigNode with the one on disk to determine if it's a ModuleManager Patch
 				string parentConfigNodePath = Utils.GameDataPath + configUrl.parent.url +".cfg";
 				if (System.IO.File.Exists(parentConfigNodePath))

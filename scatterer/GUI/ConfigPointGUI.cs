@@ -121,7 +121,14 @@ namespace scatterer
 				GUIfloat ("Post Processing Alpha", ref postProcessingalpha, ref _cur.postProcessAlpha);
 				GUIfloat ("Post Processing Depth", ref postProcessDepth, ref _cur.postProcessDepth);
 				GUILayout.Label ("Godrays");
-				GUIfloat ("Godray strength*", ref godrayStrength, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.godrayStrength);
+
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label ("Godray strength*");				
+				godrayStrength = Mathf.Min(float.Parse (GUILayout.TextField (godrayStrength.ToString ("0.000"))),1.0f);
+				if (GUILayout.Button ("Set")) {
+					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.godrayStrength = godrayStrength;
+				}
+				GUILayout.EndHorizontal ();
 			}
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.usesCloudIntegration) {
 				GUILayout.Label ("EVE integration");
