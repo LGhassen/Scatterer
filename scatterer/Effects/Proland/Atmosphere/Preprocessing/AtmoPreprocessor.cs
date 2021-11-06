@@ -154,6 +154,8 @@ namespace scatterer
 			BETA_MSca = inBETA_MSca * 0.001f / scaleFactor;
 
 			MIE_G = inMIE_G;
+			if (inMultiple)
+				MIE_G = Mathf.Min (MIE_G, 0.86f); //values of mie_G > 0.86 seem to break multiple scattering for some weird reason
 
 			AVERAGE_GROUND_REFLECTANCE = inGRref;
 			m_finished = false;
@@ -164,30 +166,25 @@ namespace scatterer
 			m_inscatterT = new RenderTexture[2];
 			
 			m_transmittanceT = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
-			m_transmittanceT.enableRandomWrite = true;
 			m_transmittanceT.wrapMode = TextureWrapMode.Clamp;
 			m_transmittanceT.filterMode = FilterMode.Bilinear;
 			m_transmittanceT.Create();
 			
 			m_irradianceT[0] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
-			m_irradianceT[0].enableRandomWrite = true;
 			m_irradianceT[0].wrapMode = TextureWrapMode.Clamp;
 			m_irradianceT[0].filterMode = FilterMode.Bilinear;
 			m_irradianceT[0].Create();
 			
 			m_irradianceT[1] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
-			m_irradianceT[1].enableRandomWrite = true;
 			m_irradianceT[1].wrapMode = TextureWrapMode.Clamp;
 			m_irradianceT[1].filterMode = FilterMode.Bilinear;
 			m_irradianceT[1].Create();
 
 			m_deltaET = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
-			m_deltaET.enableRandomWrite = true;
 			m_deltaET.Create();
 
 			m_inscatterT[0] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
 			m_inscatterT[0].dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_inscatterT[0].enableRandomWrite = true;
 			m_inscatterT[0].volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_inscatterT[0].wrapMode = TextureWrapMode.Clamp;
 			m_inscatterT[0].filterMode = FilterMode.Bilinear;
@@ -195,7 +192,6 @@ namespace scatterer
 
 			m_inscatterT[1] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
 			m_inscatterT[1].dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_inscatterT[1].enableRandomWrite = true;
 			m_inscatterT[1].volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_inscatterT[1].wrapMode = TextureWrapMode.Clamp;
 			m_inscatterT[1].filterMode = FilterMode.Bilinear;
@@ -203,7 +199,6 @@ namespace scatterer
 
 			m_deltaSRT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaSRT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_deltaSRT.enableRandomWrite = true;
 			m_deltaSRT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_deltaSRT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaSRT.filterMode = FilterMode.Bilinear;
@@ -211,7 +206,6 @@ namespace scatterer
 
 			m_deltaSMT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaSMT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_deltaSMT.enableRandomWrite = true;
 			m_deltaSMT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_deltaSMT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaSMT.filterMode = FilterMode.Bilinear;
@@ -219,7 +213,6 @@ namespace scatterer
 
 			m_deltaJT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaJT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_deltaJT.enableRandomWrite = true;
 			m_deltaJT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
 			m_deltaJT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaJT.filterMode = FilterMode.Bilinear;
