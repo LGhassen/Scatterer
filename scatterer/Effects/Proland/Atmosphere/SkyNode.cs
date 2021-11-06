@@ -909,18 +909,31 @@ namespace scatterer
 		{
 			while (true)
 			{
-				for (int i=0; i<200; i++)
-					yield return new WaitForFixedUpdate ();
-
 				if (!ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
-					break;
+				{
+					if (adjustScaledTexture)
+						TweakStockScaledTexture ();
+					
+					TweakStockAtmosphere ();
+
+					yield return StartCoroutine(CheckOnDemandUnload());	//once loaded, wait for it to unload and resume checking again
+				}
+
+				yield return new WaitForSeconds(1f);
 			}
+		}
 
-			if (adjustScaledTexture)
-				TweakStockScaledTexture ();
-
-			TweakStockAtmosphere ();
-		}		
+		// Check if kopernicus on demand unloads the planet, then we have to start waiting for it to load it again
+		IEnumerator CheckOnDemandUnload()
+		{
+			while (true)
+			{
+				if (ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
+					break;
+				
+				yield return new WaitForSeconds(3f);
+			}
+		}
 
 		public void TweakStockAtmosphere ()	//move to utils/scaledUtils etc
 		{
@@ -942,6 +955,16 @@ namespace scatterer
 					materials.ElementAt(1).SetShaderPassEnabled("ForwardBase", false);
 					materials.ElementAt(1).SetShaderPassEnabled("ForwardAdd", true);
 					materials.ElementAt(1).renderQueue = 2002;
+				}
+				else if (materials.Count () > 1)
+				{
+					if (materials.ElementAt(1).GetShaderPassEnabled("ForwardAdd")  && !materials.ElementAt(1).GetShaderPassEnabled("ForwardBase"))
+					{
+						materials.ElementAt(1).CopyPropertiesFromMaterial(materials.ElementAt(0));
+						materials.ElementAt(1).SetShaderPassEnabled("ForwardBase", false);
+						materials.ElementAt(1).SetShaderPassEnabled("ForwardAdd", true);
+						materials.ElementAt(1).renderQueue = 2002;
+					}
 				}
 
 				materials.Add(scaledEclipseMaterial);
