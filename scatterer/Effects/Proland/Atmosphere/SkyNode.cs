@@ -16,6 +16,7 @@ namespace scatterer
 
 		public float Rg;	//The radius of the planet
 		public float Rt;	//Radius of the atmosphere, calculated automatically from HR and HM and the scattering factors
+		[Persistent] public float atmosphereStartRadiusScale = 1f;
 		[Persistent] public float HR = 8.0f;	//Half heights for the atmosphere air density (HR) and particle density (HM), this is the height in km that half the particles are found below
 		[Persistent] public float HM = 1.2f;
 		[Persistent] public Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
@@ -26,8 +27,6 @@ namespace scatterer
 		public bool previewMode = false;
 
 		public float mainMenuScaleFactor = 1f;
-		
-		[Persistent] public float atmosphereGlobalScale = 1f;	//this should probably apply to the radius only now, be very careful about how this is integrated in some uniform inits
 
 		[Persistent] public float godrayStrength = 0.8f;
 		[Persistent] public float flattenScaledSpaceMesh = 0f;
@@ -207,9 +206,7 @@ namespace scatterer
 
 		void InitSkySphere ()
 		{
-			//float skySphereSize = 2 * (4 * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor; //way excessive
-
-			float skySphereSize = (1.5f * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor;
+			float skySphereSize = (1.5f * (Rt - Rg*atmosphereStartRadiusScale) + Rg*atmosphereStartRadiusScale) / ScaledSpace.ScaleFactor;
 			skySphere = new SkySphereContainer (skySphereSize, skyMaterial, parentLocalTransform, parentScaledTransform);
 
 			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
@@ -391,8 +388,8 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.extinctionTint_PROPERTY, interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
 			mat.SetFloat (ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
 
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
 
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
@@ -435,8 +432,8 @@ namespace scatterer
 
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun ());
 			mat.SetVector(ShaderProperties._camForward_PROPERTY, Scatterer.Instance.nearCamera.transform.forward);
@@ -456,8 +453,8 @@ namespace scatterer
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
 
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
 			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", PRECOMPUTED_SCTR_LUT_DIM);
 			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
 			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
@@ -509,10 +506,6 @@ namespace scatterer
 		
 		public void UpdatePostProcessMaterialUniforms (Material mat)
 		{
-			//all these don't need to be on update, just make it so that the UI sets them
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
-
 			mat.SetFloat (ShaderProperties._global_alpha_PROPERTY, interpolatedSettings.postProcessAlpha);
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 			mat.SetFloat (ShaderProperties._global_depth_PROPERTY, interpolatedSettings.postProcessDepth *1000000);
@@ -559,8 +552,8 @@ namespace scatterer
 			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
 			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
 			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg * atmosphereGlobalScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt * atmosphereGlobalScale);
+			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
+			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
 			
 			mat.SetFloat (ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
 			mat.SetFloat (ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
@@ -614,7 +607,7 @@ namespace scatterer
 		void InitPrecomputedAtmo ()
 		{
 			Rg = (float) prolandManager.GetRadius ();
-			Rt = AtmoPreprocessor.CalculateRt (Rg, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
+			Rt = AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
 
 			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
@@ -629,8 +622,8 @@ namespace scatterer
 
 			//Compute atmo hash and path
 			string cachePath = Utils.GameDataPath + "/ScattererAtmosphereCache/PluginData";
-			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius, HR, HM, m_betaR, BETA_MSca);
-			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM);
+			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca);
+			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM);
 			cachePath += "/" + atmohash;
 
 			string inscatterPath = cachePath+"/inscatter.half";
@@ -639,7 +632,7 @@ namespace scatterer
 			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (irradiancePath))
 			{
 				Utils.LogInfo("No atmosphere cache for "+prolandManager.parentCelestialBody.name+", generating new atmosphere");
-				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM, cachePath);
+				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM, cachePath);
 			}
 
 			m_inscatter.SetPixelData (System.IO.File.ReadAllBytes (inscatterPath),0,0);
@@ -649,7 +642,7 @@ namespace scatterer
 			m_irradiance.Apply ();
 		}
 
-		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool fastPreviewMode)
+		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool fastPreviewMode, float inAtmosphereStartRadiusScale)
 		{
 			m_betaR = inBETA_R;
 			BETA_MSca = inBETA_MSca;
@@ -659,10 +652,11 @@ namespace scatterer
 			averageGroundReflectance = inGRref;
 			multipleScattering = inMultiple;
 			PRECOMPUTED_SCTR_LUT_DIM = fastPreviewMode ? AtmoPreprocessor.PRECOMPUTED_SCTR_LUT_DIM_PREVIEW : AtmoPreprocessor.PRECOMPUTED_SCTR_LUT_DIM_DEFAULT ;
+			atmosphereStartRadiusScale = inAtmosphereStartRadiusScale;
 
 			InitPrecomputedAtmo ();
 
-			float skySphereSize = 2 * (4 * (Rt - Rg) + Rg) / ScaledSpace.ScaleFactor;
+			float skySphereSize = 2 * (4 * (Rt - Rg*atmosphereStartRadiusScale) + Rg*atmosphereStartRadiusScale) / ScaledSpace.ScaleFactor;
 			skySphere.Resize (skySphereSize);
 
 			ReinitAllMaterials();
@@ -833,7 +827,7 @@ namespace scatterer
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			
 				Rg = (float) prolandManager.GetRadius ();
-				Rt = AtmoPreprocessor.CalculateRt (Rg, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
+				Rt = AtmoPreprocessor.CalculateRt (Rg * atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
 
 				godrayStrength = Mathf.Min(godrayStrength,1.0f);
 
@@ -1140,7 +1134,7 @@ namespace scatterer
 		void UpdateLightExtinctions ()
 		{
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
-			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
 
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
 			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (prolandManager.mainSunLight, extinction);
@@ -1149,7 +1143,7 @@ namespace scatterer
 			{
 				if (!ReferenceEquals(secondarySun.sunLight, null))
 				{
-					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
+					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
 					extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);	//consider getting rid of extinction thickness and tint now
 					Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (secondarySun.sunLight, extinction);
 				}

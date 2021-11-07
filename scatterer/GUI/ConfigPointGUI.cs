@@ -48,9 +48,6 @@ namespace scatterer
 		//sky properties
 		float exposure = 25f;
 		float alphaGlobal = 100f;
-		
-		//other stuff
-		float atmosphereGlobalScale = 1000f;
 
 		public ConfigPointGUI ()
 		{
@@ -106,9 +103,7 @@ namespace scatterer
 				GUIfloat ("Point altitude", ref pointAltitude, ref _cur.altitude);
 				_scroll = GUILayout.BeginScrollView (_scroll, false, true, GUILayout.Width (400), GUILayout.Height (Scatterer.Instance.pluginData.scrollSectionHeight));
 				GUILayout.Label ("(settings with a * are global and not cfgPoint dependent)");
-				
-				GUILayout.Label ("Atmo");
-				GUIfloat ("AtmosphereGlobalScale*", ref atmosphereGlobalScale, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.atmosphereGlobalScale);
+
 				GUILayout.Label ("Sky");
 				GUIfloat ("Sky Exposure", ref exposure, ref _cur.skyExposure);
 				GUIfloat ("Sky Alpha", ref alphaGlobal, ref _cur.skyAlpha);
@@ -335,8 +330,6 @@ namespace scatterer
 			skyExtinctionTint = selected.skyExtinctionTint;
 			
 			extinctionThickness = selected.extinctionThickness;
-
-			atmosphereGlobalScale = skyNode.atmosphereGlobalScale;
 			
 			cloudColorMultiplier = skyNode.cloudColorMultiplier;
 			cloudScatteringMultiplier = skyNode.cloudScatteringMultiplier;

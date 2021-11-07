@@ -15,7 +15,7 @@ namespace scatterer
 	public class AtmoGUI
 	{
 		float Rg = 600000.0f;
-
+		float atmosphereStartRadiusScale = 1f;
 		float HR = 3.2f;
 		float HM = 0.48f;
 
@@ -40,13 +40,18 @@ namespace scatterer
 		public void drawAtmoGUI(int selectedPlanet)
 		{
 			GUILayout.BeginHorizontal();
-			GUILayout.Label("Planet radius     ");				
-			GUILayout.TextField(Rg.ToString("000000000.0"));
+			GUILayout.Label("Atmosphere start radius     ");				
+			GUILayout.TextField((Rg * atmosphereStartRadiusScale).ToString("000000000.0"));
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Scale start radius");
+			atmosphereStartRadiusScale=(float)(float.Parse(GUILayout.TextField(atmosphereStartRadiusScale.ToString("00.0000"))));
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Atmo height (auto)");
-			GUILayout.TextField((AtmoPreprocessor.CalculateRt (Rg, HR, HM, m_betaR, BETA_MSca)-Rg).ToString("000000000.0"));
+			GUILayout.TextField((AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca)-Rg*atmosphereStartRadiusScale).ToString("000000000.0"));
 			//Rt=float.Parse(GUILayout.TextField(Rt.ToString("00000000.0")));
 			GUILayout.EndHorizontal();
 
@@ -170,7 +175,7 @@ namespace scatterer
 		{
 			Utils.LogDebug ("Generating atmosphere from UI for planet: " + targetSkyNode.prolandManager.scattererCelestialBody.celestialBodyName + "" +
 				"With settings:" +
-				"Rg " + Rg.ToString () +
+				"Rg " + (Rg*atmosphereStartRadiusScale).ToString () +
 				" HR " + HR.ToString () +
 				" HM " + HM.ToString () +
 				" m_betaR " + m_betaR.ToString () +
@@ -180,7 +185,7 @@ namespace scatterer
 				" multipleScattering " + multipleScattering.ToString () +
 				" fastPreviewMode " + fastPreviewMode.ToString ());
 
-			targetSkyNode.ApplyAtmoFromUI (m_betaR, BETA_MSca, m_mieG, HR, HM, AVERAGE_GROUND_REFLECTANCE, multipleScattering, fastPreviewMode);
+			targetSkyNode.ApplyAtmoFromUI (m_betaR, BETA_MSca, m_mieG, HR, HM, AVERAGE_GROUND_REFLECTANCE, multipleScattering, fastPreviewMode, atmosphereStartRadiusScale);
 		}
 
 		public void loadSettingsForPlanet(int selectedPlanet)
@@ -191,6 +196,7 @@ namespace scatterer
 				selPlanet = selectedPlanet;
 
 				Rg = targetSkyNode.Rg;
+				atmosphereStartRadiusScale = targetSkyNode.atmosphereStartRadiusScale;
 				HR = targetSkyNode.HR;
 				HM = targetSkyNode.HM;
 				m_betaR = targetSkyNode.m_betaR;

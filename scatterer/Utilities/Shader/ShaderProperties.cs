@@ -15,9 +15,7 @@ namespace scatterer
 		//sorry about this huge wall
 		//I wrote a script to take care of the whole thing
 		//And by script I mean a regex
-		
-		public static int atmosphereGlobalScale_PROPERTY { get { return atmosphereGlobalScale; } }
-		private static int atmosphereGlobalScale;
+
 		public static int Rg_PROPERTY { get { return Rg; } }
 		private static int Rg;
 		public static int Rt_PROPERTY { get { return Rt; } }
@@ -365,7 +363,6 @@ namespace scatterer
 
 		private void Awake()
 		{
-			atmosphereGlobalScale = Shader.PropertyToID("atmosphereGlobalScale");
 			Rg = Shader.PropertyToID("Rg");
 			Rt = Shader.PropertyToID("Rt");
 			RL = Shader.PropertyToID("RL");
