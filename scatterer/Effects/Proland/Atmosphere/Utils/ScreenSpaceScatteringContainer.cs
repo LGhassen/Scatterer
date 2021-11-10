@@ -139,6 +139,7 @@ namespace scatterer
 				compositeScatteringMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeDownscaledScattering")]);
 				Utils.EnableOrDisableShaderKeywords(compositeScatteringMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", inHasOcean);
 				compositeScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean ? 1 : 0);
+				compositeScatteringMaterial.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
 				
 				int width, height;
 				
