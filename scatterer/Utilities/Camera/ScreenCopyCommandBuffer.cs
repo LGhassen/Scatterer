@@ -55,6 +55,8 @@ namespace scatterer
 
 			if (!reflectionProbeMode)
 			{
+				targetCamera.forceIntoRenderTexture = true;
+
 				if (!ReferenceEquals (targetCamera.activeTexture, null))
 				{
 					width = targetCamera.activeTexture.width;
