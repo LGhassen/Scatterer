@@ -26,17 +26,17 @@ namespace scatterer
 			}
 			else
 			{
+				ScreenCopyCommandBuffer handler = (ScreenCopyCommandBuffer) cam.gameObject.AddComponent(typeof(ScreenCopyCommandBuffer));
+
 				if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))
-					CameraToCommandBufferHandler[cam] = null;
-				else
-				{
-					ScreenCopyCommandBuffer handler = (ScreenCopyCommandBuffer) cam.gameObject.AddComponent(typeof(ScreenCopyCommandBuffer));
-					handler.Initialize();
-					CameraToCommandBufferHandler[cam] = handler;
-				}
+					handler.reflectionProbeMode = true;
+				
+				handler.Initialize();
+				CameraToCommandBufferHandler[cam] = handler;
 			}
 		}
 
+		public bool reflectionProbeMode = false;
 		bool isEnabled = false;
 		bool isInitialized = false;
 		private Camera targetCamera;
@@ -53,30 +53,40 @@ namespace scatterer
 
 			int width, height;
 
-			if (!ReferenceEquals (targetCamera.activeTexture, null))
+			if (!reflectionProbeMode)
 			{
-				width = targetCamera.activeTexture.width;
-				height = targetCamera.activeTexture.height;
-			}
-			else
-			{
-				width = Screen.width;
-				height = Screen.height;
-			}
+				if (!ReferenceEquals (targetCamera.activeTexture, null))
+				{
+					width = targetCamera.activeTexture.width;
+					height = targetCamera.activeTexture.height;
+				}
+				else
+				{
+					width = Screen.width;
+					height = Screen.height;
+				}
 
-			colorCopyRenderTexture = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
-			colorCopyRenderTexture.anisoLevel = 1;
-			colorCopyRenderTexture.antiAliasing = 1;
-			colorCopyRenderTexture.volumeDepth = 0;
-			colorCopyRenderTexture.useMipMap = false;
-			colorCopyRenderTexture.autoGenerateMips = false;
-			colorCopyRenderTexture.Create ();
+				colorCopyRenderTexture = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
+				colorCopyRenderTexture.anisoLevel = 1;
+				colorCopyRenderTexture.antiAliasing = 1;
+				colorCopyRenderTexture.volumeDepth = 0;
+				colorCopyRenderTexture.useMipMap = false;
+				colorCopyRenderTexture.autoGenerateMips = false;
+				colorCopyRenderTexture.Create ();
+			}
 
 			screenCopyCommandBuffer = new CommandBuffer();
 			screenCopyCommandBuffer.name = "Scatterer screen copy CommandBuffer";
 
-			screenCopyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
-			screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", colorCopyRenderTexture);
+			if (!reflectionProbeMode)
+			{
+				screenCopyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
+				screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", colorCopyRenderTexture);
+			}
+			else
+			{
+				screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", Texture2D.blackTexture);	//Hack but will stop sky flickering
+			}
 			
 			isInitialized = true;
 		}
