@@ -199,6 +199,7 @@
     <Compile Include="GUI\ConfigPointGUI.cs" />
     <Compile Include="GUI\OceanGUI.cs" />
     <Compile Include="GUI\AtmoGUI.cs" />
+    <Compile Include="Utilities\Misc\PlanetSecondaryLightUpdater.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataSerialization\" />

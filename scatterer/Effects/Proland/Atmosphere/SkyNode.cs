@@ -196,7 +196,7 @@ namespace scatterer
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
 
 			try {StartCoroutine(DelayedTweakStockPlanet ());}
-			catch (Exception){};
+			catch (Exception e){Utils.LogError("Error when starting SkyNode::DelayedTweakStockPlanet coroutine "+e.Message);};
 
 			InitEVEClouds ();
 			
@@ -900,7 +900,7 @@ namespace scatterer
 			}
 		}
 
-		// Have to delay this, otherwise the eclipse material separation breaks with kopernicus on-demand
+		// Have to delay this until Kopernicus loads the on-demand textures
 		IEnumerator DelayedTweakStockPlanet()
 		{
 			while (true)
@@ -926,7 +926,7 @@ namespace scatterer
 			{
 				if (ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
 					break;
-				
+
 				yield return new WaitForSeconds(3f);
 			}
 		}
@@ -940,7 +940,7 @@ namespace scatterer
 			if (useEclipses)
 			{
 				// Split the main pass and the additive light passes into separate materials with different renderqueues so we can inject eclipses after the first pass, and make it apply only to the main pass
-				if (materials.Count () == 1)
+				if (ReferenceEquals(parentScaledTransform.GetComponent<PlanetSecondaryLightUpdater>(),null))
 				{
 					materials.ElementAt(0).SetShaderPassEnabled("ForwardBase", true);
 					materials.ElementAt(0).SetShaderPassEnabled("ForwardAdd", false);
@@ -951,16 +951,9 @@ namespace scatterer
 					materials.ElementAt(1).SetShaderPassEnabled("ForwardBase", false);
 					materials.ElementAt(1).SetShaderPassEnabled("ForwardAdd", true);
 					materials.ElementAt(1).renderQueue = 2002;
-				}
-				else if (materials.Count () > 1)
-				{
-					if (materials.ElementAt(1).GetShaderPassEnabled("ForwardAdd")  && !materials.ElementAt(1).GetShaderPassEnabled("ForwardBase"))
-					{
-						materials.ElementAt(1).CopyPropertiesFromMaterial(materials.ElementAt(0));
-						materials.ElementAt(1).SetShaderPassEnabled("ForwardBase", false);
-						materials.ElementAt(1).SetShaderPassEnabled("ForwardAdd", true);
-						materials.ElementAt(1).renderQueue = 2002;
-					}
+
+					PlanetSecondaryLightUpdater secondaryLightUpdater = parentScaledTransform.gameObject.AddComponent<PlanetSecondaryLightUpdater>();
+					secondaryLightUpdater.Init(materials.ElementAt(0), materials.ElementAt(1));
 				}
 
 				materials.Add(scaledEclipseMaterial);
