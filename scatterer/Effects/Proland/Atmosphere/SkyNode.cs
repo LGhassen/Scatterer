@@ -900,22 +900,30 @@ namespace scatterer
 			}
 		}
 
-		// Have to delay this until Kopernicus loads the on-demand textures
+
 		IEnumerator DelayedTweakStockPlanet()
 		{
-			while (true)
+			if (!stockScaledPlanetMeshRenderer.sharedMaterial.HasProperty ("_MainTex"))  //this property is absent on gas giants
 			{
-				if (!ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
+				if (adjustScaledTexture)
+					TweakStockScaledTexture ();
+			}
+			else // Have to delay this until Kopernicus loads the on-demand textures
+			{
+				while (true)
 				{
-					if (adjustScaledTexture)
-						TweakStockScaledTexture ();
-					
-					TweakStockAtmosphere ();
+					if (!ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
+					{
+						if (adjustScaledTexture)
+							TweakStockScaledTexture ();
+						
+						TweakStockAtmosphere ();
 
-					yield return StartCoroutine(CheckOnDemandUnload());	//once loaded, wait for it to unload and resume checking again
+						yield return StartCoroutine(CheckOnDemandUnload());	//once loaded, wait for it to unload and resume checking again
+					}
+
+					yield return new WaitForSeconds(1f);
 				}
-
-				yield return new WaitForSeconds(1f);
 			}
 		}
 
@@ -942,18 +950,23 @@ namespace scatterer
 				// Split the main pass and the additive light passes into separate materials with different renderqueues so we can inject eclipses after the first pass, and make it apply only to the main pass
 				if (ReferenceEquals(parentScaledTransform.GetComponent<PlanetSecondaryLightUpdater>(),null))
 				{
-					materials.ElementAt(0).SetShaderPassEnabled("ForwardBase", true);
-					materials.ElementAt(0).SetShaderPassEnabled("ForwardAdd", false);
+					List<Material> materialsNoCityLights = new List<Material>(materials);
+					materialsNoCityLights.RemoveAll(x => x.shader.name == "EVE/PlanetCityLight");
 
-					materials.Add(Material.Instantiate(materials.ElementAt(0)));
+					Material planetScaledSpaceMaterial = materialsNoCityLights.ElementAt(0);
 
-					materials.ElementAt(1).CopyPropertiesFromMaterial(materials.ElementAt(0));
-					materials.ElementAt(1).SetShaderPassEnabled("ForwardBase", false);
-					materials.ElementAt(1).SetShaderPassEnabled("ForwardAdd", true);
-					materials.ElementAt(1).renderQueue = 2002;
+					planetScaledSpaceMaterial.SetShaderPassEnabled("ForwardBase", true);
+					planetScaledSpaceMaterial.SetShaderPassEnabled("ForwardAdd", false);
+
+					materials.Add(Material.Instantiate(planetScaledSpaceMaterial));
+
+					materials.Last().CopyPropertiesFromMaterial(materialsNoCityLights.ElementAt(0));
+					materials.Last().SetShaderPassEnabled("ForwardBase", false);
+					materials.Last().SetShaderPassEnabled("ForwardAdd", true);
+					materials.Last().renderQueue = 2002;
 
 					PlanetSecondaryLightUpdater secondaryLightUpdater = parentScaledTransform.gameObject.AddComponent<PlanetSecondaryLightUpdater>();
-					secondaryLightUpdater.Init(materials.ElementAt(0), materials.ElementAt(1));
+					secondaryLightUpdater.Init(planetScaledSpaceMaterial, materials.Last());
 				}
 
 				materials.Add(scaledEclipseMaterial);
