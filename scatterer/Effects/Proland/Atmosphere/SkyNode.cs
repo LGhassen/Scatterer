@@ -55,9 +55,8 @@ namespace scatterer
 		[Persistent] public float scaledOceanBrightnessAdjust = 1f;
 		[Persistent] public float scaledOceanContrastAdjust   = 1f;
 		[Persistent] public float scaledOceanSaturationAdjust = 1f;
-
-		Texture3D m_inscatter;
-		Texture2D m_irradiance;
+		
+		Texture2D m_inscatter, m_irradiance;
 
 		//Dimensions of the tables
 		const int TRANSMITTANCE_W = 256;
@@ -611,7 +610,7 @@ namespace scatterer
 
 			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
-			m_inscatter = new Texture3D((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), TextureFormat.RGBAHalf, false);
+			m_inscatter = new Texture2D((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), TextureFormat.RGBAHalf, false);
 			m_inscatter.wrapMode = TextureWrapMode.Clamp;
 			m_inscatter.filterMode = FilterMode.Bilinear;
 			
@@ -635,8 +634,8 @@ namespace scatterer
 				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM, cachePath);
 			}
 
-			m_inscatter.SetPixelData (System.IO.File.ReadAllBytes (inscatterPath),0,0);
-			m_irradiance.SetPixelData  (System.IO.File.ReadAllBytes (irradiancePath),0,0);
+			m_inscatter.LoadRawTextureData  (System.IO.File.ReadAllBytes (inscatterPath));
+			m_irradiance.LoadRawTextureData   (System.IO.File.ReadAllBytes (irradiancePath));
 
 			m_inscatter.Apply();
 			m_irradiance.Apply ();

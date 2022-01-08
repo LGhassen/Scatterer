@@ -75,7 +75,7 @@ namespace scatterer
 		float HM = 1.2f;
 
 		RenderTexture m_transmittanceT;
-		RenderTexture m_deltaET, m_deltaSRT, m_deltaSMT, m_deltaJT, textureSlice;
+		RenderTexture m_deltaET, m_deltaSRT, m_deltaSMT, m_deltaJT;
 		public RenderTexture[] m_irradianceT, m_inscatterT;
 
 		Material m_transmittanceMaterial, m_irradianceNMaterial, m_irradiance1Material, m_inscatter1Material, m_inscatterNMaterial, m_inscatterSMaterial, m_copyInscatter1Material, m_copyInscatterNMaterial, m_copyIrradianceMaterial, copyMaterial;
@@ -183,46 +183,30 @@ namespace scatterer
 			m_deltaET = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
 			m_deltaET.Create();
 
-			m_inscatterT[0] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_inscatterT[0].dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_inscatterT[0].volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
+			m_inscatterT[0] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
 			m_inscatterT[0].wrapMode = TextureWrapMode.Clamp;
 			m_inscatterT[0].filterMode = FilterMode.Bilinear;
 			m_inscatterT[0].Create();
 
-			m_inscatterT[1] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_inscatterT[1].dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_inscatterT[1].volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
+			m_inscatterT[1] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
 			m_inscatterT[1].wrapMode = TextureWrapMode.Clamp;
 			m_inscatterT[1].filterMode = FilterMode.Bilinear;
 			m_inscatterT[1].Create();
 
-			m_deltaSRT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaSRT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_deltaSRT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
+			m_deltaSRT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaSRT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaSRT.filterMode = FilterMode.Bilinear;
 			m_deltaSRT.Create();
 
-			m_deltaSMT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaSMT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_deltaSMT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
+			m_deltaSMT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaSMT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaSMT.filterMode = FilterMode.Bilinear;
 			m_deltaSMT.Create();
 
-			m_deltaJT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaJT.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-			m_deltaJT.volumeDepth = (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);
+			m_deltaJT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaJT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaJT.filterMode = FilterMode.Bilinear;
 			m_deltaJT.Create();
-
-			//single slice of a 3d texture
-			textureSlice = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x), (int)(PRECOMPUTED_SCTR_LUT_DIM.y), 0, RenderTextureFormat.ARGBFloat);
-			textureSlice.wrapMode = TextureWrapMode.Clamp;
-			textureSlice.filterMode = FilterMode.Bilinear;
-			textureSlice.Create();
 
 			SetParameters(m_transmittanceMaterial);
 			SetParameters(m_irradianceNMaterial);
@@ -253,7 +237,6 @@ namespace scatterer
 			m_deltaSRT.Release();
 			m_deltaSMT.Release();
 			m_deltaJT.Release();
-			textureSlice.Release ();
 		}
 
 		void SetParameters(Material mat)
@@ -290,35 +273,18 @@ namespace scatterer
 					SaveAs8bit(SKY_W, SKY_H, 4, "/deltaE_debug", m_deltaET);
 				#endif
 			} 
-			else if (m_step == 2) // computes single scattering texture deltaS (line 3 in algorithm 4.1), Rayleigh and Mie separated in deltaSR + deltaSM
+			else if (m_step == 2) 
 			{
+				// computes single scattering texture deltaS (line 3 in algorithm 4.1)
+				// Rayleigh and Mie separated in deltaSR + deltaSM
 				m_inscatter1Material.SetTexture("transmittanceRead", m_transmittanceT);
-
-				for (int i=0; i< (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);i++)
-				{
-					// Set sun zenith and sun view angles
-					int uiW = i % (int)(PRECOMPUTED_SCTR_LUT_DIM.z);
-					int uiQ = i / (int)(PRECOMPUTED_SCTR_LUT_DIM.z);
-
-					float f2WQx = ((float)uiW + 0.5f) / (float)PRECOMPUTED_SCTR_LUT_DIM.z;
-					float f2WQy = ((float)uiQ + 0.5f) / (float)PRECOMPUTED_SCTR_LUT_DIM.w;
-
-					m_inscatter1Material.SetVector("f2WQ", new Vector2(f2WQx, f2WQy));
-
-					// rayleigh pass
-					Graphics.Blit(null, textureSlice, m_inscatter1Material, 0);
-					Graphics.Blit(textureSlice, m_deltaSRT, 0, i);
-
-					// mie pass
-					Graphics.Blit(null, textureSlice, m_inscatter1Material, 1);
-					Graphics.Blit(textureSlice, m_deltaSMT, 0, i);
-				}
-
-				#if(WRITE_DEBUG_TEX)
-					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/deltaSR_debug", m_deltaSRT);
-					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/deltaSM_debug", m_deltaSMT);
-				#endif
-			} 
+				
+				// rayleigh pass
+				Graphics.Blit(null, m_deltaSRT, m_inscatter1Material, 0);
+				
+				// mie pass
+				Graphics.Blit(null, m_deltaSMT, m_inscatter1Material, 1);
+			}
 			else if (m_step == 3) // copies deltaE into irradiance texture E (line 4 in algorithm 4.1)
 			{
 				m_copyIrradianceMaterial.SetFloat("k", 0.0f);
@@ -334,17 +300,7 @@ namespace scatterer
 				m_copyInscatter1Material.SetTexture("deltaSRRead", m_deltaSRT);
 				m_copyInscatter1Material.SetTexture("deltaSMRead", m_deltaSMT);
 
-				for (int i=0; i < (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);i++)
-				{	
-					m_copyInscatter1Material.SetInt("layer", i);
-
-					Graphics.Blit(null, textureSlice, m_copyInscatter1Material, 0);
-					Graphics.Blit(textureSlice, m_inscatterT[WRITE], 0, i);
-				}
-
-				#if(WRITE_DEBUG_TEX)
-					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/copy_inscatter1_debug",  m_inscatterT[WRITE]);
-				#endif
+				Graphics.Blit(null, m_inscatterT[WRITE], m_copyInscatter1Material, 0);
 
 				RTUtility.Swap(m_inscatterT);
 			} 
@@ -355,28 +311,12 @@ namespace scatterer
 				m_inscatterSMaterial.SetTexture("deltaERead", m_deltaET);
 				m_inscatterSMaterial.SetTexture("deltaSRRead", m_deltaSRT);
 				m_inscatterSMaterial.SetTexture("deltaSMRead", m_deltaSMT);
-
+				
 				m_inscatterSMaterial.SetTexture("deltaSRReadSampler", m_deltaSRT);
 				m_inscatterSMaterial.SetTexture("deltaSMReadSampler", m_deltaSMT);
-
-				for (int i=0; i < (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);i++)
-				{
-					int uiW = i % (int)(PRECOMPUTED_SCTR_LUT_DIM.z);
-					int uiQ = i / (int)(PRECOMPUTED_SCTR_LUT_DIM.z);
-
-					float f2WQx = ((float)uiW + 0.5f) / (float)PRECOMPUTED_SCTR_LUT_DIM.z;
-					float f2WQy = ((float)uiQ + 0.5f) / (float)PRECOMPUTED_SCTR_LUT_DIM.w;
-
-					m_inscatterSMaterial.SetVector("f2WQ", new Vector2(f2WQx, f2WQy));
-
-					Graphics.Blit(null, textureSlice, m_inscatterSMaterial, 0);
-					Graphics.Blit(textureSlice, m_deltaJT, 0, i);
-				}
-
-				#if(WRITE_DEBUG_TEX)
-					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/m_deltaJT_debug",  m_deltaJT);
-				#endif
-			} 
+				
+				Graphics.Blit(null, m_deltaJT, m_inscatterSMaterial, 0);
+			}
 			else if (m_step == 6) // computes deltaE (line 8 in algorithm 4.1)
 			{
 				m_irradianceNMaterial.SetInt("first", (m_order == 2) ? 1 : 0);
@@ -390,29 +330,14 @@ namespace scatterer
 			} 
 			else if (m_step == 7) // computes deltaS (line 9 in algorithm 4.1)
 			{
+				// computes deltaS (line 9 in algorithm 4.1)
+				
 				m_inscatterNMaterial.SetTexture("transmittanceRead", m_transmittanceT);
 				m_inscatterNMaterial.SetTexture("deltaJRead", m_deltaJT);
 				m_inscatterNMaterial.SetTexture("deltaJReadSampler", m_deltaJT);
-
-				for (int i=0; i < (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);i++)
-				{
-					int uiW = i % (int)(PRECOMPUTED_SCTR_LUT_DIM.z);
-					int uiQ = i / (int)(PRECOMPUTED_SCTR_LUT_DIM.z);
-
-					float f2WQx = ((float)uiW + 0.5f) / (float)PRECOMPUTED_SCTR_LUT_DIM.z;
-					float f2WQy = ((float)uiQ + 0.5f) / (float)PRECOMPUTED_SCTR_LUT_DIM.w;
-
-					m_inscatterNMaterial.SetInt("layer", i);
-					m_inscatterNMaterial.SetVector("f2WQ", new Vector2(f2WQx, f2WQy));
-
-					Graphics.Blit(null, textureSlice, m_inscatterNMaterial, 0);
-					Graphics.Blit(textureSlice, m_deltaSRT, 0, i);
-				}
-
-					#if(WRITE_DEBUG_TEX)
-					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/inscatterN_debug",  m_deltaSRT);
-					#endif
-			} 
+				
+				Graphics.Blit(null, m_deltaSRT, m_inscatterNMaterial, 0);
+			}
 			else if (m_step == 8) // adds deltaE into irradiance texture E (line 10 in algorithm 4.1)
 			{
 				m_copyIrradianceMaterial.SetFloat("k", 1.0f);
@@ -423,32 +348,17 @@ namespace scatterer
 
 				RTUtility.Swap(m_irradianceT);
 			}
-			else if (m_step == 9 && multipleScattering) // adds deltaS into inscatter texture S (line 11 in algorithm 4.1)
+			else if (m_step == 9 && multipleScattering)
 			{
+				// adds deltaS into inscatter texture S (line 11 in algorithm 4.1)
+				
 				m_copyInscatterNMaterial.SetTexture("deltaSRead", m_deltaSRT);
 				m_copyInscatterNMaterial.SetTexture("inscatterRead", m_inscatterT[READ]);
-
-				for (int i=0; i < (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w);i++)
-				{
-					int uiW = i % (int)(PRECOMPUTED_SCTR_LUT_DIM.z);
-					int uiQ = i / (int)(PRECOMPUTED_SCTR_LUT_DIM.z);
-
-					float f2WQx = ((float)uiW + 0.5f) / (float)PRECOMPUTED_SCTR_LUT_DIM.z;
-					float f2WQy = ((float)uiQ + 0.5f) / (float)PRECOMPUTED_SCTR_LUT_DIM.w;
-
-					m_copyInscatterNMaterial.SetInt("layer", i);
-					m_copyInscatterNMaterial.SetVector("f2WQ", new Vector2(f2WQx, f2WQy));
-
-					Graphics.Blit(null, textureSlice, m_copyInscatterNMaterial, 0);
-					Graphics.Blit(textureSlice, m_inscatterT[WRITE], 0, i);
-				}
-
-				#if(WRITE_DEBUG_TEX)
-					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/copyIscatterN_debug",   m_inscatterT[WRITE]);
-				#endif
-
+				
+				Graphics.Blit(null,  m_inscatterT[WRITE], m_copyInscatterNMaterial, 0);
+				
 				RTUtility.Swap(m_inscatterT);
-
+				
 				if (m_order < scatteringOrders) {
 					m_step = 4;
 					m_order += 1;
@@ -460,19 +370,8 @@ namespace scatterer
 					Directory.CreateDirectory(assetPath);
 
 				// Add an option to clean up old cache files on start?
-				//SaveAsHalf(m_transmittanceT, assetPath+"/transmittance");
 				SaveAsHalf(m_irradianceT[READ], assetPath+"/irradiance");
 				SaveAsHalf(m_inscatterT[READ], assetPath+"/inscatter");
-
-				#if(WRITE_DEBUG_TEX)
-				{
-					SaveAs8bit(TRANSMITTANCE_W, TRANSMITTANCE_H, 4, "/transmittance_debug", m_transmittanceT);
-
-					SaveAs8bit(SKY_W, SKY_H, 4, "/irradiance_debug", m_irradianceT[READ], 10.0f);
-
-					SaveAs8bit((int)(PRECOMPUTED_SCTR_LUT_DIM.x*PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z*PRECOMPUTED_SCTR_LUT_DIM.w), 4, "/inscater_debug", m_inscatterT[READ]);
-				}
-				#endif
 			} 
 			else if (m_step == 11) 
 			{
@@ -494,95 +393,19 @@ namespace scatterer
 			m_deltaSRT.Release();
 			m_deltaSMT.Release();
 			m_deltaJT.Release();
-			textureSlice.Release ();
 		}
 
 		void SaveAsHalf(RenderTexture rtex, string fileName)
 		{
-			if (rtex.dimension == UnityEngine.Rendering.TextureDimension.Tex3D)
-			{
-				RenderTexture tempSlice = new RenderTexture(rtex.width, rtex.height, 0, RenderTextureFormat.ARGBHalf);
-				textureSlice.Create();
-
-				Texture2D temp = new Texture2D(rtex.width, rtex.height, TextureFormat.RGBAHalf, false, false);
-
-				byte[] byteArray = new byte[rtex.width * rtex.height * rtex.volumeDepth * 4 * 2];
-
-				for (int slice=0; slice < rtex.volumeDepth; slice++)
-				{
-					copyMaterial.SetTexture("textureToCopy",rtex);
-					copyMaterial.SetFloat("slice",slice);
-					copyMaterial.SetFloat("width",rtex.width);
-					copyMaterial.SetFloat("height",rtex.height);
-					Graphics.Blit(null, textureSlice, copyMaterial, 0);
-
-					RenderTexture.active = textureSlice;
-					temp.ReadPixels (new Rect (0, 0, textureSlice.width, textureSlice.height), 0, 0);
-					temp.Apply ();
-
-					byte[] tempArray = temp.GetRawTextureData();
-					System.Buffer.BlockCopy(tempArray, 0, byteArray, slice * rtex.width * rtex.height * 4 * 2 , tempArray.Length);
-				}
-
-				System.IO.File.WriteAllBytes(fileName + ".half", byteArray);
-				textureSlice.Release();
-			}
-			else
-			{
-				Texture2D temp = new Texture2D(rtex.width, rtex.height, TextureFormat.RGBAHalf, false, false);
-
-				RenderTexture.active = rtex;
-				temp.ReadPixels (new Rect (0, 0, rtex.width, rtex.height), 0, 0);
-				temp.Apply ();
-
-				byte[] byteArray = temp.GetRawTextureData();
-
-				System.IO.File.WriteAllBytes(fileName + ".half", byteArray);
-			}
-
+			Texture2D temp = new Texture2D(rtex.width, rtex.height, TextureFormat.RGBAHalf, false, false);
+			
+			RenderTexture.active = rtex;
+			temp.ReadPixels (new Rect (0, 0, rtex.width, rtex.height), 0, 0);
+			temp.Apply ();
+			
+			byte[] byteArray = temp.GetRawTextureData();
+			System.IO.File.WriteAllBytes(fileName + ".half", byteArray);
 		}
-
-		void SaveAs8bit(int width, int height, int channels, string fileName, RenderTexture rtex, float scale = 1.0f)
-		{
-			//Only used to get a visible image for debugging.
-//
-//			ComputeBuffer buffer = new ComputeBuffer(width*height, sizeof(float)*channels);
-//			
-//			CBUtility.ReadFromRenderTexture(rtex, channels, buffer, m_readData);
-//			
-//			float[] data = new float[width*height* channels];
-//			
-//			buffer.GetData(data);
-//
-//			Texture2D tex = new Texture2D(width, height);
-//
-//			for(int x = 0; x < width; x++)
-//			{
-//				for(int y = 0; y < height; y++)
-//				{
-//					Color col = new Color(0,0,0,1);
-//
-//					col.r = data[(x + y * width) * channels + 0];
-//
-//					if(channels > 1)
-//						col.g = data[(x + y * width) * channels + 1];
-//
-//					if(channels > 2)
-//						col.b = data[(x + y * width) * channels + 2];
-//
-//					tex.SetPixel(x, y, col * scale);
-//				}
-//			}
-//
-//			tex.Apply();
-//
-//			byte[] bytes = tex.EncodeToPNG();
-//
-//			System.IO.File.WriteAllBytes(Application.dataPath + m_filePath + fileName + ".png", bytes);
-//
-//			buffer.Release();
-		}
-
 	}
 
 }
