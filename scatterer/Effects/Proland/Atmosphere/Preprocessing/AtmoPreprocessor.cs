@@ -62,7 +62,7 @@ namespace scatterer
 
 		public static Vector4 PRECOMPUTED_SCTR_LUT_DIM_DEFAULT = new Vector4(32f,128f,32f,16f);		//the one from yusov, double the current one so should be 16 megs in half precision
 		public static Vector4 PRECOMPUTED_SCTR_LUT_DIM_PREVIEW = new Vector4(16f,64f,16f,2f);		//fast preview version, 32x smaller
-		private int xTiles = 32, yTiles = 16;
+		private int xTiles = 256, yTiles = 16;
 
 		Vector4 PRECOMPUTED_SCTR_LUT_DIM = PRECOMPUTED_SCTR_LUT_DIM_DEFAULT;
 		
