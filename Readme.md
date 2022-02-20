@@ -1,21 +1,12 @@
 Scatterer
 ---------------------------------------------------------------------------------
 
-Atmospheric scattering graphical effects for Kerbal Space Program
+Atmospheric scattering graphical effects for Kerbal Space Program.
 
-
-This project is based on the unity port of Proland by Justin Hawkes.
-
-This project is under the following license:
+This project contains the plugin source which is under the following license:
 
  GNU GENERAL PUBLIC LICENSE Version 3
-
-Shader files borrowed from the EVE mod are under the MIT license:
--SphereCloud.Shader
--CloudVolumeParticle.shader
--cubeMap.cginc
--EVEUtils.cginc
--alphaMap.cginc
--noiseSimplex.cginc
  
-Copyright (c) 2015-2019 Ghassen Lahmar
+This repo does not contain shaders for versions higher than 0.0772 and they are not necessary to compile/load the plugin. Shaders are loaded dynamically from asset bundles and can be replaced by custom shaders.
+
+Copyright (c) 2015-2022 Ghassen Lahmar
