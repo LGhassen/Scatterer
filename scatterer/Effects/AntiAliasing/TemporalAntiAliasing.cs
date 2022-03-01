@@ -21,9 +21,8 @@ namespace scatterer
 	{
 		public float jitterSpread = 0.75f;				//The diameter (in texels) inside which jitter samples are spread. Smaller values result in crisper but more aliased output, while larger values result in more stable, but blurrier, output. Range(0.1f, 1f)
 		public float sharpness = 0.25f;					//Controls the amount of sharpening applied to the color buffer. High values may introduce dark-border artifacts. Range(0f, 3f)
-//		public float stationaryBlending = 0.95f;		//The blend coefficient for a stationary fragment. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
 		public float stationaryBlending = 0.90f;		//The blend coefficient for a stationary fragment. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
-		public float motionBlending = 0.45f;			//The blend coefficient for a fragment with significant motion. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
+		public float motionBlending = 0.55f;			//The blend coefficient for a fragment with significant motion. Controls the percentage of history sample blended into the final color. Range(0f, 0.99f)
 
 		public Vector2 jitter { get; private set; }		// The current jitter amount
 		public int sampleIndex { get; private set; }	// The current sample index
