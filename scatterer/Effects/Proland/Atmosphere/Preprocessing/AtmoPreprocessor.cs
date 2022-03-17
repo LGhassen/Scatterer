@@ -452,20 +452,4 @@ namespace scatterer
 			System.IO.File.WriteAllBytes(fileName + ".half", byteArray);
 		}
 	}
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

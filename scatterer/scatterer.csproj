@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -202,25 +202,10 @@
     <Compile Include="Utilities\Misc\PlanetSecondaryLightUpdater.cs" />
     <Compile Include="Utilities\Dx12UnifiedCamera.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DataSerialization\" />
-    <Folder Include="Utilities\" />
-    <Folder Include="Effects\" />
-    <Folder Include="Effects\SunFlare\" />
-    <Folder Include="GUI\" />
-    <Folder Include="Utilities\Math\" />
-    <Folder Include="Effects\SunlightModulator\" />
-    <Folder Include="Effects\PlanetShine\" />
-    <Folder Include="Effects\Proland\" />
-    <Folder Include="Utilities\Shader\" />
-    <Folder Include="Utilities\Camera\" />
-    <Folder Include="Utilities\Misc\" />
-    <Folder Include="Effects\Proland\Ocean\Caustics\" />
-    <Folder Include="GUI\ModularGUI\" />
-    <Folder Include="Effects\Proland\Atmosphere\Godrays\" />
-    <Folder Include="Utilities\EVE\" />
-    <Folder Include="Effects\AntiAliasing\" />
-    <Folder Include="Effects\AntiAliasing\Utils\" />
-    <Folder Include="Effects\Proland\Atmosphere\Preprocessing\" />
-  </ItemGroup>
+  <ItemGroup />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(ProjectDir)bin\Release\scatterer.dll" "C:\Steam\steamapps\common\Kerbal Space Program\GameData\scatterer" /Y
+
+"C:\Steam\steamapps\common\Kerbal Space Program\dx11.bat"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

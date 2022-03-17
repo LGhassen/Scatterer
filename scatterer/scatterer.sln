@@ -1,7 +1,9 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "scatterer", "scatterer.csproj", "{604EF0A2-B04D-4A3C-99AB-B039093AE098}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32126.315
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scatterer", "Scatterer.csproj", "{604EF0A2-B04D-4A3C-99AB-B039093AE098}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +15,12 @@ Global
 		{604EF0A2-B04D-4A3C-99AB-B039093AE098}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{604EF0A2-B04D-4A3C-99AB-B039093AE098}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{604EF0A2-B04D-4A3C-99AB-B039093AE098}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B8023EC5-FC75-4821-B315-FAC57582B37B}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		outputpath = bin
