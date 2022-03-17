@@ -120,6 +120,18 @@ namespace scatterer
 		public bool useTemporalAntiAliasing = false;
 
 		[Persistent]
+		public float taaStationaryBlending = 0.90f;
+
+		[Persistent]
+		public float taaMotionBlending = 0.55f;
+
+		[Persistent]
+		public float taaJitterSpread = 0.75f;
+
+		[Persistent]
+		public float taaSharpness = 0.25f;
+
+		[Persistent]
 		public bool terrainShadows = false;
 
 		//0 - None, 1 - Bruneton, 2 - Uncharted
@@ -237,9 +249,16 @@ namespace scatterer
 				 OldConfig.useDepthBufferMode != useDepthBufferMode ||
 				 OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
 				 OldConfig.quarterResScattering != quarterResScattering ||
+				 
 				 OldConfig.useSubpixelMorphologicalAntialiasing != useSubpixelMorphologicalAntialiasing ||
 				 OldConfig.smaaQuality != smaaQuality ||
+				 
 				 OldConfig.useTemporalAntiAliasing  != useTemporalAntiAliasing ||
+				 OldConfig.taaStationaryBlending != taaStationaryBlending ||
+				 OldConfig.taaMotionBlending != taaMotionBlending ||
+				 OldConfig.taaJitterSpread != taaJitterSpread ||
+				 OldConfig.taaSharpness != taaSharpness ||
+				
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.scatteringTonemapper != scatteringTonemapper ||
 				 OldConfig.useDithering != useDithering ||

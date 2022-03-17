@@ -1,13 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 
 namespace scatterer
@@ -157,7 +149,26 @@ namespace scatterer
 				Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering in 1/4 resolution (speedup, incompatible and disabled with godrays)");
 				Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
 				
-				Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal Antialiasing (Has trailing issues at low fps)") && !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
+				Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal Antialiasing") && !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
+				if (Scatterer.Instance.mainSettings.useTemporalAntiAliasing)
+				{
+					GUILayout.BeginHorizontal ();
+					{
+						GUILayout.Label ("Stationary blending");
+						Scatterer.Instance.mainSettings.taaStationaryBlending = Mathf.Clamp(float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.taaStationaryBlending.ToString("0.00"))),0f,0.99f);
+
+						GUILayout.Label("   Motion blending");
+						Scatterer.Instance.mainSettings.taaMotionBlending = Mathf.Clamp(float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.taaMotionBlending.ToString("0.00"))),0f,0.99f);
+
+						GUILayout.Label("   Sample spread");
+						Scatterer.Instance.mainSettings.taaJitterSpread = Mathf.Clamp(float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.taaJitterSpread.ToString("0.00"))),0.1f,1f);
+
+						GUILayout.Label("   Sharpness");
+						Scatterer.Instance.mainSettings.taaSharpness = Mathf.Clamp(float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.taaSharpness.ToString("0.00"))), 0f, 1f);
+					}
+					GUILayout.EndHorizontal();
+				}
+
 				Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing, "Subpixel Morphological Antialiasing")  && !Scatterer.Instance.mainSettings.useTemporalAntiAliasing;
 				if (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing)
 				{

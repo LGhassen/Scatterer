@@ -50,15 +50,18 @@ namespace scatterer
 
 		public TemporalAntiAliasing()
 		{
-			targetCamera = GetComponent<Camera> ();
-
+			targetCamera = GetComponent<Camera>();
 			originalDepthTextureMode = targetCamera.depthTextureMode;
 			targetCamera.depthTextureMode = DepthTextureMode.Depth | DepthTextureMode.MotionVectors;
-
 			targetCamera.forceIntoRenderTexture = true;
 
 			temporalAAMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/TemporalAntialiasing")]);
-			Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", false);
+			Utils.EnableOrDisableShaderKeywords(temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", false);
+
+			jitterSpread = Scatterer.Instance.mainSettings.taaJitterSpread;
+			sharpness = Scatterer.Instance.mainSettings.taaSharpness;
+			stationaryBlending = Scatterer.Instance.mainSettings.taaStationaryBlending;
+			motionBlending = Scatterer.Instance.mainSettings.taaMotionBlending;
 
 			const float kMotionAmplification = 100f * 60f;
 			temporalAAMaterial.SetFloat("_Sharpness", sharpness);
