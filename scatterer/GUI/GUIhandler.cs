@@ -48,6 +48,10 @@ namespace scatterer
 			mainOptions = (HighLogic.LoadedScene == GameScenes.SPACECENTER);
 			windowRect.x=Scatterer.Instance.pluginData.inGameWindowLocation.x;
 			windowRect.y=Scatterer.Instance.pluginData.inGameWindowLocation.y;
+
+			//prevent window from going offscreen, only do this on start as otherwise it messes with lower resolutions
+			windowRect.x = Mathf.Clamp(windowRect.x, 0, Screen.width - windowRect.width);
+			windowRect.y = Mathf.Clamp(windowRect.y, 0, Screen.height - windowRect.height);
 		}
 
 		public void UpdateGUIvisible()
@@ -72,10 +76,6 @@ namespace scatterer
 				windowRect = GUILayout.Window (windowId, windowRect, DrawScattererWindow,"Scatterer v"+Scatterer.Instance.versionNumber+": "
 				                               + Scatterer.Instance.pluginData.guiModifierKey1String+"/"+Scatterer.Instance.pluginData.guiModifierKey2String +"+" +Scatterer.Instance.pluginData.guiKey1String
 				                               +"/"+Scatterer.Instance.pluginData.guiKey2String+" toggle");
-				
-				//prevent window from going offscreen
-				windowRect.x = Mathf.Clamp(windowRect.x,0,Screen.width-windowRect.width);
-				windowRect.y = Mathf.Clamp(windowRect.y,0,Screen.height-windowRect.height);
 			}
 		}
 		
