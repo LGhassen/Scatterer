@@ -55,7 +55,7 @@ namespace scatterer
 		//When scene changes, the resolution of the shadowMap can change so recreate the commandBuffers
 		IEnumerator DelayedRecreateForSceneChange()
 		{
-			for (int i=0; i<3; i++)
+			for (int i=0; i<7; i++)
 				yield return new WaitForFixedUpdate ();
 
 			Disable ();

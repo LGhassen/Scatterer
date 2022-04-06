@@ -112,10 +112,10 @@ namespace scatterer
 			}
 		}
 
-		//wait for 5 frames for EVE and the game to finish setting up
+		//wait for 5 frames for EVE, TUFX and the game to finish setting up
 		IEnumerator DelayedInit()
 		{
-			int delayFrames = (HighLogic.LoadedScene == GameScenes.MAINMENU) ? 5 : 1;
+			int delayFrames = 5;
 			for (int i=0; i<delayFrames; i++)
 				yield return new WaitForFixedUpdate ();
 
