@@ -126,7 +126,7 @@ namespace scatterer
 		public float taaMotionBlending = 0.55f;
 
 		[Persistent]
-		public float taaJitterSpread = 0.75f;
+		public float taaJitterSpread = 0.9f;
 
 		[Persistent]
 		public float taaSharpness = 0.25f;
