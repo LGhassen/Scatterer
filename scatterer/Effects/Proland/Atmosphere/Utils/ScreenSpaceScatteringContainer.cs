@@ -124,7 +124,7 @@ namespace scatterer
 			targetCamera.depthTextureMode = targetCamera.depthTextureMode | DepthTextureMode.Depth;
 
 			rendererCommandBuffer = new CommandBuffer();
-			rendererCommandBuffer.name = "Scattererer screen-space scattering CommandBuffer";
+			rendererCommandBuffer.name = "Scatterer screen-space scattering CommandBuffer";
 
 			//if no depth downscaling, render directly to screen
 			if (!quarterRes)
