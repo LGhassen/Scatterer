@@ -63,6 +63,9 @@ namespace scatterer
 		public float buoyancyWaterDragScalarOverride=4.5f / 3f;
 
 		[Persistent]
+		public float buoyancyWaterDragScalarEndOverride = 0.15f / 3f;
+
+		[Persistent]
 		public float buoyancyWaterAngularDragScalarOverride=0.001f / 3f;
 
 		[Persistent]
@@ -232,7 +235,8 @@ namespace scatterer
 				 OldConfig.oceanCraftWaveInteractionsOverrideWaterCrashTolerance != oceanCraftWaveInteractionsOverrideWaterCrashTolerance || 
 				 OldConfig.buoyancyCrashToleranceMultOverride != buoyancyCrashToleranceMultOverride || 
 				 OldConfig.oceanCraftWaveInteractionsOverrideDrag != oceanCraftWaveInteractionsOverrideDrag || 
-				 OldConfig.buoyancyWaterDragScalarOverride != buoyancyWaterDragScalarOverride || 
+				 OldConfig.buoyancyWaterDragScalarOverride != buoyancyWaterDragScalarOverride ||
+				 OldConfig.buoyancyWaterDragScalarEndOverride != buoyancyWaterDragScalarEndOverride ||
 				 OldConfig.buoyancyWaterAngularDragScalarOverride != buoyancyWaterAngularDragScalarOverride || 
 				 OldConfig.oceanCraftWaveInteractionsOverrideRecoveryVelocity != oceanCraftWaveInteractionsOverrideRecoveryVelocity || 
 				 OldConfig.waterMaxRecoveryVelocity != waterMaxRecoveryVelocity || 

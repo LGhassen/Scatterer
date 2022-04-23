@@ -252,8 +252,9 @@ namespace scatterer
 
 				if (mainSettings.oceanCraftWaveInteractionsOverrideDrag)
 				{
-					PhysicsGlobals.BuoyancyWaterDragTimer = -10.0; //disabled because ti's bs doesn't really disable it?
+					PhysicsGlobals.BuoyancyWaterDragTimer = double.NegativeInfinity; 
 					PhysicsGlobals.BuoyancyWaterDragScalar = mainSettings.buoyancyWaterDragScalarOverride;
+					PhysicsGlobals.BuoyancyWaterDragScalarEnd = mainSettings.buoyancyWaterDragScalarEndOverride;
 					PhysicsGlobals.BuoyancyWaterAngularDragScalar = mainSettings.buoyancyWaterAngularDragScalarOverride;
 				}
 			}
