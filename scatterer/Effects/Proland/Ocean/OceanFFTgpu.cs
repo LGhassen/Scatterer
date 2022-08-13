@@ -355,7 +355,7 @@ namespace scatterer {
 			if (SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders && Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
 			{
 				GameEvents.onGamePause.Remove (ForcePauseMenuSaving);
-				GameEvents.onGamePause.Remove (UnPause);
+				GameEvents.onGameUnpause.Remove (UnPause);
 			}
 
 		}
@@ -756,7 +756,6 @@ namespace scatterer {
 				FlightGlobals.ActiveVessel.srf_velocity = Vector3d.zero;
 							
 				PauseMenu.Display ();
-
 			}
 		}
 		

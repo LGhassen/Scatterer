@@ -295,6 +295,9 @@ namespace scatterer
 
 		void OnDestroy ()
 		{
+			GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
+			GameEvents.OnCameraChange.Remove(AddAAToInternalCamera);
+
 			if (isActive)
 			{
 				if (!ReferenceEquals(sunlightModulatorsManagerInstance,null))
@@ -388,12 +391,6 @@ namespace scatterer
 
 				if (mainSettings.useDepthBufferMode)
 					QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
-
-				if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
-				{
-					GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
-					GameEvents.OnCameraChange.Remove(AddAAToInternalCamera);
-				}
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
 				SaveSettings();
