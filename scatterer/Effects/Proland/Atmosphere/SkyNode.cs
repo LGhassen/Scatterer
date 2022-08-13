@@ -64,7 +64,7 @@ namespace scatterer
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
-		Vector4 PRECOMPUTED_SCTR_LUT_DIM = AtmoPreprocessor.PRECOMPUTED_SCTR_LUT_DIM_DEFAULT;
+		Vector4 scatteringLutDimensions = AtmoPreprocessor.scatteringLutDimensionsDefault;
 
 		string celestialBodyName;
 		public Transform parentScaledTransform, parentLocalTransform;
@@ -454,7 +454,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
 			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
-			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", PRECOMPUTED_SCTR_LUT_DIM);
+			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
 			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
 			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
 			
@@ -558,7 +558,7 @@ namespace scatterer
 			mat.SetFloat (ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
 			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
 			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
-			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", PRECOMPUTED_SCTR_LUT_DIM);
+			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
 			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
 			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
 			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
@@ -610,7 +610,7 @@ namespace scatterer
 
 			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
-			m_inscatter = new Texture2D((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), TextureFormat.RGBAHalf, false);
+			m_inscatter = new Texture2D((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), TextureFormat.RGBAHalf, false);
 			m_inscatter.wrapMode = TextureWrapMode.Clamp;
 			m_inscatter.filterMode = FilterMode.Bilinear;
 			
@@ -622,7 +622,7 @@ namespace scatterer
 			//Compute atmo hash and path
 			string cachePath = Utils.GameDataPath + "/ScattererAtmosphereCache/PluginData";
 			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca);
-			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM);
+			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions);
 			cachePath += "/" + atmohash;
 
 			string inscatterPath = cachePath+"/inscatter.half";
@@ -631,7 +631,7 @@ namespace scatterer
 			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (irradiancePath))
 			{
 				Utils.LogInfo("No atmosphere cache for "+prolandManager.parentCelestialBody.name+", generating new atmosphere");
-				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, PRECOMPUTED_SCTR_LUT_DIM, cachePath);
+				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, previewMode, cachePath);
 			}
 
 			m_inscatter.LoadRawTextureData  (System.IO.File.ReadAllBytes (inscatterPath));
@@ -641,7 +641,7 @@ namespace scatterer
 			m_irradiance.Apply ();
 		}
 
-		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool fastPreviewMode, float inAtmosphereStartRadiusScale)
+		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale)
 		{
 			m_betaR = inBETA_R;
 			BETA_MSca = inBETA_MSca;
@@ -650,7 +650,8 @@ namespace scatterer
 			HM = inHM;
 			averageGroundReflectance = inGRref;
 			multipleScattering = inMultiple;
-			PRECOMPUTED_SCTR_LUT_DIM = fastPreviewMode ? AtmoPreprocessor.PRECOMPUTED_SCTR_LUT_DIM_PREVIEW : AtmoPreprocessor.PRECOMPUTED_SCTR_LUT_DIM_DEFAULT ;
+			previewMode = inFastPreviewMode;
+			scatteringLutDimensions = inFastPreviewMode ? AtmoPreprocessor.scatteringLutDimensionsPreview : AtmoPreprocessor.scatteringLutDimensionsDefault ;
 			atmosphereStartRadiusScale = inAtmosphereStartRadiusScale;
 
 			InitPrecomputedAtmo ();

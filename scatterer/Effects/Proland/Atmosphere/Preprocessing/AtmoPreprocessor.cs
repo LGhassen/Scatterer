@@ -25,9 +25,7 @@
  */
 
 using UnityEngine;
-using System.Collections;
 using System.IO;
-using System.Linq;
 
 namespace scatterer 
 {
@@ -60,12 +58,15 @@ namespace scatterer
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
-		public static Vector4 PRECOMPUTED_SCTR_LUT_DIM_DEFAULT = new Vector4(32f,128f,32f,16f);		//the one from yusov, double the current one so should be 16 megs in half precision
-		public static Vector4 PRECOMPUTED_SCTR_LUT_DIM_PREVIEW = new Vector4(16f,64f,16f,2f);		//fast preview version, 32x smaller
-		private int xTiles = 256, yTiles = 16;
+		public static Vector4 scatteringLutDimensionsDefault = new Vector4(32f,128f,32f,16f);		//the one from yusov, double the current one so should be 16 megs in half precision
+		public static Vector4 scatteringLutDimensionsPreview = new Vector4(16f,64f,16f,2f);     //fast preview version, 32x smaller
+		private static int xTilesDefault = 512, yTilesDefault = 64;
+		private static int xTilesPreview = 512, yTilesPreview = 16;
 
-		Vector4 PRECOMPUTED_SCTR_LUT_DIM = PRECOMPUTED_SCTR_LUT_DIM_DEFAULT;
-		
+		Vector4 scatteringLutDimensions = scatteringLutDimensionsDefault;
+		int xTiles = xTilesDefault, yTiles = yTilesDefault;
+
+
 		float AVERAGE_GROUND_REFLECTANCE = 0.1f;
 		Vector4 BETA_R = new Vector4(5.8e-3f, 1.35e-2f, 3.31e-2f, 0.0f);
 		Vector4 BETA_MSca = new Vector4(4e-3f, 4e-3f, 4e-3f, 0.0f);
@@ -138,7 +139,7 @@ namespace scatterer
 			return result.ToString ();
 		}
 
-		public void Generate(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inPRECOMPUTED_SCTR_LUT_DIM, string assetPath)
+		public void Generate(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inScatteringLutDimensions, bool previewMode, string assetPath)
 		{
 			//Rescale to a fixed radius which we know never causes issues
 			float referenceRadius = 1000000f;
@@ -160,7 +161,16 @@ namespace scatterer
 			AVERAGE_GROUND_REFLECTANCE = inGRref;
 			m_finished = false;
 			multipleScattering = inMultiple;
-			PRECOMPUTED_SCTR_LUT_DIM = inPRECOMPUTED_SCTR_LUT_DIM;
+			scatteringLutDimensions = inScatteringLutDimensions;
+
+			if (previewMode)
+            {
+				xTiles = xTilesPreview; yTiles = yTilesPreview;
+            }
+			else
+            {
+				xTiles = xTilesDefault; yTiles = yTilesDefault;
+			}
 
 			m_irradianceT = new RenderTexture[2];
 			m_inscatterT = new RenderTexture[2];
@@ -183,27 +193,27 @@ namespace scatterer
 			m_deltaET = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
 			m_deltaET.Create();
 
-			m_inscatterT[0] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
+			m_inscatterT[0] = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
 			m_inscatterT[0].wrapMode = TextureWrapMode.Clamp;
 			m_inscatterT[0].filterMode = FilterMode.Bilinear;
 			m_inscatterT[0].Create();
 
-			m_inscatterT[1] = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
+			m_inscatterT[1] = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
 			m_inscatterT[1].wrapMode = TextureWrapMode.Clamp;
 			m_inscatterT[1].filterMode = FilterMode.Bilinear;
 			m_inscatterT[1].Create();
 
-			m_deltaSRT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
+			m_deltaSRT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaSRT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaSRT.filterMode = FilterMode.Bilinear;
 			m_deltaSRT.Create();
 
-			m_deltaSMT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
+			m_deltaSMT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaSMT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaSMT.filterMode = FilterMode.Bilinear;
 			m_deltaSMT.Create();
 
-			m_deltaJT = new RenderTexture((int)(PRECOMPUTED_SCTR_LUT_DIM.x * PRECOMPUTED_SCTR_LUT_DIM.y), (int)(PRECOMPUTED_SCTR_LUT_DIM.z * PRECOMPUTED_SCTR_LUT_DIM.w), 0, RenderTextureFormat.ARGBFloat);
+			m_deltaJT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
 			m_deltaJT.wrapMode = TextureWrapMode.Clamp;
 			m_deltaJT.filterMode = FilterMode.Bilinear;
 			m_deltaJT.Create();
@@ -255,7 +265,7 @@ namespace scatterer
 			mat.SetVector("betaMEx", BETA_MSca / 0.9f);
 			mat.SetFloat("mieG", Mathf.Clamp(MIE_G, 0.0f, 0.99f));
 			mat.SetFloat ("Sun_intensity", 10f);
-			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", PRECOMPUTED_SCTR_LUT_DIM);
+			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
 			mat.SetVector ("tiles", new Vector2 (xTiles, yTiles));
 		}
 
