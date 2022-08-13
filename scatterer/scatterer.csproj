@@ -176,7 +176,7 @@
     <Compile Include="Effects\Proland\Atmosphere\Godrays\GodraysRenderer.cs" />
     <Compile Include="Utilities\EVE\EVEReflectionHandler.cs" />
     <Compile Include="Utilities\Misc\IcoSphere.cs" />
-    <Compile Include="c:\gh\scattererGithub\Scatterer\scatterer\Utilities\Occlusion\ShadowMapCopier.cs" />
+    <Compile Include="Utilities\Occlusion\ShadowMapCopier.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\ScaledScatteringContainer.cs" />
     <Compile Include="DataSerialization\QualityPresetsLoader.cs" />
