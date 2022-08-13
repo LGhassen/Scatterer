@@ -122,9 +122,6 @@ namespace scatterer
 		/// Prepares the jittered and non jittered projection matrices
 		public void ConfigureJitteredProjectionMatrix()
 		{
-			targetCamera.ResetProjectionMatrix();
-
-			targetCamera.nonJitteredProjectionMatrix = targetCamera.projectionMatrix;
 			targetCamera.projectionMatrix = GetJitteredProjectionMatrix(targetCamera);
 			targetCamera.useJitteredProjectionMatrixForTransparentRendering = jitterTransparencies;
 
@@ -209,7 +206,15 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
+			ResetProjection();
 			targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+		}
+
+		// This is needed otherwise transparencies jitter
+		public void ResetProjection()
+        {
+			targetCamera.ResetProjectionMatrix();
+			targetCamera.nonJitteredProjectionMatrix = targetCamera.projectionMatrix;
 		}
 		
 		public override void Cleanup()
