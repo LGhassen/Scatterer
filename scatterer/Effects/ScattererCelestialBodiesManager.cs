@@ -142,7 +142,7 @@ namespace scatterer
 				
 				if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Contains (scattererCelestialBody))
 				{
-					Scatterer.Instance.guiHandler.loadPlanet(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (scattererCelestialBody));
+					Scatterer.Instance.guiHandler.LoadPlanet(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (scattererCelestialBody));
 				}
 				else
 				{

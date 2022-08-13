@@ -1,13 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 
 namespace scatterer
@@ -26,11 +17,11 @@ namespace scatterer
 
 		enum PlanetSettingsTabs
 		{
-			ConfigPoints,
 			Atmo,
-			Ocean
+			Ocean,
+			ConfigPoints,
 		}
-		PlanetSettingsTabs selectedPlanetSettingsTab = PlanetSettingsTabs.ConfigPoints;
+		PlanetSettingsTabs selectedPlanetSettingsTab = PlanetSettingsTabs.Atmo;
 
 		MainOptionsGUI mainOptionsGUI = new MainOptionsGUI();
 		ConfigPointGUI configPointGUI = new ConfigPointGUI ();
@@ -119,23 +110,23 @@ namespace scatterer
 					{	
 
 						GUILayout.BeginHorizontal ();
-						if (GUILayout.Button ("Config points"))
-						{
-							windowRect.width = 400;
-							windowRect.height = 40;
-							selectedPlanetSettingsTab = PlanetSettingsTabs.ConfigPoints;
-						}
-						if (GUILayout.Button ("Atmosphere"))
+						if (GUILayout.Button("Atmosphere"))
 						{
 							windowRect.width = 300;
 							windowRect.height = 40;
 							selectedPlanetSettingsTab = PlanetSettingsTabs.Atmo;
 						}
-						if (GUILayout.Button ("Ocean") && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
+						if (GUILayout.Button("Ocean") && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies[selectedPlanet].hasOcean)
 						{
 							windowRect.width = 400;
 							windowRect.height = 40;
 							selectedPlanetSettingsTab = PlanetSettingsTabs.Ocean;
+						}
+						if (GUILayout.Button ("Config points"))
+						{
+							windowRect.width = 400;
+							windowRect.height = 40;
+							selectedPlanetSettingsTab = PlanetSettingsTabs.ConfigPoints;
 						}
 						GUILayout.EndHorizontal ();	
 
@@ -209,7 +200,26 @@ namespace scatterer
 
 		void DrawSharedFooterGUI ()
 		{
-			GUILayout.BeginHorizontal ();
+			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds)
+			{
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Map EVE clouds"))
+				{
+					Scatterer.Instance.eveReflectionHandler.MapEVEClouds();
+					foreach (ScattererCelestialBody _cel in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
+					{
+						if (_cel.active)
+						{
+							_cel.prolandManager.skyNode.InitEVEClouds();
+							if (!_cel.prolandManager.skyNode.inScaledSpace)
+								_cel.prolandManager.skyNode.MapEVEVolumetrics();
+						}
+					}
+				}
+				GUILayout.EndHorizontal();
+			}
+
+			GUILayout.BeginHorizontal();
 			if (GUILayout.Button ("Toggle WireFrame")) {
 				if (wireFrame) {
 					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION) {
@@ -241,9 +251,9 @@ namespace scatterer
 			GUILayout.EndHorizontal ();
 		}
 
-		public void loadPlanet(int planetIndex)
+		public void LoadPlanet(int planetIndex)
 		{
-			selectedPlanetSettingsTab = PlanetSettingsTabs.ConfigPoints;
+			selectedPlanetSettingsTab = PlanetSettingsTabs.Atmo;
 			selectedPlanet = planetIndex;
 			configPointGUI.loadSettingsForPlanet (selectedPlanet);
 			atmoGUI.loadSettingsForPlanet(selectedPlanet);

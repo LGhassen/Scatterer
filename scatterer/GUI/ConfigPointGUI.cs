@@ -275,21 +275,6 @@ namespace scatterer
 			
 			GUILayout.TextField (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.isConfigModuleManagerPatch ? "ModuleManager patch detected, saving disabled" : Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.configUrl.parent.url, guiStyle);
 			GUILayout.EndHorizontal ();
-
-			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds) {
-				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button ("Map EVE clouds")) {
-					Scatterer.Instance.eveReflectionHandler.MapEVEClouds ();
-					foreach (ScattererCelestialBody _cel in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies) {
-						if (_cel.active) {
-							_cel.prolandManager.skyNode.InitEVEClouds ();
-							if (!_cel.prolandManager.skyNode.inScaledSpace)
-								_cel.prolandManager.skyNode.MapEVEVolumetrics ();
-						}
-					}
-				}
-				GUILayout.EndHorizontal ();
-			}
 		}
 
 		public void loadSettingsForPlanet(int selectedPlanet)
