@@ -104,13 +104,15 @@ namespace scatterer
 
 		public void Cleanup()
 		{
-			if (!ReferenceEquals (skySphereMR, null))
+			//if (!ReferenceEquals (skySphereMR, null))
+			if (skySphereMR != null)
 			{
 				skySphereMR.enabled = false;
 				UnityEngine.Component.DestroyImmediate (skySphereMR);
 			}
 
-			if (!ReferenceEquals (skySphereGO, null))
+			//if (!ReferenceEquals (skySphereGO, null))
+			if (skySphereGO != null)
 			{
 				UnityEngine.Object.DestroyImmediate(skySphereGO);
 			}
