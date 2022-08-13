@@ -190,6 +190,18 @@ namespace scatterer
 					}
 					
 					Utils.LogDebug("replaced EVE/GeometryCloudVolumeParticleToTexture in EVE shader dictionary");
+
+					if (EVEshaderDictionary.ContainsKey("EVE/RaymarchCloud"))
+					{
+						EVEshaderDictionary["EVE/RaymarchCloud"] = LoadedShaders["Scatterer-EVE/RaymarchCloud"];
+					}
+					else
+					{
+						List<Material> cloudsList = new List<Material>();
+						EVEshaderDictionary.Add("EVE/RaymarchCloud", LoadedShaders["Scatterer-EVE/RaymarchCloud"]);
+					}
+
+					Utils.LogDebug("replaced EVE/RaymarchCloud in EVE shader dictionary");
 				}
 			}
 			

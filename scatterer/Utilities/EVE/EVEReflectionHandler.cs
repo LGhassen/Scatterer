@@ -243,7 +243,7 @@ namespace scatterer
 						object layerVolume = cloudsPQS.GetType ().GetField ("layerVolume", flags).GetValue (cloudsPQS) as object;
 						if (ReferenceEquals(layerVolume, null))
 						{
-							Utils.LogDebug (" No volumetric cloud for layer on planet: " + celestialBodyName);
+							Utils.LogDebug ("No volumetric cloud for layer on planet: " + celestialBodyName);
 							continue;
 						}
 						
@@ -251,7 +251,7 @@ namespace scatterer
 						
 						if (ReferenceEquals(layerVolume, null))
 						{
-							Utils.LogDebug (" Volumetric cloud has no material on planet: " + celestialBodyName);
+							Utils.LogDebug ("Volumetric cloud has no material on planet: " + celestialBodyName);
 							continue;
 						}
 						
@@ -259,9 +259,38 @@ namespace scatterer
 					}
 					catch (Exception stupid)
 					{
-						Utils.LogDebug (" Volumetric clouds error on planet: " + celestialBodyName + stupid.ToString ());
+						Utils.LogDebug ("Volumetric clouds error on planet: " + celestialBodyName + stupid.ToString ());
 					}
-				}				
+				}
+
+				foreach (object _obj in cloudObjs)
+				{
+					try
+					{
+						object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags).GetValue(_obj) as object;
+						object layerRaymarchedVolume = cloudsPQS.GetType().GetField("layerRaymarchedVolume", flags).GetValue(cloudsPQS) as object;
+						if (ReferenceEquals(layerRaymarchedVolume, null))
+						{
+							Utils.LogDebug("No raymarched volumetric cloud for layer on planet: " + celestialBodyName);
+							continue;
+						}
+
+						Material RaymarchedMaterial = layerRaymarchedVolume.GetType().GetField("raymarchedCloudMaterial", flags).GetValue(layerRaymarchedVolume) as Material;
+
+						if (ReferenceEquals(RaymarchedMaterial, null))
+						{
+							Utils.LogDebug("Raymarched volumetric cloud has no material on planet: " + celestialBodyName);
+							continue;
+						}
+
+						EVEvolumetrics.Add(RaymarchedMaterial);
+					}
+					catch (Exception stupid)
+					{
+						Utils.LogDebug("Raymarched volumetric clouds error on planet: " + celestialBodyName + stupid.ToString());
+					}
+				}
+
 				Utils.LogDebug (" Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + celestialBodyName);
 			}
 			else
