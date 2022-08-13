@@ -120,9 +120,9 @@ namespace scatterer
 		
 		public void OnDestroy ()
 		{
-			if (!ReferenceEquals(targetCamera,null))
+			if (targetCamera != null)
 			{
-				if (!ReferenceEquals(screenCopyCommandBuffer,null))
+				if (screenCopyCommandBuffer != null)
 				{
 					targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
 					colorCopyRenderTexture.Release();

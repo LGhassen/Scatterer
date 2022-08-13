@@ -81,13 +81,13 @@ namespace scatterer
 		
 		public void Cleanup()
 		{
-			if (!ReferenceEquals (scaledScatteringMR, null))
+			if (scaledScatteringMR != null)
 			{
 				scaledScatteringMR.enabled = false;
 				UnityEngine.Component.Destroy (scaledScatteringMR);
 			}
 
-			if (!ReferenceEquals (scaledScatteringGO, null))
+			if (scaledScatteringGO != null)
 				UnityEngine.Object.Destroy(scaledScatteringGO);
 		}
 	}
