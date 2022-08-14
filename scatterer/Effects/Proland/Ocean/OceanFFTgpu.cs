@@ -362,8 +362,8 @@ namespace scatterer {
 		
 		protected virtual void CreateRenderTextures()
 		{
-			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBHalf;
-			RenderTextureFormat format = RenderTextureFormat.ARGBHalf;
+			RenderTextureFormat mapFormat = RenderTextureFormat.ARGBFloat;
+			RenderTextureFormat fourierTransformformat = RenderTextureFormat.ARGBHalf;
 			
 			//These texture hold the actual data use in the ocean renderer
 			CreateMap(ref m_map0, mapFormat, mapsAniso, true);
@@ -373,27 +373,27 @@ namespace scatterer {
 			CreateMap(ref m_map4, mapFormat, mapsAniso, true);
 			
 			//These textures are used to perform the fourier transform
-			CreateBuffer(ref m_fourierBuffer0, format); //heights
-			CreateBuffer(ref m_fourierBuffer1, format); // slopes X
-			CreateBuffer(ref m_fourierBuffer2, format); // slopes Y
-			CreateBuffer(ref m_fourierBuffer3, format); // displacement X
-			CreateBuffer(ref m_fourierBuffer4, format); // displacement Y
+			CreateBuffer(ref m_fourierBuffer0, fourierTransformformat); //heights
+			CreateBuffer(ref m_fourierBuffer1, fourierTransformformat); // slopes X
+			CreateBuffer(ref m_fourierBuffer2, fourierTransformformat); // slopes Y
+			CreateBuffer(ref m_fourierBuffer3, fourierTransformformat); // displacement X
+			CreateBuffer(ref m_fourierBuffer4, fourierTransformformat); // displacement Y
 			
 			//These textures hold the specturm the fourier transform is performed on
-			m_spectrum01 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
+			m_spectrum01 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat);
 			m_spectrum01.filterMode = FilterMode.Point;
 			m_spectrum01.wrapMode = TextureWrapMode.Repeat;
 			m_spectrum01.enableRandomWrite = false;
 			m_spectrum01.Create();
 			
-			m_spectrum23 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
+			m_spectrum23 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat);
 			m_spectrum23.filterMode = FilterMode.Point;
 			m_spectrum23.wrapMode = TextureWrapMode.Repeat;
 			m_spectrum23.enableRandomWrite = false;
 			m_spectrum23.Create();
 			
 
-			m_WTable = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
+			m_WTable = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat);
 			m_WTable.filterMode = FilterMode.Point;
 			m_WTable.wrapMode = TextureWrapMode.Clamp;
 			m_WTable.enableRandomWrite = false;
