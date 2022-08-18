@@ -60,7 +60,7 @@ namespace scatterer
 
 		public static Vector4 scatteringLutDimensionsDefault = new Vector4(32f,128f,32f,16f);		//the one from yusov, double the current one so should be 16 megs in half precision
 		public static Vector4 scatteringLutDimensionsPreview = new Vector4(16f,64f,16f,2f);     //fast preview version, 32x smaller
-		private static int xTilesDefault = 1024, yTilesDefault = 128;
+		private static int xTilesDefault = 512, yTilesDefault = 64;
 		private static int xTilesPreview = 512, yTilesPreview = 16;
 
 		Vector4 scatteringLutDimensions = scatteringLutDimensionsDefault;
