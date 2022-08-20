@@ -157,6 +157,7 @@ namespace scatterer
 				}
 			}
 
+			// TODO: move all AA logic to a separate class?
 			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
 			{
 				//cleanup any forgotten/glitched AA scripts
@@ -238,22 +239,6 @@ namespace scatterer
 			if (mainSettings.sunlightExtinction || (mainSettings.underwaterLightDimming && mainSettings.useOceanShaders))
 			{
 				sunlightModulatorsManagerInstance = new SunlightModulatorsManager();
-			}
-
-			if (mainSettings.useOceanShaders && mainSettings.oceanCraftWaveInteractions && SystemInfo.supportsComputeShaders && SystemInfo.supportsAsyncGPUReadback)
-			{
-				if (mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance)
-				{
-					PhysicsGlobals.BuoyancyCrashToleranceMult = mainSettings.buoyancyCrashToleranceMultOverride;
-				}
-
-				if (mainSettings.oceanCraftWaveInteractionsOverrideDrag)
-				{
-					PhysicsGlobals.BuoyancyWaterDragTimer = double.NegativeInfinity; 
-					PhysicsGlobals.BuoyancyWaterDragScalar = mainSettings.buoyancyWaterDragScalarOverride;
-					PhysicsGlobals.BuoyancyWaterDragScalarEnd = mainSettings.buoyancyWaterDragScalarEndOverride;
-					PhysicsGlobals.BuoyancyWaterAngularDragScalar = mainSettings.buoyancyWaterAngularDragScalarOverride;
-				}
 			}
 
 			coreInitiated = true;

@@ -101,6 +101,7 @@
     <Compile Include="DataSerialization\ConfigPoint.cs" />
     <Compile Include="DataSerialization\PlanetshineSource.cs" />
     <Compile Include="DataSerialization\ScattererCelestialBody.cs" />
+    <Compile Include="Effects\Proland\Ocean\GPUWaveInteractionHandler.cs" />
     <Compile Include="Effects\SunFlare\SunFlare.cs" />
     <Compile Include="Effects\SunFlare\SunflareCameraHook.cs" />
     <Compile Include="GUI\GUIhandler.cs" />

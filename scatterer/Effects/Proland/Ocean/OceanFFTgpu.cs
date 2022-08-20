@@ -25,13 +25,6 @@
  */
 
 using UnityEngine;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
-using UnityEngine.Rendering;
-
-using System.Reflection;
 
 namespace scatterer {
 	/*
@@ -98,25 +91,13 @@ namespace scatterer {
 
 		[Persistent] public float maxWaveInteractionShipAltitude = 500.0f;
 
-		private ComputeShader findHeightsShader;
-		private List<PartBuoyancy> partsBuoyancies = new List<PartBuoyancy>();
-		private bool heightsRequestInProgress=false;
-		private bool cameraHeightRequested=false;
-		float[] heights = {};
-		ComputeBuffer positionsBuffer, heightsBuffer;
-		int frameLatencyCounter = 1;
-
-		private bool paused = false;
-		KSP.UI.Screens.AltimeterSliderButtons altimeterRecoveryButton;
-		private bool altimeterRecoveryButtonOverriden = false;
-		MethodInfo recoveryButtonSetUnlockMethod;
-		object[] setUnlockParametersArray;
-
 		// These are all oceanWhiteCaps settings but I add them here so they don't mess up serialization of gui
 		public float m_foamMipMapBias = -2.0f;		
 		[Persistent] public float m_whiteCapStr = 0.1f;		
 		[Persistent] public float shoreFoam = 1.0f;		
 		[Persistent] public float m_farWhiteCapStr = 0.1f;
+
+		private GPUWaveInteractionHandler waveInteractionHandler = null;
 
 		public override void Init(ProlandManager manager)
 		{
@@ -175,34 +156,7 @@ namespace scatterer {
 
 			if (SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders && Scatterer.Instance.mainSettings.oceanCraftWaveInteractions)
 			{
-				findHeightsShader = ShaderReplacer.Instance.LoadedComputeShaders ["FindHeights"];
-
-				if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
-				{
-					GameEvents.onGamePause.Add (ForcePauseMenuSaving);
-					GameEvents.onGameUnpause.Add(UnPause);
-
-					if (prolandManager.parentCelestialBody.isHomeWorld)
-					{
-						KSP.UI.Screens.AltimeterSliderButtons[] sliderButtons = Resources.FindObjectsOfTypeAll<KSP.UI.Screens.AltimeterSliderButtons>();
-						if (sliderButtons.Length > 0)
-						{
-							altimeterRecoveryButton = sliderButtons[0];
-							
-							BindingFlags Flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
-							
-							recoveryButtonSetUnlockMethod = altimeterRecoveryButton.GetType().GetMethod("setUnlock", Flags);
-							if (recoveryButtonSetUnlockMethod == null)
-							{
-								Utils.LogError("No setUnlock method found in AltimeterSliderButtons");
-								altimeterRecoveryButton = null;
-								return;
-							}
-							
-							setUnlockParametersArray = new object[] { 2 }; //The state for unlocking the altimeterSliderButtons
-						}
-					}
-				}
+				waveInteractionHandler = new GPUWaveInteractionHandler(maxWaveInteractionShipAltitude, prolandManager.parentCelestialBody.isHomeWorld);
 			}
 		}
 		
@@ -274,7 +228,7 @@ namespace scatterer {
 
 		public override void UpdateNode()
 		{
-			if (!prolandManager.skyNode.inScaledSpace || (prolandManager.skyNode.simulateOceanInteraction && (findHeightsShader != null)))
+			if (!prolandManager.skyNode.inScaledSpace || (prolandManager.skyNode.simulateOceanInteraction && (waveInteractionHandler != null)))
 			{
 				//keep within low float exponents, otherwise we lose precision
 				float t = (float)(Planetarium.GetUniversalTime() % 100000.0);
@@ -314,15 +268,10 @@ namespace scatterer {
 				m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
 				m_oceanMaterial.SetVector (ShaderProperties._VarianceMax_PROPERTY, SystemInfo.supportsComputeShaders? Vector2.one : m_varianceMax);
 				
-				
-				if (findHeightsShader != null)
+				// don't need to be done every frame
+				if (waveInteractionHandler != null)
 				{
-					findHeightsShader.SetVector (ShaderProperties._Ocean_Choppyness_PROPERTY, m_choppyness);
-					findHeightsShader.SetVector (ShaderProperties._Ocean_GridSizes_PROPERTY, m_gridSizes);
-					
-					findHeightsShader.SetTexture (0, ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
-					findHeightsShader.SetTexture (0 ,ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
-					findHeightsShader.SetTexture (0, ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
+					waveInteractionHandler.SetMaterialProperties(m_choppyness, m_gridSizes, m_map0, m_map3, m_map4);
 				}
 			}
 
@@ -352,12 +301,10 @@ namespace scatterer {
 				m_fourierBuffer4[i].Release();
 			}
 
-			if (SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders && Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
-			{
-				GameEvents.onGamePause.Remove (ForcePauseMenuSaving);
-				GameEvents.onGameUnpause.Remove (UnPause);
+			if (waveInteractionHandler != null)
+            {
+				waveInteractionHandler.Cleanup();
 			}
-
 		}
 		
 		protected virtual void CreateRenderTextures()
@@ -745,159 +692,14 @@ namespace scatterer {
 			return Sum;
 		}
 
-		public void ForcePauseMenuSaving()
-		{
-			if (!paused && FlightGlobals.ActiveVessel != null && (FlightGlobals.ActiveVessel.altitude <= Mathf.Abs(maxWaveInteractionShipAltitude))
-			    && (FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR) && (FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED)
-			    && (FlightGlobals.ActiveVessel.srf_velocity.sqrMagnitude < Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity * Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity))
-			{
-				Utils.LogInfo("Overriding pasue menu recovery and save options");
-				paused = true;
-				FlightGlobals.ActiveVessel.srf_velocity = Vector3d.zero;
-							
-				PauseMenu.Display ();
-			}
-		}
-		
-		public void UnPause()
-		{
-			paused = false;
-		}
-
-		//FixedUpdate is responsible for physics, we do the part displacement here
+		//FixedUpdate is responsible for physics, apply part displacement here
 		public void FixedUpdate()
 		{
-			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions && findHeightsShader != null && prolandManager.GetSkyNode().simulateOceanInteraction)
+			if (waveInteractionHandler != null && prolandManager.GetSkyNode().simulateOceanInteraction)
 			{
-				if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity && !paused && FlightGlobals.ActiveVessel != null)
-				{
-					if ((altimeterRecoveryButton!=null) && (FlightGlobals.ActiveVessel.altitude <= Mathf.Abs(maxWaveInteractionShipAltitude))
-					    && (FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR) && (FlightGlobals.ActiveVessel.situation == Vessel.Situations.SPLASHED)
-					    && (FlightGlobals.ActiveVessel.srf_velocity.sqrMagnitude < Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity * Scatterer.Instance.mainSettings.waterMaxRecoveryVelocity))
-					{
-						FlightGlobals.ActiveVessel.srf_velocity = Vector3d.zero;
-						
-						if (!altimeterRecoveryButton.led.IsOn || (altimeterRecoveryButton.led.color != KSP.UI.Screens.LED.colorIndices.green))
-						{
-							Utils.LogInfo("Overriding recovery button");
-							recoveryButtonSetUnlockMethod.Invoke(altimeterRecoveryButton, setUnlockParametersArray);
-							altimeterRecoveryButton.StopAllCoroutines();
-							altimeterRecoveryButtonOverriden = true;
-						}
-					}
-					else if (altimeterRecoveryButtonOverriden)
-					{
-						Utils.LogInfo("Restoring recovery button");
-						altimeterRecoveryButton.StartCoroutine("UnlockRecovery", FlightGlobals.ActiveVessel);
-						altimeterRecoveryButton.StartCoroutine("UnlockReturnToKSC",FlightGlobals.ActiveVessel);
-						altimeterRecoveryButtonOverriden=false;
-					}
-				}
-
-				if (!heightsRequestInProgress)
-				{
-					ApplyWaterLevelHeights ();
-
-					List<Vector2> positionsList = new List<Vector2> ();
-					BuildPartsPositionsList (positionsList, partsBuoyancies);
-					AddCameraPosition (positionsList);
-					RequestAsyncWaterLevelHeights (positionsList);
-				}
-				else
-				{
-					frameLatencyCounter++;
-				}
+				waterHeightAtCameraPosition = waveInteractionHandler.UpdateInteractions(height, waterHeightAtCameraPosition, ux.ToVector3(), uy.ToVector3(), offsetVector3);
 			}
 		}
-		
-		void BuildPartsPositionsList (List<Vector2> positionsList, List<PartBuoyancy> partsBuoyanciesList)
-		{
-			foreach (Vessel vessel in FlightGlobals.VesselsLoaded)
-			{
-				if (vessel.altitude <= Mathf.Abs(maxWaveInteractionShipAltitude))
-				{
-					foreach (Part part in vessel.parts)
-					{
-						if (!ReferenceEquals (part.partBuoyancy, null))
-						{
-							//To be more accurate I'd need to take ceter of buoyancy and transform it to worldPos but that would add a matrix multiply for every part, which I'm not about to do
-							Vector3 relativePartPos = part.transform.position - Scatterer.Instance.nearCamera.transform.position;
-							Vector2 oceanPos = new Vector2 (Vector3.Dot (relativePartPos, ux.ToVector3 ()) + offsetVector3.x, Vector3.Dot (relativePartPos, uy.ToVector3 ()) + offsetVector3.y);
-							positionsList.Add (oceanPos);
-							partsBuoyanciesList.Add (part.partBuoyancy);
-						}
-					}
-				}
-			}
-		}
-
-		void AddCameraPosition (List<Vector2> positionsList)
-		{
-			if (height <= Mathf.Abs (maxWaveInteractionShipAltitude))
-			{
-				positionsList.Add (new Vector2(offsetVector3.x,offsetVector3.y));
-				cameraHeightRequested = true;
-			}
-		}
-		
-		void ApplyWaterLevelHeights ()
-		{
-			//partBuoyancy has no way to override the force direction (it uses -g direction directly) however, maybe do a parent addforce at position with the buoyancy effective position with the normal? will always be hacky probably
-
-			if (cameraHeightRequested)
-			{
-				waterHeightAtCameraPosition = heights[heights.Length-1];
-			}
-
-			if (!ReferenceEquals (partsBuoyancies, null))
-			{
-				for (int i = 0; i < partsBuoyancies.Count; i++)
-				{
-					if (!ReferenceEquals (partsBuoyancies [i], null))
-					{
-						partsBuoyancies [i].waterLevel = heights [i];
-					}
-				}
-			}
-
-			partsBuoyancies.Clear ();
-			cameraHeightRequested = false;
-		}
-
-		void RequestAsyncWaterLevelHeights (List<Vector2> positionsList)
-		{
-			int size = positionsList.Count;
-			if (size > 0)
-			{
-				positionsBuffer = new ComputeBuffer (size, 2 * sizeof(float));
-				positionsBuffer.SetData (positionsList);
-				findHeightsShader.SetBuffer (0, "positions", positionsBuffer);
-				heightsBuffer = new ComputeBuffer (size, sizeof(float));
-				findHeightsShader.SetBuffer (0, "result", heightsBuffer);
-				
-				findHeightsShader.Dispatch (0, size, 1, 1); //worry about figuring out threads and groups later
-				
-				AsyncGPUReadback.Request (heightsBuffer, OnCompletePartHeightsReadback);
-				frameLatencyCounter = 1;
-				heightsRequestInProgress = true;
-			}
-		}
-
-		void OnCompletePartHeightsReadback(AsyncGPUReadbackRequest request)
-		{
-			if (request.hasError)
-			{
-				Utils.LogError("GPU readback error detected.");
-				return;
-			}
-
-			heights = request.GetData<float>().ToArray();
-			heightsRequestInProgress = false;
-
-			positionsBuffer.Dispose ();
-			heightsBuffer.Dispose ();
-		}
-
 	}
 	
 }
