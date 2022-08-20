@@ -20,12 +20,13 @@
  *
  * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  * Modified and ported to Unity by Justin Hawkins 2014
- * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015-2021
+ * Modified and adapted for use with Kerbal Space Program by Ghassen Lahmar 2015-2022
  *
  */
 
 using UnityEngine;
 using System.IO;
+using System;
 
 namespace scatterer 
 {
@@ -58,8 +59,8 @@ namespace scatterer
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
-		public static Vector4 scatteringLutDimensionsDefault = new Vector4(32f,128f,32f,16f);		//the one from yusov, double the current one so should be 16 megs in half precision
-		public static Vector4 scatteringLutDimensionsPreview = new Vector4(16f,64f,16f,2f);     //fast preview version, 32x smaller
+		public static Vector4 scatteringLutDimensionsDefault = new Vector4(32f,128f,32f,16f);	//the one from yusov, double the current one so should be 16 megs in half precision
+		public static Vector4 scatteringLutDimensionsPreview = new Vector4(16f,64f,16f,2f);		//fast preview version, 32x smaller
 		private static int xTilesDefault = 512, yTilesDefault = 64;
 		private static int xTilesPreview = 512, yTilesPreview = 16;
 
@@ -82,11 +83,8 @@ namespace scatterer
 
 		Material m_transmittanceMaterial, m_irradianceNMaterial, m_irradiance1Material, m_inscatter1Material, m_inscatterNMaterial, m_inscatterSMaterial, m_copyInscatter1Material, m_copyInscatterNMaterial, m_copyIrradianceMaterial;
 
-		int m_step, m_order;
 		int scatteringOrders = 4; //min is 2 unless you skip that step
 		bool multipleScattering = true;
-
-		bool m_finished = false;
 
 //		#define WRITE_DEBUG_TEX
 		
@@ -159,7 +157,6 @@ namespace scatterer
 				MIE_G = Mathf.Min (MIE_G, 0.86f); //values of mie_G > 0.86 seem to break multiple scattering for some weird reason
 
 			AVERAGE_GROUND_REFLECTANCE = inGRref;
-			m_finished = false;
 			multipleScattering = inMultiple;
 			scatteringLutDimensions = inScatteringLutDimensions;
 
@@ -228,15 +225,12 @@ namespace scatterer
 			SetParameters(m_copyInscatterNMaterial);
 			SetParameters(m_copyIrradianceMaterial);
 
-			m_step = 0;
-			m_order = 2;
+			// m_step = 0;
+			// scatteringOrder = 2;
 
 			RTUtility.ClearColor(m_irradianceT);
 			
-			while(!m_finished)
-			{
-				Preprocess(assetPath);
-			}
+			Preprocess(assetPath);
 
 			m_transmittanceT.Release();
 			m_irradianceT[0].Release();
@@ -270,171 +264,179 @@ namespace scatterer
 		}
 
 		void Preprocess(string assetPath)
+        {
+            ComputeTransmittance();
+            ComputeIrradiance();
+            ComputeInscatter1();
+            CopyIrradiance();
+			CopyInscatter1();
+
+			if (!multipleScattering)
+            {
+				ComputeInscatterS(2);
+				ComputeIrradianceN(2);
+				ComputeInscatterN();
+				CopyIrradianceK1();
+			}
+			else
+            {
+				for (int scatteringOrder=2; scatteringOrder<=scatteringOrders; scatteringOrder++)
+                {
+					ComputeInscatterS(scatteringOrder);
+					ComputeIrradianceN(scatteringOrder);
+					ComputeInscatterN();
+					CopyIrradianceK1();
+					CopyInscatterN();
+				}
+            }
+
+			if (!Directory.Exists(assetPath))
+				Directory.CreateDirectory(assetPath);
+
+			// Add an option to clean up old cache files on start?
+			SaveAsHalf(m_irradianceT[READ], assetPath + "/irradiance");
+			SaveAsHalf(m_inscatterT[READ], assetPath + "/inscatter");
+
+			Utils.LogInfo("Atmo generation successful");
+        }
+
+        private void CopyInscatterN()
+        {
+			// adds deltaS into inscatter texture S(line 11 in algorithm 4.1)
+			ProcessInTiles((int i, int j) =>
+            {
+                m_copyInscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
+
+                m_copyInscatterNMaterial.SetTexture("deltaSRead", m_deltaSRT);
+                m_copyInscatterNMaterial.SetTexture("inscatterRead", m_inscatterT[READ]);
+
+                Graphics.Blit(null, m_inscatterT[WRITE], m_copyInscatterNMaterial, 0);
+            });
+
+            RTUtility.Swap(m_inscatterT);
+        }
+
+        private void CopyIrradianceK1()
+        {
+			// adds deltaE into irradiance texture E (line 10 in algorithm 4.1)
+			m_copyIrradianceMaterial.SetFloat("k", 1.0f);
+            m_copyIrradianceMaterial.SetTexture("deltaERead", m_deltaET);
+            m_copyIrradianceMaterial.SetTexture("irradianceRead", m_irradianceT[READ]);
+
+            Graphics.Blit(null, m_irradianceT[WRITE], m_copyIrradianceMaterial);
+
+            RTUtility.Swap(m_irradianceT);
+        }
+
+        private void ComputeInscatterN()
+        {
+			// computes deltaS (line 9 in algorithm 4.1)
+			ProcessInTiles((int i, int j) =>
+            {
+                m_inscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
+
+                m_inscatterNMaterial.SetTexture("transmittanceRead", m_transmittanceT);
+                m_inscatterNMaterial.SetTexture("deltaJRead", m_deltaJT);
+                m_inscatterNMaterial.SetTexture("deltaJReadSampler", m_deltaJT);
+
+                Graphics.Blit(null, m_deltaSRT, m_inscatterNMaterial, 0);
+            });
+        }
+
+        private void ComputeInscatterS(int scatteringOrder)
+        {
+			ProcessInTiles((int i, int j) =>
+            {
+				m_inscatterSMaterial.SetVector("currentTile", new Vector2(i, j));
+
+                m_inscatterSMaterial.SetInt("first", (scatteringOrder == 2) ? 1 : 0);
+                m_inscatterSMaterial.SetTexture("transmittanceRead", m_transmittanceT);
+                m_inscatterSMaterial.SetTexture("deltaERead", m_deltaET);
+                m_inscatterSMaterial.SetTexture("deltaSRRead", m_deltaSRT);
+                m_inscatterSMaterial.SetTexture("deltaSMRead", m_deltaSMT);
+
+                m_inscatterSMaterial.SetTexture("deltaSRReadSampler", m_deltaSRT);
+                m_inscatterSMaterial.SetTexture("deltaSMReadSampler", m_deltaSMT);
+
+                Graphics.Blit(null, m_deltaJT, m_inscatterSMaterial, 0);
+            });
+        }
+
+        private void ComputeIrradianceN(int scatteringOrder)
+        {
+			// computes deltaE (line 8 in algorithm 4.1)
+			m_irradianceNMaterial.SetInt("first", (scatteringOrder == 2) ? 1 : 0);
+            m_irradianceNMaterial.SetTexture("deltaSRRead", m_deltaSRT);
+            m_irradianceNMaterial.SetTexture("deltaSMRead", m_deltaSMT);
+
+            m_irradianceNMaterial.SetTexture("deltaSRReadSampler", m_deltaSRT);
+            m_irradianceNMaterial.SetTexture("deltaSMReadSampler", m_deltaSMT);
+
+            Graphics.Blit(null, m_deltaET, m_irradianceNMaterial);
+        }
+
+        private void CopyInscatter1()
 		{
-			if (m_step == 0) 
-			{
-				Graphics.Blit(null, m_transmittanceT, m_transmittanceMaterial);
-			} 
-			else if (m_step == 1) 	// computes irradiance texture deltaE (line 2 in algorithm 4.1)
-			{
-				m_irradiance1Material.SetTexture("transmittanceRead", m_transmittanceT);
-				Graphics.Blit(null, m_deltaET, m_irradiance1Material);
+			// copies deltaS into inscatter texture S (line 5 in algorithm 4.1)
+			ProcessInTiles((int i, int j) =>
+            {
+                m_copyInscatter1Material.SetVector("currentTile", new Vector2(i, j));
 
-				#if(WRITE_DEBUG_TEX)
-					SaveAs8bit(SKY_W, SKY_H, 4, "/deltaE_debug", m_deltaET);
-				#endif
-			} 
-			else if (m_step == 2) 
-			{
-				// computes single scattering texture deltaS (line 3 in algorithm 4.1)
-				// Rayleigh and Mie separated in deltaSR + deltaSM
-				m_inscatter1Material.SetTexture("transmittanceRead", m_transmittanceT);
+                m_copyInscatter1Material.SetTexture("deltaSRRead", m_deltaSRT);
+                m_copyInscatter1Material.SetTexture("deltaSMRead", m_deltaSMT);
 
-				//render in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
-				for (int i=0;i<xTiles;i++)
+                Graphics.Blit(null, m_inscatterT[WRITE], m_copyInscatter1Material, 0);
+            });
+
+            RTUtility.Swap(m_inscatterT);
+        }
+
+        private void CopyIrradiance()
+        {
+            m_copyIrradianceMaterial.SetFloat("k", 0.0f);
+            m_copyIrradianceMaterial.SetTexture("deltaERead", m_deltaET);
+            m_copyIrradianceMaterial.SetTexture("irradianceRead", m_irradianceT[READ]);
+
+            Graphics.Blit(null, m_irradianceT[WRITE], m_copyIrradianceMaterial, 0);
+            RTUtility.Swap(m_irradianceT);
+        }
+
+        private void ComputeInscatter1()
+        {
+			// computes single scattering texture deltaS (line 3 in algorithm 4.1)
+			// Rayleigh and Mie separated in deltaSR + deltaSM
+			m_inscatter1Material.SetTexture("transmittanceRead", m_transmittanceT);
+
+			ProcessInTiles((int i, int j) =>
+            {
+                m_inscatter1Material.SetVector("currentTile", new Vector2(i, j));
+                Graphics.Blit(null, m_deltaSRT, m_inscatter1Material, 0); // rayleigh pass
+                Graphics.Blit(null, m_deltaSMT, m_inscatter1Material, 1); // mie pass
+            });
+        }
+
+        private void ComputeIrradiance()
+        {
+            // computes irradiance texture deltaE (line 2 in algorithm 4.1)
+            m_irradiance1Material.SetTexture("transmittanceRead", m_transmittanceT);
+            Graphics.Blit(null, m_deltaET, m_irradiance1Material);
+        }
+
+        private void ComputeTransmittance()
+        {
+            Graphics.Blit(null, m_transmittanceT, m_transmittanceMaterial);
+        }
+
+        //Process in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
+        void ProcessInTiles(Action<int, int> process)
+		{
+			for (int i = 0; i < xTiles; i++)
+			{
+				for (int j = 0; j < yTiles; j++)
 				{
-					for (int j=0;j<yTiles;j++)
-					{
-						m_inscatter1Material.SetVector("currentTile", new Vector2(i,j));
-
-						// rayleigh pass
-						Graphics.Blit(null, m_deltaSRT, m_inscatter1Material, 0);
-						
-						// mie pass
-						Graphics.Blit(null, m_deltaSMT, m_inscatter1Material, 1);
-					}
+					process(i, j);
 				}
 			}
-			else if (m_step == 3) // copies deltaE into irradiance texture E (line 4 in algorithm 4.1)
-			{
-				m_copyIrradianceMaterial.SetFloat("k", 0.0f);
-				m_copyIrradianceMaterial.SetTexture("deltaERead", m_deltaET);
-				m_copyIrradianceMaterial.SetTexture("irradianceRead", m_irradianceT[READ]);
-
-				Graphics.Blit(null, m_irradianceT[WRITE], m_copyIrradianceMaterial, 0);
-
-				RTUtility.Swap(m_irradianceT);
-			} 
-			else if (m_step == 4) // copies deltaS into inscatter texture S (line 5 in algorithm 4.1)
-			{
-				//render in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
-				for (int i=0;i<xTiles;i++)
-				{
-					for (int j=0;j<yTiles;j++)
-					{
-						m_copyInscatter1Material.SetVector("currentTile", new Vector2(i,j));
-						
-						m_copyInscatter1Material.SetTexture("deltaSRRead", m_deltaSRT);
-						m_copyInscatter1Material.SetTexture("deltaSMRead", m_deltaSMT);
-						
-						Graphics.Blit(null, m_inscatterT[WRITE], m_copyInscatter1Material, 0);
-					}
-				}
-
-				RTUtility.Swap(m_inscatterT);
-			} 
-			else if (m_step == 5) 
-			{
-				//render in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
-				for (int i=0;i<xTiles;i++)
-				{
-					for (int j=0;j<yTiles;j++)
-					{
-						m_inscatterSMaterial.SetVector("currentTile", new Vector2(i,j));
-
-						m_inscatterSMaterial.SetInt("first", (m_order == 2) ? 1 : 0);
-						m_inscatterSMaterial.SetTexture("transmittanceRead", m_transmittanceT);
-						m_inscatterSMaterial.SetTexture("deltaERead", m_deltaET);
-						m_inscatterSMaterial.SetTexture("deltaSRRead", m_deltaSRT);
-						m_inscatterSMaterial.SetTexture("deltaSMRead", m_deltaSMT);
-						
-						m_inscatterSMaterial.SetTexture("deltaSRReadSampler", m_deltaSRT);
-						m_inscatterSMaterial.SetTexture("deltaSMReadSampler", m_deltaSMT);
-						
-						Graphics.Blit(null, m_deltaJT, m_inscatterSMaterial, 0);
-					}
-				}
-			}
-			else if (m_step == 6) // computes deltaE (line 8 in algorithm 4.1)
-			{
-				m_irradianceNMaterial.SetInt("first", (m_order == 2) ? 1 : 0);
-				m_irradianceNMaterial.SetTexture("deltaSRRead", m_deltaSRT);
-				m_irradianceNMaterial.SetTexture("deltaSMRead", m_deltaSMT);
-
-				m_irradianceNMaterial.SetTexture("deltaSRReadSampler", m_deltaSRT);
-				m_irradianceNMaterial.SetTexture("deltaSMReadSampler", m_deltaSMT);
-
-				Graphics.Blit(null, m_deltaET, m_irradianceNMaterial);
-			} 
-			else if (m_step == 7) // computes deltaS (line 9 in algorithm 4.1)
-			{
-				//render in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
-				for (int i=0;i<xTiles;i++)
-				{
-					for (int j=0;j<yTiles;j++)
-					{
-						m_inscatterNMaterial.SetVector("currentTile", new Vector2(i,j));
-
-						m_inscatterNMaterial.SetTexture("transmittanceRead", m_transmittanceT);
-						m_inscatterNMaterial.SetTexture("deltaJRead", m_deltaJT);
-						m_inscatterNMaterial.SetTexture("deltaJReadSampler", m_deltaJT);
-						
-						
-						Graphics.Blit(null, m_deltaSRT, m_inscatterNMaterial, 0);
-					}
-				}
-			}
-			else if (m_step == 8) // adds deltaE into irradiance texture E (line 10 in algorithm 4.1)
-			{
-				m_copyIrradianceMaterial.SetFloat("k", 1.0f);
-				m_copyIrradianceMaterial.SetTexture("deltaERead", m_deltaET);
-				m_copyIrradianceMaterial.SetTexture("irradianceRead", m_irradianceT[READ]);
-
-				Graphics.Blit(null, m_irradianceT[WRITE], m_copyIrradianceMaterial);
-
-				RTUtility.Swap(m_irradianceT);
-			}
-			else if (m_step == 9 && multipleScattering)
-			{
-				//adds deltaS into inscatter texture S (line 11 in algorithm 4.1)
-
-				//render in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
-				for (int i=0;i<xTiles;i++)
-				{
-					for (int j=0;j<yTiles;j++)
-					{
-						m_copyInscatterNMaterial.SetVector("currentTile", new Vector2(i,j));
-						
-						m_copyInscatterNMaterial.SetTexture("deltaSRead", m_deltaSRT);
-						m_copyInscatterNMaterial.SetTexture("inscatterRead", m_inscatterT[READ]);
-						
-						Graphics.Blit(null,  m_inscatterT[WRITE], m_copyInscatterNMaterial, 0);
-					}
-				}
-				
-				RTUtility.Swap(m_inscatterT);
-				
-				if (m_order < scatteringOrders) {
-					m_step = 4;
-					m_order += 1;
-				}
-			} 
-			else if (m_step == 10) 
-			{
-				if (!Directory.Exists(assetPath))
-					Directory.CreateDirectory(assetPath);
-
-				// Add an option to clean up old cache files on start?
-				SaveAsHalf(m_irradianceT[READ], assetPath+"/irradiance");
-				SaveAsHalf(m_inscatterT[READ], assetPath+"/inscatter");
-			} 
-			else if (m_step == 11) 
-			{
-				m_finished = true;
-				Utils.LogInfo("Atmo generation successful");
-			}
-
-			m_step += 1;
 		}
 
 		void OnDestroy()
