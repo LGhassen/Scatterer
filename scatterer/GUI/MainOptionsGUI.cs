@@ -184,6 +184,10 @@ namespace Scatterer
 				GUILayout.Label ("Tonemapper (0:disabled,1:bruneton,2:uncharted)");
 				Scatterer.Instance.mainSettings.scatteringTonemapper = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.scatteringTonemapper.ToString ()))),0f,2f);
 				GUILayout.EndHorizontal ();
+
+				GUILayout.BeginHorizontal();
+				Scatterer.Instance.mainSettings.useLowResolutionAtmosphere = GUILayout.Toggle(Scatterer.Instance.mainSettings.useLowResolutionAtmosphere, "Use low resolution atmosphere (for slower machines that get white atmos)");
+				GUILayout.EndHorizontal();
 			}
 			else if (selectedIndividualSettingsTab == IndividualSettingsTabs.Ocean)
 			{

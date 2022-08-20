@@ -64,7 +64,7 @@ namespace Scatterer
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
-		Vector4 scatteringLutDimensions = AtmoPreprocessor.scatteringLutDimensionsDefault;
+		Vector4 scatteringLutDimensions = AtmoPreprocessor.ScatteringLutDimensionsDefault;
 
 		string celestialBodyName;
 		public Transform parentScaledTransform, parentLocalTransform;
@@ -651,7 +651,7 @@ namespace Scatterer
 			averageGroundReflectance = inGRref;
 			multipleScattering = inMultiple;
 			previewMode = inFastPreviewMode;
-			scatteringLutDimensions = inFastPreviewMode ? AtmoPreprocessor.scatteringLutDimensionsPreview : AtmoPreprocessor.scatteringLutDimensionsDefault ;
+			scatteringLutDimensions = inFastPreviewMode ? AtmoPreprocessor.scatteringLutDimensionsPreview : AtmoPreprocessor.ScatteringLutDimensionsDefault ;
 			atmosphereStartRadiusScale = inAtmosphereStartRadiusScale;
 
 			InitPrecomputedAtmo ();

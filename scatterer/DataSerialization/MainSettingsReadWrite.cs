@@ -179,7 +179,10 @@ namespace Scatterer
 
 		[Persistent]
 		public int oceanMeshResolution = 8;
-		
+
+		[Persistent]
+		public bool useLowResolutionAtmosphere = false;
+
 		public void loadMainSettings ()
 		{
 			UrlDir.UrlConfig[] baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
@@ -278,9 +281,11 @@ namespace Scatterer
 				 OldConfig.dualCamShadowBiasOverride != dualCamShadowBiasOverride ||
 				 OldConfig.dualCamShadowCascadeSplitsOverride != dualCamShadowCascadeSplitsOverride ||
 				 OldConfig.dualCamShadowResolutionOverride != dualCamShadowResolutionOverride ||
-				 
-				 OldConfig.m_fourierGridSize != m_fourierGridSize||
-				 OldConfig.oceanMeshResolution != oceanMeshResolution);
+
+				 OldConfig.m_fourierGridSize != m_fourierGridSize ||
+				 OldConfig.oceanMeshResolution != oceanMeshResolution) ||
+
+				 OldConfig.useLowResolutionAtmosphere != useLowResolutionAtmosphere;
 			
 			if (configChanged)
 			{

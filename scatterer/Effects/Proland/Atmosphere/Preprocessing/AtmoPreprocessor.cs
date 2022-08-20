@@ -48,7 +48,9 @@ namespace Scatterer
 			}
 		}
 
-		const int READ = 0; const int WRITE = 1;
+        public static Vector4 ScatteringLutDimensionsDefault { get => Scatterer.Instance.mainSettings.useLowResolutionAtmosphere ? scatteringLutDimensionsPreview : scatteringLutDimensionsDefault; }
+
+        const int READ = 0; const int WRITE = 1;
 
 		float Rg = 60000.0f;
 		float Rt = 71500.603f;
@@ -59,12 +61,13 @@ namespace Scatterer
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
-		public static Vector4 scatteringLutDimensionsDefault = new Vector4(32f,128f,32f,16f);	//the one from yusov, double the current one so should be 16 megs in half precision
-		public static Vector4 scatteringLutDimensionsPreview = new Vector4(16f,64f,16f,2f);		//fast preview version, 32x smaller
-		private static int xTilesDefault = 512, yTilesDefault = 64;
+		private static Vector4 scatteringLutDimensionsDefault = new Vector4(32f, 128f, 32f, 16f);   //the one from yusov, double the current one so should be 16 megs in half precision
+		public static Vector4 scatteringLutDimensionsPreview = new Vector4(16f, 64f, 16f, 2f);      //fast preview version, 32x smaller
+
+        private static int xTilesDefault = 512, yTilesDefault = 64;
 		private static int xTilesPreview = 512, yTilesPreview = 16;
 
-		Vector4 scatteringLutDimensions = scatteringLutDimensionsDefault;
+		Vector4 scatteringLutDimensions = ScatteringLutDimensionsDefault;
 		int xTiles = xTilesDefault, yTiles = yTilesDefault;
 
 
@@ -160,7 +163,7 @@ namespace Scatterer
 			multipleScattering = inMultiple;
 			scatteringLutDimensions = inScatteringLutDimensions;
 
-			if (previewMode)
+			if (previewMode || Scatterer.Instance.mainSettings.useLowResolutionAtmosphere)
             {
 				xTiles = xTilesPreview; yTiles = yTilesPreview;
             }
