@@ -66,7 +66,7 @@ namespace Scatterer
 			mainSunLight = findLight (scattererBody.mainSunCelestialBody);
 			mainScaledSunLight = findScaledLight (scattererBody.mainSunCelestialBody);
 
-			if (ReferenceEquals (mainSunLight, null))
+			if (!mainSunLight)
 			{
 				Utils.LogError ("No light found for " + scattererBody.mainSunCelestialBody + " for body " + parentCelestialBody.name + ". Defaulting to main sunlight, godrays, lightrays and caustics may look wrong, check your Kopernicus configuration.");
 				mainSunLight = Scatterer.Instance.sunLight;
@@ -122,7 +122,7 @@ namespace Scatterer
 		{
 			Light light = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == sunCelestialBody));
 
-			if (ReferenceEquals(light,null) && (sunCelestialBody == "Sun"))
+			if (!light && (sunCelestialBody == "Sun"))
 				light = Scatterer.Instance.sunLight;
 
 			return light;
@@ -132,7 +132,7 @@ namespace Scatterer
 		{
 			Light light = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == ("Scaledspace SunLight "+sunCelestialBody)));
 
-			if (ReferenceEquals(light,null) && (sunCelestialBody == "Sun"))
+			if (!light && (sunCelestialBody == "Sun"))
 				light = Scatterer.Instance.scaledSpaceSunLight;
 			
 			return  light;
@@ -206,7 +206,7 @@ namespace Scatterer
 
 			skyNode.UpdateNode();
 			
-			if (!ReferenceEquals(oceanNode,null))
+			if (oceanNode)
 			{
 				oceanNode.UpdateNode();
 			}
@@ -217,7 +217,7 @@ namespace Scatterer
 			foreach (SecondarySunConfig sunConfig in scattererBody.secondarySuns)
 			{
 				SecondarySun secondarySun = SecondarySun.FindSecondarySun (sunConfig);
-				if (!ReferenceEquals (secondarySun, null))
+				if (secondarySun != null)
 				{
 					secondarySun.sunLight = findLight (sunConfig.celestialBodyName);
 					secondarySun.scaledSunLight = findScaledLight (sunConfig.celestialBodyName);
@@ -268,27 +268,20 @@ namespace Scatterer
 		
 		public void OnDestroy()
 		{
-			if (!ReferenceEquals(skyNode,null))
-			{
-				skyNode.Cleanup();
+			if (skyNode)
 				Component.DestroyImmediate(skyNode);
-			}
 			
-			if (!ReferenceEquals(oceanNode,null)) {
-				oceanNode.Cleanup();
+			if (oceanNode)
 				Component.DestroyImmediate(oceanNode);
-			}
 		}
 
 		//TODO: change this so that it takes the new configNode and that's all? May not be possible depending on if it needs to recreate lightraysRenderer and stuff
 		//Therefor add an option to init from configNode? yep
 		public void reBuildOcean()
 		{
-			if (!ReferenceEquals(oceanNode,null))
+			if (oceanNode)
 			{
-				oceanNode.Cleanup();
-				Component.Destroy(oceanNode);
-				UnityEngine.Object.Destroy(oceanNode);
+				Component.DestroyImmediate(oceanNode);
 
 				if (Scatterer.Instance.mainSettings.oceanFoam)
 					oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));

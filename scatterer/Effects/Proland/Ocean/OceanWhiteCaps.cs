@@ -58,9 +58,9 @@ namespace Scatterer {
 			base.CreateRenderTextures();
 		}
 		
-		public override void Cleanup()
+		public override void OnDestroy()
 		{
-			base.Cleanup();
+			base.OnDestroy();
 			
 			m_foam0.Release();
 			m_foam1.Release();

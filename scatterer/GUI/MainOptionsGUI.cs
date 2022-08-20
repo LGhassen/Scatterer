@@ -75,7 +75,7 @@ namespace Scatterer
 
 		void DrawQualityPresets ()
 		{
-			if (ReferenceEquals (qualityPresetsStrings, null))
+			if (qualityPresetsStrings == null)
 			{
 				qualityPresetsStrings = QualityPresetsLoader.GetPresetsList ();
 				currentPreset = QualityPresetsLoader.FindPresetOfCurrentSettings(Scatterer.Instance.mainSettings);

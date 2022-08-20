@@ -35,7 +35,7 @@ namespace Scatterer
 		{
 			while (true)
 			{
-				if (!ReferenceEquals(sourceMaterial,null) && !ReferenceEquals(targetMaterial,null))
+				if (sourceMaterial && targetMaterial)
 				{
 					targetMaterial.CopyPropertiesFromMaterial (sourceMaterial);
 					targetMaterial.SetShaderPassEnabled ("ForwardBase", false);

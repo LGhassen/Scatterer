@@ -89,17 +89,15 @@ namespace Scatterer
 			}
 		}
 
-		public void Cleanup()
+		public void OnDestroy()
 		{
-			foreach (var camBuffer in cameraToScatteringCommandBuffer)
+			foreach (var scatteringCommandBuffer in cameraToScatteringCommandBuffer.Values)
 			{
-				if (!ReferenceEquals(camBuffer.Value,null))
+				if (scatteringCommandBuffer)
 				{
-					camBuffer.Value.Cleanup();
-					Component.DestroyImmediate(camBuffer.Value);
+					Component.DestroyImmediate(scatteringCommandBuffer);
 				}
 			}
-
 		}
 	}
 
@@ -143,7 +141,7 @@ namespace Scatterer
 				
 				int width, height;
 				
-				if (!ReferenceEquals (targetCamera.activeTexture, null))
+				if (targetCamera.activeTexture)
 				{
 					width = targetCamera.activeTexture.width / 2;
 					height = targetCamera.activeTexture.height / 2;
@@ -231,21 +229,21 @@ namespace Scatterer
 			}
 		}
 		
-		public void Cleanup ()
+		public void OnDestroy ()
 		{
-			if (targetCamera && !ReferenceEquals(rendererCommandBuffer,null))
+			if (targetCamera && rendererCommandBuffer != null)
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
 				rendererCommandBuffer = null;
 				renderingEnabled = true;
 
-				if (!ReferenceEquals(downscaledDepthRenderTexture,null))
+				if (downscaledDepthRenderTexture)
 					downscaledDepthRenderTexture.Release();
 
-				if (!ReferenceEquals(downscaledRenderTexture0,null))
+				if (downscaledRenderTexture0)
 					downscaledRenderTexture0.Release();
 
-				if (!ReferenceEquals(downscaledRenderTexture1,null))
+				if (downscaledRenderTexture1)
 					downscaledRenderTexture1.Release();
 			}
 		}
@@ -283,31 +281,24 @@ namespace Scatterer
 			screenSpaceScattering.Init(quarterRes);
 		}
 
-		public override void updateContainer ()
+		public override void UpdateContainer ()
 		{
 			bool isEnabled = !underwater && !inScaledSpace && activated;
 			screenSpaceScattering.SetActive(isEnabled);
 			scatteringGO.SetActive(isEnabled);
 		}
 
-		public override void OnDestroy ()
+		public override void Cleanup ()
 		{
-			setActivated (false);
-			if(!ReferenceEquals(scatteringGO,null))
+			SetActivated (false);
+			if(scatteringGO)
 			{
-				if(!ReferenceEquals(scatteringGO.transform,null))
+				if(scatteringGO.transform && scatteringGO.transform.parent)
 				{
-					if(!ReferenceEquals(scatteringGO.transform.parent,null))
-					{
 						scatteringGO.transform.parent = null;
-					}
 				}
-
-				screenSpaceScattering.Cleanup();
 				Component.DestroyImmediate(screenSpaceScattering);
 				GameObject.DestroyImmediate(scatteringGO);
-				screenSpaceScattering = null;
-				scatteringGO = null;
 			}
 		}
 	}

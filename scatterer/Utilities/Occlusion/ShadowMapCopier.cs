@@ -134,7 +134,7 @@ namespace Scatterer
 		{
 			get 
 			{
-				if (ReferenceEquals(renderTexture,null))
+				if (!renderTexture)
 				{
 					CreateTexture();
 				}

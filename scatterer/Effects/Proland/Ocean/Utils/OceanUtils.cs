@@ -88,10 +88,10 @@ namespace Scatterer
 			if (oceanRemoved && sctBody.hasOcean)
 			{
 				GameObject go = GameObject.Find ("Scatterer stock ocean disabler "+sctBody.celestialBodyName);
-				if (!ReferenceEquals(go,null))
+				if (go != null)
 				{
 					FakeOceanPQS fake = go.GetComponent<FakeOceanPQS>();
-					if (!ReferenceEquals(fake,null))
+					if (fake)
 					{
 						fake.Remove ();
 						Component.Destroy(fake);

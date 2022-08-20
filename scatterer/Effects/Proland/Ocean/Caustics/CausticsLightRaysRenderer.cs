@@ -33,7 +33,7 @@ namespace Scatterer
 			}
 			else
 			{
-				if (ReferenceEquals (CausticsLightRaysMaterial, null)) {
+				if (CausticsLightRaysMaterial == null) {
 					CausticsLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CausticsGodraysRaymarch")]);
 				}
 				
@@ -134,7 +134,7 @@ namespace Scatterer
 		{
 			targetCamera = GetComponent<Camera>();
 			
-			if (!ReferenceEquals (targetCamera.targetTexture, null))
+			if (targetCamera.targetTexture)
 			{
 				targetRT = new RenderTexture (targetCamera.targetTexture.width / 4, targetCamera.targetTexture.height / 4, 0, RenderTextureFormat.R8);
 			}
@@ -246,7 +246,7 @@ namespace Scatterer
 		public void CleanUp()
 		{
 			renderingEnabled = false;
-			if (!ReferenceEquals(commandBuffer,null))
+			if (commandBuffer != null)
 			{
 				if (targetCamera)
 				{

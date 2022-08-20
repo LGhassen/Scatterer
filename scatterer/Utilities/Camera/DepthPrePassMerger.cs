@@ -43,7 +43,7 @@ namespace Scatterer
 
 		public void OnDestroy()
 		{
-			if (!ReferenceEquals (targetCamera, null) && !ReferenceEquals (depthInitCommandBuffer, null))
+			if (targetCamera && depthInitCommandBuffer != null)
 			{
 				targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
 			}

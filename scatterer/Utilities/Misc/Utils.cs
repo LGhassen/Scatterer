@@ -19,7 +19,7 @@ namespace Scatterer
 		{
 			get
 			{
-				if (ReferenceEquals(null,pluginPath))
+				if (pluginPath == null)
 				{
 					string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
 					UriBuilder uri = new UriBuilder (codeBase);
@@ -35,7 +35,7 @@ namespace Scatterer
 		{
 			get
 			{
-				if (ReferenceEquals(null,gameDataPath))
+				if (gameDataPath==null)
 				{
 					gameDataPath= KSPUtil.ApplicationRootPath + "GameData/";				
 				}
@@ -64,7 +64,7 @@ namespace Scatterer
 
 			GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("Scene")));
 			
-			if (ReferenceEquals(mainMenuObject,null))
+			if (!mainMenuObject)
 			{
 				throw new Exception("No correct main menu object found for "+celestialBody.name);
 			}
@@ -131,7 +131,7 @@ namespace Scatterer
 		// If condition is true, enable keywordOn and disable keywordOff, else do the opposite
 		public static void EnableOrDisableShaderKeywords(Material mat, string keywordOn, string keywordOff, bool enable) 
 		{
-			if (!ReferenceEquals(mat,null))
+			if (mat)
 			{
 				if (enable)
 				{

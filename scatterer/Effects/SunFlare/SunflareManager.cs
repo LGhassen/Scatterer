@@ -2,12 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 
 namespace Scatterer
@@ -65,7 +59,7 @@ namespace Scatterer
 			}
 		}
 
-		public void Cleanup()
+		public void OnDestroy()
 		{
 			if (this)
 				StopAllCoroutines();
@@ -74,8 +68,7 @@ namespace Scatterer
 
 			foreach (SunFlare customSunFlare in scattererSunFlares.Values)
 			{
-				customSunFlare.CleanUp();
-				Component.Destroy (customSunFlare);
+				Component.DestroyImmediate (customSunFlare);
 			}
 		}
 		

@@ -38,7 +38,7 @@ namespace Scatterer
 		{
 			get 
 			{
-				if (ReferenceEquals(instance,null))
+				if (instance == null)
 				{
 					instance = new AtmoPreprocessor();
 					instance.InitMaterials();
@@ -235,15 +235,7 @@ namespace Scatterer
 			
 			Preprocess(assetPath);
 
-			m_transmittanceT.Release();
-			m_irradianceT[0].Release();
-			m_irradianceT[1].Release();
-			m_inscatterT[0].Release();
-			m_inscatterT[1].Release();
-			m_deltaET.Release();
-			m_deltaSRT.Release();
-			m_deltaSMT.Release();
-			m_deltaJT.Release();
+			ReleaseTextures();
 		}
 
 		void SetParameters(Material mat)
@@ -442,7 +434,12 @@ namespace Scatterer
 			}
 		}
 
-		void OnDestroy()
+		public void OnDestroy()
+        {
+			ReleaseTextures();
+		}
+
+		void ReleaseTextures()
 		{
 			m_transmittanceT.Release();
 			m_irradianceT[0].Release();

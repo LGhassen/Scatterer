@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public class ShaderReplacer : MonoBehaviour
+	public class ShaderReplacer
 	{
 		private static ShaderReplacer instance;
 		public Dictionary<string, Shader> LoadedShaders = new Dictionary<string, Shader>();
@@ -28,7 +28,7 @@ namespace Scatterer
 		{
 			get 
 			{
-				if (ReferenceEquals(instance,null))
+				if (instance == null)
 				{
 					instance = new ShaderReplacer();
 					Utils.LogDebug("ShaderReplacer instance created");

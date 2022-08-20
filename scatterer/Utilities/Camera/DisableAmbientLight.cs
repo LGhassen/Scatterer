@@ -1,15 +1,4 @@
-
 using UnityEngine;
-using System.Collections;
-using System.IO;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
-using KSP.IO;
 
 namespace Scatterer
 {
@@ -31,12 +20,17 @@ namespace Scatterer
 
 		public void OnPostRender()
 		{
-			restoreLight ();
+			RestoreLight ();
 		}
 
-		public void restoreLight()
+		public void RestoreLight()
 		{
 			RenderSettings.ambientLight = originalAmbientLight;
+		}
+
+		public void OnDestroy()
+        {
+			RestoreLight();
 		}
 	}
 }

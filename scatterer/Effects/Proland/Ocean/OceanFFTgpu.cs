@@ -278,9 +278,9 @@ namespace Scatterer {
 			base.UpdateNode();
 		}
 		
-		public override void Cleanup()
+		public override void OnDestroy()
 		{
-			base.Cleanup();
+			base.OnDestroy();
 			
 			m_map0.Release();
 			m_map1.Release();

@@ -143,7 +143,7 @@ namespace Scatterer
 				{
 					foreach (Part part in vessel.parts)
 					{
-						if (!ReferenceEquals(part.partBuoyancy, null))
+						if (part.partBuoyancy)
 						{
 							//To be more accurate I'd need to take ceter of buoyancy and transform it to worldPos but that would add a matrix multiply for every part, which I'm not about to do
 							Vector3 relativePartPos = part.transform.position - Scatterer.Instance.nearCamera.transform.position;
@@ -174,11 +174,11 @@ namespace Scatterer
 				waterHeightAtCameraPosition = heights[heights.Length - 1];
 			}
 
-			if (!ReferenceEquals(partsBuoyancies, null))
+			if (partsBuoyancies!=null)
 			{
 				for (int i = 0; i < partsBuoyancies.Count; i++)
 				{
-					if (!ReferenceEquals(partsBuoyancies[i], null))
+					if (partsBuoyancies[i] != null)
 					{
 						partsBuoyancies[i].waterLevel = heights[i];
 					}

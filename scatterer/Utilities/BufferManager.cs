@@ -68,7 +68,7 @@ namespace Scatterer
 				depthTexture.Release ();
 				UnityEngine.Object.Destroy (depthTexture);
 			}
-			if (!ReferenceEquals(checkTexturesCoroutine,null))
+			if (checkTexturesCoroutine!=null)
 			{
 				StopCoroutine(checkTexturesCoroutine);
 			}

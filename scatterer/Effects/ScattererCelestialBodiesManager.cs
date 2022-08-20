@@ -1,23 +1,13 @@
 // Manages loading,unloading and updating for all the Scatterer-enabled celestial bodies
 // Will spawn/delete/update a ProlandManager for each body if within range
-
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 
 namespace Scatterer
 {
 	public class ScattererCelestialBodiesManager
-	{
-		bool callCollector=false;		
+	{	
 		public bool underwater = false;
 		
 		bool pqsEnabledOnScattererPlanet = false;
@@ -38,7 +28,6 @@ namespace Scatterer
 		public void Update()
 		{
 			UpdateProlandManagers ();
-			CallCollectorIfNeeded ();
 		}
 		
 		void UpdateProlandManagers ()
@@ -119,16 +108,6 @@ namespace Scatterer
 			}
 		}
 
-		void CallCollectorIfNeeded()
-		{
-			//TODO: determine if still needed anymore, ie test without
-			if (callCollector)
-			{
-				GC.Collect();
-				callCollector=false;
-			}
-		}
-
 		void loadEffectsForBody (ScattererCelestialBody scattererCelestialBody)
 		{
 			try
@@ -149,7 +128,6 @@ namespace Scatterer
 					throw new Exception ("Planet already removed from planets list");
 				}
 				
-				callCollector = true;
 				Utils.LogDebug ("Effects loaded for " + scattererCelestialBody.celestialBodyName);
 			}
 			catch (Exception exception)
@@ -180,7 +158,7 @@ namespace Scatterer
 		{
 			scattererCelestialBody.prolandManager.Update ();
 			inPqsEnabledOnScattererPlanet = inPqsEnabledOnScattererPlanet || !scattererCelestialBody.prolandManager.skyNode.inScaledSpace;
-			if (inPqsEnabledOnScattererPlanet && !ReferenceEquals (scattererCelestialBody.prolandManager.GetOceanNode (), null)) {
+			if (inPqsEnabledOnScattererPlanet && scattererCelestialBody.prolandManager.GetOceanNode()) {
 				inCustomOceanEnabledOnScattererPlanet = true;
 				inUnderwater = scattererCelestialBody.prolandManager.GetOceanNode ().isUnderwater;
 			}
@@ -193,7 +171,6 @@ namespace Scatterer
 			UnityEngine.Object.DestroyImmediate (scattererCelestialBody.prolandManager);
 			scattererCelestialBody.prolandManager = null;
 			scattererCelestialBody.active = false;
-			callCollector = true;
 			Utils.LogDebug ("Effects unloaded for " + scattererCelestialBody.celestialBodyName);
 		}
 

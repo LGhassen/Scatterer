@@ -72,8 +72,8 @@ namespace Scatterer
 		{
 			foreach (OceanCommandBuffer oceanCommandBuffer in cameraToOceanCommandBuffer.Values)
 			{
-				if (!ReferenceEquals(oceanCommandBuffer,null))
-					Component.Destroy(oceanCommandBuffer);
+				if (oceanCommandBuffer)
+					Component.DestroyImmediate(oceanCommandBuffer);
 			}
 		}
 	}
@@ -110,7 +110,7 @@ namespace Scatterer
 				
 				int width, height;
 				
-				if (!ReferenceEquals (targetCamera.activeTexture, null))
+				if (targetCamera.activeTexture)
 				{
 					width = targetCamera.activeTexture.width;
 					height = targetCamera.activeTexture.height;
@@ -185,14 +185,14 @@ namespace Scatterer
 		
 		public void OnDestroy ()
 		{
-			if (targetCamera && !ReferenceEquals(rendererCommandBuffer,null))
+			if (targetCamera && rendererCommandBuffer != null)
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer);
 
-				if (!ReferenceEquals(depthCopyRenderTexture,null))
+				if (depthCopyRenderTexture)
 					depthCopyRenderTexture.Release();
 				
-				if (!ReferenceEquals(oceanRenderTexture,null))
+				if (oceanRenderTexture)
 					oceanRenderTexture.Release();
 
 				renderingEnabled = false;

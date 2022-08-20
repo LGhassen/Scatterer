@@ -282,7 +282,7 @@ namespace Scatterer
 			RenderTexture.active=rt;
 		}	
 
-		public void CleanUp()
+		public void OnDestroy()
 		{
 			if (nearCameraHook)
 			{

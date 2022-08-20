@@ -27,24 +27,24 @@ namespace Scatterer
 		//and scatteringProjector not disabling correctly
 		public void OnPreCull()
 		{
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode && !ReferenceEquals (null, manager.GetSkyNode ().localScatteringContainer))
+			if (Scatterer.Instance.mainSettings.useDepthBufferMode && manager.GetSkyNode ().localScatteringContainer != null)
 			{
-				manager.GetSkyNode ().localScatteringContainer.setActivated (false);
-				manager.GetSkyNode ().localScatteringContainer.updateContainer();
+				manager.GetSkyNode().localScatteringContainer.SetActivated (false);
+				manager.GetSkyNode().localScatteringContainer.UpdateContainer();
 			}
 
-			if (!ReferenceEquals (manager.GetOceanNode (), null))
+			if (manager.GetOceanNode())
 			{
-				manager.GetOceanNode ().setWaterMeshrenderersEnabled (false);
+				manager.GetOceanNode().setWaterMeshrenderersEnabled (false);
 			}
 		}
 
 		public void OnPostRender()
 		{
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode && !ReferenceEquals (null, manager.GetSkyNode ().localScatteringContainer))
-				manager.GetSkyNode ().localScatteringContainer.setActivated (true);
-			if (!ReferenceEquals(manager.GetOceanNode (),null))
-				manager.GetOceanNode ().setWaterMeshrenderersEnabled (true);
+			if (Scatterer.Instance.mainSettings.useDepthBufferMode && manager.GetSkyNode ().localScatteringContainer != null)
+				manager.GetSkyNode().localScatteringContainer.SetActivated (true);
+			if (manager.GetOceanNode())
+				manager.GetOceanNode().setWaterMeshrenderersEnabled (true);
 		}
 	}
 }

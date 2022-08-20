@@ -464,7 +464,7 @@ namespace Scatterer {
 				{
 					foreach (Part part in vessel.parts)
 					{
-						if (!ReferenceEquals (part.partBuoyancy, null))
+						if (part.partBuoyancy)
 						{
 							Vector3 relativePartPos = part.partBuoyancy.transform.position-Scatterer.Instance.nearCamera.transform.position;
 							
@@ -482,9 +482,9 @@ namespace Scatterer {
 			}
 		}
 
-		public override void Cleanup()
+		public override void OnDestroy()
 		{
-			base.Cleanup();
+			base.OnDestroy();
 			
 			m_map0.Release();
 			m_map1.Release();

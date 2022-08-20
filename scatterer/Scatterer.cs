@@ -75,7 +75,6 @@ namespace Scatterer
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-
 				isActive = true;
 
 				LoadSettings ();
@@ -138,7 +137,6 @@ namespace Scatterer
 //			if (mainSettings.usePlanetShine)
 //			{
 //				planetshineManager = new PlanetshineManager();
-//				planetshineManager.Init();
 //			}
 
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
@@ -161,12 +159,11 @@ namespace Scatterer
 			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
 			{
 				//cleanup any forgotten/glitched AA scripts
-				foreach (GenericAntiAliasing AA in Resources.FindObjectsOfTypeAll(typeof(GenericAntiAliasing)))
+				foreach (GenericAntiAliasing antiAliasing in Resources.FindObjectsOfTypeAll(typeof(GenericAntiAliasing)))
 				{
-					if (AA)
+					if (antiAliasing)
 					{
-						AA.Cleanup();
-						Component.DestroyImmediate(AA);
+						Component.DestroyImmediate(antiAliasing);
 					}
 				}
 
@@ -263,12 +260,12 @@ namespace Scatterer
 						bufferManager.ClearDepthTexture();
 				}
 
-				if (!ReferenceEquals(sunflareManager,null))
+				if (sunflareManager != null)
 				{
 					sunflareManager.UpdateFlares();
 				}
 
-//				if(!ReferenceEquals(planetshineManager,null))
+//				if(planetshineManager != null)
 //				{
 //					planetshineManager.UpdatePlanetshine();
 //				}
@@ -282,25 +279,23 @@ namespace Scatterer
 
 			if (isActive)
 			{
-				if (!ReferenceEquals(sunlightModulatorsManagerInstance,null))
+				if (sunlightModulatorsManagerInstance != null)
 				{
 					sunlightModulatorsManagerInstance.Cleanup();
 				}
 
-//				if(!ReferenceEquals(planetshineManager,null))
+//				if(planetshineManager != null)
 //				{
-//					planetshineManager.CleanUp();
-//					Component.DestroyImmediate(planetshineManager);
+//					planetshineManager.Cleanup();
 //				}
 
-				if (!ReferenceEquals(scattererCelestialBodiesManager,null))
+				if (scattererCelestialBodiesManager != null)
 				{
 					scattererCelestialBodiesManager.Cleanup();
 				}
 
 				if (ambientLightScript)
 				{
-					ambientLightScript.restoreLight();
 					Component.DestroyImmediate(ambientLightScript);
 				}				
 
@@ -309,25 +304,21 @@ namespace Scatterer
 					if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.DestroyImmediate (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
 					
-					
 					if (farCamera && farCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.DestroyImmediate (farCamera.gameObject.GetComponent (typeof(Wireframe)));
-					
 					
 					if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.DestroyImmediate (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
 				}
 
-				if (!ReferenceEquals(sunflareManager,null))
+				if (sunflareManager)
 				{
-					sunflareManager.Cleanup();
 					UnityEngine.Component.DestroyImmediate(sunflareManager);
 					GameObject.DestroyImmediate(sunflareManagerGO);
 				}
 
 				if (shadowFadeRemover)
 				{
-					shadowFadeRemover.OnDestroy();
 					Component.DestroyImmediate(shadowFadeRemover);
 				}
 
@@ -347,22 +338,19 @@ namespace Scatterer
 
 				if (bufferManager)
 				{
-					bufferManager.OnDestroy();
 					Component.DestroyImmediate (bufferManager);
 				}
 
-				foreach (GenericAntiAliasing AA in antiAliasingScripts)
+				foreach (GenericAntiAliasing antiAliasing in antiAliasingScripts)
 				{
-					if (AA)
+					if (antiAliasing)
 					{
-						AA.Cleanup();
-						Component.DestroyImmediate(AA);
+						Component.DestroyImmediate(antiAliasing);
 					}
 				}
 
 				if (reflectionProbeChecker)
 				{
-					reflectionProbeChecker.OnDestroy ();
 					Component.DestroyImmediate (reflectionProbeChecker);
 				}
 
@@ -622,10 +610,10 @@ namespace Scatterer
 			if (cameraMode == CameraManager.CameraMode.IVA)
 			{
 				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
-				if (!ReferenceEquals(internalCamera,null))
+				if (internalCamera)
 				{
 					TemporalAntiAliasing internalTAA = internalCamera.GetComponent<TemporalAntiAliasing>();
-					if(ReferenceEquals(internalTAA,null))
+					if(internalTAA == null)
 					{
 						internalTAA = internalCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 						antiAliasingScripts.Add(internalTAA);
@@ -636,9 +624,9 @@ namespace Scatterer
 		
 		public void SMAAOnCameraChange(CameraManager.CameraMode cameraMode)
 		{
-			foreach (SubpixelMorphologicalAntialiasing AA in antiAliasingScripts)
+			foreach (SubpixelMorphologicalAntialiasing antiAliasing in antiAliasingScripts)
 			{
-				if (AA) { AA.Cleanup(); Component.DestroyImmediate(AA);}
+				if (antiAliasing) { Component.DestroyImmediate(antiAliasing);}
 			}
 			antiAliasingScripts.Clear ();
 
@@ -649,7 +637,7 @@ namespace Scatterer
 				antiAliasingScripts.Add(nearAA);
 
 				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
-				if (!ReferenceEquals(internalCamera,null))
+				if (internalCamera)
 				{
 					// Add depth-based SMAA to internal camera, to avoid blurring over cockpit elements and text especially with custom IVAs
 					SubpixelMorphologicalAntialiasing internalSMAA = internalCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();

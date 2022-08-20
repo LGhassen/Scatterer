@@ -61,7 +61,7 @@ namespace Scatterer
 				return false;
 			}
 
-			if (ReferenceEquals (inputLight, null))
+			if (!inputLight)
 			{
 				Utils.LogError("Godrays light is null, godrays can't be added");
 				return false;
@@ -245,7 +245,7 @@ namespace Scatterer
 
 		void OnPreCull()
 		{
-			if (!ReferenceEquals(parentSkyNode,null) && !parentSkyNode.inScaledSpace)
+			if (parentSkyNode && !parentSkyNode.inScaledSpace)
 			{
 				EnableRenderingForFrame();
 
@@ -323,32 +323,32 @@ namespace Scatterer
 
 		public void OnPostRender()
 		{
-			if (!ReferenceEquals(parentSkyNode,null))
+			if (parentSkyNode)
 			{
 				RenderingDone ();
 			}
 		}
 		
-		public void Cleanup()
+		public void OnDestroy()
 		{
 			RenderingDone ();
 
-			if (!ReferenceEquals (inverseShadowMatricesBuffer, null))
+			if (inverseShadowMatricesBuffer != null)
 			{
 				inverseShadowMatricesBuffer.Dispose();
 			}
 
-			if (!ReferenceEquals (volumeDepthTexture, null))
+			if (volumeDepthTexture)
 			{
 				volumeDepthTexture.Release();
 			}
 
-			if (!ReferenceEquals (volumeDepthGO, null))
+			if (volumeDepthGO)
 			{
 				DestroyImmediate(volumeDepthGO);
 			}
 
-//			if (!ReferenceEquals (cloudShadowGO, null))
+//			if (cloudShadowGO)
 //			{
 //				DestroyImmediate(cloudShadowGO);
 //			}

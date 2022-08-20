@@ -128,7 +128,7 @@ namespace Scatterer
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);
 
-			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null)
+			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController
 			    && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
 			{
 				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
@@ -150,16 +150,16 @@ namespace Scatterer
 			TweakScaledMesh ();
 			InitScaledScattering ();
 
-			if (!ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null))
+			if (prolandManager.parentCelestialBody.pqsController)
 			{
 				prolandManager.parentCelestialBody.pqsController.isActive = false; 	//sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
-																				//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
+																					//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
 			}
 
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
 				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && ReferenceEquals (godraysRenderer, null));
+					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && godraysRenderer);
 				else
 					localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt, prolandManager);
 
@@ -256,7 +256,7 @@ namespace Scatterer
 
 		public void UpdateGraphicsUniforms()
 		{
-			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && !ReferenceEquals(localScatteringContainer,null))
+			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && localScatteringContainer!=null)
 			{
 				UpdatePostProcessMaterialUniforms (localScatteringContainer.material);
 			}
@@ -268,18 +268,18 @@ namespace Scatterer
 			{
 				UpdateEVECloudMaterials ();
 			}
-			if (!ReferenceEquals(Scatterer.Instance.sunflareManager,null))
+			if (Scatterer.Instance.sunflareManager)
 			{
 				UpdateSunflareExtinctions ();
 			}
 
-			if (!ReferenceEquals(scaledScatteringContainer,null))
+			if (scaledScatteringContainer != null)
 				scaledScatteringContainer.MeshRenderer.enabled = stockScaledPlanetMeshRenderer.enabled;
 
-			if (!ReferenceEquals (localScatteringContainer, null))
+			if (localScatteringContainer != null)
 			{
-				localScatteringContainer.setInScaledSpace (inScaledSpace);
-				localScatteringContainer.updateContainer ();
+				localScatteringContainer.SetInScaledSpace (inScaledSpace);
+				localScatteringContainer.UpdateContainer ();
 
 				if (prolandManager.parentCelestialBody.pqsController != null && !Scatterer.Instance.mainSettings.useDepthBufferMode)
 				{
@@ -291,10 +291,10 @@ namespace Scatterer
 			SetUniforms (skyMaterial);
 			SetUniforms (scaledScatteringMaterial);
 
-			if (!ReferenceEquals (sunflareExtinctionMaterial, null))
+			if (sunflareExtinctionMaterial)
 				SetUniforms (sunflareExtinctionMaterial);
 
-			if (!ReferenceEquals (scaledEclipseMaterial, null))
+			if (scaledEclipseMaterial)
 			{
 				scaledEclipseMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun ());
 				
@@ -352,12 +352,12 @@ namespace Scatterer
 		{
 			Utils.LogInfo ("Skynode switch effects to scaled mode: "+prolandManager.parentCelestialBody.name);
 
-			if (!ReferenceEquals(skySphere,null))
+			if (skySphere != null)
 				skySphere.SwitchScaledMode ();
-			if (!ReferenceEquals(scaledScatteringContainer,null))
+			if (scaledScatteringContainer != null)
 				scaledScatteringContainer.SwitchScaledMode ();
-			if (!ReferenceEquals(localScatteringContainer,null))
-				localScatteringContainer.setActivated(false);
+			if (localScatteringContainer != null)
+				localScatteringContainer.SetActivated(false);
 			EVEvolumetrics.Clear();
 		}
 
@@ -365,12 +365,12 @@ namespace Scatterer
 		{
 			Utils.LogInfo ("Skynode switch effects to local mode "+prolandManager.parentCelestialBody.name);
 
-			if (!ReferenceEquals(skySphere,null))
+			if (skySphere != null)
 				skySphere.SwitchLocalMode();
-			if (!ReferenceEquals(scaledScatteringContainer,null))
+			if (scaledScatteringContainer != null)
 				scaledScatteringContainer.SwitchLocalMode ();
-			if (!ReferenceEquals(localScatteringContainer,null))
-				localScatteringContainer.setActivated(true);
+			if (localScatteringContainer != null)
+				localScatteringContainer.SetActivated(true);
 
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
@@ -415,7 +415,7 @@ namespace Scatterer
 				mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
 			}
 
-			if (!ReferenceEquals (godraysRenderer, null))
+			if (godraysRenderer)
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
@@ -493,11 +493,11 @@ namespace Scatterer
 
 			mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY,camerasOverlap);
 
-			if (!ReferenceEquals (godraysRenderer, null))
+			if (godraysRenderer)
 			{
 				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
 			}
-			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
+			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer!=null);
 
 			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
 		}
@@ -532,7 +532,7 @@ namespace Scatterer
 				mat.SetMatrix (ShaderProperties.cloudPlanetShineRGB_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ?  prolandManager.planetShineRGBMatrix : prolandManager.planetShineOriginalRGBMatrix );
 			}
 
-			if (!ReferenceEquals (godraysRenderer, null))
+			if (godraysRenderer)
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
@@ -589,11 +589,11 @@ namespace Scatterer
 			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
 			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
 
-			if (!ReferenceEquals (godraysRenderer, null))
+			if (godraysRenderer)
 			{
 				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
 			}
-			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
+			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null);
 
 			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
 		}
@@ -664,15 +664,15 @@ namespace Scatterer
 
 		void ReinitAllMaterials()
 		{
-			if (!ReferenceEquals(scaledEclipseMaterial,null))
+			if (scaledEclipseMaterial)
 				InitUniforms(scaledEclipseMaterial);
-			if (!ReferenceEquals(skyMaterial,null))	//need also here to resize the sky sphere thingy
+			if (skyMaterial)
 				InitUniforms(skyMaterial);
-			if (!ReferenceEquals(scaledScatteringMaterial,null))
+			if (scaledScatteringMaterial)
 				InitUniforms(scaledScatteringMaterial);
-			if (!ReferenceEquals(sunflareExtinctionMaterial,null))
+			if (sunflareExtinctionMaterial)
 				InitUniforms(sunflareExtinctionMaterial);
-			if (!ReferenceEquals(localScatteringMaterial,null))
+			if (localScatteringMaterial)
 				InitPostprocessMaterialUniforms(localScatteringMaterial);
 
 			ReInitMaterialUniformsOnRenderTexturesLoss ();
@@ -692,15 +692,15 @@ namespace Scatterer
 				}
 			}
 
-			if (!ReferenceEquals(prolandManager.GetOceanNode(),null))
+			if (prolandManager.GetOceanNode())
 			{
-				if (!ReferenceEquals(prolandManager.GetOceanNode().m_oceanMaterial,null))
+				if (prolandManager.GetOceanNode().m_oceanMaterial)
 				{
 					InitUniforms (prolandManager.GetOceanNode().m_oceanMaterial);
 					InitPostprocessMaterialUniforms (prolandManager.GetOceanNode().m_oceanMaterial);
 				}
 
-				if (!ReferenceEquals(prolandManager.GetOceanNode().underwaterMaterial,null))
+				if (prolandManager.GetOceanNode().underwaterMaterial)
 				{
 					InitPostprocessMaterialUniforms (prolandManager.GetOceanNode().underwaterMaterial);
 				}
@@ -713,7 +713,7 @@ namespace Scatterer
 		//
 		//}
 		
-		public void Cleanup ()
+		public void OnDestroy()
 		{
 			try {StopAllCoroutines ();}
 			catch (Exception){}
@@ -733,24 +733,23 @@ namespace Scatterer
 				UnityEngine.Object.DestroyImmediate (m_inscatter);
 			}
 
-			if (!ReferenceEquals (skySphere, null))
+			if (skySphere != null)
 			{
 				skySphere.Cleanup ();
 			}
 
-			if (!ReferenceEquals (scaledScatteringContainer, null))
+			if (scaledScatteringContainer != null)
 			{
 				scaledScatteringContainer.Cleanup ();
 			}
 
-			if (!ReferenceEquals (localScatteringContainer, null))
+			if (localScatteringContainer != null)
 			{
-				localScatteringContainer.OnDestroy();
+				localScatteringContainer.Cleanup();
 			}
 
-			if (!ReferenceEquals (godraysRenderer, null))
+			if (godraysRenderer)
 			{
-				godraysRenderer.Cleanup();
 				Component.DestroyImmediate(godraysRenderer);
 			}
 
@@ -791,7 +790,7 @@ namespace Scatterer
 				}
 			}
 
-			if (!ReferenceEquals(originalScaledMesh,null))
+			if (originalScaledMesh)
 				parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = originalScaledMesh;
 
 			RestoreStockScaledTexture ();
@@ -912,7 +911,7 @@ namespace Scatterer
 			{
 				while (true)
 				{
-					if (!ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
+					if (stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"))
 					{
 						if (adjustScaledTexture)
 							TweakStockScaledTexture ();
@@ -932,7 +931,7 @@ namespace Scatterer
 		{
 			while (true)
 			{
-				if (ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
+				if (stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex") == null)
 					break;
 
 				yield return new WaitForSeconds(3f);
@@ -948,7 +947,7 @@ namespace Scatterer
 			if (useEclipses)
 			{
 				// Split the main pass and the additive light passes into separate materials with different renderqueues so we can inject eclipses after the first pass, and make it apply only to the main pass
-				if (ReferenceEquals(parentScaledTransform.GetComponent<PlanetSecondaryLightUpdater>(),null))
+				if (parentScaledTransform.GetComponent<PlanetSecondaryLightUpdater>() == null)
 				{
 					List<Material> materialsNoCityLights = new List<Material>(materials);
 					materialsNoCityLights.RemoveAll(x => x.shader.name == "EVE/PlanetCityLight");
@@ -998,7 +997,7 @@ namespace Scatterer
 				}
 			}
 
-			if (!ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null))
+			if (prolandManager.parentCelestialBody.pqsController)
 			{
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.surfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.fallbackMaterial,"AERIAL_ON", "AERIAL_OFF", false);
@@ -1017,12 +1016,11 @@ namespace Scatterer
 			{	
 				if (sharedMaterial.shader.name.Contains("Terrain/Scaled Planet (RimAerial)"))
 				{
-					if (ReferenceEquals(originalPlanetTexture,null))
+					if (!originalPlanetTexture)
 						originalPlanetTexture = sharedMaterial.GetTexture("_MainTex");
-
-					if (!ReferenceEquals(originalPlanetTexture,null))
+					else
 					{
-						if (ReferenceEquals(adjustedPlanetTexture,null))
+						if (!adjustedPlanetTexture)
 						{
 							adjustedPlanetTexture = new RenderTexture(originalPlanetTexture.width, originalPlanetTexture.height, 0, RenderTextureFormat.ARGB32);
 							adjustedPlanetTexture.name = "ScattererAdjustedPlanetMap";
@@ -1050,7 +1048,7 @@ namespace Scatterer
 
 		public void RestoreStockScaledTexture () 	//move to utils/scaledUtils etc
 		{
-			if (!ReferenceEquals (originalPlanetTexture, null))
+			if (originalPlanetTexture)
 			{
 				List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
 
@@ -1063,7 +1061,7 @@ namespace Scatterer
 				}
 			}
 
-			if (!ReferenceEquals (adjustedPlanetTexture, null))
+			if (adjustedPlanetTexture)
 			{
 				adjustedPlanetTexture.Release();
 			}
@@ -1071,7 +1069,7 @@ namespace Scatterer
 		
 		public void TweakScaledMesh() 	//move to utils/scaledUtils etc
 		{
-			if (ReferenceEquals (originalScaledMesh, null))
+			if (!originalScaledMesh)
 			{
 				originalScaledMesh = parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh;
 			}
@@ -1147,7 +1145,7 @@ namespace Scatterer
 
 			foreach(SecondarySun secondarySun in prolandManager.secondarySuns)
 			{
-				if (!ReferenceEquals(secondarySun.sunLight, null))
+				if (secondarySun.sunLight)
 				{
 					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
 					extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);	//consider getting rid of extinction thickness and tint now
@@ -1246,7 +1244,7 @@ namespace Scatterer
 
 		public void InitEVEClouds()
 		{
-			if (!ReferenceEquals (Scatterer.Instance.eveReflectionHandler.EVEinstance, null) && Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
+			if ((Scatterer.Instance.eveReflectionHandler.EVEinstance != null) && Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
 			{
 				try
 				{
@@ -1351,7 +1349,7 @@ namespace Scatterer
 		//to be called on loss of rendertextures, ie alt-enter
 		public void ReInitMaterialUniformsOnRenderTexturesLoss()
 		{
-			if (!ReferenceEquals (localScatteringContainer, null))
+			if (localScatteringContainer != null)
 			{
 				InitPostprocessMaterialUniforms (localScatteringContainer.material);
 			}

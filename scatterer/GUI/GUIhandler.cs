@@ -85,7 +85,7 @@ namespace Scatterer
 					windowRect.height = 40;
 					sunflareOptions = false;
 				}
-				if (Scatterer.Instance.mainSettings.fullLensFlareReplacement && !ReferenceEquals(Scatterer.Instance.sunflareManager,null) && !ReferenceEquals(Scatterer.Instance.sunflareManager.scattererSunFlares,null))
+				if (Scatterer.Instance.mainSettings.fullLensFlareReplacement && Scatterer.Instance.sunflareManager && Scatterer.Instance.sunflareManager.scattererSunFlares != null)
 				{
 					if (GUILayout.Button ("Sunflare settings"))
 					{
@@ -258,7 +258,7 @@ namespace Scatterer
 			configPointGUI.loadSettingsForPlanet (selectedPlanet);
 			atmoGUI.loadSettingsForPlanet(selectedPlanet);
 
-			if (!ReferenceEquals (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode(), null))
+			if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode())
 			{
 				oceanGUI.buildOceanGUI (planetIndex);
 			}

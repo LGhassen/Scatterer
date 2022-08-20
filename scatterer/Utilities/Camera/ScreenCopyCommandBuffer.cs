@@ -57,7 +57,7 @@ namespace Scatterer
 			{
 				targetCamera.forceIntoRenderTexture = true;
 
-				if (!ReferenceEquals (targetCamera.activeTexture, null))
+				if (targetCamera.activeTexture)
 				{
 					width = targetCamera.activeTexture.width;
 					height = targetCamera.activeTexture.height;

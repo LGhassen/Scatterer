@@ -35,7 +35,7 @@ namespace Scatterer
 			}
 			else
 			{
-				if (ReferenceEquals (CausticsShadowMaskModulateMaterial, null)) {
+				if (!CausticsShadowMaskModulateMaterial) {
 					CausticsShadowMaskModulateMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CausticsOcclusion")]);
 				}
 
@@ -96,7 +96,7 @@ namespace Scatterer
 				
 		public void RemoveCommandBuffer ()
 		{
-			if (!ReferenceEquals(sunLight,null))
+			if (sunLight)
 				sunLight.RemoveCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
 			commandBufferAdded = false;
 		}

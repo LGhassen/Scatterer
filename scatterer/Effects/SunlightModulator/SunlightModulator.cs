@@ -1,18 +1,9 @@
 using UnityEngine;
-using System.Collections;
-using System.IO;
-
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
-using KSP.IO;
 
 namespace Scatterer
 {
-	public class SunlightModulatorsManager : MonoBehaviour
+	public class SunlightModulatorsManager
 	{
 		public void ModulateByAttenuation(Light light, float inAttenuation)
 		{
@@ -51,11 +42,6 @@ namespace Scatterer
 		private Dictionary<Light, SunlightModulator> modulatorsDictionary = new Dictionary<Light, SunlightModulator> ();
 
 		public void Cleanup()
-		{
-			OnDestroy ();
-		}
-
-		public void OnDestroy()
 		{
 			foreach (SunlightModulator modulator in modulatorsDictionary.Values)
 			{

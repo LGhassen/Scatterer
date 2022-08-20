@@ -1,15 +1,5 @@
 using UnityEngine;
-using System.Collections;
-using System.IO;
-
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using UnityEngine.Rendering;
-
-using KSP.IO;
 
 namespace Scatterer
 {
@@ -252,14 +242,14 @@ namespace Scatterer
 				worldToLightMatrix.m23 = oceanNode.prolandManager.parentCelestialBody.transform.position.z;
 			}
 
-			if (!ReferenceEquals (oceanNode.causticsShadowMaskModulator, null))
+			if (oceanNode.causticsShadowMaskModulator)
 			{
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, worldToLightMatrix);
 				oceanNode.causticsShadowMaskModulator.CausticsShadowMaskModulateMaterial.SetVector (ShaderProperties.PlanetOrigin_PROPERTY, oceanNode.prolandManager.parentLocalTransform.position);
 			}
 
-			if (!ReferenceEquals (oceanNode.causticsLightRaysRenderer, null))
+			if (oceanNode.causticsLightRaysRenderer)
 			{
 				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.CameraToWorld_PROPERTY, inCamera.cameraToWorldMatrix);
 				oceanNode.causticsLightRaysRenderer.CausticsLightRaysMaterial.SetMatrix (ShaderProperties.WorldToLight_PROPERTY, worldToLightMatrix);

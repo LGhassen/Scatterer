@@ -42,7 +42,7 @@ namespace Scatterer
 
 			int width, height;
 			
-			if (!ReferenceEquals (targetCamera.activeTexture, null))
+			if (targetCamera.activeTexture)
 			{
 				width = targetCamera.activeTexture.width;
 				height = targetCamera.activeTexture.height;
@@ -75,9 +75,9 @@ namespace Scatterer
 
 			SMAAMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/SubpixelMorphologicalAntialiasing")]);
 
-			if (ReferenceEquals(areaTex,null))
+			if (areaTex == null)
 				areaTex = (Texture2D) ShaderReplacer.Instance.LoadedTextures ["AreaTex"];
-			if (ReferenceEquals (searchTex, null))
+			if (searchTex == null)
 				searchTex = (Texture2D)ShaderReplacer.Instance.LoadedTextures ["SearchTex"];
 
 			SMAAMaterial.SetTexture("_AreaTex"  , areaTex);
@@ -117,20 +117,20 @@ namespace Scatterer
 			}
 		}
 		
-		public override void Cleanup()
+		public void OnDestroy()
 		{
 			SMAAMaterial = null;
 
-			if (!ReferenceEquals(SMAACommandBuffer,null))
+			if (SMAACommandBuffer !=null)
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer);
 				SMAACommandBuffer.Clear();
 			}
 			
-			if (!ReferenceEquals (flip, null))
+			if (flip)
 				flip.Release ();
 
-			if (!ReferenceEquals (flop, null))
+			if (flop)
 				flop.Release ();
 		}
 	}

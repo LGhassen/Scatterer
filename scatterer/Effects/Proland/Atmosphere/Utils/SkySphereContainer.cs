@@ -85,7 +85,7 @@ namespace Scatterer
 
 			var scrCopy = skySphereGO.GetComponent<SkySphereScreenCopy> ();
 
-			if (!ReferenceEquals (null, scrCopy))
+			if (scrCopy)
 				UnityEngine.Component.DestroyImmediate (scrCopy);
 
 		}
