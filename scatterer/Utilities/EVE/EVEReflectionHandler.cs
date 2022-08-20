@@ -239,17 +239,17 @@ namespace scatterer
 				{
 					try
 					{
-						object cloudsPQS = _obj.GetType ().GetField ("cloudsPQS", flags).GetValue (_obj) as object;
-						object layerVolume = cloudsPQS.GetType ().GetField ("layerVolume", flags).GetValue (cloudsPQS) as object;
-						if (ReferenceEquals(layerVolume, null))
+						object cloudsPQS = _obj.GetType ().GetField("cloudsPQS", flags)?.GetValue (_obj) as object;
+						object layerVolume = cloudsPQS?.GetType ().GetField ("layerVolume", flags)?.GetValue (cloudsPQS) as object;
+						if (layerVolume == null)
 						{
 							Utils.LogDebug ("No volumetric cloud for layer on planet: " + celestialBodyName);
 							continue;
 						}
 						
-						Material ParticleMaterial = layerVolume.GetType ().GetField ("ParticleMaterial", flags).GetValue (layerVolume) as Material;
+						Material ParticleMaterial = layerVolume.GetType ().GetField ("ParticleMaterial", flags)?.GetValue (layerVolume) as Material;
 						
-						if (ReferenceEquals(layerVolume, null))
+						if (ParticleMaterial == null)
 						{
 							Utils.LogDebug ("Volumetric cloud has no material on planet: " + celestialBodyName);
 							continue;
@@ -267,17 +267,18 @@ namespace scatterer
 				{
 					try
 					{
-						object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags).GetValue(_obj) as object;
-						object layerRaymarchedVolume = cloudsPQS.GetType().GetField("layerRaymarchedVolume", flags).GetValue(cloudsPQS) as object;
-						if (ReferenceEquals(layerRaymarchedVolume, null))
+						// TODO: refactor this into a function and use for both
+						object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags)?.GetValue(_obj) as object;
+						object layerRaymarchedVolume = cloudsPQS?.GetType().GetField("layerRaymarchedVolume", flags)?.GetValue(cloudsPQS) as object;
+						if (layerRaymarchedVolume == null)
 						{
 							Utils.LogDebug("No raymarched volumetric cloud for layer on planet: " + celestialBodyName);
 							continue;
 						}
 
-						Material RaymarchedMaterial = layerRaymarchedVolume.GetType().GetField("raymarchedCloudMaterial", flags).GetValue(layerRaymarchedVolume) as Material;
+						Material RaymarchedMaterial = layerRaymarchedVolume.GetType().GetField("raymarchedCloudMaterial", flags)?.GetValue(layerRaymarchedVolume) as Material;
 
-						if (ReferenceEquals(RaymarchedMaterial, null))
+						if (RaymarchedMaterial == null)
 						{
 							Utils.LogDebug("Raymarched volumetric cloud has no material on planet: " + celestialBodyName);
 							continue;
