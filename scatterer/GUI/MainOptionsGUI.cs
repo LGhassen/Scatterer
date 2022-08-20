@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class MainOptionsGUI
 	{

@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 using System.Collections.Generic;
 using System;
 
-namespace scatterer
+namespace Scatterer
 {
 	//transform this to general caustics class, pass to it the light and once of the ocean's meshrenderers?
 	//how to handle the lightrays? do we need to render a quad to screen? do we set it as texture which the underwaterProjector reads from?

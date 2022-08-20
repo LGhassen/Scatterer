@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class AtmosphereProjectorContainer : GenericLocalAtmosphereContainer
 	{

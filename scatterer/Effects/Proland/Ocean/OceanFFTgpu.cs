@@ -26,7 +26,7 @@
 
 using UnityEngine;
 
-namespace scatterer {
+namespace Scatterer {
 	/*
 	 * Extend the base class OceanNode to provide the data need 
 	 * to create the waves using fourier transform which can then be applied

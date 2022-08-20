@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-namespace scatterer
+namespace Scatterer
 {
 
 public class Wireframe : MonoBehaviour {

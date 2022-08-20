@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.Instantly, true)]
 	public class ShaderProperties : MonoBehaviour

@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 using System.Collections.Generic;
 using System;
 
-namespace scatterer
+namespace Scatterer
 {
 	
 	// First class inits the material and OnWillRender adds a script to relevant cameras, the given script adds and removes commandbuffers before and after rendering? yes, also enables only OnWillRender and if underwater

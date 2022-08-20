@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace scatterer
+namespace Scatterer
 {
 	//Pretty sure this class should be useless, change affected classes to static
 	public class BufferManager : MonoBehaviour

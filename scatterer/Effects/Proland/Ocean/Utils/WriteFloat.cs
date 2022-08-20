@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 
 	//This class is now obsolete and can be replaced with a single blit

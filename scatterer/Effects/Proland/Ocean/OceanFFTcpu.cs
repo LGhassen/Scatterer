@@ -32,7 +32,7 @@ using System.Threading;
 
 
 
-namespace scatterer {
+namespace Scatterer {
 	/*
 	 * Unused CPU FFT version, ship interaction is better done with async GPU readback so this CPU version is not needed. Kept for reference
 	 * Extend the base class OceanNode to provide the data need 

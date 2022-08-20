@@ -13,7 +13,7 @@ using System.Text;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class DisableEffectsForReflectionsCamera : MonoBehaviour
 	{

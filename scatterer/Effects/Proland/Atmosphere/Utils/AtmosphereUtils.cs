@@ -10,7 +10,7 @@ using System.Text;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public static class AtmosphereUtils
 	{		

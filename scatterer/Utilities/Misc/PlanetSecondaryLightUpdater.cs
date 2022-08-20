@@ -12,7 +12,7 @@ using System.Reflection;
 using System.Text;
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class PlanetSecondaryLightUpdater : MonoBehaviour
 	{

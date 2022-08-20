@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine.Rendering;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class GPUWaveInteractionHandler
 	{

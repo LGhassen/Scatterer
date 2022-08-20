@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ShaderReplacer : MonoBehaviour
 	{

@@ -12,7 +12,7 @@ using UnityEngine.Rendering;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ScreenSpaceScattering : MonoBehaviour
 	{

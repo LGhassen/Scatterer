@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 [assembly:AssemblyVersion("0.0838")]
-namespace scatterer
+namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class Scatterer: MonoBehaviour

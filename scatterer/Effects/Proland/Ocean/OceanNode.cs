@@ -36,7 +36,7 @@ using UnityEngine.Rendering;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	//TODO: refactor and clean up this class
 	public abstract class OceanNode: MonoBehaviour

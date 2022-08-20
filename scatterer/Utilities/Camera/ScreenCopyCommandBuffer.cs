@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ScreenCopyCommandBuffer : MonoBehaviour
 	{

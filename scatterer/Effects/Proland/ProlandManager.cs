@@ -10,7 +10,7 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	/*
 	 * A manager to organise what order update functions are called

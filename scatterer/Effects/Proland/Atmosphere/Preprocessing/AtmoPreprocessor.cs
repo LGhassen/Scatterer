@@ -28,7 +28,7 @@ using UnityEngine;
 using System.IO;
 using System;
 
-namespace scatterer 
+namespace Scatterer 
 {
 	public class AtmoPreprocessor : MonoBehaviour
 	{

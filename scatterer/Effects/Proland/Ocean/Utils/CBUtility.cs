@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 using System;
 using System.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	static public class CBUtility
 	{

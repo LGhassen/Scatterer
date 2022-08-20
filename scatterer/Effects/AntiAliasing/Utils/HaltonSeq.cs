@@ -1,4 +1,4 @@
-namespace scatterer
+namespace Scatterer
 {
 	/// Halton sequence utility from unity post-processing stack V2
 	public static class HaltonSeq

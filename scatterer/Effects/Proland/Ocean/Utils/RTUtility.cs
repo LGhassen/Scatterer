@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-namespace scatterer
+namespace Scatterer
 {
 	static public class RTUtility
 	{

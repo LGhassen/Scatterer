@@ -5,7 +5,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class FakeOceanPQS : PQSMod
 	{

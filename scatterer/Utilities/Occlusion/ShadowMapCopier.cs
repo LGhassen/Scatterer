@@ -12,7 +12,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ShadowMapCopier : MonoBehaviour
 	{

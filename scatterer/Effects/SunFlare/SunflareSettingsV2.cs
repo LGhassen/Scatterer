@@ -5,7 +5,7 @@ using System.IO;
 using System;
 using System.Collections.Generic;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class SunflareSettingsV2
 	{

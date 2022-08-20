@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-namespace scatterer {
+namespace Scatterer {
 	/*
 	 * Extend the OceanFFT node to also generate ocean white caps.
 	 */

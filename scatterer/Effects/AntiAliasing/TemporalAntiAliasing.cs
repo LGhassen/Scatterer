@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace scatterer
+namespace Scatterer
 {
 	// Not recommended in KSP, setting a custom camera projection matrix in Unity causes shadowmaps to flicker with high far/near clipplanes ratio
 	// Temporal anti-aliasing from Unity post-processing stack V2
