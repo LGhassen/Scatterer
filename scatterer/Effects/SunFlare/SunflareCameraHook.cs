@@ -24,7 +24,7 @@ namespace scatterer
 
 		public void OnPreRender()
 		{
-			if(!ReferenceEquals(flare,null))
+			if(flare != null)
 			{
 				flare.updateProperties ();
 				flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,1.0f);
@@ -34,7 +34,7 @@ namespace scatterer
 
 		public void OnPostRender()
 		{
-			if(!ReferenceEquals(flare,null))
+			if(flare != null)
 			{
 				flare.ClearExtinction ();
 				flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,0.0f);
