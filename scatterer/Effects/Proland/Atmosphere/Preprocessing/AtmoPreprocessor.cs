@@ -228,9 +228,6 @@ namespace Scatterer
 			SetParameters(m_copyInscatterNMaterial);
 			SetParameters(m_copyIrradianceMaterial);
 
-			// m_step = 0;
-			// scatteringOrder = 2;
-
 			RTUtility.ClearColor(m_irradianceT);
 			
 			Preprocess(assetPath);
@@ -266,24 +263,16 @@ namespace Scatterer
             CopyIrradiance();
 			CopyInscatter1();
 
-			if (!multipleScattering)
-            {
+			for (int scatteringOrder = 2; scatteringOrder <= (multipleScattering ? scatteringOrders : 2); scatteringOrder++)
+			{
 				ComputeInscatterS(2);
 				ComputeIrradianceN(2);
 				ComputeInscatterN();
 				CopyIrradianceK1();
-			}
-			else
-            {
-				for (int scatteringOrder=2; scatteringOrder<=scatteringOrders; scatteringOrder++)
-                {
-					ComputeInscatterS(scatteringOrder);
-					ComputeIrradianceN(scatteringOrder);
-					ComputeInscatterN();
-					CopyIrradianceK1();
+
+				if (multipleScattering)
 					CopyInscatterN();
-				}
-            }
+			}
 
 			if (!Directory.Exists(assetPath))
 				Directory.CreateDirectory(assetPath);
