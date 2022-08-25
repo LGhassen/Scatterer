@@ -53,9 +53,9 @@ namespace Scatterer {
 		public Vector4 m_gridSizes = new Vector4(5488, 392, 28, 2);				//Size in meters (i.e. in spatial domain) of each grid
 		public Vector4 m_choppyness = new Vector4(2.3f, 2.1f, 1.3f, 0.9f);		//strenght of sideways displacement for each grid
 
-		public int m_fourierGridSize = 64;										//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
-		
-		private int m_varianceSize = SystemInfo.supportsComputeShaders ? 16 : 4;
+		public int m_fourierGridSize = 64;                                      //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
+
+		private int m_varianceSize;
 		
 		float m_fsize;
 		float m_maxSlopeVariance;
@@ -98,6 +98,11 @@ namespace Scatterer {
 		[Persistent] public float m_farWhiteCapStr = 0.1f;
 
 		private GPUWaveInteractionHandler waveInteractionHandler = null;
+
+		public void Awake()
+		{
+			m_varianceSize = SystemInfo.supportsComputeShaders ? 16 : 4;
+		}
 
 		public override void Init(ProlandManager manager)
 		{

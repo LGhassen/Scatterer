@@ -30,11 +30,11 @@ namespace Scatterer
 		static Dictionary<string, Texture2D> texturesDictionary = new Dictionary<string, Texture2D> ();
 
 		//Size is loaded automatically from the files
-		Texture2D sunSpikes = new Texture2D (1, 1);
-		Texture2D sunFlare  = new Texture2D (1, 1);
-		Texture2D sunGhost1 = new Texture2D (1, 1);
-		Texture2D sunGhost2 = new Texture2D (1, 1);
-		Texture2D sunGhost3 = new Texture2D (1, 1);
+		Texture2D sunSpikes;
+		Texture2D sunFlare;
+		Texture2D sunGhost1;
+		Texture2D sunGhost2;
+		Texture2D sunGhost3;
 
 		public RenderTexture extinctionTexture;
 		int waitBeforeReloadCnt = 0;
