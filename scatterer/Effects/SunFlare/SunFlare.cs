@@ -29,12 +29,6 @@ namespace Scatterer
 
 		static Dictionary<string, Texture2D> texturesDictionary = new Dictionary<string, Texture2D> ();
 
-		//Size is loaded automatically from the files
-		Texture2D sunSpikes;
-		Texture2D sunFlare;
-		Texture2D sunGhost1;
-		Texture2D sunGhost2;
-		Texture2D sunGhost3;
 
 		public RenderTexture extinctionTexture;
 		int waitBeforeReloadCnt = 0;
@@ -375,12 +369,12 @@ namespace Scatterer
 
 		void ApplySyntaxV1FlareConfig ()
 		{
-			LoadAndSetTexture ("sunFlare" , sunFlare , (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunFlare.png")));
-			LoadAndSetTexture ("sunSpikes", sunSpikes, (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunSpikes.png")));
+			LoadAndSetTexture ("sunFlare" , (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunFlare.png")));
+			LoadAndSetTexture ("sunSpikes", (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunSpikes.png")));
 
-			LoadAndSetTexture ("sunGhost1", sunGhost1, (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost1.png")));
-			LoadAndSetTexture ("sunGhost2", sunGhost2, (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost2.png")));
-			LoadAndSetTexture ("sunGhost3", sunGhost3, (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost3.png")));
+			LoadAndSetTexture ("sunGhost1", (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost1.png")));
+			LoadAndSetTexture ("sunGhost2", (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost2.png")));
+			LoadAndSetTexture ("sunGhost3", (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost3.png")));
 
 			//didn't want to serialize the matrices directly as the result is pretty unreadable
 			//sorry about the mess, syntax v2 is cleaner
@@ -446,12 +440,12 @@ namespace Scatterer
 
 			if (settingsV2.flares.Count > 0)
 			{
-				LoadAndSetTexture ("sunFlare", sunFlare, Utils.GameDataPath + settingsV2.flares[0].texture);
+				LoadAndSetTexture ("sunFlare", Utils.GameDataPath + settingsV2.flares[0].texture);
 				sunglareMaterial.SetVector ("flareSettings", new Vector3(1f, settingsV2.flares[0].displayAspectRatio,1f));
 			}
 			if (settingsV2.flares.Count > 1)
 			{
-				LoadAndSetTexture ("sunSpikes", sunSpikes, Utils.GameDataPath + settingsV2.flares[1].texture);
+				LoadAndSetTexture ("sunSpikes", Utils.GameDataPath + settingsV2.flares[1].texture);
 				sunglareMaterial.SetVector ("spikesSettings", new Vector3(1f, settingsV2.flares[1].displayAspectRatio,1f));
 			}
 			if (settingsV2.flares.Count > 2)
@@ -462,17 +456,17 @@ namespace Scatterer
 			//All static settings are set for ghosts, all that's left to do is configure the fade from ghost intensity curves
 			if (settingsV2.ghosts.Count > 0)
 			{
-				LoadAndSetTexture ("sunGhost1", sunGhost1, Utils.GameDataPath + settingsV2.ghosts[0].texture);
+				LoadAndSetTexture ("sunGhost1", Utils.GameDataPath + settingsV2.ghosts[0].texture);
 				SetGhostParameters ("ghost1Settings1", "ghost1Settings2", settingsV2.ghosts[0]);
 			}
 			if (settingsV2.ghosts.Count > 1)
 			{
-				LoadAndSetTexture ("sunGhost2", sunGhost2, Utils.GameDataPath + settingsV2.ghosts[1].texture);
+				LoadAndSetTexture ("sunGhost2", Utils.GameDataPath + settingsV2.ghosts[1].texture);
 				SetGhostParameters ("ghost2Settings1", "ghost2Settings2", settingsV2.ghosts[1]);
 			}
 			if (settingsV2.ghosts.Count > 2)
 			{
-				LoadAndSetTexture ("sunGhost3", sunGhost3, Utils.GameDataPath + settingsV2.ghosts[2].texture);
+				LoadAndSetTexture ("sunGhost3", Utils.GameDataPath + settingsV2.ghosts[2].texture);
 				SetGhostParameters ("ghost3Settings1", "ghost3Settings2", settingsV2.ghosts[2]);
 			}
 			if (settingsV2.ghosts.Count > 3)
@@ -499,8 +493,10 @@ namespace Scatterer
 			sunglareMaterial.SetMatrix (shaderParam2, ghostSettings2);
 		}
 
-		void LoadAndSetTexture (string textureName, Texture2D texture, string path)
+		void LoadAndSetTexture (string textureName, string path)
 		{
+			Texture2D texture = null;
+
 			if (texturesDictionary.ContainsKey (path))
 			{
 				texture = texturesDictionary[path];
@@ -513,7 +509,8 @@ namespace Scatterer
 				}
 				else
 				{
-					texture.LoadImage (System.IO.File.ReadAllBytes (path));
+					texture = new Texture2D(1, 1);
+					texture.LoadImage(System.IO.File.ReadAllBytes(path));
 				}
 
 				texturesDictionary[path] = texture;
