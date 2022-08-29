@@ -110,7 +110,7 @@ namespace Scatterer
 			}
 			else
 			{
-				if (isEnabled)
+				if (isEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
 				{
 					targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
 					isEnabled = false;

@@ -56,8 +56,6 @@ namespace Scatterer
 				if (!cam)
 					return;
 
-				material.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, cam.cameraToWorldMatrix);
-
 				if (!hasOcean)
 					ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
 
@@ -220,9 +218,14 @@ namespace Scatterer
 			}
 		}
 		
+		void OnPreRender()
+		{
+			targetMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, targetCamera.cameraToWorldMatrix);
+		}
+
 		void OnPostRender()
 		{
-			if (renderingEnabled)
+			if (renderingEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
 			{
 				targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
 				renderingEnabled = false;

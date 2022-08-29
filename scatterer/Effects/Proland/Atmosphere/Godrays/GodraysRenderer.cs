@@ -223,7 +223,7 @@ namespace Scatterer
 
 		public void RenderingDone()
 		{
-			if (commandBufferAdded)
+			if (commandBufferAdded && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardOpaque, shadowVolumeCB);
 

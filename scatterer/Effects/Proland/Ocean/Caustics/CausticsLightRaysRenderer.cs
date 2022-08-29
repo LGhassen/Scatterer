@@ -236,7 +236,7 @@ namespace Scatterer
 		
 		public void OnPostRender()
 		{
-			if (renderingEnabled)
+			if (renderingEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
 			{
 				targetCamera.RemoveCommandBuffer(CameraEvent.AfterForwardAlpha, commandBuffer);
 				renderingEnabled = false;
