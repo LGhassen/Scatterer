@@ -159,7 +159,7 @@ namespace Scatterer
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
 				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && godraysRenderer);
+					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && !godraysRenderer);
 				else
 					localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt, prolandManager);
 
