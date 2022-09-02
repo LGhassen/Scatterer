@@ -133,7 +133,7 @@ namespace Scatterer
 
 		public void updateProperties()
 		{
-			sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint (sourceScaledTransform.position);
+			sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint (sourceScaledTransform.position, Camera.current.stereoActiveEye);
 			hitStatus=false;
 
 			if (sunViewPortPos.z > 0)
@@ -225,6 +225,11 @@ namespace Scatterer
 						hitStatus=false;
 				}
 
+				// For whatever reason, calling SetVector on the material doesn't work for the right eye in VR
+				// but calling Shader.SetGlobalVector does (note OnPreRender is called for each eye)
+				// However this will probably break situations where more than one star has an active lens flare
+				// so I don't want to enable that by default.
+				// Shader.SetGlobalVector(ShaderProperties.sunViewPortPos_PROPERTY, sunViewPortPos);
 				sunglareMaterial.SetVector (ShaderProperties.sunViewPortPos_PROPERTY, sunViewPortPos);
 
 				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
