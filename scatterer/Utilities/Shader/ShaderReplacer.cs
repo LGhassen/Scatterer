@@ -170,10 +170,10 @@ namespace Scatterer
 		{
 			String name = mat.shader.name;
 
-			if (name.StartsWith(eveShaderPrefix) && shadersToReplace.Contains(name.Substring(eveShaderPrefix.Length)))
-            {
-				Utils.LogDebug("replacing "+ name);
-				string replacementShaderName = scattererShaderPrefix + "/" + name.Substring(eveShaderPrefix.Length);
+			if (name.StartsWith(eveShaderPrefix) && shadersToReplace.Contains(name.Substring(eveShaderPrefix.Length+1)))
+			{
+				Utils.LogDebug("replacing " + name);
+				string replacementShaderName = scattererShaderPrefix + "/" + name.Substring(eveShaderPrefix.Length + 1);
 
 				if (LoadedShaders.ContainsKey(replacementShaderName))
 				{
@@ -181,9 +181,9 @@ namespace Scatterer
 					Utils.LogDebug("Shader replaced");
 				}
 				else
-                {
+				{
 					Utils.LogDebug("Shader " + replacementShaderName + " not loaded?");
-				}	
+				}
 			}
 		}
 
