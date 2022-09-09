@@ -37,7 +37,7 @@ namespace Scatterer
 		public bool checkOceanDepth = false;
 		public bool jitterTransparencies = false;
 
-		public TemporalAntiAliasing()
+		public void Awake()
 		{
 			targetCamera = GetComponent<Camera>();
 			originalDepthTextureMode = targetCamera.depthTextureMode;

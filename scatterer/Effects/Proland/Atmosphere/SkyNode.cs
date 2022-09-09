@@ -790,8 +790,11 @@ namespace Scatterer
 				}
 			}
 
-			if (originalScaledMesh)
-				parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = originalScaledMesh;
+			if (originalScaledMesh && parentScaledTransform)
+			{ 
+				var mf = parentScaledTransform.GetComponent<MeshFilter> ();
+				if (mf) mf.sharedMesh = originalScaledMesh;
+			}
 
 			RestoreStockScaledTexture ();
 		}
@@ -1048,7 +1051,7 @@ namespace Scatterer
 
 		public void RestoreStockScaledTexture () 	//move to utils/scaledUtils etc
 		{
-			if (originalPlanetTexture)
+			if (originalPlanetTexture && stockScaledPlanetMeshRenderer)
 			{
 				List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
 

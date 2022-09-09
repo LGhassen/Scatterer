@@ -144,7 +144,6 @@
     <Compile Include="Scatterer.cs" />
     <Compile Include="Utilities\Shader\ShaderReplacer.cs" />
     <Compile Include="Utilities\Shader\ShaderProperties.cs" />
-    <Compile Include="Utilities\Shader\RenderTypeFixer.cs" />
     <Compile Include="Utilities\Camera\DisableEffectsChecker.cs" />
     <Compile Include="Utilities\Camera\DisableAmbientLight.cs" />
     <Compile Include="Utilities\Camera\WireFrame.cs" />
