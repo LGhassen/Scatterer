@@ -459,7 +459,7 @@ namespace Scatterer
 					GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/customScreenSpaceShadows")]);
 				}
 
-				if (mainSettings.shadowsOnOcean)
+				if (mainSettings.shadowsOnOcean || mainSettings.oceanLightRays)
 				{
 					if (unifiedCameraMode || SystemInfo.graphicsDeviceVersion.Contains("Direct3D 11.0"))
 					{

@@ -156,7 +156,7 @@ namespace Scatterer
 			DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
 			disableEffectsChecker.manager = this.prolandManager;
 
-			if (Scatterer.Instance.mainSettings.shadowsOnOcean)
+			if (Scatterer.Instance.mainSettings.shadowsOnOcean || Scatterer.Instance.mainSettings.oceanLightRays)
 			{
 				ShadowMapRetrieveCommandBuffer retriever = prolandManager.mainSunLight.gameObject.GetComponent<ShadowMapRetrieveCommandBuffer>();
 				if (!retriever)
@@ -193,7 +193,7 @@ namespace Scatterer
 					causticsShadowMaskModulator = null;
 				}
 
-				if (Scatterer.Instance.mainSettings.oceanLightRays && Scatterer.Instance.mainSettings.shadowsOnOcean)
+				if (Scatterer.Instance.mainSettings.oceanLightRays)
 				{
 					causticsLightRaysRenderer = (CausticsLightRaysRenderer) waterGameObjects[0].AddComponent<CausticsLightRaysRenderer>();
 					if (!causticsLightRaysRenderer.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
