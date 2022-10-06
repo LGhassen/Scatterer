@@ -33,6 +33,7 @@ namespace Scatterer
 		//Map them here to facilitate accessing the volumetrics later
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 		public object EVEinstance;
+		public Material raymarchedVolumetricsCompositeMaterial = null;
 
 		public EVEReflectionHandler ()
 		{
@@ -135,9 +136,6 @@ namespace Scatterer
 
 				Material shadowMaterial = null;
 
-				//first try to get screenSpace shadow, if it doesn't work means we are on old EVE and grab shadowProjector
-				//make sure to try this on old EVE
-
 				object screenSpaceShadow = null;
 
 				try
@@ -222,9 +220,9 @@ namespace Scatterer
 	}
 
 
-		public void mapEVEVolumetrics(string celestialBodyName, List<Material> EVEvolumetrics)
+		public void MapEVEVolumetrics(string celestialBodyName, List<Material> EVEvolumetrics)
 		{
-			Utils.LogDebug (" Mapping EVE volumetrics for planet: "+celestialBodyName);
+			Utils.LogDebug ("Mapping EVE volumetrics for planet: "+celestialBodyName);
 			
 			EVEvolumetrics.Clear ();
 			
@@ -285,6 +283,12 @@ namespace Scatterer
 						}
 
 						EVEvolumetrics.Add(RaymarchedMaterial);
+
+						if (raymarchedVolumetricsCompositeMaterial == null)
+                        {
+							raymarchedVolumetricsCompositeMaterial = layerRaymarchedVolume.GetType().GetField("raymarchedCloudCompositeMaterial", flags)?.GetValue(layerRaymarchedVolume) as Material;
+						}
+
 					}
 					catch (Exception stupid)
 					{

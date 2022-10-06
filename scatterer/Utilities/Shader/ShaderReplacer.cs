@@ -128,9 +128,9 @@ namespace Scatterer
 
 			Utils.LogDebug("Successfully grabbed EVE shader dictionary");
 
-			var shadersToReplace = new List<string>() { "Cloud", "CloudVolumeParticle", "GeometryCloudVolumeParticle", "GeometryCloudVolumeParticleToTexture", "RaymarchCloud" };
+			var shadersToReplace = new List<string>() { "Cloud", "CloudVolumeParticle", "GeometryCloudVolumeParticle", "GeometryCloudVolumeParticleToTexture", "RaymarchCloud", "CompositeRaymarchedClouds", "ReconstructRaymarchedClouds" };
 
-			foreach(var shaderName in shadersToReplace)
+			foreach (var shaderName in shadersToReplace)
             {
 				ReplaceOrAddShader(shaderName, EVEshaderDictionary);
 			}

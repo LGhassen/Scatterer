@@ -782,6 +782,12 @@ namespace Scatterer
 							EVEvolumetrics[i].DisableKeyword ("SCATTERER_ON");
 							EVEvolumetrics[i].EnableKeyword ("SCATTERER_OFF");
 						}
+
+						if (Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial)
+						{
+							Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial.DisableKeyword("SCATTERER_ON");
+							Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial.EnableKeyword("SCATTERER_OFF");
+						}
 					}
 				}
 				catch (Exception)
@@ -1289,7 +1295,7 @@ namespace Scatterer
 
 		public void MapEVEVolumetrics()
 		{
-			Scatterer.Instance.eveReflectionHandler.mapEVEVolumetrics (celestialBodyName, EVEvolumetrics);
+			Scatterer.Instance.eveReflectionHandler.MapEVEVolumetrics (celestialBodyName, EVEvolumetrics);
 
 			foreach (Material particleMaterial in EVEvolumetrics)
 			{
@@ -1298,6 +1304,15 @@ namespace Scatterer
 			
 				InitUniforms (particleMaterial);
 				InitPostprocessMaterialUniforms (particleMaterial);
+			}
+
+			if (Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial)
+            {
+				Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial.EnableKeyword("SCATTERER_ON");
+				Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial.DisableKeyword("SCATTERER_OFF");
+
+				InitUniforms(Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial);
+				InitPostprocessMaterialUniforms(Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial);
 			}
 
 			mappedVolumetrics = true;
@@ -1328,6 +1343,12 @@ namespace Scatterer
 					UpdatePostProcessMaterialUniforms (volumetricsMat);
 					volumetricsMat.SetVector (ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
 					volumetricsMat.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier);
+				}
+
+				if (Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial)
+                {
+					SetUniforms(Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial);
+					UpdatePostProcessMaterialUniforms(Scatterer.Instance.eveReflectionHandler.raymarchedVolumetricsCompositeMaterial);
 				}
 			}
 		}
