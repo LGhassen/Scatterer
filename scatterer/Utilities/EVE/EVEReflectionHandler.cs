@@ -33,7 +33,6 @@ namespace Scatterer
 		//Map them here to facilitate accessing the volumetrics later
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 		public object EVEinstance;
-		public Material raymarchedVolumetricsCompositeMaterial = null;
 
 		public EVEReflectionHandler ()
 		{
@@ -283,12 +282,6 @@ namespace Scatterer
 						}
 
 						EVEvolumetrics.Add(RaymarchedMaterial);
-
-						if (raymarchedVolumetricsCompositeMaterial == null)
-                        {
-							raymarchedVolumetricsCompositeMaterial = layerRaymarchedVolume.GetType().GetField("raymarchedCloudCompositeMaterial", flags)?.GetValue(layerRaymarchedVolume) as Material;
-						}
-
 					}
 					catch (Exception stupid)
 					{
