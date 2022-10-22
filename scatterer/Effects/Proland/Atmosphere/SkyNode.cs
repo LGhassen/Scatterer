@@ -907,6 +907,8 @@ namespace Scatterer
 		{
 			if (!stockScaledPlanetMeshRenderer.sharedMaterial.HasProperty ("_MainTex"))  //this property is absent on gas giants
 			{
+				DisableStockSky();
+
 				if (adjustScaledTexture)
 					TweakStockScaledTexture ();
 			}
