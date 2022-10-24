@@ -28,7 +28,7 @@ namespace Scatterer
 
 		String[] qualityPresetsStrings;
 		string currentPreset;
-		int selQualityPresetInt = 0;
+		int selQualityPresetInt = -1;
 		
 		public MainOptionsGUI ()
 		{
@@ -54,6 +54,7 @@ namespace Scatterer
 			{
 				if (GUILayout.Button ("Quality Presets"))
 				{
+					InitPresets();
 					selectedMainMenuTab = MainMenuTabs.QualityPresets;
 				}
 				if (GUILayout.Button ("Customize Settings"))
@@ -77,41 +78,45 @@ namespace Scatterer
 		{
 			if (qualityPresetsStrings == null)
 			{
-				qualityPresetsStrings = QualityPresetsLoader.GetPresetsList ();
-				currentPreset = QualityPresetsLoader.FindPresetOfCurrentSettings(Scatterer.Instance.mainSettings);
-				
-				int index = qualityPresetsStrings.IndexOf(currentPreset);
-				
-				if (index != -1)
-				{
-					selQualityPresetInt = index;
-				}
+				InitPresets();
 			}
-			else
+
+			GUILayout.BeginVertical();
+			GUILayout.BeginHorizontal();
 			{
-				GUILayout.BeginVertical ();
-				GUILayout.BeginHorizontal ();
-				{
-					GUILayout.Label("Current preset:");
-					GUILayout.TextField(currentPreset);
-				}
-				GUILayout.EndHorizontal ();
-				selQualityPresetInt = GUILayout.SelectionGrid (selQualityPresetInt, qualityPresetsStrings, 1);
-				GUILayout.Label("");
-				if (GUILayout.Button ("Apply preset"))
-				{
-					if (qualityPresetsStrings.Count() > 0)
-					{
-						Utils.LogInfo("Applying quality preset "+qualityPresetsStrings[selQualityPresetInt]);
-						QualityPresetsLoader.LoadPresetIntoMainSettings(Scatterer.Instance.mainSettings, qualityPresetsStrings[selQualityPresetInt]);
-						currentPreset = qualityPresetsStrings[selQualityPresetInt];
-					}
-				}
-				GUILayout.EndVertical ();
+				GUILayout.Label("Current preset:");
+				GUILayout.TextField(currentPreset);
 			}
+			GUILayout.EndHorizontal();
+			selQualityPresetInt = GUILayout.SelectionGrid(selQualityPresetInt, qualityPresetsStrings, 1);
+			GUILayout.Label("");
+			if (GUILayout.Button("Apply preset"))
+			{
+				if (qualityPresetsStrings.Count() > 0)
+				{
+					Utils.LogInfo("Applying quality preset " + qualityPresetsStrings[selQualityPresetInt]);
+					QualityPresetsLoader.LoadPresetIntoMainSettings(Scatterer.Instance.mainSettings, qualityPresetsStrings[selQualityPresetInt]);
+					currentPreset = qualityPresetsStrings[selQualityPresetInt];
+				}
+			}
+			GUILayout.EndVertical();
 		}
-		
-		void DrawIndividualSettings ()
+
+        private void InitPresets()
+        {
+			if (qualityPresetsStrings == null)
+			{
+				qualityPresetsStrings = QualityPresetsLoader.GetPresetsList();
+			}
+
+			currentPreset = QualityPresetsLoader.FindPresetOfCurrentSettings(Scatterer.Instance.mainSettings);
+
+            int index = qualityPresetsStrings.IndexOf(currentPreset);
+
+			selQualityPresetInt = index;
+        }
+
+        void DrawIndividualSettings ()
 		{
 			GUILayout.BeginHorizontal ();
 			{
