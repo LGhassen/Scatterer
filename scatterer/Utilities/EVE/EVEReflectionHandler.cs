@@ -34,6 +34,9 @@ namespace Scatterer
 		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
 		public object EVEinstance;
 
+		private EventVoid onCloudsApplyEvent;
+		private bool onApplyCloudsEventAdded = false;
+
 		public EVEReflectionHandler ()
 		{
 		}
@@ -85,7 +88,22 @@ namespace Scatterer
 			{
 				Utils.LogInfo("Successfully grabbed EVE Instance");
 			}
-			
+
+			try
+			{
+				onCloudsApplyEvent = EVEType.GetField("onApply", flags).GetValue(EVEinstance) as EventVoid;
+
+				if (onCloudsApplyEvent != null)
+                {
+					onCloudsApplyEvent.Add(OnCloudsReapplied);
+					onApplyCloudsEventAdded = true;
+				}
+			}
+			catch (Exception)
+			{
+				Utils.LogDebug("No EVE onCloudsApplyEvent found");
+			}
+
 			IList objectList = EVEType.GetField ("ObjectList", flags).GetValue (EVEinstance) as IList;
 			
 			foreach (object _obj in objectList)
@@ -295,6 +313,26 @@ namespace Scatterer
 			{
 				Utils.LogDebug (" No cloud objects for planet: " + celestialBodyName);
 			}
+		}
+
+		public void OnCloudsReapplied()
+        {
+			MapEVEClouds();
+			foreach (ScattererCelestialBody _cel in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
+			{
+				if (_cel.active)
+				{
+					_cel.prolandManager.skyNode.InitEVEClouds();
+					//if (!_cel.prolandManager.skyNode.inScaledSpace)
+					_cel.prolandManager.skyNode.MapEVEVolumetrics();
+				}
+			}
+		}
+
+		public void CleanUp()
+        {
+			if (onApplyCloudsEventAdded)
+				onCloudsApplyEvent.Remove(OnCloudsReapplied);
 		}
 	}
 }

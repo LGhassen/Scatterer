@@ -362,6 +362,9 @@ namespace Scatterer
 				if (mainSettings.useDepthBufferMode)
 					QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
 
+				if (eveReflectionHandler != null)
+					eveReflectionHandler.CleanUp();
+
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
 				SaveSettings();
 			}
