@@ -24,6 +24,7 @@ namespace Scatterer
 		public BufferManager bufferManager;
 		public SunflareManager sunflareManager; GameObject sunflareManagerGO;
 		public EVEReflectionHandler eveReflectionHandler;
+		private Coroutine cloudReappliedCoroutine;
 		//public PlanetshineManager planetshineManager;
 
 		DisableAmbientLight ambientLightScript;
@@ -569,6 +570,24 @@ namespace Scatterer
 					mainMenuLight = _light;
 				}
 			}
+		}
+
+		// TODO: this shouldn't be here
+		public void TriggerOnCloudReapplied()
+        {
+			if (cloudReappliedCoroutine != null)
+				StopCoroutine(cloudReappliedCoroutine);
+
+			cloudReappliedCoroutine = StartCoroutine(DelayedOnCloudsReapplied());
+        }
+
+		IEnumerator DelayedOnCloudsReapplied()
+		{
+			yield return new WaitForFixedUpdate();
+			yield return new WaitForFixedUpdate();
+
+			if (eveReflectionHandler != null)
+				eveReflectionHandler.OnCloudsReapplied();
 		}
 
 		public void OnRenderTexturesLost()

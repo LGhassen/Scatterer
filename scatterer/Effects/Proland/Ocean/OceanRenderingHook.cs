@@ -140,13 +140,16 @@ namespace Scatterer
 				rendererCommandBuffer.SetGlobalFloat(ShaderProperties.render_ocean_cloud_shadow_PROPERTY, 1f);
 
 				//draw cloud shadows
-				foreach (var clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName])
-                {
-					if (clouds2d.CloudShadowMaterial != null)
-                    {
-						rendererCommandBuffer.Blit(null, oceanRenderTexture, clouds2d.CloudShadowMaterial);
+				if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
+				{ 
+					foreach (var clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName])
+					{
+						if (clouds2d.CloudShadowMaterial != null)
+						{
+							rendererCommandBuffer.Blit(null, oceanRenderTexture, clouds2d.CloudShadowMaterial);
+						}
 					}
-                }
+				}
 
 				//disable regular cloud shadows
 				rendererCommandBuffer.SetGlobalFloat(ShaderProperties.render_ocean_cloud_shadow_PROPERTY, 0f);

@@ -35,7 +35,6 @@ namespace Scatterer
 		public object EVEinstance;
 
 		private EventVoid onCloudsApplyEvent;
-		private bool onApplyCloudsEventAdded = false;
 
 		public EVEReflectionHandler ()
 		{
@@ -49,6 +48,8 @@ namespace Scatterer
 		public void MapEVEClouds()
 		{
 			Utils.LogDebug ("mapping EVE clouds");
+
+			CleanUp();
 			EVEClouds2dDictionary.Clear();
 			EVECloudObjects.Clear ();
 			
@@ -95,8 +96,7 @@ namespace Scatterer
 
 				if (onCloudsApplyEvent != null)
                 {
-					onCloudsApplyEvent.Add(OnCloudsReapplied);
-					onApplyCloudsEventAdded = true;
+					onCloudsApplyEvent.Add(Scatterer.Instance.TriggerOnCloudReapplied);
 				}
 			}
 			catch (Exception)
@@ -316,7 +316,7 @@ namespace Scatterer
 		}
 
 		public void OnCloudsReapplied()
-        {
+		{
 			MapEVEClouds();
 			foreach (ScattererCelestialBody _cel in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
@@ -327,12 +327,14 @@ namespace Scatterer
 					_cel.prolandManager.skyNode.MapEVEVolumetrics();
 				}
 			}
+
+			Scatterer.Instance.OnRenderTexturesLost(); // to recreate any ocean stuck with old cloud shadows
 		}
 
 		public void CleanUp()
         {
-			if (onApplyCloudsEventAdded)
-				onCloudsApplyEvent.Remove(OnCloudsReapplied);
+			if (onCloudsApplyEvent != null)
+				onCloudsApplyEvent.Remove(Scatterer.Instance.TriggerOnCloudReapplied);
 		}
 	}
 }
