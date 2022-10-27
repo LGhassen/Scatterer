@@ -1,13 +1,4 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -23,7 +14,8 @@ namespace Scatterer
 		
 		public MeshRenderer targetRenderer;
 		public Material targetMaterial;
-		
+		public string celestialBodyName;
+
 		//Dictionary to check if we added the OceanCommandBuffer to the camera
 		private Dictionary<Camera,OceanCommandBuffer> cameraToOceanCommandBuffer = new Dictionary<Camera,OceanCommandBuffer>();
 		
@@ -60,6 +52,7 @@ namespace Scatterer
 					OceanCommandBuffer oceanCommandBuffer = (OceanCommandBuffer) cam.gameObject.AddComponent(typeof(OceanCommandBuffer));
 					oceanCommandBuffer.targetRenderer = targetRenderer;
 					oceanCommandBuffer.targetMaterial = targetMaterial;
+					oceanCommandBuffer.celestialBodyName = celestialBodyName;
 					oceanCommandBuffer.Initialize();
 					oceanCommandBuffer.EnableForThisFrame();
 					
@@ -84,7 +77,8 @@ namespace Scatterer
 
 		public MeshRenderer targetRenderer;
 		public Material targetMaterial;
-		
+		public string celestialBodyName;
+
 		private Camera targetCamera;
 		private CommandBuffer rendererCommandBuffer;
 
@@ -135,12 +129,30 @@ namespace Scatterer
 
 				//draw ocean renderer
 				rendererCommandBuffer.SetRenderTarget(new RenderTargetIdentifier(oceanRenderTexture), new RenderTargetIdentifier(depthCopyRenderTexture));
-				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial,0, 0); 	//this doesn't work with pixel lights so render only the main pass here and render pixel lights the regular way
+				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial,0, 0);   //this doesn't work with pixel lights so render only the main pass here and render pixel lights the regular way
 																							//they will render on top of depth buffer scattering but that's not a noticeable issue, especially since ocean lights are soft additive
-				
+
+				//expose the new depth buffer
+				rendererCommandBuffer.SetRenderTarget(new RenderTargetIdentifier(oceanRenderTexture), new RenderTargetIdentifier(oceanRenderTexture.depthBuffer));
+				rendererCommandBuffer.SetGlobalTexture("ScattererDepthCopy", depthCopyRenderTexture);
+
+				//enable cloud shadows
+				rendererCommandBuffer.SetGlobalFloat(ShaderProperties.render_ocean_cloud_shadow_PROPERTY, 1f);
+
+				//draw cloud shadows
+				foreach (var clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName])
+                {
+					if (clouds2d.CloudShadowMaterial != null)
+                    {
+						rendererCommandBuffer.Blit(null, oceanRenderTexture, clouds2d.CloudShadowMaterial);
+					}
+                }
+
+				//disable regular cloud shadows
+				rendererCommandBuffer.SetGlobalFloat(ShaderProperties.render_ocean_cloud_shadow_PROPERTY, 0f);
+
 				//then set the textures for the scattering shader
 				rendererCommandBuffer.SetGlobalTexture ("ScattererScreenCopy", oceanRenderTexture);
-				rendererCommandBuffer.SetGlobalTexture ("ScattererDepthCopy",  depthCopyRenderTexture);
 			}
 		}
 

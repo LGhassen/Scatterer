@@ -361,6 +361,9 @@ namespace Scatterer
 		public static int _godrayStrength_PROPERTY { get { return _godrayStrength; } }
 		private static int _godrayStrength;
 
+		public static int render_ocean_cloud_shadow_PROPERTY { get { return render_ocean_cloud_shadow; } }
+		private static int render_ocean_cloud_shadow;
+		
 		private void Awake()
 		{
 			Rg = Shader.PropertyToID("Rg");
@@ -521,6 +524,8 @@ namespace Scatterer
 			lightToWorld = Shader.PropertyToID("lightToWorld");
 
 			_godrayStrength = Shader.PropertyToID("_godrayStrength");
+
+			render_ocean_cloud_shadow = Shader.PropertyToID("render_ocean_cloud_shadow"); 
 		}
 	}
 }

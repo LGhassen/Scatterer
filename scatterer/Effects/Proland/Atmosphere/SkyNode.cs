@@ -1257,14 +1257,14 @@ namespace Scatterer
 					// Call EVE clouds2D.reassign() method to set the shader properties
 					Scatterer.Instance.eveReflectionHandler.invokeClouds2dReassign(celestialBodyName);
 
-					int size = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName].Count;
-					for (int i=0; i<size; i++)
+					for (int i=0; i< Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName].Count; i++)
 					{
-						Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial.EnableKeyword ("SCATTERER_ON");
-						Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial.DisableKeyword ("SCATTERER_OFF");
+						var cloud2d = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i];
+						cloud2d.Clouds2dMaterial.EnableKeyword ("SCATTERER_ON");
+						cloud2d.Clouds2dMaterial.DisableKeyword ("SCATTERER_OFF");
 
-						InitUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
-						InitPostprocessMaterialUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
+						InitUniforms (cloud2d.Clouds2dMaterial);
+						InitPostprocessMaterialUniforms (cloud2d.Clouds2dMaterial);
 
 						if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 						{
@@ -1272,7 +1272,13 @@ namespace Scatterer
 							Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial, "WORLD_SPACE_ON", "WORLD_SPACE_OFF", false);
 						}
 
+						if (cloud2d.CloudShadowMaterial != null)
+                        {
+							Utils.EnableOrDisableShaderKeywords(cloud2d.CloudShadowMaterial, "SCATTERER_OCEAN_ON", "SCATTERER_OCEAN_FF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
+						}
 					}
+
+					
 				}
 				catch (Exception stupid)
 				{

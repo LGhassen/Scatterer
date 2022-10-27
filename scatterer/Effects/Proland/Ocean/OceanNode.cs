@@ -152,6 +152,7 @@ namespace Scatterer
 			oceanRenderingHook = waterGameObjects[0].AddComponent<OceanRenderingHook>();
 			oceanRenderingHook.targetMaterial = m_oceanMaterial;
 			oceanRenderingHook.targetRenderer = waterMeshRenderers [0];
+			oceanRenderingHook.celestialBodyName = prolandManager.parentCelestialBody.name;
 
 			DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
 			disableEffectsChecker.manager = this.prolandManager;
