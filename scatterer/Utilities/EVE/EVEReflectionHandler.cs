@@ -1,40 +1,29 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
 using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 
 namespace Scatterer
 {
-	public struct EVEClouds2d
+	public struct EVECloudLayer
 	{
+		public object CloudObject;
 		public Material Clouds2dMaterial;
 		public MeshRenderer Clouds2dMeshRenderer;
 		public Material CloudShadowMaterial;
+		public Material ParticleVolumetricsMaterial;
+		public Material RaymarchedVolumetricsMaterial;
 	}
 
 	public class EVEReflectionHandler
 	{
-		public Dictionary<String, List<EVEClouds2d> > EVEClouds2dDictionary = new Dictionary<String, List<EVEClouds2d>>();
-		
-		//how to make this detect when EVE re-applies though? need some kind of callback, is there one on EVE? maybe there is a C# way to add one?
-		//doesn't seem to be a way to do this, just do it in the map eve clouds button
-		//also make it so that the map eve clouds button causes the active planet to remap
+		public Dictionary<String, List<EVECloudLayer>> EVECloudLayers = new Dictionary<String, List<EVECloudLayer>>();
 
-		//map EVE CloudObjects to planet names
-		//CloudObjects in EVE contain the 2d clouds and the volumetrics for a given layer on a given planet
-		//Due to the way they are handled in EVE they don't directly reference their parent planet and the volumetrics are only created when the PQS is active
-		//Map them here to facilitate accessing the volumetrics later
-		public Dictionary<String, List<object>> EVECloudObjects = new Dictionary<String, List<object>>();
-		public object EVEinstance;
-
+		public object EVEInstance;
 		private EventVoid onCloudsApplyEvent;
+
+		private const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
 
 		public EVEReflectionHandler ()
 		{
@@ -46,106 +35,67 @@ namespace Scatterer
 		}
 
 		public void MapEVEClouds()
-		{
-			Utils.LogDebug ("mapping EVE clouds");
+        {
+            Utils.LogDebug("Mapping EVE clouds");
 
-			CleanUp();
-			EVEClouds2dDictionary.Clear();
-			EVECloudObjects.Clear ();
-			
-			//find EVE base type
-			Type EVEType = ReflectionUtils.getType("Atmosphere.CloudsManager"); 
-			
-			if (EVEType == null)
-			{
-				Utils.LogDebug("Eve assembly type not found");
-				return;
-			}
-			else
-			{
-				Utils.LogDebug("Eve assembly type found");
-			}
-			
-			Utils.LogDebug("Eve assembly version: " + EVEType.Assembly.GetName().ToString());
-			
-			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
-				BindingFlags.Instance | BindingFlags.Static;
-			
-			try
-			{
-				EVEinstance = EVEType.GetField("instance", flags).GetValue(null) ;
-			}
-			catch (Exception)
-			{
-				Utils.LogDebug("No EVE Instance found");
-				return;
-			}
-			if (EVEinstance == null)
-			{
-				Utils.LogError("Failed grabbing EVE Instance");
-				return;
-			}
-			else
-			{
-				Utils.LogInfo("Successfully grabbed EVE Instance");
-			}
+            CleanUp();
+            EVECloudLayers.Clear();
 
-			try
-			{
-				onCloudsApplyEvent = EVEType.GetField("onApply", flags).GetValue(EVEinstance) as EventVoid;
+            Type EVEType = null;
 
-				if (onCloudsApplyEvent != null)
+            if (!GetEVETypeAndInstance(ref EVEType, ref EVEInstance))
+                return;
+
+			GetOnApplyEvent(ref EVEType);
+
+			IList objectList = EVEType.GetField("ObjectList", flags).GetValue(EVEInstance) as IList;
+
+            foreach (object cloudObject in objectList)
+            {
+                String body = cloudObject.GetType().GetField("body", flags).GetValue(cloudObject) as String;
+
+				EVECloudLayer cloudLayer = new EVECloudLayer();
+				cloudLayer.CloudObject = cloudObject;
+
+				Map2DLayer(ref cloudLayer, cloudObject, body);
+				MapParticleVolumetrics(ref cloudLayer, cloudObject, body);
+				MapRaymarchedVolumetrics(ref cloudLayer, cloudObject, body);
+
+				if (EVECloudLayers.ContainsKey(body))
                 {
-					onCloudsApplyEvent.Add(Scatterer.Instance.TriggerOnCloudReapplied);
-				}
+                    EVECloudLayers[body].Add(cloudLayer);
+                }
+                else
+                {
+                    List<EVECloudLayer> cloudsList = new List<EVECloudLayer>() { cloudLayer };
+                    EVECloudLayers.Add(body, cloudsList);
+                }
 			}
-			catch (Exception)
+        }
+
+		private void Map2DLayer(ref EVECloudLayer cloudLayer, object cloudObject, string body)
+        {
+			object cloud2dObj;
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-				Utils.LogDebug("No EVE onCloudsApplyEvent found");
+				object cloudsPQS = cloudObject.GetType().GetField("cloudsPQS", flags).GetValue(cloudObject) as object;
+
+				if (cloudsPQS == null)
+				{
+					Utils.LogDebug("cloudsPQS not found for layer on planet :" + body);
+					return;
+				}
+				cloud2dObj = cloudsPQS.GetType().GetField("mainMenuLayer", flags).GetValue(cloudsPQS) as object;
+			}
+			else
+			{
+				cloud2dObj = cloudObject.GetType().GetField("layer2D", flags).GetValue(cloudObject) as object;
 			}
 
-			IList objectList = EVEType.GetField ("ObjectList", flags).GetValue (EVEinstance) as IList;
-			
-			foreach (object _obj in objectList)
+			if (cloud2dObj != null)
 			{
-				String body = _obj.GetType().GetField("body", flags).GetValue(_obj) as String;
-				
-				if (EVECloudObjects.ContainsKey(body))
-				{
-					EVECloudObjects[body].Add(_obj);
-				}
-				else
-				{
-					List<object> objectsList = new List<object>();
-					objectsList.Add(_obj);
-					EVECloudObjects.Add(body,objectsList);
-				}
-				
-				object cloud2dObj;
-				if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-				{
-					object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags).GetValue(_obj) as object;
-					
-					if (cloudsPQS==null)
-					{
-						Utils.LogDebug("cloudsPQS not found for layer on planet :"+body);
-						continue;
-					}
-					cloud2dObj = cloudsPQS.GetType().GetField("mainMenuLayer", flags).GetValue(cloudsPQS) as object;
-				}
-				else
-				{
-					cloud2dObj = _obj.GetType().GetField("layer2D", flags).GetValue(_obj) as object;
-				}
-				
-				if (cloud2dObj==null)
-				{
-					Utils.LogDebug("layer2d not found for layer on planet :"+body);
-					continue;
-				}
-				
 				GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
-				if (cloudmesh==null)
+				if (cloudmesh == null)
 				{
 					Utils.LogDebug("cloudmesh null");
 					return;
@@ -159,7 +109,7 @@ namespace Scatterer
 				{
 					screenSpaceShadow = cloud2dObj.GetType().GetField("screenSpaceShadow", flags).GetValue(cloud2dObj) as object;
 				}
-				catch(Exception){}
+				catch (Exception) { }
 
 				if (screenSpaceShadow != null)
 				{
@@ -168,163 +118,171 @@ namespace Scatterer
 				else
 				{
 					Projector shadowProjector = cloud2dObj.GetType().GetField("ShadowProjector", flags).GetValue(cloud2dObj) as Projector;
-					
+
 					if (shadowProjector != null && shadowProjector.material != null)
 					{
 						shadowMaterial = shadowProjector.material;
 					}
 				}
 
-				if (EVEClouds2dDictionary.ContainsKey(body))
-				{
-					EVEClouds2d clouds2d = new EVEClouds2d();
-					clouds2d.Clouds2dMeshRenderer = cloudmesh.GetComponent < MeshRenderer > ();
-					clouds2d.Clouds2dMaterial = clouds2d.Clouds2dMeshRenderer.material;
-					clouds2d.CloudShadowMaterial = shadowMaterial;
+				cloudLayer.Clouds2dMeshRenderer = cloudmesh.GetComponent<MeshRenderer>();
+				cloudLayer.Clouds2dMaterial = cloudLayer.Clouds2dMeshRenderer.material;
+				cloudLayer.CloudShadowMaterial = shadowMaterial;
 
-					EVEClouds2dDictionary[body].Add(clouds2d);
+				cloudLayer.Clouds2dMaterial.renderQueue = 2999; //fix for EVE cloud renderqueue, TODO: check if outdated and remove it
 
-					clouds2d.Clouds2dMaterial.renderQueue = 2999; //we might as well fix the EVE clouds renderqueue for 1.9 until official EVE fix
-				}
-				else
-				{
-					List<EVEClouds2d> cloudsList = new List<EVEClouds2d>();
-
-					EVEClouds2d clouds2d = new EVEClouds2d();
-					clouds2d.Clouds2dMeshRenderer = cloudmesh.GetComponent < MeshRenderer > ();
-					clouds2d.Clouds2dMaterial = clouds2d.Clouds2dMeshRenderer.material;
-					clouds2d.CloudShadowMaterial = shadowMaterial;
-
-					cloudsList.Add(clouds2d);
-					cloudmesh.GetComponent < MeshRenderer > ().material.renderQueue = 2999;
-
-					EVEClouds2dDictionary.Add(body,cloudsList);
-				}
-				Utils.LogDebug("Detected EVE 2d cloud layer for planet: "+body);
+				Utils.LogDebug("Detected EVE 2d cloud layer for planet: " + body);
 			}
 		}
-		
+
+		private void MapParticleVolumetrics(ref EVECloudLayer cloudLayer, object cloudObject, string body)
+		{
+			try
+			{
+				object cloudsPQS = cloudObject.GetType().GetField("cloudsPQS", flags)?.GetValue(cloudObject) as object;
+				object layerVolume = cloudsPQS?.GetType().GetField("layerVolume", flags)?.GetValue(cloudsPQS) as object;
+				if (layerVolume == null)
+				{
+					Utils.LogDebug("No particle volumetric cloud for layer on planet: " + body);
+					return;
+				}
+
+				Material ParticleMaterial = layerVolume.GetType().GetField("ParticleMaterial", flags)?.GetValue(layerVolume) as Material;
+
+				if (ParticleMaterial == null)
+				{
+					Utils.LogDebug("Particle volumetric cloud has no material on planet: " + body);
+					return;
+				}
+
+				cloudLayer.ParticleVolumetricsMaterial = ParticleMaterial;
+				Utils.LogDebug("Particle volumetric cloud mapped for layer on planet: " + body);
+			}
+			catch (Exception stupid)
+			{
+				Utils.LogDebug("Particle volumetric clouds error on planet: " + body + stupid.ToString());
+			}
+		}
+
+		private void MapRaymarchedVolumetrics(ref EVECloudLayer cloudLayer, object cloudObject, string body)
+		{
+			// TODO: refactor with previous function?
+
+			try
+			{
+				object cloudsPQS = cloudObject.GetType().GetField("cloudsPQS", flags)?.GetValue(cloudObject) as object;
+				object layerRaymarchedVolume = cloudsPQS?.GetType().GetField("layerRaymarchedVolume", flags)?.GetValue(cloudsPQS) as object;
+				if (layerRaymarchedVolume == null)
+				{
+					Utils.LogDebug("No raymarched volumetric cloud for layer on planet: " + body);
+					return;
+				}
+
+				Material RaymarchedMaterial = layerRaymarchedVolume.GetType().GetField("raymarchedCloudMaterial", flags)?.GetValue(layerRaymarchedVolume) as Material;
+
+				if (RaymarchedMaterial == null)
+				{
+					Utils.LogDebug("Raymarched volumetric cloud has no material on planet: " + body);
+					return;
+				}
+
+				cloudLayer.RaymarchedVolumetricsMaterial = RaymarchedMaterial;
+				Utils.LogDebug("Raymarched volumetric cloud mapped for layer on planet: " + body);
+			}
+			catch (Exception stupid)
+			{
+				Utils.LogDebug("Raymarched volumetric clouds error on planet: " + body + stupid.ToString());
+			}
+		}
+
 		public void invokeClouds2dReassign(string celestialBodyName)
-		{
-			const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | 
-				BindingFlags.Instance | BindingFlags.Static;
-			
-			foreach (object _obj in Scatterer.Instance.eveReflectionHandler.EVECloudObjects[celestialBodyName])
+		{	
+			foreach (var cloudLayer in EVECloudLayers[celestialBodyName])
 			{
-				object cloud2dObj = _obj.GetType ().GetField ("layer2D", flags).GetValue (_obj) as object;
-				if (cloud2dObj == null) {
-					Utils.LogDebug (" layer2d not found for layer on planet: " + celestialBodyName);
-					continue;
+				if (cloudLayer.CloudObject != null)
+				{ 
+					object cloud2dObj = cloudLayer.CloudObject.GetType ().GetField ("layer2D", flags).GetValue (cloudLayer.CloudObject) as object;
+					if (cloud2dObj == null) {
+						Utils.LogDebug (" layer2d not found for layer on planet: " + celestialBodyName);
+						continue;
+					}
+				
+					bool cloud2dScaled = (bool)cloud2dObj.GetType ().GetField ("isScaled", flags).GetValue (cloud2dObj);
+				
+					MethodInfo scaledGetter = cloud2dObj.GetType ().GetProperty ("Scaled").GetGetMethod ();
+					MethodInfo scaledSetter = cloud2dObj.GetType ().GetProperty ("Scaled").GetSetMethod ();
+				
+					//if in scaled mode, switch it to local then back to scaled, to set all the properties
+					if (cloud2dScaled)
+						scaledSetter.Invoke (cloud2dObj, new object[] { !cloud2dScaled });
+				
+					scaledSetter.Invoke (cloud2dObj, new object[] { cloud2dScaled });
+
+					//set the radius for use in the scatterer shader to have smooth scattering
+					float radius = (float) cloud2dObj.GetType ().GetField ("radius", flags).GetValue (cloud2dObj);
+					GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
+					cloudmesh.GetComponent < MeshRenderer > ().material.SetFloat("_Radius",radius);
 				}
-				
-				bool cloud2dScaled = (bool)cloud2dObj.GetType ().GetField ("isScaled", flags).GetValue (cloud2dObj);
-				
-				MethodInfo scaledGetter = cloud2dObj.GetType ().GetProperty ("Scaled").GetGetMethod ();
-				MethodInfo scaledSetter = cloud2dObj.GetType ().GetProperty ("Scaled").GetSetMethod ();
-				
-				//if in scaled mode, switch it to local then back to scaled, to set all the properties
-				if (cloud2dScaled)
-					scaledSetter.Invoke (cloud2dObj, new object[] { !cloud2dScaled });
-				
-				scaledSetter.Invoke (cloud2dObj, new object[] { cloud2dScaled });
-
-				//set the radius for use in the scatterer shader to have smooth scattering
-				float radius = (float) cloud2dObj.GetType ().GetField ("radius", flags).GetValue (cloud2dObj);
-				GameObject cloudmesh = cloud2dObj.GetType().GetField("CloudMesh", flags).GetValue(cloud2dObj) as GameObject;
-				cloudmesh.GetComponent < MeshRenderer > ().material.SetFloat("_Radius",radius);
-
 			}
-	}
+		}
 
-
-		public void MapEVEVolumetrics(string celestialBodyName, List<Material> EVEvolumetrics)
+		private bool GetEVETypeAndInstance(ref Type type, ref object instance)
 		{
-			Utils.LogDebug ("Mapping EVE volumetrics for planet: "+celestialBodyName);
-			
-			EVEvolumetrics.Clear ();
-			
-			const BindingFlags flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | 
-				BindingFlags.Instance | BindingFlags.Static;
-			
-			if (EVECloudObjects.ContainsKey (celestialBodyName)) //EVECloudObjects contain both the 2d clouds and the volumetrics, here we extract the volumetrics
+			type = ReflectionUtils.getType("Atmosphere.CloudsManager");
+
+			if (type == null)
 			{
-				List<object> cloudObjs = Scatterer.Instance.eveReflectionHandler.EVECloudObjects [celestialBodyName];
-				
-				foreach (object _obj in cloudObjs)
-				{
-					try
-					{
-						object cloudsPQS = _obj.GetType ().GetField("cloudsPQS", flags)?.GetValue (_obj) as object;
-						object layerVolume = cloudsPQS?.GetType ().GetField ("layerVolume", flags)?.GetValue (cloudsPQS) as object;
-						if (layerVolume == null)
-						{
-							Utils.LogDebug ("No volumetric cloud for layer on planet: " + celestialBodyName);
-							continue;
-						}
-						
-						Material ParticleMaterial = layerVolume.GetType ().GetField ("ParticleMaterial", flags)?.GetValue (layerVolume) as Material;
-						
-						if (ParticleMaterial == null)
-						{
-							Utils.LogDebug ("Volumetric cloud has no material on planet: " + celestialBodyName);
-							continue;
-						}
-						
-						EVEvolumetrics.Add (ParticleMaterial);
-					}
-					catch (Exception stupid)
-					{
-						Utils.LogDebug ("Volumetric clouds error on planet: " + celestialBodyName + stupid.ToString ());
-					}
-				}
-
-				foreach (object _obj in cloudObjs)
-				{
-					try
-					{
-						// TODO: refactor this into a function and use for both
-						object cloudsPQS = _obj.GetType().GetField("cloudsPQS", flags)?.GetValue(_obj) as object;
-						object layerRaymarchedVolume = cloudsPQS?.GetType().GetField("layerRaymarchedVolume", flags)?.GetValue(cloudsPQS) as object;
-						if (layerRaymarchedVolume == null)
-						{
-							Utils.LogDebug("No raymarched volumetric cloud for layer on planet: " + celestialBodyName);
-							continue;
-						}
-
-						Material RaymarchedMaterial = layerRaymarchedVolume.GetType().GetField("raymarchedCloudMaterial", flags)?.GetValue(layerRaymarchedVolume) as Material;
-
-						if (RaymarchedMaterial == null)
-						{
-							Utils.LogDebug("Raymarched volumetric cloud has no material on planet: " + celestialBodyName);
-							continue;
-						}
-
-						EVEvolumetrics.Add(RaymarchedMaterial);
-					}
-					catch (Exception stupid)
-					{
-						Utils.LogDebug("Raymarched volumetric clouds error on planet: " + celestialBodyName + stupid.ToString());
-					}
-				}
-
-				Utils.LogDebug (" Detected " + EVEvolumetrics.Count + " EVE volumetric layers for planet: " + celestialBodyName);
+				Utils.LogDebug("Eve assembly type not found");
+				return false;
 			}
-			else
+
+			Utils.LogDebug("Eve assembly version: " + type.Assembly.GetName().ToString());
+
+			try
 			{
-				Utils.LogDebug (" No cloud objects for planet: " + celestialBodyName);
+				instance = type.GetField("instance", flags).GetValue(null);
+			}
+			catch (Exception)
+			{
+				Utils.LogDebug("No EVE Instance found");
+				return false;
+			}
+			if (instance == null)
+			{
+				Utils.LogError("Failed grabbing EVE Instance");
+				return false;
+			}
+
+			Utils.LogInfo("Successfully grabbed EVE Instance");
+			return true;
+		}
+
+		private void GetOnApplyEvent(ref Type EVEType)
+		{
+			try
+			{
+				onCloudsApplyEvent = EVEType.GetField("onApply", flags).GetValue(EVEInstance) as EventVoid;
+
+				if (onCloudsApplyEvent != null)
+				{
+					onCloudsApplyEvent.Add(Scatterer.Instance.TriggerOnCloudReapplied);
+				}
+			}
+			catch (Exception)
+			{
+				Utils.LogDebug("No EVE onCloudsApplyEvent found");
 			}
 		}
 
 		public void OnCloudsReapplied()
 		{
 			MapEVEClouds();
+
 			foreach (ScattererCelestialBody _cel in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
 				if (_cel.active)
 				{
 					_cel.prolandManager.skyNode.InitEVEClouds();
-					//if (!_cel.prolandManager.skyNode.inScaledSpace)
-					_cel.prolandManager.skyNode.MapEVEVolumetrics();
 				}
 			}
 

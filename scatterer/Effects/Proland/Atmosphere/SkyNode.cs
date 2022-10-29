@@ -74,8 +74,6 @@ namespace Scatterer
 		public bool isConfigModuleManagerPatch = true;
 		
 		public bool usesCloudIntegration = true;
-		public List<Material> EVEvolumetrics = new List<Material>();
-		bool mappedVolumetrics=false;
 		
 		public float altitude;
 		public float percentage;
@@ -358,7 +356,6 @@ namespace Scatterer
 				scaledScatteringContainer.SwitchScaledMode ();
 			if (localScatteringContainer != null)
 				localScatteringContainer.SetActivated(false);
-			EVEvolumetrics.Clear();
 		}
 
 		public void SwitchEffectsLocal()
@@ -371,13 +368,6 @@ namespace Scatterer
 				scaledScatteringContainer.SwitchLocalMode ();
 			if (localScatteringContainer != null)
 				localScatteringContainer.SetActivated(true);
-
-			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
-			{
-				//really strange but when changing scenes StartCoroutine can return a nullref, even though I check all references
-				try {StartCoroutine(DelayedMapEVEVolumetrics());}
-				catch (Exception){}
-			}
 		}
 		
 		public void SetUniforms (Material mat)
@@ -677,18 +667,29 @@ namespace Scatterer
 
 			ReInitMaterialUniformsOnRenderTexturesLoss ();
 
-			foreach (Material particleMaterial in EVEvolumetrics)
-			{	
-				InitUniforms (particleMaterial);
-				InitPostprocessMaterialUniforms (particleMaterial);
-			}
-
-			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
+			// make the clouds2d material optional
+			// add fields for volumetrics and raymarched volumetrics
+			if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
 			{
-				foreach (EVEClouds2d eveClouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName])
+				foreach (EVECloudLayer eveCloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers [celestialBodyName])
 				{
-					InitUniforms (eveClouds2d.Clouds2dMaterial);
-					InitPostprocessMaterialUniforms (eveClouds2d.Clouds2dMaterial);
+					if (eveCloudLayer.Clouds2dMaterial != null)
+					{ 
+						InitUniforms (eveCloudLayer.Clouds2dMaterial);
+						InitPostprocessMaterialUniforms (eveCloudLayer.Clouds2dMaterial);
+					}
+
+					if (eveCloudLayer.ParticleVolumetricsMaterial != null)
+					{
+						InitUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
+						InitPostprocessMaterialUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
+					}
+
+					if (eveCloudLayer.RaymarchedVolumetricsMaterial != null)
+					{
+						InitUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
+						InitPostprocessMaterialUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
+					}
 				}
 			}
 
@@ -757,30 +758,28 @@ namespace Scatterer
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				try
-				{
-					int size;
-					
-					//2d clouds
-					if(Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
+				{	
+					if(Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
 					{
-						size = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName].Count;
-						for (int i=0;i<size;i++)
+						foreach(var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
 						{
-							Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i].Clouds2dMaterial.DisableKeyword ("SCATTERER_ON");
-							Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i].Clouds2dMaterial.EnableKeyword ("SCATTERER_OFF");
-						}
-					}
-					
-					//volumetrics
-					//if in local mode and mapping is done
-					if (!inScaledSpace && mappedVolumetrics)
-					{
-						size = EVEvolumetrics.Count;
-						
-						for (int i=0;i<size;i++)
-						{
-							EVEvolumetrics[i].DisableKeyword ("SCATTERER_ON");
-							EVEvolumetrics[i].EnableKeyword ("SCATTERER_OFF");
+							if (cloudLayer.Clouds2dMaterial != null)
+                            {
+								cloudLayer.Clouds2dMaterial.DisableKeyword("SCATTERER_ON");
+								cloudLayer.Clouds2dMaterial.EnableKeyword("SCATTERER_OFF");
+							}
+
+							if (cloudLayer.ParticleVolumetricsMaterial != null)
+							{
+								cloudLayer.ParticleVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
+								cloudLayer.ParticleVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
+							}
+
+							if (cloudLayer.RaymarchedVolumetricsMaterial != null)
+							{
+								cloudLayer.RaymarchedVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
+								cloudLayer.RaymarchedVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
+							}
 						}
 					}
 				}
@@ -1249,93 +1248,85 @@ namespace Scatterer
 
 		public void InitEVEClouds()
 		{
-			if ((Scatterer.Instance.eveReflectionHandler.EVEinstance != null) && Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
+			if ((Scatterer.Instance.eveReflectionHandler.EVEInstance != null) && Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
 			{
 				try
 				{
-					// After the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
-					// Call EVE clouds2D.reassign() method to set the shader properties
-					Scatterer.Instance.eveReflectionHandler.invokeClouds2dReassign(celestialBodyName);
+					Scatterer.Instance.eveReflectionHandler.invokeClouds2dReassign(celestialBodyName); // After the shader has been replaced by the modified scatterer shader, the properties are lost, this sets them again
 
-					for (int i=0; i< Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName].Count; i++)
+					foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
 					{
-						var cloud2d = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i];
-						cloud2d.Clouds2dMaterial.EnableKeyword ("SCATTERER_ON");
-						cloud2d.Clouds2dMaterial.DisableKeyword ("SCATTERER_OFF");
-
-						InitUniforms (cloud2d.Clouds2dMaterial);
-						InitPostprocessMaterialUniforms (cloud2d.Clouds2dMaterial);
-
-						if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-						{
-							//Wrongly defined to ON in mainmenu by EVE, causing messed up extinction calculations
-							Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial, "WORLD_SPACE_ON", "WORLD_SPACE_OFF", false);
+						if (cloudLayer.Clouds2dMaterial != null)
+						{ 
+							Utils.EnableOrDisableShaderKeywords(cloudLayer.Clouds2dMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
+							InitUniforms (cloudLayer.Clouds2dMaterial);
+							InitPostprocessMaterialUniforms (cloudLayer.Clouds2dMaterial);
+							
+							if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+							{
+								//Wrongly defined to ON in mainmenu by EVE, causing messed up extinction calculations
+								Utils.EnableOrDisableShaderKeywords(cloudLayer.Clouds2dMaterial, "WORLD_SPACE_ON", "WORLD_SPACE_OFF", false);
+							}
 						}
 
-						if (cloud2d.CloudShadowMaterial != null)
+						if (cloudLayer.ParticleVolumetricsMaterial != null)
+						{
+							Utils.EnableOrDisableShaderKeywords(cloudLayer.ParticleVolumetricsMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
+							InitUniforms(cloudLayer.ParticleVolumetricsMaterial);
+							InitPostprocessMaterialUniforms(cloudLayer.ParticleVolumetricsMaterial);
+						}
+
+						if (cloudLayer.RaymarchedVolumetricsMaterial != null)
+						{
+							Utils.EnableOrDisableShaderKeywords(cloudLayer.RaymarchedVolumetricsMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
+							InitUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+							InitPostprocessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+						}
+
+						if (cloudLayer.CloudShadowMaterial != null)
                         {
-							Utils.EnableOrDisableShaderKeywords(cloud2d.CloudShadowMaterial, "SCATTERER_OCEAN_ON", "SCATTERER_OCEAN_FF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
+							Utils.EnableOrDisableShaderKeywords(cloudLayer.CloudShadowMaterial, "SCATTERER_OCEAN_ON", "SCATTERER_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
 						}
 					}
-
-					
 				}
-				catch (Exception stupid)
+				catch (Exception e)
 				{
-					Utils.LogError ("Error initiating EVE Clouds on planet: " + celestialBodyName + " Exception returned: " + stupid.ToString ());
+					Utils.LogError ("Error initiating EVE Clouds on planet: " + celestialBodyName + " Exception returned: " + e.ToString ());
 				}
 			}
-		}
-		
-		IEnumerator DelayedMapEVEVolumetrics()
-		{
-			mappedVolumetrics = false;
-			for (int i=0; i<5; i++)
-				yield return new WaitForFixedUpdate ();
-			MapEVEVolumetrics();
-		}
-
-		public void MapEVEVolumetrics()
-		{
-			Scatterer.Instance.eveReflectionHandler.MapEVEVolumetrics (celestialBodyName, EVEvolumetrics);
-
-			foreach (Material particleMaterial in EVEvolumetrics)
-			{
-				particleMaterial.EnableKeyword ("SCATTERER_ON");
-				particleMaterial.DisableKeyword ("SCATTERER_OFF");
-			
-				InitUniforms (particleMaterial);
-				InitPostprocessMaterialUniforms (particleMaterial);
-			}
-
-			mappedVolumetrics = true;
 		}
 
 		void UpdateEVECloudMaterials ()
 		{
-			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey (celestialBodyName))
+			if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey (celestialBodyName))
 			{
-				foreach (EVEClouds2d clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName])
+				foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
 				{
-					SetUniforms (clouds2d.Clouds2dMaterial);
-					//if (!inScaledSpace)
-					UpdatePostProcessMaterialUniforms (clouds2d.Clouds2dMaterial);
-					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, cloudColorMultiplier);
-					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudScatteringMultiplier_PROPERTY, cloudScatteringMultiplier);
-					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudSkyIrradianceMultiplier_PROPERTY, cloudSkyIrradianceMultiplier);
-					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.preserveCloudColors_PROPERTY, EVEIntegration_preserveCloudColors ? 1f : 0f);
-				}
-			}
-			
-			if (!inScaledSpace && mappedVolumetrics)
-			{
-				foreach (Material volumetricsMat in EVEvolumetrics)
-				{
-					//TODO: simplify, take one or the other, doesn't need to be done very frame also
-					SetUniforms (volumetricsMat);
-					UpdatePostProcessMaterialUniforms (volumetricsMat);
-					volumetricsMat.SetVector (ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
-					volumetricsMat.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier);
+					if (cloudLayer.Clouds2dMaterial != null)
+					{ 
+						SetUniforms (cloudLayer.Clouds2dMaterial);
+						UpdatePostProcessMaterialUniforms(cloudLayer.Clouds2dMaterial);
+						cloudLayer.Clouds2dMaterial.SetFloat(ShaderProperties.cloudColorMultiplier_PROPERTY, cloudColorMultiplier);
+						cloudLayer.Clouds2dMaterial.SetFloat(ShaderProperties.cloudScatteringMultiplier_PROPERTY, cloudScatteringMultiplier);
+						cloudLayer.Clouds2dMaterial.SetFloat(ShaderProperties.cloudSkyIrradianceMultiplier_PROPERTY, cloudSkyIrradianceMultiplier);
+						cloudLayer.Clouds2dMaterial.SetFloat(ShaderProperties.preserveCloudColors_PROPERTY, EVEIntegration_preserveCloudColors ? 1f : 0f);
+					}
+
+					if (cloudLayer.ParticleVolumetricsMaterial != null)
+                    {
+						SetUniforms(cloudLayer.ParticleVolumetricsMaterial);
+						UpdatePostProcessMaterialUniforms(cloudLayer.ParticleVolumetricsMaterial);
+						cloudLayer.ParticleVolumetricsMaterial.SetVector(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
+						cloudLayer.ParticleVolumetricsMaterial.SetFloat(ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier);
+					}
+
+					if (cloudLayer.RaymarchedVolumetricsMaterial != null)
+                    {
+						InitUniforms(cloudLayer.RaymarchedVolumetricsMaterial); //temporary until I fix the issue with raymarched volumetrics
+						SetUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+						UpdatePostProcessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+						cloudLayer.RaymarchedVolumetricsMaterial.SetVector(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);	// not sure if needed
+					}
 				}
 			}
 		}

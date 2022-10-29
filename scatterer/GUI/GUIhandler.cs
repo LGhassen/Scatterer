@@ -211,8 +211,6 @@ namespace Scatterer
 						if (_cel.active)
 						{
 							_cel.prolandManager.skyNode.InitEVEClouds();
-							if (!_cel.prolandManager.skyNode.inScaledSpace)
-								_cel.prolandManager.skyNode.MapEVEVolumetrics();
 						}
 					}
 				}
