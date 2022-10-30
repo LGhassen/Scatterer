@@ -418,9 +418,7 @@ namespace Scatterer
 				underwaterScattering.UpdateContainer ();
 				m_oceanMaterial.EnableKeyword("UNDERWATER_OFF");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_ON");
-				if (prolandManager.GetSkyNode().localScatteringContainer!=null)
-					prolandManager.GetSkyNode().localScatteringContainer.SetUnderwater(false);
-
+				prolandManager.GetSkyNode().SetUnderwater(false);
 			}
 			else   //switch to underwater 
 			{
@@ -428,8 +426,7 @@ namespace Scatterer
 				underwaterScattering.UpdateContainer ();
 				m_oceanMaterial.EnableKeyword("UNDERWATER_ON");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_OFF");
-				if (prolandManager.GetSkyNode().localScatteringContainer!=null)
-					prolandManager.GetSkyNode().localScatteringContainer.SetUnderwater(true);
+				prolandManager.GetSkyNode().SetUnderwater(true);
 			}
 
 			underwaterMode = !underwaterMode;

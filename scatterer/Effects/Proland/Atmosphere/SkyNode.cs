@@ -773,12 +773,15 @@ namespace Scatterer
 							{
 								cloudLayer.ParticleVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
 								cloudLayer.ParticleVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
+								cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", 0f);
+
 							}
 
 							if (cloudLayer.RaymarchedVolumetricsMaterial != null)
 							{
 								cloudLayer.RaymarchedVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
 								cloudLayer.RaymarchedVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
+								cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
 							}
 						}
 					}
@@ -1274,6 +1277,7 @@ namespace Scatterer
 							Utils.EnableOrDisableShaderKeywords(cloudLayer.ParticleVolumetricsMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
 							InitUniforms(cloudLayer.ParticleVolumetricsMaterial);
 							InitPostprocessMaterialUniforms(cloudLayer.ParticleVolumetricsMaterial);
+							cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", 0f);
 						}
 
 						if (cloudLayer.RaymarchedVolumetricsMaterial != null)
@@ -1281,6 +1285,7 @@ namespace Scatterer
 							Utils.EnableOrDisableShaderKeywords(cloudLayer.RaymarchedVolumetricsMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
 							InitUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
 							InitPostprocessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+							cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
 						}
 
 						if (cloudLayer.CloudShadowMaterial != null)
@@ -1355,6 +1360,28 @@ namespace Scatterer
 			{
 				InitPostprocessMaterialUniforms (localScatteringContainer.material);
 			}
-		}	
+		}
+
+		public void SetUnderwater(bool value)
+        {
+			if (localScatteringContainer != null)
+				localScatteringContainer.SetUnderwater(value);
+
+			if ((Scatterer.Instance.eveReflectionHandler.EVEInstance != null) && Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
+			{
+				foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+				{
+					if (cloudLayer.ParticleVolumetricsMaterial != null)
+					{
+						cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", value ? 1f : 0f);
+					}
+
+					if (cloudLayer.RaymarchedVolumetricsMaterial != null)
+					{
+						cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", value ? 1f : 0f);
+					}
+				}
+			}
+		}
 	}
 }
