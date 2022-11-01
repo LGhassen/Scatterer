@@ -218,7 +218,7 @@ namespace Scatterer
 				}
 			}
 
-			skyMaterial.renderQueue = 2999;
+			skyMaterial.renderQueue = 2998;
 			InitUniforms (skyMaterial);
 		}
 
@@ -237,8 +237,8 @@ namespace Scatterer
 					scaledScatteringContainer.SwitchScaledMode ();
 				}
 			}
-			
-			scaledScatteringMaterial.renderQueue = 2998;
+
+			scaledScatteringMaterial.renderQueue = 2997;
 			InitUniforms (scaledScatteringMaterial);
 		}
 		
