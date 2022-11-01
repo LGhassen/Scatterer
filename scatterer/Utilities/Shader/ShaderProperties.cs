@@ -270,7 +270,10 @@ namespace Scatterer
 
 		public static int renderSunFlare_PROPERTY { get { return renderSunFlare; } }
 		private static int renderSunFlare;
-		
+
+		public static int scattererReconstructedCloud_PROPERTY { get { return scattererReconstructedCloud; } }
+		private static int scattererReconstructedCloud;
+
 		public static int sunViewPortPos_PROPERTY { get { return sunViewPortPos; } }
 		private static int sunViewPortPos;
 		
@@ -487,6 +490,7 @@ namespace Scatterer
 			flatScaledSpaceModel = Shader.PropertyToID("flatScaledSpaceModel");
 
 			renderSunFlare = Shader.PropertyToID("renderSunFlare");
+			scattererReconstructedCloud = Shader.PropertyToID("scattererReconstructedCloud");
 			sunViewPortPos = Shader.PropertyToID("sunViewPortPos");
 			aspectRatio = Shader.PropertyToID("aspectRatio");
 			sunGlareScale = Shader.PropertyToID("sunGlareScale");

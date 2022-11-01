@@ -233,6 +233,8 @@ namespace Scatterer
 
 			flareRendering = !hitStatus && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater;
 			sunglareMaterial.SetFloat(ShaderProperties.renderSunFlare_PROPERTY, flareRendering ? 1.0f : 0.0f);
+			
+			sunglareMaterial.SetTexture(ShaderProperties.scattererReconstructedCloud_PROPERTY, Texture2D.whiteTexture); // Temporary way to pass volumetric cloud extinction, if raymarched volumetrics are loaded they override this
 		}	
 
 		public void Update()
