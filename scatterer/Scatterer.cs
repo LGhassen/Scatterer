@@ -5,7 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0850")]
+[assembly:AssemblyVersion("0.0851")]
 namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]

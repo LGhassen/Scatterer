@@ -128,6 +128,8 @@ namespace Scatterer
 
 			sunglareMaterial.SetFloat (ShaderProperties.aspectRatio_PROPERTY, Scatterer.Instance.scaledSpaceCamera.aspect);
 
+			Shader.SetGlobalTexture(ShaderProperties.scattererReconstructedCloud_PROPERTY, Texture2D.whiteTexture); // Temporary way to pass volumetric cloud extinction, if raymarched volumetrics are loaded they override this
+
 			Utils.LogDebug ("Added custom sun flare for "+sourceName);
 		}
 
@@ -165,8 +167,6 @@ namespace Scatterer
 				else if (syntaxVersion == 2)
 				{
 					float dist = (float) (Scatterer.Instance.scaledSpaceCamera.transform.position - sourceScaledTransform.position).magnitude / ((float) source.Radius / ScaledSpace.ScaleFactor); //distance measured in stellar radius
-
-					//Utils.LogInfo("dist "+dist.ToString());
 
 					if (settingsV2.flares.Count > 0)
 					{
@@ -233,8 +233,6 @@ namespace Scatterer
 
 			flareRendering = !hitStatus && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater;
 			sunglareMaterial.SetFloat(ShaderProperties.renderSunFlare_PROPERTY, flareRendering ? 1.0f : 0.0f);
-			
-			sunglareMaterial.SetTexture(ShaderProperties.scattererReconstructedCloud_PROPERTY, Texture2D.whiteTexture); // Temporary way to pass volumetric cloud extinction, if raymarched volumetrics are loaded they override this
 		}	
 
 		public void Update()
