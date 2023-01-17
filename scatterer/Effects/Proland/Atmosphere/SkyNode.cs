@@ -371,50 +371,56 @@ namespace Scatterer
 		}
 		
 		public void SetUniforms (Material mat)
-		{
-			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
-			mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
-			mat.SetFloat (ShaderProperties.extinctionTint_PROPERTY, interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
-			mat.SetFloat (ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
+        {
+            mat.SetFloat(ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
+            mat.SetFloat(ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
+            mat.SetFloat(ShaderProperties.extinctionTint_PROPERTY, interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
+            mat.SetFloat(ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
 
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
+            mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+            mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
 
-			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+            mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
-			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun ());
+            mat.SetVector(ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun());
 
-			mat.SetFloat (ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
-			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
+            mat.SetFloat(ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
+            mat.SetFloat(ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 
-			if (useEclipses)
-			{
-				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
-				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
-				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
-				                                                                       sunPosRelPlanet.z, (float)prolandManager.sunCelestialBody.Radius));
-			}
-			if ((prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
-			{
-				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, prolandManager.planetShineSourcesMatrix);
-				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, prolandManager.planetShineRGBMatrix);
-			}
 
-			if (hasRingObjectAndShadowActivated)
-			{
-				mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
-			}
+            if ((prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
+            {
+                mat.SetMatrix(ShaderProperties.planetShineSources_PROPERTY, prolandManager.planetShineSourcesMatrix);
+                mat.SetMatrix(ShaderProperties.planetShineRGB_PROPERTY, prolandManager.planetShineRGBMatrix);
+            }
 
-			if (godraysRenderer)
-			{
-				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
-			}
+            UpdateEclipseAndRingUniforms(mat);
 
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
-		}
-		
-		
-		public void SetOceanUniforms (Material mat)
+            if (godraysRenderer)
+            {
+                mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
+            }
+
+            mat.SetColor(ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+        }
+
+        private void UpdateEclipseAndRingUniforms(Material mat)
+        {
+            if (useEclipses)
+            {
+                mat.SetMatrix(ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
+                mat.SetMatrix(ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
+                mat.SetVector(ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4(sunPosRelPlanet.x, sunPosRelPlanet.y,
+                                                                                       sunPosRelPlanet.z, (float)prolandManager.sunCelestialBody.Radius));
+            }
+
+            if (hasRingObjectAndShadowActivated)
+            {
+                mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
+            }
+        }
+
+        public void SetOceanUniforms (Material mat)
 		{
 			if (mat == null)
 				return;
@@ -490,6 +496,8 @@ namespace Scatterer
 			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer!=null);
 
 			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+
+			InitEclipseAndRingUniforms(mat);
 		}
 
 		
@@ -528,67 +536,74 @@ namespace Scatterer
 			}
 
 			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+
+			UpdateEclipseAndRingUniforms(mat);
 		}
 
 		public void InitUniforms (Material mat)
-		{
-			if (mat == null)
-				return;
-			
-			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
-			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
-			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
-			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
-			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
-			
-			mat.SetFloat (ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
-			mat.SetFloat (ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
-			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
-			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
-			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
-			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
-			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
-			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
-			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
+        {
+            if (mat == null)
+                return;
 
-			if (hasRingObjectAndShadowActivated)
-			{
-				Utils.EnableOrDisableShaderKeywords (mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", true);
-				mat.SetFloat ("useRingShadow", 1f);
-				mat.SetFloat (ShaderProperties.ringInnerRadius_PROPERTY, ringInnerRadius);
-				mat.SetFloat (ShaderProperties.ringOuterRadius_PROPERTY, ringOuterRadius);
-				mat.SetVector (ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
-				mat.SetTexture (ShaderProperties.ringTexture_PROPERTY, ringTexture);
-			}
-			else
-			{
-				Utils.EnableOrDisableShaderKeywords (mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", false);
-				mat.SetFloat ("useRingShadow", 0f);
-			}
+            mat.SetFloat(ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+            mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
-			Utils.EnableOrDisableShaderKeywords (mat, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses );
-			mat.SetFloat ("useEclipses", useEclipses ? 1f : 0f);
+            mat.SetVector(ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
+            mat.SetTexture(ShaderProperties._Inscatter_PROPERTY, m_inscatter);
+            mat.SetTexture(ShaderProperties._Irradiance_PROPERTY, m_irradiance);
+            mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+            mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
 
-			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
-			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
+            mat.SetFloat(ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
+            mat.SetFloat(ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
+            mat.SetFloat(ShaderProperties.SKY_W_PROPERTY, SKY_W);
+            mat.SetFloat(ShaderProperties.SKY_H_PROPERTY, SKY_H);
+            mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
+            mat.SetFloat(ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
+            mat.SetFloat(ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
+            mat.SetVector(ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
+            mat.SetVector(ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
 
-			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, prolandManager.flatScaledSpaceModel ? 1f : 0f );
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
-			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
+            InitEclipseAndRingUniforms(mat);
 
-			if (godraysRenderer)
-			{
-				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
-			}
-			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null);
+            Utils.EnableOrDisableShaderKeywords(mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
+            Utils.EnableOrDisableShaderKeywords(mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
-			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
-		}
+            mat.SetFloat(ShaderProperties.flatScaledSpaceModel_PROPERTY, prolandManager.flatScaledSpaceModel ? 1f : 0f);
+            mat.SetColor(ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+            mat.SetColor(ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
 
-		public void TogglePostProcessing()
+            if (godraysRenderer)
+            {
+                mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, godraysRenderer.volumeDepthTexture);
+            }
+            Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null);
+
+            mat.SetInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+        }
+
+        private void InitEclipseAndRingUniforms(Material mat)
+        {
+            if (hasRingObjectAndShadowActivated)
+            {
+                Utils.EnableOrDisableShaderKeywords(mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", true);
+                mat.SetFloat("useRingShadow", 1f);
+                mat.SetFloat(ShaderProperties.ringInnerRadius_PROPERTY, ringInnerRadius);
+                mat.SetFloat(ShaderProperties.ringOuterRadius_PROPERTY, ringOuterRadius);
+                mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
+                mat.SetTexture(ShaderProperties.ringTexture_PROPERTY, ringTexture);
+            }
+            else
+            {
+                Utils.EnableOrDisableShaderKeywords(mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", false);
+                mat.SetFloat("useRingShadow", 0f);
+            }
+
+            Utils.EnableOrDisableShaderKeywords(mat, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
+            mat.SetFloat("useEclipses", useEclipses ? 1f : 0f);
+        }
+
+        public void TogglePostProcessing()
 		{
 			postprocessingEnabled = !postprocessingEnabled;
 		}
