@@ -34,7 +34,7 @@ namespace Scatterer
 
 		public void OnPostRender()
 		{
-			if(flare)
+			if(flare && Camera.current.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
 			{
 				flare.ClearExtinction ();
 				flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,0.0f);
