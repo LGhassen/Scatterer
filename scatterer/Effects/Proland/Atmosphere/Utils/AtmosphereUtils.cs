@@ -134,6 +134,33 @@ namespace Scatterer
 			return new Vector2(uMuS, uR);
 		}
 
+		public static float getEclipseShadow(Vector3 worldPos, Vector3 worldLightPos, Vector3 occluderSpherePosition, float occluderSphereRadius, float lightSourceRadius)
+		{
+			var lightDirection = worldLightPos - worldPos;
+			float lightDistance = lightDirection.magnitude;
+			lightDirection = lightDirection / lightDistance;
+
+			// computation of level of shadowing w  
+			var sphereDirection = occluderSpherePosition - worldPos;  //occluder planet
+			float sphereDistance = sphereDirection.magnitude;
+			sphereDirection = sphereDirection / sphereDistance;
+
+			float dd = lightDistance * (Mathf.Asin(Mathf.Min(1.0f, (Vector3.Cross(lightDirection, sphereDirection)).magnitude))
+				- Mathf.Asin(Mathf.Min(1.0f, occluderSphereRadius / sphereDistance)));
+
+			float w = smoothstep(-1.0f, 1.0f, -dd / lightSourceRadius);
+			w = w * smoothstep(0.0f, 0.2f, Vector3.Dot(lightDirection, sphereDirection));
+
+			return (1 - w);
+		}
+
+		// Reimplement because the Mathf Smoothstep doesn't match what is done in shaders
+		public static float smoothstep(float a, float b, float x)
+		{
+			float t = Mathf.Clamp01((x - a) / (b - a));
+			return t * t * (3.0f - (2.0f * t));
+		}
+
 	}
 }
 
