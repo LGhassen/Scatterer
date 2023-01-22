@@ -34,8 +34,6 @@ namespace Scatterer
 		int waitBeforeReloadCnt = 0;
 		SunflareCameraHook nearCameraHook, scaledCameraHook;
 
-		Vector3 sunViewPortPos=Vector3.zero;
-
 		RaycastHit hit;
 		bool hitStatus=false;
 		bool flareRendering=false;
@@ -135,7 +133,7 @@ namespace Scatterer
 
 		public void updateProperties()
 		{
-			sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint (sourceScaledTransform.position);
+			var sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint (sourceScaledTransform.position);
 			hitStatus=false;
 
 			if (sunViewPortPos.z > 0)
@@ -225,8 +223,6 @@ namespace Scatterer
 						hitStatus=false;
 				}
 
-				sunglareMaterial.SetVector (ShaderProperties.sunViewPortPos_PROPERTY, sunViewPortPos);
-
 				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
 					sunglareMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 			}
@@ -254,6 +250,8 @@ namespace Scatterer
 				nearCameraHook.enabled = true;
 				scaledCameraHook.enabled = false;
 				sunflareGameObject.layer = 15;
+
+				sunglareMaterial.SetVector(ShaderProperties.sunWorldPosition_PROPERTY, (Vector3)ScaledSpace.ScaledToLocalSpace(new Vector3d(sourceScaledTransform.position.x, sourceScaledTransform.position.y, sourceScaledTransform.position.z)));
 			}
 			else
 			{
@@ -262,6 +260,8 @@ namespace Scatterer
 
 				scaledCameraHook.enabled=true;
 				sunflareGameObject.layer = 10;
+
+				sunglareMaterial.SetVector(ShaderProperties.sunWorldPosition_PROPERTY, sourceScaledTransform.position);
 			}
 		}
 
