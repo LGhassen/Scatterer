@@ -1211,19 +1211,17 @@ namespace Scatterer
 
 			float eclipseTerm = 1f;
 
-			Vector3 camPosRelPlanet = Scatterer.Instance.nearCamera.transform.position - parentLocalTransform.position;
-
 			for (int i = 0; i < Mathf.Min (4, prolandManager.eclipseCasters.Count); i++)
 			{
 				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor)); //wtf is this? this is doing local to scaled and back to local?
 				castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
-				eclipseTerm *= AtmosphereUtils.getEclipseShadow(camPosRelPlanet, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
+				eclipseTerm *= AtmosphereUtils.getEclipseShadow(Scatterer.Instance.nearCamera.transform.position, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
 			}
 			for (int i = 4; i < Mathf.Min (8, prolandManager.eclipseCasters.Count); i++)
 			{
 				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
 				castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
-				eclipseTerm *= AtmosphereUtils.getEclipseShadow(camPosRelPlanet, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
+				eclipseTerm *= AtmosphereUtils.getEclipseShadow(Scatterer.Instance.nearCamera.transform.position, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
 			}
 
 			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByAttenuation(prolandManager.mainSunLight, eclipseTerm);
