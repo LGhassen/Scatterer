@@ -1,8 +1,5 @@
 using UnityEngine;
 using UnityEngine.Rendering;
-using System.Collections.Generic;
-using System;
-
 
 namespace Scatterer
 {
@@ -38,4 +35,3 @@ namespace Scatterer
 		}
 	}
 }
-
