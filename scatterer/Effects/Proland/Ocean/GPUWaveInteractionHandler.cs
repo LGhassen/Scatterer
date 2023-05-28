@@ -119,7 +119,6 @@ namespace Scatterer
 
                     if (!altimeterRecoveryButton.led.IsOn || (altimeterRecoveryButton.led.color != KSP.UI.Screens.LED.colorIndices.green))
                     {
-                        Utils.LogInfo("Overriding recovery button");
                         recoveryButtonSetUnlockMethod.Invoke(altimeterRecoveryButton, setUnlockParametersArray);
                         altimeterRecoveryButton.StopAllCoroutines();
                         altimeterRecoveryButtonOverriden = true;
@@ -127,7 +126,6 @@ namespace Scatterer
                 }
                 else if (altimeterRecoveryButtonOverriden)
                 {
-                    Utils.LogInfo("Restoring recovery button");
                     altimeterRecoveryButton.StartCoroutine("UnlockRecovery", FlightGlobals.ActiveVessel);
                     altimeterRecoveryButton.StartCoroutine("UnlockReturnToKSC", FlightGlobals.ActiveVessel);
                     altimeterRecoveryButtonOverriden = false;
