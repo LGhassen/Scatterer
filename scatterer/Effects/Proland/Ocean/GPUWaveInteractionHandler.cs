@@ -38,10 +38,7 @@ namespace Scatterer
 
 			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag)
 			{
-				PhysicsGlobals.BuoyancyWaterDragTimer = double.NegativeInfinity;
-				PhysicsGlobals.BuoyancyWaterDragScalar = Scatterer.Instance.mainSettings.buoyancyWaterDragScalarOverride;
-				PhysicsGlobals.BuoyancyWaterDragScalarEnd = Scatterer.Instance.mainSettings.buoyancyWaterDragScalarEndOverride;
-				PhysicsGlobals.BuoyancyWaterAngularDragScalar = Scatterer.Instance.mainSettings.buoyancyWaterAngularDragScalarOverride;
+				PhysicsGlobals.BuoyancyWaterDragTimer = double.NegativeInfinity; // this is needed to avoid the excessive drag that is applied when first hitting the water and which basically kills seaplanes with the smallest waves
 			}
 
 			if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
@@ -179,6 +176,12 @@ namespace Scatterer
 					if (partsBuoyancies[i] != null)
 					{
 						partsBuoyancies[i].waterLevel = heights[i];
+
+						if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag)
+						{ 
+							partsBuoyancies[i].wasSplashed = true;			// changing these is also need so the game doesn't apply excessive drag on splashes which makes seaplanes unusable
+							partsBuoyancies[i].splashed = true;
+						}
 					}
 				}
 			}
