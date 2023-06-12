@@ -20,6 +20,7 @@ namespace Scatterer
 		
 		readonly RenderTargetIdentifier[] m_Mrt = new RenderTargetIdentifier[2];
 		bool m_ResetHistory = true;
+		bool hdrEnabled = false;
 		
 		const int k_SampleCount = 8;
 		
@@ -138,7 +139,10 @@ namespace Scatterer
 			
 			if (m_HistoryTextures[activeEye] == null)
 				m_HistoryTextures[activeEye] = new RenderTexture[k_NumHistoryTextures];
-			
+
+			if (hdrEnabled != targetCamera.allowHDR)
+				ResetHistory();
+
 			var rt = m_HistoryTextures[activeEye][id];
 			
 			if (m_ResetHistory || rt == null || !rt.IsCreated())
@@ -158,7 +162,9 @@ namespace Scatterer
 					height = Screen.height;
 				}
 
-				rt = RenderTexture.GetTemporary (width, height, 0, RenderTextureFormat.ARGB32);
+				hdrEnabled = targetCamera.allowHDR;
+
+				rt = RenderTexture.GetTemporary (width, height, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
 
 				GenerateHistoryName(rt, id);
 				

@@ -74,6 +74,7 @@ namespace Scatterer
 	public class OceanCommandBuffer : MonoBehaviour
 	{
 		bool renderingEnabled = false;
+		bool hdrEnabled = false;
 
 		public MeshRenderer targetRenderer;
 		public Material targetMaterial;
@@ -102,23 +103,7 @@ namespace Scatterer
 				// If depth buffer mode render to separate buffer so we can have the ocean's color and depth to be used by the scattering shader
 				copyCameraDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/CopyCameraDepth"]);
 				
-				int width, height;
-				
-				if (targetCamera.activeTexture)
-				{
-					width = targetCamera.activeTexture.width;
-					height = targetCamera.activeTexture.height;
-				}
-				else
-				{
-					width = Screen.width;
-					height = Screen.height;
-				}
-
-				targetCamera.forceIntoRenderTexture = true; //do this to force the camera target orientation to always match depth orientation
-															//that way we don't have to worry about flipping them separately
-
-				CreateRenderTextures (width, height);
+				CreateRenderTextures();
 
 				//initialize color and depth render textures
 				rendererCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, oceanRenderTexture);
@@ -159,9 +144,33 @@ namespace Scatterer
 			}
 		}
 
-		void CreateRenderTextures (int width, int height)
+		void CreateRenderTextures ()
 		{
-			oceanRenderTexture = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
+			int width, height;
+
+			if (targetCamera.activeTexture)
+			{
+				width = targetCamera.activeTexture.width;
+				height = targetCamera.activeTexture.height;
+			}
+			else
+			{
+				width = Screen.width;
+				height = Screen.height;
+			}
+
+			targetCamera.forceIntoRenderTexture = true; //do this to force the camera target orientation to always match depth orientation
+														//that way we don't have to worry about flipping them separately
+
+			hdrEnabled = targetCamera.allowHDR;
+
+			if (depthCopyRenderTexture)
+				depthCopyRenderTexture.Release();
+
+			if (oceanRenderTexture)
+				oceanRenderTexture.Release();
+
+			oceanRenderTexture = new RenderTexture (width, height, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
 			oceanRenderTexture.anisoLevel = 1;
 			oceanRenderTexture.antiAliasing = 1;
 			oceanRenderTexture.volumeDepth = 0;
@@ -184,6 +193,11 @@ namespace Scatterer
 		{
 			if (!renderingEnabled)
 			{
+				if (Scatterer.Instance.mainSettings.useDepthBufferMode && hdrEnabled != targetCamera.allowHDR)
+                {
+					CreateRenderTextures();
+				}
+
 				targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer); //ocean renders on AfterImageEffectsOpaque, local scattering (with it's depth downscale) can render and copy to screen on afterForwardAlpha
 				renderingEnabled = true;
 			}

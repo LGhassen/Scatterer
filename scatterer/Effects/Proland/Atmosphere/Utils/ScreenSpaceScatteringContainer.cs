@@ -137,20 +137,7 @@ namespace Scatterer
 				compositeScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean ? 1 : 0);
 				compositeScatteringMaterial.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
 				
-				int width, height;
-				
-				if (targetCamera.activeTexture)
-				{
-					width = targetCamera.activeTexture.width / 2;
-					height = targetCamera.activeTexture.height / 2;
-				}
-				else
-				{
-					width = Screen.width / 2;
-					height = Screen.height / 2;
-				}
-				
-				CreateRenderTextures (width, height);
+				CreateRenderTextures();
 
 				//1) Downscale depth
 
@@ -179,9 +166,24 @@ namespace Scatterer
 		}
 
 
-		void CreateRenderTextures (int width, int height)
+		void CreateRenderTextures ()
 		{
-			downscaledRenderTexture0 = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
+			int width, height;
+
+			if (targetCamera.activeTexture)
+			{
+				width = targetCamera.activeTexture.width / 2;
+				height = targetCamera.activeTexture.height / 2;
+			}
+			else
+			{
+				width = Screen.width / 2;
+				height = Screen.height / 2;
+			}
+
+			bool hdrEnabled = targetCamera.allowHDR;
+
+			downscaledRenderTexture0 = new RenderTexture (width, height, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
 			downscaledRenderTexture0.anisoLevel = 1;
 			downscaledRenderTexture0.antiAliasing = 1;
 			downscaledRenderTexture0.volumeDepth = 0;
@@ -190,7 +192,7 @@ namespace Scatterer
 			downscaledRenderTexture0.filterMode = FilterMode.Point;
 			downscaledRenderTexture0.Create ();
 
-			downscaledRenderTexture1 = new RenderTexture (width, height, 0, RenderTextureFormat.RG16);
+			downscaledRenderTexture1 = new RenderTexture (width, height, 0, hdrEnabled ? RenderTextureFormat.RGHalf : RenderTextureFormat.RG16);
 			downscaledRenderTexture1.anisoLevel = 1;
 			downscaledRenderTexture1.antiAliasing = 1;
 			downscaledRenderTexture1.volumeDepth = 0;
