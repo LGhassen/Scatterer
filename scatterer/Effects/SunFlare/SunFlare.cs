@@ -53,12 +53,8 @@ namespace Scatterer
 		
 		public int syntaxVersion = 1;
 
-		//Syntax V1 settings
 		SunflareSettingsV1 settingsV1;
-
-		//Syntax V2 settings
 		SunflareSettingsV2 settingsV2;
-
 
 		public void start()
 		{
@@ -209,11 +205,14 @@ namespace Scatterer
 						                             (sourceScaledTransform.position - Scatterer.Instance.scaledSpaceCamera.transform.position)
 						                             .normalized, out hit, Mathf.Infinity, (int)((1 << 10)));
 					}
+
+					sunglareMaterial.SetVector(ShaderProperties.sunWorldPosition_PROPERTY, (Vector3)ScaledSpace.ScaledToLocalSpace(new Vector3d(sourceScaledTransform.position.x, sourceScaledTransform.position.y, sourceScaledTransform.position.z)));
 				}
 				else
 				{
-					hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position, (sourceScaledTransform.position
-					                                                                                       - Scatterer.Instance.transform.position).normalized, out hit, Mathf.Infinity, (int)((1 << 10)));
+					hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position, (sourceScaledTransform.position - Scatterer.Instance.transform.position).normalized, out hit, Mathf.Infinity, (int)((1 << 10)));
+					
+					sunglareMaterial.SetVector(ShaderProperties.sunWorldPosition_PROPERTY, sourceScaledTransform.position);
 				}
 
 				if(hitStatus)
@@ -250,8 +249,6 @@ namespace Scatterer
 				nearCameraHook.enabled = true;
 				scaledCameraHook.enabled = false;
 				sunflareGameObject.layer = 15;
-
-				sunglareMaterial.SetVector(ShaderProperties.sunWorldPosition_PROPERTY, (Vector3)ScaledSpace.ScaledToLocalSpace(new Vector3d(sourceScaledTransform.position.x, sourceScaledTransform.position.y, sourceScaledTransform.position.z)));
 			}
 			else
 			{
@@ -260,8 +257,6 @@ namespace Scatterer
 
 				scaledCameraHook.enabled=true;
 				sunflareGameObject.layer = 10;
-
-				sunglareMaterial.SetVector(ShaderProperties.sunWorldPosition_PROPERTY, sourceScaledTransform.position);
 			}
 		}
 
