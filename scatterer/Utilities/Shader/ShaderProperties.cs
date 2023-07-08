@@ -148,12 +148,12 @@ namespace Scatterer
 		private static int _Ocean_Foam0;
 		public static int _Ocean_Foam1_PROPERTY { get { return _Ocean_Foam1; } }
 		private static int _Ocean_Foam1;
-		public static int _Transmittance_PROPERTY { get { return _Transmittance; } }
-		private static int _Transmittance;
-		public static int _Inscatter_PROPERTY { get { return _Inscatter; } }
-		private static int _Inscatter;
-		public static int _Irradiance_PROPERTY { get { return _Irradiance; } }
-		private static int _Irradiance;
+		public static int Transmittance_PROPERTY { get { return Transmittance; } }
+		private static int Transmittance;
+		public static int Inscatter_PROPERTY { get { return Inscatter; } }
+		private static int Inscatter;
+		public static int Irradiance_PROPERTY { get { return Irradiance; } }
+		private static int Irradiance;
 		public static int _customDepthTexture_PROPERTY { get { return _customDepthTexture; } }
 		private static int _customDepthTexture;
 		public static int _godrayDepthTexture_PROPERTY { get { return _godrayDepthTexture; } }
@@ -436,9 +436,9 @@ namespace Scatterer
 			_Ocean_Foam0 = Shader.PropertyToID("_Ocean_Foam0");
 			_Ocean_Foam1 = Shader.PropertyToID("_Ocean_Foam1");
 
-			_Transmittance = Shader.PropertyToID("_Transmittance");
-			_Inscatter = Shader.PropertyToID("_Inscatter");
-			_Irradiance = Shader.PropertyToID("_Irradiance");
+			Transmittance = Shader.PropertyToID("Transmittance");
+			Inscatter = Shader.PropertyToID("Inscatter");
+			Irradiance = Shader.PropertyToID("Irradiance");
 			_customDepthTexture = Shader.PropertyToID("_customDepthTexture");
 			_godrayDepthTexture = Shader.PropertyToID("_godrayDepthTexture");
 

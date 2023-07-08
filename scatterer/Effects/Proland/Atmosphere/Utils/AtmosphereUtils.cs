@@ -62,9 +62,25 @@ namespace Scatterer
 			depth.y = Mathf.Clamp (Mathf.Exp(-depth.y), 1e-36f, 1f);
 			depth.z = Mathf.Clamp (Mathf.Exp(-depth.z), 1e-36f, 1f);
 			return new Color (depth.x,depth.y,depth.z,1f);
-		} 
+		}
 
-		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx)
+		private static Vector2 GetTransmittanceUV(float r, float mu, float Rt, float Rg)
+		{
+			float uR, uMu;
+
+			uR = Mathf.Sqrt(Mathf.Max(0, (r - Rg)) / (Rt - Rg));
+			uMu = Mathf.Atan((mu + 0.15f) / (1.0f + 0.15f) * Mathf.Tan(1.5f)) / 1.5f;
+
+			return new Vector2(uMu, uR);
+		}
+
+		public static Color getOzoneExtinction(float r, float mu, float Rt, float Rg, Texture2D ozoneExtinction)
+        {
+			Vector2 uv = GetTransmittanceUV(r, mu, Rt, Rg);
+			return ozoneExtinction.GetPixelBilinear(uv.x, uv.y);
+		}
+
+		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx, bool useOzone, Texture2D ozoneExtinction)
 		{
 			float r = camera.magnitude;
 			float rMu = Vector3.Dot(camera, viewdir);
@@ -82,7 +98,10 @@ namespace Scatterer
 			}
 			
 			Color extinction = (r > Rt) ? Color.white : AnalyticTransmittance(r, mu, Rt, Rg, HR, HM, betaR, betaMEx);
-			
+
+			if (useOzone)
+				extinction *= getOzoneExtinction(r, mu, Rt, Rg, ozoneExtinction);
+
 			return extinction;
 		}
 

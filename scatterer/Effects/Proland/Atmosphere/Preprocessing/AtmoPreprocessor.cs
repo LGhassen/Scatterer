@@ -77,23 +77,29 @@ namespace Scatterer
 		
 		float MIE_G = 0.8f;
 		
-		float HR = 8.0f;
-		float HM = 1.2f;
+		float HR = 8000.0f;
+		float HM = 1200.0f;
 
-		RenderTexture m_transmittanceT;
+		Vector3 ozoneAbsorption = new Vector3(0.0000003426f, 0.0000008298f, 0.000000036f);
+		float ozoneHeight =  25000f;
+		float ozoneFalloff = 15000f;
+
+		RenderTexture m_ozoneTransmittanceT;
 		RenderTexture m_deltaET, m_deltaSRT, m_deltaSMT, m_deltaJT;
 		public RenderTexture[] m_irradianceT, m_inscatterT;
 
-		Material m_transmittanceMaterial, m_irradianceNMaterial, m_irradiance1Material, m_inscatter1Material, m_inscatterNMaterial, m_inscatterSMaterial, m_copyInscatter1Material, m_copyInscatterNMaterial, m_copyIrradianceMaterial;
+		Material m_transmittanceMaterial, m_ozoneTransmittanceMaterial, m_irradianceNMaterial, m_irradiance1Material, m_inscatter1Material, m_inscatterNMaterial, m_inscatterSMaterial, m_copyInscatter1Material, m_copyInscatterNMaterial, m_copyIrradianceMaterial;
 
 		int scatteringOrders = 4; //min is 2 unless you skip that step
 		bool multipleScattering = true;
+		bool useOzone = false;
 
-//		#define WRITE_DEBUG_TEX
-		
+		//		#define WRITE_DEBUG_TEX
+
 		private void InitMaterials()
 		{
 			m_transmittanceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Transmittance")]);
+			m_ozoneTransmittanceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/OzoneTransmittance")]);
 			m_irradianceNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/IrradianceN")]);
 			m_irradiance1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Irradiance1")]);
 			m_inscatter1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Inscatter1")]);
@@ -104,12 +110,16 @@ namespace Scatterer
 			m_copyIrradianceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyIrradiance")]);
 		}
 		
-		public static float CalculateRt(float inRg, float inHR, float inHM, Vector3 in_betaR, Vector3 in_BETA_MSca)
+		public static float CalculateRt(float inRg, float inHR, float inHM, Vector3 in_betaR, Vector3 in_BETA_MSca, bool useOzone, float ozoneHeight, float ozoneFalloff)
 		{
 			float RtHR  =  - 1000f * inHR * Mathf.Log(0.0000001f / in_betaR.magnitude);
 			float RtHM  =  - 1000f * inHM * Mathf.Log(0.0000001f / in_BETA_MSca.magnitude);
+
+			float maxHeight = Mathf.Max(RtHR, RtHM);
 			
-			return inRg + Mathf.Max(RtHR, RtHM);
+			if (useOzone) maxHeight = Mathf.Max(maxHeight, 1000f * (ozoneHeight + ozoneFalloff));
+
+			return inRg + maxHeight;
 		}
 
 		public static void deleteCache()
@@ -119,7 +129,7 @@ namespace Scatterer
 		}
 
 		//Hashing may not be a very good idea with floats though
-		public static string GetAtmoHash(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inPRECOMPUTED_SCTR_LUT_DIM)
+		public static string GetAtmoHash(float inRG, float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inPRECOMPUTED_SCTR_LUT_DIM, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
 		{
 			Hash128 result = new Hash128();
 			
@@ -136,11 +146,23 @@ namespace Scatterer
 			HashUtilities.QuantisedVectorHash (ref hashVector, ref temp);
 			
 			HashUtilities.AppendHash (ref temp, ref result);
-			
+
+			if (inUseOzone)
+			{ 
+				Matrix4x4 hashMatrixOzone = Matrix4x4.identity;
+				hashMatrixOzone.SetRow(0, inOzoneAbsorption);
+				hashMatrixOzone.SetRow(1, new Vector4(inOzoneHeight, inOzoneFalloff, 1f, 1f));
+
+				Hash128 ozoneResult = new Hash128();
+				HashUtilities.QuantisedMatrixHash(ref hashMatrixOzone, ref ozoneResult);
+
+				HashUtilities.AppendHash(ref ozoneResult, ref result);
+			}
+
 			return result.ToString ();
 		}
 
-		public void Generate(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inScatteringLutDimensions, bool previewMode, string assetPath)
+		public void Generate(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inScatteringLutDimensions, bool previewMode, string assetPath, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
 		{
 			//Rescale to a fixed radius which we know never causes issues
 			float referenceRadius = 1000000f;
@@ -163,6 +185,12 @@ namespace Scatterer
 			multipleScattering = inMultiple;
 			scatteringLutDimensions = inScatteringLutDimensions;
 
+			useOzone = inUseOzone;
+			ozoneAbsorption = inOzoneAbsorption / scaleFactor;
+			if (!useOzone) ozoneAbsorption = Vector4.zero;
+			ozoneHeight = inOzoneHeight * 1000f * scaleFactor;
+			ozoneFalloff = inOzoneFalloff * 1000f* scaleFactor;
+
 			if (previewMode || Scatterer.Instance.mainSettings.useLowResolutionAtmosphere)
             {
 				xTiles = xTilesPreview; yTiles = yTilesPreview;
@@ -175,10 +203,10 @@ namespace Scatterer
 			m_irradianceT = new RenderTexture[2];
 			m_inscatterT = new RenderTexture[2];
 			
-			m_transmittanceT = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
-			m_transmittanceT.wrapMode = TextureWrapMode.Clamp;
-			m_transmittanceT.filterMode = FilterMode.Bilinear;
-			m_transmittanceT.Create();
+			m_ozoneTransmittanceT = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
+			m_ozoneTransmittanceT.wrapMode = TextureWrapMode.Clamp;
+			m_ozoneTransmittanceT.filterMode = FilterMode.Bilinear;
+			m_ozoneTransmittanceT.Create();
 			
 			m_irradianceT[0] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
 			m_irradianceT[0].wrapMode = TextureWrapMode.Clamp;
@@ -218,6 +246,7 @@ namespace Scatterer
 			m_deltaJT.filterMode = FilterMode.Bilinear;
 			m_deltaJT.Create();
 
+			SetParameters(m_ozoneTransmittanceMaterial);
 			SetParameters(m_transmittanceMaterial);
 			SetParameters(m_irradianceNMaterial);
 			SetParameters(m_irradiance1Material);
@@ -253,6 +282,9 @@ namespace Scatterer
 			mat.SetFloat ("Sun_intensity", 10f);
 			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
 			mat.SetVector ("tiles", new Vector2 (xTiles, yTiles));
+			mat.SetFloat("ozoneHeight", ozoneHeight);
+			mat.SetFloat("ozoneFalloff", ozoneFalloff);
+			mat.SetVector("ozoneAbsorption", new Vector4(ozoneAbsorption.x, ozoneAbsorption.y, ozoneAbsorption.z, 0.0f));
 		}
 
 		void Preprocess(string assetPath)
@@ -278,6 +310,10 @@ namespace Scatterer
 				Directory.CreateDirectory(assetPath);
 
 			// Add an option to clean up old cache files on start?
+			if (useOzone)
+			{ 
+				SaveAsHalf(m_ozoneTransmittanceT, assetPath + "/ozoneTransmittance");
+			}
 			SaveAsHalf(m_irradianceT[READ], assetPath + "/irradiance");
 			SaveAsHalf(m_inscatterT[READ], assetPath + "/inscatter");
 
@@ -319,7 +355,7 @@ namespace Scatterer
             {
                 m_inscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
 
-                m_inscatterNMaterial.SetTexture("transmittanceRead", m_transmittanceT);
+                m_inscatterNMaterial.SetTexture("transmittanceRead", m_ozoneTransmittanceT);
                 m_inscatterNMaterial.SetTexture("deltaJRead", m_deltaJT);
                 m_inscatterNMaterial.SetTexture("deltaJReadSampler", m_deltaJT);
 
@@ -334,7 +370,7 @@ namespace Scatterer
 				m_inscatterSMaterial.SetVector("currentTile", new Vector2(i, j));
 
                 m_inscatterSMaterial.SetInt("first", (scatteringOrder == 2) ? 1 : 0);
-                m_inscatterSMaterial.SetTexture("transmittanceRead", m_transmittanceT);
+                m_inscatterSMaterial.SetTexture("transmittanceRead", m_ozoneTransmittanceT);
                 m_inscatterSMaterial.SetTexture("deltaERead", m_deltaET);
                 m_inscatterSMaterial.SetTexture("deltaSRRead", m_deltaSRT);
                 m_inscatterSMaterial.SetTexture("deltaSMRead", m_deltaSMT);
@@ -389,7 +425,7 @@ namespace Scatterer
         {
 			// computes single scattering texture deltaS (line 3 in algorithm 4.1)
 			// Rayleigh and Mie separated in deltaSR + deltaSM
-			m_inscatter1Material.SetTexture("transmittanceRead", m_transmittanceT);
+			m_inscatter1Material.SetTexture("transmittanceRead", m_ozoneTransmittanceT);
 
 			ProcessInTiles((int i, int j) =>
             {
@@ -402,13 +438,13 @@ namespace Scatterer
         private void ComputeIrradiance()
         {
             // computes irradiance texture deltaE (line 2 in algorithm 4.1)
-            m_irradiance1Material.SetTexture("transmittanceRead", m_transmittanceT);
+            m_irradiance1Material.SetTexture("transmittanceRead", m_ozoneTransmittanceT);
             Graphics.Blit(null, m_deltaET, m_irradiance1Material);
         }
 
         private void ComputeTransmittance()
         {
-            Graphics.Blit(null, m_transmittanceT, m_transmittanceMaterial);
+            Graphics.Blit(null, m_ozoneTransmittanceT, m_ozoneTransmittanceMaterial);
         }
 
         //Process in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
@@ -430,7 +466,7 @@ namespace Scatterer
 
 		void ReleaseTextures()
 		{
-			m_transmittanceT.Release();
+			m_ozoneTransmittanceT.Release();
 			m_irradianceT[0].Release();
 			m_irradianceT[1].Release();
 			m_inscatterT[0].Release();

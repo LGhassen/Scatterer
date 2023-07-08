@@ -22,6 +22,12 @@ namespace Scatterer
 		[Persistent] public Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
 		[Persistent] public Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f); //scatter coefficient for mie
 		[Persistent] public float m_mieG = 0.85f; //Asymmetry factor for the mie phase function, a higher number means more light is scattered in the forward direction
+
+		[Persistent] public Vector3 ozoneAbsorption = new Vector3(0.0000003426f, 0.0000008298f, 0.000000036f);
+		[Persistent] public float ozoneHeight = 25f;    // Ozone density is highest at ozoneHeight(km) and decreases linearly away from that altitude until ozoneFalloff(km), as per Bruneton (2017)
+		[Persistent] public float ozoneFalloff = 15f;   // profile from http://www.kln.ac.lk/science/Chemistry/Teaching_Resources/
+		[Persistent] public bool useOzone = false;
+
 		[Persistent] public float averageGroundReflectance = 0.1f;
 		[Persistent] public bool multipleScattering = true;
 		public bool previewMode = false;
@@ -56,7 +62,7 @@ namespace Scatterer
 		[Persistent] public float scaledOceanContrastAdjust   = 1f;
 		[Persistent] public float scaledOceanSaturationAdjust = 1f;
 		
-		Texture2D m_inscatter, m_irradiance;
+		Texture2D m_inscatter, m_irradiance, m_ozoneTransmittance = Texture2D.whiteTexture;
 
 		//Dimensions of the tables
 		const int TRANSMITTANCE_W = 256;
@@ -444,8 +450,9 @@ namespace Scatterer
 		{
 			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
 
-			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
-			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
+			mat.SetTexture (ShaderProperties.Inscatter_PROPERTY, m_inscatter);
+			mat.SetTexture (ShaderProperties.Irradiance_PROPERTY, m_irradiance);
+			mat.SetTexture(ShaderProperties.Transmittance_PROPERTY, m_ozoneTransmittance);
 
 			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
 			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
@@ -549,9 +556,10 @@ namespace Scatterer
             mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
             mat.SetVector(ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
-            mat.SetTexture(ShaderProperties._Inscatter_PROPERTY, m_inscatter);
-            mat.SetTexture(ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-            mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+            mat.SetTexture(ShaderProperties.Inscatter_PROPERTY, m_inscatter);
+            mat.SetTexture(ShaderProperties.Irradiance_PROPERTY, m_irradiance);
+			mat.SetTexture(ShaderProperties.Transmittance_PROPERTY, m_ozoneTransmittance);
+			mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
             mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
 
             mat.SetFloat(ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
@@ -611,7 +619,7 @@ namespace Scatterer
 		void InitPrecomputedAtmo ()
 		{
 			Rg = (float) prolandManager.GetRadius ();
-			Rt = AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
+			Rt = AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor, useOzone, ozoneHeight/mainMenuScaleFactor, ozoneFalloff/mainMenuScaleFactor);
 
 			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
 			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
@@ -624,29 +632,39 @@ namespace Scatterer
 			m_irradiance.wrapMode = TextureWrapMode.Clamp;
 			m_irradiance.filterMode = FilterMode.Bilinear;
 
+			if (useOzone)
+            {
+				m_ozoneTransmittance = new Texture2D(TRANSMITTANCE_W, TRANSMITTANCE_H, TextureFormat.RGBAHalf, false);
+				m_ozoneTransmittance.wrapMode = TextureWrapMode.Clamp;
+				m_ozoneTransmittance.filterMode = FilterMode.Bilinear;
+			}
+
 			//Compute atmo hash and path
 			string cachePath = Utils.GameDataPath + "/ScattererAtmosphereCache/PluginData";
-			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca);
-			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions);
+			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca, useOzone, ozoneHeight, ozoneFalloff);
+			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff);
 			cachePath += "/" + atmohash;
 
 			string inscatterPath = cachePath+"/inscatter.half";
 			string irradiancePath = cachePath+"/irradiance.half";
+			string ozoneTransmittancePath = cachePath + "/ozoneTransmittance.half";
 
-			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (irradiancePath))
+			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (irradiancePath) || (useOzone && !System.IO.File.Exists(ozoneTransmittancePath)))
 			{
 				Utils.LogInfo("No atmosphere cache for "+prolandManager.parentCelestialBody.name+", generating new atmosphere");
-				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, previewMode, cachePath);
+				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, previewMode, cachePath, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff);
 			}
 
 			m_inscatter.LoadRawTextureData  (System.IO.File.ReadAllBytes (inscatterPath));
 			m_irradiance.LoadRawTextureData   (System.IO.File.ReadAllBytes (irradiancePath));
+			if (useOzone) m_ozoneTransmittance.LoadRawTextureData(System.IO.File.ReadAllBytes(ozoneTransmittancePath));
 
 			m_inscatter.Apply();
 			m_irradiance.Apply ();
+			if (useOzone) m_ozoneTransmittance.Apply();
 		}
 
-		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale)
+		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale, bool inUseOzone, Vector3 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
 		{
 			m_betaR = inBETA_R;
 			BETA_MSca = inBETA_MSca;
@@ -658,6 +676,11 @@ namespace Scatterer
 			previewMode = inFastPreviewMode;
 			scatteringLutDimensions = inFastPreviewMode ? AtmoPreprocessor.scatteringLutDimensionsPreview : AtmoPreprocessor.ScatteringLutDimensionsDefault ;
 			atmosphereStartRadiusScale = inAtmosphereStartRadiusScale;
+
+			ozoneAbsorption = inOzoneAbsorption;
+			ozoneHeight = inOzoneHeight;
+			ozoneFalloff = inOzoneFalloff;
+			useOzone = inUseOzone;
 
 			InitPrecomputedAtmo ();
 
@@ -737,6 +760,11 @@ namespace Scatterer
 			if (Scatterer.Instance.mainSettings.autosavePlanetSettingsOnSceneChange && !isConfigModuleManagerPatch)
 			{
 				SaveToConfigNode ();
+			}
+
+			if (m_ozoneTransmittance)
+			{
+				UnityEngine.Object.DestroyImmediate(m_ozoneTransmittance);
 			}
 
 			if (m_irradiance)
@@ -846,7 +874,7 @@ namespace Scatterer
 				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
 			
 				Rg = (float) prolandManager.GetRadius ();
-				Rt = AtmoPreprocessor.CalculateRt (Rg * atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
+				Rt = AtmoPreprocessor.CalculateRt (Rg * atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor, useOzone, ozoneHeight / mainMenuScaleFactor, ozoneFalloff / mainMenuScaleFactor);
 
 				godrayStrength = Mathf.Min(godrayStrength,1.0f);
 
@@ -1160,7 +1188,7 @@ namespace Scatterer
 		void UpdateLightExtinctions ()
 		{
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
-			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, m_ozoneTransmittance);
 
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
 			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (prolandManager.mainSunLight, extinction);
@@ -1169,7 +1197,7 @@ namespace Scatterer
 			{
 				if (secondarySun.sunLight)
 				{
-					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
+					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, m_ozoneTransmittance);
 					extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);	//consider getting rid of extinction thickness and tint now
 					Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (secondarySun.sunLight, extinction);
 				}
