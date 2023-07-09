@@ -27,6 +27,7 @@
 using UnityEngine;
 using System.IO;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Scatterer 
 {
@@ -69,7 +70,6 @@ namespace Scatterer
 
 		Vector4 scatteringLutDimensions = ScatteringLutDimensionsDefault;
 		int xTiles = xTilesDefault, yTiles = yTilesDefault;
-
 
 		float AVERAGE_GROUND_REFLECTANCE = 0.1f;
 		Vector4 BETA_R = new Vector4(5.8e-3f, 1.35e-2f, 3.31e-2f, 0.0f);
@@ -128,38 +128,69 @@ namespace Scatterer
 			Directory.Delete(cachePath, true);
 		}
 
-		//Hashing may not be a very good idea with floats though
-		public static string GetAtmoHash(float inRG, float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inPRECOMPUTED_SCTR_LUT_DIM, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
+		[StructLayout(LayoutKind.Sequential)]
+		struct AtmoHashData
 		{
-			Hash128 result = new Hash128();
-			
-			Matrix4x4 hashMatrix = Matrix4x4.identity;
-			hashMatrix.SetRow(0, inBETA_R);
-			hashMatrix.SetRow(1, inBETA_MSca);
-			hashMatrix.SetRow(2, inPRECOMPUTED_SCTR_LUT_DIM);
-			hashMatrix.SetRow(3, new Vector4(inRG, inRT, inHR, inHM));
-			
-			HashUtilities.QuantisedMatrixHash (ref hashMatrix, ref result);
-			
-			Hash128 temp = new Hash128();
-			Vector3 hashVector = new Vector3 (inMIE_G, inGRref, inMultiple? 1f : 0f);
-			HashUtilities.QuantisedVectorHash (ref hashVector, ref temp);
-			
-			HashUtilities.AppendHash (ref temp, ref result);
+			public float Rg;
+			public float Rt;
+			public float AVERAGE_GROUND_REFLECTANCE;
+			public Vector4 BETA_R;
+			public Vector4 BETA_MSca;
+			public Vector4 ScatteringLutDimensions;
 
-			if (inUseOzone)
-			{ 
-				Matrix4x4 hashMatrixOzone = Matrix4x4.identity;
-				hashMatrixOzone.SetRow(0, inOzoneAbsorption);
-				hashMatrixOzone.SetRow(1, new Vector4(inOzoneHeight, inOzoneFalloff, 1f, 1f));
+			public float MIE_G;
+			public float HR;
+			public float HM;
 
-				Hash128 ozoneResult = new Hash128();
-				HashUtilities.QuantisedMatrixHash(ref hashMatrixOzone, ref ozoneResult);
+			public Vector3 ozoneAbsorption;
+			public float ozoneHeight;
+			public float ozoneFalloff;
+			public bool useOzone;
+			public bool useMultipleScattering;
 
-				HashUtilities.AppendHash(ref ozoneResult, ref result);
+			public AtmoHashData(float rg, float rt, float averageGroundReflectance, Vector4 betaR, Vector4 betaMSca, Vector4 scatteringLutDimensions, float mieG, float hr,float hm,Vector3 ozoneAbsorption,float ozoneHeight,float ozoneFalloff,bool useOzone,bool useMultipleScattering)
+			{
+				Rg = rg;
+				Rt = rt;
+				AVERAGE_GROUND_REFLECTANCE = averageGroundReflectance;
+				BETA_R = betaR;
+				BETA_MSca = betaMSca;
+				ScatteringLutDimensions = scatteringLutDimensions;
+				MIE_G = mieG;
+				HR = hr;
+				HM = hm;
+				this.ozoneAbsorption = ozoneAbsorption;
+				this.ozoneHeight = ozoneHeight;
+				this.ozoneFalloff = ozoneFalloff;
+				this.useOzone = useOzone;
+				this.useMultipleScattering = useMultipleScattering;
 			}
+		}
 
-			return result.ToString ();
+		public static string GetAtmoHash(float inRG, float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inAverageGroundRreflectance, bool inMultiple, Vector4 inPRECOMPUTED_SCTR_LUT_DIM, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
+		{
+
+			AtmoHashData atmoHashData = new AtmoHashData(
+				inRG,
+				inRT,
+				inAverageGroundRreflectance,
+				inBETA_R,
+				inBETA_MSca,
+				inPRECOMPUTED_SCTR_LUT_DIM,
+				inMIE_G,
+				inHR,
+				inHM,
+				inUseOzone ? inOzoneAbsorption : Vector4.zero,
+				inUseOzone ? inOzoneHeight  : 0f,
+				inUseOzone ? inOzoneFalloff : 0f,
+				inUseOzone,
+				inMultiple
+			);
+
+			Hash128 result = new Hash128();
+			HashUtilities.ComputeHash128(ref atmoHashData, ref result);
+
+			return result.ToString();
 		}
 
 		public void Generate(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inScatteringLutDimensions, bool previewMode, string assetPath, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
