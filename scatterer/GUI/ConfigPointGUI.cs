@@ -342,7 +342,7 @@ namespace Scatterer
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (label);
 			
-			local = float.Parse (GUILayout.TextField (local.ToString ("00000.000000")));
+			local = float.Parse (GUILayout.TextField (local.ToString ()));
 			if (GUILayout.Button ("Set")) {
 				target = local;
 			}
@@ -354,9 +354,9 @@ namespace Scatterer
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (label);
 			
-			target.r = float.Parse (GUILayout.TextField (target.r.ToString ("0.0000")));
-			target.g = float.Parse (GUILayout.TextField (target.g.ToString ("0.0000")));
-			target.b = float.Parse (GUILayout.TextField (target.b.ToString ("0.0000")));
+			target.r = float.Parse (GUILayout.TextField (target.r.ToString ()));
+			target.g = float.Parse (GUILayout.TextField (target.g.ToString ()));
+			target.b = float.Parse (GUILayout.TextField (target.b.ToString ()));
 			
 			GUILayout.EndHorizontal ();
 		}

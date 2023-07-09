@@ -35,7 +35,7 @@ namespace Scatterer
 			GUILayout.BeginHorizontal ();
 
 			GUILayout.Label (label);
-			localVariable = float.Parse (GUILayout.TextField (localVariable.ToString ("00000.000000")));
+			localVariable = float.Parse (GUILayout.TextField (localVariable.ToString ()));
 			if (GUILayout.Button ("Set"))
 			{
 				targetField.SetValue(targetObject, localVariable);

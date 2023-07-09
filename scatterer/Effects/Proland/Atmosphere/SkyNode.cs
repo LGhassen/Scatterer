@@ -871,7 +871,7 @@ namespace Scatterer
 			{
 				Utils.LogDebug(" Atmosphere config found for: "+celestialBodyName);
 
-				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
+				ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 			
 				Rg = (float) prolandManager.GetRadius ();
 				Rt = AtmoPreprocessor.CalculateRt (Rg * atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor, useOzone, ozoneHeight / mainMenuScaleFactor, ozoneFalloff / mainMenuScaleFactor);
