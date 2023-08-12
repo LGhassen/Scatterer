@@ -217,7 +217,7 @@ namespace Scatterer
 			scatteringLutDimensions = inScatteringLutDimensions;
 
 			useOzone = inUseOzone;
-			ozoneAbsorption = inOzoneAbsorption / scaleFactor;
+			ozoneAbsorption = inOzoneAbsorption * 0.001f / scaleFactor;
 			if (!useOzone) ozoneAbsorption = Vector4.zero;
 			ozoneHeight = inOzoneHeight * 1000f * scaleFactor;
 			ozoneFalloff = inOzoneFalloff * 1000f* scaleFactor;

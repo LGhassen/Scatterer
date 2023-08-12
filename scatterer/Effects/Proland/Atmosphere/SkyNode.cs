@@ -23,7 +23,7 @@ namespace Scatterer
 		[Persistent] public Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f); //scatter coefficient for mie
 		[Persistent] public float m_mieG = 0.85f; //Asymmetry factor for the mie phase function, a higher number means more light is scattered in the forward direction
 
-		[Persistent] public Vector3 ozoneAbsorption = new Vector3(0.0000003426f, 0.0000008298f, 0.000000036f);
+		[Persistent] public Vector3 ozoneAbsorption = new Vector3(0.0003426f, 0.0008298f, 0.000036f); // From Physically Based Sky, Atmosphere & Cloud Rendering in Frostbite (2016), these look better than other coefficients I found in the literature
 		[Persistent] public float ozoneHeight = 25f;    // Ozone density is highest at ozoneHeight(km) and decreases linearly away from that altitude until ozoneFalloff(km), as per Bruneton (2017)
 		[Persistent] public float ozoneFalloff = 15f;   // profile from http://www.kln.ac.lk/science/Chemistry/Teaching_Resources/
 		[Persistent] public bool useOzone = false;
