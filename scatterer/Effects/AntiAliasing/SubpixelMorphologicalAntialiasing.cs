@@ -53,7 +53,7 @@ namespace Scatterer
 				height = Screen.height;
 			}
 			
-			flip = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
+			flip = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32); //TODO: hdr support for these
 			flip.anisoLevel = 1;
 			flip.antiAliasing = 1;
 			flip.volumeDepth = 0;
