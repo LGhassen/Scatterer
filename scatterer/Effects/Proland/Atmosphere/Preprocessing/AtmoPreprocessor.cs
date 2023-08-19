@@ -57,8 +57,8 @@ namespace Scatterer
 		float Rt = 71500.603f;
 
 		//Dimensions of the tables
-		const int TRANSMITTANCE_W = 256;
-		const int TRANSMITTANCE_H = 64;
+		const int TRANSMITTANCE_W = 512;
+		const int TRANSMITTANCE_H = 128;
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
@@ -84,7 +84,7 @@ namespace Scatterer
 		float ozoneHeight =  25000f;
 		float ozoneFalloff = 15000f;
 
-		RenderTexture m_ozoneTransmittanceT;
+		RenderTexture m_ozoneTransmittanceRT;
 		RenderTexture m_deltaET, m_deltaSRT, m_deltaSMT, m_deltaJT;
 		public RenderTexture[] m_irradianceT, m_inscatterT;
 
@@ -234,10 +234,10 @@ namespace Scatterer
 			m_irradianceT = new RenderTexture[2];
 			m_inscatterT = new RenderTexture[2];
 			
-			m_ozoneTransmittanceT = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
-			m_ozoneTransmittanceT.wrapMode = TextureWrapMode.Clamp;
-			m_ozoneTransmittanceT.filterMode = FilterMode.Bilinear;
-			m_ozoneTransmittanceT.Create();
+			m_ozoneTransmittanceRT = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
+			m_ozoneTransmittanceRT.wrapMode = TextureWrapMode.Clamp;
+			m_ozoneTransmittanceRT.filterMode = FilterMode.Bilinear;
+			m_ozoneTransmittanceRT.Create();
 			
 			m_irradianceT[0] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
 			m_irradianceT[0].wrapMode = TextureWrapMode.Clamp;
@@ -343,7 +343,7 @@ namespace Scatterer
 			// Add an option to clean up old cache files on start?
 			if (useOzone)
 			{ 
-				SaveAsHalf(m_ozoneTransmittanceT, assetPath + "/ozoneTransmittance");
+				SaveAsHalf(m_ozoneTransmittanceRT, assetPath + "/ozoneTransmittance");
 			}
 			SaveAsHalf(m_irradianceT[READ], assetPath + "/irradiance");
 			SaveAsHalf(m_inscatterT[READ], assetPath + "/inscatter");
@@ -386,7 +386,7 @@ namespace Scatterer
             {
                 m_inscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
 
-                m_inscatterNMaterial.SetTexture("transmittanceRead", m_ozoneTransmittanceT);
+                m_inscatterNMaterial.SetTexture("transmittanceRead", m_ozoneTransmittanceRT);
                 m_inscatterNMaterial.SetTexture("deltaJRead", m_deltaJT);
                 m_inscatterNMaterial.SetTexture("deltaJReadSampler", m_deltaJT);
 
@@ -401,7 +401,7 @@ namespace Scatterer
 				m_inscatterSMaterial.SetVector("currentTile", new Vector2(i, j));
 
                 m_inscatterSMaterial.SetInt("first", (scatteringOrder == 2) ? 1 : 0);
-                m_inscatterSMaterial.SetTexture("transmittanceRead", m_ozoneTransmittanceT);
+                m_inscatterSMaterial.SetTexture("transmittanceRead", m_ozoneTransmittanceRT);
                 m_inscatterSMaterial.SetTexture("deltaERead", m_deltaET);
                 m_inscatterSMaterial.SetTexture("deltaSRRead", m_deltaSRT);
                 m_inscatterSMaterial.SetTexture("deltaSMRead", m_deltaSMT);
@@ -456,7 +456,7 @@ namespace Scatterer
         {
 			// computes single scattering texture deltaS (line 3 in algorithm 4.1)
 			// Rayleigh and Mie separated in deltaSR + deltaSM
-			m_inscatter1Material.SetTexture("transmittanceRead", m_ozoneTransmittanceT);
+			m_inscatter1Material.SetTexture("transmittanceRead", m_ozoneTransmittanceRT);
 
 			ProcessInTiles((int i, int j) =>
             {
@@ -469,13 +469,13 @@ namespace Scatterer
         private void ComputeIrradiance()
         {
             // computes irradiance texture deltaE (line 2 in algorithm 4.1)
-            m_irradiance1Material.SetTexture("transmittanceRead", m_ozoneTransmittanceT);
+            m_irradiance1Material.SetTexture("transmittanceRead", m_ozoneTransmittanceRT);
             Graphics.Blit(null, m_deltaET, m_irradiance1Material);
         }
 
         private void ComputeTransmittance()
         {
-            Graphics.Blit(null, m_ozoneTransmittanceT, m_ozoneTransmittanceMaterial);
+            Graphics.Blit(null, m_ozoneTransmittanceRT, m_ozoneTransmittanceMaterial);
         }
 
         //Process in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
@@ -497,7 +497,7 @@ namespace Scatterer
 
 		void ReleaseTextures()
 		{
-			m_ozoneTransmittanceT.Release();
+			m_ozoneTransmittanceRT.Release();
 			m_irradianceT[0].Release();
 			m_irradianceT[1].Release();
 			m_inscatterT[0].Release();

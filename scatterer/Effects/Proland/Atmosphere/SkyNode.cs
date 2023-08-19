@@ -65,8 +65,8 @@ namespace Scatterer
 		Texture2D m_inscatter, m_irradiance, m_ozoneTransmittance = Texture2D.whiteTexture;
 
 		//Dimensions of the tables
-		const int TRANSMITTANCE_W = 256;
-		const int TRANSMITTANCE_H = 64;
+		const int TRANSMITTANCE_W = 512;
+		const int TRANSMITTANCE_H = 128;
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
