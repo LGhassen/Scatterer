@@ -128,9 +128,29 @@ namespace Scatterer
 		[Persistent]
 		public bool terrainShadows = false;
 
-		//0 - None, 1 - Bruneton, 2 - Uncharted
+		//0 - None, 1 - Bruneton, 2 - Uncharted, 3 - Hable but disabled
 		[Persistent]
 		public int scatteringTonemapper = 2;
+
+		/*
+		[Persistent]
+		public float hableToeStrength;
+
+		[Persistent]
+		public float hableToeLength;
+
+		[Persistent]
+		public float hableShoulderStrength;
+
+		[Persistent]
+		public float hableShoulderLength;
+
+		[Persistent]
+		public float hableShoulderAngle;
+
+		[Persistent]
+		public float hableGamma;
+		*/
 
 		[Persistent]
 		public float unifiedCamShadowsDistance=50000f;
@@ -256,6 +276,16 @@ namespace Scatterer
 				
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.scatteringTonemapper != scatteringTonemapper ||
+
+				 /*
+				 OldConfig.hableToeStrength != hableToeStrength ||
+				 OldConfig.hableToeLength != hableToeLength ||
+				 OldConfig.hableShoulderStrength != hableShoulderStrength ||
+				 OldConfig.hableShoulderLength != hableShoulderLength ||
+				 OldConfig.hableShoulderAngle != hableShoulderAngle ||
+				 OldConfig.hableGamma != hableGamma ||
+				 */
+
 				 OldConfig.useDithering != useDithering ||
 
 				 OldConfig.unifiedCamShadowsDistance != unifiedCamShadowsDistance ||

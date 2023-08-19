@@ -209,6 +209,31 @@ namespace Scatterer
 			
 			return texture;
 		}
+
+		public static void SetToneMapping(Material mat)
+		{
+			//mat.SetInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+
+			// set them globally for the composite clouds material
+			Shader.SetGlobalInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+
+			/*
+			if (Scatterer.Instance.mainSettings.scatteringTonemapper == 3)
+			{
+				HableCurve curve = new HableCurve();
+				curve.Init(
+						Scatterer.Instance.mainSettings.hableToeStrength,
+						Scatterer.Instance.mainSettings.hableToeLength,
+						Scatterer.Instance.mainSettings.hableShoulderStrength,
+						Scatterer.Instance.mainSettings.hableShoulderLength,
+						Scatterer.Instance.mainSettings.hableShoulderAngle,
+						Scatterer.Instance.mainSettings.hableGamma
+					);
+
+				curve.SetMaterialParams(mat);
+			}
+			*/
+		}
 	}
 }
 

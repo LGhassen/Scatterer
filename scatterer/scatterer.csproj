@@ -104,6 +104,7 @@
     <Compile Include="Effects\Proland\Ocean\GPUWaveInteractionHandler.cs" />
     <Compile Include="Effects\SunFlare\SunFlare.cs" />
     <Compile Include="Effects\SunFlare\SunflareCameraHook.cs" />
+    <Compile Include="Effects\Tonemapping\HableCurve.cs" />
     <Compile Include="GUI\GUIhandler.cs" />
     <Compile Include="GUI\ToolbarButton.cs" />
     <Compile Include="Utilities\Math\MathUtility.cs" />

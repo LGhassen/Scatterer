@@ -447,68 +447,67 @@ namespace Scatterer
 		
 
 		public void InitPostprocessMaterialUniforms (Material mat)
-		{
-			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+        {
+            mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
-			mat.SetTexture (ShaderProperties.Inscatter_PROPERTY, m_inscatter);
-			mat.SetTexture (ShaderProperties.Irradiance_PROPERTY, m_irradiance);
-			mat.SetTexture(ShaderProperties.Transmittance_PROPERTY, m_ozoneTransmittance);
+            mat.SetTexture(ShaderProperties.Inscatter_PROPERTY, m_inscatter);
+            mat.SetTexture(ShaderProperties.Irradiance_PROPERTY, m_irradiance);
+            mat.SetTexture(ShaderProperties.Transmittance_PROPERTY, m_ozoneTransmittance);
 
-			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
-			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
-			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
-			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
-			
-			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
-			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
-			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
-			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
-			
-			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
-			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
-			
-			
-			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun());
+            mat.SetFloat(ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+            mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+            mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
+            mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
+            mat.SetFloat(ShaderProperties.SKY_W_PROPERTY, SKY_W);
+            mat.SetFloat(ShaderProperties.SKY_H_PROPERTY, SKY_H);
 
-			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
+            mat.SetVector(ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
+            mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
-			//When using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately: Instead ocean shader handles scattering internally
-			//When the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
-			//The ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering, this is not needed for stock ocean so disable it
-			Utils.EnableOrDisableShaderKeywords (mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
+            mat.SetVector(ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
+            mat.SetVector(ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
 
-			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
+            mat.SetFloat(ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
+            mat.SetFloat(ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
 
-			if (prolandManager.flatScaledSpaceModel && prolandManager.parentCelestialBody.pqsController)
-				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
-			else
-				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f);
 
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
-			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity );
+            mat.SetVector(ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun());
 
-			float camerasOverlap = 0f;
-			if (!Scatterer.Instance.unifiedCameraMode)
-				camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
+            Utils.EnableOrDisableShaderKeywords(mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
 
-			mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY,camerasOverlap);
+            //When using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately: Instead ocean shader handles scattering internally
+            //When the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
+            //The ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering, this is not needed for stock ocean so disable it
+            Utils.EnableOrDisableShaderKeywords(mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
 
-			if (godraysRenderer)
-			{
-				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
-			}
-			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer!=null);
+            Utils.EnableOrDisableShaderKeywords(mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
 
-			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+            if (prolandManager.flatScaledSpaceModel && prolandManager.parentCelestialBody.pqsController)
+                mat.SetFloat(ShaderProperties._PlanetOpacity_PROPERTY, 0f);
+            else
+                mat.SetFloat(ShaderProperties._PlanetOpacity_PROPERTY, 1f);
 
-			InitEclipseAndRingUniforms(mat);
-		}
+            mat.SetColor(ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+            mat.SetColor(ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
 
-		
-		public void UpdatePostProcessMaterialUniforms (Material mat)
+            float camerasOverlap = 0f;
+            if (!Scatterer.Instance.unifiedCameraMode)
+                camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
+
+            mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY, camerasOverlap);
+
+            if (godraysRenderer)
+            {
+                mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, godraysRenderer.volumeDepthTexture);
+            }
+            Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null);
+
+            Utils.SetToneMapping(mat);
+
+            InitEclipseAndRingUniforms(mat);
+        }
+
+        public void UpdatePostProcessMaterialUniforms (Material mat)
 		{
 			mat.SetFloat (ShaderProperties._global_alpha_PROPERTY, interpolatedSettings.postProcessAlpha);
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
@@ -587,8 +586,8 @@ namespace Scatterer
             }
             Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null);
 
-            mat.SetInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
-        }
+			Utils.SetToneMapping(mat);
+		}
 
         private void InitEclipseAndRingUniforms(Material mat)
         {

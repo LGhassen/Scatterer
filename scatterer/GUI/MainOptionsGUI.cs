@@ -190,6 +190,33 @@ namespace Scatterer
 				Scatterer.Instance.mainSettings.scatteringTonemapper = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.scatteringTonemapper.ToString ()))),0f,2f);
 				GUILayout.EndHorizontal ();
 
+				/*
+				if (Scatterer.Instance.mainSettings.scatteringTonemapper == 3)
+                {
+					GUILayout.BeginHorizontal();
+					{
+						GUILayout.Label("Toe strength");
+						Scatterer.Instance.mainSettings.hableToeStrength =float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableToeStrength.ToString("0.00")));
+
+						GUILayout.Label("Toe length");
+						Scatterer.Instance.mainSettings.hableToeLength = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableToeLength.ToString("0.00")));
+
+						GUILayout.Label("Shoulder strength");
+						Scatterer.Instance.mainSettings.hableShoulderStrength = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableShoulderStrength.ToString("0.00")));
+
+						GUILayout.Label("Shoulder length");
+						Scatterer.Instance.mainSettings.hableShoulderLength = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableShoulderLength.ToString("0.00")));
+
+						GUILayout.Label("Shoulder angle");
+						Scatterer.Instance.mainSettings.hableShoulderAngle = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableShoulderAngle.ToString("0.00")));
+
+						GUILayout.Label("Gamma");
+						Scatterer.Instance.mainSettings.hableGamma = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableGamma.ToString("0.00")));
+					}
+					GUILayout.EndHorizontal();
+				}
+				*/
+
 				GUILayout.BeginHorizontal();
 				Scatterer.Instance.mainSettings.useLowResolutionAtmosphere = GUILayout.Toggle(Scatterer.Instance.mainSettings.useLowResolutionAtmosphere, "Use low resolution atmosphere (for slower machines that get white atmos)");
 				GUILayout.EndHorizontal();
