@@ -100,46 +100,46 @@ namespace Scatterer
 			}
 			else
 			{
-				// If depth buffer mode render to separate buffer so we can have the ocean's color and depth to be used by the scattering shader
+				// If depth buffer mode render to separate buffer so we can have the ocean's depth to be used by the scattering shader
 				copyCameraDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/CopyCameraDepth"]);
-				
 				CreateRenderTextures();
-
-				//initialize color and depth render textures
-				rendererCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, oceanRenderTexture);
 				
-				//blit by itself draws a quad with zwite off, use a material with zwrite on and outputs to depth
-				//source: support.unity.com/hc/en-us/articles/115000229323-Graphics-Blit-does-not-copy-RenderTexture-depth
-				rendererCommandBuffer.Blit (null, depthCopyRenderTexture, copyCameraDepthMaterial, 0);
+				// Init depth render texture
+				rendererCommandBuffer.Blit(null, depthCopyRenderTexture, copyCameraDepthMaterial, 3);
 
-				//draw ocean renderer
-				rendererCommandBuffer.SetRenderTarget(new RenderTargetIdentifier(oceanRenderTexture), new RenderTargetIdentifier(depthCopyRenderTexture));
+				// Draw ocean renderer, output as normal to the screen, and ocean depth to the depth texture
+				RenderTargetIdentifier[] oceanRenderTargets = { new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), new RenderTargetIdentifier(depthCopyRenderTexture) };
+
+				rendererCommandBuffer.SetRenderTarget(oceanRenderTargets, BuiltinRenderTextureType.CameraTarget);
 				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial,0, 0);   //this doesn't work with pixel lights so render only the main pass here and render pixel lights the regular way
 																							//they will render on top of depth buffer scattering but that's not a noticeable issue, especially since ocean lights are soft additive
 
-				//expose the new depth buffer
-				rendererCommandBuffer.SetRenderTarget(new RenderTargetIdentifier(oceanRenderTexture), new RenderTargetIdentifier(oceanRenderTexture.depthBuffer));
+				// expose the new depth buffer
+				rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
 				rendererCommandBuffer.SetGlobalTexture("ScattererDepthCopy", depthCopyRenderTexture);
 
-				//enable cloud shadows
+				// enable cloud shadows
 				rendererCommandBuffer.SetGlobalFloat(ShaderProperties.render_ocean_cloud_shadow_PROPERTY, 1f);
-
-				//draw cloud shadows
+				
+				// draw cloud shadows
 				if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
 				{ 
 					foreach (var clouds2d in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
 					{
 						if (clouds2d.CloudShadowMaterial != null)
 						{
-							rendererCommandBuffer.Blit(null, oceanRenderTexture, clouds2d.CloudShadowMaterial);
+							rendererCommandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, clouds2d.CloudShadowMaterial);
 						}
 					}
 				}
-
-				//disable regular cloud shadows
+				
+				// disable it for regular cloud shadows
 				rendererCommandBuffer.SetGlobalFloat(ShaderProperties.render_ocean_cloud_shadow_PROPERTY, 0f);
 
-				//then set the textures for the scattering shader
+				// recopy the screen and expose it as input for the scattering
+				rendererCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, new RenderTargetIdentifier(oceanRenderTexture));
+
+				// then set the textures for the scattering shader
 				rendererCommandBuffer.SetGlobalTexture ("ScattererScreenCopy", oceanRenderTexture);
 			}
 		}
@@ -171,21 +171,14 @@ namespace Scatterer
 				oceanRenderTexture.Release();
 
 			oceanRenderTexture = new RenderTexture (width, height, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
-			oceanRenderTexture.anisoLevel = 1;
-			oceanRenderTexture.antiAliasing = 1;
-			oceanRenderTexture.volumeDepth = 0;
 			oceanRenderTexture.useMipMap = false;
 			oceanRenderTexture.autoGenerateMips = false;
 			oceanRenderTexture.Create ();
 
-			depthCopyRenderTexture = new RenderTexture (width, height, 32, RenderTextureFormat.Depth);
-			depthCopyRenderTexture.anisoLevel = 1;
-			depthCopyRenderTexture.antiAliasing = 1;
-			depthCopyRenderTexture.volumeDepth = 0;
+			depthCopyRenderTexture = new RenderTexture (width, height, 0, RenderTextureFormat.RFloat);
 			depthCopyRenderTexture.useMipMap = false;
 			depthCopyRenderTexture.autoGenerateMips = false;
 			depthCopyRenderTexture.filterMode = FilterMode.Point;
-			depthCopyRenderTexture.depth = 32;
 			depthCopyRenderTexture.Create ();
 		}
 		
