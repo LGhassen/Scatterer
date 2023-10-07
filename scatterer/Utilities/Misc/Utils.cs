@@ -94,10 +94,19 @@ namespace Scatterer
 			foreach(ScattererCelestialBody _scattererCB in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
 				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
-				foreach (Transform child in scaledSunTransform) {
-					MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
-					if (temp != null)
-						temp.material.renderQueue = 2998;
+				if (scaledSunTransform != null)
+				{ 
+					foreach (Transform child in scaledSunTransform)
+					{
+						if (child != null)
+						{ 
+							MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
+							if (temp != null)
+							{ 
+								temp.material.renderQueue = 2998;
+							}
+						}
+					}
 				}
 			}
 		}
