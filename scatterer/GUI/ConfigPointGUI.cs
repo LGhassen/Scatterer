@@ -22,7 +22,8 @@ namespace Scatterer
 		
 		float extinctionThickness = 1f;
 		float skyExtinctionTint = 1f;
-		
+		float noonSunlightExtinctionStrength = 1f;
+
 		float specR = 0f, specG = 0f, specB = 0f, shininess = 0f, flattenScaledSpaceMesh = 0f;
 		
 		//ConfigPoint variables 		
@@ -103,11 +104,12 @@ namespace Scatterer
 				GUIfloat ("Scattering Exposure (scaled+local)", ref postProcessExposure, ref _cur.scatteringExposure);
 				GUIfloat ("Extinction Tint (scaled+local)", ref extinctionTint, ref _cur.extinctionTint);
 				GUIfloat ("Extinction Thickness (scaled+local)", ref extinctionThickness, ref _cur.extinctionThickness);
+				GUIfloat ("Noon Sunlight Extinction strength*", ref noonSunlightExtinctionStrength, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies[selectedPlanet].prolandManager.skyNode.noonSunlightExtinctionStrength);
 				GUILayout.Label ("Post Processing");
 				GUIfloat ("Post Processing Alpha", ref postProcessingalpha, ref _cur.postProcessAlpha);
 				GUIfloat ("Post Processing Depth", ref postProcessDepth, ref _cur.postProcessDepth);
 				GUILayout.Label ("Godrays");
-
+				
 				GUILayout.BeginHorizontal ();
 				GUILayout.Label ("Godray strength*");				
 				godrayStrength = Mathf.Min(float.Parse (GUILayout.TextField (godrayStrength.ToString ("0.000"))),1.0f);

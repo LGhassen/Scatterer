@@ -43,6 +43,8 @@ namespace Scatterer
 		[Persistent] public float specB = 0f;
 		[Persistent] public float shininess = 0f;
 
+		[Persistent] public float noonSunlightExtinctionStrength = 1f;
+
 		[Persistent] public float cloudColorMultiplier=3f;
 		[Persistent] public float cloudScatteringMultiplier=0.2f;
 		[Persistent] public float cloudSkyIrradianceMultiplier=0.05f;
@@ -1186,10 +1188,17 @@ namespace Scatterer
 
 		void UpdateLightExtinctions ()
 		{
+			Vector3 sunDirection = prolandManager.getDirectionToMainSun();
+
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
-			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, m_ozoneTransmittance);
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, sunDirection, Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, m_ozoneTransmittance);
 
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
+
+			float extinctionSunsetToNoonTransition = Vector3.Dot(sunDirection, extinctionPosition.normalized);
+			extinctionSunsetToNoonTransition = Mathf.Clamp01( ((extinctionSunsetToNoonTransition-0.2f) / 0.8f) * (1f - noonSunlightExtinctionStrength) );
+			extinction = Color.Lerp(extinction, Color.white, extinctionSunsetToNoonTransition);
+
 			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (prolandManager.mainSunLight, extinction);
 
 			foreach(SecondarySun secondarySun in prolandManager.secondarySuns)
