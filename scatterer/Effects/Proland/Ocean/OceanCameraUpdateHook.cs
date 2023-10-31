@@ -204,8 +204,7 @@ namespace Scatterer
 			double OHL = sphereDir.Magnitude ();         		 //distance to center of planet
 			sphereDir = sphereDir.Normalized ();		 		 //direction to center of planet
 			
-			double rHorizon = Math.Sqrt( (OHL)*(OHL) - (radius * radius));  //distance to the horizon, i.e distance to ocean sphere tangent
-			//basic geometry yo
+			double rHorizon = Math.Sqrt(OHL * OHL - radius * radius);  //distance to the horizon, i.e distance to ocean sphere tangent
 			
 			//Theta=angle to horizon, now all that is left to do is check the viewdir against this angle in the shader
 			double cosTheta= rHorizon / (OHL); 
