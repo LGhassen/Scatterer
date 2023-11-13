@@ -95,6 +95,9 @@ namespace Scatterer
 		[Persistent]
 		public bool useGodrays = false;
 
+		[Persistent]
+		public bool useRaymarchedGodrays = false;
+
 		//[Persistent]
 		public bool useDepthBufferMode = true;
 
@@ -264,6 +267,7 @@ namespace Scatterer
 				 OldConfig.useRingShadows != useRingShadows ||
 				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
 				 OldConfig.useGodrays != useGodrays ||
+				 OldConfig.useRaymarchedGodrays != useRaymarchedGodrays ||
 				 OldConfig.useDepthBufferMode != useDepthBufferMode ||
 				 OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
 				 OldConfig.quarterResScattering != quarterResScattering ||

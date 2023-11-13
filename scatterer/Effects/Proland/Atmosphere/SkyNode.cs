@@ -101,6 +101,7 @@ namespace Scatterer
 		public Material localScatteringMaterial, skyMaterial, scaledScatteringMaterial, sunflareExtinctionMaterial, scaledEclipseMaterial;
 		public GenericLocalAtmosphereContainer localScatteringContainer;
 		public GodraysRenderer godraysRenderer;
+		public RaymarchedGodraysRenderer raymarchedGodraysRenderer;
 		public bool postprocessingEnabled = true;
 
 		GameObject ringObject;
@@ -134,6 +135,7 @@ namespace Scatterer
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);
 
+			/*
 			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController
 			    && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
 			{
@@ -142,6 +144,17 @@ namespace Scatterer
 				{
 					Component.Destroy (godraysRenderer);
 					godraysRenderer = null;
+				}
+			}
+			*/
+
+			if (Scatterer.Instance.mainSettings.useRaymarchedGodrays)
+            {
+				raymarchedGodraysRenderer = (RaymarchedGodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(RaymarchedGodraysRenderer)); // TODO: make this work on OpenGL so do not earliest but latest and the combined buffer thing
+				if (!raymarchedGodraysRenderer.Init(prolandManager.mainSunLight, this))
+				{
+					Component.Destroy(raymarchedGodraysRenderer);
+					raymarchedGodraysRenderer = null;
 				}
 			}
 
@@ -404,7 +417,7 @@ namespace Scatterer
 
             UpdateEclipseAndRingUniforms(mat);
 
-            if (godraysRenderer)
+            if (godraysRenderer || raymarchedGodraysRenderer)
             {
                 mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
             }
@@ -502,7 +515,7 @@ namespace Scatterer
             {
                 mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, godraysRenderer.volumeDepthTexture);
             }
-            Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null);
+            Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null || raymarchedGodraysRenderer != null); // TODO: better handling
 
             Utils.SetToneMapping(mat);
 
@@ -538,7 +551,7 @@ namespace Scatterer
 				mat.SetMatrix (ShaderProperties.cloudPlanetShineRGB_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ?  prolandManager.planetShineRGBMatrix : prolandManager.planetShineOriginalRGBMatrix );
 			}
 
-			if (godraysRenderer)
+			if (godraysRenderer || raymarchedGodraysRenderer)
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
@@ -586,7 +599,7 @@ namespace Scatterer
             {
                 mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, godraysRenderer.volumeDepthTexture);
             }
-            Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null);
+            Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null || raymarchedGodraysRenderer != null); // TODO: better handling of this
 
 			Utils.SetToneMapping(mat);
 		}
@@ -796,6 +809,11 @@ namespace Scatterer
 			if (godraysRenderer)
 			{
 				Component.DestroyImmediate(godraysRenderer);
+			}
+
+			if (raymarchedGodraysRenderer)
+            {
+				Component.DestroyImmediate(raymarchedGodraysRenderer);
 			}
 
 			//disable eve integration scatterer flag

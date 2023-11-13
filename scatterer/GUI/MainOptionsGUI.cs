@@ -151,6 +151,8 @@ namespace Scatterer
 					//Godrays tesselation placeholder
 				}
 
+				Scatterer.Instance.mainSettings.useRaymarchedGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedGodrays, "Raymarched Godrays");
+
 				Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering in 1/4 resolution (speedup, incompatible and disabled with godrays)");
 				Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
 				

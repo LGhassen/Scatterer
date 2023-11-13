@@ -19,6 +19,9 @@ namespace Scatterer
 		const string eveShaderPrefix = "EVE";
 		const string scattererShaderPrefix = "Scatterer-EVE";
 
+		public static Vector3Int stbnDimensions = new Vector3Int(128, 128, 64);
+		public static Texture2D stbn;
+
 		private ShaderReplacer()
 		{
 			Init ();
@@ -94,6 +97,17 @@ namespace Scatterer
 
 				bundle.Unload(false); // unload the raw asset bundle
 				www.Dispose();
+			}
+
+			if (stbn == null)
+			{
+				stbn = new Texture2D((int)stbnDimensions.x, (int)(stbnDimensions.y * stbnDimensions.z), TextureFormat.R8, false);
+				stbn.filterMode = FilterMode.Point;
+				stbn.wrapMode = TextureWrapMode.Repeat;
+				stbn.LoadRawTextureData(System.IO.File.ReadAllBytes(path + "/stbn.R8"));
+				stbn.Apply();
+
+				Utils.LogDebug("Stbn loaded");
 			}
 		}
 
