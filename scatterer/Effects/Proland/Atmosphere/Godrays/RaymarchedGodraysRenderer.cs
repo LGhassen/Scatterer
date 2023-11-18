@@ -162,7 +162,7 @@ namespace Scatterer
 				commandBuffer.SetGlobalTexture(ShaderProperties._godrayDepthTexture_PROPERTY, RenderTargets[0]);
 				commandBuffer.SetGlobalTexture("downscaledGodrayDepth", downscaledDepth);
 
-				targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, commandBuffer);
+				targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, commandBuffer); // This renders after the ocean even though they are on the same event because it gets added later (OnPreRender vs OnWillRenderObject)
 			}
 		}
 
@@ -173,7 +173,7 @@ namespace Scatterer
 				bool isRightEye = targetCamera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right;
 				var commandBuffer = godraysCommandBuffer[isRightEye];
 
-				targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, commandBuffer);
+				targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, commandBuffer);
 
 				previousP[isRightEye] = GL.GetGPUProjectionMatrix(VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera), false);
 				previousV[isRightEye] = VRUtils.GetViewMatrixForCamera(targetCamera);
