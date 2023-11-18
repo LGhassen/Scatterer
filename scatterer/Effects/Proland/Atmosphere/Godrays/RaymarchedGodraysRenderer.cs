@@ -148,7 +148,18 @@ namespace Scatterer
 
 				var prevV = previousV[isRightEye];
 
-				// TODO: inject the parent/origin movement offset here, we will be lacking the planet's rotation but it won't be a big deal I think
+				// Add the frame to frame offset of the parent body, this contains both the movement of the body and the floating origin
+				Vector3d currentOffset = parentSkyNode.parentLocalTransform.position - previousParentPosition;
+				previousParentPosition = parentSkyNode.parentLocalTransform.position;
+
+				//transform to camera space
+				var currentV = VRUtils.GetViewMatrixForCamera(targetCamera);
+				Vector3 floatOffset = currentV.MultiplyVector(-currentOffset);
+
+				//inject in the previous view matrix
+				prevV.m03 += floatOffset.x;
+				prevV.m13 += floatOffset.y;
+				prevV.m23 += floatOffset.z;
 
 				var prevP = previousP[isRightEye];
 
