@@ -133,28 +133,25 @@ namespace Scatterer
 
 			useEclipses = Scatterer.Instance.mainSettings.useEclipses && (prolandManager.eclipseCasters.Count > 0) && HighLogic.LoadedScene != GameScenes.MAINMENU ; //disable bugged eclipses on main menu
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
-			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);
+			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);			
 
-			/*
-			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController
-			    && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
-			{
-				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
-				if (!godraysRenderer.Init(prolandManager.mainSunLight, this))
-				{
-					Component.Destroy (godraysRenderer);
-					godraysRenderer = null;
-				}
-			}
-			*/
-
-			if (Scatterer.Instance.mainSettings.useRaymarchedGodrays)
+			if (Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays || Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays) // must also detect if EVE is active and lightvolume is available
             {
 				raymarchedGodraysRenderer = (RaymarchedGodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(RaymarchedGodraysRenderer)); // TODO: make this work on OpenGL so do not earliest but latest and the combined buffer thing
-				if (!raymarchedGodraysRenderer.Init(prolandManager.mainSunLight, this))
+				if (!raymarchedGodraysRenderer.Init(prolandManager.mainSunLight, this, Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays, Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays, Scatterer.Instance.mainSettings.raymarchedGodraysStepCount))
 				{
 					Component.Destroy(raymarchedGodraysRenderer);
 					raymarchedGodraysRenderer = null;
+				}
+			}
+			else if (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController
+				&& Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
+			{
+				godraysRenderer = (GodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(GodraysRenderer));
+				if (!godraysRenderer.Init(prolandManager.mainSunLight, this))
+				{
+					Component.Destroy(godraysRenderer);
+					godraysRenderer = null;
 				}
 			}
 
@@ -511,13 +508,25 @@ namespace Scatterer
 
             mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY, camerasOverlap);
 
+			/*
             if (godraysRenderer)
             {
                 mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, godraysRenderer.volumeDepthTexture);
             }
-            Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null || raymarchedGodraysRenderer != null); // TODO: better handling
+			*/
+			//Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null || raymarchedGodraysRenderer != null); // TODO: better handling
 
-            Utils.SetToneMapping(mat);
+			if (raymarchedGodraysRenderer != null)
+			{
+				raymarchedGodraysRenderer.SetStepCountAndKeywords(mat);
+			}
+			else
+			{
+				mat.EnableKeyword("GODRAYS_OFF");
+			}
+
+
+			Utils.SetToneMapping(mat);
 
             InitEclipseAndRingUniforms(mat);
         }
@@ -595,11 +604,22 @@ namespace Scatterer
             mat.SetColor(ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
             mat.SetColor(ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
 
-            if (godraysRenderer)
+			/*
+            if (godraysRenderer) // TODO: review this
             {
                 mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, godraysRenderer.volumeDepthTexture);
             }
             Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null || raymarchedGodraysRenderer != null); // TODO: better handling of this
+			*/
+
+			if (raymarchedGodraysRenderer != null)
+            {
+				raymarchedGodraysRenderer.SetStepCountAndKeywords(mat);
+			}
+			else
+            {
+				mat.EnableKeyword("GODRAYS_OFF");
+			}
 
 			Utils.SetToneMapping(mat);
 		}

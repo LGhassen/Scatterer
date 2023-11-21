@@ -28,79 +28,123 @@ namespace Scatterer
 		private FlipFlop<Matrix4x4> previousV;
 		private FlipFlop<Matrix4x4> previousP;
 
-		Vector3d previousParentPosition = Vector3d.zero;
+		private Vector3d previousParentPosition = Vector3d.zero;
 
-		bool renderingEnabled = false;
+		private bool renderingEnabled = false;
 
-		bool hasOcean = false;
+		private bool hasOcean = false;
+		private bool useCloudGodrays = true;
+		private bool useTerrainGodrays = false;
+		private int stepCount = 50;
 
 		public RaymarchedGodraysRenderer()
 		{
 
 		}
 
-		public bool Init(Light inputLight, SkyNode inputParentSkyNode)
-		{
-			if (ShaderReplacer.Instance.LoadedShaders.ContainsKey ("Scatterer/RaymarchScatteringOcclusion")) // TODO: change this to not duplicate the key
+		public bool Init(Light inputLight, SkyNode inputParentSkyNode, bool useCloudGodrays, bool useTerrainGodrays, int stepCount)
+        {
+            if (ShaderReplacer.Instance.LoadedShaders.ContainsKey("Scatterer/RaymarchScatteringOcclusion")) // TODO: change this to not duplicate the key
+            {
+                scatteringOcclusionMaterial = new Material(ShaderReplacer.Instance.LoadedShaders["Scatterer/RaymarchScatteringOcclusion"]);
+            }
+            else
+            {
+                Utils.LogError("Godrays Scattering Occlusion shader can't be found, godrays can't be added");
+                return false;
+            }
+
+            downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/DownscaleDepth")]);
+
+            if (!inputLight)
+            {
+                Utils.LogError("Godrays light is null, godrays can't be added");
+                return false;
+            }
+
+            targetLight = inputLight;
+            parentSkyNode = inputParentSkyNode;
+
+            hasOcean = parentSkyNode.prolandManager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders;
+
+            this.useCloudGodrays = useCloudGodrays;
+            this.useTerrainGodrays = useTerrainGodrays;
+            this.stepCount = stepCount;
+
+            SetStepCountAndKeywords(scatteringOcclusionMaterial);
+
+            scatteringOcclusionMaterial.SetTexture("StbnBlueNoise", ShaderReplacer.stbn);
+            scatteringOcclusionMaterial.SetVector("stbnDimensions", new Vector3(ShaderReplacer.stbnDimensions.x, ShaderReplacer.stbnDimensions.y, ShaderReplacer.stbnDimensions.z));
+
+            targetCamera = gameObject.GetComponent<Camera>();
+
+            bool supportVR = VRUtils.VREnabled();
+
+            if (supportVR)
+            {
+                VRUtils.GetEyeTextureResolution(out screenWidth, out screenHeight);
+            }
+            else
+            {
+                screenWidth = Screen.width;
+                screenHeight = Screen.height;
+            }
+
+			// Terrain godrays are higher frequency and need higher resolution to avoid artifacts and aliasing, cloud godrays are fine with lower
+			if (useTerrainGodrays)
 			{
-				scatteringOcclusionMaterial = new Material(ShaderReplacer.Instance.LoadedShaders ["Scatterer/RaymarchScatteringOcclusion"]);
+				renderWidth = screenWidth   / 4;
+				renderHeight = screenHeight / 2;
 			}
 			else
-			{
-				Utils.LogError("Godrays Scattering Occlusion shader can't be found, godrays can't be added");
-				return false;
+            {
+				renderWidth  = screenWidth  / 4;
+				renderHeight = screenHeight / 4;
 			}
-
-			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/DownscaleDepth")]);
-
-			if (!inputLight)
-			{
-				Utils.LogError("Godrays light is null, godrays can't be added");
-				return false;
-			}
-
-			targetLight = inputLight;
-			parentSkyNode = inputParentSkyNode;
-
-			hasOcean = parentSkyNode.prolandManager.hasOcean && Scatterer.Instance.mainSettings.useOceanShaders;
-
-			scatteringOcclusionMaterial.SetTexture("StbnBlueNoise", ShaderReplacer.stbn);
-			scatteringOcclusionMaterial.SetVector("stbnDimensions", new Vector3(ShaderReplacer.stbnDimensions.x, ShaderReplacer.stbnDimensions.y, ShaderReplacer.stbnDimensions.z));
-
-			targetCamera = gameObject.GetComponent<Camera> ();
-
-			bool supportVR = VRUtils.VREnabled();
-
-			if (supportVR)
-			{
-				VRUtils.GetEyeTextureResolution(out screenWidth, out screenHeight);
-			}
-			else
-			{
-				screenWidth = Screen.width;
-				screenHeight = Screen.height;
-			}
-
-			renderWidth  = screenWidth  / 4;
-			renderHeight = screenHeight / 4;
 
 			godraysRT = VRUtils.CreateVRFlipFlopRT(supportVR, renderWidth, renderHeight, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
-			depthRT   = VRUtils.CreateVRFlipFlopRT(supportVR, renderWidth, renderHeight, RenderTextureFormat.RHalf, FilterMode.Bilinear);
+            depthRT = VRUtils.CreateVRFlipFlopRT(supportVR, renderWidth, renderHeight, RenderTextureFormat.RFloat, FilterMode.Point); // not sure if float helps here?
 
-			downscaledDepth = RenderTextureUtils.CreateRenderTexture(renderWidth, renderHeight, RenderTextureFormat.RFloat, false, FilterMode.Point);
+            downscaledDepth = RenderTextureUtils.CreateRenderTexture(renderWidth, renderHeight, RenderTextureFormat.RFloat, false, FilterMode.Point);
 
-			godraysCommandBuffer = new FlipFlop<CommandBuffer>(VRUtils.VREnabled() ? new CommandBuffer() : null, new CommandBuffer());
+            godraysCommandBuffer = new FlipFlop<CommandBuffer>(VRUtils.VREnabled() ? new CommandBuffer() : null, new CommandBuffer());
 
-			GameObject tempGO = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            GameObject tempGO = GameObject.CreatePrimitive(PrimitiveType.Quad);
 
-			mesh = Instantiate(tempGO.GetComponent<MeshFilter>().mesh);
+            mesh = Instantiate(tempGO.GetComponent<MeshFilter>().mesh);
 
-			GameObject.DestroyImmediate(tempGO);
+            GameObject.DestroyImmediate(tempGO);
 
-			return true;
+            return true;
+        }
+
+        public void SetStepCountAndKeywords(Material mat)
+        {
+			mat.SetFloat("godraysStepCount", stepCount);
+
+			if (useCloudGodrays && useTerrainGodrays)
+            {
+				mat.EnableKeyword("GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.DisableKeyword("GODRAYS_CLOUDS_ON");
+				mat.DisableKeyword("GODRAYS_TERRAIN_ON");
+			}
+            else if (useCloudGodrays)
+            {
+				mat.DisableKeyword("GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.EnableKeyword("GODRAYS_CLOUDS_ON");
+				mat.DisableKeyword("GODRAYS_TERRAIN_ON");
+			}
+            else if (useTerrainGodrays)
+            {
+				mat.DisableKeyword("GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.DisableKeyword("GODRAYS_CLOUDS_ON");
+				mat.EnableKeyword("GODRAYS_TERRAIN_ON");
+			}
+
+			mat.DisableKeyword("GODRAYS_OFF");
 		}
 
-		void OnPreRender()
+        void OnPreRender()
         {
 			if (parentSkyNode && !parentSkyNode.inScaledSpace)
 			{
@@ -127,18 +171,21 @@ namespace Scatterer
 				commandBuffer.Clear();
 
 				// first downscale depth to 1/4
-
 				// TODO: shader property
-				commandBuffer.GetTemporaryRT(Shader.PropertyToID("tempGodraysDepthDownscale"), renderWidth * 2, renderHeight * 2, 0, FilterMode.Point, RenderTextureFormat.RFloat, RenderTextureReadWrite.Default);
-				
+				commandBuffer.GetTemporaryRT(Shader.PropertyToID("tempGodraysDepthDownscale"), screenWidth / 2, screenHeight / 2, 0, FilterMode.Point, RenderTextureFormat.RFloat, RenderTextureReadWrite.Default);
+
 				if (hasOcean)
 					commandBuffer.Blit(null, Shader.PropertyToID("tempGodraysDepthDownscale"), downscaleDepthMaterial, 3);      //ocean depth buffer downsample
 				else
 					commandBuffer.Blit(null, Shader.PropertyToID("tempGodraysDepthDownscale"), downscaleDepthMaterial, 0);      //default depth buffer downsample
-				
 
-				// then downscale again to 1/16 (or 1/8)
-				commandBuffer.Blit(Shader.PropertyToID("tempGodraysDepthDownscale"), downscaledDepth, downscaleDepthMaterial, 4); // TODO: do min/max downscaling, although current system works well enough
+				// then downscale again to 1/16 or 1/8
+				commandBuffer.SetGlobalTexture("tempGodraysDepthDownscale", Shader.PropertyToID("tempGodraysDepthDownscale"));
+
+				if (downscaledDepth.height == screenHeight / 4)
+					commandBuffer.Blit(null, downscaledDepth, downscaleDepthMaterial, 4);
+				else
+					commandBuffer.Blit(null, downscaledDepth, downscaleDepthMaterial, 5);
 
 				commandBuffer.ReleaseTemporaryRT(Shader.PropertyToID("tempGodraysDepthDownscale"));
 
