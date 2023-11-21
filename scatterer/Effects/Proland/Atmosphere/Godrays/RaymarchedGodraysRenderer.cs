@@ -165,6 +165,10 @@ namespace Scatterer
 
 				scatteringOcclusionMaterial.SetMatrix("previousVP", prevP * prevV);
 
+				var currentP = VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera); // Note: This isn't the GPU projection matrix (GL.GetGPUprojection matrix) equivalent to UNITY_MATRIX_P, but the code that uses this is adapted from code originally using unity_CameraInvProjection
+
+				scatteringOcclusionMaterial.SetMatrix("inverseProjection", currentP.inverse);
+
 				RenderTargetIdentifier[] RenderTargets = { new RenderTargetIdentifier(godraysRT[isRightEye][useFlipBuffer]), new RenderTargetIdentifier(depthRT[isRightEye][useFlipBuffer]) };
 
 				commandBuffer.SetRenderTarget(RenderTargets, godraysRT[isRightEye][useFlipBuffer].depthBuffer);
