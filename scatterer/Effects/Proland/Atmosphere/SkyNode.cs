@@ -100,7 +100,7 @@ namespace Scatterer
 		public ScaledScatteringContainer scaledScatteringContainer;
 		public Material localScatteringMaterial, skyMaterial, scaledScatteringMaterial, sunflareExtinctionMaterial, scaledEclipseMaterial;
 		public GenericLocalAtmosphereContainer localScatteringContainer;
-		public GodraysRenderer godraysRenderer;
+		public LegacyGodraysRenderer legacyGodraysRenderer;
 		public RaymarchedGodraysRenderer raymarchedGodraysRenderer;
 		public bool postprocessingEnabled = true;
 
@@ -147,11 +147,11 @@ namespace Scatterer
 			else if (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController
 				&& Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
 			{
-				godraysRenderer = (GodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(GodraysRenderer));
-				if (!godraysRenderer.Init(prolandManager.mainSunLight, this))
+				legacyGodraysRenderer = (LegacyGodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(LegacyGodraysRenderer));
+				if (!legacyGodraysRenderer.Init(prolandManager.mainSunLight, this))
 				{
-					Component.Destroy(godraysRenderer);
-					godraysRenderer = null;
+					Component.Destroy(legacyGodraysRenderer);
+					legacyGodraysRenderer = null;
 				}
 			}
 
@@ -175,7 +175,7 @@ namespace Scatterer
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
 				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && !godraysRenderer);
+					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && !legacyGodraysRenderer);
 				else
 					localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt, prolandManager);
 
@@ -414,7 +414,7 @@ namespace Scatterer
 
             UpdateEclipseAndRingUniforms(mat);
 
-            if (godraysRenderer || raymarchedGodraysRenderer)
+            if (legacyGodraysRenderer || raymarchedGodraysRenderer)
             {
                 mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
             }
@@ -560,7 +560,7 @@ namespace Scatterer
 				mat.SetMatrix (ShaderProperties.cloudPlanetShineRGB_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ?  prolandManager.planetShineRGBMatrix : prolandManager.planetShineOriginalRGBMatrix );
 			}
 
-			if (godraysRenderer || raymarchedGodraysRenderer)
+			if (legacyGodraysRenderer || raymarchedGodraysRenderer)
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
@@ -826,9 +826,9 @@ namespace Scatterer
 				localScatteringContainer.Cleanup();
 			}
 
-			if (godraysRenderer)
+			if (legacyGodraysRenderer)
 			{
-				Component.DestroyImmediate(godraysRenderer);
+				Component.DestroyImmediate(legacyGodraysRenderer);
 			}
 
 			if (raymarchedGodraysRenderer)

@@ -344,7 +344,7 @@ namespace Scatterer
 			else
 			{
 				m_oceanMaterial.DisableKeyword("DEPTH_BUFFER_MODE_ON");
-				if (prolandManager.skyNode.godraysRenderer)
+				if (prolandManager.skyNode.legacyGodraysRenderer)
 				{
 					m_oceanMaterial.EnableKeyword("PROJECTOR_MODE_GODRAYS");
 					m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
