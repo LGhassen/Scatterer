@@ -110,7 +110,7 @@ namespace Scatterer
 		[Persistent]
 		public bool mergeDepthPrePass = false;
 
-		[Persistent]
+		//[Persistent]
 		public bool quarterResScattering = true;
 
 		[Persistent]

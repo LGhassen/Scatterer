@@ -145,8 +145,8 @@ namespace Scatterer
 			GUILayout.EndHorizontal ();
 			if (selectedIndividualSettingsTab == IndividualSettingsTabs.Scattering)
 			{
-				Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays, "Raymarched cloud godrays");
-				Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays, "Raymarched terrain godrays (Requires long-distance shadows and shadowMapResolution override)");
+				Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays, "Raymarched cloud godrays") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
+				Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays, "Raymarched terrain godrays (Requires long-distance shadows and shadowMapResolution override)") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
 
 				GUILayout.BeginHorizontal();
 				{
@@ -155,13 +155,14 @@ namespace Scatterer
 				}
 				GUILayout.EndHorizontal();
 
-				Scatterer.Instance.mainSettings.useLegacyTerrainGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays, "Legacy terrain godrays (Requires long-distance shadows and shadowMapResolution override, Directx11 only)");
+				Scatterer.Instance.mainSettings.useLegacyTerrainGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays, "Legacy terrain godrays (Requires long-distance shadows and shadowMapResolution override, Directx11 only)") &&
+					!Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays && !Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays;
 				if (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays)
 				{
 					//Godrays tesselation placeholder
 				}
 
-				Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering in 1/4 resolution (speedup, incompatible and disabled with godrays)");
+				//Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering in 1/4 resolution (speedup, incompatible and disabled with godrays)");
 				Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
 				
 				Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal Antialiasing (TAA)") && !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
