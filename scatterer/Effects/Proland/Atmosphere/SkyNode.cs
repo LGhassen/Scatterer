@@ -138,7 +138,8 @@ namespace Scatterer
 			if (Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays || Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays) // must also detect if EVE is active and lightvolume is available
             {
 				raymarchedGodraysRenderer = (RaymarchedGodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(RaymarchedGodraysRenderer)); // TODO: make this work on OpenGL so do not earliest but latest and the combined buffer thing
-				if (!raymarchedGodraysRenderer.Init(prolandManager.mainSunLight, this, Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays, Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays, Scatterer.Instance.mainSettings.raymarchedGodraysStepCount))
+					// also will need to figure out copying shadowmap for opengl
+				if (!raymarchedGodraysRenderer.Init(prolandManager.mainSunLight, this, Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays, Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays && Scatterer.Instance.mainSettings.terrainShadows, Scatterer.Instance.mainSettings.raymarchedGodraysStepCount))
 				{
 					Component.Destroy(raymarchedGodraysRenderer);
 					raymarchedGodraysRenderer = null;
