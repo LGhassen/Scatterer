@@ -111,7 +111,7 @@ namespace Scatterer
 				GUILayout.Label ("Godrays");
 				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Godray strength*");				
+				GUILayout.Label ("Legacy Godrays strength*");				
 				godrayStrength = Mathf.Min(float.Parse (GUILayout.TextField (godrayStrength.ToString ("0.000"))),1.0f);
 				if (GUILayout.Button ("Set")) {
 					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.godrayStrength = godrayStrength;
