@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.Rendering;
-using System.Collections.Generic;
-using System;
 
 namespace Scatterer
 {
@@ -241,8 +239,23 @@ namespace Scatterer
 		
 		public void OnDestroy()
 		{
-			// TODO: release, remove commandBuffers etc
+			if (targetCamera != null)
+			{ 
+				if (godraysCommandBuffer[true] != null)
+				{
+					targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, godraysCommandBuffer[true]);
+				}
 
+				targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, godraysCommandBuffer[false]);
+			}
+			
+			if (downscaledDepth != null)
+            {
+				downscaledDepth.Release();
+			}
+
+			VRUtils.ReleaseVRFlipFlopRT(ref godraysRT);
+			VRUtils.ReleaseVRFlipFlopRT(ref depthRT);
 		}
 	}
 }
