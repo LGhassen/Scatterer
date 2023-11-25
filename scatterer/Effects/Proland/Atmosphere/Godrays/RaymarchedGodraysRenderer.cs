@@ -118,7 +118,7 @@ namespace Scatterer
 
         public void SetStepCountAndKeywords(Material mat)
         {
-			mat.SetFloat("godraysStepCount", stepCount);
+			mat.SetFloat(ShaderProperties.godraysStepCount_PROPERTY, stepCount);
 
 			mat.EnableKeyword("GODRAYS_RAYMARCHED");
 			mat.DisableKeyword("GODRAYS_OFF");
@@ -159,7 +159,7 @@ namespace Scatterer
 				parentSkyNode.UpdatePostProcessMaterialUniforms(scatteringOcclusionMaterial);
 
 				int frame = Time.frameCount % ShaderReplacer.stbnDimensions.z;
-				scatteringOcclusionMaterial.SetFloat("frameNumber", frame);
+				scatteringOcclusionMaterial.SetFloat(ShaderProperties.frameNumber_PROPERTY, frame);
 
 				scatteringOcclusionMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, targetCamera.cameraToWorldMatrix);
 
@@ -176,9 +176,9 @@ namespace Scatterer
 				else
 					commandBuffer.Blit(null, downscaledDepth, downscaleDepthMaterial, 0);      //default depth buffer downsample
 
-				scatteringOcclusionMaterial.SetTexture("downscaledDepth", downscaledDepth);
-				scatteringOcclusionMaterial.SetTexture("historyGodrayOcclusionBuffer", godraysRT[isRightEye][!useFlipBuffer]);
-				scatteringOcclusionMaterial.SetTexture("historyGodrayDepthBuffer", depthRT[isRightEye][!useFlipBuffer]);
+				scatteringOcclusionMaterial.SetTexture(ShaderProperties.downscaledDepth_PROPERTY, downscaledDepth);
+				scatteringOcclusionMaterial.SetTexture(ShaderProperties.historyGodrayOcclusionBuffer_PROPERTY, godraysRT[isRightEye][!useFlipBuffer]);
+				scatteringOcclusionMaterial.SetTexture(ShaderProperties.historyGodrayDepthBuffer_PROPERTY, depthRT[isRightEye][!useFlipBuffer]);
 
 				var prevV = previousV[isRightEye];
 
@@ -197,11 +197,11 @@ namespace Scatterer
 
 				var prevP = previousP[isRightEye];
 
-				scatteringOcclusionMaterial.SetMatrix("previousVP", prevP * prevV);
+				scatteringOcclusionMaterial.SetMatrix(ShaderProperties.previousVP_PROPERTY, prevP * prevV);
 
 				var currentP = VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera); // Note: This isn't the GPU projection matrix (GL.GetGPUprojection matrix) equivalent to UNITY_MATRIX_P, but the code that uses this is adapted from code originally using unity_CameraInvProjection
 
-				scatteringOcclusionMaterial.SetMatrix("inverseProjection", currentP.inverse);
+				scatteringOcclusionMaterial.SetMatrix(ShaderProperties.inverseProjection_PROPERTY, currentP.inverse);
 
 				RenderTargetIdentifier[] RenderTargets = { new RenderTargetIdentifier(godraysRT[isRightEye][useFlipBuffer]), new RenderTargetIdentifier(depthRT[isRightEye][useFlipBuffer]) };
 
@@ -209,7 +209,7 @@ namespace Scatterer
 				commandBuffer.DrawMesh(mesh, Matrix4x4.identity, scatteringOcclusionMaterial);
 
 				commandBuffer.SetGlobalTexture(ShaderProperties._godrayDepthTexture_PROPERTY, RenderTargets[0]);
-				commandBuffer.SetGlobalTexture("downscaledGodrayDepth", downscaledDepth);
+				commandBuffer.SetGlobalTexture(ShaderProperties.downscaledGodrayDepth_PROPERTY, downscaledDepth);
 
 				targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, commandBuffer); // This renders after the ocean even though they are on the same event because it gets added later (OnPreRender vs OnWillRenderObject)
 			}

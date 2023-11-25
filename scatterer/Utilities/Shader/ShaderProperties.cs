@@ -369,7 +369,31 @@ namespace Scatterer
 
 		public static int render_ocean_cloud_shadow_PROPERTY { get { return render_ocean_cloud_shadow; } }
 		private static int render_ocean_cloud_shadow;
-		
+
+		public static int frameNumber_PROPERTY { get { return frameNumber; } }
+		private static int frameNumber;
+
+		public static int downscaledDepth_PROPERTY { get { return downscaledDepth; } }
+		private static int downscaledDepth;
+
+		public static int historyGodrayOcclusionBuffer_PROPERTY { get { return historyGodrayOcclusionBuffer; } }
+		private static int historyGodrayOcclusionBuffer;
+
+		public static int historyGodrayDepthBuffer_PROPERTY { get { return historyGodrayDepthBuffer; } }
+		private static int historyGodrayDepthBuffer;
+
+		public static int previousVP_PROPERTY { get { return previousVP; } }
+		private static int previousVP;
+
+		public static int inverseProjection_PROPERTY { get { return inverseProjection; } }
+		private static int inverseProjection;
+
+		public static int downscaledGodrayDepth_PROPERTY { get { return downscaledGodrayDepth; } }
+		private static int downscaledGodrayDepth;
+
+		public static int godraysStepCount_PROPERTY { get { return godraysStepCount; } }
+		private static int godraysStepCount;
+
 		private void Awake()
 		{
 			Rg = Shader.PropertyToID("Rg");
@@ -533,7 +557,16 @@ namespace Scatterer
 
 			_godrayStrength = Shader.PropertyToID("_godrayStrength");
 
-			render_ocean_cloud_shadow = Shader.PropertyToID("render_ocean_cloud_shadow"); 
+			render_ocean_cloud_shadow = Shader.PropertyToID("render_ocean_cloud_shadow");
+
+			frameNumber = Shader.PropertyToID("frameNumber");
+			downscaledDepth = Shader.PropertyToID("downscaledDepth");
+			historyGodrayOcclusionBuffer = Shader.PropertyToID("historyGodrayOcclusionBuffer");
+			historyGodrayDepthBuffer = Shader.PropertyToID("historyGodrayDepthBuffer");
+			previousVP = Shader.PropertyToID("previousVP");
+			inverseProjection = Shader.PropertyToID("inverseProjection");
+			downscaledGodrayDepth = Shader.PropertyToID("downscaledGodrayDepth");
+			godraysStepCount = Shader.PropertyToID("godraysStepCount");
 		}
 	}
 }
