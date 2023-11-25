@@ -122,26 +122,29 @@ namespace Scatterer
         {
 			mat.SetFloat("godraysStepCount", stepCount);
 
+			mat.EnableKeyword("GODRAYS_RAYMARCHED");
+			mat.DisableKeyword("GODRAYS_OFF");
+			mat.DisableKeyword("RAYMARCHED_GODRAYS_OFF");
+			mat.DisableKeyword("GODRAYS_LEGACY");
+
 			if (useCloudGodrays && useTerrainGodrays)
             {
-				mat.EnableKeyword("GODRAYS_CLOUDS_TERRAIN_ON");
-				mat.DisableKeyword("GODRAYS_CLOUDS_ON");
-				mat.DisableKeyword("GODRAYS_TERRAIN_ON");
+				mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
+				mat.DisableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
 			}
             else if (useCloudGodrays)
             {
-				mat.DisableKeyword("GODRAYS_CLOUDS_TERRAIN_ON");
-				mat.EnableKeyword("GODRAYS_CLOUDS_ON");
-				mat.DisableKeyword("GODRAYS_TERRAIN_ON");
+				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
+				mat.DisableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
 			}
             else if (useTerrainGodrays)
             {
-				mat.DisableKeyword("GODRAYS_CLOUDS_TERRAIN_ON");
-				mat.DisableKeyword("GODRAYS_CLOUDS_ON");
-				mat.EnableKeyword("GODRAYS_TERRAIN_ON");
+				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
+				mat.EnableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
 			}
-
-			mat.DisableKeyword("GODRAYS_OFF");
 		}
 
         void OnPreRender()

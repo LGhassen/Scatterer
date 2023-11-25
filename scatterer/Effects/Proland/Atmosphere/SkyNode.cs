@@ -509,23 +509,7 @@ namespace Scatterer
 
             mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY, camerasOverlap);
 
-			/*
-            if (godraysRenderer)
-            {
-                mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, godraysRenderer.volumeDepthTexture);
-            }
-			*/
-			//Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null || raymarchedGodraysRenderer != null); // TODO: better handling
-
-			if (raymarchedGodraysRenderer != null)
-			{
-				raymarchedGodraysRenderer.SetStepCountAndKeywords(mat);
-			}
-			else
-			{
-				mat.EnableKeyword("GODRAYS_OFF");
-			}
-
+			InitGodraysUniforms(mat);
 
 			Utils.SetToneMapping(mat);
 
@@ -582,8 +566,8 @@ namespace Scatterer
             mat.SetVector(ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
             mat.SetTexture(ShaderProperties.Inscatter_PROPERTY, m_inscatter);
             mat.SetTexture(ShaderProperties.Irradiance_PROPERTY, m_irradiance);
-			mat.SetTexture(ShaderProperties.Transmittance_PROPERTY, m_ozoneTransmittance);
-			mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+            mat.SetTexture(ShaderProperties.Transmittance_PROPERTY, m_ozoneTransmittance);
+            mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
             mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
 
             mat.SetFloat(ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
@@ -605,25 +589,30 @@ namespace Scatterer
             mat.SetColor(ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
             mat.SetColor(ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
 
-			/*
-            if (godraysRenderer) // TODO: review this
+            InitGodraysUniforms(mat);
+
+            Utils.SetToneMapping(mat);
+        }
+
+        private void InitGodraysUniforms(Material mat)
+        {
+            if (raymarchedGodraysRenderer != null)
             {
-                mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, godraysRenderer.volumeDepthTexture);
+                raymarchedGodraysRenderer.SetStepCountAndKeywords(mat);
             }
-            Utils.EnableOrDisableShaderKeywords(mat, "GODRAYS_ON", "GODRAYS_OFF", godraysRenderer != null || raymarchedGodraysRenderer != null); // TODO: better handling of this
-			*/
-
-			if (raymarchedGodraysRenderer != null)
+            else if (legacyGodraysRenderer != null)
             {
-				raymarchedGodraysRenderer.SetStepCountAndKeywords(mat);
-			}
-			else
+                mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, legacyGodraysRenderer.volumeDepthTexture);
+                mat.EnableKeyword("GODRAYS_LEGACY");
+                mat.EnableKeyword("RAYMARCHED_GODRAYS_OFF");
+                mat.DisableKeyword("GODRAYS_OFF");
+            }
+            else
             {
-				mat.EnableKeyword("GODRAYS_OFF");
-			}
-
-			Utils.SetToneMapping(mat);
-		}
+                mat.EnableKeyword("RAYMARCHED_GODRAYS_OFF");
+                mat.EnableKeyword("GODRAYS_OFF");
+            }
+        }
 
         private void InitEclipseAndRingUniforms(Material mat)
         {
