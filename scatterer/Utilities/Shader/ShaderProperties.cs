@@ -274,6 +274,9 @@ namespace Scatterer
 		public static int scattererReconstructedCloud_PROPERTY { get { return scattererReconstructedCloud; } }
 		private static int scattererReconstructedCloud;
 
+		public static int scattererCloudLightVolumeEnabled_PROPERTY { get { return scattererCloudLightVolumeEnabled; } }
+		private static int scattererCloudLightVolumeEnabled;
+
 		public static int sunWorldPosition_PROPERTY { get { return sunWorldPosition; } }
 		private static int sunWorldPosition;
 		
@@ -491,6 +494,7 @@ namespace Scatterer
 
 			renderSunFlare = Shader.PropertyToID("renderSunFlare");
 			scattererReconstructedCloud = Shader.PropertyToID("scattererReconstructedCloud");
+			scattererCloudLightVolumeEnabled = Shader.PropertyToID("scattererCloudLightVolumeEnabled");
 			sunWorldPosition = Shader.PropertyToID("sunWorldPosition");
 			aspectRatio = Shader.PropertyToID("aspectRatio");
 			sunGlareScale = Shader.PropertyToID("sunGlareScale");

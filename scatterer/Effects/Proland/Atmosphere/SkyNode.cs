@@ -215,7 +215,9 @@ namespace Scatterer
 			catch (Exception e){Utils.LogError("Error when starting SkyNode::DelayedTweakStockPlanet coroutine "+e.Message);};
 
 			InitEVEClouds ();
-			
+
+			Shader.SetGlobalFloat(ShaderProperties.scattererCloudLightVolumeEnabled_PROPERTY, 0f); // Temporary way to initialize the light volume godrays, if raymarched volumetrics are loaded they override this then enable/disable as needed
+
 			skyNodeInitiated = true;
 			Utils.LogDebug("Skynode initiated for "+celestialBodyName);
 		}
