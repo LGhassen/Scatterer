@@ -142,7 +142,7 @@ namespace Scatterer
 				//1) Downscale depth
 
 				if (inHasOcean)
-					rendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 3);		//ocean depth buffer downsample
+					rendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 1);		//ocean depth buffer downsample
 				else
 					rendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 0);		//default depth buffer downsample
 

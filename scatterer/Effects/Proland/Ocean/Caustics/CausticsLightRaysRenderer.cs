@@ -118,7 +118,7 @@ namespace Scatterer
 		CommandBuffer commandBuffer;
 		Camera targetCamera;
 		private RenderTexture targetRT, targetRT2;
-		private RenderTexture downscaledDepthRT,downscaledDepthRT2;
+		private RenderTexture downscaledDepthRT;
 		private Material downscaleDepthMaterial;
 		bool isInitialized = false;
 		bool renderingEnabled = false;
@@ -159,7 +159,7 @@ namespace Scatterer
 			targetRT2.filterMode = FilterMode.Bilinear;
 			targetRT2.Create();
 			
-			downscaledDepthRT = new RenderTexture(targetRT.width * 2, targetRT.height * 2, 0, RenderTextureFormat.RFloat);
+			downscaledDepthRT = new RenderTexture(targetRT.width, targetRT.height, 0, RenderTextureFormat.RFloat);
 			downscaledDepthRT.anisoLevel = 1;
 			downscaledDepthRT.antiAliasing = 1;
 			downscaledDepthRT.volumeDepth = 0;
@@ -167,15 +167,6 @@ namespace Scatterer
 			downscaledDepthRT.autoGenerateMips = false;
 			downscaledDepthRT.filterMode = FilterMode.Point;
 			downscaledDepthRT.Create();			
-
-			downscaledDepthRT2 = new RenderTexture(downscaledDepthRT.width / 2, downscaledDepthRT.height / 2, 0, RenderTextureFormat.RFloat);
-			downscaledDepthRT2.anisoLevel = 1;
-			downscaledDepthRT2.antiAliasing = 1;
-			downscaledDepthRT2.volumeDepth = 0;
-			downscaledDepthRT2.useMipMap = false;
-			downscaledDepthRT2.autoGenerateMips = false;
-			downscaledDepthRT2.filterMode = FilterMode.Point;
-			downscaledDepthRT2.Create();
 			
 			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]);
 			compositeLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeCausticsGodrays")]);
@@ -186,12 +177,9 @@ namespace Scatterer
 
 			commandBuffer = new CommandBuffer();
 			
-			//downscale depth to 1/4
+			//downscale depth to 1/16
 			commandBuffer.Blit(null, downscaledDepthRT, downscaleDepthMaterial, 0);
-			commandBuffer.SetGlobalTexture("ScattererDownscaledDepthIntermediate", downscaledDepthRT);
-			//further downscale depth to 1/16
-			commandBuffer.Blit(null, downscaledDepthRT2, downscaleDepthMaterial, 1);
-			commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT2);
+			commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT);
 			
 			//render
 			commandBuffer.Blit(null, targetRT, CausticsLightRaysMaterial);
@@ -258,7 +246,6 @@ namespace Scatterer
 			targetRT.Release ();
 			targetRT2.Release ();
 			downscaledDepthRT.Release ();
-			downscaledDepthRT2.Release ();
 		}
 	}
 }

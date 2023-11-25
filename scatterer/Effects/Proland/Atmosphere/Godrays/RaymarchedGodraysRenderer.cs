@@ -173,24 +173,10 @@ namespace Scatterer
 
 				commandBuffer.Clear();
 
-				// first downscale depth to 1/4
-				// TODO: shader property
-				commandBuffer.GetTemporaryRT(Shader.PropertyToID("tempGodraysDepthDownscale"), screenWidth / 2, screenHeight / 2, 0, FilterMode.Point, RenderTextureFormat.RFloat, RenderTextureReadWrite.Default);
-
 				if (hasOcean)
-					commandBuffer.Blit(null, Shader.PropertyToID("tempGodraysDepthDownscale"), downscaleDepthMaterial, 3);      //ocean depth buffer downsample
+					commandBuffer.Blit(null, downscaledDepth, downscaleDepthMaterial, 1);      //ocean depth buffer downsample
 				else
-					commandBuffer.Blit(null, Shader.PropertyToID("tempGodraysDepthDownscale"), downscaleDepthMaterial, 0);      //default depth buffer downsample
-
-				// then downscale again to 1/16 or 1/8
-				commandBuffer.SetGlobalTexture("tempGodraysDepthDownscale", Shader.PropertyToID("tempGodraysDepthDownscale"));
-
-				if (downscaledDepth.height == screenHeight / 4)
-					commandBuffer.Blit(null, downscaledDepth, downscaleDepthMaterial, 4);
-				else
-					commandBuffer.Blit(null, downscaledDepth, downscaleDepthMaterial, 5);
-
-				commandBuffer.ReleaseTemporaryRT(Shader.PropertyToID("tempGodraysDepthDownscale"));
+					commandBuffer.Blit(null, downscaledDepth, downscaleDepthMaterial, 0);      //default depth buffer downsample
 
 				scatteringOcclusionMaterial.SetTexture("downscaledDepth", downscaledDepth);
 				scatteringOcclusionMaterial.SetTexture("historyGodrayOcclusionBuffer", godraysRT[isRightEye][!useFlipBuffer]);
