@@ -107,7 +107,7 @@ namespace Scatterer
 		public Material targetMaterial;
 		
 		private Camera targetCamera;
-		private CommandBuffer rendererCommandBuffer;
+		private CommandBuffer rendererCommandBuffer, quarterResRendererCommandBuffer;
 
 		//downscaledRenderTexture0 will hold scattering.RGB in RGB channels and extinction.R in alpha, downscaledRenderTexture1 will hold extinction.GB in RG
 		private RenderTexture downscaledRenderTexture0, downscaledRenderTexture1, downscaledDepthRenderTexture;
@@ -119,49 +119,50 @@ namespace Scatterer
 
 			targetCamera.depthTextureMode = targetCamera.depthTextureMode | DepthTextureMode.Depth;
 
+			//if no depth downscaling, render directly to screen
 			rendererCommandBuffer = new CommandBuffer();
 			rendererCommandBuffer.name = "Scatterer screen-space scattering CommandBuffer";
 
-			//if no depth downscaling, render directly to screen
-			if (!quarterRes)
+			targetMaterial.SetInt(ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean ? 1 : 0);
+			rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+			rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, 0); //pass 0 render to screen
+
+			if (quarterRes)
 			{
-				targetMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean ? 1 : 0);
-				rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial, 0, 0); //pass 0 render to screen
-			}
-			else
-			{
+				quarterResRendererCommandBuffer = new CommandBuffer();
+				quarterResRendererCommandBuffer.name = "Scatterer 1/4 res screen-space scattering CommandBuffer";
+
+				CreateRenderTextures();
+
 				downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]);
 				compositeScatteringMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeDownscaledScattering")]);
 				Utils.EnableOrDisableShaderKeywords(compositeScatteringMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", inHasOcean);
 				compositeScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean ? 1 : 0);
 				Utils.SetToneMapping(compositeScatteringMaterial);
 
-				CreateRenderTextures();
-
 				//1) Downscale depth
 
 				if (inHasOcean)
-					rendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 1);		//ocean depth buffer downsample
+					quarterResRendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 1);		//ocean depth buffer downsample
 				else
-					rendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 0);		//default depth buffer downsample
+					quarterResRendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 0);        //default depth buffer downsample
 
-				rendererCommandBuffer.SetGlobalTexture("ScattererDownscaledScatteringDepth", downscaledDepthRenderTexture);
+				quarterResRendererCommandBuffer.SetGlobalTexture("ScattererDownscaledScatteringDepth", downscaledDepthRenderTexture);
 
 				//2) Render 1/4 res scattering+extinction to 1 RGBA + 1 RG texture
 
 				RenderTargetIdentifier[] downscaledRenderTextures = {new RenderTargetIdentifier(downscaledRenderTexture0), new RenderTargetIdentifier(downscaledRenderTexture1)};
-				rendererCommandBuffer.SetRenderTarget(downscaledRenderTextures, downscaledRenderTexture0.depthBuffer);
-				rendererCommandBuffer.ClearRenderTarget(false, true,Color.clear);
-				rendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial, 0, 1); //pass 1 render to textures
+				quarterResRendererCommandBuffer.SetRenderTarget(downscaledRenderTextures, downscaledRenderTexture0.depthBuffer);
+				quarterResRendererCommandBuffer.ClearRenderTarget(false, true,Color.clear);
+				quarterResRendererCommandBuffer.DrawRenderer (targetRenderer, targetMaterial, 0, 1); //pass 1 render to textures
 
-				rendererCommandBuffer.SetGlobalTexture("DownscaledScattering0", downscaledRenderTexture0);
-				rendererCommandBuffer.SetGlobalTexture("DownscaledScattering1", downscaledRenderTexture1);
+				quarterResRendererCommandBuffer.SetGlobalTexture("DownscaledScattering0", downscaledRenderTexture0);
+				quarterResRendererCommandBuffer.SetGlobalTexture("DownscaledScattering1", downscaledRenderTexture1);
 
 				//3) Render quad to screen that reads from downscaled textures and full res depth and performs near-depth upsampling
 
-				rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-				rendererCommandBuffer.DrawRenderer (targetRenderer, compositeScatteringMaterial, 0, 0);
+				quarterResRendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+				quarterResRendererCommandBuffer.DrawRenderer (targetRenderer, compositeScatteringMaterial, 0, 0);
 			}
 		}
 
@@ -215,7 +216,13 @@ namespace Scatterer
 		{
 			if (!renderingEnabled)
 			{
-				targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
+				bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
+
+				if (quarterResRendererCommandBuffer != null && !screenShotModeEnabled)
+					targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, quarterResRendererCommandBuffer);
+				else
+					targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
+
 				renderingEnabled = true;
 			}
 		}
@@ -230,6 +237,8 @@ namespace Scatterer
 			if (renderingEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
 			{
 				targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
+				if (quarterResRendererCommandBuffer != null) targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, quarterResRendererCommandBuffer);
+
 				renderingEnabled = false;
 			}
 		}
@@ -240,6 +249,13 @@ namespace Scatterer
 			{
 				targetCamera.RemoveCommandBuffer (CameraEvent.BeforeForwardAlpha, rendererCommandBuffer);
 				rendererCommandBuffer = null;
+
+				if (quarterResRendererCommandBuffer != null)
+                {
+					targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, quarterResRendererCommandBuffer);
+					quarterResRendererCommandBuffer = null;
+				}
+
 				renderingEnabled = true;
 
 				if (downscaledDepthRenderTexture)

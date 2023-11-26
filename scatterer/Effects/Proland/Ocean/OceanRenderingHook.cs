@@ -85,6 +85,9 @@ namespace Scatterer
 
 		private RenderTexture oceanRenderTexture, depthCopyRenderTexture;
 		private Material copyCameraDepthMaterial;
+		bool oceanScreenShotModeEnabled = false;
+
+		int width, height;
 
 		public void Initialize()
 		{
@@ -145,44 +148,46 @@ namespace Scatterer
 		}
 
 		void CreateRenderTextures ()
-		{
-			int width, height;
+        {
+            if (targetCamera.activeTexture)
+            {
+                width = targetCamera.activeTexture.width;
+                height = targetCamera.activeTexture.height;
+            }
+            else
+            {
+                width = Screen.width;
+                height = Screen.height;
+            }
 
-			if (targetCamera.activeTexture)
-			{
-				width = targetCamera.activeTexture.width;
-				height = targetCamera.activeTexture.height;
-			}
-			else
-			{
-				width = Screen.width;
-				height = Screen.height;
-			}
+            targetCamera.forceIntoRenderTexture = true; //do this to force the camera target orientation to always match depth orientation
+                                                        //that way we don't have to worry about flipping them separately
+            hdrEnabled = targetCamera.allowHDR;
 
-			targetCamera.forceIntoRenderTexture = true; //do this to force the camera target orientation to always match depth orientation
-														//that way we don't have to worry about flipping them separately
+            CreateTextures(width, height);
+        }
 
-			hdrEnabled = targetCamera.allowHDR;
-
+        private void CreateTextures(int targetWidth, int targetHeight)
+        {
 			if (depthCopyRenderTexture)
 				depthCopyRenderTexture.Release();
 
 			if (oceanRenderTexture)
 				oceanRenderTexture.Release();
 
-			oceanRenderTexture = new RenderTexture (width, height, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
-			oceanRenderTexture.useMipMap = false;
-			oceanRenderTexture.autoGenerateMips = false;
-			oceanRenderTexture.Create ();
+			oceanRenderTexture = new RenderTexture(targetWidth, targetHeight, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
+            oceanRenderTexture.useMipMap = false;
+            oceanRenderTexture.autoGenerateMips = false;
+            oceanRenderTexture.Create();
 
-			depthCopyRenderTexture = new RenderTexture (width, height, 0, RenderTextureFormat.RFloat);
-			depthCopyRenderTexture.useMipMap = false;
-			depthCopyRenderTexture.autoGenerateMips = false;
-			depthCopyRenderTexture.filterMode = FilterMode.Point;
-			depthCopyRenderTexture.Create ();
-		}
-		
-		public void EnableForThisFrame()
+            depthCopyRenderTexture = new RenderTexture(targetWidth, targetHeight, 0, RenderTextureFormat.RFloat);
+            depthCopyRenderTexture.useMipMap = false;
+            depthCopyRenderTexture.autoGenerateMips = false;
+            depthCopyRenderTexture.filterMode = FilterMode.Point;
+            depthCopyRenderTexture.Create();
+        }
+
+        public void EnableForThisFrame()
 		{
 			if (!renderingEnabled)
 			{
@@ -191,11 +196,21 @@ namespace Scatterer
 					CreateRenderTextures();
 				}
 
+				bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
+				if (oceanScreenShotModeEnabled != screenShotModeEnabled)
+                {
+					// Resize textures
+					int superSizingFactor = screenShotModeEnabled ? Mathf.Max(GameSettings.SCREENSHOT_SUPERSIZE, 1) : 1;
+					CreateTextures(width * superSizingFactor, height * superSizingFactor);
+
+					oceanScreenShotModeEnabled = screenShotModeEnabled;
+				}
+
 				targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer); //ocean renders on AfterImageEffectsOpaque, local scattering (with it's depth downscale) can render and copy to screen on afterForwardAlpha
 				renderingEnabled = true;
 			}
 		}
-		
+
 		void OnPostRender()
 		{
 			if (renderingEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
