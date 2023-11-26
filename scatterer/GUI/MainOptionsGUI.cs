@@ -146,7 +146,7 @@ namespace Scatterer
 			if (selectedIndividualSettingsTab == IndividualSettingsTabs.Scattering)
 			{
 				Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays, "Raymarched cloud godrays") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
-				Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays, "Raymarched terrain godrays (Requires long-distance shadows)") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
+				Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays, "Raymarched terrain godrays (Requires long-distance shadows, Directx11 only)") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
 
 				GUILayout.BeginHorizontal();
 				{
