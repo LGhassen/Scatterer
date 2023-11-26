@@ -35,12 +35,15 @@ namespace Scatterer
 		private bool useTerrainGodrays = false;
 		private int stepCount = 50;
 
+		private bool godraysScreenShotModeEnabled = false;
+		private int screenshotModeIterations = 8;
+
 		public RaymarchedGodraysRenderer()
 		{
 
 		}
 
-		public bool Init(Light inputLight, SkyNode inputParentSkyNode, bool useCloudGodrays, bool useTerrainGodrays, int stepCount)
+		public bool Init(Light inputLight, SkyNode inputParentSkyNode, bool useCloudGodrays, bool useTerrainGodrays, int stepCount, int screenshotModeIterations)
         {
             if (ShaderReplacer.Instance.LoadedShaders.ContainsKey("Scatterer/RaymarchScatteringOcclusion")) // TODO: change this to not duplicate the key
             {
@@ -54,7 +57,10 @@ namespace Scatterer
 
             downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/DownscaleDepth")]);
 
-            if (!inputLight)
+			downscaleDepthMaterial.EnableKeyword("COPY_ONLY_OFF");
+			downscaleDepthMaterial.DisableKeyword("COPY_ONLY_ON");
+
+			if (!inputLight)
             {
                 Utils.LogError("Godrays light is null, godrays can't be added");
                 return false;
@@ -68,13 +74,16 @@ namespace Scatterer
             this.useCloudGodrays = useCloudGodrays;
             this.useTerrainGodrays = useTerrainGodrays;
             this.stepCount = stepCount;
+			this.screenshotModeIterations = screenshotModeIterations;
 
-            SetStepCountAndKeywords(scatteringOcclusionMaterial);
+			SetStepCountAndKeywords(scatteringOcclusionMaterial);
 
             scatteringOcclusionMaterial.SetTexture("StbnBlueNoise", ShaderReplacer.stbn);
             scatteringOcclusionMaterial.SetVector("stbnDimensions", new Vector3(ShaderReplacer.stbnDimensions.x, ShaderReplacer.stbnDimensions.y, ShaderReplacer.stbnDimensions.z));
 
-            targetCamera = gameObject.GetComponent<Camera>();
+			scatteringOcclusionMaterial.SetFloat("screenshotModeIterations", (float)screenshotModeIterations);
+
+			targetCamera = gameObject.GetComponent<Camera>();
 
             bool supportVR = VRUtils.VREnabled();
 
@@ -101,7 +110,7 @@ namespace Scatterer
 			}
 
 			godraysRT = VRUtils.CreateVRFlipFlopRT(supportVR, renderWidth, renderHeight, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
-            depthRT = VRUtils.CreateVRFlipFlopRT(supportVR, renderWidth, renderHeight, RenderTextureFormat.RFloat, FilterMode.Point); // not sure if float helps here?
+            depthRT = VRUtils.CreateVRFlipFlopRT(supportVR, renderWidth, renderHeight, RenderTextureFormat.RFloat, FilterMode.Point);
 
             downscaledDepth = RenderTextureUtils.CreateRenderTexture(renderWidth, renderHeight, RenderTextureFormat.RFloat, false, FilterMode.Point);
 
@@ -118,31 +127,36 @@ namespace Scatterer
 
         public void SetStepCountAndKeywords(Material mat)
         {
-			mat.SetFloat(ShaderProperties.godraysStepCount_PROPERTY, stepCount);
+            SetStepCount(mat);
 
-			mat.EnableKeyword("GODRAYS_RAYMARCHED");
-			mat.DisableKeyword("GODRAYS_OFF");
-			mat.DisableKeyword("RAYMARCHED_GODRAYS_OFF");
-			mat.DisableKeyword("GODRAYS_LEGACY");
+            mat.EnableKeyword("GODRAYS_RAYMARCHED");
+            mat.DisableKeyword("GODRAYS_OFF");
+            mat.DisableKeyword("RAYMARCHED_GODRAYS_OFF");
+            mat.DisableKeyword("GODRAYS_LEGACY");
 
-			if (useCloudGodrays && useTerrainGodrays)
+            if (useCloudGodrays && useTerrainGodrays)
             {
-				mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
-				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
-				mat.DisableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
-			}
+                mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+                mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
+                mat.DisableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
+            }
             else if (useCloudGodrays)
             {
-				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
-				mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
-				mat.DisableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
-			}
+                mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+                mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
+                mat.DisableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
+            }
             else if (useTerrainGodrays)
             {
-				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
-				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
-				mat.EnableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
-			}
+                mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+                mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
+                mat.EnableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
+            }
+        }
+
+        public void SetStepCount(Material mat)
+        {
+			mat.SetFloat(ShaderProperties.godraysStepCount_PROPERTY, stepCount);
 		}
 
         void OnPreRender()
@@ -151,15 +165,34 @@ namespace Scatterer
 			{
 				renderingEnabled = true;
 
+				bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
+
+				if (godraysScreenShotModeEnabled != screenShotModeEnabled)
+				{
+					ResizeRenderTextures(screenShotModeEnabled);
+
+					if (screenShotModeEnabled)
+                    {
+						downscaleDepthMaterial.EnableKeyword("COPY_ONLY_ON");
+						downscaleDepthMaterial.DisableKeyword("COPY_ONLY_OFF");
+					}
+					else
+                    {
+						downscaleDepthMaterial.EnableKeyword("COPY_ONLY_OFF");
+						downscaleDepthMaterial.DisableKeyword("COPY_ONLY_ON");
+					}
+
+					SetStepCount(scatteringOcclusionMaterial);
+
+					godraysScreenShotModeEnabled = screenShotModeEnabled;
+				}
+
 				// volumeDepthMaterial.SetTexture(ShaderProperties._ShadowMapTextureCopyScatterer_PROPERTY, ShadowMapCopy.RenderTexture);
 
 				// TODO: remove unneded calls?
 				parentSkyNode.InitUniforms(scatteringOcclusionMaterial);
 				parentSkyNode.SetUniforms(scatteringOcclusionMaterial);
 				parentSkyNode.UpdatePostProcessMaterialUniforms(scatteringOcclusionMaterial);
-
-				int frame = Time.frameCount % ShaderReplacer.stbnDimensions.z;
-				scatteringOcclusionMaterial.SetFloat(ShaderProperties.frameNumber_PROPERTY, frame);
 
 				scatteringOcclusionMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, targetCamera.cameraToWorldMatrix);
 
@@ -168,6 +201,9 @@ namespace Scatterer
 				bool isRightEye = targetCamera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right;
 
 				CommandBuffer commandBuffer = godraysCommandBuffer[isRightEye];
+
+				int frame = Time.frameCount % ShaderReplacer.stbnDimensions.z;
+				commandBuffer.SetGlobalFloat(ShaderProperties.frameNumber_PROPERTY, frame);
 
 				commandBuffer.Clear();
 
@@ -206,13 +242,51 @@ namespace Scatterer
 				RenderTargetIdentifier[] RenderTargets = { new RenderTargetIdentifier(godraysRT[isRightEye][useFlipBuffer]), new RenderTargetIdentifier(depthRT[isRightEye][useFlipBuffer]) };
 
 				commandBuffer.SetRenderTarget(RenderTargets, godraysRT[isRightEye][useFlipBuffer].depthBuffer);
-				commandBuffer.DrawMesh(mesh, Matrix4x4.identity, scatteringOcclusionMaterial);
+
+				if (!screenShotModeEnabled)
+				{
+					commandBuffer.DrawMesh(mesh, Matrix4x4.identity, scatteringOcclusionMaterial, 0, 0);
+				}
+				else
+                {
+					commandBuffer.ClearRenderTarget(false, true, Color.clear);
+					for (int i=0;i< screenshotModeIterations;i++)
+                    {
+						commandBuffer.SetGlobalFloat(ShaderProperties.frameNumber_PROPERTY, frame);
+						commandBuffer.DrawMesh(mesh, Matrix4x4.identity, scatteringOcclusionMaterial, 0, 1);
+						frame++;
+					}
+                }
 
 				commandBuffer.SetGlobalTexture(ShaderProperties._godrayDepthTexture_PROPERTY, RenderTargets[0]);
 				commandBuffer.SetGlobalTexture(ShaderProperties.downscaledGodrayDepth_PROPERTY, downscaledDepth);
 
 				targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, commandBuffer); // This renders after the ocean even though they are on the same event because it gets added later (OnPreRender vs OnWillRenderObject)
 			}
+		}
+
+		private void ResizeRenderTextures(bool screenShotModeEnabled)
+		{
+			int newWidth, newHeight;
+
+			if (screenShotModeEnabled)
+            {
+				// There is an issue with my downscaling shader where it stays stuck at the original texelSize(?)
+				// and can't handle downscaling so make this a simple copy at the same resolution
+				int superSizingFactor = Mathf.Max(GameSettings.SCREENSHOT_SUPERSIZE, 1);
+				newWidth = screenWidth * superSizingFactor;
+				newHeight = screenHeight * superSizingFactor;
+			}
+			else
+            {
+				newWidth = renderWidth;
+				newHeight = renderHeight;
+			}
+
+			VRUtils.ResizeVRFlipFlopRT(ref godraysRT, newWidth, newHeight);
+			VRUtils.ResizeVRFlipFlopRT(ref depthRT, newWidth, newHeight);
+
+			RenderTextureUtils.ResizeRT(downscaledDepth, newWidth, newHeight);
 		}
 
 		void OnPostRender()

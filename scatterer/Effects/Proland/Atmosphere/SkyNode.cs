@@ -141,7 +141,7 @@ namespace Scatterer
 					// also will need to figure out copying shadowmap for opengl
 				if (!raymarchedGodraysRenderer.Init(prolandManager.mainSunLight, this, Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays,
 					Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays && Scatterer.Instance.mainSettings.terrainShadows && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController,
-					Scatterer.Instance.mainSettings.raymarchedGodraysStepCount))
+					Scatterer.Instance.mainSettings.raymarchedGodraysStepCount, Scatterer.Instance.mainSettings.raymarchedGodraysScreenshotDenoisingIterations))
 				{
 					Component.Destroy(raymarchedGodraysRenderer);
 					raymarchedGodraysRenderer = null;

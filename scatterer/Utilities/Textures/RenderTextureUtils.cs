@@ -51,33 +51,21 @@ namespace Scatterer
             flipFlop = new FlipFlop<RenderTexture>(null, null);
         }
 
-        public static void ResizeFlipFlopRT(ref FlipFlop<RenderTexture> flipFlop, int newWidth, int newHeight, bool copyContents, int newDepth = 0)
+        public static void ResizeRT(RenderTexture rt, int newWidth, int newHeight)
         {
-            bool is3d = flipFlop[false].volumeDepth > 0;
-
-            // Create new RenderTextures with the specified dimensions
-            var newFlip = CreateRenderTexture(newWidth, newHeight, flipFlop[false].format, flipFlop[false].useMipMap, flipFlop[false].filterMode, flipFlop[false].dimension, is3d && newDepth > 0 ? newDepth : flipFlop[false].volumeDepth, flipFlop[false].enableRandomWrite);
-            var newFlop = CreateRenderTexture(newWidth, newHeight, flipFlop[true].format,  flipFlop[true].useMipMap,  flipFlop[true].filterMode,  flipFlop[true].dimension,  is3d && newDepth > 0 ? newDepth : flipFlop[true].volumeDepth,  flipFlop[true].enableRandomWrite);
-
-            if (copyContents)
+            if (rt != null)
             {
-                if (is3d)
-                {
-                    // TODO
-                }
-                else
-                {
-                    // Copy the contents from the old RenderTextures to the new ones
-                    Graphics.Blit(flipFlop[false], newFlip);
-                    Graphics.Blit(flipFlop[true], newFlop);
-                }
+                rt.Release();
+                rt.width = newWidth;
+                rt.height = newHeight;
+                rt.Create();
             }
+        }
 
-            // Release the old RenderTextures
-            ReleaseFlipFlopRT(ref flipFlop);
-
-            // Update the FlipFlop with the new RenderTextures
-            flipFlop = new FlipFlop<RenderTexture>(newFlip, newFlop);
+        public static void ResizeFlipFlopRT(ref FlipFlop<RenderTexture> flipFlop, int newWidth, int newHeight, int newDepth = 0)
+        {
+            RenderTextureUtils.ResizeRT(flipFlop[false], newWidth, newHeight);
+            RenderTextureUtils.ResizeRT(flipFlop[true], newWidth, newHeight);
         }
 
         public static RenderTexture CreateRenderTexture(int width, int height, RenderTextureFormat format, bool useMips, FilterMode filterMode, TextureDimension dimension = TextureDimension.Tex2D, int depth = 0, bool randomReadWrite = false)

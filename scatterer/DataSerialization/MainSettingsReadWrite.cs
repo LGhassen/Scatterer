@@ -102,6 +102,9 @@ namespace Scatterer
 		public int raymarchedGodraysStepCount = 50;
 
 		[Persistent]
+		public int raymarchedGodraysScreenshotDenoisingIterations = 10;
+
+		[Persistent]
 		public bool useLegacyTerrainGodrays = false;
 
 		//[Persistent]
@@ -275,6 +278,7 @@ namespace Scatterer
 				 OldConfig.useRaymarchedCloudGodrays != useRaymarchedCloudGodrays ||
 				 OldConfig.useRaymarchedTerrainGodrays != useRaymarchedTerrainGodrays ||
 				 OldConfig.raymarchedGodraysStepCount != raymarchedGodraysStepCount ||
+				 OldConfig.raymarchedGodraysScreenshotDenoisingIterations != raymarchedGodraysScreenshotDenoisingIterations ||
 				 OldConfig.useLegacyTerrainGodrays != useLegacyTerrainGodrays ||
 				 OldConfig.useDepthBufferMode != useDepthBufferMode ||
 				 OldConfig.mergeDepthPrePass != mergeDepthPrePass ||

@@ -57,5 +57,17 @@ namespace Scatterer
                 return cam.GetStereoViewMatrix(cam.stereoActiveEye == Camera.MonoOrStereoscopicEye.Left ? Camera.StereoscopicEye.Left : Camera.StereoscopicEye.Right);
             }
         }
+
+        public static void ResizeVRFlipFlopRT(ref FlipFlop<FlipFlop<RenderTexture>> flipFlop, int newWidth, int newHeight)
+        {
+            var leftEyeFlipFlop = flipFlop[false];
+            var rightEyeFlipFlop = flipFlop[true];
+
+            if (leftEyeFlipFlop[true] != null)
+                RenderTextureUtils.ResizeFlipFlopRT(ref leftEyeFlipFlop, newWidth, newHeight);
+
+            if (rightEyeFlipFlop[true] != null)
+                RenderTextureUtils.ResizeFlipFlopRT(ref rightEyeFlipFlop, newWidth, newHeight);
+        }
     }
 }
