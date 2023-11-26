@@ -40,6 +40,8 @@ namespace Scatterer
 		public bool checkOceanDepth = false;
 		public bool jitterTransparencies = false;
 
+		private static CameraEvent TAACameraEvent = CameraEvent.AfterForwardAlpha;  // BeforeImageEffects doesn't work well
+
 		public void Awake()
 		{
 			targetCamera = GetComponent<Camera>();
@@ -213,43 +215,48 @@ namespace Scatterer
 		//adapted from the original render() method
 		public void OnPreCull()
 		{
-			temporalAACommandBuffer.Clear ();
+			bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
 
-			ConfigureJitteredProjectionMatrix ();
+			if (!screenShotModeEnabled)
+			{ 
+				temporalAACommandBuffer.Clear ();
 
-			int activeEye = 0;
+				ConfigureJitteredProjectionMatrix ();
 
-			//TODO: move to shader properties
-			if (checkOceanDepth)
-				Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
+				int activeEye = 0;
 
-			int pingPongIndex = m_HistoryPingPong[activeEye];
-			RenderTexture historyRead  = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
-			RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
-			m_HistoryPingPong[activeEye] = ++pingPongIndex % 2;
+				//TODO: move to shader properties
+				if (checkOceanDepth)
+					Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
 
-			RenderTexture motionVectorsHistory = CheckMotionVectorsHistory();
+				int pingPongIndex = m_HistoryPingPong[activeEye];
+				RenderTexture historyRead  = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
+				RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
+				m_HistoryPingPong[activeEye] = ++pingPongIndex % 2;
 
-			temporalAAMaterial.SetTexture("_HistoryTex", historyRead); // TODO: shader properties
-			temporalAAMaterial.SetTexture("_HistoryMotionVectorsTex", motionVectorsHistory); // TODO: shader properties
+				RenderTexture motionVectorsHistory = CheckMotionVectorsHistory();
 
-			int pass = (int)Pass.SolverDilate;
+				temporalAAMaterial.SetTexture("_HistoryTex", historyRead); // TODO: shader properties
+				temporalAAMaterial.SetTexture("_HistoryMotionVectorsTex", motionVectorsHistory); // TODO: shader properties
 
-			temporalAACommandBuffer.SetGlobalTexture ("_ScreenColor", BuiltinRenderTextureType.CameraTarget);  // TODO: shader properties
-			temporalAACommandBuffer.Blit (null, historyWrite, temporalAAMaterial, pass);
+				int pass = (int)Pass.SolverDilate;
 
-			temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
-			temporalAACommandBuffer.Blit (null, motionVectorsHistory, copyMotionVectorsMaterial);
+				temporalAACommandBuffer.SetGlobalTexture ("_ScreenColor", BuiltinRenderTextureType.CameraTarget);  // TODO: shader properties
+				temporalAACommandBuffer.Blit (null, historyWrite, temporalAAMaterial, pass);
 
-			targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer); // BeforeImageEffects doesn't work well
+				temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
+				temporalAACommandBuffer.Blit (null, motionVectorsHistory, copyMotionVectorsMaterial);
 
-			m_ResetHistory = false;
+				targetCamera.AddCommandBuffer (TAACameraEvent, temporalAACommandBuffer);
+
+				m_ResetHistory = false;
+			}
 		}
 
 		public void OnPostRender()
 		{
 			ResetProjection();
-			targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+			targetCamera.RemoveCommandBuffer (TAACameraEvent, temporalAACommandBuffer);
 		}
 
 		// This is needed otherwise transparencies jitter
@@ -262,7 +269,7 @@ namespace Scatterer
 		public void OnDestroy()
 		{
 			if (temporalAACommandBuffer != null)
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+				targetCamera.RemoveCommandBuffer (TAACameraEvent, temporalAACommandBuffer);
 
 			targetCamera.depthTextureMode = originalDepthTextureMode;
 

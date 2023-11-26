@@ -1,13 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -21,7 +12,9 @@ namespace Scatterer
 
 		enum Pass { EdgeDetection = 0, BlendWeights = 3, NeighborhoodBlending = 6 }
 		public enum Quality { DepthMode = 0, Medium = 1, High = 2 }
-		
+
+		private static CameraEvent SMAACameraEvent = CameraEvent.AfterForwardAlpha; // BeforeImageEffects doesn't work well
+
 		Quality quality;
 
 		public void forceDepthBuffermode()
@@ -91,7 +84,9 @@ namespace Scatterer
 
 		public void OnPreCull()
 		{
-			if (!initialized)
+			bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
+
+			if (!initialized && !screenShotModeEnabled)
 			{
 				SMAACommandBuffer.Clear ();
 			
@@ -112,8 +107,14 @@ namespace Scatterer
 				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.NeighborhoodBlending);				//neighborhood blending to flip
 				SMAACommandBuffer.Blit (flip, BuiltinRenderTextureType.CameraTarget);							//blit back to screen
 			
-				targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer); 				// BeforeImageEffects doesn't work well so use this
+				targetCamera.AddCommandBuffer (SMAACameraEvent, SMAACommandBuffer);
 				initialized = true;
+			}
+
+			if (initialized && screenShotModeEnabled)
+            {
+				targetCamera.RemoveCommandBuffer(SMAACameraEvent, SMAACommandBuffer);
+				initialized = false;
 			}
 		}
 		
@@ -123,7 +124,7 @@ namespace Scatterer
 
 			if (SMAACommandBuffer !=null)
 			{
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer);
+				targetCamera.RemoveCommandBuffer (SMAACameraEvent, SMAACommandBuffer);
 				SMAACommandBuffer.Clear();
 			}
 			
