@@ -45,8 +45,11 @@ namespace Scatterer
 				width = Screen.width;
 				height = Screen.height;
 			}
-			
-			flip = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32); //TODO: hdr support for these
+
+			bool hdrEnabled = targetCamera.allowHDR;
+			var colorFormat = hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32;
+
+			flip = new RenderTexture (width, height, 0, colorFormat);
 			flip.anisoLevel = 1;
 			flip.antiAliasing = 1;
 			flip.volumeDepth = 0;
@@ -56,7 +59,7 @@ namespace Scatterer
 			flip.filterMode = FilterMode.Bilinear;
 			flip.Create ();
 
-			flop = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
+			flop = new RenderTexture (width, height, 0, colorFormat);
 			flop.anisoLevel = 1;
 			flop.antiAliasing = 1;
 			flop.volumeDepth = 0;
