@@ -199,7 +199,7 @@ namespace Scatterer
 					// and IVA camera
 					if (mainSettings.useSMAAForIVA)
                     {
-						GameEvents.OnCameraChange.Add(AddSMAAToInternalCamera);
+						GameEvents.OnCameraChange.Add(AddSMAAToInternalCameraForTAA);
 					}
 					else
 					{
@@ -285,7 +285,7 @@ namespace Scatterer
 		{
 			GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
 			GameEvents.OnCameraChange.Remove(AddTAAToInternalCamera);
-			GameEvents.OnCameraChange.Remove(AddSMAAToInternalCamera);
+			GameEvents.OnCameraChange.Remove(AddSMAAToInternalCameraForTAA);
 
 			if (isActive)
 			{
@@ -653,19 +653,20 @@ namespace Scatterer
 			}
 		}
 
-		public void AddSMAAToInternalCamera(CameraManager.CameraMode cameraMode)
+		public void AddSMAAToInternalCameraForTAA(CameraManager.CameraMode cameraMode)
 		{
+			for (int i = antiAliasingScripts.Count - 1; i >= 0; i--)
+			{
+				var aaScript = antiAliasingScripts.ElementAt(i);
+				if (aaScript != null && aaScript is SubpixelMorphologicalAntialiasing)
+				{
+					antiAliasingScripts.Remove(aaScript);
+					Component.DestroyImmediate(aaScript);
+				}
+			}
+
 			if (cameraMode == CameraManager.CameraMode.IVA)
 			{
-				foreach (SubpixelMorphologicalAntialiasing smaaScript in antiAliasingScripts.OfType<SubpixelMorphologicalAntialiasing>())
-				{
-					if (smaaScript)
-					{
-						antiAliasingScripts.Remove(smaaScript);
-						Component.DestroyImmediate(smaaScript);
-					}
-				}
-
 				Camera internalCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "InternalCamera");
 				if (internalCamera)
 				{
