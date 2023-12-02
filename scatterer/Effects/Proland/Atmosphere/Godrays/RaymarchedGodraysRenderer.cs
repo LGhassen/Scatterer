@@ -311,6 +311,8 @@ namespace Scatterer
 					renderingEnabled = false;
 					useFlipBuffer = !useFlipBuffer;
 				}
+
+				Shader.SetGlobalTexture(ShaderProperties._godrayDepthTexture_PROPERTY, Texture2D.blackTexture);
 			}
 		}
 		
