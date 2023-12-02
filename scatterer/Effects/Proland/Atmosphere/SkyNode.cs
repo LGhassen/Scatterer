@@ -610,12 +610,15 @@ namespace Scatterer
                 mat.EnableKeyword("GODRAYS_LEGACY");
                 mat.EnableKeyword("RAYMARCHED_GODRAYS_OFF");
                 mat.DisableKeyword("GODRAYS_OFF");
-            }
+				mat.SetFloat(ShaderProperties.godraysSoftwareSwitch_PROPERTY, 0f);
+
+			}
             else
             {
                 mat.EnableKeyword("RAYMARCHED_GODRAYS_OFF");
                 mat.EnableKeyword("GODRAYS_OFF");
-            }
+				mat.SetFloat(ShaderProperties.godraysSoftwareSwitch_PROPERTY, 0f);
+			}
         }
 
         private void InitEclipseAndRingUniforms(Material mat)

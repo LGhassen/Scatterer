@@ -158,6 +158,8 @@ namespace Scatterer
 		private static int _customDepthTexture;
 		public static int _godrayDepthTexture_PROPERTY { get { return _godrayDepthTexture; } }
 		private static int _godrayDepthTexture;
+		public static int godraysSoftwareSwitch_PROPERTY { get { return godraysSoftwareSwitch; } }
+		private static int godraysSoftwareSwitch;
 		public static int M_PI_PROPERTY { get { return M_PI; } }
 		private static int M_PI;
 		public static int SKY_W_PROPERTY { get { return SKY_W; } }
@@ -468,6 +470,7 @@ namespace Scatterer
 			Irradiance = Shader.PropertyToID("Irradiance");
 			_customDepthTexture = Shader.PropertyToID("_customDepthTexture");
 			_godrayDepthTexture = Shader.PropertyToID("_godrayDepthTexture");
+			godraysSoftwareSwitch = Shader.PropertyToID("godraysSoftwareSwitch");
 
 			M_PI = Shader.PropertyToID("M_PI");
 			SKY_W = Shader.PropertyToID("SKY_W");

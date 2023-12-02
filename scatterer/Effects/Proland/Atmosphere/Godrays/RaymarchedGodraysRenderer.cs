@@ -136,19 +136,22 @@ namespace Scatterer
 
             if (useCloudGodrays && useTerrainGodrays)
             {
-                mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.SetFloat(ShaderProperties.godraysSoftwareSwitch_PROPERTY, 3f);
+				mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
                 mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
                 mat.DisableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
             }
             else if (useCloudGodrays)
             {
-                mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.SetFloat(ShaderProperties.godraysSoftwareSwitch_PROPERTY, 1f);
+				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
                 mat.EnableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
                 mat.DisableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
             }
             else if (useTerrainGodrays)
             {
-                mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
+				mat.SetFloat(ShaderProperties.godraysSoftwareSwitch_PROPERTY, 2f);
+				mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_TERRAIN_ON");
                 mat.DisableKeyword("RAYMARCHED_GODRAYS_CLOUDS_ON");
                 mat.EnableKeyword("RAYMARCHED_GODRAYS_TERRAIN_ON");
             }
