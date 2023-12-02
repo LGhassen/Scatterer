@@ -5,7 +5,6 @@ namespace Scatterer
 {
 	// Temporal anti-aliasing from Unity post-processing stack V2
 	// Modified to not blur the ocean, removed dependency on other postprocessing classes I don't need here so we can initialize and make everything work by just adding this to a camera
-	// Also modified to store previous motion vectors and compare them to the current's to eliminate ghosting (where motion vectors are correct)
 	// Generating motion vectors for the ocean is both expensive and unnecessary so we should just not apply TAA on the ocean, otherwise it would just blur it without proper motion vectors
 	public class TemporalAntiAliasing : GenericAntiAliasing
 	{
@@ -28,13 +27,12 @@ namespace Scatterer
 		// Ping-pong between two history textures as we can't read & write the same target in the same pass
 		const int eyesCount = 1; const int historyTexturesCount = 2;
 		RenderTexture[][] historyTextures = new RenderTexture[eyesCount][];
-		RenderTexture[] historyMotionVectors = new RenderTexture[eyesCount];
 
 		int[] m_HistoryPingPong = new int [eyesCount];
 
 		Camera targetCamera;
 		CommandBuffer temporalAACommandBuffer;
-		Material temporalAAMaterial, copyMotionVectorsMaterial;
+		Material temporalAAMaterial;
 
 		DepthTextureMode originalDepthTextureMode;
 		public bool checkOceanDepth = false;
@@ -51,8 +49,6 @@ namespace Scatterer
 
 			temporalAAMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/TemporalAntialiasing")]);
 			Utils.EnableOrDisableShaderKeywords(temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", false);
-
-			copyMotionVectorsMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/CopyMotionVectors")]);
 
 			jitterSpread = Scatterer.Instance.mainSettings.taaJitterSpread;
 			sharpness = Scatterer.Instance.mainSettings.taaSharpness;
@@ -176,42 +172,7 @@ namespace Scatterer
 			
 			return historyTextures[activeEye][id];
 		}
-
 		
-		RenderTexture CheckMotionVectorsHistory()
-		{
-			int activeEye = 0;
-
-			var historyMotionVectorsRT = historyMotionVectors[activeEye];
-
-			if (m_ResetHistory || historyMotionVectorsRT == null || !historyMotionVectorsRT.IsCreated())
-			{
-				RenderTexture.ReleaseTemporary(historyMotionVectorsRT);
-
-				int width, height;
-
-				if (targetCamera.activeTexture)
-				{
-					width = targetCamera.activeTexture.width;
-					height = targetCamera.activeTexture.height;
-				}
-				else
-				{
-					width = Screen.width;
-					height = Screen.height;
-				}
-
-				historyMotionVectorsRT = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.RGHalf);
-				historyMotionVectorsRT.name = "Temporal Anti-aliasing Motion Vectors History";
-
-				historyMotionVectorsRT.filterMode = FilterMode.Bilinear;
-				historyMotionVectors[activeEye] = historyMotionVectorsRT;
-			}
-
-			return historyMotionVectors[activeEye];
-		}
-		
-
 		//adapted from the original render() method
 		public void OnPreCull()
 		{
@@ -234,10 +195,7 @@ namespace Scatterer
 				RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
 				m_HistoryPingPong[activeEye] = ++pingPongIndex % 2;
 
-				RenderTexture motionVectorsHistory = CheckMotionVectorsHistory();
-
 				temporalAAMaterial.SetTexture("_HistoryTex", historyRead); // TODO: shader properties
-				temporalAAMaterial.SetTexture("_HistoryMotionVectorsTex", motionVectorsHistory); // TODO: shader properties
 
 				int pass = (int)Pass.SolverDilate;
 
@@ -245,7 +203,6 @@ namespace Scatterer
 				temporalAACommandBuffer.Blit (null, historyWrite, temporalAAMaterial, pass);
 
 				temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
-				temporalAACommandBuffer.Blit (null, motionVectorsHistory, copyMotionVectorsMaterial);
 
 				targetCamera.AddCommandBuffer (TAACameraEvent, temporalAACommandBuffer);
 
@@ -265,7 +222,7 @@ namespace Scatterer
 			targetCamera.ResetProjectionMatrix();
 			targetCamera.nonJitteredProjectionMatrix = targetCamera.projectionMatrix;
 		}
-		
+
 		public void OnDestroy()
 		{
 			if (temporalAACommandBuffer != null)
@@ -286,19 +243,6 @@ namespace Scatterer
 						historyTextures[i][j] = null;
 					}
 					historyTextures[i] = null;
-				}
-			}
-
-			if (historyMotionVectors != null)
-            {
-				for (int i = 0; i < historyMotionVectors.Length; i++)
-				{
-					if (historyMotionVectors[i] == null)
-						continue;
-
-					RenderTexture.ReleaseTemporary(historyMotionVectors[i]);
-
-					historyMotionVectors[i] = null;
 				}
 			}
 
