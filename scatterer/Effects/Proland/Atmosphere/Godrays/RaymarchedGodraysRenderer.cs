@@ -258,6 +258,7 @@ namespace Scatterer
 						commandBuffer.SetGlobalFloat(ShaderProperties.frameNumber_PROPERTY, frame);
 						commandBuffer.DrawMesh(mesh, Matrix4x4.identity, scatteringOcclusionMaterial, 0, 1);
 						frame++;
+						frame = frame % ShaderReplacer.stbnDimensions.z;
 					}
                 }
 
