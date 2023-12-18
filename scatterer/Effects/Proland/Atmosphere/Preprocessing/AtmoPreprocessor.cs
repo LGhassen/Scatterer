@@ -122,7 +122,7 @@ namespace Scatterer
 			return inRg + maxHeight;
 		}
 
-		public static void deleteCache()
+		public static void DeleteCache()
 		{
 			string cachePath = Utils.GameDataPath + "/ScattererAtmosphereCache/PluginData";
 			Directory.Delete(cachePath, true);

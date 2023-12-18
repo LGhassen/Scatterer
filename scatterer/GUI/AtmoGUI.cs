@@ -176,7 +176,7 @@ namespace Scatterer
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button ("Delete atmo cache"))
 			{
-				AtmoPreprocessor.deleteCache();
+				AtmoPreprocessor.DeleteCache();
 			}
 			GUILayout.EndHorizontal();
 
