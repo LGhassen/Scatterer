@@ -99,7 +99,7 @@ namespace Scatterer
 			
 			Color extinction = (r > Rt) ? Color.white : AnalyticTransmittance(r, mu, Rt, Rg, HR, HM, betaR, betaMEx);
 
-			if (useOzone)
+			if (useOzone && r < Rt)
 				extinction *= getOzoneExtinction(r, mu, Rt, Rg, ozoneExtinction);
 
 			return extinction;
