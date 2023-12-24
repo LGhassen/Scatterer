@@ -1379,6 +1379,7 @@ namespace Scatterer
 							InitUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
 							InitPostprocessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
 							cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
+							cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("scattererEnabled", 1f);
 						}
 
 						if (cloudLayer.CloudShadowMaterial != null)
