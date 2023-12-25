@@ -146,7 +146,6 @@ namespace Scatterer
 				
 				if (HighLogic.LoadedScene != GameScenes.MAINMENU)
 				{
-					OceanUtils.restoreOceanForBody (scattererCelestialBody);
 					Utils.LogDebug ("" + scattererCelestialBody.celestialBodyName + " removed from active planets.");
 				}
 				

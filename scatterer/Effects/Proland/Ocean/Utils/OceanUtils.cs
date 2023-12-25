@@ -82,23 +82,6 @@ namespace Scatterer
 				Utils.LogDebug ("Stock oceans restored");
 			}
 		}
-		
-		public static void restoreOceanForBody(ScattererCelestialBody sctBody)
-		{
-			if (oceanRemoved && sctBody.hasOcean)
-			{
-				GameObject go = GameObject.Find ("Scatterer stock ocean disabler "+sctBody.celestialBodyName);
-				if (go != null)
-				{
-					FakeOceanPQS fake = go.GetComponent<FakeOceanPQS>();
-					if (fake)
-					{
-						fake.Remove ();
-						Component.Destroy(fake);
-					}
-				}
-			}
-		}
 	}
 }
 
