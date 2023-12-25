@@ -112,7 +112,7 @@ namespace Scatterer
 		bool skyNodeInitiated = false;
 		public bool useEclipses = false;
 
-		Texture originalPlanetTexture;
+		Texture2D originalPlanetTexture;
 		RenderTexture adjustedPlanetTexture;
 
 		public void Init ()
@@ -993,11 +993,12 @@ namespace Scatterer
 				if (adjustScaledTexture)
 					TweakStockScaledTexture ();
 			}
-			else // Have to delay this until Kopernicus loads the on-demand textures
+			else // Have to delay this until Kopernicus loads the on-demand textures and also check it's not a rendertexture (ie overridden by scatterer)
 			{
 				while (true)
 				{
-					if (stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"))
+					Texture maintex = stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex");
+					if (maintex != null && maintex is Texture2D)
 					{
 						if (adjustScaledTexture)
 							TweakStockScaledTexture ();
@@ -1018,7 +1019,9 @@ namespace Scatterer
 			while (true)
 			{
 				if (stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex") == null)
+				{
 					break;
+				}
 
 				yield return new WaitForSeconds(3f);
 			}
@@ -1103,8 +1106,15 @@ namespace Scatterer
 				if (sharedMaterial.shader.name.Contains("Terrain/Scaled Planet (RimAerial)"))
 				{
 					if (!originalPlanetTexture)
-						originalPlanetTexture = sharedMaterial.GetTexture("_MainTex");
-					else
+					{
+						Texture maintex = sharedMaterial.GetTexture("_MainTex");
+						if (maintex is Texture2D)
+						{ 
+							originalPlanetTexture = (Texture2D)maintex;
+						}
+					}
+					
+					if (originalPlanetTexture)
 					{
 						if (!adjustedPlanetTexture)
 						{
