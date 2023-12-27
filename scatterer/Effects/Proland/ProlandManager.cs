@@ -269,10 +269,16 @@ namespace Scatterer
 		public void OnDestroy()
 		{
 			if (skyNode)
-				Component.DestroyImmediate(skyNode);
-			
+			{
+				skyNode.OnDestroy(); // no idea why this doesn't fire by itself sometimes
+				Component.Destroy(skyNode);
+			}
+
 			if (oceanNode)
-				Component.DestroyImmediate(oceanNode);
+			{
+				oceanNode.OnDestroy();
+				Component.Destroy(oceanNode);
+			}
 		}
 
 		//TODO: change this so that it takes the new configNode and that's all? May not be possible depending on if it needs to recreate lightraysRenderer and stuff

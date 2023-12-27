@@ -55,7 +55,7 @@ namespace Scatterer {
 
 		public int m_fourierGridSize = 64;                                      //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
-		private int m_varianceSize;
+		private int m_varianceSize = 4;
 		
 		float m_fsize;
 		float m_maxSlopeVariance;
@@ -101,7 +101,7 @@ namespace Scatterer {
 
 		public void Awake()
 		{
-			m_varianceSize = SystemInfo.supportsComputeShaders ? 16 : 4;
+			
 		}
 
 		public override void Init(ProlandManager manager)
@@ -139,6 +139,8 @@ namespace Scatterer {
 			m_fourier = new FourierGPU(m_fourierGridSize);
 			
 			m_writeFloat = new WriteFloat(m_fourierGridSize, m_fourierGridSize);
+
+			m_varianceSize = SystemInfo.supportsComputeShaders ? 16 : 4;
 
 			//Create the data needed to make the waves each frame
 			CreateRenderTextures();
