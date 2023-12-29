@@ -176,7 +176,8 @@ namespace Scatterer
 					// On camera change change apply to new camera
 					GameEvents.OnCameraChange.Add(SMAAOnCameraChange);
 				}
-				else if(mainSettings.useTemporalAntiAliasing)
+
+				if (mainSettings.useTemporalAntiAliasing)
 				{
 					TemporalAntiAliasing nearAA, farAA, scaledAA;
 
@@ -196,14 +197,8 @@ namespace Scatterer
 					scaledAA.jitterTransparencies = true;
 					antiAliasingScripts.Add(scaledAA);
 
-					// and IVA camera
-					if (mainSettings.useSMAAForIVA)
-                    {
-						GameEvents.OnCameraChange.Add(AddSMAAToInternalCameraForTAA);
-					}
-					else
+					if (!mainSettings.useSubpixelMorphologicalAntialiasing)
 					{
-						
 						GameEvents.OnCameraChange.Add(AddTAAToInternalCamera);
 					}
 				}
@@ -285,7 +280,6 @@ namespace Scatterer
 		{
 			GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
 			GameEvents.OnCameraChange.Remove(AddTAAToInternalCamera);
-			GameEvents.OnCameraChange.Remove(AddSMAAToInternalCameraForTAA);
 
 			if (isActive)
 			{
@@ -653,45 +647,10 @@ namespace Scatterer
 			}
 		}
 
-		public void AddSMAAToInternalCameraForTAA(CameraManager.CameraMode cameraMode)
-		{
-			for (int i = antiAliasingScripts.Count - 1; i >= 0; i--)
-			{
-				var aaScript = antiAliasingScripts.ElementAt(i);
-				if (aaScript != null && aaScript is SubpixelMorphologicalAntialiasing)
-				{
-					antiAliasingScripts.Remove(aaScript);
-					Component.DestroyImmediate(aaScript);
-				}
-			}
-
-			if (cameraMode == CameraManager.CameraMode.IVA)
-			{
-				Camera internalCamera = Camera.allCameras.FirstOrDefault(_cam => _cam.name == "InternalCamera");
-				if (internalCamera)
-				{
-					// Add depth-based SMAA to internal camera, to avoid blurring over cockpit elements and text especially with custom IVAs
-					SubpixelMorphologicalAntialiasing internalSMAA = internalCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-					internalSMAA.forceDepthBuffermode();
-					antiAliasingScripts.Add(internalSMAA);
-				}
-			}
-		}
-
 		public void SMAAOnCameraChange(CameraManager.CameraMode cameraMode)
 		{
-			foreach (SubpixelMorphologicalAntialiasing antiAliasing in antiAliasingScripts)
-			{
-				if (antiAliasing) { Component.DestroyImmediate(antiAliasing);}
-			}
-			antiAliasingScripts.Clear ();
-
 			if (cameraMode == CameraManager.CameraMode.IVA)
 			{
-				// Add regular SMAA to flight camera
-				SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-				antiAliasingScripts.Add(nearAA);
-
 				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
 				if (internalCamera)
 				{
@@ -701,15 +660,17 @@ namespace Scatterer
 					antiAliasingScripts.Add(internalSMAA);
 				}
 			}
-			else if (cameraMode == CameraManager.CameraMode.Flight)
-			{
-				SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-				antiAliasingScripts.Add(nearAA);
-			}
-			else if (cameraMode == CameraManager.CameraMode.Map)
-			{
-				SubpixelMorphologicalAntialiasing ScaledAA = scaledSpaceCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-				antiAliasingScripts.Add(ScaledAA);
+			else
+            {
+				var ivaSmaaScripts = antiAliasingScripts.OfType<SubpixelMorphologicalAntialiasing>()
+					.Where(x => x.QualityUsed == SubpixelMorphologicalAntialiasing.Quality.DepthMode).ToList();
+
+				antiAliasingScripts.RemoveAll(script => ivaSmaaScripts.Contains(script));
+
+				foreach (var ivaSmaaScript in ivaSmaaScripts)
+				{
+					Component.DestroyImmediate(ivaSmaaScript);
+				}
 			}
 		}
 

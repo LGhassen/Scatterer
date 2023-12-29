@@ -117,16 +117,13 @@ namespace Scatterer
 		public bool quarterResScattering = true;
 
 		[Persistent]
-		public bool useSubpixelMorphologicalAntialiasing = false;
+		public bool useSubpixelMorphologicalAntialiasing = true;
 
 		[Persistent]
 		public int smaaQuality = 0;
 
 		[Persistent]
 		public bool useTemporalAntiAliasing = true;
-
-		[Persistent]
-		public bool useSMAAForIVA = true;
 
 		[Persistent]
 		public float taaStationaryBlending = 0.90f;
@@ -292,7 +289,6 @@ namespace Scatterer
 				 OldConfig.taaMotionBlending != taaMotionBlending ||
 				 OldConfig.taaJitterSpread != taaJitterSpread ||
 				 OldConfig.taaSharpness != taaSharpness ||
-				 OldConfig.useSMAAForIVA != useSMAAForIVA ||
 
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.scatteringTonemapper != scatteringTonemapper ||

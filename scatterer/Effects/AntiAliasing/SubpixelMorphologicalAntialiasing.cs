@@ -27,7 +27,9 @@ namespace Scatterer
 		static Texture2D areaTex, searchTex;
 		bool initialized = false;
 
-		public SubpixelMorphologicalAntialiasing()
+        public Quality QualityUsed { get => quality; }
+
+        public SubpixelMorphologicalAntialiasing()
 		{
 			targetCamera = GetComponent<Camera> ();
 			
