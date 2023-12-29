@@ -193,6 +193,11 @@ namespace Scatterer
 					GUILayout.EndHorizontal();
 				}
 
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Disable TAA below framerate threshold (when SMAA is enabled)");
+				Scatterer.Instance.mainSettings.disableTaaBelowFrameRateThreshold = Convert.ToInt32(GUILayout.TextField(Scatterer.Instance.mainSettings.disableTaaBelowFrameRateThreshold.ToString()));
+				GUILayout.EndHorizontal();
+
 				Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing = GUILayout.Toggle(Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing, "Subpixel Morphological Antialiasing (SMAA), can combine with TAA");
 				if (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing)
 				{

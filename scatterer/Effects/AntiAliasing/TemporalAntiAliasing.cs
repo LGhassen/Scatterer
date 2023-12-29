@@ -40,6 +40,8 @@ namespace Scatterer
 
 		private static CameraEvent TAACameraEvent = CameraEvent.AfterForwardAlpha;  // BeforeImageEffects doesn't work well
 
+		bool firstFrame = true;
+
 		public void Awake()
 		{
 			targetCamera = GetComponent<Camera>();
@@ -178,35 +180,51 @@ namespace Scatterer
 		{
 			bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
 
-			if (!screenShotModeEnabled)
-			{ 
-				temporalAACommandBuffer.Clear ();
+			float currentFps = 1.0f / Time.deltaTime;
+			bool aboveFpsThreshold = currentFps >= Scatterer.Instance.mainSettings.disableTaaBelowFrameRateThreshold
+				|| !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
 
-				ConfigureJitteredProjectionMatrix ();
+			if (!screenShotModeEnabled && aboveFpsThreshold)
+			{ 
+				temporalAACommandBuffer.Clear();
 
 				int activeEye = 0;
 
-				//TODO: move to shader properties
-				if (checkOceanDepth)
-					Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
-
 				int pingPongIndex = m_HistoryPingPong[activeEye];
-				RenderTexture historyRead  = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
+				RenderTexture historyRead = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
 				RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
 				m_HistoryPingPong[activeEye] = ++pingPongIndex % 2;
 
-				temporalAAMaterial.SetTexture("_HistoryTex", historyRead); // TODO: shader properties
+				if (firstFrame)
+                {
+					temporalAACommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, historyWrite);
+				}
+				else
+                {
+					ConfigureJitteredProjectionMatrix();
 
-				int pass = (int)Pass.SolverDilate;
+					//TODO: move to shader properties
+					if (checkOceanDepth)
+						Utils.EnableOrDisableShaderKeywords(temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
 
-				temporalAACommandBuffer.SetGlobalTexture ("_ScreenColor", BuiltinRenderTextureType.CameraTarget);  // TODO: shader properties
-				temporalAACommandBuffer.Blit (null, historyWrite, temporalAAMaterial, pass);
+					temporalAAMaterial.SetTexture(ShaderProperties._HistoryTex_PROPERTY, historyRead);
 
-				temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
+					int pass = (int)Pass.SolverDilate;
+
+					temporalAACommandBuffer.SetGlobalTexture(ShaderProperties._ScreenColor_PROPERTY, BuiltinRenderTextureType.CameraTarget);
+					temporalAACommandBuffer.Blit(null, historyWrite, temporalAAMaterial, pass);
+
+					temporalAACommandBuffer.Blit(historyWrite, BuiltinRenderTextureType.CameraTarget);
+				}
 
 				targetCamera.AddCommandBuffer (TAACameraEvent, temporalAACommandBuffer);
 
 				m_ResetHistory = false;
+				firstFrame = false;
+			}
+			else
+            {
+				firstFrame = true;
 			}
 		}
 

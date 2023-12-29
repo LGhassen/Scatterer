@@ -396,6 +396,12 @@ namespace Scatterer
 		public static int godraysStepCount_PROPERTY { get { return godraysStepCount; } }
 		private static int godraysStepCount;
 
+		public static int _ScreenColor_PROPERTY { get { return _ScreenColor; } }
+		private static int _ScreenColor;
+
+		public static int _HistoryTex_PROPERTY { get { return _HistoryTex; } }
+		private static int _HistoryTex;
+
 		private void Awake()
 		{
 			Rg = Shader.PropertyToID("Rg");
@@ -570,6 +576,9 @@ namespace Scatterer
 			inverseProjection = Shader.PropertyToID("inverseProjection");
 			downscaledGodrayDepth = Shader.PropertyToID("downscaledGodrayDepth");
 			godraysStepCount = Shader.PropertyToID("godraysStepCount");
+
+			_ScreenColor = Shader.PropertyToID("_ScreenColor");
+			_HistoryTex = Shader.PropertyToID("_HistoryTex");
 		}
 	}
 }

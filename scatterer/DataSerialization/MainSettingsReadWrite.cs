@@ -138,6 +138,9 @@ namespace Scatterer
 		public float taaSharpness = 0.25f;
 
 		[Persistent]
+		public int disableTaaBelowFrameRateThreshold = 26;
+
+		[Persistent]
 		public bool terrainShadows = false;
 
 		//0 - None, 1 - Bruneton, 2 - Uncharted, 3 - Hable but disabled
