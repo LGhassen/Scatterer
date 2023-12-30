@@ -402,6 +402,9 @@ namespace Scatterer
 		public static int _HistoryTex_PROPERTY { get { return _HistoryTex; } }
 		private static int _HistoryTex;
 
+		public static int renderSkyOnCurrentCamera_PROPERTY { get { return renderSkyOnCurrentCamera; } }
+		private static int renderSkyOnCurrentCamera;
+
 		private void Awake()
 		{
 			Rg = Shader.PropertyToID("Rg");
@@ -579,6 +582,8 @@ namespace Scatterer
 
 			_ScreenColor = Shader.PropertyToID("_ScreenColor");
 			_HistoryTex = Shader.PropertyToID("_HistoryTex");
+
+			renderSkyOnCurrentCamera = Shader.PropertyToID("renderSkyOnCurrentCamera");
 		}
 	}
 }

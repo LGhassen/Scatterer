@@ -68,7 +68,7 @@ namespace Scatterer
 
 			Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", true);
 
-			skySphereGO.AddComponent<SkySphereScreenCopy> ();
+			skySphereGO.AddComponent<SkySphereScreenCopy> ().Init(skySphereMR.sharedMaterial);
 		}
 		
 		public void SwitchScaledMode()
@@ -119,13 +119,28 @@ namespace Scatterer
 
 	public class SkySphereScreenCopy : MonoBehaviour
 	{
+		Material material;
+		public void Init(Material material)
+		{
+			this.material = material;
+		}
+
 		void OnWillRenderObject()
 		{
 			Camera cam = Camera.current;
 			
 			if (!cam)
 				return;
-			
+
+			if (cam == Scatterer.Instance.nearCamera && !Scatterer.Instance.unifiedCameraMode)
+			{
+				material.SetFloat(ShaderProperties.renderSkyOnCurrentCamera_PROPERTY, 0f);
+			}
+			else
+			{
+				material.SetFloat(ShaderProperties.renderSkyOnCurrentCamera_PROPERTY, 1f);
+			}
+
 			ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
 		}
 	}
