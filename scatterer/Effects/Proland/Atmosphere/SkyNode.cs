@@ -1099,44 +1099,47 @@ namespace Scatterer
 
 		public void TweakStockScaledTexture () 	//move to utils/scaledUtils etc
 		{
-			List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
+			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
+			{ 
+				List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
 			
-			foreach (Material sharedMaterial in materials)
-			{	
-				if (sharedMaterial.shader.name.Contains("Terrain/Scaled Planet (RimAerial)"))
-				{
-					if (!originalPlanetTexture)
+				foreach (Material sharedMaterial in materials)
+				{	
+					if (sharedMaterial.shader.name.Contains("Terrain/Scaled Planet (RimAerial)"))
 					{
-						Texture maintex = sharedMaterial.GetTexture("_MainTex");
-						if (maintex is Texture2D)
-						{ 
-							originalPlanetTexture = (Texture2D)maintex;
-						}
-					}
-					
-					if (originalPlanetTexture)
-					{
-						if (!adjustedPlanetTexture)
+						if (!originalPlanetTexture)
 						{
-							adjustedPlanetTexture = new RenderTexture(originalPlanetTexture.width, originalPlanetTexture.height, 0, RenderTextureFormat.ARGB32);
-							adjustedPlanetTexture.name = "ScattererAdjustedPlanetMap";
-							adjustedPlanetTexture.autoGenerateMips = true;
-							adjustedPlanetTexture.Create();
+							Texture maintex = sharedMaterial.GetTexture("_MainTex");
+							if (maintex is Texture2D)
+							{ 
+								originalPlanetTexture = (Texture2D)maintex;
+							}
 						}
+					
+						if (originalPlanetTexture)
+						{
+							if (!adjustedPlanetTexture)
+							{
+								adjustedPlanetTexture = new RenderTexture(originalPlanetTexture.width, originalPlanetTexture.height, 0, RenderTextureFormat.ARGB32);
+								adjustedPlanetTexture.name = "ScattererAdjustedPlanetMap";
+								adjustedPlanetTexture.autoGenerateMips = true;
+								adjustedPlanetTexture.Create();
+							}
 
-						Material imageAdjustMat = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledTextureAdjust")]);
-						imageAdjustMat.SetTexture("inputTexture", originalPlanetTexture);
+							Material imageAdjustMat = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledTextureAdjust")]);
+							imageAdjustMat.SetTexture("inputTexture", originalPlanetTexture);
 						
-						imageAdjustMat.SetFloat("_scaledLandBrightnessAdjust", scaledLandBrightnessAdjust);
-						imageAdjustMat.SetFloat("_scaledLandContrastAdjust",   scaledLandContrastAdjust);
-						imageAdjustMat.SetFloat("_scaledLandSaturationAdjust", scaledLandSaturationAdjust);
+							imageAdjustMat.SetFloat("_scaledLandBrightnessAdjust", scaledLandBrightnessAdjust);
+							imageAdjustMat.SetFloat("_scaledLandContrastAdjust",   scaledLandContrastAdjust);
+							imageAdjustMat.SetFloat("_scaledLandSaturationAdjust", scaledLandSaturationAdjust);
 
-						imageAdjustMat.SetFloat("_scaledOceanBrightnessAdjust", scaledOceanBrightnessAdjust);
-						imageAdjustMat.SetFloat("_scaledOceanContrastAdjust",   scaledOceanContrastAdjust);
-						imageAdjustMat.SetFloat("_scaledOceanSaturationAdjust", scaledOceanSaturationAdjust);
+							imageAdjustMat.SetFloat("_scaledOceanBrightnessAdjust", scaledOceanBrightnessAdjust);
+							imageAdjustMat.SetFloat("_scaledOceanContrastAdjust",   scaledOceanContrastAdjust);
+							imageAdjustMat.SetFloat("_scaledOceanSaturationAdjust", scaledOceanSaturationAdjust);
 
-						Graphics.Blit(originalPlanetTexture, adjustedPlanetTexture, imageAdjustMat);						
-						sharedMaterial.SetTexture("_MainTex", adjustedPlanetTexture);
+							Graphics.Blit(originalPlanetTexture, adjustedPlanetTexture, imageAdjustMat);						
+							sharedMaterial.SetTexture("_MainTex", adjustedPlanetTexture);
+						}
 					}
 				}
 			}
