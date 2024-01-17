@@ -55,15 +55,10 @@ namespace Scatterer
 		{
 			string shaderspath;
 
-			if (Application.platform == RuntimePlatform.WindowsPlayer && SystemInfo.graphicsDeviceVersion.StartsWith ("OpenGL"))
-				shaderspath = path+"/shaders/scatterershaders-linux";   //fixes openGL on windows
+			if (Application.platform == RuntimePlatform.WindowsPlayer && SystemInfo.graphicsDeviceVersion.StartsWith("Direct"))
+				shaderspath = path + "/shaders/scatterershaders-directx";
 			else
-				if (Application.platform == RuntimePlatform.WindowsPlayer)
-				shaderspath = path + "/shaders/scatterershaders-windows";
-			else if (Application.platform == RuntimePlatform.LinuxPlayer)
-				shaderspath = path+"/shaders/scatterershaders-linux";
-			else
-				shaderspath = path+"/shaders/scatterershaders-macosx";
+				shaderspath = path+"/shaders/scatterershaders-opengl";
 
 			LoadedShaders.Clear ();
 			LoadedComputeShaders.Clear ();
