@@ -405,6 +405,24 @@ namespace Scatterer
 		public static int renderSkyOnCurrentCamera_PROPERTY { get { return renderSkyOnCurrentCamera; } }
 		private static int renderSkyOnCurrentCamera;
 
+		public static int AtmosphereAtlas_PROPERTY { get { return AtmosphereAtlas; } }
+		private static int AtmosphereAtlas;
+
+		public static int InscatterAtlasScaleAndOffset_PROPERTY { get { return InscatterAtlasScaleAndOffset; } }
+		private static int InscatterAtlasScaleAndOffset;
+
+		public static int IrradianceAtlasScaleAndOffset_PROPERTY { get { return IrradianceAtlasScaleAndOffset; } }
+		private static int IrradianceAtlasScaleAndOffset;
+
+		public static int TransmittanceAtlasScaleAndOffset_PROPERTY { get { return TransmittanceAtlasScaleAndOffset; } }
+		private static int TransmittanceAtlasScaleAndOffset;
+
+		public static int AtmosphereAtlasDimensions_PROPERTY { get { return AtmosphereAtlasDimensions; } }
+		private static int AtmosphereAtlasDimensions;
+
+		public static int PRECOMPUTED_SCTR_LUT_DIM_PROPERTY { get { return PRECOMPUTED_SCTR_LUT_DIM; } }
+		private static int PRECOMPUTED_SCTR_LUT_DIM;
+
 		private void Awake()
 		{
 			Rg = Shader.PropertyToID("Rg");
@@ -584,6 +602,13 @@ namespace Scatterer
 			_HistoryTex = Shader.PropertyToID("_HistoryTex");
 
 			renderSkyOnCurrentCamera = Shader.PropertyToID("renderSkyOnCurrentCamera");
+
+			AtmosphereAtlas = Shader.PropertyToID("AtmosphereAtlas");
+			InscatterAtlasScaleAndOffset = Shader.PropertyToID("InscatterAtlasScaleAndOffset");
+			IrradianceAtlasScaleAndOffset = Shader.PropertyToID("IrradianceAtlasScaleAndOffset");
+			TransmittanceAtlasScaleAndOffset = Shader.PropertyToID("TransmittanceAtlasScaleAndOffset");
+			PRECOMPUTED_SCTR_LUT_DIM = Shader.PropertyToID("PRECOMPUTED_SCTR_LUT_DIM");
+			AtmosphereAtlasDimensions = Shader.PropertyToID("AtmosphereAtlasDimensions");
 		}
 	}
 }

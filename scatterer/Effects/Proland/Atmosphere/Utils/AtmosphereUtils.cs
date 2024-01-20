@@ -74,13 +74,31 @@ namespace Scatterer
 			return new Vector2(uMu, uR);
 		}
 
-		public static Color getOzoneExtinction(float r, float mu, float Rt, float Rg, Texture2D ozoneExtinction)
+		public static Color getOzoneExtinction(float r, float mu, float Rt, float Rg, Texture2D atmosphereAtlas, Vector2 ozoneTextureDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
         {
 			Vector2 uv = GetTransmittanceUV(r, mu, Rt, Rg);
-			return ozoneExtinction.GetPixelBilinear(uv.x, uv.y);
+			uv = remapUVToAtlas(uv, ozoneTextureDimensions, textureScaleAndOffsetInAtlas, AtmosphereAtlasDimensions);
+			return atmosphereAtlas.GetPixelBilinear(uv.x, uv.y);
 		}
 
-		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx, bool useOzone, Texture2D ozoneExtinction)
+		private static Vector2 remapUVToAtlas(Vector2 uv, Vector2 oldTexDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
+		{
+			// Remove half pixel offset
+			uv -= new Vector2(0.5f, 0.5f) / oldTexDimensions;
+
+			// Clamp
+			uv.x = Mathf.Clamp(uv.x, 0f, 1f - 0.5f / oldTexDimensions.x);
+			uv.y = Mathf.Clamp(uv.y, 0f, 1f - 0.5f / oldTexDimensions.y);
+
+			// Scale, offset and add new half pixel offset
+			uv = uv * new Vector2(textureScaleAndOffsetInAtlas.x, textureScaleAndOffsetInAtlas.y) +
+				new Vector2(textureScaleAndOffsetInAtlas.z, textureScaleAndOffsetInAtlas.w) +
+				new Vector2(0.5f, 0.5f) / AtmosphereAtlasDimensions;
+
+			return uv;
+		}
+
+		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx, bool useOzone, Texture2D atmosphereAtlas, Vector2 ozoneTextureDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
 		{
 			float r = camera.magnitude;
 			float rMu = Vector3.Dot(camera, viewdir);
@@ -100,7 +118,7 @@ namespace Scatterer
 			Color extinction = (r > Rt) ? Color.white : AnalyticTransmittance(r, mu, Rt, Rg, HR, HM, betaR, betaMEx);
 
 			if (useOzone && r < Rt)
-				extinction *= getOzoneExtinction(r, mu, Rt, Rg, ozoneExtinction);
+				extinction *= getOzoneExtinction(r, mu, Rt, Rg, atmosphereAtlas, ozoneTextureDimensions, textureScaleAndOffsetInAtlas, AtmosphereAtlasDimensions);
 
 			return extinction;
 		}

@@ -27,6 +27,8 @@
 using UnityEngine;
 using System.IO;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Scatterer 
@@ -340,18 +342,59 @@ namespace Scatterer
 			if (!Directory.Exists(assetPath))
 				Directory.CreateDirectory(assetPath);
 
-			// Add an option to clean up old cache files on start?
-			if (useOzone)
-			{ 
-				SaveAsHalf(m_ozoneTransmittanceRT, assetPath + "/ozoneTransmittance");
-			}
-			SaveAsHalf(m_irradianceT[READ], assetPath + "/irradiance");
-			SaveAsHalf(m_inscatterT[READ], assetPath + "/inscatter");
+			var atmosphereAtlas = PackTextures(new RenderTexture[] { m_inscatterT[READ], m_irradianceT[READ], m_ozoneTransmittanceRT });
+			SaveAsHalf(atmosphereAtlas, assetPath + "/atlas");
+
+			atmosphereAtlas.Release();
 
 			Utils.LogInfo("Atmo generation successful");
         }
 
-        private void CopyInscatterN()
+		private static RenderTexture PackTextures(RenderTexture[] textures)
+		{
+			// Just do the simplest packing possible, top-left to bottom-left
+			int width = textures.Max(texture => texture.width);
+			int height = textures.Sum(texture => texture.height);
+
+			RenderTexture rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, 0);
+			rt.wrapMode = TextureWrapMode.Clamp;
+			rt.Create();
+
+			int currentHeight = 0;
+
+			for (int i = 0; i < textures.Length; i++)
+			{
+				var texture = textures[i];
+
+				Vector2 currentScale = new Vector2((float)texture.width / (float)width, (float)texture.height / (float)height);
+				Vector2 currentOffset = new Vector2(0f, (float)currentHeight / (float)height);
+				Graphics.CopyTexture(texture, 0, 0, 0, 0, texture.width, texture.height, rt, 0, 0, 0, currentHeight);
+
+				currentHeight += texture.height;
+			}
+
+			return rt;
+		}
+
+		public static List<Vector4> GetPackedTexturesScaleAndOffsets(List<Vector2> dimensions, Vector2 atlasDimensions)
+		{
+			var result = new List<Vector4>();
+			float currentHeight = 0;
+
+			foreach(Vector2 dimension in dimensions)
+            {
+				Vector2 currentScale = new Vector2(dimension.x / atlasDimensions.x, dimension.y / atlasDimensions.y);
+				Vector2 currentOffset = new Vector2(0f, currentHeight /  atlasDimensions.y);
+
+				result.Add(new Vector4(currentScale.x, currentScale.y, currentOffset.x, currentOffset.y));
+
+				currentHeight += dimension.y;
+			}
+
+			return result;
+		}
+
+		private void CopyInscatterN()
         {
 			// adds deltaS into inscatter texture S(line 11 in algorithm 4.1)
 			ProcessInTiles((int i, int j) =>

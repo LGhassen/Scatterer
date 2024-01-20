@@ -63,12 +63,17 @@ namespace Scatterer
 		[Persistent] public float scaledOceanBrightnessAdjust = 1f;
 		[Persistent] public float scaledOceanContrastAdjust   = 1f;
 		[Persistent] public float scaledOceanSaturationAdjust = 1f;
-		
-		Texture2D m_inscatter, m_irradiance, m_ozoneTransmittance = Texture2D.whiteTexture;
+
+		//Texture2D m_inscatter, m_irradiance, m_ozoneTransmittance = Texture2D.whiteTexture;
+
+		Texture2D atmosphereAtlas; // Combine all the lookup tables to save texture slots on Mac
+		Vector2 atlasDimensions;
+		List<Vector4> atlasScaleAndOffsets = new List<Vector4> { Vector4.zero, Vector4.zero, Vector4.zero, Vector4.zero};
 
 		//Dimensions of the tables
 		const int TRANSMITTANCE_W = 512;
 		const int TRANSMITTANCE_H = 128;
+		Vector2 transmittanceTableDimensions = new Vector2(TRANSMITTANCE_W, TRANSMITTANCE_H);
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
@@ -467,15 +472,21 @@ namespace Scatterer
         {
             mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
-            mat.SetTexture(ShaderProperties.Inscatter_PROPERTY, m_inscatter);
-            mat.SetTexture(ShaderProperties.Irradiance_PROPERTY, m_irradiance);
-            mat.SetTexture(ShaderProperties.Transmittance_PROPERTY, m_ozoneTransmittance);
+			mat.SetTexture(ShaderProperties.AtmosphereAtlas_PROPERTY, atmosphereAtlas);
 
-            mat.SetFloat(ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+			mat.SetVector(ShaderProperties.InscatterAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[0]);
+			mat.SetVector(ShaderProperties.IrradianceAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[1]);
+			mat.SetVector(ShaderProperties.TransmittanceAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[2]);
+			mat.SetVector(ShaderProperties.AtmosphereAtlasDimensions_PROPERTY, new Vector2(atmosphereAtlas.width, atmosphereAtlas.height));
+
+			mat.SetFloat(ShaderProperties.M_PI_PROPERTY, Mathf.PI);
             mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
             mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
-            mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
-            mat.SetFloat(ShaderProperties.SKY_W_PROPERTY, SKY_W);
+            mat.SetVector(ShaderProperties.PRECOMPUTED_SCTR_LUT_DIM_PROPERTY, scatteringLutDimensions);
+
+			mat.SetFloat(ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
+			mat.SetFloat(ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
+			mat.SetFloat(ShaderProperties.SKY_W_PROPERTY, SKY_W);
             mat.SetFloat(ShaderProperties.SKY_H_PROPERTY, SKY_H);
 
             mat.SetVector(ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
@@ -568,17 +579,22 @@ namespace Scatterer
             mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
             mat.SetVector(ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
-            mat.SetTexture(ShaderProperties.Inscatter_PROPERTY, m_inscatter);
-            mat.SetTexture(ShaderProperties.Irradiance_PROPERTY, m_irradiance);
-            mat.SetTexture(ShaderProperties.Transmittance_PROPERTY, m_ozoneTransmittance);
-            mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+
+			mat.SetTexture(ShaderProperties.AtmosphereAtlas_PROPERTY, atmosphereAtlas);
+
+			mat.SetVector(ShaderProperties.InscatterAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[0]);
+			mat.SetVector(ShaderProperties.IrradianceAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[1]);
+			mat.SetVector(ShaderProperties.TransmittanceAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[2]);
+			mat.SetVector(ShaderProperties.AtmosphereAtlasDimensions_PROPERTY, atlasDimensions);
+
+			mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
             mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
 
             mat.SetFloat(ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
             mat.SetFloat(ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
             mat.SetFloat(ShaderProperties.SKY_W_PROPERTY, SKY_W);
             mat.SetFloat(ShaderProperties.SKY_H_PROPERTY, SKY_H);
-            mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
+            mat.SetVector(ShaderProperties.PRECOMPUTED_SCTR_LUT_DIM_PROPERTY, scatteringLutDimensions);
             mat.SetFloat(ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
             mat.SetFloat(ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
             mat.SetVector(ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
@@ -652,47 +668,72 @@ namespace Scatterer
 			Rg = (float) prolandManager.GetRadius ();
 			Rt = AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor, useOzone, ozoneHeight/mainMenuScaleFactor, ozoneFalloff/mainMenuScaleFactor);
 
-			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
-			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
-			m_inscatter = new Texture2D((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), TextureFormat.RGBAHalf, false);
-			m_inscatter.wrapMode = TextureWrapMode.Clamp;
-			m_inscatter.filterMode = FilterMode.Bilinear;
-			
-			//Irradiance is responsible for the change in light emitted from the sky as the sun moves. The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-			m_irradiance = new Texture2D (SKY_W, SKY_H, TextureFormat.RGBAHalf,false);
-			m_irradiance.wrapMode = TextureWrapMode.Clamp;
-			m_irradiance.filterMode = FilterMode.Bilinear;
-
-			if (useOzone)
-            {
-				m_ozoneTransmittance = new Texture2D(TRANSMITTANCE_W, TRANSMITTANCE_H, TextureFormat.RGBAHalf, false);
-				m_ozoneTransmittance.wrapMode = TextureWrapMode.Clamp;
-				m_ozoneTransmittance.filterMode = FilterMode.Bilinear;
-			}
-
 			//Compute atmo hash and path
 			string cachePath = Utils.GameDataPath + "/ScattererAtmosphereCache/PluginData";
 			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca, useOzone, ozoneHeight, ozoneFalloff);
 			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff);
 			cachePath += "/" + atmohash;
 
-			string inscatterPath = cachePath+"/inscatter.half";
-			string irradiancePath = cachePath+"/irradiance.half";
-			string ozoneTransmittancePath = cachePath + "/ozoneTransmittance.half";
+			string atlasPath = cachePath + "/atlas.half";
 
-			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (irradiancePath) || (useOzone && !System.IO.File.Exists(ozoneTransmittancePath)))
+			if (!System.IO.File.Exists (atlasPath))
 			{
 				Utils.LogInfo("No atmosphere cache for "+prolandManager.parentCelestialBody.name+", generating new atmosphere");
 				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, previewMode, cachePath, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff);
 			}
 
-			m_inscatter.LoadRawTextureData  (System.IO.File.ReadAllBytes (inscatterPath));
-			m_irradiance.LoadRawTextureData   (System.IO.File.ReadAllBytes (irradiancePath));
-			if (useOzone) m_ozoneTransmittance.LoadRawTextureData(System.IO.File.ReadAllBytes(ozoneTransmittancePath));
+			var textureDimensions = new List<Vector2> {
+				new Vector2(scatteringLutDimensions.x * scatteringLutDimensions.y, scatteringLutDimensions.z* scatteringLutDimensions.w),
+				new Vector2(SKY_W, SKY_H),
+				new Vector2(TRANSMITTANCE_W, TRANSMITTANCE_H) };
 
-			m_inscatter.Apply();
-			m_irradiance.Apply ();
-			if (useOzone) m_ozoneTransmittance.Apply();
+			// Textures are packed in the simplest way possible, top-left to bottom-left
+			int atlasWidth = textureDimensions.Max(texture => (int)texture.x);
+			int atlasHeight = textureDimensions.Sum(texture => (int)texture.y);
+			
+			atlasDimensions = new Vector2(atlasWidth, atlasHeight);
+
+			atmosphereAtlas = new Texture2D(atlasWidth, atlasHeight, TextureFormat.RGBAHalf, false);
+			atmosphereAtlas.wrapMode = TextureWrapMode.Clamp;
+			atmosphereAtlas.filterMode = FilterMode.Bilinear;
+			atmosphereAtlas.LoadRawTextureData(System.IO.File.ReadAllBytes(atlasPath));
+			atmosphereAtlas.Apply();
+
+			atlasScaleAndOffsets = AtmoPreprocessor.GetPackedTexturesScaleAndOffsets(textureDimensions, atlasDimensions);
+		}
+
+		public RenderTexture PackTextures(Texture2D[] textures, out Vector4[] scaleAndOffsets)
+        {
+			// Just do the simplest packing possible, top-left to bottom-left
+			int width = textures.Max(texture => texture.width);
+			int height = textures.Sum(texture => texture.height);
+
+			RenderTexture rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBHalf, 0);
+			rt.wrapMode = TextureWrapMode.Clamp;
+			rt.Create();
+
+			scaleAndOffsets = new Vector4[textures.Length];
+
+			int currentHeight = 0;
+
+			for (int i = 0; i < textures.Length; i++)
+			{
+				var texture = textures[i];
+
+				Vector2 currentScale = new Vector2((float)texture.width / (float)width, (float)texture.height / (float)height);
+				Vector2 currentOffset = new Vector2(0f, (float)currentHeight / (float)height);
+
+				scaleAndOffsets[i] = new Vector4(currentScale.x, currentScale.y, currentOffset.x, currentOffset.y);
+
+				Debug.Log("scaleAndOffset " + scaleAndOffsets[i].x.ToString() + " " + scaleAndOffsets[i].y.ToString() + " "
+					+ scaleAndOffsets[i].z.ToString() + " " + scaleAndOffsets[i].w.ToString());
+
+				Graphics.CopyTexture(texture, 0, 0, 0, 0, texture.width, texture.height, rt, 0, 0, 0, currentHeight);
+
+				currentHeight += texture.height;
+			}
+
+			return rt;
 		}
 
 		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale, bool inUseOzone, Vector3 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
@@ -793,19 +834,9 @@ namespace Scatterer
 				SaveToConfigNode ();
 			}
 
-			if (m_ozoneTransmittance)
+			if (atmosphereAtlas)
 			{
-				UnityEngine.Object.DestroyImmediate(m_ozoneTransmittance);
-			}
-
-			if (m_irradiance)
-			{
-				UnityEngine.Object.DestroyImmediate (m_irradiance);
-			}
-
-			if (m_inscatter)
-			{
-				UnityEngine.Object.DestroyImmediate (m_inscatter);
+				UnityEngine.Object.DestroyImmediate(atmosphereAtlas);
 			}
 
 			if (skySphere != null)
@@ -1239,7 +1270,7 @@ namespace Scatterer
 			Vector3 sunDirection = prolandManager.getDirectionToMainSun();
 
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
-			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, sunDirection, Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, m_ozoneTransmittance);
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, sunDirection, Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, atmosphereAtlas, transmittanceTableDimensions, atlasScaleAndOffsets[2], atlasDimensions);
 
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
 
@@ -1253,7 +1284,7 @@ namespace Scatterer
 			{
 				if (secondarySun.sunLight)
 				{
-					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, m_ozoneTransmittance);
+					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, atmosphereAtlas, transmittanceTableDimensions, atlasScaleAndOffsets[2], atlasDimensions);
 					extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);	//consider getting rid of extinction thickness and tint now
 					Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (secondarySun.sunLight, extinction);
 				}
