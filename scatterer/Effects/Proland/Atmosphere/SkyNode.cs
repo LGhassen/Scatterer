@@ -1118,9 +1118,8 @@ namespace Scatterer
 				}
 			}
 
-			if (prolandManager.parentCelestialBody.pqsController)
+			if (prolandManager.parentCelestialBody.pqsController != null)
 			{
-				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.surfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.fallbackMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.lowQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.mediumQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
