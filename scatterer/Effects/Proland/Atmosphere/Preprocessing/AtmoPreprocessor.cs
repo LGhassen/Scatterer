@@ -90,7 +90,8 @@ namespace Scatterer
 		RenderTexture m_deltaET, m_deltaSRT, m_deltaSMT, m_deltaJT;
 		public RenderTexture[] m_irradianceT, m_inscatterT;
 
-		Material m_transmittanceMaterial, m_ozoneTransmittanceMaterial, m_irradianceNMaterial, m_irradiance1Material, m_inscatter1Material, m_inscatterNMaterial, m_inscatterSMaterial, m_copyInscatter1Material, m_copyInscatterNMaterial, m_copyIrradianceMaterial;
+		Material m_transmittanceMaterial, m_ozoneTransmittanceMaterial, m_irradianceNMaterial, m_irradiance1Material, m_inscatter1Material,
+			m_inscatterNMaterial, m_inscatterSMaterial, m_copyInscatter1Material, m_copyInscatterNMaterial, m_copyIrradianceMaterial, atlasMaterial;
 
 		int scatteringOrders = 4; //min is 2 unless you skip that step
 		bool multipleScattering = true;
@@ -110,6 +111,7 @@ namespace Scatterer
 			m_copyInscatter1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyInscatter1")]);
 			m_copyInscatterNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyInscatterN")]);
 			m_copyIrradianceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyIrradiance")]);
+			atlasMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Atlas")]);
 		}
 		
 		public static float CalculateRt(float inRg, float inHR, float inHM, Vector3 in_betaR, Vector3 in_BETA_MSca, bool useOzone, float ozoneHeight, float ozoneFalloff)
@@ -350,7 +352,7 @@ namespace Scatterer
 			Utils.LogInfo("Atmo generation successful");
         }
 
-		private static RenderTexture PackTextures(RenderTexture[] textures)
+		private RenderTexture PackTextures(RenderTexture[] textures)
 		{
 			// Just do the simplest packing possible, top-left to bottom-left
 			int width = textures.Max(texture => texture.width);
@@ -360,15 +362,23 @@ namespace Scatterer
 			rt.wrapMode = TextureWrapMode.Clamp;
 			rt.Create();
 
+			atlasMaterial.SetInt("targetWidth", width);
+			atlasMaterial.SetInt("targetHeight", height);
+
 			int currentHeight = 0;
 
 			for (int i = 0; i < textures.Length; i++)
 			{
 				var texture = textures[i];
 
-				Vector2 currentScale = new Vector2((float)texture.width / (float)width, (float)texture.height / (float)height);
-				Vector2 currentOffset = new Vector2(0f, (float)currentHeight / (float)height);
-				Graphics.CopyTexture(texture, 0, 0, 0, 0, texture.width, texture.height, rt, 0, 0, 0, currentHeight);
+				atlasMaterial.SetTexture("inputTexture", texture);
+				atlasMaterial.SetInt("width", texture.width);
+				atlasMaterial.SetInt("height", texture.height);
+
+				atlasMaterial.SetInt("horizontalOffset", 0);
+				atlasMaterial.SetInt("verticalOffset", currentHeight);
+
+				Graphics.Blit(null, rt, atlasMaterial);
 
 				currentHeight += texture.height;
 			}

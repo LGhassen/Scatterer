@@ -703,40 +703,6 @@ namespace Scatterer
 			atlasScaleAndOffsets = AtmoPreprocessor.GetPackedTexturesScaleAndOffsets(textureDimensions, atlasDimensions);
 		}
 
-		public RenderTexture PackTextures(Texture2D[] textures, out Vector4[] scaleAndOffsets)
-        {
-			// Just do the simplest packing possible, top-left to bottom-left
-			int width = textures.Max(texture => texture.width);
-			int height = textures.Sum(texture => texture.height);
-
-			RenderTexture rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBHalf, 0);
-			rt.wrapMode = TextureWrapMode.Clamp;
-			rt.Create();
-
-			scaleAndOffsets = new Vector4[textures.Length];
-
-			int currentHeight = 0;
-
-			for (int i = 0; i < textures.Length; i++)
-			{
-				var texture = textures[i];
-
-				Vector2 currentScale = new Vector2((float)texture.width / (float)width, (float)texture.height / (float)height);
-				Vector2 currentOffset = new Vector2(0f, (float)currentHeight / (float)height);
-
-				scaleAndOffsets[i] = new Vector4(currentScale.x, currentScale.y, currentOffset.x, currentOffset.y);
-
-				Debug.Log("scaleAndOffset " + scaleAndOffsets[i].x.ToString() + " " + scaleAndOffsets[i].y.ToString() + " "
-					+ scaleAndOffsets[i].z.ToString() + " " + scaleAndOffsets[i].w.ToString());
-
-				Graphics.CopyTexture(texture, 0, 0, 0, 0, texture.width, texture.height, rt, 0, 0, 0, currentHeight);
-
-				currentHeight += texture.height;
-			}
-
-			return rt;
-		}
-
 		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale, bool inUseOzone, Vector3 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
 		{
 			m_betaR = inBETA_R;
