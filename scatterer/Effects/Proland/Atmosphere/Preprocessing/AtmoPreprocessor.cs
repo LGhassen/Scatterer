@@ -86,12 +86,12 @@ namespace Scatterer
 		float ozoneHeight =  25000f;
 		float ozoneFalloff = 15000f;
 
-		RenderTexture m_ozoneTransmittanceRT;
-		RenderTexture m_deltaET, m_deltaSRT, m_deltaSMT, m_deltaJT;
-		public RenderTexture[] m_irradianceT, m_inscatterT;
+		RenderTexture ozoneTransmittanceRT;
+		RenderTexture deltaET, deltaSRT, deltaSMT, deltaJT;
+		public RenderTexture[] irradianceT, inscatterT;
 
-		Material m_transmittanceMaterial, m_ozoneTransmittanceMaterial, m_irradianceNMaterial, m_irradiance1Material, m_inscatter1Material,
-			m_inscatterNMaterial, m_inscatterSMaterial, m_copyInscatter1Material, m_copyInscatterNMaterial, m_copyIrradianceMaterial, atlasMaterial;
+		Material transmittanceMaterial, ozoneTransmittanceMaterial, irradianceNMaterial, irradiance1Material, inscatter1Material,
+			inscatterNMaterial, inscatterSMaterial, copyInscatter1Material, copyInscatterNMaterial, copyIrradianceMaterial, atlasMaterial;
 
 		int scatteringOrders = 4; //min is 2 unless you skip that step
 		bool multipleScattering = true;
@@ -101,16 +101,16 @@ namespace Scatterer
 
 		private void InitMaterials()
 		{
-			m_transmittanceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Transmittance")]);
-			m_ozoneTransmittanceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/OzoneTransmittance")]);
-			m_irradianceNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/IrradianceN")]);
-			m_irradiance1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Irradiance1")]);
-			m_inscatter1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Inscatter1")]);
-			m_inscatterNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/InscatterN")]);
-			m_inscatterSMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/InscatterS")]);
-			m_copyInscatter1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyInscatter1")]);
-			m_copyInscatterNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyInscatterN")]);
-			m_copyIrradianceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyIrradiance")]);
+			transmittanceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Transmittance")]);
+			ozoneTransmittanceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/OzoneTransmittance")]);
+			irradianceNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/IrradianceN")]);
+			irradiance1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Irradiance1")]);
+			inscatter1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Inscatter1")]);
+			inscatterNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/InscatterN")]);
+			inscatterSMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/InscatterS")]);
+			copyInscatter1Material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyInscatter1")]);
+			copyInscatterNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyInscatterN")]);
+			copyIrradianceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyIrradiance")]);
 			atlasMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Atlas")]);
 		}
 		
@@ -235,64 +235,64 @@ namespace Scatterer
 				xTiles = xTilesDefault; yTiles = yTilesDefault;
 			}
 
-			m_irradianceT = new RenderTexture[2];
-			m_inscatterT = new RenderTexture[2];
+			irradianceT = new RenderTexture[2];
+			inscatterT = new RenderTexture[2];
 			
-			m_ozoneTransmittanceRT = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
-			m_ozoneTransmittanceRT.wrapMode = TextureWrapMode.Clamp;
-			m_ozoneTransmittanceRT.filterMode = FilterMode.Bilinear;
-			m_ozoneTransmittanceRT.Create();
+			ozoneTransmittanceRT = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
+			ozoneTransmittanceRT.wrapMode = TextureWrapMode.Clamp;
+			ozoneTransmittanceRT.filterMode = FilterMode.Bilinear;
+			ozoneTransmittanceRT.Create();
 			
-			m_irradianceT[0] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
-			m_irradianceT[0].wrapMode = TextureWrapMode.Clamp;
-			m_irradianceT[0].filterMode = FilterMode.Bilinear;
-			m_irradianceT[0].Create();
+			irradianceT[0] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
+			irradianceT[0].wrapMode = TextureWrapMode.Clamp;
+			irradianceT[0].filterMode = FilterMode.Bilinear;
+			irradianceT[0].Create();
 			
-			m_irradianceT[1] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
-			m_irradianceT[1].wrapMode = TextureWrapMode.Clamp;
-			m_irradianceT[1].filterMode = FilterMode.Bilinear;
-			m_irradianceT[1].Create();
+			irradianceT[1] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
+			irradianceT[1].wrapMode = TextureWrapMode.Clamp;
+			irradianceT[1].filterMode = FilterMode.Bilinear;
+			irradianceT[1].Create();
 
-			m_deltaET = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
-			m_deltaET.Create();
+			deltaET = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
+			deltaET.Create();
 
-			m_inscatterT[0] = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
-			m_inscatterT[0].wrapMode = TextureWrapMode.Clamp;
-			m_inscatterT[0].filterMode = FilterMode.Bilinear;
-			m_inscatterT[0].Create();
+			inscatterT[0] = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
+			inscatterT[0].wrapMode = TextureWrapMode.Clamp;
+			inscatterT[0].filterMode = FilterMode.Bilinear;
+			inscatterT[0].Create();
 
-			m_inscatterT[1] = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
-			m_inscatterT[1].wrapMode = TextureWrapMode.Clamp;
-			m_inscatterT[1].filterMode = FilterMode.Bilinear;
-			m_inscatterT[1].Create();
+			inscatterT[1] = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
+			inscatterT[1].wrapMode = TextureWrapMode.Clamp;
+			inscatterT[1].filterMode = FilterMode.Bilinear;
+			inscatterT[1].Create();
 
-			m_deltaSRT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaSRT.wrapMode = TextureWrapMode.Clamp;
-			m_deltaSRT.filterMode = FilterMode.Bilinear;
-			m_deltaSRT.Create();
+			deltaSRT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
+			deltaSRT.wrapMode = TextureWrapMode.Clamp;
+			deltaSRT.filterMode = FilterMode.Bilinear;
+			deltaSRT.Create();
 
-			m_deltaSMT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaSMT.wrapMode = TextureWrapMode.Clamp;
-			m_deltaSMT.filterMode = FilterMode.Bilinear;
-			m_deltaSMT.Create();
+			deltaSMT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
+			deltaSMT.wrapMode = TextureWrapMode.Clamp;
+			deltaSMT.filterMode = FilterMode.Bilinear;
+			deltaSMT.Create();
 
-			m_deltaJT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
-			m_deltaJT.wrapMode = TextureWrapMode.Clamp;
-			m_deltaJT.filterMode = FilterMode.Bilinear;
-			m_deltaJT.Create();
+			deltaJT = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
+			deltaJT.wrapMode = TextureWrapMode.Clamp;
+			deltaJT.filterMode = FilterMode.Bilinear;
+			deltaJT.Create();
 
-			SetParameters(m_ozoneTransmittanceMaterial);
-			SetParameters(m_transmittanceMaterial);
-			SetParameters(m_irradianceNMaterial);
-			SetParameters(m_irradiance1Material);
-			SetParameters(m_inscatter1Material);
-			SetParameters(m_inscatterNMaterial);
-			SetParameters(m_inscatterSMaterial);
-			SetParameters(m_copyInscatter1Material);
-			SetParameters(m_copyInscatterNMaterial);
-			SetParameters(m_copyIrradianceMaterial);
+			SetParameters(ozoneTransmittanceMaterial);
+			SetParameters(transmittanceMaterial);
+			SetParameters(irradianceNMaterial);
+			SetParameters(irradiance1Material);
+			SetParameters(inscatter1Material);
+			SetParameters(inscatterNMaterial);
+			SetParameters(inscatterSMaterial);
+			SetParameters(copyInscatter1Material);
+			SetParameters(copyInscatterNMaterial);
+			SetParameters(copyIrradianceMaterial);
 
-			RTUtility.ClearColor(m_irradianceT);
+			RTUtility.ClearColor(irradianceT);
 			
 			Preprocess(assetPath);
 
@@ -344,7 +344,7 @@ namespace Scatterer
 			if (!Directory.Exists(assetPath))
 				Directory.CreateDirectory(assetPath);
 
-			var atmosphereAtlas = PackTextures(new RenderTexture[] { m_inscatterT[READ], m_irradianceT[READ], m_ozoneTransmittanceRT });
+			var atmosphereAtlas = PackTextures(new RenderTexture[] { inscatterT[READ], irradianceT[READ], ozoneTransmittanceRT });
 			SaveAsHalf(atmosphereAtlas, assetPath + "/atlas");
 
 			atmosphereAtlas.Release();
@@ -409,27 +409,27 @@ namespace Scatterer
 			// adds deltaS into inscatter texture S(line 11 in algorithm 4.1)
 			ProcessInTiles((int i, int j) =>
             {
-                m_copyInscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
+                copyInscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
 
-                m_copyInscatterNMaterial.SetTexture("deltaSRead", m_deltaSRT);
-                m_copyInscatterNMaterial.SetTexture("inscatterRead", m_inscatterT[READ]);
+                copyInscatterNMaterial.SetTexture("deltaSRead", deltaSRT);
+                copyInscatterNMaterial.SetTexture("inscatterRead", inscatterT[READ]);
 
-                Graphics.Blit(null, m_inscatterT[WRITE], m_copyInscatterNMaterial, 0);
+                Graphics.Blit(null, inscatterT[WRITE], copyInscatterNMaterial, 0);
             });
 
-            RTUtility.Swap(m_inscatterT);
+            RTUtility.Swap(inscatterT);
         }
 
         private void CopyIrradianceK1()
         {
 			// adds deltaE into irradiance texture E (line 10 in algorithm 4.1)
-			m_copyIrradianceMaterial.SetFloat("k", 1.0f);
-            m_copyIrradianceMaterial.SetTexture("deltaERead", m_deltaET);
-            m_copyIrradianceMaterial.SetTexture("irradianceRead", m_irradianceT[READ]);
+			copyIrradianceMaterial.SetFloat("k", 1.0f);
+            copyIrradianceMaterial.SetTexture("deltaERead", deltaET);
+            copyIrradianceMaterial.SetTexture("irradianceRead", irradianceT[READ]);
 
-            Graphics.Blit(null, m_irradianceT[WRITE], m_copyIrradianceMaterial);
+            Graphics.Blit(null, irradianceT[WRITE], copyIrradianceMaterial);
 
-            RTUtility.Swap(m_irradianceT);
+            RTUtility.Swap(irradianceT);
         }
 
         private void ComputeInscatterN()
@@ -437,13 +437,13 @@ namespace Scatterer
 			// computes deltaS (line 9 in algorithm 4.1)
 			ProcessInTiles((int i, int j) =>
             {
-                m_inscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
+                inscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
 
-                m_inscatterNMaterial.SetTexture("transmittanceRead", m_ozoneTransmittanceRT);
-                m_inscatterNMaterial.SetTexture("deltaJRead", m_deltaJT);
-                m_inscatterNMaterial.SetTexture("deltaJReadSampler", m_deltaJT);
+                inscatterNMaterial.SetTexture("transmittanceRead", ozoneTransmittanceRT);
+                inscatterNMaterial.SetTexture("deltaJRead", deltaJT);
+                inscatterNMaterial.SetTexture("deltaJReadSampler", deltaJT);
 
-                Graphics.Blit(null, m_deltaSRT, m_inscatterNMaterial, 0);
+                Graphics.Blit(null, deltaSRT, inscatterNMaterial, 0);
             });
         }
 
@@ -451,32 +451,32 @@ namespace Scatterer
         {
 			ProcessInTiles((int i, int j) =>
             {
-				m_inscatterSMaterial.SetVector("currentTile", new Vector2(i, j));
+				inscatterSMaterial.SetVector("currentTile", new Vector2(i, j));
 
-                m_inscatterSMaterial.SetInt("first", (scatteringOrder == 2) ? 1 : 0);
-                m_inscatterSMaterial.SetTexture("transmittanceRead", m_ozoneTransmittanceRT);
-                m_inscatterSMaterial.SetTexture("deltaERead", m_deltaET);
-                m_inscatterSMaterial.SetTexture("deltaSRRead", m_deltaSRT);
-                m_inscatterSMaterial.SetTexture("deltaSMRead", m_deltaSMT);
+                inscatterSMaterial.SetInt("first", (scatteringOrder == 2) ? 1 : 0);
+                inscatterSMaterial.SetTexture("transmittanceRead", ozoneTransmittanceRT);
+                inscatterSMaterial.SetTexture("deltaERead", deltaET);
+                inscatterSMaterial.SetTexture("deltaSRRead", deltaSRT);
+                inscatterSMaterial.SetTexture("deltaSMRead", deltaSMT);
 
-                m_inscatterSMaterial.SetTexture("deltaSRReadSampler", m_deltaSRT);
-                m_inscatterSMaterial.SetTexture("deltaSMReadSampler", m_deltaSMT);
+                inscatterSMaterial.SetTexture("deltaSRReadSampler", deltaSRT);
+                inscatterSMaterial.SetTexture("deltaSMReadSampler", deltaSMT);
 
-                Graphics.Blit(null, m_deltaJT, m_inscatterSMaterial, 0);
+                Graphics.Blit(null, deltaJT, inscatterSMaterial, 0);
             });
         }
 
         private void ComputeIrradianceN(int scatteringOrder)
         {
 			// computes deltaE (line 8 in algorithm 4.1)
-			m_irradianceNMaterial.SetInt("first", (scatteringOrder == 2) ? 1 : 0);
-            m_irradianceNMaterial.SetTexture("deltaSRRead", m_deltaSRT);
-            m_irradianceNMaterial.SetTexture("deltaSMRead", m_deltaSMT);
+			irradianceNMaterial.SetInt("first", (scatteringOrder == 2) ? 1 : 0);
+            irradianceNMaterial.SetTexture("deltaSRRead", deltaSRT);
+            irradianceNMaterial.SetTexture("deltaSMRead", deltaSMT);
 
-            m_irradianceNMaterial.SetTexture("deltaSRReadSampler", m_deltaSRT);
-            m_irradianceNMaterial.SetTexture("deltaSMReadSampler", m_deltaSMT);
+            irradianceNMaterial.SetTexture("deltaSRReadSampler", deltaSRT);
+            irradianceNMaterial.SetTexture("deltaSMReadSampler", deltaSMT);
 
-            Graphics.Blit(null, m_deltaET, m_irradianceNMaterial);
+            Graphics.Blit(null, deltaET, irradianceNMaterial);
         }
 
         private void CopyInscatter1()
@@ -484,51 +484,51 @@ namespace Scatterer
 			// copies deltaS into inscatter texture S (line 5 in algorithm 4.1)
 			ProcessInTiles((int i, int j) =>
             {
-                m_copyInscatter1Material.SetVector("currentTile", new Vector2(i, j));
+                copyInscatter1Material.SetVector("currentTile", new Vector2(i, j));
 
-                m_copyInscatter1Material.SetTexture("deltaSRRead", m_deltaSRT);
-                m_copyInscatter1Material.SetTexture("deltaSMRead", m_deltaSMT);
+                copyInscatter1Material.SetTexture("deltaSRRead", deltaSRT);
+                copyInscatter1Material.SetTexture("deltaSMRead", deltaSMT);
 
-                Graphics.Blit(null, m_inscatterT[WRITE], m_copyInscatter1Material, 0);
+                Graphics.Blit(null, inscatterT[WRITE], copyInscatter1Material, 0);
             });
 
-            RTUtility.Swap(m_inscatterT);
+            RTUtility.Swap(inscatterT);
         }
 
         private void CopyIrradiance()
         {
-            m_copyIrradianceMaterial.SetFloat("k", 0.0f);
-            m_copyIrradianceMaterial.SetTexture("deltaERead", m_deltaET);
-            m_copyIrradianceMaterial.SetTexture("irradianceRead", m_irradianceT[READ]);
+            copyIrradianceMaterial.SetFloat("k", 0.0f);
+            copyIrradianceMaterial.SetTexture("deltaERead", deltaET);
+            copyIrradianceMaterial.SetTexture("irradianceRead", irradianceT[READ]);
 
-            Graphics.Blit(null, m_irradianceT[WRITE], m_copyIrradianceMaterial, 0);
-            RTUtility.Swap(m_irradianceT);
+            Graphics.Blit(null, irradianceT[WRITE], copyIrradianceMaterial, 0);
+            RTUtility.Swap(irradianceT);
         }
 
         private void ComputeInscatter1()
         {
 			// computes single scattering texture deltaS (line 3 in algorithm 4.1)
 			// Rayleigh and Mie separated in deltaSR + deltaSM
-			m_inscatter1Material.SetTexture("transmittanceRead", m_ozoneTransmittanceRT);
+			inscatter1Material.SetTexture("transmittanceRead", ozoneTransmittanceRT);
 
 			ProcessInTiles((int i, int j) =>
             {
-                m_inscatter1Material.SetVector("currentTile", new Vector2(i, j));
-                Graphics.Blit(null, m_deltaSRT, m_inscatter1Material, 0); // rayleigh pass
-                Graphics.Blit(null, m_deltaSMT, m_inscatter1Material, 1); // mie pass
+                inscatter1Material.SetVector("currentTile", new Vector2(i, j));
+                Graphics.Blit(null, deltaSRT, inscatter1Material, 0); // rayleigh pass
+                Graphics.Blit(null, deltaSMT, inscatter1Material, 1); // mie pass
             });
         }
 
         private void ComputeIrradiance()
         {
             // computes irradiance texture deltaE (line 2 in algorithm 4.1)
-            m_irradiance1Material.SetTexture("transmittanceRead", m_ozoneTransmittanceRT);
-            Graphics.Blit(null, m_deltaET, m_irradiance1Material);
+            irradiance1Material.SetTexture("transmittanceRead", ozoneTransmittanceRT);
+            Graphics.Blit(null, deltaET, irradiance1Material);
         }
 
         private void ComputeTransmittance()
         {
-            Graphics.Blit(null, m_ozoneTransmittanceRT, m_ozoneTransmittanceMaterial);
+            Graphics.Blit(null, ozoneTransmittanceRT, ozoneTransmittanceMaterial);
         }
 
         //Process in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
@@ -550,15 +550,15 @@ namespace Scatterer
 
 		void ReleaseTextures()
 		{
-			m_ozoneTransmittanceRT.Release();
-			m_irradianceT[0].Release();
-			m_irradianceT[1].Release();
-			m_inscatterT[0].Release();
-			m_inscatterT[1].Release();
-			m_deltaET.Release();
-			m_deltaSRT.Release();
-			m_deltaSMT.Release();
-			m_deltaJT.Release();
+			ozoneTransmittanceRT.Release();
+			irradianceT[0].Release();
+			irradianceT[1].Release();
+			inscatterT[0].Release();
+			inscatterT[1].Release();
+			deltaET.Release();
+			deltaSRT.Release();
+			deltaSMT.Release();
+			deltaJT.Release();
 		}
 
 		void SaveAsHalf(RenderTexture rtex, string fileName)
