@@ -60,7 +60,7 @@ namespace Scatterer
 
 		public static GameObject GetMainMenuObject(CelestialBody celestialBody)
 		{
-			string name = celestialBody.isHomeWorld ? "Kerbin" : celestialBody.name;
+			string name = celestialBody.name;
 
 			GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("Scene")));
 			
