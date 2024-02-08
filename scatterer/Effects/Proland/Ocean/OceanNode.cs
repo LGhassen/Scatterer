@@ -360,14 +360,11 @@ namespace Scatterer
 
 
 			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
-			
-			prolandManager.GetSkyNode ().InitUniforms (m_oceanMaterial);
 
 			if (!Scatterer.Instance.unifiedCameraMode)
 				m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
 
 			m_oceanMaterial.renderQueue=2502;
-			prolandManager.GetSkyNode ().InitPostprocessMaterialUniforms (m_oceanMaterial);
 			
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
 			m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
@@ -399,7 +396,6 @@ namespace Scatterer
 			else
 				underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterProjector")]);
 
-			prolandManager.GetSkyNode ().InitPostprocessMaterialUniforms (underwaterMaterial);
 			underwaterMaterial.renderQueue = 2502; //draw over fairings which is 2450 and over ocean which is 2501
 			
 			underwaterMaterial.SetFloat ("transparencyDepth", transparencyDepth);

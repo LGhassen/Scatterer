@@ -298,6 +298,9 @@ namespace Scatterer
 
 				Utils.LogDebug("Rebuilt Ocean");
 			}
+
+			if (skyNode)
+				skyNode.InitOceanMaterialUniforms();
 		}
 
 		public Vector3 getDirectionToMainSun()

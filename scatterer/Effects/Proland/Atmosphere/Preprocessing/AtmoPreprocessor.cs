@@ -30,28 +30,46 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Collections;
+using System.Diagnostics;
 
 namespace Scatterer 
 {
+	[KSPAddon(KSPAddon.Startup.Instantly, true)]
 	public class AtmoPreprocessor : MonoBehaviour
 	{
 		private static AtmoPreprocessor instance;
+
+		public AtmoPreprocessor()
+        {
+			if (instance == null)
+			{
+				instance = this;
+				instance.InitMaterials();
+				Utils.LogDebug("AtmoPreprocessor instance created");
+			}
+			else
+			{
+				throw new UnityException("Attempted double instance!");
+			}
+		}
 
 		public static AtmoPreprocessor Instance
 		{
 			get 
 			{
-				if (instance == null)
-				{
-					instance = new AtmoPreprocessor();
-					instance.InitMaterials();
-					Utils.LogDebug("AtmoPreprocessor instance created");
-				}
 				return instance;
 			}
 		}
 
-        public static Vector4 ScatteringLutDimensionsDefault { get => Scatterer.Instance.mainSettings.useLowResolutionAtmosphere ? scatteringLutDimensionsPreview : scatteringLutDimensionsDefault; }
+		public void Start()
+		{
+			DontDestroyOnLoad(this);
+		}
+
+		private static bool atmoGenerationRunning = false;
+
+		public static Vector4 ScatteringLutDimensionsDefault { get => Scatterer.Instance.mainSettings.useLowResolutionAtmosphere ? scatteringLutDimensionsPreview : scatteringLutDimensionsDefault; }
 
         const int READ = 0; const int WRITE = 1;
 
@@ -67,8 +85,8 @@ namespace Scatterer
 		private static Vector4 scatteringLutDimensionsDefault = new Vector4(32f, 128f, 32f, 16f);   //the one from yusov, double the current one so should be 16 megs in half precision
 		public static Vector4 scatteringLutDimensionsPreview = new Vector4(16f, 64f, 16f, 2f);      //fast preview version, 32x smaller
 
-        private static int xTilesDefault = 512, yTilesDefault = 64;
-		private static int xTilesPreview = 512, yTilesPreview = 16;
+        private static int xTilesDefault = 32, yTilesDefault = 64;
+		private static int xTilesPreview = 32, yTilesPreview = 16;
 
 		Vector4 scatteringLutDimensions = ScatteringLutDimensionsDefault;
 		int xTiles = xTilesDefault, yTiles = yTilesDefault;
@@ -97,7 +115,10 @@ namespace Scatterer
 		bool multipleScattering = true;
 		bool useOzone = false;
 
-		//		#define WRITE_DEBUG_TEX
+		// Process in chunks and return if we spend more time than this
+		// Otherwise windows thinks the GPU crashed on slower hardware
+		// https://en.wikipedia.org/wiki/Timeout_Detection_and_Recovery
+		long generationMsThreshold = 1000;
 
 		private void InitMaterials()
 		{
@@ -197,8 +218,19 @@ namespace Scatterer
 			return result.ToString();
 		}
 
-		public void Generate(float inRG,float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inScatteringLutDimensions, bool previewMode, string assetPath, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
+		public static void Generate(float inRG, float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inScatteringLutDimensions, bool previewMode, string assetPath, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff, string bodyName)
 		{
+			if (!atmoGenerationRunning)
+			{
+				Utils.LogInfo("Generating new atmosphere for "+bodyName);
+				instance.StartCoroutine(instance.GenerateAndSaveAtmoCoroutine(inRG, inRT, inBETA_R, inBETA_MSca, inMIE_G, inHR, inHM, inGRref, inMultiple, inScatteringLutDimensions, previewMode, assetPath, inUseOzone, inOzoneAbsorption, inOzoneHeight, inOzoneFalloff));
+			}
+		}
+
+		IEnumerator GenerateAndSaveAtmoCoroutine(float inRG, float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inScatteringLutDimensions, bool previewMode, string assetPath, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
+		{
+			atmoGenerationRunning = true;
+
 			//Rescale to a fixed radius which we know never causes issues
 			float referenceRadius = 1000000f;
 			float scaleFactor = referenceRadius / inRG;
@@ -293,10 +325,12 @@ namespace Scatterer
 			SetParameters(copyIrradianceMaterial);
 
 			RTUtility.ClearColor(irradianceT);
-			
-			Preprocess(assetPath);
+
+			yield return Preprocess(assetPath);
 
 			ReleaseTextures();
+
+			atmoGenerationRunning = false;
 		}
 
 		void SetParameters(Material mat)
@@ -322,23 +356,29 @@ namespace Scatterer
 			mat.SetVector("ozoneAbsorption", new Vector4(ozoneAbsorption.x, ozoneAbsorption.y, ozoneAbsorption.z, 0.0f));
 		}
 
-		void Preprocess(string assetPath)
+		
+		IEnumerator Preprocess(string assetPath)
         {
-            ComputeTransmittance();
-            ComputeIrradiance();
-            ComputeInscatter1();
-            CopyIrradiance();
-			CopyInscatter1();
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
+
+			ComputeTransmittance();
+			ComputeIrradiance();
+			yield return ComputeInscatter1(stopwatch);
+			CopyIrradiance();
+			yield return CopyInscatter1(stopwatch);
 
 			for (int scatteringOrder = 2; scatteringOrder <= (multipleScattering ? scatteringOrders : 2); scatteringOrder++)
 			{
-				ComputeInscatterS(2);
+				yield return ComputeInscatterS(2, stopwatch); // is this a mistake? should it be scatteringOrder instead of 2?
 				ComputeIrradianceN(2);
-				ComputeInscatterN();
+				yield return ComputeInscatterN(stopwatch);
 				CopyIrradianceK1();
 
 				if (multipleScattering)
-					CopyInscatterN();
+				{
+					yield return CopyInscatterN(stopwatch);
+				}
 			}
 
 			if (!Directory.Exists(assetPath))
@@ -404,10 +444,10 @@ namespace Scatterer
 			return result;
 		}
 
-		private void CopyInscatterN()
+		IEnumerator CopyInscatterN(Stopwatch stopwatch)
         {
 			// adds deltaS into inscatter texture S(line 11 in algorithm 4.1)
-			ProcessInTiles((int i, int j) =>
+			yield return ProcessInTiles(stopwatch, (int i, int j) =>
             {
                 copyInscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
 
@@ -432,10 +472,10 @@ namespace Scatterer
             RTUtility.Swap(irradianceT);
         }
 
-        private void ComputeInscatterN()
-        {
+        IEnumerator ComputeInscatterN(Stopwatch stopwatch)
+		{
 			// computes deltaS (line 9 in algorithm 4.1)
-			ProcessInTiles((int i, int j) =>
+			yield return ProcessInTiles(stopwatch, (int i, int j) =>
             {
                 inscatterNMaterial.SetVector("currentTile", new Vector2(i, j));
 
@@ -447,9 +487,9 @@ namespace Scatterer
             });
         }
 
-        private void ComputeInscatterS(int scatteringOrder)
+        IEnumerator ComputeInscatterS(int scatteringOrder, Stopwatch stopwatch)
         {
-			ProcessInTiles((int i, int j) =>
+			yield return ProcessInTiles(stopwatch, (int i, int j) =>
             {
 				inscatterSMaterial.SetVector("currentTile", new Vector2(i, j));
 
@@ -479,10 +519,10 @@ namespace Scatterer
             Graphics.Blit(null, deltaET, irradianceNMaterial);
         }
 
-        private void CopyInscatter1()
+        IEnumerator CopyInscatter1(Stopwatch stopwatch)
 		{
 			// copies deltaS into inscatter texture S (line 5 in algorithm 4.1)
-			ProcessInTiles((int i, int j) =>
+			yield return ProcessInTiles(stopwatch, (int i, int j) =>
             {
                 copyInscatter1Material.SetVector("currentTile", new Vector2(i, j));
 
@@ -505,19 +545,19 @@ namespace Scatterer
             RTUtility.Swap(irradianceT);
         }
 
-        private void ComputeInscatter1()
+        IEnumerator ComputeInscatter1(Stopwatch stopwatch)
         {
 			// computes single scattering texture deltaS (line 3 in algorithm 4.1)
 			// Rayleigh and Mie separated in deltaSR + deltaSM
 			inscatter1Material.SetTexture("transmittanceRead", ozoneTransmittanceRT);
 
-			ProcessInTiles((int i, int j) =>
-            {
-                inscatter1Material.SetVector("currentTile", new Vector2(i, j));
-                Graphics.Blit(null, deltaSRT, inscatter1Material, 0); // rayleigh pass
-                Graphics.Blit(null, deltaSMT, inscatter1Material, 1); // mie pass
-            });
-        }
+			yield return ProcessInTiles(stopwatch, (int i, int j) =>
+			{
+				inscatter1Material.SetVector("currentTile", new Vector2(i, j));
+				Graphics.Blit(null, deltaSRT, inscatter1Material, 0); // rayleigh pass
+				Graphics.Blit(null, deltaSMT, inscatter1Material, 1); // mie pass
+			});
+		}
 
         private void ComputeIrradiance()
         {
@@ -532,7 +572,7 @@ namespace Scatterer
         }
 
         //Process in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
-        void ProcessInTiles(Action<int, int> process)
+        IEnumerator ProcessInTiles(Stopwatch stopwatch, Action<int, int> process)
 		{
 			for (int i = 0; i < xTiles; i++)
 			{
@@ -540,6 +580,7 @@ namespace Scatterer
 				{
 					process(i, j);
 				}
+				if (stopwatch.ElapsedMilliseconds > generationMsThreshold) { yield return new WaitForFixedUpdate(); stopwatch.Restart(); }
 			}
 		}
 

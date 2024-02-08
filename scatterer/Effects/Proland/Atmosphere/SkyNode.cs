@@ -115,6 +115,8 @@ namespace Scatterer
 		bool hasRingObjectAndShadowActivated = false;
 	
 		bool skyNodeInitiated = false;
+		bool precomputedAtmoLoaded = false;
+		bool atmosphereShadersInitiated = false;
 		public bool useEclipses = false;
 
 		Texture2D originalPlanetTexture;
@@ -122,7 +124,7 @@ namespace Scatterer
 
 		public void Init ()
 		{
-			InitPrecomputedAtmo ();
+			InitOrRequestPrecomputedAtmo ();
 
 			skyMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/SkySphere")]);
 			scaledScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledPlanetScattering")]);
@@ -168,11 +170,7 @@ namespace Scatterer
 				InitKopernicusRings ();
 			}
 
-			InitSkySphere ();
-
-			InitPostprocessMaterialUniforms (localScatteringMaterial);
 			TweakScaledMesh ();
-			InitScaledScattering ();
 
 			if (prolandManager.parentCelestialBody.pqsController)
 			{
@@ -218,11 +216,7 @@ namespace Scatterer
 
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
 
-			try {StartCoroutine(DelayedTweakStockPlanet ());}
-			catch (Exception e){Utils.LogError("Error when starting SkyNode::DelayedTweakStockPlanet coroutine "+e.Message);};
 
-			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
-				InitEVEClouds ();
 
 			Shader.SetGlobalFloat(ShaderProperties.scattererCloudLightVolumeEnabled_PROPERTY, 0f); // Temporary way to initialize the light volume godrays, if raymarched volumetrics are loaded they override this then enable/disable as needed
 
@@ -275,7 +269,7 @@ namespace Scatterer
 		{
 			UpdateGraphicsUniforms ();
 
-			if (!MapView.MapIsEnabled && Scatterer.Instance.mainSettings.sunlightExtinction)
+			if (!MapView.MapIsEnabled && Scatterer.Instance.mainSettings.sunlightExtinction && precomputedAtmoLoaded)
 			{
 				UpdateLightExtinctions ();
 			}
@@ -365,6 +359,28 @@ namespace Scatterer
 
 			if (skyNodeInitiated)
 			{
+				if (!precomputedAtmoLoaded)
+                {
+					InitOrRequestPrecomputedAtmo();
+                }
+				else if (!atmosphereShadersInitiated)
+                {
+					InitSkySphere ();
+
+					InitPostprocessMaterialUniforms (localScatteringMaterial);
+					InitScaledScattering ();
+
+					try {StartCoroutine(DelayedTweakStockPlanet ());}
+					catch (Exception e){Utils.LogError("Error when starting SkyNode::DelayedTweakStockPlanet coroutine "+e.Message);};
+
+					if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
+						InitEVEClouds ();
+
+					InitOceanMaterialUniforms();
+
+					atmosphereShadersInitiated = true;
+				}
+
 				InterpolateVariables ();
 
 				if (prolandManager.hasOcean && !Scatterer.Instance.mainSettings.useOceanShaders)
@@ -471,7 +487,10 @@ namespace Scatterer
 
 		public void InitPostprocessMaterialUniforms (Material mat)
         {
-            mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
+			if (mat == null || !precomputedAtmoLoaded)
+				return;
+
+			mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
 			mat.SetTexture(ShaderProperties.AtmosphereAtlas_PROPERTY, atmosphereAtlas);
 
@@ -573,7 +592,7 @@ namespace Scatterer
 
 		public void InitUniforms (Material mat)
         {
-            if (mat == null)
+            if (mat == null || !precomputedAtmoLoaded)
                 return;
 
             mat.SetFloat(ShaderProperties.M_PI_PROPERTY, Mathf.PI);
@@ -664,7 +683,7 @@ namespace Scatterer
 			postprocessingEnabled = !postprocessingEnabled;
 		}
 		
-		void InitPrecomputedAtmo ()
+		void InitOrRequestPrecomputedAtmo ()
 		{
 			Rg = (float) prolandManager.GetRadius ();
 			Rt = AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor, useOzone, ozoneHeight/mainMenuScaleFactor, ozoneFalloff/mainMenuScaleFactor);
@@ -679,31 +698,41 @@ namespace Scatterer
 
 			if (!System.IO.File.Exists (atlasPath))
 			{
-				Utils.LogInfo("No atmosphere cache for "+prolandManager.parentCelestialBody.name+", generating new atmosphere");
-				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, previewMode, cachePath, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff);
+				AtmoPreprocessor.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, previewMode, cachePath, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff, prolandManager.parentCelestialBody.name);
+				precomputedAtmoLoaded = false;
+				return;
 			}
-
-			var textureDimensions = new List<Vector2> {
-				new Vector2(scatteringLutDimensions.x * scatteringLutDimensions.y, scatteringLutDimensions.z* scatteringLutDimensions.w),
-				new Vector2(SKY_W, SKY_H),
-				new Vector2(TRANSMITTANCE_W, TRANSMITTANCE_H) };
-
-			// Textures are packed in the simplest way possible, top-left to bottom-left
-			int atlasWidth = textureDimensions.Max(texture => (int)texture.x);
-			int atlasHeight = textureDimensions.Sum(texture => (int)texture.y);
 			
-			atlasDimensions = new Vector2(atlasWidth, atlasHeight);
+			LoadPrecomputedAtmo(atlasPath);
+			precomputedAtmoLoaded = true;
 
-			atmosphereAtlas = new Texture2D(atlasWidth, atlasHeight, TextureFormat.RGBAHalf, false);
-			atmosphereAtlas.wrapMode = TextureWrapMode.Clamp;
-			atmosphereAtlas.filterMode = FilterMode.Bilinear;
-			atmosphereAtlas.LoadRawTextureData(System.IO.File.ReadAllBytes(atlasPath));
-			atmosphereAtlas.Apply();
+			if (atmosphereShadersInitiated)
+				ReinitAllMaterials();
+        }
 
-			atlasScaleAndOffsets = AtmoPreprocessor.GetPackedTexturesScaleAndOffsets(textureDimensions, atlasDimensions);
-		}
+        private void LoadPrecomputedAtmo(string atlasPath)
+        {
+            var textureDimensions = new List<Vector2> {
+                    new Vector2(scatteringLutDimensions.x * scatteringLutDimensions.y, scatteringLutDimensions.z* scatteringLutDimensions.w),
+                    new Vector2(SKY_W, SKY_H),
+                    new Vector2(TRANSMITTANCE_W, TRANSMITTANCE_H) };
 
-		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale, bool inUseOzone, Vector3 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
+            // Textures are packed in the simplest way possible, top-left to bottom-left
+            int atlasWidth = textureDimensions.Max(texture => (int)texture.x);
+            int atlasHeight = textureDimensions.Sum(texture => (int)texture.y);
+
+            atlasDimensions = new Vector2(atlasWidth, atlasHeight);
+
+            atmosphereAtlas = new Texture2D(atlasWidth, atlasHeight, TextureFormat.RGBAHalf, false);
+            atmosphereAtlas.wrapMode = TextureWrapMode.Clamp;
+            atmosphereAtlas.filterMode = FilterMode.Bilinear;
+            atmosphereAtlas.LoadRawTextureData(System.IO.File.ReadAllBytes(atlasPath));
+            atmosphereAtlas.Apply();
+
+            atlasScaleAndOffsets = AtmoPreprocessor.GetPackedTexturesScaleAndOffsets(textureDimensions, atlasDimensions);
+        }
+
+        public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale, bool inUseOzone, Vector3 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
 		{
 			m_betaR = inBETA_R;
 			BETA_MSca = inBETA_MSca;
@@ -721,77 +750,74 @@ namespace Scatterer
 			ozoneFalloff = inOzoneFalloff;
 			useOzone = inUseOzone;
 
-			InitPrecomputedAtmo ();
+			InitOrRequestPrecomputedAtmo ();
 
 			float skySphereSize = 2 * (4 * (Rt - Rg*atmosphereStartRadiusScale) + Rg*atmosphereStartRadiusScale) / ScaledSpace.ScaleFactor;
 			skySphere.Resize (skySphereSize);
-
-			ReinitAllMaterials();
 		}
 
 		void ReinitAllMaterials()
-		{
-			if (scaledEclipseMaterial)
-				InitUniforms(scaledEclipseMaterial);
-			if (skyMaterial)
-				InitUniforms(skyMaterial);
-			if (scaledScatteringMaterial)
-				InitUniforms(scaledScatteringMaterial);
-			if (sunflareExtinctionMaterial)
-				InitUniforms(sunflareExtinctionMaterial);
-			if (localScatteringMaterial)
-				InitPostprocessMaterialUniforms(localScatteringMaterial);
+        {
+            if (scaledEclipseMaterial)
+                InitUniforms(scaledEclipseMaterial);
+            if (skyMaterial)
+                InitUniforms(skyMaterial);
+            if (scaledScatteringMaterial)
+                InitUniforms(scaledScatteringMaterial);
+            if (sunflareExtinctionMaterial)
+                InitUniforms(sunflareExtinctionMaterial);
+            if (localScatteringMaterial)
+                InitPostprocessMaterialUniforms(localScatteringMaterial);
 
-			ReInitMaterialUniformsOnRenderTexturesLoss ();
+            ReInitMaterialUniformsOnRenderTexturesLoss();
 
-			// make the clouds2d material optional
-			// add fields for volumetrics and raymarched volumetrics
-			if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
-			{
-				foreach (EVECloudLayer eveCloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers [celestialBodyName])
-				{
-					if (eveCloudLayer.Clouds2dMaterial != null)
-					{ 
-						InitUniforms (eveCloudLayer.Clouds2dMaterial);
-						InitPostprocessMaterialUniforms (eveCloudLayer.Clouds2dMaterial);
-					}
+            // make the clouds2d material optional
+            // add fields for volumetrics and raymarched volumetrics
+            if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
+            {
+                foreach (EVECloudLayer eveCloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+                {
+                    if (eveCloudLayer.Clouds2dMaterial != null)
+                    {
+                        InitUniforms(eveCloudLayer.Clouds2dMaterial);
+                        InitPostprocessMaterialUniforms(eveCloudLayer.Clouds2dMaterial);
+                    }
 
-					if (eveCloudLayer.ParticleVolumetricsMaterial != null)
-					{
-						InitUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
-						InitPostprocessMaterialUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
-					}
+                    if (eveCloudLayer.ParticleVolumetricsMaterial != null)
+                    {
+                        InitUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
+                        InitPostprocessMaterialUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
+                    }
 
-					if (eveCloudLayer.RaymarchedVolumetricsMaterial != null)
-					{
-						InitUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
-						InitPostprocessMaterialUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
-					}
-				}
-			}
+                    if (eveCloudLayer.RaymarchedVolumetricsMaterial != null)
+                    {
+                        InitUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
+                        InitPostprocessMaterialUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
+                    }
+                }
+            }
 
-			if (prolandManager.GetOceanNode())
-			{
-				if (prolandManager.GetOceanNode().m_oceanMaterial)
-				{
-					InitUniforms (prolandManager.GetOceanNode().m_oceanMaterial);
-					InitPostprocessMaterialUniforms (prolandManager.GetOceanNode().m_oceanMaterial);
-				}
+            InitOceanMaterialUniforms();
+        }
 
-				if (prolandManager.GetOceanNode().underwaterMaterial)
-				{
-					InitPostprocessMaterialUniforms (prolandManager.GetOceanNode().underwaterMaterial);
-				}
-			}
-		}
+        public void InitOceanMaterialUniforms()
+        {
+            if (prolandManager.GetOceanNode())
+            {
+                if (prolandManager.GetOceanNode().m_oceanMaterial)
+                {
+                    InitUniforms(prolandManager.GetOceanNode().m_oceanMaterial);
+                    InitPostprocessMaterialUniforms(prolandManager.GetOceanNode().m_oceanMaterial);
+                }
 
-		//Also try to make this stay on scene changes and unload/reloads?
-		//void ReInitAtmoFromUI()
-		//{
-		//
-		//}
-		
-		public void OnDestroy()
+                if (prolandManager.GetOceanNode().underwaterMaterial)
+                {
+                    InitPostprocessMaterialUniforms(prolandManager.GetOceanNode().underwaterMaterial);
+                }
+            }
+        }
+
+        public void OnDestroy()
 		{
 			try {StopAllCoroutines ();}
 			catch (Exception){}
