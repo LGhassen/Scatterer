@@ -101,14 +101,15 @@ namespace Scatterer
 				}
 			}
 
-			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
-			{
-				QualitySettings.antiAliasing = 0;
-			}
-
 			if (isActive)
 			{
 				StartCoroutine (DelayedInit ());
+			}
+
+			// The built-in AA breaks basically all post effects
+			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+			{
+				QualitySettings.antiAliasing = 0;
 			}
 		}
 
@@ -247,13 +248,20 @@ namespace Scatterer
 			Utils.LogDebug("Core setup done");
 		}
 
-		void Update ()
+		void Update()
 		{
 			guiHandler.UpdateGUIvisible ();
 
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
 			{
+				/*
+				if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+				{
+					QualitySettings.antiAliasing = 0;
+				}
+				*/
+
 				scattererCelestialBodiesManager.Update ();
 
 				//move this out of this update, let it be a one time thing
