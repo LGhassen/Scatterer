@@ -27,7 +27,7 @@ namespace Scatterer
 		//and scatteringProjector not disabling correctly
 		public void OnPreCull()
 		{
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode && manager.GetSkyNode ().localScatteringContainer != null)
+			if (manager.GetSkyNode ().localScatteringContainer != null)
 			{
 				manager.GetSkyNode().localScatteringContainer.SetActivated (false);
 				manager.GetSkyNode().localScatteringContainer.UpdateContainer();
@@ -41,8 +41,9 @@ namespace Scatterer
 
 		public void OnPostRender()
 		{
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode && manager.GetSkyNode ().localScatteringContainer != null)
+			if (manager.GetSkyNode ().localScatteringContainer != null)
 				manager.GetSkyNode().localScatteringContainer.SetActivated (true);
+
 			if (manager.GetOceanNode())
 				manager.GetOceanNode().setWaterMeshrenderersEnabled (true);
 		}

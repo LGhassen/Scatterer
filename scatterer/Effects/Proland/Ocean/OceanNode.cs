@@ -166,11 +166,7 @@ namespace Scatterer
 
 			InitUnderwaterMaterial ();
 
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-				underwaterScattering = new ScreenSpaceScatteringContainer(underwaterMaterial,prolandManager.parentLocalTransform,(float)prolandManager.m_radius, prolandManager, false);	//this shouldn't need quarter res as it isn't expensive
-			else
-				underwaterScattering = new AtmosphereProjectorContainer(underwaterMaterial,prolandManager.parentLocalTransform,(float)prolandManager.m_radius, prolandManager);
-
+			underwaterScattering = new ScreenSpaceScatteringContainer(underwaterMaterial,prolandManager.parentLocalTransform,(float)prolandManager.m_radius, prolandManager, false);	//this shouldn't need quarter res as it isn't expensive
 			underwaterScattering.SetInScaledSpace(false);
 			underwaterScattering.SetActivated(false);
 			underwaterScattering.UpdateContainer ();
@@ -244,7 +240,7 @@ namespace Scatterer
 			planetOpacity = 1f - prolandManager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
 			m_oceanMaterial.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, planetOpacity);
 
-			m_oceanMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, Scatterer.Instance.mainSettings.useDepthBufferMode || (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
+			m_oceanMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, 1);
 		}
 
 		public void OnPreCull()
@@ -333,30 +329,11 @@ namespace Scatterer
 				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_SOFT");
 			}
 
-//			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
+			m_oceanMaterial.EnableKeyword("DEPTH_BUFFER_MODE_ON");
+			m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
+			m_oceanMaterial.DisableKeyword("PROJECTOR_MODE_GODRAYS");
 
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-			{
-				m_oceanMaterial.EnableKeyword("DEPTH_BUFFER_MODE_ON");
-				m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
-				m_oceanMaterial.DisableKeyword("PROJECTOR_MODE_GODRAYS");
-			}
-			else
-			{
-				m_oceanMaterial.DisableKeyword("DEPTH_BUFFER_MODE_ON");
-				if (prolandManager.skyNode.legacyGodraysRenderer)
-				{
-					m_oceanMaterial.EnableKeyword("PROJECTOR_MODE_GODRAYS");
-					m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
-				}
-				else
-				{
-					m_oceanMaterial.EnableKeyword("PROJECTOR_MODE");
-					m_oceanMaterial.DisableKeyword("PROJECTOR_MODE_GODRAYS");
-				}
-			}
-
-			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "DEPTH_BUFFER_MODE_ON", "DEPTH_BUFFER_MODE_OFF", Scatterer.Instance.mainSettings.useDepthBufferMode);
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "DEPTH_BUFFER_MODE_ON", "DEPTH_BUFFER_MODE_OFF", true);
 
 
 			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
@@ -391,11 +368,7 @@ namespace Scatterer
 		
 		void InitUnderwaterMaterial ()
 		{
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-				underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterDepthBuffer")]);
-			else
-				underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterProjector")]);
-
+			underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterDepthBuffer")]);
 			underwaterMaterial.renderQueue = 2502; //draw over fairings which is 2450 and over ocean which is 2501
 			
 			underwaterMaterial.SetFloat ("transparencyDepth", transparencyDepth);

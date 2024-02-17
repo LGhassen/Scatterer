@@ -128,11 +128,7 @@ namespace Scatterer
 
 			skyMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/SkySphere")]);
 			scaledScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledPlanetScattering")]);
-
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-				localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthBufferScattering")]);
-			else
-				localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
+			localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthBufferScattering")]);
 
 			skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
@@ -180,11 +176,7 @@ namespace Scatterer
 
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
-				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
 					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && !legacyGodraysRenderer);
-				else
-					localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt, prolandManager);
-
 			}
 
 			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
@@ -301,12 +293,6 @@ namespace Scatterer
 			{
 				localScatteringContainer.SetInScaledSpace (inScaledSpace);
 				localScatteringContainer.UpdateContainer ();
-
-				if (prolandManager.parentCelestialBody.pqsController != null && !Scatterer.Instance.mainSettings.useDepthBufferMode)
-				{
-					float planetOpactiy = prolandManager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
-					localScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, (planetOpactiy > 0f) ? 1 : 0);
-				}
 			}
 
 			SetUniforms (skyMaterial);

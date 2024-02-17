@@ -72,7 +72,6 @@ namespace Scatterer
 			Utils.LogInfo ("Game resolution: " + Screen.width.ToString() + "x" +Screen.height.ToString());
 			Utils.LogInfo ("Compute shader support: " + SystemInfo.supportsComputeShaders.ToString());
 			Utils.LogInfo ("Async GPU readback support: " + SystemInfo.supportsAsyncGPUReadback.ToString());
-			Utils.LogInfo ("Using depth buffer mode: " + mainSettings.useDepthBufferMode.ToString());
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
@@ -107,7 +106,7 @@ namespace Scatterer
 			}
 
 			// The built-in AA breaks basically all post effects
-			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
 			{
 				QualitySettings.antiAliasing = 0;
 			}
@@ -158,7 +157,7 @@ namespace Scatterer
 			}
 
 			// TODO: move all AA logic to a separate class?
-			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
 			{
 				//cleanup any forgotten/glitched AA scripts
 				foreach (GenericAntiAliasing antiAliasing in Resources.FindObjectsOfTypeAll(typeof(GenericAntiAliasing)))
@@ -371,8 +370,7 @@ namespace Scatterer
 					UnityEngine.GameObject.DestroyImmediate (ReflectionProbeCheckerGO);
 				}
 
-				if (mainSettings.useDepthBufferMode)
-					QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
+				QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
 
 				if (eveReflectionHandler != null)
 					eveReflectionHandler.CleanUp();
