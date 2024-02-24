@@ -25,10 +25,6 @@ namespace Scatterer
 			
 			if (!cam || !targetRenderer || !targetMaterial)
 				return;
-			
-			// Enable screen copying for this frame
-			if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions && (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera))
-				ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
 
 			// Render ocean MeshRenderer for this frame
 			// If projector mode render directly to screen
@@ -38,12 +34,16 @@ namespace Scatterer
 				if (cameraToOceanCommandBuffer[cam] != null)
 				{
 					cameraToOceanCommandBuffer[cam].EnableForThisFrame();
-				}
+
+                    // Enable screen copying for this frame
+                    if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions && (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera))
+                        ScreenCopyCommandBuffer.EnableScreenCopyForFrame(cam);
+                }
 			}
 			else
 			{
 				//we add null to the cameras we don't want to render on so we don't do a string compare every time
-				if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))
+				if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera") || (cam.name == "DepthCamera") || (cam.name == "NearCamera"))
 				{
 					cameraToOceanCommandBuffer[cam] = null;
 				}
