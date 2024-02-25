@@ -288,6 +288,7 @@ namespace Scatterer
 				 OldConfig.taaMotionBlending != taaMotionBlending ||
 				 OldConfig.taaJitterSpread != taaJitterSpread ||
 				 OldConfig.taaSharpness != taaSharpness ||
+				 OldConfig.disableTaaBelowFrameRateThreshold != disableTaaBelowFrameRateThreshold ||
 
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.scatteringTonemapper != scatteringTonemapper ||

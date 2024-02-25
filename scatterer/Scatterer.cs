@@ -5,7 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0871")]
+[assembly:AssemblyVersion("0.0872")]
 namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
@@ -48,7 +48,7 @@ namespace Scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0871";
+		public string versionNumber = "0.0872";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
