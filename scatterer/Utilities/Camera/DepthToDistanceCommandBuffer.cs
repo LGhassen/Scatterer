@@ -3,35 +3,70 @@ using UnityEngine.Rendering;
 
 namespace Scatterer
 {
-	public class DepthToDistanceCommandBuffer : MonoBehaviour
-	{
+    public class DepthToDistanceCommandBuffer : MonoBehaviour
+    {
 
-		private CommandBuffer m_Buffer;
-		public Camera m_Camera;
-		private Material m_Material;
+        private CommandBuffer buffer;
+        public Camera camera;
+        private Material material;
+        private static RenderTexture renderTexture;
+        private bool initialized = false;
+        public static RenderTexture RenderTexture { get => renderTexture; }
 
-		private void Awake ()
-		{
-			// after depth texture is rendered on far and near cameras, copy it and merge it as a single distance buffer
-			m_Camera = gameObject.GetComponent<Camera>();
-			m_Buffer = new CommandBuffer();
-			m_Buffer.name = "ScattererDepthToDistanceCommandBuffer";
-			m_Material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthToDistance")]);
+        private void Init()
+        {
+            // after depth texture is rendered on far and near cameras, copy it and merge it as a single distance buffer
+            camera = gameObject.GetComponent<Camera>();
+            buffer = new CommandBuffer();
+            buffer.name = "EVEDepthToDistanceCommandBuffer";
 
-			if (m_Camera == Utils.getEarliestLocalCamera()){
-				m_Buffer.SetRenderTarget(Scatterer.Instance.bufferManager.depthTexture);
-				m_Buffer.ClearRenderTarget (false, true, Color.white);
-			}
+            if (!renderTexture)
+            {
+                if (camera == null || camera.activeTexture == null)
+                {
+                    return;
+                }
+                renderTexture = RenderTextureUtils.CreateRenderTexture(camera.activeTexture.width, camera.activeTexture.height, RenderTextureFormat.RFloat, false, FilterMode.Point);
+            }
 
+            material = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthToDistance")]);
 
-			m_Buffer.Blit (null, Scatterer.Instance.bufferManager.depthTexture, m_Material); //change to shadowmap texture
+            if (camera == Utils.getEarliestLocalCamera())
+            {
+                buffer.SetRenderTarget(renderTexture);
+                buffer.ClearRenderTarget(false, true, Color.white);
+            }
 
-			m_Camera.AddCommandBuffer (CameraEvent.AfterDepthTexture, m_Buffer);
-		}
+            buffer.Blit(null, renderTexture, material);
 
-		public void OnDestroy ()
-		{
-			m_Camera.RemoveCommandBuffer (CameraEvent.AfterDepthTexture, m_Buffer);
-		}
-	}
+            camera.AddCommandBuffer(CameraEvent.AfterDepthTexture, buffer);
+
+            initialized = true;
+        }
+
+        public void OnPostRender()
+        {
+            if (initialized && camera.activeTexture != null)
+            {
+                if (renderTexture.width != camera.activeTexture.width || renderTexture.height != camera.activeTexture.height)
+                {
+                    renderTexture.Release();
+                    renderTexture = null;
+
+                    buffer.Clear();
+                    buffer = null;
+
+                    initialized = false;
+                }
+            }
+
+            if (!initialized)
+                Init();
+        }
+
+        public void OnDestroy()
+        {
+            camera.RemoveCommandBuffer(CameraEvent.AfterDepthTexture, buffer);
+        }
+    }
 }

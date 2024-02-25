@@ -21,7 +21,6 @@ namespace Scatterer
 		public GUIhandler guiHandler = new GUIhandler();
 		
 		public ScattererCelestialBodiesManager scattererCelestialBodiesManager = new ScattererCelestialBodiesManager ();
-		public BufferManager bufferManager;
 		public SunflareManager sunflareManager; GameObject sunflareManagerGO;
 		public EVEReflectionHandler eveReflectionHandler;
 		private Coroutine cloudReappliedCoroutine;
@@ -142,13 +141,7 @@ namespace Scatterer
 
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				// Note: Stock KSP dragCubes make a copy of components and removes them rom far/near cameras when rendering
-				// This can cause issues with renderTextures and commandBuffers, to keep in mind for when implementing godrays
-				bufferManager = (BufferManager)scaledSpaceCamera.gameObject.AddComponent (typeof(BufferManager));	// This doesn't need to be added to any camera anymore
-																													// TODO: move to appropriate gameObject
-
-				//copy stock depth buffers and combine into a single depth buffer
-				//TODO: shouldn't this be moved to bufferManager?
+				// copy stock depth buffers and combine into a single depth buffer
 				if (!unifiedCameraMode && (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement))
 				{
 					farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
@@ -263,6 +256,7 @@ namespace Scatterer
 
 				scattererCelestialBodiesManager.Update ();
 
+				/*
 				//move this out of this update, let it be a one time thing
 				//TODO: check what this means
 				if (bufferManager)
@@ -270,6 +264,7 @@ namespace Scatterer
 					if (!bufferManager.depthTextureCleared && (MapView.MapIsEnabled || !scattererCelestialBodiesManager.isPQSEnabledOnScattererPlanet) )
 						bufferManager.ClearDepthTexture();
 				}
+				*/
 
 				if (sunflareManager != null)
 				{
@@ -346,11 +341,6 @@ namespace Scatterer
 
 				if (nearDepthPassMerger)
 					Component.DestroyImmediate (nearDepthPassMerger);
-
-				if (bufferManager)
-				{
-					Component.DestroyImmediate (bufferManager);
-				}
 
 				foreach (GenericAntiAliasing antiAliasing in antiAliasingScripts)
 				{

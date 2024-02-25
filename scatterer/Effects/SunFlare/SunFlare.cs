@@ -65,13 +65,15 @@ namespace Scatterer
 			sunglareMaterial.SetOverrideTag ("IGNOREPROJECTOR", "True");
 			sunglareMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
-			Utils.EnableOrDisableShaderKeywords (sunglareMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
+			Utils.EnableOrDisableShaderKeywords (sunglareMaterial, "SCATTERER_MERGED_DEPTH_ON", "SCATTERER_MERGED_DEPTH_OFF", !Scatterer.Instance.unifiedCameraMode);
 
 			if (!Scatterer.Instance.unifiedCameraMode)
 			{
-				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-					sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferManager.depthTexture);
-				else
+				if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && DepthToDistanceCommandBuffer.RenderTexture != null)
+				{
+					sunglareMaterial.SetTexture ("_customDepthTexture", DepthToDistanceCommandBuffer.RenderTexture);
+                }
+                else
 					sunglareMaterial.SetTexture ("_customDepthTexture", Texture2D.whiteTexture);	//keep this in mind for when doing multiple points check and ditching raycast
 			}
 
@@ -222,8 +224,8 @@ namespace Scatterer
 						hitStatus=false;
 				}
 
-				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-					sunglareMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
+				if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && DepthToDistanceCommandBuffer.RenderTexture != null)
+					sunglareMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, DepthToDistanceCommandBuffer.RenderTexture);
 			}
 
 			flareRendering = !hitStatus && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater;
@@ -244,7 +246,7 @@ namespace Scatterer
 			}
 
 			//enable or disable scaled or near script depending on trackstation or mapview
-			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			if (!MapView.MapIsEnabled && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
 				nearCameraHook.enabled = true;
 				scaledCameraHook.enabled = false;
@@ -278,6 +280,7 @@ namespace Scatterer
 				Component.Destroy (nearCameraHook);
 				UnityEngine.Object.Destroy (nearCameraHook);
 			}
+			
 			if (scaledCameraHook)
 			{
 				Component.Destroy (scaledCameraHook);

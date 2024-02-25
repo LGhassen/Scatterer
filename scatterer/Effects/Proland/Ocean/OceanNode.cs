@@ -335,13 +335,12 @@ namespace Scatterer
 
 			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "DEPTH_BUFFER_MODE_ON", "DEPTH_BUFFER_MODE_OFF", true);
 
-
 			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
-			if (!Scatterer.Instance.unifiedCameraMode)
-				m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
+            if (!Scatterer.Instance.unifiedCameraMode && DepthToDistanceCommandBuffer.RenderTexture != null)
+                m_oceanMaterial.SetTexture(ShaderProperties._customDepthTexture_PROPERTY, DepthToDistanceCommandBuffer.RenderTexture);
 
-			m_oceanMaterial.renderQueue=2502;
+            m_oceanMaterial.renderQueue=2502;
 			
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
 			m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
