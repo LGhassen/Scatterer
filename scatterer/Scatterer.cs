@@ -247,12 +247,11 @@ namespace Scatterer
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
 			{
-				/*
-				if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+                // The built-in AA breaks basically all post effects
+                if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
 				{
 					QualitySettings.antiAliasing = 0;
 				}
-				*/
 
 				scattererCelestialBodiesManager.Update ();
 
