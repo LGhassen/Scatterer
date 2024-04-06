@@ -76,26 +76,35 @@ namespace Scatterer
 
 		public static Color getOzoneExtinction(float r, float mu, float Rt, float Rg, Texture2D atmosphereAtlas, Vector2 ozoneTextureDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
         {
-			Vector2 uv = GetTransmittanceUV(r, mu, Rt, Rg);
-			uv = remapUVToAtlas(uv, ozoneTextureDimensions, textureScaleAndOffsetInAtlas, AtmosphereAtlasDimensions);
-			return atmosphereAtlas.GetPixelBilinear(uv.x, uv.y);
-		}
+            Vector2 uv = GetTransmittanceUV(r, mu, Rt, Rg);
+            uv = remapUVToAtlas(uv, ozoneTextureDimensions, textureScaleAndOffsetInAtlas, AtmosphereAtlasDimensions);
+
+            // Unity's get pixel Bilinear doesn't work exactly like shader-based bilinear sampling
+            // See thread https://forum.unity.com/threads/confusion-about-texture-getpixelbinear.1236826/
+            // Therefore manually remap from shader-based UV to unity-style UV to be able to sample bilinear correctly here
+            // The equivalent transformation is just to remove a half-texel offset
+            // Note that I checked all the math 10 times and compared GetPixelBilinear() to what the shader tex2Dlod outputs and confirmed
+            // There is always a half texel offset
+            uv -= new Vector2(0.5f, 0.5f) / AtmosphereAtlasDimensions;
+
+            return atmosphereAtlas.GetPixelBilinear(uv.x, uv.y);
+        }
 
 		private static Vector2 remapUVToAtlas(Vector2 uv, Vector2 oldTexDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
 		{
 			// Remove half pixel offset
 			uv -= new Vector2(0.5f, 0.5f) / oldTexDimensions;
 
-			// Clamp
-			uv.x = Mathf.Clamp(uv.x, 0f, 1f - 0.5f / oldTexDimensions.x);
-			uv.y = Mathf.Clamp(uv.y, 0f, 1f - 0.5f / oldTexDimensions.y);
+			// Clamp, note the half pixel offset is taken into account on both sides
+			uv.x = Mathf.Clamp(uv.x, 0f, 1f - 1.0f / oldTexDimensions.x);
+			uv.y = Mathf.Clamp(uv.y, 0f, 1f - 1.0f / oldTexDimensions.y);
 
 			// Scale, offset and add new half pixel offset
 			uv = uv * new Vector2(textureScaleAndOffsetInAtlas.x, textureScaleAndOffsetInAtlas.y) +
 				new Vector2(textureScaleAndOffsetInAtlas.z, textureScaleAndOffsetInAtlas.w) +
 				new Vector2(0.5f, 0.5f) / AtmosphereAtlasDimensions;
 
-			return uv;
+            return uv;
 		}
 
 		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx, bool useOzone, Texture2D atmosphereAtlas, Vector2 ozoneTextureDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
