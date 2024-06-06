@@ -107,7 +107,7 @@ namespace Scatterer
 		[Persistent]
 		public bool useLegacyTerrainGodrays = false;
 
-		[Persistent]
+		//[Persistent]
 		public bool mergeDepthPrePass = false;
 
 		//[Persistent]
@@ -277,7 +277,7 @@ namespace Scatterer
 				 OldConfig.raymarchedGodraysStepCount != raymarchedGodraysStepCount ||
 				 OldConfig.raymarchedGodraysScreenshotDenoisingIterations != raymarchedGodraysScreenshotDenoisingIterations ||
 				 OldConfig.useLegacyTerrainGodrays != useLegacyTerrainGodrays ||
-				 OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
+				 //OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
 				 OldConfig.quarterResScattering != quarterResScattering ||
 				 
 				 OldConfig.useSubpixelMorphologicalAntialiasing != useSubpixelMorphologicalAntialiasing ||
