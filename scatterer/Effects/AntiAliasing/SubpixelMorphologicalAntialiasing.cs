@@ -87,7 +87,10 @@ namespace Scatterer
 			SMAACommandBuffer = new CommandBuffer ();
 		}
 
-		public void OnPreCull()
+        static readonly int MainTextureProperty = Shader.PropertyToID("_MainTexture");
+        static readonly int BlendTexproperty = Shader.PropertyToID("_BlendTex");
+
+        public void OnPreCull()
 		{
 			bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
 
@@ -101,14 +104,14 @@ namespace Scatterer
 				SMAACommandBuffer.SetRenderTarget (flip);
 				SMAACommandBuffer.ClearRenderTarget (false, true, Color.clear);
 			
-				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", BuiltinRenderTextureType.CameraTarget);
+				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, BuiltinRenderTextureType.CameraTarget);
 
 				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.EdgeDetection + (int)quality);		//screen to flip with edge detection
 			
-				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", flip);
+				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, flip);
 				SMAACommandBuffer.Blit (null, flop, SMAAMaterial, (int)Pass.BlendWeights + (int)quality);		//flip to flop with blendweights
-				SMAACommandBuffer.SetGlobalTexture ("_BlendTex", flop);
-				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", BuiltinRenderTextureType.CameraTarget);
+				SMAACommandBuffer.SetGlobalTexture (BlendTexproperty, flop);
+				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, BuiltinRenderTextureType.CameraTarget);
 				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.NeighborhoodBlending);				//neighborhood blending to flip
 				SMAACommandBuffer.Blit (flip, BuiltinRenderTextureType.CameraTarget);							//blit back to screen
 			
