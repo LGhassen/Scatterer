@@ -39,7 +39,7 @@ namespace Scatterer
 
             buffer.Blit(null, renderTexture, material);
 
-            camera.AddCommandBuffer(CameraEvent.AfterDepthTexture, buffer);
+            camera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, buffer);
 
             initialized = true;
         }
@@ -66,7 +66,7 @@ namespace Scatterer
 
         public void OnDestroy()
         {
-            camera.RemoveCommandBuffer(CameraEvent.AfterDepthTexture, buffer);
+            camera.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, buffer);
         }
     }
 }
