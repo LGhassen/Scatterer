@@ -29,12 +29,12 @@ namespace scatterer
 
 			m_Buffer.Blit (null, Scatterer.Instance.bufferManager.depthTexture, m_Material); //change to shadowmap texture
 
-			m_Camera.AddCommandBuffer (CameraEvent.AfterDepthTexture, m_Buffer);
+			m_Camera.AddCommandBuffer (CameraEvent.AfterForwardOpaque, m_Buffer);
 		}
 
 		public void OnDestroy ()
 		{
-			m_Camera.RemoveCommandBuffer (CameraEvent.AfterDepthTexture, m_Buffer);
+			m_Camera.RemoveCommandBuffer (CameraEvent.AfterForwardOpaque, m_Buffer);
 		}
 	}
 }
