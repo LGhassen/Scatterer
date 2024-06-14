@@ -131,6 +131,10 @@ namespace scatterer
 
 		void loadEffectsForBody (ScattererCelestialBody scattererCelestialBody)
 		{
+			// Totally skip bodies that aren't in the scene.
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU && !Utils.GetMainMenuObject(scattererCelestialBody.celestialBody, out GameObject _))
+				return;
+
 			try
 			{
 				if (HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)

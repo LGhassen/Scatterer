@@ -30,11 +30,11 @@ namespace scatterer
 		static Dictionary<string, Texture2D> texturesDictionary = new Dictionary<string, Texture2D> ();
 
 		//Size is loaded automatically from the files
-		Texture2D sunSpikes = new Texture2D (1, 1);
-		Texture2D sunFlare  = new Texture2D (1, 1);
-		Texture2D sunGhost1 = new Texture2D (1, 1);
-		Texture2D sunGhost2 = new Texture2D (1, 1);
-		Texture2D sunGhost3 = new Texture2D (1, 1);
+		Texture2D sunSpikes;
+		Texture2D sunFlare;
+		Texture2D sunGhost1;
+		Texture2D sunGhost2;
+		Texture2D sunGhost3;
 
 		public RenderTexture extinctionTexture;
 		int waitBeforeReloadCnt = 0;
@@ -67,6 +67,16 @@ namespace scatterer
 		//Syntax V2 settings
 		SunflareSettingsV2 settingsV2;
 
+		public void Awake()
+		{
+			// Creating textures in field initialisers can cause exceptions.
+
+			sunSpikes = new Texture2D(1, 1);
+			sunFlare = new Texture2D(1, 1);
+			sunGhost1 = new Texture2D(1, 1);
+			sunGhost2 = new Texture2D(1, 1);
+			sunGhost3 = new Texture2D(1, 1);
+		}
 
 		public void start()
 		{

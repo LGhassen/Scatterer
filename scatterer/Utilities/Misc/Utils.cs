@@ -58,18 +58,12 @@ namespace scatterer
 			Debug.LogError("[Scatterer][Error] " + log);
 		}
 
-		public static GameObject GetMainMenuObject(CelestialBody celestialBody)
+		public static bool GetMainMenuObject(CelestialBody celestialBody, out GameObject gameObject)
 		{
+			// Search all Rotatos for the one with the correct name.
 			string name = celestialBody.isHomeWorld ? "Kerbin" : celestialBody.name;
-
-			GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("Scene")));
-			
-			if (ReferenceEquals(mainMenuObject,null))
-			{
-				throw new Exception("No correct main menu object found for "+celestialBody.name);
-			}
-			
-			return mainMenuObject;
+			gameObject = GameObject.FindObjectsOfType<Rotato>().Select(r => r.gameObject).FirstOrDefault(b => b.name == name);
+			return gameObject != null;
 		}
 		
 		public static Transform GetScaledTransform (string body)

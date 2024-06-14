@@ -62,7 +62,7 @@ namespace scatterer {
 
 		public int m_fourierGridSize = 64;										//This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 		
-		private int m_varianceSize = SystemInfo.supportsComputeShaders ? 16 : 4;
+		private int m_varianceSize;
 		
 		float m_fsize;
 		float m_maxSlopeVariance;
@@ -121,6 +121,8 @@ namespace scatterer {
 		public override void Init(ProlandManager manager)
 		{
 			base.Init(manager);
+
+			m_varianceSize = SystemInfo.supportsComputeShaders ? 16 : 4; // SystemInfo.supportsComputeShaders must not be called from a field initialiser.
 
 			if (m_gravity == 0f)
 			{

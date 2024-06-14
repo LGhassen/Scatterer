@@ -791,7 +791,7 @@ namespace scatterer
 				}
 			}
 
-			if (!ReferenceEquals(originalScaledMesh,null))
+			if (parentScaledTransform != null && !ReferenceEquals(originalScaledMesh,null))
 				parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = originalScaledMesh;
 
 			RestoreStockScaledTexture ();
@@ -965,8 +965,12 @@ namespace scatterer
 					materials.Last().SetShaderPassEnabled("ForwardAdd", true);
 					materials.Last().renderQueue = 2002;
 
-					PlanetSecondaryLightUpdater secondaryLightUpdater = parentScaledTransform.gameObject.AddComponent<PlanetSecondaryLightUpdater>();
-					secondaryLightUpdater.Init(planetScaledSpaceMaterial, materials.Last());
+					// Starting a coroutine on an inactive object causes an exception.
+					if (parentScaledTransform.gameObject.activeInHierarchy)
+					{
+						PlanetSecondaryLightUpdater secondaryLightUpdater = parentScaledTransform.gameObject.AddComponent<PlanetSecondaryLightUpdater>();
+						secondaryLightUpdater.Init(planetScaledSpaceMaterial, materials.Last());
+					}
 				}
 
 				materials.Add(scaledEclipseMaterial);
