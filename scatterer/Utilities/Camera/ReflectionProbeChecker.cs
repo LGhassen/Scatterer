@@ -41,8 +41,9 @@ namespace Scatterer
 					ReflectionProbe[] probes = Resources.FindObjectsOfTypeAll<ReflectionProbe> ();
 					foreach (ReflectionProbe _probe in probes)
 					{
-						_probe.size= new Vector3(100000f,100000f,100000f);
-					}
+                        float size = Mathf.Max(10000000f, _probe.size.x);
+                        _probe.size = new Vector3(size, size, size);
+                    }
 
 					Utils.LogDebug("Added reflection probe fixer to "+cam.name);
 				}

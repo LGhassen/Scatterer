@@ -48,7 +48,7 @@ namespace Scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0875";
+		public string versionNumber = "0.0876";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
