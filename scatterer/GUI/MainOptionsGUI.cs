@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class MainOptionsGUI
 	{
@@ -28,7 +28,7 @@ namespace scatterer
 
 		String[] qualityPresetsStrings;
 		string currentPreset;
-		int selQualityPresetInt = 0;
+		int selQualityPresetInt = -1;
 		
 		public MainOptionsGUI ()
 		{
@@ -54,6 +54,7 @@ namespace scatterer
 			{
 				if (GUILayout.Button ("Quality Presets"))
 				{
+					InitPresets();
 					selectedMainMenuTab = MainMenuTabs.QualityPresets;
 				}
 				if (GUILayout.Button ("Customize Settings"))
@@ -75,43 +76,47 @@ namespace scatterer
 
 		void DrawQualityPresets ()
 		{
-			if (ReferenceEquals (qualityPresetsStrings, null))
+			if (qualityPresetsStrings == null)
 			{
-				qualityPresetsStrings = QualityPresetsLoader.GetPresetsList ();
-				currentPreset = QualityPresetsLoader.FindPresetOfCurrentSettings(Scatterer.Instance.mainSettings);
-				
-				int index = qualityPresetsStrings.IndexOf(currentPreset);
-				
-				if (index != -1)
+				InitPresets();
+			}
+
+			GUILayout.BeginVertical();
+			GUILayout.BeginHorizontal();
+			{
+				GUILayout.Label("Current preset:");
+				GUILayout.TextField(currentPreset);
+			}
+			GUILayout.EndHorizontal();
+			selQualityPresetInt = GUILayout.SelectionGrid(selQualityPresetInt, qualityPresetsStrings, 1);
+			GUILayout.Label("");
+			if (GUILayout.Button("Apply preset"))
+			{
+				if (qualityPresetsStrings.Count() > 0)
 				{
-					selQualityPresetInt = index;
+					Utils.LogInfo("Applying quality preset " + qualityPresetsStrings[selQualityPresetInt]);
+					QualityPresetsLoader.LoadPresetIntoMainSettings(Scatterer.Instance.mainSettings, qualityPresetsStrings[selQualityPresetInt]);
+					currentPreset = qualityPresetsStrings[selQualityPresetInt];
 				}
 			}
-			else
-			{
-				GUILayout.BeginVertical ();
-				GUILayout.BeginHorizontal ();
-				{
-					GUILayout.Label("Current preset:");
-					GUILayout.TextField(currentPreset);
-				}
-				GUILayout.EndHorizontal ();
-				selQualityPresetInt = GUILayout.SelectionGrid (selQualityPresetInt, qualityPresetsStrings, 1);
-				GUILayout.Label("");
-				if (GUILayout.Button ("Apply preset"))
-				{
-					if (qualityPresetsStrings.Count() > 0)
-					{
-						Utils.LogInfo("Applying quality preset "+qualityPresetsStrings[selQualityPresetInt]);
-						QualityPresetsLoader.LoadPresetIntoMainSettings(Scatterer.Instance.mainSettings, qualityPresetsStrings[selQualityPresetInt]);
-						currentPreset = qualityPresetsStrings[selQualityPresetInt];
-					}
-				}
-				GUILayout.EndVertical ();
-			}
+			GUILayout.EndVertical();
 		}
-		
-		void DrawIndividualSettings ()
+
+        private void InitPresets()
+        {
+			if (qualityPresetsStrings == null)
+			{
+				qualityPresetsStrings = QualityPresetsLoader.GetPresetsList();
+			}
+
+			currentPreset = QualityPresetsLoader.FindPresetOfCurrentSettings(Scatterer.Instance.mainSettings);
+
+            int index = qualityPresetsStrings.IndexOf(currentPreset);
+
+			selQualityPresetInt = index;
+        }
+
+        void DrawIndividualSettings ()
 		{
 			GUILayout.BeginHorizontal ();
 			{
@@ -140,16 +145,35 @@ namespace scatterer
 			GUILayout.EndHorizontal ();
 			if (selectedIndividualSettingsTab == IndividualSettingsTabs.Scattering)
 			{
-				Scatterer.Instance.mainSettings.useGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useGodrays, "Godrays (Requires unified camera, long-distance shadows and shadowMapResolution override, Directx11 only)");
-				if (Scatterer.Instance.mainSettings.useGodrays)
+				Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays, "Raymarched cloud godrays") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
+				Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays, "Raymarched terrain godrays (Requires long-distance shadows, Directx11 only)") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
+
+				GUILayout.BeginHorizontal();
+				{
+					GUILayout.Label("Raymarched godrays sample count");
+					Scatterer.Instance.mainSettings.raymarchedGodraysStepCount = Convert.ToInt32(GUILayout.TextField(Scatterer.Instance.mainSettings.raymarchedGodraysStepCount.ToString()));
+				}
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+				{
+					GUILayout.Label("Raymarched godrays denoising iterations in screenshot mode");
+					Scatterer.Instance.mainSettings.raymarchedGodraysScreenshotDenoisingIterations = Convert.ToInt32(GUILayout.TextField(Scatterer.Instance.mainSettings.raymarchedGodraysScreenshotDenoisingIterations.ToString()));
+				}
+				GUILayout.EndHorizontal();
+
+
+				Scatterer.Instance.mainSettings.useLegacyTerrainGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays, "Legacy terrain godrays (Requires long-distance shadows and shadowMapResolution override, Directx11 only)") &&
+					!Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays && !Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays;
+				if (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays)
 				{
 					//Godrays tesselation placeholder
 				}
 
-				Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering in 1/4 resolution (speedup, incompatible and disabled with godrays)");
-				Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
-				
-				Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal Antialiasing") && !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
+				//Scatterer.Instance.mainSettings.quarterResScattering = GUILayout.Toggle (Scatterer.Instance.mainSettings.quarterResScattering, "Render scattering in 1/4 resolution (speedup, incompatible and disabled with godrays)");
+				//Scatterer.Instance.mainSettings.mergeDepthPrePass = GUILayout.Toggle (Scatterer.Instance.mainSettings.mergeDepthPrePass, "Merge depth pre-pass into main depth for culling (experimental, may give small speedup but may cause z-fighting");
+
+				Scatterer.Instance.mainSettings.useTemporalAntiAliasing = GUILayout.Toggle(Scatterer.Instance.mainSettings.useTemporalAntiAliasing, "Temporal Antialiasing (TAA), can combine with SMAA");
 				if (Scatterer.Instance.mainSettings.useTemporalAntiAliasing)
 				{
 					GUILayout.BeginHorizontal ();
@@ -169,7 +193,12 @@ namespace scatterer
 					GUILayout.EndHorizontal();
 				}
 
-				Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing = GUILayout.Toggle (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing, "Subpixel Morphological Antialiasing")  && !Scatterer.Instance.mainSettings.useTemporalAntiAliasing;
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Disable TAA below framerate threshold (when SMAA is enabled)");
+				Scatterer.Instance.mainSettings.disableTaaBelowFrameRateThreshold = Convert.ToInt32(GUILayout.TextField(Scatterer.Instance.mainSettings.disableTaaBelowFrameRateThreshold.ToString()));
+				GUILayout.EndHorizontal();
+
+				Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing = GUILayout.Toggle(Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing, "Subpixel Morphological Antialiasing (SMAA), can combine with TAA");
 				if (Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing)
 				{
 					GUILayout.BeginHorizontal ();
@@ -184,6 +213,37 @@ namespace scatterer
 				GUILayout.Label ("Tonemapper (0:disabled,1:bruneton,2:uncharted)");
 				Scatterer.Instance.mainSettings.scatteringTonemapper = (Int32) Mathf.Clamp( (float)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.scatteringTonemapper.ToString ()))),0f,2f);
 				GUILayout.EndHorizontal ();
+
+				/*
+				if (Scatterer.Instance.mainSettings.scatteringTonemapper == 3)
+                {
+					GUILayout.BeginHorizontal();
+					{
+						GUILayout.Label("Toe strength");
+						Scatterer.Instance.mainSettings.hableToeStrength =float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableToeStrength.ToString("0.00")));
+
+						GUILayout.Label("Toe length");
+						Scatterer.Instance.mainSettings.hableToeLength = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableToeLength.ToString("0.00")));
+
+						GUILayout.Label("Shoulder strength");
+						Scatterer.Instance.mainSettings.hableShoulderStrength = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableShoulderStrength.ToString("0.00")));
+
+						GUILayout.Label("Shoulder length");
+						Scatterer.Instance.mainSettings.hableShoulderLength = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableShoulderLength.ToString("0.00")));
+
+						GUILayout.Label("Shoulder angle");
+						Scatterer.Instance.mainSettings.hableShoulderAngle = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableShoulderAngle.ToString("0.00")));
+
+						GUILayout.Label("Gamma");
+						Scatterer.Instance.mainSettings.hableGamma = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.hableGamma.ToString("0.00")));
+					}
+					GUILayout.EndHorizontal();
+				}
+				*/
+
+				GUILayout.BeginHorizontal();
+				Scatterer.Instance.mainSettings.useLowResolutionAtmosphere = GUILayout.Toggle(Scatterer.Instance.mainSettings.useLowResolutionAtmosphere, "Use low resolution atmosphere (for slower machines that get white atmos)");
+				GUILayout.EndHorizontal();
 			}
 			else if (selectedIndividualSettingsTab == IndividualSettingsTabs.Ocean)
 			{
@@ -209,7 +269,7 @@ namespace scatterer
 							Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle (Scatterer.Instance.mainSettings.shadowsOnOcean, "Surface receives shadows");
 							Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Secondary lights compatibility (huge performance hit when lights on)");
 							Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCaustics, "Underwater caustics");
-							Scatterer.Instance.mainSettings.oceanLightRays = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanLightRays, "Underwater light rays (requires ocean surface shadows)");
+							Scatterer.Instance.mainSettings.oceanLightRays = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanLightRays, "Underwater light rays");
 							GUI.contentColor = SystemInfo.supportsAsyncGPUReadback && SystemInfo.supportsComputeShaders ? Color.white : Color.gray;
 							Scatterer.Instance.mainSettings.oceanCraftWaveInteractions = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions, "Waves interact with ships (Requires asyncGPU readback, Directx11 only)");
 							if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractions) {
@@ -226,20 +286,6 @@ namespace scatterer
 											GUILayout.EndHorizontal ();
 										}
 										Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag, "Override water drag");
-										if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag) {
-											GUILayout.BeginHorizontal ();
-											GUILayout.Label ("Drag scalar (default is 4.5)");
-											Scatterer.Instance.mainSettings.buoyancyWaterDragScalarOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.buoyancyWaterDragScalarOverride.ToString ("00.00")));
-											GUILayout.EndHorizontal ();
-											GUILayout.BeginHorizontal();
-											GUILayout.Label("Drag scalar end (default is 0.15)");
-											Scatterer.Instance.mainSettings.buoyancyWaterDragScalarEndOverride = float.Parse(GUILayout.TextField(Scatterer.Instance.mainSettings.buoyancyWaterDragScalarEndOverride.ToString("00.00")));
-											GUILayout.EndHorizontal();
-											GUILayout.BeginHorizontal ();
-											GUILayout.Label ("Angular drag scalar (default is 0.001");
-											Scatterer.Instance.mainSettings.buoyancyWaterAngularDragScalarOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.buoyancyWaterAngularDragScalarOverride.ToString ("0.0000000")));
-											GUILayout.EndHorizontal ();
-										}
 										Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity, "Override max water recovery velocity");
 										if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity) {
 											GUILayout.BeginHorizontal ();

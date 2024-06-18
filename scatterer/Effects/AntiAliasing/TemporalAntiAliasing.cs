@@ -1,9 +1,8 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace scatterer
+namespace Scatterer
 {
-	// Not recommended in KSP, setting a custom camera projection matrix in Unity causes shadowmaps to flicker with high far/near clipplanes ratio
 	// Temporal anti-aliasing from Unity post-processing stack V2
 	// Modified to not blur the ocean, removed dependency on other postprocessing classes I don't need here so we can initialize and make everything work by just adding this to a camera
 	// Generating motion vectors for the ocean is both expensive and unnecessary so we should just not apply TAA on the ocean, otherwise it would just blur it without proper motion vectors
@@ -17,18 +16,19 @@ namespace scatterer
 		public Vector2 jitter { get; private set; }		// The current jitter amount
 		public int sampleIndex { get; private set; }	// The current sample index
 		
-		enum Pass {SolverDilate,SolverNoDilate}
+		enum Pass {SolverDilate, SolverNoDilate}
 		
 		readonly RenderTargetIdentifier[] m_Mrt = new RenderTargetIdentifier[2];
 		bool m_ResetHistory = true;
+		bool hdrEnabled = false;
 		
 		const int k_SampleCount = 8;
 		
 		// Ping-pong between two history textures as we can't read & write the same target in the same pass
-		const int k_NumEyes = 1; const int k_NumHistoryTextures = 2;
-		RenderTexture[][] m_HistoryTextures = new RenderTexture[k_NumEyes][];
-		
-		int[] m_HistoryPingPong = new int [k_NumEyes];
+		const int eyesCount = 1; const int historyTexturesCount = 2;
+		RenderTexture[][] historyTextures = new RenderTexture[eyesCount][];
+
+		int[] m_HistoryPingPong = new int [eyesCount];
 
 		Camera targetCamera;
 		CommandBuffer temporalAACommandBuffer;
@@ -38,7 +38,11 @@ namespace scatterer
 		public bool checkOceanDepth = false;
 		public bool jitterTransparencies = false;
 
-		public TemporalAntiAliasing()
+		private static CameraEvent TAACameraEvent = CameraEvent.AfterForwardAlpha;  // BeforeImageEffects doesn't work well
+
+		bool firstFrame = true;
+
+		public void Awake()
 		{
 			targetCamera = GetComponent<Camera>();
 			originalDepthTextureMode = targetCamera.depthTextureMode;
@@ -125,30 +129,28 @@ namespace scatterer
 			targetCamera.projectionMatrix = GetJitteredProjectionMatrix(targetCamera);
 			targetCamera.useJitteredProjectionMatrixForTransparentRendering = jitterTransparencies;
 
-			temporalAAMaterial.SetVector("_Jitter", jitter);
-		}
-		
-		void GenerateHistoryName(RenderTexture rt, int id)
-		{
-			rt.name = "Temporal Anti-aliasing History id #" + id;
+			temporalAAMaterial.SetVector("_Jitter", jitter); // TODO: shader properties
 		}
 		
 		RenderTexture CheckHistory(int id, CommandBuffer cmd)
 		{
 			int activeEye = 0;
 			
-			if (m_HistoryTextures[activeEye] == null)
-				m_HistoryTextures[activeEye] = new RenderTexture[k_NumHistoryTextures];
+			if (historyTextures[activeEye] == null)
+				historyTextures[activeEye] = new RenderTexture[historyTexturesCount];
+
+			if (hdrEnabled != targetCamera.allowHDR)
+				ResetHistory();
+
+			var historyRT = historyTextures[activeEye][id];
 			
-			var rt = m_HistoryTextures[activeEye][id];
-			
-			if (m_ResetHistory || rt == null || !rt.IsCreated())
+			if (m_ResetHistory || historyRT == null || !historyRT.IsCreated())
 			{
-				RenderTexture.ReleaseTemporary(rt);
+				RenderTexture.ReleaseTemporary(historyRT);
 
 				int width, height;
 				
-				if (!ReferenceEquals (targetCamera.activeTexture, null))
+				if (targetCamera.activeTexture)
 				{
 					width = targetCamera.activeTexture.width;
 					height = targetCamera.activeTexture.height;
@@ -159,55 +161,77 @@ namespace scatterer
 					height = Screen.height;
 				}
 
-				rt = RenderTexture.GetTemporary (width, height, 0, RenderTextureFormat.ARGB32);
+				hdrEnabled = targetCamera.allowHDR;
 
-				GenerateHistoryName(rt, id);
+				historyRT = RenderTexture.GetTemporary (width, height, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
+				historyRT.name = "Temporal Anti-aliasing History id #" + id;
 				
-				rt.filterMode = FilterMode.Bilinear;
-				m_HistoryTextures[activeEye][id] = rt;
+				historyRT.filterMode = FilterMode.Bilinear;
+				historyTextures[activeEye][id] = historyRT;
 
-				cmd.Blit(BuiltinRenderTextureType.CameraTarget, rt);
+				cmd.Blit(BuiltinRenderTextureType.CameraTarget, historyRT);
 			}
 			
-			return m_HistoryTextures[activeEye][id];
+			return historyTextures[activeEye][id];
 		}
-
+		
 		//adapted from the original render() method
 		public void OnPreCull()
 		{
-			temporalAACommandBuffer.Clear ();
+			bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
 
-			ConfigureJitteredProjectionMatrix ();
+			float currentFps = 1.0f / Time.deltaTime;
+			bool aboveFpsThreshold = currentFps >= Scatterer.Instance.mainSettings.disableTaaBelowFrameRateThreshold
+				|| !Scatterer.Instance.mainSettings.useSubpixelMorphologicalAntialiasing;
 
-			int activeEye = 0;
+			if (!screenShotModeEnabled && aboveFpsThreshold)
+			{ 
+				temporalAACommandBuffer.Clear();
 
-			//TODO: move to shader properties
-			if (checkOceanDepth)
-				Utils.EnableOrDisableShaderKeywords (temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
+				int activeEye = 0;
 
-			int pp = m_HistoryPingPong[activeEye];
-			RenderTexture historyRead  = CheckHistory(++pp % 2, temporalAACommandBuffer);
-			RenderTexture historyWrite = CheckHistory(++pp % 2, temporalAACommandBuffer);
-			m_HistoryPingPong[activeEye] = ++pp % 2;
+				int pingPongIndex = m_HistoryPingPong[activeEye];
+				RenderTexture historyRead = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
+				RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
+				m_HistoryPingPong[activeEye] = ++pingPongIndex % 2;
 
-			temporalAAMaterial.SetTexture("_HistoryTex", historyRead);
-						
-			int pass = (int)Pass.SolverDilate;
+				if (firstFrame)
+                {
+					temporalAACommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, historyWrite);
+				}
+				else
+                {
+					ConfigureJitteredProjectionMatrix();
 
-			temporalAACommandBuffer.SetGlobalTexture ("_ScreenColor", BuiltinRenderTextureType.CameraTarget);
-			temporalAACommandBuffer.Blit (null, historyWrite, temporalAAMaterial, pass);
+					//TODO: move to shader properties
+					if (checkOceanDepth)
+						Utils.EnableOrDisableShaderKeywords(temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
 
-			temporalAACommandBuffer.Blit (historyWrite, BuiltinRenderTextureType.CameraTarget);
+					temporalAAMaterial.SetTexture(ShaderProperties._HistoryTex_PROPERTY, historyRead);
 
-			targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer); // BeforeImageEffects doesn't work well
+					int pass = (int)Pass.SolverDilate;
 
-			m_ResetHistory = false;
+					temporalAACommandBuffer.SetGlobalTexture(ShaderProperties._ScreenColor_PROPERTY, BuiltinRenderTextureType.CameraTarget);
+					temporalAACommandBuffer.Blit(null, historyWrite, temporalAAMaterial, pass);
+
+					temporalAACommandBuffer.Blit(historyWrite, BuiltinRenderTextureType.CameraTarget);
+				}
+
+				targetCamera.AddCommandBuffer (TAACameraEvent, temporalAACommandBuffer);
+
+				m_ResetHistory = false;
+				firstFrame = false;
+			}
+			else
+            {
+				firstFrame = true;
+			}
 		}
 
 		public void OnPostRender()
 		{
 			ResetProjection();
-			targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+			targetCamera.RemoveCommandBuffer (TAACameraEvent, temporalAACommandBuffer);
 		}
 
 		// This is needed otherwise transparencies jitter
@@ -216,27 +240,27 @@ namespace scatterer
 			targetCamera.ResetProjectionMatrix();
 			targetCamera.nonJitteredProjectionMatrix = targetCamera.projectionMatrix;
 		}
-		
-		public override void Cleanup()
+
+		public void OnDestroy()
 		{
-			if (!ReferenceEquals(temporalAACommandBuffer,null))
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, temporalAACommandBuffer);
+			if (temporalAACommandBuffer != null)
+				targetCamera.RemoveCommandBuffer (TAACameraEvent, temporalAACommandBuffer);
 
 			targetCamera.depthTextureMode = originalDepthTextureMode;
 
-			if (m_HistoryTextures != null)
+			if (historyTextures != null)
 			{
-				for (int i = 0; i < m_HistoryTextures.Length; i++)
+				for (int i = 0; i < historyTextures.Length; i++)
 				{
-					if (m_HistoryTextures[i] == null)
+					if (historyTextures[i] == null)
 						continue;
 
-					for (int j = 0; j < m_HistoryTextures[i].Length; j++)
+					for (int j = 0; j < historyTextures[i].Length; j++)
 					{
-						RenderTexture.ReleaseTemporary(m_HistoryTextures[i][j]);
-						m_HistoryTextures[i][j] = null;
+						RenderTexture.ReleaseTemporary(historyTextures[i][j]);
+						historyTextures[i][j] = null;
 					}
-					m_HistoryTextures[i] = null;
+					historyTextures[i] = null;
 				}
 			}
 

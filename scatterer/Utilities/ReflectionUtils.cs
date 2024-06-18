@@ -1,5 +1,5 @@
 using System;
-namespace scatterer
+namespace Scatterer
 {
 	public static class ReflectionUtils
 	{

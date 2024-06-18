@@ -10,7 +10,7 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public static class OceanUtils
 	{
@@ -80,23 +80,6 @@ namespace scatterer
 				oceanRemoved = false;
 
 				Utils.LogDebug ("Stock oceans restored");
-			}
-		}
-		
-		public static void restoreOceanForBody(ScattererCelestialBody sctBody)
-		{
-			if (oceanRemoved && sctBody.hasOcean)
-			{
-				GameObject go = GameObject.Find ("Scatterer stock ocean disabler "+sctBody.celestialBodyName);
-				if (!ReferenceEquals(go,null))
-				{
-					FakeOceanPQS fake = go.GetComponent<FakeOceanPQS>();
-					if (!ReferenceEquals(fake,null))
-					{
-						fake.Remove ();
-						Component.Destroy(fake);
-					}
-				}
 			}
 		}
 	}

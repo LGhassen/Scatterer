@@ -10,7 +10,7 @@ using System.Text;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public static class AtmosphereUtils
 	{		
@@ -62,9 +62,52 @@ namespace scatterer
 			depth.y = Mathf.Clamp (Mathf.Exp(-depth.y), 1e-36f, 1f);
 			depth.z = Mathf.Clamp (Mathf.Exp(-depth.z), 1e-36f, 1f);
 			return new Color (depth.x,depth.y,depth.z,1f);
-		} 
+		}
 
-		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx)
+		private static Vector2 GetTransmittanceUV(float r, float mu, float Rt, float Rg)
+		{
+			float uR, uMu;
+
+			uR = Mathf.Sqrt(Mathf.Max(0, (r - Rg)) / (Rt - Rg));
+			uMu = Mathf.Atan((mu + 0.15f) / (1.0f + 0.15f) * Mathf.Tan(1.5f)) / 1.5f;
+
+			return new Vector2(uMu, uR);
+		}
+
+		public static Color getOzoneExtinction(float r, float mu, float Rt, float Rg, Texture2D atmosphereAtlas, Vector2 ozoneTextureDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
+        {
+            Vector2 uv = GetTransmittanceUV(r, mu, Rt, Rg);
+            uv = remapUVToAtlas(uv, ozoneTextureDimensions, textureScaleAndOffsetInAtlas, AtmosphereAtlasDimensions);
+
+            // Unity's get pixel Bilinear doesn't work exactly like shader-based bilinear sampling
+            // See thread https://forum.unity.com/threads/confusion-about-texture-getpixelbinear.1236826/
+            // Therefore manually remap from shader-based UV to unity-style UV to be able to sample bilinear correctly here
+            // The equivalent transformation is just to remove a half-texel offset
+            // Note that I checked all the math 10 times and compared GetPixelBilinear() to what the shader tex2Dlod outputs and confirmed
+            // There is always a half texel offset
+            uv -= new Vector2(0.5f, 0.5f) / AtmosphereAtlasDimensions;
+
+            return atmosphereAtlas.GetPixelBilinear(uv.x, uv.y);
+        }
+
+		private static Vector2 remapUVToAtlas(Vector2 uv, Vector2 oldTexDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
+		{
+			// Remove half pixel offset
+			uv -= new Vector2(0.5f, 0.5f) / oldTexDimensions;
+
+			// Clamp, note the half pixel offset is taken into account on both sides
+			uv.x = Mathf.Clamp(uv.x, 0f, 1f - 1.0f / oldTexDimensions.x);
+			uv.y = Mathf.Clamp(uv.y, 0f, 1f - 1.0f / oldTexDimensions.y);
+
+			// Scale, offset and add new half pixel offset
+			uv = uv * new Vector2(textureScaleAndOffsetInAtlas.x, textureScaleAndOffsetInAtlas.y) +
+				new Vector2(textureScaleAndOffsetInAtlas.z, textureScaleAndOffsetInAtlas.w) +
+				new Vector2(0.5f, 0.5f) / AtmosphereAtlasDimensions;
+
+            return uv;
+		}
+
+		public static Color getExtinction(Vector3 camera, Vector3 viewdir, float Rt, float Rg, float HR, float HM, Vector3 betaR, Vector3 betaMEx, bool useOzone, Texture2D atmosphereAtlas, Vector2 ozoneTextureDimensions, Vector4 textureScaleAndOffsetInAtlas, Vector2 AtmosphereAtlasDimensions)
 		{
 			float r = camera.magnitude;
 			float rMu = Vector3.Dot(camera, viewdir);
@@ -82,7 +125,10 @@ namespace scatterer
 			}
 			
 			Color extinction = (r > Rt) ? Color.white : AnalyticTransmittance(r, mu, Rt, Rg, HR, HM, betaR, betaMEx);
-			
+
+			if (useOzone && r < Rt)
+				extinction *= getOzoneExtinction(r, mu, Rt, Rg, atmosphereAtlas, ozoneTextureDimensions, textureScaleAndOffsetInAtlas, AtmosphereAtlasDimensions);
+
 			return extinction;
 		}
 
@@ -132,6 +178,33 @@ namespace scatterer
 			float uR = (r - Rg) / (Rt - Rg);
 			float uMuS = (muS + 0.2f) / (1.0f + 0.2f);
 			return new Vector2(uMuS, uR);
+		}
+
+		public static float getEclipseShadow(Vector3 worldPos, Vector3 worldLightPos, Vector3 occluderSpherePosition, float occluderSphereRadius, float lightSourceRadius)
+		{
+			var lightDirection = worldLightPos - worldPos;
+			float lightDistance = lightDirection.magnitude;
+			lightDirection = lightDirection / lightDistance;
+
+			// computation of level of shadowing w  
+			var sphereDirection = occluderSpherePosition - worldPos;  //occluder planet
+			float sphereDistance = sphereDirection.magnitude;
+			sphereDirection = sphereDirection / sphereDistance;
+
+			float dd = lightDistance * (Mathf.Asin(Mathf.Min(1.0f, (Vector3.Cross(lightDirection, sphereDirection)).magnitude))
+				- Mathf.Asin(Mathf.Min(1.0f, occluderSphereRadius / sphereDistance)));
+
+			float w = smoothstep(-1.0f, 1.0f, -dd / lightSourceRadius);
+			w = w * smoothstep(0.0f, 0.2f, Vector3.Dot(lightDirection, sphereDirection));
+
+			return (1 - w);
+		}
+
+		// Reimplement because the Mathf Smoothstep doesn't match what is done in shaders
+		public static float smoothstep(float a, float b, float x)
+		{
+			float t = Mathf.Clamp01((x - a) / (b - a));
+			return t * t * (3.0f - (2.0f * t));
 		}
 
 	}

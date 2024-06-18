@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Runtime;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class GUIModuleVector4  : AbstractGUIModule
 	{
@@ -36,10 +36,10 @@ namespace scatterer
 
 			GUILayout.Label (label);
 
-			localVariable.x = float.Parse (GUILayout.TextField (localVariable.x.ToString ("0000.00000")));
-			localVariable.y = float.Parse (GUILayout.TextField (localVariable.y.ToString ("0000.00000")));
-			localVariable.z = float.Parse (GUILayout.TextField (localVariable.z.ToString ("0000.00000")));
-			localVariable.w = float.Parse (GUILayout.TextField (localVariable.w.ToString ("0000.00000")));
+			localVariable.x = float.Parse (GUILayout.TextField (localVariable.x.ToString ()));
+			localVariable.y = float.Parse (GUILayout.TextField (localVariable.y.ToString ()));
+			localVariable.z = float.Parse (GUILayout.TextField (localVariable.z.ToString ()));
+			localVariable.w = float.Parse (GUILayout.TextField (localVariable.w.ToString ()));
 
 			if (GUILayout.Button ("Set"))
 			{

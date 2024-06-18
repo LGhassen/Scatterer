@@ -4,7 +4,7 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class MainSettingsReadWrite
 	{
@@ -60,15 +60,6 @@ namespace scatterer
 		public bool oceanCraftWaveInteractionsOverrideDrag = true;
 
 		[Persistent]
-		public float buoyancyWaterDragScalarOverride=4.5f / 3f;
-
-		[Persistent]
-		public float buoyancyWaterDragScalarEndOverride = 0.15f / 3f;
-
-		[Persistent]
-		public float buoyancyWaterAngularDragScalarOverride=0.001f / 3f;
-
-		[Persistent]
 		public bool oceanCraftWaveInteractionsOverrideRecoveryVelocity = true;
 
 		[Persistent]
@@ -102,15 +93,24 @@ namespace scatterer
 		public bool d3d11ShadowFix = true;
 
 		[Persistent]
-		public bool useGodrays = false;
+		public bool useRaymarchedCloudGodrays = true;
+
+		[Persistent]
+		public bool useRaymarchedTerrainGodrays = false;
+
+		[Persistent]
+		public int raymarchedGodraysStepCount = 50;
+
+		[Persistent]
+		public int raymarchedGodraysScreenshotDenoisingIterations = 10;
+
+		[Persistent]
+		public bool useLegacyTerrainGodrays = false;
 
 		//[Persistent]
-		public bool useDepthBufferMode = true;
-
-		[Persistent]
 		public bool mergeDepthPrePass = false;
 
-		[Persistent]
+		//[Persistent]
 		public bool quarterResScattering = true;
 
 		[Persistent]
@@ -120,7 +120,7 @@ namespace scatterer
 		public int smaaQuality = 0;
 
 		[Persistent]
-		public bool useTemporalAntiAliasing = false;
+		public bool useTemporalAntiAliasing = true;
 
 		[Persistent]
 		public float taaStationaryBlending = 0.90f;
@@ -135,11 +135,34 @@ namespace scatterer
 		public float taaSharpness = 0.25f;
 
 		[Persistent]
+		public int disableTaaBelowFrameRateThreshold = 26;
+
+		[Persistent]
 		public bool terrainShadows = false;
 
-		//0 - None, 1 - Bruneton, 2 - Uncharted
+		//0 - None, 1 - Bruneton, 2 - Uncharted, 3 - Hable but disabled
 		[Persistent]
 		public int scatteringTonemapper = 2;
+
+		/*
+		[Persistent]
+		public float hableToeStrength;
+
+		[Persistent]
+		public float hableToeLength;
+
+		[Persistent]
+		public float hableShoulderStrength;
+
+		[Persistent]
+		public float hableShoulderLength;
+
+		[Persistent]
+		public float hableShoulderAngle;
+
+		[Persistent]
+		public float hableGamma;
+		*/
 
 		[Persistent]
 		public float unifiedCamShadowsDistance=50000f;
@@ -179,7 +202,10 @@ namespace scatterer
 
 		[Persistent]
 		public int oceanMeshResolution = 8;
-		
+
+		[Persistent]
+		public bool useLowResolutionAtmosphere = false;
+
 		public void loadMainSettings ()
 		{
 			UrlDir.UrlConfig[] baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config");
@@ -235,9 +261,6 @@ namespace scatterer
 				 OldConfig.oceanCraftWaveInteractionsOverrideWaterCrashTolerance != oceanCraftWaveInteractionsOverrideWaterCrashTolerance || 
 				 OldConfig.buoyancyCrashToleranceMultOverride != buoyancyCrashToleranceMultOverride || 
 				 OldConfig.oceanCraftWaveInteractionsOverrideDrag != oceanCraftWaveInteractionsOverrideDrag || 
-				 OldConfig.buoyancyWaterDragScalarOverride != buoyancyWaterDragScalarOverride ||
-				 OldConfig.buoyancyWaterDragScalarEndOverride != buoyancyWaterDragScalarEndOverride ||
-				 OldConfig.buoyancyWaterAngularDragScalarOverride != buoyancyWaterAngularDragScalarOverride || 
 				 OldConfig.oceanCraftWaveInteractionsOverrideRecoveryVelocity != oceanCraftWaveInteractionsOverrideRecoveryVelocity || 
 				 OldConfig.waterMaxRecoveryVelocity != waterMaxRecoveryVelocity || 
 
@@ -249,9 +272,12 @@ namespace scatterer
 				 OldConfig.useEclipses != useEclipses ||
 				 OldConfig.useRingShadows != useRingShadows ||
 				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
-				 OldConfig.useGodrays != useGodrays ||
-				 OldConfig.useDepthBufferMode != useDepthBufferMode ||
-				 OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
+				 OldConfig.useRaymarchedCloudGodrays != useRaymarchedCloudGodrays ||
+				 OldConfig.useRaymarchedTerrainGodrays != useRaymarchedTerrainGodrays ||
+				 OldConfig.raymarchedGodraysStepCount != raymarchedGodraysStepCount ||
+				 OldConfig.raymarchedGodraysScreenshotDenoisingIterations != raymarchedGodraysScreenshotDenoisingIterations ||
+				 OldConfig.useLegacyTerrainGodrays != useLegacyTerrainGodrays ||
+				 //OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
 				 OldConfig.quarterResScattering != quarterResScattering ||
 				 
 				 OldConfig.useSubpixelMorphologicalAntialiasing != useSubpixelMorphologicalAntialiasing ||
@@ -262,9 +288,20 @@ namespace scatterer
 				 OldConfig.taaMotionBlending != taaMotionBlending ||
 				 OldConfig.taaJitterSpread != taaJitterSpread ||
 				 OldConfig.taaSharpness != taaSharpness ||
-				
+				 OldConfig.disableTaaBelowFrameRateThreshold != disableTaaBelowFrameRateThreshold ||
+
 				 OldConfig.terrainShadows != terrainShadows ||
 				 OldConfig.scatteringTonemapper != scatteringTonemapper ||
+
+				 /*
+				 OldConfig.hableToeStrength != hableToeStrength ||
+				 OldConfig.hableToeLength != hableToeLength ||
+				 OldConfig.hableShoulderStrength != hableShoulderStrength ||
+				 OldConfig.hableShoulderLength != hableShoulderLength ||
+				 OldConfig.hableShoulderAngle != hableShoulderAngle ||
+				 OldConfig.hableGamma != hableGamma ||
+				 */
+
 				 OldConfig.useDithering != useDithering ||
 
 				 OldConfig.unifiedCamShadowsDistance != unifiedCamShadowsDistance ||
@@ -278,9 +315,11 @@ namespace scatterer
 				 OldConfig.dualCamShadowBiasOverride != dualCamShadowBiasOverride ||
 				 OldConfig.dualCamShadowCascadeSplitsOverride != dualCamShadowCascadeSplitsOverride ||
 				 OldConfig.dualCamShadowResolutionOverride != dualCamShadowResolutionOverride ||
-				 
-				 OldConfig.m_fourierGridSize != m_fourierGridSize||
-				 OldConfig.oceanMeshResolution != oceanMeshResolution);
+
+				 OldConfig.m_fourierGridSize != m_fourierGridSize ||
+				 OldConfig.oceanMeshResolution != oceanMeshResolution) ||
+
+				 OldConfig.useLowResolutionAtmosphere != useLowResolutionAtmosphere;
 			
 			if (configChanged)
 			{

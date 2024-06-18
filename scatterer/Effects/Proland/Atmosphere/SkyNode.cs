@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class SkyNode: MonoBehaviour
 	{
@@ -22,6 +22,12 @@ namespace scatterer
 		[Persistent] public Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
 		[Persistent] public Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f); //scatter coefficient for mie
 		[Persistent] public float m_mieG = 0.85f; //Asymmetry factor for the mie phase function, a higher number means more light is scattered in the forward direction
+
+		[Persistent] public Vector3 ozoneAbsorption = new Vector3(0.0003426f, 0.0008298f, 0.000036f); // From Physically Based Sky, Atmosphere & Cloud Rendering in Frostbite (2016), these look better than other coefficients I found in the literature
+		[Persistent] public float ozoneHeight = 25f;    // Ozone density is highest at ozoneHeight(km) and decreases linearly away from that altitude until ozoneFalloff(km), as per Bruneton (2017)
+		[Persistent] public float ozoneFalloff = 15f;   // profile from http://www.kln.ac.lk/science/Chemistry/Teaching_Resources/
+		[Persistent] public bool useOzone = false;
+
 		[Persistent] public float averageGroundReflectance = 0.1f;
 		[Persistent] public bool multipleScattering = true;
 		public bool previewMode = false;
@@ -36,6 +42,8 @@ namespace scatterer
 		[Persistent] public float specG = 0f;
 		[Persistent] public float specB = 0f;
 		[Persistent] public float shininess = 0f;
+
+		[Persistent] public float noonSunlightExtinctionStrength = 1f;
 
 		[Persistent] public float cloudColorMultiplier=3f;
 		[Persistent] public float cloudScatteringMultiplier=0.2f;
@@ -55,16 +63,21 @@ namespace scatterer
 		[Persistent] public float scaledOceanBrightnessAdjust = 1f;
 		[Persistent] public float scaledOceanContrastAdjust   = 1f;
 		[Persistent] public float scaledOceanSaturationAdjust = 1f;
-		
-		Texture2D m_inscatter, m_irradiance;
+
+		//Texture2D m_inscatter, m_irradiance, m_ozoneTransmittance = Texture2D.whiteTexture;
+
+		Texture2D atmosphereAtlas; // Combine all the lookup tables to save texture slots on Mac
+		Vector2 atlasDimensions;
+		List<Vector4> atlasScaleAndOffsets = new List<Vector4> { Vector4.zero, Vector4.zero, Vector4.zero, Vector4.zero};
 
 		//Dimensions of the tables
-		const int TRANSMITTANCE_W = 256;
-		const int TRANSMITTANCE_H = 64;
+		const int TRANSMITTANCE_W = 512;
+		const int TRANSMITTANCE_H = 128;
+		Vector2 transmittanceTableDimensions = new Vector2(TRANSMITTANCE_W, TRANSMITTANCE_H);
 		const int SKY_W = 64;
 		const int SKY_H = 16;
 
-		Vector4 scatteringLutDimensions = AtmoPreprocessor.scatteringLutDimensionsDefault;
+		Vector4 scatteringLutDimensions = AtmoPreprocessor.ScatteringLutDimensionsDefault;
 
 		string celestialBodyName;
 		public Transform parentScaledTransform, parentLocalTransform;
@@ -74,8 +87,6 @@ namespace scatterer
 		public bool isConfigModuleManagerPatch = true;
 		
 		public bool usesCloudIntegration = true;
-		public List<Material> EVEvolumetrics = new List<Material>();
-		bool mappedVolumetrics=false;
 		
 		public float altitude;
 		public float percentage;
@@ -94,7 +105,8 @@ namespace scatterer
 		public ScaledScatteringContainer scaledScatteringContainer;
 		public Material localScatteringMaterial, skyMaterial, scaledScatteringMaterial, sunflareExtinctionMaterial, scaledEclipseMaterial;
 		public GenericLocalAtmosphereContainer localScatteringContainer;
-		public GodraysRenderer godraysRenderer;
+		public LegacyGodraysRenderer legacyGodraysRenderer;
+		public RaymarchedGodraysRenderer raymarchedGodraysRenderer;
 		public bool postprocessingEnabled = true;
 
 		GameObject ringObject;
@@ -103,22 +115,20 @@ namespace scatterer
 		bool hasRingObjectAndShadowActivated = false;
 	
 		bool skyNodeInitiated = false;
+		bool precomputedAtmoLoaded = false;
+		bool atmosphereShadersInitiated = false;
 		public bool useEclipses = false;
 
-		Texture originalPlanetTexture;
+		Texture2D originalPlanetTexture;
 		RenderTexture adjustedPlanetTexture;
 
 		public void Init ()
 		{
-			InitPrecomputedAtmo ();
+			InitOrRequestPrecomputedAtmo ();
 
 			skyMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/SkySphere")]);
 			scaledScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledPlanetScattering")]);
-
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-				localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthBufferScattering")]);
-			else
-				localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/AtmosphericLocalScatter")]);
+			localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthBufferScattering")]);
 
 			skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
 			scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
@@ -126,16 +136,28 @@ namespace scatterer
 
 			useEclipses = Scatterer.Instance.mainSettings.useEclipses && (prolandManager.eclipseCasters.Count > 0) && HighLogic.LoadedScene != GameScenes.MAINMENU ; //disable bugged eclipses on main menu
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
-			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);
+			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);			
 
-			if (Scatterer.Instance.mainSettings.useGodrays && Scatterer.Instance.unifiedCameraMode && !ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null)
-			    && Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
-			{
-				godraysRenderer = (GodraysRenderer) Utils.getEarliestLocalCamera().gameObject.AddComponent (typeof(GodraysRenderer));
-				if (!godraysRenderer.Init(prolandManager.mainSunLight, this))
+			if (Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays || Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays) // must also detect if EVE is active and lightvolume is available
+            {
+				raymarchedGodraysRenderer = (RaymarchedGodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(RaymarchedGodraysRenderer)); // TODO: make this work on OpenGL so do not earliest but latest and the combined buffer thing
+					// also will need to figure out copying shadowmap for opengl
+				if (!raymarchedGodraysRenderer.Init(prolandManager.mainSunLight, this, Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays,
+					Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays && Scatterer.Instance.mainSettings.terrainShadows && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController,
+					Scatterer.Instance.mainSettings.raymarchedGodraysStepCount, Scatterer.Instance.mainSettings.raymarchedGodraysScreenshotDenoisingIterations))
 				{
-					Component.Destroy (godraysRenderer);
-					godraysRenderer = null;
+					Component.Destroy(raymarchedGodraysRenderer);
+					raymarchedGodraysRenderer = null;
+				}
+			}
+			else if (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController
+				&& Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
+			{
+				legacyGodraysRenderer = (LegacyGodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(LegacyGodraysRenderer));
+				if (!legacyGodraysRenderer.Init(prolandManager.mainSunLight, this))
+				{
+					Component.Destroy(legacyGodraysRenderer);
+					legacyGodraysRenderer = null;
 				}
 			}
 
@@ -144,25 +166,17 @@ namespace scatterer
 				InitKopernicusRings ();
 			}
 
-			InitSkySphere ();
-
-			InitPostprocessMaterialUniforms (localScatteringMaterial);
 			TweakScaledMesh ();
-			InitScaledScattering ();
 
-			if (!ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null))
+			if (prolandManager.parentCelestialBody.pqsController)
 			{
 				prolandManager.parentCelestialBody.pqsController.isActive = false; 	//sometimes the PQS is forgotten as "active" if a ship is loaded directly around another body, this would mess with the mod
-																				//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
+																					//this sets it to false, if it's really active it will be set to active automatically. EVE mod seems also to have a fix for this
 			}
 
 			if ((HighLogic.LoadedScene != GameScenes.MAINMENU) && (HighLogic.LoadedScene != GameScenes.TRACKSTATION)) // &&useLocalScattering
 			{
-				if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && ReferenceEquals (godraysRenderer, null));
-				else
-					localScatteringContainer = new AtmosphereProjectorContainer (localScatteringMaterial, parentLocalTransform, Rt, prolandManager);
-
+					localScatteringContainer = new ScreenSpaceScatteringContainer(localScatteringMaterial, parentLocalTransform, Rt, prolandManager, Scatterer.Instance.mainSettings.quarterResScattering && !legacyGodraysRenderer);
 			}
 
 			if (Scatterer.Instance.mainSettings.fullLensFlareReplacement)
@@ -194,11 +208,10 @@ namespace scatterer
 
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
 
-			try {StartCoroutine(DelayedTweakStockPlanet ());}
-			catch (Exception e){Utils.LogError("Error when starting SkyNode::DelayedTweakStockPlanet coroutine "+e.Message);};
 
-			InitEVEClouds ();
-			
+
+			Shader.SetGlobalFloat(ShaderProperties.scattererCloudLightVolumeEnabled_PROPERTY, 0f); // Temporary way to initialize the light volume godrays, if raymarched volumetrics are loaded they override this then enable/disable as needed
+
 			skyNodeInitiated = true;
 			Utils.LogDebug("Skynode initiated for "+celestialBodyName);
 		}
@@ -220,7 +233,7 @@ namespace scatterer
 				}
 			}
 
-			skyMaterial.renderQueue = 2999;
+			skyMaterial.renderQueue = 2998;
 			InitUniforms (skyMaterial);
 		}
 
@@ -239,8 +252,8 @@ namespace scatterer
 					scaledScatteringContainer.SwitchScaledMode ();
 				}
 			}
-			
-			scaledScatteringMaterial.renderQueue = 2998;
+
+			scaledScatteringMaterial.renderQueue = 2997;
 			InitUniforms (scaledScatteringMaterial);
 		}
 		
@@ -248,7 +261,7 @@ namespace scatterer
 		{
 			UpdateGraphicsUniforms ();
 
-			if (!MapView.MapIsEnabled && Scatterer.Instance.mainSettings.sunlightExtinction)
+			if (!MapView.MapIsEnabled && Scatterer.Instance.mainSettings.sunlightExtinction && precomputedAtmoLoaded)
 			{
 				UpdateLightExtinctions ();
 			}
@@ -256,7 +269,7 @@ namespace scatterer
 
 		public void UpdateGraphicsUniforms()
 		{
-			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && !ReferenceEquals(localScatteringContainer,null))
+			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && localScatteringContainer!=null)
 			{
 				UpdatePostProcessMaterialUniforms (localScatteringContainer.material);
 			}
@@ -268,33 +281,27 @@ namespace scatterer
 			{
 				UpdateEVECloudMaterials ();
 			}
-			if (!ReferenceEquals(Scatterer.Instance.sunflareManager,null))
+			if (Scatterer.Instance.sunflareManager)
 			{
 				UpdateSunflareExtinctions ();
 			}
 
-			if (!ReferenceEquals(scaledScatteringContainer,null))
+			if (scaledScatteringContainer != null)
 				scaledScatteringContainer.MeshRenderer.enabled = stockScaledPlanetMeshRenderer.enabled;
 
-			if (!ReferenceEquals (localScatteringContainer, null))
+			if (localScatteringContainer != null)
 			{
-				localScatteringContainer.setInScaledSpace (inScaledSpace);
-				localScatteringContainer.updateContainer ();
-
-				if (prolandManager.parentCelestialBody.pqsController != null && !Scatterer.Instance.mainSettings.useDepthBufferMode)
-				{
-					float planetOpactiy = prolandManager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
-					localScatteringMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, (planetOpactiy > 0f) ? 1 : 0);
-				}
+				localScatteringContainer.SetInScaledSpace (inScaledSpace);
+				localScatteringContainer.UpdateContainer ();
 			}
 
 			SetUniforms (skyMaterial);
 			SetUniforms (scaledScatteringMaterial);
 
-			if (!ReferenceEquals (sunflareExtinctionMaterial, null))
+			if (sunflareExtinctionMaterial)
 				SetUniforms (sunflareExtinctionMaterial);
 
-			if (!ReferenceEquals (scaledEclipseMaterial, null))
+			if (scaledEclipseMaterial)
 			{
 				scaledEclipseMaterial.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun ());
 				
@@ -338,6 +345,28 @@ namespace scatterer
 
 			if (skyNodeInitiated)
 			{
+				if (!precomputedAtmoLoaded)
+                {
+					InitOrRequestPrecomputedAtmo();
+                }
+				else if (!atmosphereShadersInitiated)
+                {
+					InitSkySphere ();
+
+					InitPostprocessMaterialUniforms (localScatteringMaterial);
+					InitScaledScattering ();
+
+					try {StartCoroutine(DelayedTweakStockPlanet ());}
+					catch (Exception e){Utils.LogError("Error when starting SkyNode::DelayedTweakStockPlanet coroutine "+e.Message);};
+
+					if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
+						InitEVEClouds ();
+
+					InitOceanMaterialUniforms();
+
+					atmosphereShadersInitiated = true;
+				}
+
 				InterpolateVariables ();
 
 				if (prolandManager.hasOcean && !Scatterer.Instance.mainSettings.useOceanShaders)
@@ -352,79 +381,77 @@ namespace scatterer
 		{
 			Utils.LogInfo ("Skynode switch effects to scaled mode: "+prolandManager.parentCelestialBody.name);
 
-			if (!ReferenceEquals(skySphere,null))
+			if (skySphere != null)
 				skySphere.SwitchScaledMode ();
-			if (!ReferenceEquals(scaledScatteringContainer,null))
+			if (scaledScatteringContainer != null)
 				scaledScatteringContainer.SwitchScaledMode ();
-			if (!ReferenceEquals(localScatteringContainer,null))
-				localScatteringContainer.setActivated(false);
-			EVEvolumetrics.Clear();
+			if (localScatteringContainer != null)
+				localScatteringContainer.SetActivated(false);
 		}
 
 		public void SwitchEffectsLocal()
 		{
 			Utils.LogInfo ("Skynode switch effects to local mode "+prolandManager.parentCelestialBody.name);
 
-			if (!ReferenceEquals(skySphere,null))
+			if (skySphere != null)
 				skySphere.SwitchLocalMode();
-			if (!ReferenceEquals(scaledScatteringContainer,null))
+			if (scaledScatteringContainer != null)
 				scaledScatteringContainer.SwitchLocalMode ();
-			if (!ReferenceEquals(localScatteringContainer,null))
-				localScatteringContainer.setActivated(true);
-
-			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
-			{
-				//really strange but when changing scenes StartCoroutine can return a nullref, even though I check all references
-				try {StartCoroutine(DelayedMapEVEVolumetrics());}
-				catch (Exception){}
-			}
+			if (localScatteringContainer != null)
+				localScatteringContainer.SetActivated(true);
 		}
 		
 		public void SetUniforms (Material mat)
-		{
-			mat.SetFloat (ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
-			mat.SetFloat (ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
-			mat.SetFloat (ShaderProperties.extinctionTint_PROPERTY, interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
-			mat.SetFloat (ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
+        {
+            mat.SetFloat(ShaderProperties._Alpha_Global_PROPERTY, interpolatedSettings.skyAlpha);
+            mat.SetFloat(ShaderProperties._Extinction_Tint_PROPERTY, interpolatedSettings.skyExtinctionTint);
+            mat.SetFloat(ShaderProperties.extinctionTint_PROPERTY, interpolatedSettings.extinctionTint); //extinctionTint for scaled+local
+            mat.SetFloat(ShaderProperties.extinctionThickness_PROPERTY, interpolatedSettings.extinctionThickness);
 
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
+            mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+            mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
 
-			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+            mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
-			mat.SetVector (ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun ());
+            mat.SetVector(ShaderProperties._Sun_WorldSunDir_PROPERTY, prolandManager.getDirectionToMainSun());
 
-			mat.SetFloat (ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
-			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
+            mat.SetFloat(ShaderProperties._SkyExposure_PROPERTY, interpolatedSettings.skyExposure);
+            mat.SetFloat(ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
 
-			if (useEclipses)
-			{
-				mat.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
-				mat.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
-				mat.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
-				                                                                       sunPosRelPlanet.z, (float)prolandManager.sunCelestialBody.Radius));
-			}
-			if ((prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
-			{
-				mat.SetMatrix (ShaderProperties.planetShineSources_PROPERTY, prolandManager.planetShineSourcesMatrix);
-				mat.SetMatrix (ShaderProperties.planetShineRGB_PROPERTY, prolandManager.planetShineRGBMatrix);
-			}
 
-			if (hasRingObjectAndShadowActivated)
-			{
-				mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
-			}
+            if ((prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine)
+            {
+                mat.SetMatrix(ShaderProperties.planetShineSources_PROPERTY, prolandManager.planetShineSourcesMatrix);
+                mat.SetMatrix(ShaderProperties.planetShineRGB_PROPERTY, prolandManager.planetShineRGBMatrix);
+            }
 
-			if (!ReferenceEquals (godraysRenderer, null))
-			{
-				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
-			}
+            UpdateEclipseAndRingUniforms(mat);
 
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
-		}
-		
-		
-		public void SetOceanUniforms (Material mat)
+            if (legacyGodraysRenderer || raymarchedGodraysRenderer)
+            {
+                mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
+            }
+
+            mat.SetColor(ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+        }
+
+        private void UpdateEclipseAndRingUniforms(Material mat)
+        {
+            if (useEclipses)
+            {
+                mat.SetMatrix(ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
+                mat.SetMatrix(ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
+                mat.SetVector(ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4(sunPosRelPlanet.x, sunPosRelPlanet.y,
+                                                                                       sunPosRelPlanet.z, (float)prolandManager.sunCelestialBody.Radius));
+            }
+
+            if (hasRingObjectAndShadowActivated)
+            {
+                mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
+            }
+        }
+
+        public void SetOceanUniforms (Material mat)
 		{
 			if (mat == null)
 				return;
@@ -445,65 +472,72 @@ namespace scatterer
 		
 
 		public void InitPostprocessMaterialUniforms (Material mat)
-		{
-			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
+        {
+			if (mat == null || !precomputedAtmoLoaded)
+				return;
 
-			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
-			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
+			mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
-			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
-			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
-			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
-			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
-			
-			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
-			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
-			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
-			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
-			
-			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
-			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
-			
-			
-			mat.SetVector (ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun());
+			mat.SetTexture(ShaderProperties.AtmosphereAtlas_PROPERTY, atmosphereAtlas);
 
-			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
+			mat.SetVector(ShaderProperties.InscatterAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[0]);
+			mat.SetVector(ShaderProperties.IrradianceAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[1]);
+			mat.SetVector(ShaderProperties.TransmittanceAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[2]);
+			mat.SetVector(ShaderProperties.AtmosphereAtlasDimensions_PROPERTY, new Vector2(atmosphereAtlas.width, atmosphereAtlas.height));
 
-			//When using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately: Instead ocean shader handles scattering internally
-			//When the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
-			//The ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering, this is not needed for stock ocean so disable it
-			Utils.EnableOrDisableShaderKeywords (mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
+			mat.SetFloat(ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+            mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+            mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
+            mat.SetVector(ShaderProperties.PRECOMPUTED_SCTR_LUT_DIM_PROPERTY, scatteringLutDimensions);
 
-			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
+			mat.SetFloat(ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
+			mat.SetFloat(ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
+			mat.SetFloat(ShaderProperties.SKY_W_PROPERTY, SKY_W);
+            mat.SetFloat(ShaderProperties.SKY_H_PROPERTY, SKY_H);
 
-			if (prolandManager.flatScaledSpaceModel && prolandManager.parentCelestialBody.pqsController)
-				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 0f);
-			else
-				mat.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, 1f);
+            mat.SetVector(ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
+            mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
 
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
-			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity );
+            mat.SetVector(ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
+            mat.SetVector(ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
 
-			float camerasOverlap = 0f;
-			if (!Scatterer.Instance.unifiedCameraMode)
-				camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
+            mat.SetFloat(ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
+            mat.SetFloat(ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
 
-			mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY,camerasOverlap);
 
-			if (!ReferenceEquals (godraysRenderer, null))
-			{
-				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
-			}
-			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
+            mat.SetVector(ShaderProperties.SUN_DIR_PROPERTY, prolandManager.getDirectionToMainSun());
 
-			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
-		}
+            Utils.EnableOrDisableShaderKeywords(mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
 
-		
-		public void UpdatePostProcessMaterialUniforms (Material mat)
+            //When using custom ocean shaders, we don't reuse the ocean mesh to render scattering separately: Instead ocean shader handles scattering internally
+            //When the ocean starts fading out when transitioning to orbit, ocean shader stops doing scattering, and stops writing to z-buffer
+            //The ocean floor vertexes are then used by the scattering shader, moving them to the surface to render scattering, this is not needed for stock ocean so disable it
+            Utils.EnableOrDisableShaderKeywords(mat, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
+
+            Utils.EnableOrDisableShaderKeywords(mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
+
+            if (prolandManager.flatScaledSpaceModel && prolandManager.parentCelestialBody.pqsController)
+                mat.SetFloat(ShaderProperties._PlanetOpacity_PROPERTY, 0f);
+            else
+                mat.SetFloat(ShaderProperties._PlanetOpacity_PROPERTY, 1f);
+
+            mat.SetColor(ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+            mat.SetColor(ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
+
+            float camerasOverlap = 0f;
+            if (!Scatterer.Instance.unifiedCameraMode)
+                camerasOverlap = Scatterer.Instance.nearCamera.farClipPlane - Scatterer.Instance.farCamera.nearClipPlane;
+
+            mat.SetFloat(ShaderProperties._ScattererCameraOverlap_PROPERTY, camerasOverlap);
+
+			InitGodraysUniforms(mat);
+
+			Utils.SetToneMapping(mat);
+
+            InitEclipseAndRingUniforms(mat);
+        }
+
+        public void UpdatePostProcessMaterialUniforms (Material mat)
 		{
 			mat.SetFloat (ShaderProperties._global_alpha_PROPERTY, interpolatedSettings.postProcessAlpha);
 			mat.SetFloat (ShaderProperties._ScatteringExposure_PROPERTY, interpolatedSettings.scatteringExposure);
@@ -532,116 +566,159 @@ namespace scatterer
 				mat.SetMatrix (ShaderProperties.cloudPlanetShineRGB_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ?  prolandManager.planetShineRGBMatrix : prolandManager.planetShineOriginalRGBMatrix );
 			}
 
-			if (!ReferenceEquals (godraysRenderer, null))
+			if (legacyGodraysRenderer || raymarchedGodraysRenderer)
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
 
 			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+
+			UpdateEclipseAndRingUniforms(mat);
 		}
 
 		public void InitUniforms (Material mat)
-		{
-			if (mat == null)
-				return;
-			
-			mat.SetFloat (ShaderProperties.M_PI_PROPERTY, Mathf.PI);
-			mat.SetFloat (ShaderProperties.mieG_PROPERTY, Mathf.Clamp (m_mieG, 0.0f, 0.99f));
-			
-			mat.SetVector (ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
-			mat.SetTexture (ShaderProperties._Inscatter_PROPERTY, m_inscatter);
-			mat.SetTexture (ShaderProperties._Irradiance_PROPERTY, m_irradiance);
-			mat.SetFloat (ShaderProperties.Rg_PROPERTY, Rg*atmosphereStartRadiusScale);
-			mat.SetFloat (ShaderProperties.Rt_PROPERTY, Rt);
-			
-			mat.SetFloat (ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
-			mat.SetFloat (ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
-			mat.SetFloat (ShaderProperties.SKY_W_PROPERTY, SKY_W);
-			mat.SetFloat (ShaderProperties.SKY_H_PROPERTY, SKY_H);
-			mat.SetVector("PRECOMPUTED_SCTR_LUT_DIM", scatteringLutDimensions);
-			mat.SetFloat (ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
-			mat.SetFloat (ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
-			mat.SetVector (ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
-			mat.SetVector (ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
+        {
+            if (mat == null || !precomputedAtmoLoaded)
+                return;
 
-			if (hasRingObjectAndShadowActivated)
-			{
-				Utils.EnableOrDisableShaderKeywords (mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", true);
-				mat.SetFloat ("useRingShadow", 1f);
-				mat.SetFloat (ShaderProperties.ringInnerRadius_PROPERTY, ringInnerRadius);
-				mat.SetFloat (ShaderProperties.ringOuterRadius_PROPERTY, ringOuterRadius);
-				mat.SetVector (ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
-				mat.SetTexture (ShaderProperties.ringTexture_PROPERTY, ringTexture);
+            mat.SetFloat(ShaderProperties.M_PI_PROPERTY, Mathf.PI);
+            mat.SetFloat(ShaderProperties.mieG_PROPERTY, Mathf.Clamp(m_mieG, 0.0f, 0.99f));
+
+            mat.SetVector(ShaderProperties.betaR_PROPERTY, m_betaR / 1000.0f / mainMenuScaleFactor);
+
+			mat.SetTexture(ShaderProperties.AtmosphereAtlas_PROPERTY, atmosphereAtlas);
+
+			mat.SetVector(ShaderProperties.InscatterAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[0]);
+			mat.SetVector(ShaderProperties.IrradianceAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[1]);
+			mat.SetVector(ShaderProperties.TransmittanceAtlasScaleAndOffset_PROPERTY, atlasScaleAndOffsets[2]);
+			mat.SetVector(ShaderProperties.AtmosphereAtlasDimensions_PROPERTY, atlasDimensions);
+
+			mat.SetFloat(ShaderProperties.Rg_PROPERTY, Rg * atmosphereStartRadiusScale);
+            mat.SetFloat(ShaderProperties.Rt_PROPERTY, Rt);
+
+            mat.SetFloat(ShaderProperties.TRANSMITTANCE_W_PROPERTY, TRANSMITTANCE_W);
+            mat.SetFloat(ShaderProperties.TRANSMITTANCE_H_PROPERTY, TRANSMITTANCE_H);
+            mat.SetFloat(ShaderProperties.SKY_W_PROPERTY, SKY_W);
+            mat.SetFloat(ShaderProperties.SKY_H_PROPERTY, SKY_H);
+            mat.SetVector(ShaderProperties.PRECOMPUTED_SCTR_LUT_DIM_PROPERTY, scatteringLutDimensions);
+            mat.SetFloat(ShaderProperties.HR_PROPERTY, HR * 1000.0f * mainMenuScaleFactor);
+            mat.SetFloat(ShaderProperties.HM_PROPERTY, HM * 1000.0f * mainMenuScaleFactor);
+            mat.SetVector(ShaderProperties.betaMSca_PROPERTY, BETA_MSca / 1000.0f / mainMenuScaleFactor);
+            mat.SetVector(ShaderProperties.betaMEx_PROPERTY, (BETA_MSca / 1000.0f / mainMenuScaleFactor) / 0.9f);
+
+            InitEclipseAndRingUniforms(mat);
+
+            Utils.EnableOrDisableShaderKeywords(mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
+            Utils.EnableOrDisableShaderKeywords(mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
+
+            mat.SetFloat(ShaderProperties.flatScaledSpaceModel_PROPERTY, prolandManager.flatScaledSpaceModel ? 1f : 0f);
+            mat.SetColor(ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
+            mat.SetColor(ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
+
+            InitGodraysUniforms(mat);
+
+            Utils.SetToneMapping(mat);
+        }
+
+        private void InitGodraysUniforms(Material mat)
+        {
+            if (raymarchedGodraysRenderer != null)
+            {
+                raymarchedGodraysRenderer.SetStepCountAndKeywords(mat);
+            }
+            else if (legacyGodraysRenderer != null)
+            {
+                mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, legacyGodraysRenderer.volumeDepthTexture);
+                mat.EnableKeyword("GODRAYS_LEGACY");
+                mat.EnableKeyword("RAYMARCHED_GODRAYS_OFF");
+                mat.DisableKeyword("GODRAYS_OFF");
+				mat.SetFloat(ShaderProperties.godraysSoftwareSwitch_PROPERTY, 0f);
+
 			}
-			else
-			{
-				Utils.EnableOrDisableShaderKeywords (mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", false);
-				mat.SetFloat ("useRingShadow", 0f);
+            else
+            {
+                mat.EnableKeyword("RAYMARCHED_GODRAYS_OFF");
+                mat.EnableKeyword("GODRAYS_OFF");
+				mat.SetFloat(ShaderProperties.godraysSoftwareSwitch_PROPERTY, 0f);
 			}
+        }
 
-			Utils.EnableOrDisableShaderKeywords (mat, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses );
-			mat.SetFloat ("useEclipses", useEclipses ? 1f : 0f);
+        private void InitEclipseAndRingUniforms(Material mat)
+        {
+            if (hasRingObjectAndShadowActivated)
+            {
+                Utils.EnableOrDisableShaderKeywords(mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", true);
+                mat.SetFloat("useRingShadow", 1f);
+                mat.SetFloat(ShaderProperties.ringInnerRadius_PROPERTY, ringInnerRadius);
+                mat.SetFloat(ShaderProperties.ringOuterRadius_PROPERTY, ringOuterRadius);
+                mat.SetVector(ShaderProperties.ringNormal_PROPERTY, ringObject.transform.up);
+                mat.SetTexture(ShaderProperties.ringTexture_PROPERTY, ringTexture);
+            }
+            else
+            {
+                Utils.EnableOrDisableShaderKeywords(mat, "RINGSHADOW_ON", "RINGSHADOW_OFF", false);
+                mat.SetFloat("useRingShadow", 0f);
+            }
 
-			Utils.EnableOrDisableShaderKeywords (mat, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
-			Utils.EnableOrDisableShaderKeywords (mat, "DITHERING_ON", "DITHERING_OFF", Scatterer.Instance.mainSettings.useDithering);
+            Utils.EnableOrDisableShaderKeywords(mat, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
+            mat.SetFloat("useEclipses", useEclipses ? 1f : 0f);
+        }
 
-			mat.SetFloat (ShaderProperties.flatScaledSpaceModel_PROPERTY, prolandManager.flatScaledSpaceModel ? 1f : 0f );
-			mat.SetColor (ShaderProperties._sunColor_PROPERTY, prolandManager.getIntensityModulatedSunColor());
-			mat.SetColor (ShaderProperties.cloudSunColor_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ? prolandManager.getIntensityModulatedSunColor() : prolandManager.mainScaledSunLight.color * prolandManager.mainScaledSunLight.intensity);
-
-			if (!ReferenceEquals (godraysRenderer, null))
-			{
-				mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY,godraysRenderer.volumeDepthTexture);
-			}
-			Utils.EnableOrDisableShaderKeywords (mat, "GODRAYS_ON", "GODRAYS_OFF", !ReferenceEquals (godraysRenderer, null));
-
-			mat.SetInt ("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
-		}
-
-		public void TogglePostProcessing()
+        public void TogglePostProcessing()
 		{
 			postprocessingEnabled = !postprocessingEnabled;
 		}
 		
-		void InitPrecomputedAtmo ()
+		void InitOrRequestPrecomputedAtmo ()
 		{
 			Rg = (float) prolandManager.GetRadius ();
-			Rt = AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
-
-			//Inscatter is responsible for the change in the sky color as the sun moves. The raw file is a 4D array of 32 bit floats with a range of 0 to 1.589844
-			//As there is not such thing as a 4D texture the data is packed into a 3D texture and the shader manually performs the sample for the 4th dimension
-			m_inscatter = new Texture2D((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), TextureFormat.RGBAHalf, false);
-			m_inscatter.wrapMode = TextureWrapMode.Clamp;
-			m_inscatter.filterMode = FilterMode.Bilinear;
-			
-			//Irradiance is responsible for the change in light emitted from the sky as the sun moves. The raw file is a 2D array of 32 bit floats with a range of 0 to 1
-			m_irradiance = new Texture2D (SKY_W, SKY_H, TextureFormat.RGBAHalf,false);
-			m_irradiance.wrapMode = TextureWrapMode.Clamp;
-			m_irradiance.filterMode = FilterMode.Bilinear;
+			Rt = AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor, useOzone, ozoneHeight/mainMenuScaleFactor, ozoneFalloff/mainMenuScaleFactor);
 
 			//Compute atmo hash and path
 			string cachePath = Utils.GameDataPath + "/ScattererAtmosphereCache/PluginData";
-			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca);
-			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions);
+			float originalRt = AtmoPreprocessor.CalculateRt ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca, useOzone, ozoneHeight, ozoneFalloff);
+			string atmohash = AtmoPreprocessor.GetAtmoHash((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff);
 			cachePath += "/" + atmohash;
 
-			string inscatterPath = cachePath+"/inscatter.half";
-			string irradiancePath = cachePath+"/irradiance.half";
+			string atlasPath = cachePath + "/atlas.half";
 
-			if (!System.IO.File.Exists (inscatterPath) || !System.IO.File.Exists (irradiancePath))
+			if (!System.IO.File.Exists (atlasPath))
 			{
-				Utils.LogInfo("No atmosphere cache for "+prolandManager.parentCelestialBody.name+", generating new atmosphere");
-				AtmoPreprocessor.Instance.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, previewMode, cachePath);
+				AtmoPreprocessor.Generate ((float) prolandManager.parentCelestialBody.Radius * atmosphereStartRadiusScale, originalRt, m_betaR, BETA_MSca, m_mieG, HR, HM, averageGroundReflectance, multipleScattering, scatteringLutDimensions, previewMode, cachePath, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff, prolandManager.parentCelestialBody.name);
+				precomputedAtmoLoaded = false;
+				return;
 			}
+			
+			LoadPrecomputedAtmo(atlasPath);
+			precomputedAtmoLoaded = true;
 
-			m_inscatter.LoadRawTextureData  (System.IO.File.ReadAllBytes (inscatterPath));
-			m_irradiance.LoadRawTextureData   (System.IO.File.ReadAllBytes (irradiancePath));
+			if (atmosphereShadersInitiated)
+				ReinitAllMaterials();
+        }
 
-			m_inscatter.Apply();
-			m_irradiance.Apply ();
-		}
+        private void LoadPrecomputedAtmo(string atlasPath)
+        {
+            var textureDimensions = new List<Vector2> {
+                    new Vector2(scatteringLutDimensions.x * scatteringLutDimensions.y, scatteringLutDimensions.z* scatteringLutDimensions.w),
+                    new Vector2(SKY_W, SKY_H),
+                    new Vector2(TRANSMITTANCE_W, TRANSMITTANCE_H) };
 
-		public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale)
+            // Textures are packed in the simplest way possible, top-left to bottom-left
+            int atlasWidth = textureDimensions.Max(texture => (int)texture.x);
+            int atlasHeight = textureDimensions.Sum(texture => (int)texture.y);
+
+            atlasDimensions = new Vector2(atlasWidth, atlasHeight);
+
+            atmosphereAtlas = new Texture2D(atlasWidth, atlasHeight, TextureFormat.RGBAHalf, false);
+            atmosphereAtlas.wrapMode = TextureWrapMode.Clamp;
+            atmosphereAtlas.filterMode = FilterMode.Bilinear;
+            atmosphereAtlas.LoadRawTextureData(System.IO.File.ReadAllBytes(atlasPath));
+            atmosphereAtlas.Apply();
+
+            atlasScaleAndOffsets = AtmoPreprocessor.GetPackedTexturesScaleAndOffsets(textureDimensions, atlasDimensions);
+        }
+
+        public void ApplyAtmoFromUI(Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, bool inFastPreviewMode, float inAtmosphereStartRadiusScale, bool inUseOzone, Vector3 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
 		{
 			m_betaR = inBETA_R;
 			BETA_MSca = inBETA_MSca;
@@ -651,69 +728,82 @@ namespace scatterer
 			averageGroundReflectance = inGRref;
 			multipleScattering = inMultiple;
 			previewMode = inFastPreviewMode;
-			scatteringLutDimensions = inFastPreviewMode ? AtmoPreprocessor.scatteringLutDimensionsPreview : AtmoPreprocessor.scatteringLutDimensionsDefault ;
+			scatteringLutDimensions = inFastPreviewMode ? AtmoPreprocessor.scatteringLutDimensionsPreview : AtmoPreprocessor.ScatteringLutDimensionsDefault ;
 			atmosphereStartRadiusScale = inAtmosphereStartRadiusScale;
 
-			InitPrecomputedAtmo ();
+			ozoneAbsorption = inOzoneAbsorption;
+			ozoneHeight = inOzoneHeight;
+			ozoneFalloff = inOzoneFalloff;
+			useOzone = inUseOzone;
+
+			InitOrRequestPrecomputedAtmo ();
 
 			float skySphereSize = 2 * (4 * (Rt - Rg*atmosphereStartRadiusScale) + Rg*atmosphereStartRadiusScale) / ScaledSpace.ScaleFactor;
 			skySphere.Resize (skySphereSize);
-
-			ReinitAllMaterials();
 		}
 
 		void ReinitAllMaterials()
-		{
-			if (!ReferenceEquals(scaledEclipseMaterial,null))
-				InitUniforms(scaledEclipseMaterial);
-			if (!ReferenceEquals(skyMaterial,null))	//need also here to resize the sky sphere thingy
-				InitUniforms(skyMaterial);
-			if (!ReferenceEquals(scaledScatteringMaterial,null))
-				InitUniforms(scaledScatteringMaterial);
-			if (!ReferenceEquals(sunflareExtinctionMaterial,null))
-				InitUniforms(sunflareExtinctionMaterial);
-			if (!ReferenceEquals(localScatteringMaterial,null))
-				InitPostprocessMaterialUniforms(localScatteringMaterial);
+        {
+            if (scaledEclipseMaterial)
+                InitUniforms(scaledEclipseMaterial);
+            if (skyMaterial)
+                InitUniforms(skyMaterial);
+            if (scaledScatteringMaterial)
+                InitUniforms(scaledScatteringMaterial);
+            if (sunflareExtinctionMaterial)
+                InitUniforms(sunflareExtinctionMaterial);
+            if (localScatteringMaterial)
+                InitPostprocessMaterialUniforms(localScatteringMaterial);
 
-			ReInitMaterialUniformsOnRenderTexturesLoss ();
+            ReInitMaterialUniformsOnRenderTexturesLoss();
 
-			foreach (Material particleMaterial in EVEvolumetrics)
-			{	
-				InitUniforms (particleMaterial);
-				InitPostprocessMaterialUniforms (particleMaterial);
-			}
+            // make the clouds2d material optional
+            // add fields for volumetrics and raymarched volumetrics
+            if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
+            {
+                foreach (EVECloudLayer eveCloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+                {
+                    if (eveCloudLayer.Clouds2dMaterial != null)
+                    {
+                        InitUniforms(eveCloudLayer.Clouds2dMaterial);
+                        InitPostprocessMaterialUniforms(eveCloudLayer.Clouds2dMaterial);
+                    }
 
-			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
-			{
-				foreach (EVEClouds2d eveClouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName])
-				{
-					InitUniforms (eveClouds2d.Clouds2dMaterial);
-					InitPostprocessMaterialUniforms (eveClouds2d.Clouds2dMaterial);
-				}
-			}
+                    if (eveCloudLayer.ParticleVolumetricsMaterial != null)
+                    {
+                        InitUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
+                        InitPostprocessMaterialUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
+                    }
 
-			if (!ReferenceEquals(prolandManager.GetOceanNode(),null))
-			{
-				if (!ReferenceEquals(prolandManager.GetOceanNode().m_oceanMaterial,null))
-				{
-					InitUniforms (prolandManager.GetOceanNode().m_oceanMaterial);
-					InitPostprocessMaterialUniforms (prolandManager.GetOceanNode().m_oceanMaterial);
-				}
+                    if (eveCloudLayer.RaymarchedVolumetricsMaterial != null)
+                    {
+                        InitUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
+                        InitPostprocessMaterialUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
+                    }
+                }
+            }
 
-				if (!ReferenceEquals(prolandManager.GetOceanNode().underwaterMaterial,null))
-				{
-					InitPostprocessMaterialUniforms (prolandManager.GetOceanNode().underwaterMaterial);
-				}
-			}
-		}
+            InitOceanMaterialUniforms();
+        }
 
-		//Also try to make this stay on scene changes and unload/reloads?
-		//void ReInitAtmoFromUI()
-		//{
-		//
-		//}
-		
-		public void Cleanup ()
+        public void InitOceanMaterialUniforms()
+        {
+            if (prolandManager.GetOceanNode())
+            {
+                if (prolandManager.GetOceanNode().m_oceanMaterial)
+                {
+                    InitUniforms(prolandManager.GetOceanNode().m_oceanMaterial);
+                    InitPostprocessMaterialUniforms(prolandManager.GetOceanNode().m_oceanMaterial);
+                }
+
+                if (prolandManager.GetOceanNode().underwaterMaterial)
+                {
+                    InitPostprocessMaterialUniforms(prolandManager.GetOceanNode().underwaterMaterial);
+                }
+            }
+        }
+
+        public void OnDestroy()
 		{
 			try {StopAllCoroutines ();}
 			catch (Exception){}
@@ -723,65 +813,65 @@ namespace scatterer
 				SaveToConfigNode ();
 			}
 
-			if (m_irradiance)
+			if (atmosphereAtlas)
 			{
-				UnityEngine.Object.DestroyImmediate (m_irradiance);
+				UnityEngine.Object.DestroyImmediate(atmosphereAtlas);
 			}
 
-			if (m_inscatter)
-			{
-				UnityEngine.Object.DestroyImmediate (m_inscatter);
-			}
-
-			if (!ReferenceEquals (skySphere, null))
+			if (skySphere != null)
 			{
 				skySphere.Cleanup ();
 			}
 
-			if (!ReferenceEquals (scaledScatteringContainer, null))
+			if (scaledScatteringContainer != null)
 			{
 				scaledScatteringContainer.Cleanup ();
 			}
 
-			if (!ReferenceEquals (localScatteringContainer, null))
+			if (localScatteringContainer != null)
 			{
-				localScatteringContainer.OnDestroy();
+				localScatteringContainer.Cleanup();
 			}
 
-			if (!ReferenceEquals (godraysRenderer, null))
+			if (legacyGodraysRenderer)
 			{
-				godraysRenderer.Cleanup();
-				Component.DestroyImmediate(godraysRenderer);
+				Component.DestroyImmediate(legacyGodraysRenderer);
+			}
+
+			if (raymarchedGodraysRenderer)
+            {
+				Component.DestroyImmediate(raymarchedGodraysRenderer);
 			}
 
 			//disable eve integration scatterer flag
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
 				try
-				{
-					int size;
-					
-					//2d clouds
-					if(Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
+				{	
+					if(Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
 					{
-						size = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName].Count;
-						for (int i=0;i<size;i++)
+						foreach(var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
 						{
-							Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i].Clouds2dMaterial.DisableKeyword ("SCATTERER_ON");
-							Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName][i].Clouds2dMaterial.EnableKeyword ("SCATTERER_OFF");
-						}
-					}
-					
-					//volumetrics
-					//if in local mode and mapping is done
-					if (!inScaledSpace && mappedVolumetrics)
-					{
-						size = EVEvolumetrics.Count;
-						
-						for (int i=0;i<size;i++)
-						{
-							EVEvolumetrics[i].DisableKeyword ("SCATTERER_ON");
-							EVEvolumetrics[i].EnableKeyword ("SCATTERER_OFF");
+							if (cloudLayer.Clouds2dMaterial != null)
+                            {
+								cloudLayer.Clouds2dMaterial.DisableKeyword("SCATTERER_ON");
+								cloudLayer.Clouds2dMaterial.EnableKeyword("SCATTERER_OFF");
+							}
+
+							if (cloudLayer.ParticleVolumetricsMaterial != null)
+							{
+								cloudLayer.ParticleVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
+								cloudLayer.ParticleVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
+								cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", 0f);
+
+							}
+
+							if (cloudLayer.RaymarchedVolumetricsMaterial != null)
+							{
+								cloudLayer.RaymarchedVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
+								cloudLayer.RaymarchedVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
+								cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
+							}
 						}
 					}
 				}
@@ -791,8 +881,11 @@ namespace scatterer
 				}
 			}
 
-			if (!ReferenceEquals(originalScaledMesh,null))
-				parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = originalScaledMesh;
+			if (originalScaledMesh && parentScaledTransform)
+			{ 
+				var mf = parentScaledTransform.GetComponent<MeshFilter> ();
+				if (mf) mf.sharedMesh = originalScaledMesh;
+			}
 
 			RestoreStockScaledTexture ();
 		}
@@ -824,10 +917,10 @@ namespace scatterer
 			{
 				Utils.LogDebug(" Atmosphere config found for: "+celestialBodyName);
 
-				ConfigNode.LoadObjectFromConfig (this, cnToLoad);		
+				ConfigNode.LoadObjectFromConfig (this, cnToLoad);
 			
 				Rg = (float) prolandManager.GetRadius ();
-				Rt = AtmoPreprocessor.CalculateRt (Rg * atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor);
+				Rt = AtmoPreprocessor.CalculateRt (Rg * atmosphereStartRadiusScale, HR*mainMenuScaleFactor, HM*mainMenuScaleFactor, m_betaR/mainMenuScaleFactor, BETA_MSca/mainMenuScaleFactor, useOzone, ozoneHeight / mainMenuScaleFactor, ozoneFalloff / mainMenuScaleFactor);
 
 				godrayStrength = Mathf.Min(godrayStrength,1.0f);
 
@@ -905,14 +998,17 @@ namespace scatterer
 		{
 			if (!stockScaledPlanetMeshRenderer.sharedMaterial.HasProperty ("_MainTex"))  //this property is absent on gas giants
 			{
+				DisableStockSky();
+
 				if (adjustScaledTexture)
 					TweakStockScaledTexture ();
 			}
-			else // Have to delay this until Kopernicus loads the on-demand textures
+			else // Have to delay this until Kopernicus loads the on-demand textures and also check it's not a rendertexture (ie overridden by scatterer)
 			{
 				while (true)
 				{
-					if (!ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
+					Texture maintex = stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex");
+					if (maintex != null && maintex is Texture2D)
 					{
 						if (adjustScaledTexture)
 							TweakStockScaledTexture ();
@@ -932,8 +1028,10 @@ namespace scatterer
 		{
 			while (true)
 			{
-				if (ReferenceEquals(stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex"),null))
+				if (stockScaledPlanetMeshRenderer.sharedMaterial.GetTexture("_MainTex") == null)
+				{
 					break;
+				}
 
 				yield return new WaitForSeconds(3f);
 			}
@@ -948,7 +1046,7 @@ namespace scatterer
 			if (useEclipses)
 			{
 				// Split the main pass and the additive light passes into separate materials with different renderqueues so we can inject eclipses after the first pass, and make it apply only to the main pass
-				if (ReferenceEquals(parentScaledTransform.GetComponent<PlanetSecondaryLightUpdater>(),null))
+				if (parentScaledTransform.GetComponent<PlanetSecondaryLightUpdater>() == null)
 				{
 					List<Material> materialsNoCityLights = new List<Material>(materials);
 					materialsNoCityLights.RemoveAll(x => x.shader.name == "EVE/PlanetCityLight");
@@ -998,9 +1096,8 @@ namespace scatterer
 				}
 			}
 
-			if (!ReferenceEquals (prolandManager.parentCelestialBody.pqsController, null))
+			if (prolandManager.parentCelestialBody.pqsController != null)
 			{
-				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.surfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.fallbackMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.lowQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
 				Utils.EnableOrDisableShaderKeywords(prolandManager.parentCelestialBody.pqsController.mediumQualitySurfaceMaterial,"AERIAL_ON", "AERIAL_OFF", false);
@@ -1011,38 +1108,47 @@ namespace scatterer
 
 		public void TweakStockScaledTexture () 	//move to utils/scaledUtils etc
 		{
-			List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
+			if (HighLogic.LoadedScene != GameScenes.MAINMENU)
+			{ 
+				List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
 			
-			foreach (Material sharedMaterial in materials)
-			{	
-				if (sharedMaterial.shader.name.Contains("Terrain/Scaled Planet (RimAerial)"))
-				{
-					if (ReferenceEquals(originalPlanetTexture,null))
-						originalPlanetTexture = sharedMaterial.GetTexture("_MainTex");
-
-					if (!ReferenceEquals(originalPlanetTexture,null))
+				foreach (Material sharedMaterial in materials)
+				{	
+					if (sharedMaterial.shader.name.Contains("Terrain/Scaled Planet (RimAerial)"))
 					{
-						if (ReferenceEquals(adjustedPlanetTexture,null))
+						if (!originalPlanetTexture)
 						{
-							adjustedPlanetTexture = new RenderTexture(originalPlanetTexture.width, originalPlanetTexture.height, 0, RenderTextureFormat.ARGB32);
-							adjustedPlanetTexture.name = "ScattererAdjustedPlanetMap";
-							adjustedPlanetTexture.autoGenerateMips = true;
-							adjustedPlanetTexture.Create();
+							Texture maintex = sharedMaterial.GetTexture("_MainTex");
+							if (maintex is Texture2D)
+							{ 
+								originalPlanetTexture = (Texture2D)maintex;
+							}
 						}
+					
+						if (originalPlanetTexture)
+						{
+							if (!adjustedPlanetTexture)
+							{
+								adjustedPlanetTexture = new RenderTexture(originalPlanetTexture.width, originalPlanetTexture.height, 0, RenderTextureFormat.ARGB32);
+								adjustedPlanetTexture.name = "ScattererAdjustedPlanetMap";
+								adjustedPlanetTexture.autoGenerateMips = true;
+								adjustedPlanetTexture.Create();
+							}
 
-						Material imageAdjustMat = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledTextureAdjust")]);
-						imageAdjustMat.SetTexture("inputTexture", originalPlanetTexture);
+							Material imageAdjustMat = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledTextureAdjust")]);
+							imageAdjustMat.SetTexture("inputTexture", originalPlanetTexture);
 						
-						imageAdjustMat.SetFloat("_scaledLandBrightnessAdjust", scaledLandBrightnessAdjust);
-						imageAdjustMat.SetFloat("_scaledLandContrastAdjust",   scaledLandContrastAdjust);
-						imageAdjustMat.SetFloat("_scaledLandSaturationAdjust", scaledLandSaturationAdjust);
+							imageAdjustMat.SetFloat("_scaledLandBrightnessAdjust", scaledLandBrightnessAdjust);
+							imageAdjustMat.SetFloat("_scaledLandContrastAdjust",   scaledLandContrastAdjust);
+							imageAdjustMat.SetFloat("_scaledLandSaturationAdjust", scaledLandSaturationAdjust);
 
-						imageAdjustMat.SetFloat("_scaledOceanBrightnessAdjust", scaledOceanBrightnessAdjust);
-						imageAdjustMat.SetFloat("_scaledOceanContrastAdjust",   scaledOceanContrastAdjust);
-						imageAdjustMat.SetFloat("_scaledOceanSaturationAdjust", scaledOceanSaturationAdjust);
+							imageAdjustMat.SetFloat("_scaledOceanBrightnessAdjust", scaledOceanBrightnessAdjust);
+							imageAdjustMat.SetFloat("_scaledOceanContrastAdjust",   scaledOceanContrastAdjust);
+							imageAdjustMat.SetFloat("_scaledOceanSaturationAdjust", scaledOceanSaturationAdjust);
 
-						Graphics.Blit(originalPlanetTexture, adjustedPlanetTexture, imageAdjustMat);						
-						sharedMaterial.SetTexture("_MainTex", adjustedPlanetTexture);
+							Graphics.Blit(originalPlanetTexture, adjustedPlanetTexture, imageAdjustMat);						
+							sharedMaterial.SetTexture("_MainTex", adjustedPlanetTexture);
+						}
 					}
 				}
 			}
@@ -1050,7 +1156,7 @@ namespace scatterer
 
 		public void RestoreStockScaledTexture () 	//move to utils/scaledUtils etc
 		{
-			if (!ReferenceEquals (originalPlanetTexture, null))
+			if (originalPlanetTexture && stockScaledPlanetMeshRenderer)
 			{
 				List<Material> materials = new List<Material>(stockScaledPlanetMeshRenderer.sharedMaterials);
 
@@ -1063,7 +1169,7 @@ namespace scatterer
 				}
 			}
 
-			if (!ReferenceEquals (adjustedPlanetTexture, null))
+			if (adjustedPlanetTexture)
 			{
 				adjustedPlanetTexture.Release();
 			}
@@ -1071,7 +1177,7 @@ namespace scatterer
 		
 		public void TweakScaledMesh() 	//move to utils/scaledUtils etc
 		{
-			if (ReferenceEquals (originalScaledMesh, null))
+			if (!originalScaledMesh)
 			{
 				originalScaledMesh = parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh;
 			}
@@ -1139,17 +1245,24 @@ namespace scatterer
 
 		void UpdateLightExtinctions ()
 		{
+			Vector3 sunDirection = prolandManager.getDirectionToMainSun();
+
 			Vector3 extinctionPosition = (FlightGlobals.ActiveVessel ? FlightGlobals.ActiveVessel.transform.position : Scatterer.Instance.nearCamera.transform.position) - parentLocalTransform.position;
-			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, prolandManager.getDirectionToMainSun (), Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
+			Color extinction = AtmosphereUtils.getExtinction (extinctionPosition, sunDirection, Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, atmosphereAtlas, transmittanceTableDimensions, atlasScaleAndOffsets[2], atlasDimensions);
 
 			extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);
+
+			float extinctionSunsetToNoonTransition = Vector3.Dot(sunDirection, extinctionPosition.normalized);
+			extinctionSunsetToNoonTransition = Mathf.Clamp01( ((extinctionSunsetToNoonTransition-0.2f) / 0.8f) * (1f - noonSunlightExtinctionStrength) );
+			extinction = Color.Lerp(extinction, Color.white, extinctionSunsetToNoonTransition);
+
 			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (prolandManager.mainSunLight, extinction);
 
 			foreach(SecondarySun secondarySun in prolandManager.secondarySuns)
 			{
-				if (!ReferenceEquals(secondarySun.sunLight, null))
+				if (secondarySun.sunLight)
 				{
-					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f);
+					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, atmosphereAtlas, transmittanceTableDimensions, atlasScaleAndOffsets[2], atlasDimensions);
 					extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);	//consider getting rid of extinction thickness and tint now
 					Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (secondarySun.sunLight, extinction);
 				}
@@ -1188,16 +1301,23 @@ namespace scatterer
 			castersMatrix1 = Matrix4x4.zero;
 			castersMatrix2 = Matrix4x4.zero;
 			Vector3 casterPosRelPlanet;
+
+			float eclipseTerm = 1f;
+
 			for (int i = 0; i < Mathf.Min (4, prolandManager.eclipseCasters.Count); i++)
 			{
 				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor)); //wtf is this? this is doing local to scaled and back to local?
 				castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
+				eclipseTerm *= AtmosphereUtils.getEclipseShadow(Scatterer.Instance.nearCamera.transform.position, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
 			}
 			for (int i = 4; i < Mathf.Min (8, prolandManager.eclipseCasters.Count); i++)
 			{
 				casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
 				castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
+				eclipseTerm *= AtmosphereUtils.getEclipseShadow(Scatterer.Instance.nearCamera.transform.position, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
 			}
+
+			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByAttenuation(prolandManager.mainSunLight, eclipseTerm);
 		}
 
 		void InitKopernicusRings ()
@@ -1246,87 +1366,88 @@ namespace scatterer
 
 		public void InitEVEClouds()
 		{
-			if (!ReferenceEquals (Scatterer.Instance.eveReflectionHandler.EVEinstance, null) && Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey(celestialBodyName))
+			if ((Scatterer.Instance.eveReflectionHandler.EVEInstance != null) && Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
 			{
 				try
 				{
-					// After the shader has been replaced by the modified scatterer shader, the properties are lost and need to be set again
-					// Call EVE clouds2D.reassign() method to set the shader properties
-					Scatterer.Instance.eveReflectionHandler.invokeClouds2dReassign(celestialBodyName);
+					Scatterer.Instance.eveReflectionHandler.invokeClouds2dReassign(celestialBodyName); // After the shader has been replaced by the modified scatterer shader, the properties are lost, this sets them again
 
-					int size = Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName].Count;
-					for (int i=0; i<size; i++)
+					foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
 					{
-						Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial.EnableKeyword ("SCATTERER_ON");
-						Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial.DisableKeyword ("SCATTERER_OFF");
-
-						InitUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
-						InitPostprocessMaterialUniforms (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial);
-
-						if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-						{
-							//Wrongly defined to ON in mainmenu by EVE, causing messed up extinction calculations
-							Utils.EnableOrDisableShaderKeywords (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary [celestialBodyName] [i].Clouds2dMaterial, "WORLD_SPACE_ON", "WORLD_SPACE_OFF", false);
+						if (cloudLayer.Clouds2dMaterial != null)
+						{ 
+							Utils.EnableOrDisableShaderKeywords(cloudLayer.Clouds2dMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
+							InitUniforms (cloudLayer.Clouds2dMaterial);
+							InitPostprocessMaterialUniforms (cloudLayer.Clouds2dMaterial);
+							
+							if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+							{
+								//Wrongly defined to ON in mainmenu by EVE, causing messed up extinction calculations
+								Utils.EnableOrDisableShaderKeywords(cloudLayer.Clouds2dMaterial, "WORLD_SPACE_ON", "WORLD_SPACE_OFF", false);
+							}
 						}
 
+						if (cloudLayer.ParticleVolumetricsMaterial != null)
+						{
+							Utils.EnableOrDisableShaderKeywords(cloudLayer.ParticleVolumetricsMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
+							InitUniforms(cloudLayer.ParticleVolumetricsMaterial);
+							InitPostprocessMaterialUniforms(cloudLayer.ParticleVolumetricsMaterial);
+							cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", 0f);
+						}
+
+						if (cloudLayer.RaymarchedVolumetricsMaterial != null)
+						{
+							Utils.EnableOrDisableShaderKeywords(cloudLayer.RaymarchedVolumetricsMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
+							InitUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+							InitPostprocessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+							cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
+							cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("scattererEnabled", 1f);
+						}
+
+						if (cloudLayer.CloudShadowMaterial != null)
+                        {
+							Utils.EnableOrDisableShaderKeywords(cloudLayer.CloudShadowMaterial, "SCATTERER_OCEAN_ON", "SCATTERER_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
+						}
 					}
 				}
-				catch (Exception stupid)
+				catch (Exception e)
 				{
-					Utils.LogError ("Error initiating EVE Clouds on planet: " + celestialBodyName + " Exception returned: " + stupid.ToString ());
+					Utils.LogError ("Error initiating EVE Clouds on planet: " + celestialBodyName + " Exception returned: " + e.ToString ());
 				}
 			}
-		}
-		
-		IEnumerator DelayedMapEVEVolumetrics()
-		{
-			mappedVolumetrics = false;
-			for (int i=0; i<5; i++)
-				yield return new WaitForFixedUpdate ();
-			MapEVEVolumetrics();
-		}
-
-		public void MapEVEVolumetrics()
-		{
-			Scatterer.Instance.eveReflectionHandler.mapEVEVolumetrics (celestialBodyName, EVEvolumetrics);
-
-			foreach (Material particleMaterial in EVEvolumetrics)
-			{
-				particleMaterial.EnableKeyword ("SCATTERER_ON");
-				particleMaterial.DisableKeyword ("SCATTERER_OFF");
-			
-				InitUniforms (particleMaterial);
-				InitPostprocessMaterialUniforms (particleMaterial);
-			}
-
-			mappedVolumetrics = true;
 		}
 
 		void UpdateEVECloudMaterials ()
 		{
-			if (Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary.ContainsKey (celestialBodyName))
+			if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey (celestialBodyName))
 			{
-				foreach (EVEClouds2d clouds2d in Scatterer.Instance.eveReflectionHandler.EVEClouds2dDictionary[celestialBodyName])
+				foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
 				{
-					SetUniforms (clouds2d.Clouds2dMaterial);
-					//if (!inScaledSpace)
-					UpdatePostProcessMaterialUniforms (clouds2d.Clouds2dMaterial);
-					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, cloudColorMultiplier);
-					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudScatteringMultiplier_PROPERTY, cloudScatteringMultiplier);
-					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.cloudSkyIrradianceMultiplier_PROPERTY, cloudSkyIrradianceMultiplier);
-					clouds2d.Clouds2dMaterial.SetFloat (ShaderProperties.preserveCloudColors_PROPERTY, EVEIntegration_preserveCloudColors ? 1f : 0f);
-				}
-			}
-			
-			if (!inScaledSpace && mappedVolumetrics)
-			{
-				foreach (Material volumetricsMat in EVEvolumetrics)
-				{
-					//TODO: simplify, take one or the other, doesn't need to be done very frame also
-					SetUniforms (volumetricsMat);
-					UpdatePostProcessMaterialUniforms (volumetricsMat);
-					volumetricsMat.SetVector (ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
-					volumetricsMat.SetFloat (ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier);
+					if (cloudLayer.Clouds2dMaterial != null)
+					{ 
+						SetUniforms (cloudLayer.Clouds2dMaterial);
+						UpdatePostProcessMaterialUniforms(cloudLayer.Clouds2dMaterial);
+						cloudLayer.Clouds2dMaterial.SetFloat(ShaderProperties.cloudColorMultiplier_PROPERTY, cloudColorMultiplier);
+						cloudLayer.Clouds2dMaterial.SetFloat(ShaderProperties.cloudScatteringMultiplier_PROPERTY, cloudScatteringMultiplier);
+						cloudLayer.Clouds2dMaterial.SetFloat(ShaderProperties.cloudSkyIrradianceMultiplier_PROPERTY, cloudSkyIrradianceMultiplier);
+						cloudLayer.Clouds2dMaterial.SetFloat(ShaderProperties.preserveCloudColors_PROPERTY, EVEIntegration_preserveCloudColors ? 1f : 0f);
+					}
+
+					if (cloudLayer.ParticleVolumetricsMaterial != null)
+                    {
+						SetUniforms(cloudLayer.ParticleVolumetricsMaterial);
+						UpdatePostProcessMaterialUniforms(cloudLayer.ParticleVolumetricsMaterial);
+						cloudLayer.ParticleVolumetricsMaterial.SetVector(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
+						cloudLayer.ParticleVolumetricsMaterial.SetFloat(ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier);
+					}
+
+					if (cloudLayer.RaymarchedVolumetricsMaterial != null)
+                    {
+						InitUniforms(cloudLayer.RaymarchedVolumetricsMaterial); //temporary until I fix the issue with raymarched volumetrics
+						SetUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+						UpdatePostProcessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
+						cloudLayer.RaymarchedVolumetricsMaterial.SetVector(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);	// not sure if needed
+					}
 				}
 			}
 		}
@@ -1351,10 +1472,32 @@ namespace scatterer
 		//to be called on loss of rendertextures, ie alt-enter
 		public void ReInitMaterialUniformsOnRenderTexturesLoss()
 		{
-			if (!ReferenceEquals (localScatteringContainer, null))
+			if (localScatteringContainer != null)
 			{
 				InitPostprocessMaterialUniforms (localScatteringContainer.material);
 			}
-		}	
+		}
+
+		public void SetUnderwater(bool value)
+        {
+			if (localScatteringContainer != null)
+				localScatteringContainer.SetUnderwater(value);
+
+			if ((Scatterer.Instance.eveReflectionHandler.EVEInstance != null) && Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
+			{
+				foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+				{
+					if (cloudLayer.ParticleVolumetricsMaterial != null)
+					{
+						cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", value ? 1f : 0f);
+					}
+
+					if (cloudLayer.RaymarchedVolumetricsMaterial != null)
+					{
+						cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", value ? 1f : 0f);
+					}
+				}
+			}
+		}
 	}
 }

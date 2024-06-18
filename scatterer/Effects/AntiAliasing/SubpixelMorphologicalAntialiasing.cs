@@ -1,17 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class SubpixelMorphologicalAntialiasing : GenericAntiAliasing
 	{
@@ -21,7 +12,9 @@ namespace scatterer
 
 		enum Pass { EdgeDetection = 0, BlendWeights = 3, NeighborhoodBlending = 6 }
 		public enum Quality { DepthMode = 0, Medium = 1, High = 2 }
-		
+
+		private static CameraEvent SMAACameraEvent = CameraEvent.AfterForwardAlpha; // BeforeImageEffects doesn't work well
+
 		Quality quality;
 
 		public void forceDepthBuffermode()
@@ -34,7 +27,9 @@ namespace scatterer
 		static Texture2D areaTex, searchTex;
 		bool initialized = false;
 
-		public SubpixelMorphologicalAntialiasing()
+        public Quality QualityUsed { get => quality; }
+
+        public SubpixelMorphologicalAntialiasing()
 		{
 			targetCamera = GetComponent<Camera> ();
 			
@@ -42,7 +37,7 @@ namespace scatterer
 
 			int width, height;
 			
-			if (!ReferenceEquals (targetCamera.activeTexture, null))
+			if (targetCamera.activeTexture)
 			{
 				width = targetCamera.activeTexture.width;
 				height = targetCamera.activeTexture.height;
@@ -52,8 +47,11 @@ namespace scatterer
 				width = Screen.width;
 				height = Screen.height;
 			}
-			
-			flip = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
+
+			bool hdrEnabled = targetCamera.allowHDR;
+			var colorFormat = hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32;
+
+			flip = new RenderTexture (width, height, 0, colorFormat);
 			flip.anisoLevel = 1;
 			flip.antiAliasing = 1;
 			flip.volumeDepth = 0;
@@ -63,7 +61,7 @@ namespace scatterer
 			flip.filterMode = FilterMode.Bilinear;
 			flip.Create ();
 
-			flop = new RenderTexture (width, height, 0, RenderTextureFormat.ARGB32);
+			flop = new RenderTexture (width, height, 0, colorFormat);
 			flop.anisoLevel = 1;
 			flop.antiAliasing = 1;
 			flop.volumeDepth = 0;
@@ -75,9 +73,9 @@ namespace scatterer
 
 			SMAAMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/SubpixelMorphologicalAntialiasing")]);
 
-			if (ReferenceEquals(areaTex,null))
+			if (areaTex == null)
 				areaTex = (Texture2D) ShaderReplacer.Instance.LoadedTextures ["AreaTex"];
-			if (ReferenceEquals (searchTex, null))
+			if (searchTex == null)
 				searchTex = (Texture2D)ShaderReplacer.Instance.LoadedTextures ["SearchTex"];
 
 			SMAAMaterial.SetTexture("_AreaTex"  , areaTex);
@@ -89,9 +87,14 @@ namespace scatterer
 			SMAACommandBuffer = new CommandBuffer ();
 		}
 
-		public void OnPreCull()
+        static readonly int MainTextureProperty = Shader.PropertyToID("_MainTexture");
+        static readonly int BlendTexproperty = Shader.PropertyToID("_BlendTex");
+
+        public void OnPreCull()
 		{
-			if (!initialized)
+			bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
+
+			if (!initialized && !screenShotModeEnabled)
 			{
 				SMAACommandBuffer.Clear ();
 			
@@ -101,36 +104,42 @@ namespace scatterer
 				SMAACommandBuffer.SetRenderTarget (flip);
 				SMAACommandBuffer.ClearRenderTarget (false, true, Color.clear);
 			
-				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", BuiltinRenderTextureType.CameraTarget);
+				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, BuiltinRenderTextureType.CameraTarget);
 
 				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.EdgeDetection + (int)quality);		//screen to flip with edge detection
 			
-				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", flip);
+				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, flip);
 				SMAACommandBuffer.Blit (null, flop, SMAAMaterial, (int)Pass.BlendWeights + (int)quality);		//flip to flop with blendweights
-				SMAACommandBuffer.SetGlobalTexture ("_BlendTex", flop);
-				SMAACommandBuffer.SetGlobalTexture ("_MainTexture", BuiltinRenderTextureType.CameraTarget);
+				SMAACommandBuffer.SetGlobalTexture (BlendTexproperty, flop);
+				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, BuiltinRenderTextureType.CameraTarget);
 				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.NeighborhoodBlending);				//neighborhood blending to flip
 				SMAACommandBuffer.Blit (flip, BuiltinRenderTextureType.CameraTarget);							//blit back to screen
 			
-				targetCamera.AddCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer); 				// BeforeImageEffects doesn't work well so use this
+				targetCamera.AddCommandBuffer (SMAACameraEvent, SMAACommandBuffer);
 				initialized = true;
+			}
+
+			if (initialized && screenShotModeEnabled)
+            {
+				targetCamera.RemoveCommandBuffer(SMAACameraEvent, SMAACommandBuffer);
+				initialized = false;
 			}
 		}
 		
-		public override void Cleanup()
+		public void OnDestroy()
 		{
 			SMAAMaterial = null;
 
-			if (!ReferenceEquals(SMAACommandBuffer,null))
+			if (SMAACommandBuffer !=null)
 			{
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterForwardAlpha, SMAACommandBuffer);
+				targetCamera.RemoveCommandBuffer (SMAACameraEvent, SMAACommandBuffer);
 				SMAACommandBuffer.Clear();
 			}
 			
-			if (!ReferenceEquals (flip, null))
+			if (flip)
 				flip.Release ();
 
-			if (!ReferenceEquals (flop, null))
+			if (flop)
 				flop.Release ();
 		}
 	}

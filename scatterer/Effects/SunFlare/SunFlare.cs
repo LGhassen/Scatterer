@@ -15,7 +15,7 @@ using System.Text;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class SunFlare : MonoBehaviour
 	{
@@ -29,18 +29,10 @@ namespace scatterer
 
 		static Dictionary<string, Texture2D> texturesDictionary = new Dictionary<string, Texture2D> ();
 
-		//Size is loaded automatically from the files
-		Texture2D sunSpikes = new Texture2D (1, 1);
-		Texture2D sunFlare  = new Texture2D (1, 1);
-		Texture2D sunGhost1 = new Texture2D (1, 1);
-		Texture2D sunGhost2 = new Texture2D (1, 1);
-		Texture2D sunGhost3 = new Texture2D (1, 1);
 
 		public RenderTexture extinctionTexture;
 		int waitBeforeReloadCnt = 0;
 		SunflareCameraHook nearCameraHook, scaledCameraHook;
-
-		Vector3 sunViewPortPos=Vector3.zero;
 
 		RaycastHit hit;
 		bool hitStatus=false;
@@ -61,12 +53,8 @@ namespace scatterer
 		
 		public int syntaxVersion = 1;
 
-		//Syntax V1 settings
 		SunflareSettingsV1 settingsV1;
-
-		//Syntax V2 settings
 		SunflareSettingsV2 settingsV2;
-
 
 		public void start()
 		{
@@ -77,13 +65,15 @@ namespace scatterer
 			sunglareMaterial.SetOverrideTag ("IGNOREPROJECTOR", "True");
 			sunglareMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
-			Utils.EnableOrDisableShaderKeywords (sunglareMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
+			Utils.EnableOrDisableShaderKeywords (sunglareMaterial, "SCATTERER_MERGED_DEPTH_ON", "SCATTERER_MERGED_DEPTH_OFF", !Scatterer.Instance.unifiedCameraMode);
 
 			if (!Scatterer.Instance.unifiedCameraMode)
 			{
-				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-					sunglareMaterial.SetTexture ("_customDepthTexture", Scatterer.Instance.bufferManager.depthTexture);
-				else
+				if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && DepthToDistanceCommandBuffer.RenderTexture != null)
+				{
+					sunglareMaterial.SetTexture ("_customDepthTexture", DepthToDistanceCommandBuffer.RenderTexture);
+                }
+                else
 					sunglareMaterial.SetTexture ("_customDepthTexture", Texture2D.whiteTexture);	//keep this in mind for when doing multiple points check and ditching raycast
 			}
 
@@ -134,12 +124,14 @@ namespace scatterer
 
 			sunglareMaterial.SetFloat (ShaderProperties.aspectRatio_PROPERTY, Scatterer.Instance.scaledSpaceCamera.aspect);
 
+			Shader.SetGlobalTexture(ShaderProperties.scattererReconstructedCloud_PROPERTY, Texture2D.whiteTexture); // Temporary way to pass volumetric cloud extinction, if raymarched volumetrics are loaded they override this
+
 			Utils.LogDebug ("Added custom sun flare for "+sourceName);
 		}
 
 		public void updateProperties()
 		{
-			sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint (sourceScaledTransform.position);
+			var sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint (sourceScaledTransform.position);
 			hitStatus=false;
 
 			if (sunViewPortPos.z > 0)
@@ -171,8 +163,6 @@ namespace scatterer
 				else if (syntaxVersion == 2)
 				{
 					float dist = (float) (Scatterer.Instance.scaledSpaceCamera.transform.position - sourceScaledTransform.position).magnitude / ((float) source.Radius / ScaledSpace.ScaleFactor); //distance measured in stellar radius
-
-					//Utils.LogInfo("dist "+dist.ToString());
 
 					if (settingsV2.flares.Count > 0)
 					{
@@ -217,11 +207,14 @@ namespace scatterer
 						                             (sourceScaledTransform.position - Scatterer.Instance.scaledSpaceCamera.transform.position)
 						                             .normalized, out hit, Mathf.Infinity, (int)((1 << 10)));
 					}
+
+					sunglareMaterial.SetVector(ShaderProperties.sunWorldPosition_PROPERTY, (Vector3)ScaledSpace.ScaledToLocalSpace(new Vector3d(sourceScaledTransform.position.x, sourceScaledTransform.position.y, sourceScaledTransform.position.z)));
 				}
 				else
 				{
-					hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position, (sourceScaledTransform.position
-					                                                                                       - Scatterer.Instance.transform.position).normalized, out hit, Mathf.Infinity, (int)((1 << 10)));
+					hitStatus = Physics.Raycast (Scatterer.Instance.scaledSpaceCamera.transform.position, (sourceScaledTransform.position - Scatterer.Instance.transform.position).normalized, out hit, Mathf.Infinity, (int)((1 << 10)));
+					
+					sunglareMaterial.SetVector(ShaderProperties.sunWorldPosition_PROPERTY, sourceScaledTransform.position);
 				}
 
 				if(hitStatus)
@@ -231,10 +224,8 @@ namespace scatterer
 						hitStatus=false;
 				}
 
-				sunglareMaterial.SetVector (ShaderProperties.sunViewPortPos_PROPERTY, sunViewPortPos);
-
-				if (!(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
-					sunglareMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
+				if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && DepthToDistanceCommandBuffer.RenderTexture != null)
+					sunglareMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, DepthToDistanceCommandBuffer.RenderTexture);
 			}
 
 			flareRendering = !hitStatus && (sunViewPortPos.z > 0) && !Scatterer.Instance.scattererCelestialBodiesManager.underwater;
@@ -255,7 +246,7 @@ namespace scatterer
 			}
 
 			//enable or disable scaled or near script depending on trackstation or mapview
-			if (!MapView.MapIsEnabled && !(HighLogic.LoadedScene == GameScenes.TRACKSTATION))
+			if (!MapView.MapIsEnabled && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
 				nearCameraHook.enabled = true;
 				scaledCameraHook.enabled = false;
@@ -282,13 +273,14 @@ namespace scatterer
 			RenderTexture.active=rt;
 		}	
 
-		public void CleanUp()
+		public void OnDestroy()
 		{
 			if (nearCameraHook)
 			{
 				Component.Destroy (nearCameraHook);
 				UnityEngine.Object.Destroy (nearCameraHook);
 			}
+			
 			if (scaledCameraHook)
 			{
 				Component.Destroy (scaledCameraHook);
@@ -375,12 +367,12 @@ namespace scatterer
 
 		void ApplySyntaxV1FlareConfig ()
 		{
-			LoadAndSetTexture ("sunFlare" , sunFlare , (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunFlare.png")));
-			LoadAndSetTexture ("sunSpikes", sunSpikes, (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunSpikes.png")));
+			LoadAndSetTexture ("sunFlare" , (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunFlare.png")));
+			LoadAndSetTexture ("sunSpikes", (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "sunSpikes.png")));
 
-			LoadAndSetTexture ("sunGhost1", sunGhost1, (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost1.png")));
-			LoadAndSetTexture ("sunGhost2", sunGhost2, (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost2.png")));
-			LoadAndSetTexture ("sunGhost3", sunGhost3, (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost3.png")));
+			LoadAndSetTexture ("sunGhost1", (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost1.png")));
+			LoadAndSetTexture ("sunGhost2", (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost2.png")));
+			LoadAndSetTexture ("sunGhost3", (String.Format ("{0}/{1}", Utils.GameDataPath + settingsV1.assetPath, "Ghost3.png")));
 
 			//didn't want to serialize the matrices directly as the result is pretty unreadable
 			//sorry about the mess, syntax v2 is cleaner
@@ -446,12 +438,12 @@ namespace scatterer
 
 			if (settingsV2.flares.Count > 0)
 			{
-				LoadAndSetTexture ("sunFlare", sunFlare, Utils.GameDataPath + settingsV2.flares[0].texture);
+				LoadAndSetTexture ("sunFlare", Utils.GameDataPath + settingsV2.flares[0].texture);
 				sunglareMaterial.SetVector ("flareSettings", new Vector3(1f, settingsV2.flares[0].displayAspectRatio,1f));
 			}
 			if (settingsV2.flares.Count > 1)
 			{
-				LoadAndSetTexture ("sunSpikes", sunSpikes, Utils.GameDataPath + settingsV2.flares[1].texture);
+				LoadAndSetTexture ("sunSpikes", Utils.GameDataPath + settingsV2.flares[1].texture);
 				sunglareMaterial.SetVector ("spikesSettings", new Vector3(1f, settingsV2.flares[1].displayAspectRatio,1f));
 			}
 			if (settingsV2.flares.Count > 2)
@@ -462,17 +454,17 @@ namespace scatterer
 			//All static settings are set for ghosts, all that's left to do is configure the fade from ghost intensity curves
 			if (settingsV2.ghosts.Count > 0)
 			{
-				LoadAndSetTexture ("sunGhost1", sunGhost1, Utils.GameDataPath + settingsV2.ghosts[0].texture);
+				LoadAndSetTexture ("sunGhost1", Utils.GameDataPath + settingsV2.ghosts[0].texture);
 				SetGhostParameters ("ghost1Settings1", "ghost1Settings2", settingsV2.ghosts[0]);
 			}
 			if (settingsV2.ghosts.Count > 1)
 			{
-				LoadAndSetTexture ("sunGhost2", sunGhost2, Utils.GameDataPath + settingsV2.ghosts[1].texture);
+				LoadAndSetTexture ("sunGhost2", Utils.GameDataPath + settingsV2.ghosts[1].texture);
 				SetGhostParameters ("ghost2Settings1", "ghost2Settings2", settingsV2.ghosts[1]);
 			}
 			if (settingsV2.ghosts.Count > 2)
 			{
-				LoadAndSetTexture ("sunGhost3", sunGhost3, Utils.GameDataPath + settingsV2.ghosts[2].texture);
+				LoadAndSetTexture ("sunGhost3", Utils.GameDataPath + settingsV2.ghosts[2].texture);
 				SetGhostParameters ("ghost3Settings1", "ghost3Settings2", settingsV2.ghosts[2]);
 			}
 			if (settingsV2.ghosts.Count > 3)
@@ -499,8 +491,10 @@ namespace scatterer
 			sunglareMaterial.SetMatrix (shaderParam2, ghostSettings2);
 		}
 
-		void LoadAndSetTexture (string textureName, Texture2D texture, string path)
+		void LoadAndSetTexture (string textureName, string path)
 		{
+			Texture2D texture = null;
+
 			if (texturesDictionary.ContainsKey (path))
 			{
 				texture = texturesDictionary[path];
@@ -513,7 +507,8 @@ namespace scatterer
 				}
 				else
 				{
-					texture.LoadImage (System.IO.File.ReadAllBytes (path));
+					texture = new Texture2D(1, 1);
+					texture.LoadImage(System.IO.File.ReadAllBytes(path));
 				}
 
 				texturesDictionary[path] = texture;

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-namespace scatterer {
+namespace Scatterer {
 	/*
 	 * Extend the OceanFFT node to also generate ocean white caps.
 	 */
@@ -58,9 +58,9 @@ namespace scatterer {
 			base.CreateRenderTextures();
 		}
 		
-		public override void Cleanup()
+		public override void OnDestroy()
 		{
-			base.Cleanup();
+			base.OnDestroy();
 			
 			m_foam0.Release();
 			m_foam1.Release();

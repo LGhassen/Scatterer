@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ScaledScatteringContainer
 	{
@@ -21,12 +21,20 @@ namespace scatterer
 			parentScaledTransform = inParentScaledTransform;
 			parentLocalTransform = inParentLocalTransform;
 
-			scaledScatteringGO = new GameObject ("Scatterer scaled atmo");
+			string goName = "Scatterer scaled atmo";
+
+			var existingGoTransform = parentScaledTransform.FindChild(goName);
+
+			if (existingGoTransform != null)
+            {
+				GameObject.DestroyImmediate(existingGoTransform.gameObject);
+			}
+
+			scaledScatteringGO = new GameObject (goName);
 
 			//if depthBufferMode + new blending etc etc
 			scaledScatteringGO.AddComponent<ScaledScatteringScreenCopy> ();
 			
-
 			scaledScatteringGO.transform.SetParent (parentScaledTransform, false);
 
 			MeshFilter skySphereMF = scaledScatteringGO.AddComponent<MeshFilter>();
@@ -88,7 +96,10 @@ namespace scatterer
 			}
 
 			if (scaledScatteringGO != null)
+			{
+				scaledScatteringGO.SetActive(false);
 				UnityEngine.Object.Destroy(scaledScatteringGO);
+			}
 		}
 	}
 

@@ -1,16 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ConfigPointGUI
 	{
@@ -31,7 +22,8 @@ namespace scatterer
 		
 		float extinctionThickness = 1f;
 		float skyExtinctionTint = 1f;
-		
+		float noonSunlightExtinctionStrength = 1f;
+
 		float specR = 0f, specG = 0f, specB = 0f, shininess = 0f, flattenScaledSpaceMesh = 0f;
 		
 		//ConfigPoint variables 		
@@ -112,13 +104,14 @@ namespace scatterer
 				GUIfloat ("Scattering Exposure (scaled+local)", ref postProcessExposure, ref _cur.scatteringExposure);
 				GUIfloat ("Extinction Tint (scaled+local)", ref extinctionTint, ref _cur.extinctionTint);
 				GUIfloat ("Extinction Thickness (scaled+local)", ref extinctionThickness, ref _cur.extinctionThickness);
+				GUIfloat ("Noon Sunlight Extinction strength*", ref noonSunlightExtinctionStrength, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies[selectedPlanet].prolandManager.skyNode.noonSunlightExtinctionStrength);
 				GUILayout.Label ("Post Processing");
 				GUIfloat ("Post Processing Alpha", ref postProcessingalpha, ref _cur.postProcessAlpha);
 				GUIfloat ("Post Processing Depth", ref postProcessDepth, ref _cur.postProcessDepth);
 				GUILayout.Label ("Godrays");
-
+				
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Godray strength*");				
+				GUILayout.Label ("Legacy Godrays strength*");				
 				godrayStrength = Mathf.Min(float.Parse (GUILayout.TextField (godrayStrength.ToString ("0.000"))),1.0f);
 				if (GUILayout.Button ("Set")) {
 					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.godrayStrength = godrayStrength;
@@ -127,12 +120,12 @@ namespace scatterer
 			}
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.usesCloudIntegration) {
 				GUILayout.Label ("EVE integration");
-				GUIfloat ("Cloud Color Multiplier*", ref cloudColorMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.cloudColorMultiplier);
-				GUIfloat ("Cloud Scattering Multiplier*", ref cloudScatteringMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.cloudScatteringMultiplier);
-				GUIfloat ("Cloud Sky irradiance Multiplier*", ref cloudSkyIrradianceMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.cloudSkyIrradianceMultiplier);
-				GUIfloat ("Volumetrics Color Multiplier*", ref volumetricsColorMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.volumetricsColorMultiplier);
+				GUIfloat ("2d Cloud Color Multiplier*", ref cloudColorMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.cloudColorMultiplier);
+				GUIfloat ("2d Cloud Scattering Multiplier*", ref cloudScatteringMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.cloudScatteringMultiplier);
+				GUIfloat ("2d Cloud Sky irradiance Multiplier*", ref cloudSkyIrradianceMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.cloudSkyIrradianceMultiplier);
+				GUIfloat ("Particle Volumetrics Color Multiplier*", ref volumetricsColorMultiplier, ref Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.volumetricsColorMultiplier);
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Preserve cloud colors*");
+				GUILayout.Label ("Preserve 2d cloud colors*");
 				GUILayout.TextField (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.EVEIntegration_preserveCloudColors.ToString ());
 				if (GUILayout.Button ("Toggle"))
 					Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.TogglePreserveCloudColors ();
@@ -351,7 +344,7 @@ namespace scatterer
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (label);
 			
-			local = float.Parse (GUILayout.TextField (local.ToString ("00000.000000")));
+			local = float.Parse (GUILayout.TextField (local.ToString ()));
 			if (GUILayout.Button ("Set")) {
 				target = local;
 			}
@@ -363,9 +356,9 @@ namespace scatterer
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label (label);
 			
-			target.r = float.Parse (GUILayout.TextField (target.r.ToString ("0.0000")));
-			target.g = float.Parse (GUILayout.TextField (target.g.ToString ("0.0000")));
-			target.b = float.Parse (GUILayout.TextField (target.b.ToString ("0.0000")));
+			target.r = float.Parse (GUILayout.TextField (target.r.ToString ()));
+			target.g = float.Parse (GUILayout.TextField (target.g.ToString ()));
+			target.b = float.Parse (GUILayout.TextField (target.b.ToString ()));
 			
 			GUILayout.EndHorizontal ();
 		}

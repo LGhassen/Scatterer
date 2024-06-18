@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System;
 
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ShadowMapRetrieveCommandBuffer : MonoBehaviour
 	{

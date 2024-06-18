@@ -1,15 +1,11 @@
 //"fixes" the shadows fading near far clip plane
-
 using UnityEngine;
 using UnityEngine.Rendering;
-using System.Collections.Generic;
-using System;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ShadowRemoveFadeCommandBuffer : MonoBehaviour
 	{
-
 		private CommandBuffer m_Buffer;
 		private Camera m_Camera;
 

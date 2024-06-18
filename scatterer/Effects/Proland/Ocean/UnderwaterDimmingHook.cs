@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class UnderwaterDimmingHook : MonoBehaviour
 	{

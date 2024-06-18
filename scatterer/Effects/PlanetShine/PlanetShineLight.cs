@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-namespace scatterer
+namespace Scatterer
 {
 	public class PlanetShineLight : MonoBehaviour
 	{

@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 using System.Collections.Generic;
 using System;
 
-namespace scatterer
+namespace Scatterer
 {
 	//transform this to general caustics class, pass to it the light and once of the ocean's meshrenderers?
 	//how to handle the lightrays? do we need to render a quad to screen? do we set it as texture which the underwaterProjector reads from?
@@ -35,7 +35,7 @@ namespace scatterer
 			}
 			else
 			{
-				if (ReferenceEquals (CausticsShadowMaskModulateMaterial, null)) {
+				if (!CausticsShadowMaskModulateMaterial) {
 					CausticsShadowMaskModulateMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CausticsOcclusion")]);
 				}
 
@@ -96,7 +96,7 @@ namespace scatterer
 				
 		public void RemoveCommandBuffer ()
 		{
-			if (!ReferenceEquals(sunLight,null))
+			if (sunLight)
 				sunLight.RemoveCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
 			commandBufferAdded = false;
 		}

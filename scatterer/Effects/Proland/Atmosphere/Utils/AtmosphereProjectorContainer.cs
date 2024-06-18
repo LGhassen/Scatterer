@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class AtmosphereProjectorContainer : GenericLocalAtmosphereContainer
 	{
@@ -30,24 +30,21 @@ namespace scatterer
 			projector.material.CopyKeywordsFrom (atmosphereMaterial);
 		}
 
-		public override void updateContainer ()
+		public override void UpdateContainer ()
 		{
 			bool isEnabled = !underwater && !inScaledSpace && activated;
 			projector.enabled = isEnabled;
 			scatteringGO.SetActive(isEnabled);
 		}
 
-		public override void OnDestroy ()
+		public override void Cleanup ()
 		{
-			setActivated (false);
-			if(!ReferenceEquals(scatteringGO,null))
+			SetActivated (false);
+			if(scatteringGO)
 			{
-				if(!ReferenceEquals(scatteringGO.transform,null))
+				if(scatteringGO.transform && scatteringGO.transform.parent)
 				{
-					if(!ReferenceEquals(scatteringGO.transform.parent,null))
-					{
 						scatteringGO.transform.parent = null;
-					}
 				}
 
 				Component.Destroy(projector);

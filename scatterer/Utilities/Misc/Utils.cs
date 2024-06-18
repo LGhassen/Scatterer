@@ -10,7 +10,7 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public static class Utils
 	{		
@@ -19,7 +19,7 @@ namespace scatterer
 		{
 			get
 			{
-				if (ReferenceEquals(null,pluginPath))
+				if (pluginPath == null)
 				{
 					string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
 					UriBuilder uri = new UriBuilder (codeBase);
@@ -35,7 +35,7 @@ namespace scatterer
 		{
 			get
 			{
-				if (ReferenceEquals(null,gameDataPath))
+				if (gameDataPath==null)
 				{
 					gameDataPath= KSPUtil.ApplicationRootPath + "GameData/";				
 				}
@@ -60,11 +60,11 @@ namespace scatterer
 
 		public static GameObject GetMainMenuObject(CelestialBody celestialBody)
 		{
-			string name = celestialBody.isHomeWorld ? "Kerbin" : celestialBody.name;
+			string name = celestialBody.name;
 
 			GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("Scene")));
 			
-			if (ReferenceEquals(mainMenuObject,null))
+			if (!mainMenuObject)
 			{
 				throw new Exception("No correct main menu object found for "+celestialBody.name);
 			}
@@ -94,10 +94,19 @@ namespace scatterer
 			foreach(ScattererCelestialBody _scattererCB in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
 			{
 				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
-				foreach (Transform child in scaledSunTransform) {
-					MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
-					if (temp != null)
-						temp.material.renderQueue = 2998;
+				if (scaledSunTransform != null)
+				{ 
+					foreach (Transform child in scaledSunTransform)
+					{
+						if (child != null)
+						{ 
+							MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
+							if (temp != null)
+							{ 
+								temp.material.renderQueue = 2998;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -131,7 +140,7 @@ namespace scatterer
 		// If condition is true, enable keywordOn and disable keywordOff, else do the opposite
 		public static void EnableOrDisableShaderKeywords(Material mat, string keywordOn, string keywordOff, bool enable) 
 		{
-			if (!ReferenceEquals(mat,null))
+			if (mat)
 			{
 				if (enable)
 				{
@@ -208,6 +217,31 @@ namespace scatterer
 			LogInfo ("Loaded texture " + name + " " + width.ToString () + "x" + height.ToString () + " mip count: " + mipMapCount.ToString ());
 			
 			return texture;
+		}
+
+		public static void SetToneMapping(Material mat)
+		{
+			//mat.SetInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+
+			// set them globally for the composite clouds material
+			Shader.SetGlobalInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+
+			/*
+			if (Scatterer.Instance.mainSettings.scatteringTonemapper == 3)
+			{
+				HableCurve curve = new HableCurve();
+				curve.Init(
+						Scatterer.Instance.mainSettings.hableToeStrength,
+						Scatterer.Instance.mainSettings.hableToeLength,
+						Scatterer.Instance.mainSettings.hableShoulderStrength,
+						Scatterer.Instance.mainSettings.hableShoulderLength,
+						Scatterer.Instance.mainSettings.hableShoulderAngle,
+						Scatterer.Instance.mainSettings.hableGamma
+					);
+
+				curve.SetMaterialParams(mat);
+			}
+			*/
 		}
 	}
 }

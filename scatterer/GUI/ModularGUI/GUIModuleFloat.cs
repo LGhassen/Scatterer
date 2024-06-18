@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Runtime;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class GUIModuleFloat  : AbstractGUIModule
 	{
@@ -35,7 +35,7 @@ namespace scatterer
 			GUILayout.BeginHorizontal ();
 
 			GUILayout.Label (label);
-			localVariable = float.Parse (GUILayout.TextField (localVariable.ToString ("00000.000000")));
+			localVariable = float.Parse (GUILayout.TextField (localVariable.ToString ()));
 			if (GUILayout.Button ("Set"))
 			{
 				targetField.SetValue(targetObject, localVariable);

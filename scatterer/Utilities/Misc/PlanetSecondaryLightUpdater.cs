@@ -12,7 +12,7 @@ using System.Reflection;
 using System.Text;
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class PlanetSecondaryLightUpdater : MonoBehaviour
 	{
@@ -35,7 +35,7 @@ namespace scatterer
 		{
 			while (true)
 			{
-				if (!ReferenceEquals(sourceMaterial,null) && !ReferenceEquals(targetMaterial,null))
+				if (sourceMaterial && targetMaterial)
 				{
 					targetMaterial.CopyPropertiesFromMaterial (sourceMaterial);
 					targetMaterial.SetShaderPassEnabled ("ForwardBase", false);

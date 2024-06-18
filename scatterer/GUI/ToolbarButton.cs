@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine;
 using KSP.UI.Screens;
 
-namespace scatterer
+namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class ToolbarButton : MonoBehaviour

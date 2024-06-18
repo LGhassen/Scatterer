@@ -5,8 +5,8 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:AssemblyVersion("0.0839")]
-namespace scatterer
+[assembly:AssemblyVersion("0.0875")]
+namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class Scatterer: MonoBehaviour
@@ -21,9 +21,9 @@ namespace scatterer
 		public GUIhandler guiHandler = new GUIhandler();
 		
 		public ScattererCelestialBodiesManager scattererCelestialBodiesManager = new ScattererCelestialBodiesManager ();
-		public BufferManager bufferManager;
 		public SunflareManager sunflareManager; GameObject sunflareManagerGO;
 		public EVEReflectionHandler eveReflectionHandler;
+		private Coroutine cloudReappliedCoroutine;
 		//public PlanetshineManager planetshineManager;
 
 		DisableAmbientLight ambientLightScript;
@@ -48,7 +48,7 @@ namespace scatterer
 		bool coreInitiated = false;
 		public bool isActive = false;
 		public bool unifiedCameraMode = false;
-		public string versionNumber = "0.0839";
+		public string versionNumber = "0.0875";
 
 		public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
 
@@ -71,11 +71,9 @@ namespace scatterer
 			Utils.LogInfo ("Game resolution: " + Screen.width.ToString() + "x" +Screen.height.ToString());
 			Utils.LogInfo ("Compute shader support: " + SystemInfo.supportsComputeShaders.ToString());
 			Utils.LogInfo ("Async GPU readback support: " + SystemInfo.supportsAsyncGPUReadback.ToString());
-			Utils.LogInfo ("Using depth buffer mode: " + mainSettings.useDepthBufferMode.ToString());
 
 			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER || HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
-
 				isActive = true;
 
 				LoadSettings ();
@@ -101,14 +99,15 @@ namespace scatterer
 				}
 			}
 
-			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
-			{
-				QualitySettings.antiAliasing = 0;
-			}
-
 			if (isActive)
 			{
 				StartCoroutine (DelayedInit ());
+			}
+
+			// The built-in AA breaks basically all post effects
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			{
+				QualitySettings.antiAliasing = 0;
 			}
 		}
 
@@ -138,18 +137,11 @@ namespace scatterer
 //			if (mainSettings.usePlanetShine)
 //			{
 //				planetshineManager = new PlanetshineManager();
-//				planetshineManager.Init();
 //			}
 
 			if (HighLogic.LoadedScene != GameScenes.TRACKSTATION)
 			{
-				// Note: Stock KSP dragCubes make a copy of components and removes them rom far/near cameras when rendering
-				// This can cause issues with renderTextures and commandBuffers, to keep in mind for when implementing godrays
-				bufferManager = (BufferManager)scaledSpaceCamera.gameObject.AddComponent (typeof(BufferManager));	// This doesn't need to be added to any camera anymore
-																													// TODO: move to appropriate gameObject
-
-				//copy stock depth buffers and combine into a single depth buffer
-				//TODO: shouldn't this be moved to bufferManager?
+				// copy stock depth buffers and combine into a single depth buffer
 				if (!unifiedCameraMode && (mainSettings.useOceanShaders || mainSettings.fullLensFlareReplacement))
 				{
 					farDepthCommandbuffer = farCamera.gameObject.AddComponent<DepthToDistanceCommandBuffer>();
@@ -157,15 +149,15 @@ namespace scatterer
 				}
 			}
 
-			if (mainSettings.useDepthBufferMode && (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER))
+			// TODO: move all AA logic to a separate class?
+			if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
 			{
 				//cleanup any forgotten/glitched AA scripts
-				foreach (GenericAntiAliasing AA in Resources.FindObjectsOfTypeAll(typeof(GenericAntiAliasing)))
+				foreach (GenericAntiAliasing antiAliasing in Resources.FindObjectsOfTypeAll(typeof(GenericAntiAliasing)))
 				{
-					if (AA)
+					if (antiAliasing)
 					{
-						AA.Cleanup();
-						Component.DestroyImmediate(AA);
+						Component.DestroyImmediate(antiAliasing);
 					}
 				}
 
@@ -174,10 +166,11 @@ namespace scatterer
 					SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
 					antiAliasingScripts.Add(nearAA);
 					
-					//On camera change change apply to new camera
+					// On camera change change apply to new camera
 					GameEvents.OnCameraChange.Add(SMAAOnCameraChange);
 				}
-				else if(mainSettings.useTemporalAntiAliasing)
+
+				if (mainSettings.useTemporalAntiAliasing)
 				{
 					TemporalAntiAliasing nearAA, farAA, scaledAA;
 
@@ -192,13 +185,15 @@ namespace scatterer
 						antiAliasingScripts.Add(farAA);
 					}
 
-					//doesn't seem to hurt performance more
+					// doesn't seem to hurt performance more
 					scaledAA = scaledSpaceCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 					scaledAA.jitterTransparencies = true;
 					antiAliasingScripts.Add(scaledAA);
 
-					//and IVA camera
-					GameEvents.OnCameraChange.Add(AddAAToInternalCamera);
+					if (!mainSettings.useSubpixelMorphologicalAntialiasing)
+					{
+						GameEvents.OnCameraChange.Add(AddTAAToInternalCamera);
+					}
 				}
 				
 				if(mainSettings.mergeDepthPrePass)
@@ -240,36 +235,27 @@ namespace scatterer
 				sunlightModulatorsManagerInstance = new SunlightModulatorsManager();
 			}
 
-			if (mainSettings.useOceanShaders && mainSettings.oceanCraftWaveInteractions && SystemInfo.supportsComputeShaders && SystemInfo.supportsAsyncGPUReadback)
-			{
-				if (mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance)
-				{
-					PhysicsGlobals.BuoyancyCrashToleranceMult = mainSettings.buoyancyCrashToleranceMultOverride;
-				}
-
-				if (mainSettings.oceanCraftWaveInteractionsOverrideDrag)
-				{
-					PhysicsGlobals.BuoyancyWaterDragTimer = double.NegativeInfinity; 
-					PhysicsGlobals.BuoyancyWaterDragScalar = mainSettings.buoyancyWaterDragScalarOverride;
-					PhysicsGlobals.BuoyancyWaterDragScalarEnd = mainSettings.buoyancyWaterDragScalarEndOverride;
-					PhysicsGlobals.BuoyancyWaterAngularDragScalar = mainSettings.buoyancyWaterAngularDragScalarOverride;
-				}
-			}
-
 			coreInitiated = true;
 
 			Utils.LogDebug("Core setup done");
 		}
 
-		void Update ()
+		void Update()
 		{
 			guiHandler.UpdateGUIvisible ();
 
 			//TODO: get rid of this check, maybe move to coroutine? what happens when coroutine exits?
 			if (coreInitiated)
 			{
+                // The built-in AA breaks basically all post effects
+                if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+				{
+					QualitySettings.antiAliasing = 0;
+				}
+
 				scattererCelestialBodiesManager.Update ();
 
+				/*
 				//move this out of this update, let it be a one time thing
 				//TODO: check what this means
 				if (bufferManager)
@@ -277,13 +263,14 @@ namespace scatterer
 					if (!bufferManager.depthTextureCleared && (MapView.MapIsEnabled || !scattererCelestialBodiesManager.isPQSEnabledOnScattererPlanet) )
 						bufferManager.ClearDepthTexture();
 				}
+				*/
 
-				if (!ReferenceEquals(sunflareManager,null))
+				if (sunflareManager != null)
 				{
 					sunflareManager.UpdateFlares();
 				}
 
-//				if(!ReferenceEquals(planetshineManager,null))
+//				if(planetshineManager != null)
 //				{
 //					planetshineManager.UpdatePlanetshine();
 //				}
@@ -293,29 +280,27 @@ namespace scatterer
 		void OnDestroy ()
 		{
 			GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
-			GameEvents.OnCameraChange.Remove(AddAAToInternalCamera);
+			GameEvents.OnCameraChange.Remove(AddTAAToInternalCamera);
 
 			if (isActive)
 			{
-				if (!ReferenceEquals(sunlightModulatorsManagerInstance,null))
+				if (sunlightModulatorsManagerInstance != null)
 				{
 					sunlightModulatorsManagerInstance.Cleanup();
 				}
 
-//				if(!ReferenceEquals(planetshineManager,null))
+//				if(planetshineManager != null)
 //				{
-//					planetshineManager.CleanUp();
-//					Component.DestroyImmediate(planetshineManager);
+//					planetshineManager.Cleanup();
 //				}
 
-				if (!ReferenceEquals(scattererCelestialBodiesManager,null))
+				if (scattererCelestialBodiesManager != null)
 				{
 					scattererCelestialBodiesManager.Cleanup();
 				}
 
 				if (ambientLightScript)
 				{
-					ambientLightScript.restoreLight();
 					Component.DestroyImmediate(ambientLightScript);
 				}				
 
@@ -324,25 +309,21 @@ namespace scatterer
 					if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.DestroyImmediate (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
 					
-					
 					if (farCamera && farCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.DestroyImmediate (farCamera.gameObject.GetComponent (typeof(Wireframe)));
-					
 					
 					if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
 						Component.DestroyImmediate (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
 				}
 
-				if (!ReferenceEquals(sunflareManager,null))
+				if (sunflareManager)
 				{
-					sunflareManager.Cleanup();
 					UnityEngine.Component.DestroyImmediate(sunflareManager);
 					GameObject.DestroyImmediate(sunflareManagerGO);
 				}
 
 				if (shadowFadeRemover)
 				{
-					shadowFadeRemover.OnDestroy();
 					Component.DestroyImmediate(shadowFadeRemover);
 				}
 
@@ -360,24 +341,16 @@ namespace scatterer
 				if (nearDepthPassMerger)
 					Component.DestroyImmediate (nearDepthPassMerger);
 
-				if (bufferManager)
+				foreach (GenericAntiAliasing antiAliasing in antiAliasingScripts)
 				{
-					bufferManager.OnDestroy();
-					Component.DestroyImmediate (bufferManager);
-				}
-
-				foreach (GenericAntiAliasing AA in antiAliasingScripts)
-				{
-					if (AA)
+					if (antiAliasing)
 					{
-						AA.Cleanup();
-						Component.DestroyImmediate(AA);
+						Component.DestroyImmediate(antiAliasing);
 					}
 				}
 
 				if (reflectionProbeChecker)
 				{
-					reflectionProbeChecker.OnDestroy ();
 					Component.DestroyImmediate (reflectionProbeChecker);
 				}
 
@@ -386,8 +359,10 @@ namespace scatterer
 					UnityEngine.GameObject.DestroyImmediate (ReflectionProbeCheckerGO);
 				}
 
-				if (mainSettings.useDepthBufferMode)
-					QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
+				QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
+
+				if (eveReflectionHandler != null)
+					eveReflectionHandler.CleanUp();
 
 				pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
 				SaveSettings();
@@ -486,7 +461,7 @@ namespace scatterer
 					GraphicsSettings.SetCustomShader (BuiltinShaderType.ScreenSpaceShadows, ShaderReplacer.Instance.LoadedShaders [("Scatterer/customScreenSpaceShadows")]);
 				}
 
-				if (mainSettings.shadowsOnOcean)
+				if (mainSettings.shadowsOnOcean || mainSettings.oceanLightRays)
 				{
 					if (unifiedCameraMode || SystemInfo.graphicsDeviceVersion.Contains("Direct3D 11.0"))
 					{
@@ -595,6 +570,24 @@ namespace scatterer
 			}
 		}
 
+		// TODO: this shouldn't be here
+		public void TriggerOnCloudReapplied()
+        {
+			if (cloudReappliedCoroutine != null)
+				StopCoroutine(cloudReappliedCoroutine);
+
+			cloudReappliedCoroutine = StartCoroutine(DelayedOnCloudsReapplied());
+        }
+
+		IEnumerator DelayedOnCloudsReapplied()
+		{
+			yield return new WaitForFixedUpdate();
+			yield return new WaitForFixedUpdate();
+
+			if (eveReflectionHandler != null)
+				eveReflectionHandler.OnCloudsReapplied();
+		}
+
 		public void OnRenderTexturesLost()
 		{
 			foreach (ScattererCelestialBody _cur in planetsConfigsReader.scattererCelestialBodies)
@@ -632,15 +625,15 @@ namespace scatterer
 			_mr.enabled = true;
 		}
 		
-		public void AddAAToInternalCamera(CameraManager.CameraMode cameraMode)
+		public void AddTAAToInternalCamera(CameraManager.CameraMode cameraMode)
 		{
 			if (cameraMode == CameraManager.CameraMode.IVA)
 			{
 				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
-				if (!ReferenceEquals(internalCamera,null))
+				if (internalCamera)
 				{
 					TemporalAntiAliasing internalTAA = internalCamera.GetComponent<TemporalAntiAliasing>();
-					if(ReferenceEquals(internalTAA,null))
+					if(internalTAA == null)
 					{
 						internalTAA = internalCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 						antiAliasingScripts.Add(internalTAA);
@@ -648,23 +641,13 @@ namespace scatterer
 				}
 			}
 		}
-		
+
 		public void SMAAOnCameraChange(CameraManager.CameraMode cameraMode)
 		{
-			foreach (SubpixelMorphologicalAntialiasing AA in antiAliasingScripts)
-			{
-				if (AA) { AA.Cleanup(); Component.DestroyImmediate(AA);}
-			}
-			antiAliasingScripts.Clear ();
-
 			if (cameraMode == CameraManager.CameraMode.IVA)
 			{
-				// Add regular SMAA to flight camera
-				SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-				antiAliasingScripts.Add(nearAA);
-
 				Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
-				if (!ReferenceEquals(internalCamera,null))
+				if (internalCamera)
 				{
 					// Add depth-based SMAA to internal camera, to avoid blurring over cockpit elements and text especially with custom IVAs
 					SubpixelMorphologicalAntialiasing internalSMAA = internalCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
@@ -672,15 +655,17 @@ namespace scatterer
 					antiAliasingScripts.Add(internalSMAA);
 				}
 			}
-			else if (cameraMode == CameraManager.CameraMode.Flight)
-			{
-				SubpixelMorphologicalAntialiasing nearAA = nearCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-				antiAliasingScripts.Add(nearAA);
-			}
-			else if (cameraMode == CameraManager.CameraMode.Map)
-			{
-				SubpixelMorphologicalAntialiasing ScaledAA = scaledSpaceCamera.gameObject.AddComponent<SubpixelMorphologicalAntialiasing>();
-				antiAliasingScripts.Add(ScaledAA);
+			else
+            {
+				var ivaSmaaScripts = antiAliasingScripts.OfType<SubpixelMorphologicalAntialiasing>()
+					.Where(x => x.QualityUsed == SubpixelMorphologicalAntialiasing.Quality.DepthMode).ToList();
+
+				antiAliasingScripts.RemoveAll(script => ivaSmaaScripts.Contains(script));
+
+				foreach (var ivaSmaaScript in ivaSmaaScripts)
+				{
+					Component.DestroyImmediate(ivaSmaaScript);
+				}
 			}
 		}
 

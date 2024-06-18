@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 using System.Collections.Generic;
 using System;
 
-namespace scatterer
+namespace Scatterer
 {
 	
 	// First class inits the material and OnWillRender adds a script to relevant cameras, the given script adds and removes commandbuffers before and after rendering? yes, also enables only OnWillRender and if underwater
@@ -33,7 +33,7 @@ namespace scatterer
 			}
 			else
 			{
-				if (ReferenceEquals (CausticsLightRaysMaterial, null)) {
+				if (CausticsLightRaysMaterial == null) {
 					CausticsLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CausticsGodraysRaymarch")]);
 				}
 				
@@ -118,7 +118,7 @@ namespace scatterer
 		CommandBuffer commandBuffer;
 		Camera targetCamera;
 		private RenderTexture targetRT, targetRT2;
-		private RenderTexture downscaledDepthRT,downscaledDepthRT2;
+		private RenderTexture downscaledDepthRT;
 		private Material downscaleDepthMaterial;
 		bool isInitialized = false;
 		bool renderingEnabled = false;
@@ -134,7 +134,7 @@ namespace scatterer
 		{
 			targetCamera = GetComponent<Camera>();
 			
-			if (!ReferenceEquals (targetCamera.targetTexture, null))
+			if (targetCamera.targetTexture)
 			{
 				targetRT = new RenderTexture (targetCamera.targetTexture.width / 4, targetCamera.targetTexture.height / 4, 0, RenderTextureFormat.R8);
 			}
@@ -159,7 +159,7 @@ namespace scatterer
 			targetRT2.filterMode = FilterMode.Bilinear;
 			targetRT2.Create();
 			
-			downscaledDepthRT = new RenderTexture(targetRT.width * 2, targetRT.height * 2, 0, RenderTextureFormat.RFloat);
+			downscaledDepthRT = new RenderTexture(targetRT.width, targetRT.height, 0, RenderTextureFormat.RFloat);
 			downscaledDepthRT.anisoLevel = 1;
 			downscaledDepthRT.antiAliasing = 1;
 			downscaledDepthRT.volumeDepth = 0;
@@ -167,15 +167,6 @@ namespace scatterer
 			downscaledDepthRT.autoGenerateMips = false;
 			downscaledDepthRT.filterMode = FilterMode.Point;
 			downscaledDepthRT.Create();			
-
-			downscaledDepthRT2 = new RenderTexture(downscaledDepthRT.width / 2, downscaledDepthRT.height / 2, 0, RenderTextureFormat.RFloat);
-			downscaledDepthRT2.anisoLevel = 1;
-			downscaledDepthRT2.antiAliasing = 1;
-			downscaledDepthRT2.volumeDepth = 0;
-			downscaledDepthRT2.useMipMap = false;
-			downscaledDepthRT2.autoGenerateMips = false;
-			downscaledDepthRT2.filterMode = FilterMode.Point;
-			downscaledDepthRT2.Create();
 			
 			downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders [("Scatterer/DownscaleDepth")]);
 			compositeLightRaysMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/CompositeCausticsGodrays")]);
@@ -186,12 +177,9 @@ namespace scatterer
 
 			commandBuffer = new CommandBuffer();
 			
-			//downscale depth to 1/4
+			//downscale depth to 1/16
 			commandBuffer.Blit(null, downscaledDepthRT, downscaleDepthMaterial, 0);
-			commandBuffer.SetGlobalTexture("ScattererDownscaledDepthIntermediate", downscaledDepthRT);
-			//further downscale depth to 1/16
-			commandBuffer.Blit(null, downscaledDepthRT2, downscaleDepthMaterial, 1);
-			commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT2);
+			commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT);
 			
 			//render
 			commandBuffer.Blit(null, targetRT, CausticsLightRaysMaterial);
@@ -236,7 +224,7 @@ namespace scatterer
 		
 		public void OnPostRender()
 		{
-			if (renderingEnabled)
+			if (renderingEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
 			{
 				targetCamera.RemoveCommandBuffer(CameraEvent.AfterForwardAlpha, commandBuffer);
 				renderingEnabled = false;
@@ -246,7 +234,7 @@ namespace scatterer
 		public void CleanUp()
 		{
 			renderingEnabled = false;
-			if (!ReferenceEquals(commandBuffer,null))
+			if (commandBuffer != null)
 			{
 				if (targetCamera)
 				{
@@ -258,7 +246,6 @@ namespace scatterer
 			targetRT.Release ();
 			targetRT2.Release ();
 			downscaledDepthRT.Release ();
-			downscaledDepthRT2.Release ();
 		}
 	}
 }

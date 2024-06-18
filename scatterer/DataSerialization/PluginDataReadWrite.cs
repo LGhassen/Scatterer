@@ -6,7 +6,7 @@ using KSP.IO;
 using UnityEngine;
 
 
-namespace scatterer
+namespace Scatterer
 {
 	public class PluginDataReadWrite
 	{
@@ -52,9 +52,12 @@ namespace scatterer
 		public void savePluginData ()
 		{
 			try
-			{	
+			{
+				var dir = Utils.PluginPath + "/config/PluginData";
+				if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+
 				ConfigNode cnTemp = ConfigNode.CreateConfigFromObject (this);
-				cnTemp.Save (Utils.PluginPath + "/config/PluginData/pluginData.cfg");
+				cnTemp.Save (dir + "/pluginData.cfg");
 			}
 			catch (Exception stupid)
 			{

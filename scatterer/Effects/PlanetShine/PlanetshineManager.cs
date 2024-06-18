@@ -1,27 +1,16 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
-	public class PlanetshineManager : MonoBehaviour
+	public class PlanetshineManager
 	{
 		List<PlanetShineLight> celestialLightSources=new List<PlanetShineLight> {};
 		Cubemap planetShineCookieCubeMap;
 
 		public PlanetshineManager ()
-		{
-		}
-
-		public void Init ()
 		{
 			//load planetshine "cookie" cubemap
 			planetShineCookieCubeMap = new Cubemap (512, TextureFormat.ARGB32, true);
@@ -54,8 +43,12 @@ namespace scatterer
 					aPsLight.source = celBody;
 					if (!_aSource.isSun)
 						aPsLight.sunCelestialBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == _aSource.mainSunCelestialBody);
-					GameObject ScaledPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledSpaceSunLight.gameObject);
-					GameObject LocalPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledSpaceSunLight.gameObject);
+					// GameObject ScaledPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledSpaceSunLight.gameObject);
+					// GameObject LocalPlanetShineLight = (UnityEngine.GameObject)Instantiate (Scatterer.Instance.scaledSpaceSunLight.gameObject);
+
+					//TODO: fix this if I ever come back to it
+					GameObject ScaledPlanetShineLight = new GameObject();
+					GameObject LocalPlanetShineLight = new GameObject();
 					ScaledPlanetShineLight.GetComponent<Light> ().type = LightType.Point;
 					if (!_aSource.isSun)
 						ScaledPlanetShineLight.GetComponent<Light> ().cookie = planetShineCookieCubeMap;
@@ -90,7 +83,7 @@ namespace scatterer
 			}
 		}
 
-		public void CleanUp()
+		public void Cleanup()
 		{
 			foreach (PlanetShineLight _aLight in celestialLightSources)
 			{

@@ -14,7 +14,7 @@ using System.Text;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ReflectionProbeFixer : MonoBehaviour
 	{
@@ -70,14 +70,14 @@ namespace scatterer
 
 		public void OnDestroy()
 		{
-			if (!ReferenceEquals(scaledCamera,null))
+			if (scaledCamera)
 			{
-				Component.Destroy (scaledCamera);
+				Component.DestroyImmediate(scaledCamera);
 			}
 
-			if (!ReferenceEquals (scaledCameraGO, null))
+			if (scaledCameraGO)
 			{
-				UnityEngine.Object.Destroy (scaledCameraGO);
+				UnityEngine.Object.DestroyImmediate (scaledCameraGO);
 			}
 		}
 	}

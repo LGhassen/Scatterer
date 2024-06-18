@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 
 
-namespace scatterer
+namespace Scatterer
 {
 	public class QualityPresetsLoader
 	{

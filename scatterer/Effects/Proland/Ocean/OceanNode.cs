@@ -36,7 +36,7 @@ using UnityEngine.Rendering;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	//TODO: refactor and clean up this class
 	public abstract class OceanNode: MonoBehaviour
@@ -152,27 +152,24 @@ namespace scatterer
 			oceanRenderingHook = waterGameObjects[0].AddComponent<OceanRenderingHook>();
 			oceanRenderingHook.targetMaterial = m_oceanMaterial;
 			oceanRenderingHook.targetRenderer = waterMeshRenderers [0];
+			oceanRenderingHook.celestialBodyName = prolandManager.parentCelestialBody.name;
 
 			DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
 			disableEffectsChecker.manager = this.prolandManager;
 
-			if (Scatterer.Instance.mainSettings.shadowsOnOcean)
+			if (Scatterer.Instance.mainSettings.shadowsOnOcean || Scatterer.Instance.mainSettings.oceanLightRays)
 			{
 				ShadowMapRetrieveCommandBuffer retriever = prolandManager.mainSunLight.gameObject.GetComponent<ShadowMapRetrieveCommandBuffer>();
-				if (ReferenceEquals(retriever,null))
+				if (!retriever)
 					prolandManager.mainSunLight.gameObject.AddComponent (typeof(ShadowMapRetrieveCommandBuffer));
 			}
 
 			InitUnderwaterMaterial ();
 
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-				underwaterScattering = new ScreenSpaceScatteringContainer(underwaterMaterial,prolandManager.parentLocalTransform,(float)prolandManager.m_radius, prolandManager, false);	//this shouldn't need quarter res as it isn't expensive
-			else
-				underwaterScattering = new AtmosphereProjectorContainer(underwaterMaterial,prolandManager.parentLocalTransform,(float)prolandManager.m_radius, prolandManager);
-
-			underwaterScattering.setInScaledSpace(false);
-			underwaterScattering.setActivated(false);
-			underwaterScattering.updateContainer ();
+			underwaterScattering = new ScreenSpaceScatteringContainer(underwaterMaterial,prolandManager.parentLocalTransform,(float)prolandManager.m_radius, prolandManager, false);	//this shouldn't need quarter res as it isn't expensive
+			underwaterScattering.SetInScaledSpace(false);
+			underwaterScattering.SetActivated(false);
+			underwaterScattering.UpdateContainer ();
 
 			//dimming
 			//TODO: maybe this can be changed, instead of complicated hooks on the Camera, add it to the light, like causticsShadowMaskModulate?
@@ -193,7 +190,7 @@ namespace scatterer
 					causticsShadowMaskModulator = null;
 				}
 
-				if (Scatterer.Instance.mainSettings.oceanLightRays && Scatterer.Instance.mainSettings.shadowsOnOcean)
+				if (Scatterer.Instance.mainSettings.oceanLightRays)
 				{
 					causticsLightRaysRenderer = (CausticsLightRaysRenderer) waterGameObjects[0].AddComponent<CausticsLightRaysRenderer>();
 					if (!causticsLightRaysRenderer.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
@@ -217,14 +214,14 @@ namespace scatterer
 
 			isUnderwater = height < waterHeightAtCameraPosition;
 
-			underwaterScattering.setActivated(isUnderwater);
+			underwaterScattering.SetActivated(isUnderwater);
 
 			if (underwaterMode ^ isUnderwater)
 			{
 				toggleUnderwaterMode();
 			}
 
-			if (!ReferenceEquals (causticsShadowMaskModulator, null))
+			if (causticsShadowMaskModulator)
 			{
 				causticsShadowMaskModulator.isEnabled = oceanDraw && (prolandManager.GetSkyNode().altitude < 6000f);
 				causticsShadowMaskModulator.UpdateCaustics ();
@@ -243,7 +240,7 @@ namespace scatterer
 			planetOpacity = 1f - prolandManager.parentCelestialBody.pqsController.surfaceMaterial.GetFloat (ShaderProperties._PlanetOpacity_PROPERTY);
 			m_oceanMaterial.SetFloat (ShaderProperties._PlanetOpacity_PROPERTY, planetOpacity);
 
-			m_oceanMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, Scatterer.Instance.mainSettings.useDepthBufferMode || (planetOpacity == 1) ? 1 : 0); //if planetOpacity!=1, ie fading out the sea, disable scattering on it and enable the projector scattering, for the projector scattering to work need to disable zwrite
+			m_oceanMaterial.SetInt (ShaderProperties._ZwriteVariable_PROPERTY, 1);
 		}
 
 		public void OnPreCull()
@@ -332,41 +329,18 @@ namespace scatterer
 				m_oceanMaterial.DisableKeyword ("OCEAN_SHADOWS_SOFT");
 			}
 
-//			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "SCATTERER_MERGED_DEPTH_OFF", "SCATTERER_MERGED_DEPTH_ON", Scatterer.Instance.unifiedCameraMode);
+			m_oceanMaterial.EnableKeyword("DEPTH_BUFFER_MODE_ON");
+			m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
+			m_oceanMaterial.DisableKeyword("PROJECTOR_MODE_GODRAYS");
 
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-			{
-				m_oceanMaterial.EnableKeyword("DEPTH_BUFFER_MODE_ON");
-				m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
-				m_oceanMaterial.DisableKeyword("PROJECTOR_MODE_GODRAYS");
-			}
-			else
-			{
-				m_oceanMaterial.DisableKeyword("DEPTH_BUFFER_MODE_ON");
-				if (!ReferenceEquals (prolandManager.skyNode.godraysRenderer, null))
-				{
-					m_oceanMaterial.EnableKeyword("PROJECTOR_MODE_GODRAYS");
-					m_oceanMaterial.DisableKeyword("PROJECTOR_MODE");
-				}
-				else
-				{
-					m_oceanMaterial.EnableKeyword("PROJECTOR_MODE");
-					m_oceanMaterial.DisableKeyword("PROJECTOR_MODE_GODRAYS");
-				}
-			}
-
-			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "DEPTH_BUFFER_MODE_ON", "DEPTH_BUFFER_MODE_OFF", Scatterer.Instance.mainSettings.useDepthBufferMode);
-
+			Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "DEPTH_BUFFER_MODE_ON", "DEPTH_BUFFER_MODE_OFF", true);
 
 			m_oceanMaterial.SetOverrideTag ("IgnoreProjector", "True");
-			
-			prolandManager.GetSkyNode ().InitUniforms (m_oceanMaterial);
 
-			if (!Scatterer.Instance.unifiedCameraMode)
-				m_oceanMaterial.SetTexture (ShaderProperties._customDepthTexture_PROPERTY, Scatterer.Instance.bufferManager.depthTexture);
+            if (!Scatterer.Instance.unifiedCameraMode && DepthToDistanceCommandBuffer.RenderTexture != null)
+                m_oceanMaterial.SetTexture(ShaderProperties._customDepthTexture_PROPERTY, DepthToDistanceCommandBuffer.RenderTexture);
 
-			m_oceanMaterial.renderQueue=2502;
-			prolandManager.GetSkyNode ().InitPostprocessMaterialUniforms (m_oceanMaterial);
+            m_oceanMaterial.renderQueue=2502;
 			
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
 			m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
@@ -393,12 +367,7 @@ namespace scatterer
 		
 		void InitUnderwaterMaterial ()
 		{
-			if (Scatterer.Instance.mainSettings.useDepthBufferMode)
-				underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterDepthBuffer")]);
-			else
-				underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterProjector")]);
-
-			prolandManager.GetSkyNode ().InitPostprocessMaterialUniforms (underwaterMaterial);
+			underwaterMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/UnderwaterScatterDepthBuffer")]);
 			underwaterMaterial.renderQueue = 2502; //draw over fairings which is 2450 and over ocean which is 2501
 			
 			underwaterMaterial.SetFloat ("transparencyDepth", transparencyDepth);
@@ -413,72 +382,66 @@ namespace scatterer
 		{
 			if (underwaterMode) //switch to over water
 			{
-				underwaterScattering.setActivated(false);
-				underwaterScattering.updateContainer ();
+				underwaterScattering.SetActivated(false);
+				underwaterScattering.UpdateContainer ();
 				m_oceanMaterial.EnableKeyword("UNDERWATER_OFF");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_ON");
-				if (!ReferenceEquals(prolandManager.GetSkyNode().localScatteringContainer,null))
-					prolandManager.GetSkyNode().localScatteringContainer.setUnderwater(false);
-
+				prolandManager.GetSkyNode().SetUnderwater(false);
 			}
 			else   //switch to underwater 
 			{
-				underwaterScattering.setActivated(true);
-				underwaterScattering.updateContainer ();
+				underwaterScattering.SetActivated(true);
+				underwaterScattering.UpdateContainer ();
 				m_oceanMaterial.EnableKeyword("UNDERWATER_ON");
 				m_oceanMaterial.DisableKeyword("UNDERWATER_OFF");
-				if (!ReferenceEquals(prolandManager.GetSkyNode().localScatteringContainer,null))
-					prolandManager.GetSkyNode().localScatteringContainer.setUnderwater(true);
+				prolandManager.GetSkyNode().SetUnderwater(true);
 			}
 
 			underwaterMode = !underwaterMode;
 		}
 
-		public virtual void Cleanup ()
+		public virtual void OnDestroy ()
 		{	
 			if (oceanCameraProjectionMatModifier)
 			{
-				oceanCameraProjectionMatModifier.OnDestroy ();
 				Component.Destroy (oceanCameraProjectionMatModifier);
 				UnityEngine.Object.Destroy (oceanCameraProjectionMatModifier);
 			}
 			
 			for (int i = 0; i < numGrids; i++)
 			{
-				Destroy(waterGameObjects[i]);
-				Component.Destroy(waterMeshFilters[i]);
-				Component.Destroy(waterMeshRenderers[i]);
+				DestroyImmediate(waterGameObjects[i]);
+				Component.DestroyImmediate(waterMeshFilters[i]);
+				Component.DestroyImmediate(waterMeshRenderers[i]);
 				
-				UnityEngine.Object.Destroy (m_screenGrids [i]);
+				UnityEngine.Object.DestroyImmediate(m_screenGrids [i]);
 			}
 			
 			
-			UnityEngine.Object.Destroy (m_oceanMaterial);
-			UnityEngine.Object.Destroy (underwaterMaterial);
+			UnityEngine.Object.DestroyImmediate(m_oceanMaterial);
+			UnityEngine.Object.DestroyImmediate(underwaterMaterial);
 			
 			if (underwaterDimmingHook)
-				Component.Destroy (underwaterDimmingHook);
+				Component.DestroyImmediate(underwaterDimmingHook);
 			
-			if (!ReferenceEquals(null,underwaterScattering))
+			if (underwaterScattering!=null)
 			{
-				underwaterScattering.OnDestroy();
+				underwaterScattering.Cleanup();
 			}
 
-			if (!ReferenceEquals(null,causticsShadowMaskModulator))
+			if (causticsShadowMaskModulator)
 			{
-				causticsShadowMaskModulator.OnDestroy();
-				UnityEngine.Object.Destroy (causticsShadowMaskModulator);
+				UnityEngine.Object.DestroyImmediate (causticsShadowMaskModulator);
 			}
 
-			if (!ReferenceEquals(null,causticsLightRaysRenderer))
+			if (causticsLightRaysRenderer)
 			{
-				causticsLightRaysRenderer.OnDestroy();
-				UnityEngine.Object.Destroy (causticsLightRaysRenderer);
+				UnityEngine.Object.DestroyImmediate(causticsLightRaysRenderer);
 			}
 
-			if (!ReferenceEquals (null, oceanRenderingHook))
+			if (oceanRenderingHook)
 			{
-				Component.Destroy(oceanRenderingHook);
+				Component.DestroyImmediate(oceanRenderingHook);
 			}
 		}
 
@@ -565,8 +528,7 @@ namespace scatterer
 				
 				(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == prolandManager.parentCelestialBody.name)).hasOcean = false;
 				
-				this.Cleanup();
-				UnityEngine.Object.Destroy (this);
+				UnityEngine.Component.DestroyImmediate (this);
 			}
 		}
 

@@ -10,7 +10,7 @@ using System.Text;
 
 using KSP.IO;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ReflectionProbeChecker : MonoBehaviour
 	{
@@ -61,10 +61,9 @@ namespace scatterer
 			{
 				foreach (var _val in camToFixer.Values)
 				{
-					if (!ReferenceEquals(_val,null))
+					if (_val)
 					{
-						Component.Destroy (_val);
-						UnityEngine.Object.Destroy (_val);
+						Component.DestroyImmediate (_val);
 					}
 				}
 				camToFixer.Clear();

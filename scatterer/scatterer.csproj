@@ -96,13 +96,19 @@
     <Reference Include="UnityEngine.UnityWebRequestWWWModule">
       <HintPath>..\..\..\..\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.VRModule">
+      <HintPath>..\..\..\..\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\UnityEngine.VRModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataSerialization\ConfigPoint.cs" />
     <Compile Include="DataSerialization\PlanetshineSource.cs" />
     <Compile Include="DataSerialization\ScattererCelestialBody.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Godrays\RaymarchedGodraysRenderer.cs" />
+    <Compile Include="Effects\Proland\Ocean\GPUWaveInteractionHandler.cs" />
     <Compile Include="Effects\SunFlare\SunFlare.cs" />
     <Compile Include="Effects\SunFlare\SunflareCameraHook.cs" />
+    <Compile Include="Effects\Tonemapping\HableCurve.cs" />
     <Compile Include="GUI\GUIhandler.cs" />
     <Compile Include="GUI\ToolbarButton.cs" />
     <Compile Include="Utilities\Math\MathUtility.cs" />
@@ -139,11 +145,9 @@
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmospherePQS.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereUtils.cs" />
     <Compile Include="Effects\Proland\ProlandManager.cs" />
-    <Compile Include="Utilities\BufferManager.cs" />
     <Compile Include="Scatterer.cs" />
     <Compile Include="Utilities\Shader\ShaderReplacer.cs" />
     <Compile Include="Utilities\Shader\ShaderProperties.cs" />
-    <Compile Include="Utilities\Shader\RenderTypeFixer.cs" />
     <Compile Include="Utilities\Camera\DisableEffectsChecker.cs" />
     <Compile Include="Utilities\Camera\DisableAmbientLight.cs" />
     <Compile Include="Utilities\Camera\WireFrame.cs" />
@@ -173,7 +177,7 @@
     <Compile Include="Effects\Proland\Ocean\Utils\CBUtility.cs" />
     <Compile Include="Effects\Proland\Ocean\Caustics\CausticsLightRaysRenderer.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanCameraUpdateHook.cs" />
-    <Compile Include="Effects\Proland\Atmosphere\Godrays\GodraysRenderer.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Godrays\LegacyGodraysRenderer.cs" />
     <Compile Include="Utilities\EVE\EVEReflectionHandler.cs" />
     <Compile Include="Utilities\Misc\IcoSphere.cs" />
     <Compile Include="Utilities\Occlusion\ShadowMapCopier.cs" />
@@ -192,6 +196,8 @@
     <Compile Include="Effects\AntiAliasing\GenericAntiAliasing.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV2.cs" />
     <Compile Include="Effects\SunFlare\SunflareSettingsV1.cs" />
+    <Compile Include="Utilities\Textures\RenderTextureUtils.cs" />
+    <Compile Include="Utilities\Textures\VRUtils.cs" />
     <Compile Include="Utilities\VsyncStartupFix.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Preprocessing\AtmoPreprocessor.cs" />
     <Compile Include="GUI\MainOptionsGUI.cs" />

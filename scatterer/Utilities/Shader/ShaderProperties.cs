@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.Instantly, true)]
 	public class ShaderProperties : MonoBehaviour
@@ -148,16 +148,18 @@ namespace scatterer
 		private static int _Ocean_Foam0;
 		public static int _Ocean_Foam1_PROPERTY { get { return _Ocean_Foam1; } }
 		private static int _Ocean_Foam1;
-		public static int _Transmittance_PROPERTY { get { return _Transmittance; } }
-		private static int _Transmittance;
-		public static int _Inscatter_PROPERTY { get { return _Inscatter; } }
-		private static int _Inscatter;
-		public static int _Irradiance_PROPERTY { get { return _Irradiance; } }
-		private static int _Irradiance;
+		public static int Transmittance_PROPERTY { get { return Transmittance; } }
+		private static int Transmittance;
+		public static int Inscatter_PROPERTY { get { return Inscatter; } }
+		private static int Inscatter;
+		public static int Irradiance_PROPERTY { get { return Irradiance; } }
+		private static int Irradiance;
 		public static int _customDepthTexture_PROPERTY { get { return _customDepthTexture; } }
 		private static int _customDepthTexture;
 		public static int _godrayDepthTexture_PROPERTY { get { return _godrayDepthTexture; } }
 		private static int _godrayDepthTexture;
+		public static int godraysSoftwareSwitch_PROPERTY { get { return godraysSoftwareSwitch; } }
+		private static int godraysSoftwareSwitch;
 		public static int M_PI_PROPERTY { get { return M_PI; } }
 		private static int M_PI;
 		public static int SKY_W_PROPERTY { get { return SKY_W; } }
@@ -270,9 +272,15 @@ namespace scatterer
 
 		public static int renderSunFlare_PROPERTY { get { return renderSunFlare; } }
 		private static int renderSunFlare;
-		
-		public static int sunViewPortPos_PROPERTY { get { return sunViewPortPos; } }
-		private static int sunViewPortPos;
+
+		public static int scattererReconstructedCloud_PROPERTY { get { return scattererReconstructedCloud; } }
+		private static int scattererReconstructedCloud;
+
+		public static int scattererCloudLightVolumeEnabled_PROPERTY { get { return scattererCloudLightVolumeEnabled; } }
+		private static int scattererCloudLightVolumeEnabled;
+
+		public static int sunWorldPosition_PROPERTY { get { return sunWorldPosition; } }
+		private static int sunWorldPosition;
 		
 		public static int aspectRatio_PROPERTY { get { return aspectRatio; } }
 		private static int aspectRatio;
@@ -361,6 +369,60 @@ namespace scatterer
 		public static int _godrayStrength_PROPERTY { get { return _godrayStrength; } }
 		private static int _godrayStrength;
 
+		public static int render_ocean_cloud_shadow_PROPERTY { get { return render_ocean_cloud_shadow; } }
+		private static int render_ocean_cloud_shadow;
+
+		public static int frameNumber_PROPERTY { get { return frameNumber; } }
+		private static int frameNumber;
+
+		public static int downscaledDepth_PROPERTY { get { return downscaledDepth; } }
+		private static int downscaledDepth;
+
+		public static int historyGodrayOcclusionBuffer_PROPERTY { get { return historyGodrayOcclusionBuffer; } }
+		private static int historyGodrayOcclusionBuffer;
+
+		public static int historyGodrayDepthBuffer_PROPERTY { get { return historyGodrayDepthBuffer; } }
+		private static int historyGodrayDepthBuffer;
+
+		public static int previousVP_PROPERTY { get { return previousVP; } }
+		private static int previousVP;
+
+		public static int inverseProjection_PROPERTY { get { return inverseProjection; } }
+		private static int inverseProjection;
+
+		public static int downscaledGodrayDepth_PROPERTY { get { return downscaledGodrayDepth; } }
+		private static int downscaledGodrayDepth;
+
+		public static int godraysStepCount_PROPERTY { get { return godraysStepCount; } }
+		private static int godraysStepCount;
+
+		public static int _ScreenColor_PROPERTY { get { return _ScreenColor; } }
+		private static int _ScreenColor;
+
+		public static int _HistoryTex_PROPERTY { get { return _HistoryTex; } }
+		private static int _HistoryTex;
+
+		public static int renderSkyOnCurrentCamera_PROPERTY { get { return renderSkyOnCurrentCamera; } }
+		private static int renderSkyOnCurrentCamera;
+
+		public static int AtmosphereAtlas_PROPERTY { get { return AtmosphereAtlas; } }
+		private static int AtmosphereAtlas;
+
+		public static int InscatterAtlasScaleAndOffset_PROPERTY { get { return InscatterAtlasScaleAndOffset; } }
+		private static int InscatterAtlasScaleAndOffset;
+
+		public static int IrradianceAtlasScaleAndOffset_PROPERTY { get { return IrradianceAtlasScaleAndOffset; } }
+		private static int IrradianceAtlasScaleAndOffset;
+
+		public static int TransmittanceAtlasScaleAndOffset_PROPERTY { get { return TransmittanceAtlasScaleAndOffset; } }
+		private static int TransmittanceAtlasScaleAndOffset;
+
+		public static int AtmosphereAtlasDimensions_PROPERTY { get { return AtmosphereAtlasDimensions; } }
+		private static int AtmosphereAtlasDimensions;
+
+		public static int PRECOMPUTED_SCTR_LUT_DIM_PROPERTY { get { return PRECOMPUTED_SCTR_LUT_DIM; } }
+		private static int PRECOMPUTED_SCTR_LUT_DIM;
+
 		private void Awake()
 		{
 			Rg = Shader.PropertyToID("Rg");
@@ -430,11 +492,12 @@ namespace scatterer
 			_Ocean_Foam0 = Shader.PropertyToID("_Ocean_Foam0");
 			_Ocean_Foam1 = Shader.PropertyToID("_Ocean_Foam1");
 
-			_Transmittance = Shader.PropertyToID("_Transmittance");
-			_Inscatter = Shader.PropertyToID("_Inscatter");
-			_Irradiance = Shader.PropertyToID("_Irradiance");
+			Transmittance = Shader.PropertyToID("Transmittance");
+			Inscatter = Shader.PropertyToID("Inscatter");
+			Irradiance = Shader.PropertyToID("Irradiance");
 			_customDepthTexture = Shader.PropertyToID("_customDepthTexture");
 			_godrayDepthTexture = Shader.PropertyToID("_godrayDepthTexture");
+			godraysSoftwareSwitch = Shader.PropertyToID("godraysSoftwareSwitch");
 
 			M_PI = Shader.PropertyToID("M_PI");
 			SKY_W = Shader.PropertyToID("SKY_W");
@@ -484,7 +547,9 @@ namespace scatterer
 			flatScaledSpaceModel = Shader.PropertyToID("flatScaledSpaceModel");
 
 			renderSunFlare = Shader.PropertyToID("renderSunFlare");
-			sunViewPortPos = Shader.PropertyToID("sunViewPortPos");
+			scattererReconstructedCloud = Shader.PropertyToID("scattererReconstructedCloud");
+			scattererCloudLightVolumeEnabled = Shader.PropertyToID("scattererCloudLightVolumeEnabled");
+			sunWorldPosition = Shader.PropertyToID("sunWorldPosition");
 			aspectRatio = Shader.PropertyToID("aspectRatio");
 			sunGlareScale = Shader.PropertyToID("sunGlareScale");
 			sunGlareFade = Shader.PropertyToID("sunGlareFade");
@@ -521,6 +586,29 @@ namespace scatterer
 			lightToWorld = Shader.PropertyToID("lightToWorld");
 
 			_godrayStrength = Shader.PropertyToID("_godrayStrength");
+
+			render_ocean_cloud_shadow = Shader.PropertyToID("render_ocean_cloud_shadow");
+
+			frameNumber = Shader.PropertyToID("frameNumber");
+			downscaledDepth = Shader.PropertyToID("downscaledDepth");
+			historyGodrayOcclusionBuffer = Shader.PropertyToID("historyGodrayOcclusionBuffer");
+			historyGodrayDepthBuffer = Shader.PropertyToID("historyGodrayDepthBuffer");
+			previousVP = Shader.PropertyToID("previousVP");
+			inverseProjection = Shader.PropertyToID("inverseProjection");
+			downscaledGodrayDepth = Shader.PropertyToID("downscaledGodrayDepth");
+			godraysStepCount = Shader.PropertyToID("godraysStepCount");
+
+			_ScreenColor = Shader.PropertyToID("_ScreenColor");
+			_HistoryTex = Shader.PropertyToID("_HistoryTex");
+
+			renderSkyOnCurrentCamera = Shader.PropertyToID("renderSkyOnCurrentCamera");
+
+			AtmosphereAtlas = Shader.PropertyToID("AtmosphereAtlas");
+			InscatterAtlasScaleAndOffset = Shader.PropertyToID("InscatterAtlasScaleAndOffset");
+			IrradianceAtlasScaleAndOffset = Shader.PropertyToID("IrradianceAtlasScaleAndOffset");
+			TransmittanceAtlasScaleAndOffset = Shader.PropertyToID("TransmittanceAtlasScaleAndOffset");
+			PRECOMPUTED_SCTR_LUT_DIM = Shader.PropertyToID("PRECOMPUTED_SCTR_LUT_DIM");
+			AtmosphereAtlasDimensions = Shader.PropertyToID("AtmosphereAtlasDimensions");
 		}
 	}
 }

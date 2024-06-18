@@ -11,7 +11,7 @@ using KSP.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace scatterer
+namespace Scatterer
 {
 	// Merges the depth pre-pass result into the screenbuffer's depth to reduce overdraw and make the pre-pass more useful
 	// Only usable with MSAA off so only for depth buffer mode
@@ -43,7 +43,7 @@ namespace scatterer
 
 		public void OnDestroy()
 		{
-			if (!ReferenceEquals (targetCamera, null) && !ReferenceEquals (depthInitCommandBuffer, null))
+			if (targetCamera && depthInitCommandBuffer != null)
 			{
 				targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
 			}

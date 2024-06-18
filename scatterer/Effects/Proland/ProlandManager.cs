@@ -10,7 +10,7 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	/*
 	 * A manager to organise what order update functions are called
@@ -66,7 +66,7 @@ namespace scatterer
 			mainSunLight = findLight (scattererBody.mainSunCelestialBody);
 			mainScaledSunLight = findScaledLight (scattererBody.mainSunCelestialBody);
 
-			if (ReferenceEquals (mainSunLight, null))
+			if (!mainSunLight)
 			{
 				Utils.LogError ("No light found for " + scattererBody.mainSunCelestialBody + " for body " + parentCelestialBody.name + ". Defaulting to main sunlight, godrays, lightrays and caustics may look wrong, check your Kopernicus configuration.");
 				mainSunLight = Scatterer.Instance.sunLight;
@@ -122,7 +122,7 @@ namespace scatterer
 		{
 			Light light = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == sunCelestialBody));
 
-			if (ReferenceEquals(light,null) && (sunCelestialBody == "Sun"))
+			if (!light && (sunCelestialBody == "Sun"))
 				light = Scatterer.Instance.sunLight;
 
 			return light;
@@ -132,7 +132,7 @@ namespace scatterer
 		{
 			Light light = Scatterer.Instance.lights.SingleOrDefault (_light => (_light != null) && (_light.gameObject != null) && (_light.gameObject.name == ("Scaledspace SunLight "+sunCelestialBody)));
 
-			if (ReferenceEquals(light,null) && (sunCelestialBody == "Sun"))
+			if (!light && (sunCelestialBody == "Sun"))
 				light = Scatterer.Instance.scaledSpaceSunLight;
 			
 			return  light;
@@ -206,7 +206,7 @@ namespace scatterer
 
 			skyNode.UpdateNode();
 			
-			if (!ReferenceEquals(oceanNode,null))
+			if (oceanNode)
 			{
 				oceanNode.UpdateNode();
 			}
@@ -217,7 +217,7 @@ namespace scatterer
 			foreach (SecondarySunConfig sunConfig in scattererBody.secondarySuns)
 			{
 				SecondarySun secondarySun = SecondarySun.FindSecondarySun (sunConfig);
-				if (!ReferenceEquals (secondarySun, null))
+				if (secondarySun != null)
 				{
 					secondarySun.sunLight = findLight (sunConfig.celestialBodyName);
 					secondarySun.scaledSunLight = findScaledLight (sunConfig.celestialBodyName);
@@ -268,15 +268,16 @@ namespace scatterer
 		
 		public void OnDestroy()
 		{
-			if (!ReferenceEquals(skyNode,null))
+			if (skyNode)
 			{
-				skyNode.Cleanup();
-				Component.DestroyImmediate(skyNode);
+				skyNode.OnDestroy(); // no idea why this doesn't fire by itself sometimes
+				Component.Destroy(skyNode);
 			}
-			
-			if (!ReferenceEquals(oceanNode,null)) {
-				oceanNode.Cleanup();
-				Component.DestroyImmediate(oceanNode);
+
+			if (oceanNode)
+			{
+				oceanNode.OnDestroy();
+				Component.Destroy(oceanNode);
 			}
 		}
 
@@ -284,11 +285,9 @@ namespace scatterer
 		//Therefor add an option to init from configNode? yep
 		public void reBuildOcean()
 		{
-			if (!ReferenceEquals(oceanNode,null))
+			if (oceanNode)
 			{
-				oceanNode.Cleanup();
-				Component.Destroy(oceanNode);
-				UnityEngine.Object.Destroy(oceanNode);
+				Component.DestroyImmediate(oceanNode);
 
 				if (Scatterer.Instance.mainSettings.oceanFoam)
 					oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
@@ -299,6 +298,9 @@ namespace scatterer
 
 				Utils.LogDebug("Rebuilt Ocean");
 			}
+
+			if (skyNode)
+				skyNode.InitOceanMaterialUniforms();
 		}
 
 		public Vector3 getDirectionToMainSun()

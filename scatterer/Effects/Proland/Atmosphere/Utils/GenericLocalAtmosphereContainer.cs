@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Runtime;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public abstract class GenericLocalAtmosphereContainer
 	{	
@@ -25,23 +25,23 @@ namespace scatterer
 			manager = parentManager;
 		}
 
-		public void setActivated (bool pEnabled)
+		public void SetActivated (bool pEnabled)
 		{
 			activated = pEnabled;
 		}
 		
-		public void setInScaledSpace (bool pInScaledSpace)
+		public void SetInScaledSpace (bool pInScaledSpace)
 		{
 			inScaledSpace = pInScaledSpace;
 		}
 		
-		public void setUnderwater (bool pUnderwater)
+		public void SetUnderwater (bool pUnderwater)
 		{
 			underwater = pUnderwater;
 		}
 		
-		public abstract void updateContainer ();
+		public abstract void UpdateContainer ();
 
-		public abstract void OnDestroy ();
+		public abstract void Cleanup ();
 	}
 }

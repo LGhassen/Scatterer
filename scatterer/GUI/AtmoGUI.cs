@@ -10,7 +10,7 @@ using KSP;
 using KSP.IO;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class AtmoGUI
 	{
@@ -22,10 +22,15 @@ namespace scatterer
 		Vector3 m_betaR = new Vector3(0.029f, 0.0675f, 0.1655f);
 		Vector3 BETA_MSca = new Vector3(0.02f,0.02f,0.02f);
 
+		Vector3 ozoneAbsorption = new Vector3(0.0000003426f, 0.0000008298f, 0.000000036f);
+		float ozoneHeight = 25f;
+		float ozoneFalloff = 15f;
+		bool useOzone = false;
+
 		float m_mieG = 0.85f;
 		float AVERAGE_GROUND_REFLECTANCE = 0.1f;
 
-		float rescale=1f, thickenRayleigh=1f, thickenMie=1f;
+		float rescale = 1f, thickenRayleigh = 1f, thickenMie = 1f, thickenOzone = 1f;
 		
 		bool multipleScattering = true;
 		bool fastPreviewMode = false;
@@ -41,18 +46,17 @@ namespace scatterer
 		{
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Atmosphere start radius     ");				
-			GUILayout.TextField((Rg * atmosphereStartRadiusScale).ToString("000000000.0"));
+			GUILayout.TextField((Rg * atmosphereStartRadiusScale).ToString());
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Scale start radius");
-			atmosphereStartRadiusScale=(float)(float.Parse(GUILayout.TextField(atmosphereStartRadiusScale.ToString("00.0000"))));
+			atmosphereStartRadiusScale=(float)(float.Parse(GUILayout.TextField(atmosphereStartRadiusScale.ToString())));
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Atmo height (auto)");
-			GUILayout.TextField((AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca)-Rg*atmosphereStartRadiusScale).ToString("000000000.0"));
-			//Rt=float.Parse(GUILayout.TextField(Rt.ToString("00000000.0")));
+			GUILayout.TextField((AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca, useOzone, ozoneHeight, ozoneFalloff)-Rg*atmosphereStartRadiusScale).ToString());
 			GUILayout.EndHorizontal();
 
 			GUIvector3NoButton ("Rayleigh Scattering - Beta_R:", ref m_betaR);
@@ -78,19 +82,19 @@ namespace scatterer
 				generate();
 			}
 			GUILayout.EndHorizontal();
-			
+
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Mie G (Mie phase function asymmetry)");
-			m_mieG=(float)(float.Parse(GUILayout.TextField(m_mieG.ToString("0.000000"))));
+			m_mieG = (float)(float.Parse(GUILayout.TextField(m_mieG.ToString())));
 			GUILayout.EndHorizontal();
-			
+
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Rayleigh density scale height");	
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("HR (in KM)");	
-			HR=(float)(float.Parse(GUILayout.TextField(HR.ToString("0000.000000"))));
+			HR=(float)(float.Parse(GUILayout.TextField(HR.ToString())));
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
@@ -99,9 +103,37 @@ namespace scatterer
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("HM (in KM)");	
-			HM=(float)(float.Parse(GUILayout.TextField(HM.ToString("0000.000000"))));
+			HM=(float)(float.Parse(GUILayout.TextField(HM.ToString())));
 			GUILayout.EndHorizontal();
-			
+
+			GUIvector3NoButton("Ozone absorption:", ref ozoneAbsorption);
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Thicken");
+			thickenOzone = (float)(float.Parse(GUILayout.TextField(thickenOzone.ToString("00.000"))));
+			if (GUILayout.Button("Go"))
+			{
+				ozoneAbsorption *= thickenOzone;
+				generate();
+			}
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Ozone layer altitude (km)");
+			ozoneHeight = (float)(float.Parse(GUILayout.TextField(ozoneHeight.ToString())));
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Ozone layer falloff/extents (km)");
+			ozoneFalloff = (float)(float.Parse(GUILayout.TextField(ozoneFalloff.ToString())));
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Use Ozone: " + useOzone.ToString() + " ");
+			if (GUILayout.Button("Toggle"))
+				useOzone = !useOzone;
+			GUILayout.EndHorizontal();
+
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Auto rescale");
 			rescale=(float)(float.Parse(GUILayout.TextField(rescale.ToString("00.000"))));
@@ -111,13 +143,16 @@ namespace scatterer
 				HM*=rescale;
 				m_betaR/=rescale;
 				BETA_MSca/=rescale;
+				ozoneHeight *= rescale;
+				ozoneFalloff *= rescale;
+				ozoneAbsorption /= rescale;
 				generate();
 			}
 			GUILayout.EndHorizontal();
 			
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Average ground reflectance");
-			AVERAGE_GROUND_REFLECTANCE=(float)(float.Parse(GUILayout.TextField(AVERAGE_GROUND_REFLECTANCE.ToString("0.000000"))));
+			AVERAGE_GROUND_REFLECTANCE=(float)(float.Parse(GUILayout.TextField(AVERAGE_GROUND_REFLECTANCE.ToString())));
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
@@ -141,7 +176,7 @@ namespace scatterer
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button ("Delete atmo cache"))
 			{
-				AtmoPreprocessor.deleteCache();
+				AtmoPreprocessor.DeleteCache();
 			}
 			GUILayout.EndHorizontal();
 
@@ -181,11 +216,15 @@ namespace scatterer
 				" m_betaR " + m_betaR.ToString () +
 				" BETA_MSca " + BETA_MSca.ToString () +
 				" m_mieG " + m_mieG.ToString () +
+				" ozoneAbsorption " + ozoneAbsorption.ToString() +
+				" ozoneHeight " + ozoneHeight.ToString() +
+				" ozoneFalloff " + ozoneFalloff.ToString() +
+				" useOzone " + useOzone.ToString() +
 				" AVERAGE_GROUND_REFLECTANCE " + AVERAGE_GROUND_REFLECTANCE.ToString () +
 				" multipleScattering " + multipleScattering.ToString () +
 				" fastPreviewMode " + fastPreviewMode.ToString ());
 
-			targetSkyNode.ApplyAtmoFromUI (m_betaR, BETA_MSca, m_mieG, HR, HM, AVERAGE_GROUND_REFLECTANCE, multipleScattering, fastPreviewMode, atmosphereStartRadiusScale);
+			targetSkyNode.ApplyAtmoFromUI (m_betaR, BETA_MSca, m_mieG, HR, HM, AVERAGE_GROUND_REFLECTANCE, multipleScattering, fastPreviewMode, atmosphereStartRadiusScale, useOzone, ozoneAbsorption, ozoneHeight, ozoneFalloff);
 		}
 
 		public void loadSettingsForPlanet(int selectedPlanet)
@@ -205,6 +244,11 @@ namespace scatterer
 				AVERAGE_GROUND_REFLECTANCE = targetSkyNode.averageGroundReflectance;
 				multipleScattering = targetSkyNode.multipleScattering;
 
+				ozoneAbsorption = targetSkyNode.ozoneAbsorption;
+				ozoneHeight = targetSkyNode.ozoneHeight;
+				ozoneFalloff = targetSkyNode.ozoneFalloff;
+				useOzone = targetSkyNode.useOzone;
+
 				fastPreviewMode = false;
 				rescale=1f;
 				thickenRayleigh=1f;
@@ -220,11 +264,11 @@ namespace scatterer
 
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label ("R");
-			target.x = float.Parse (GUILayout.TextField (target.x.ToString ("00.000000")));
+			target.x = float.Parse(GUILayout.TextField(target.x.ToString()));
 			GUILayout.Label ("G");
-			target.y = float.Parse (GUILayout.TextField (target.y.ToString ("00.000000")));
+			target.y = float.Parse(GUILayout.TextField(target.y.ToString()));
 			GUILayout.Label ("B");
-			target.z = float.Parse (GUILayout.TextField (target.z.ToString ("00.000000")));
+			target.z = float.Parse (GUILayout.TextField (target.z.ToString()));
 			GUILayout.EndHorizontal ();
 		}
 	}

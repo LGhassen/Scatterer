@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 using System.Reflection;
 
-namespace scatterer
+namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.Instantly, false)]
 	public class Dx12UnifiedCamera : MonoBehaviour

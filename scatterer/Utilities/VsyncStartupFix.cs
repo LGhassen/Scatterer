@@ -3,7 +3,7 @@
 using System;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	[KSPAddon(KSPAddon.Startup.Instantly, false)]
 	public class VsyncStartupFix : MonoBehaviour

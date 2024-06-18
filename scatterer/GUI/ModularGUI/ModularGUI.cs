@@ -12,7 +12,7 @@ using System.Reflection;
 using System.Runtime;
 using UnityEngine;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ModularGUI
 	{

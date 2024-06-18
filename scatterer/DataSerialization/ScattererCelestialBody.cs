@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace scatterer
+namespace Scatterer
 {
 	public class ScattererCelestialBody
 	{
