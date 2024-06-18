@@ -106,7 +106,6 @@ namespace Scatterer
 		public Material localScatteringMaterial, skyMaterial, scaledScatteringMaterial, sunflareExtinctionMaterial, scaledEclipseMaterial;
 		public GenericLocalAtmosphereContainer localScatteringContainer;
 		public LegacyGodraysRenderer legacyGodraysRenderer;
-		public RaymarchedGodraysRenderer raymarchedGodraysRenderer;
 		public bool postprocessingEnabled = true;
 
 		GameObject ringObject;
@@ -138,19 +137,7 @@ namespace Scatterer
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "ECLIPSES_ON", "ECLIPSES_OFF", useEclipses);
 			Utils.EnableOrDisableShaderKeywords (localScatteringMaterial, "DISABLE_UNDERWATER_ON", "DISABLE_UNDERWATER_OFF", prolandManager.hasOcean);			
 
-			if (Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays || Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays) // must also detect if EVE is active and lightvolume is available
-            {
-				raymarchedGodraysRenderer = (RaymarchedGodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(RaymarchedGodraysRenderer)); // TODO: make this work on OpenGL so do not earliest but latest and the combined buffer thing
-					// also will need to figure out copying shadowmap for opengl
-				if (!raymarchedGodraysRenderer.Init(prolandManager.mainSunLight, this, Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays,
-					Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays && Scatterer.Instance.mainSettings.terrainShadows && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController,
-					Scatterer.Instance.mainSettings.raymarchedGodraysStepCount, Scatterer.Instance.mainSettings.raymarchedGodraysScreenshotDenoisingIterations))
-				{
-					Component.Destroy(raymarchedGodraysRenderer);
-					raymarchedGodraysRenderer = null;
-				}
-			}
-			else if (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController
+			if (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays && Scatterer.Instance.unifiedCameraMode && prolandManager.parentCelestialBody.pqsController
 				&& Scatterer.Instance.mainSettings.terrainShadows && (Scatterer.Instance.mainSettings.unifiedCamShadowResolutionOverride != 0))
 			{
 				legacyGodraysRenderer = (LegacyGodraysRenderer)Utils.getEarliestLocalCamera().gameObject.AddComponent(typeof(LegacyGodraysRenderer));
@@ -207,10 +194,6 @@ namespace Scatterer
 			}
 
 			stockScaledPlanetMeshRenderer = (MeshRenderer) parentScaledTransform.GetComponent<MeshRenderer>();
-
-
-
-			Shader.SetGlobalFloat(ShaderProperties.scattererCloudLightVolumeEnabled_PROPERTY, 0f); // Temporary way to initialize the light volume godrays, if raymarched volumetrics are loaded they override this then enable/disable as needed
 
 			skyNodeInitiated = true;
 			Utils.LogDebug("Skynode initiated for "+celestialBodyName);
@@ -427,7 +410,7 @@ namespace Scatterer
 
             UpdateEclipseAndRingUniforms(mat);
 
-            if (legacyGodraysRenderer || raymarchedGodraysRenderer)
+            if (legacyGodraysRenderer)
             {
                 mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
             }
@@ -566,7 +549,7 @@ namespace Scatterer
 				mat.SetMatrix (ShaderProperties.cloudPlanetShineRGB_PROPERTY, prolandManager.cloudIntegrationUsesScattererSunColors ?  prolandManager.planetShineRGBMatrix : prolandManager.planetShineOriginalRGBMatrix );
 			}
 
-			if (legacyGodraysRenderer || raymarchedGodraysRenderer)
+			if (legacyGodraysRenderer)
 			{
 				mat.SetFloat(ShaderProperties._godrayStrength_PROPERTY, godrayStrength);
 			}
@@ -622,11 +605,7 @@ namespace Scatterer
 
         private void InitGodraysUniforms(Material mat)
         {
-            if (raymarchedGodraysRenderer != null)
-            {
-                raymarchedGodraysRenderer.SetStepCountAndKeywords(mat);
-            }
-            else if (legacyGodraysRenderer != null)
+			if (legacyGodraysRenderer != null)
             {
                 mat.SetTexture(ShaderProperties._godrayDepthTexture_PROPERTY, legacyGodraysRenderer.volumeDepthTexture);
                 mat.EnableKeyword("GODRAYS_LEGACY");
@@ -774,12 +753,6 @@ namespace Scatterer
                         InitUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
                         InitPostprocessMaterialUniforms(eveCloudLayer.ParticleVolumetricsMaterial);
                     }
-
-                    if (eveCloudLayer.RaymarchedVolumetricsMaterial != null)
-                    {
-                        InitUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
-                        InitPostprocessMaterialUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
-                    }
                 }
             }
 
@@ -838,11 +811,6 @@ namespace Scatterer
 				Component.DestroyImmediate(legacyGodraysRenderer);
 			}
 
-			if (raymarchedGodraysRenderer)
-            {
-				Component.DestroyImmediate(raymarchedGodraysRenderer);
-			}
-
 			//disable eve integration scatterer flag
 			if (Scatterer.Instance.mainSettings.integrateWithEVEClouds && usesCloudIntegration)
 			{
@@ -864,13 +832,6 @@ namespace Scatterer
 								cloudLayer.ParticleVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
 								cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", 0f);
 
-							}
-
-							if (cloudLayer.RaymarchedVolumetricsMaterial != null)
-							{
-								cloudLayer.RaymarchedVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
-								cloudLayer.RaymarchedVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
-								cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
 							}
 						}
 					}
@@ -1395,15 +1356,6 @@ namespace Scatterer
 							cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", 0f);
 						}
 
-						if (cloudLayer.RaymarchedVolumetricsMaterial != null)
-						{
-							Utils.EnableOrDisableShaderKeywords(cloudLayer.RaymarchedVolumetricsMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
-							InitUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
-							InitPostprocessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
-							cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
-							cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("scattererEnabled", 1f);
-						}
-
 						if (cloudLayer.CloudShadowMaterial != null)
                         {
 							Utils.EnableOrDisableShaderKeywords(cloudLayer.CloudShadowMaterial, "SCATTERER_OCEAN_ON", "SCATTERER_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
@@ -1439,14 +1391,6 @@ namespace Scatterer
 						UpdatePostProcessMaterialUniforms(cloudLayer.ParticleVolumetricsMaterial);
 						cloudLayer.ParticleVolumetricsMaterial.SetVector(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);
 						cloudLayer.ParticleVolumetricsMaterial.SetFloat(ShaderProperties.cloudColorMultiplier_PROPERTY, volumetricsColorMultiplier);
-					}
-
-					if (cloudLayer.RaymarchedVolumetricsMaterial != null)
-                    {
-						InitUniforms(cloudLayer.RaymarchedVolumetricsMaterial); //temporary until I fix the issue with raymarched volumetrics
-						SetUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
-						UpdatePostProcessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
-						cloudLayer.RaymarchedVolumetricsMaterial.SetVector(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);	// not sure if needed
 					}
 				}
 			}
@@ -1490,11 +1434,6 @@ namespace Scatterer
 					if (cloudLayer.ParticleVolumetricsMaterial != null)
 					{
 						cloudLayer.ParticleVolumetricsMaterial.SetFloat("isUnderwater", value ? 1f : 0f);
-					}
-
-					if (cloudLayer.RaymarchedVolumetricsMaterial != null)
-					{
-						cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", value ? 1f : 0f);
 					}
 				}
 			}

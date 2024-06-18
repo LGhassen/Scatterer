@@ -145,26 +145,8 @@ namespace Scatterer
 			GUILayout.EndHorizontal ();
 			if (selectedIndividualSettingsTab == IndividualSettingsTabs.Scattering)
 			{
-				Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays, "Raymarched cloud godrays") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
-				Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays, "Raymarched terrain godrays (Requires long-distance shadows, Directx11 only)") && !Scatterer.Instance.mainSettings.useLegacyTerrainGodrays;
+				Scatterer.Instance.mainSettings.useLegacyTerrainGodrays = GUILayout.Toggle(Scatterer.Instance.mainSettings.useLegacyTerrainGodrays, "Legacy terrain godrays (Requires long-distance shadows and shadowMapResolution override, Directx11 only)");
 
-				GUILayout.BeginHorizontal();
-				{
-					GUILayout.Label("Raymarched godrays sample count");
-					Scatterer.Instance.mainSettings.raymarchedGodraysStepCount = Convert.ToInt32(GUILayout.TextField(Scatterer.Instance.mainSettings.raymarchedGodraysStepCount.ToString()));
-				}
-				GUILayout.EndHorizontal();
-
-				GUILayout.BeginHorizontal();
-				{
-					GUILayout.Label("Raymarched godrays denoising iterations in screenshot mode");
-					Scatterer.Instance.mainSettings.raymarchedGodraysScreenshotDenoisingIterations = Convert.ToInt32(GUILayout.TextField(Scatterer.Instance.mainSettings.raymarchedGodraysScreenshotDenoisingIterations.ToString()));
-				}
-				GUILayout.EndHorizontal();
-
-
-				Scatterer.Instance.mainSettings.useLegacyTerrainGodrays = GUILayout.Toggle (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays, "Legacy terrain godrays (Requires long-distance shadows and shadowMapResolution override, Directx11 only)") &&
-					!Scatterer.Instance.mainSettings.useRaymarchedCloudGodrays && !Scatterer.Instance.mainSettings.useRaymarchedTerrainGodrays;
 				if (Scatterer.Instance.mainSettings.useLegacyTerrainGodrays)
 				{
 					//Godrays tesselation placeholder

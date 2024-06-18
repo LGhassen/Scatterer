@@ -93,18 +93,6 @@ namespace Scatterer
 		public bool d3d11ShadowFix = true;
 
 		[Persistent]
-		public bool useRaymarchedCloudGodrays = true;
-
-		[Persistent]
-		public bool useRaymarchedTerrainGodrays = false;
-
-		[Persistent]
-		public int raymarchedGodraysStepCount = 50;
-
-		[Persistent]
-		public int raymarchedGodraysScreenshotDenoisingIterations = 10;
-
-		[Persistent]
 		public bool useLegacyTerrainGodrays = false;
 
 		//[Persistent]
@@ -272,10 +260,6 @@ namespace Scatterer
 				 OldConfig.useEclipses != useEclipses ||
 				 OldConfig.useRingShadows != useRingShadows ||
 				 OldConfig.d3d11ShadowFix != d3d11ShadowFix ||
-				 OldConfig.useRaymarchedCloudGodrays != useRaymarchedCloudGodrays ||
-				 OldConfig.useRaymarchedTerrainGodrays != useRaymarchedTerrainGodrays ||
-				 OldConfig.raymarchedGodraysStepCount != raymarchedGodraysStepCount ||
-				 OldConfig.raymarchedGodraysScreenshotDenoisingIterations != raymarchedGodraysScreenshotDenoisingIterations ||
 				 OldConfig.useLegacyTerrainGodrays != useLegacyTerrainGodrays ||
 				 //OldConfig.mergeDepthPrePass != mergeDepthPrePass ||
 				 OldConfig.quarterResScattering != quarterResScattering ||

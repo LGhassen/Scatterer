@@ -13,7 +13,6 @@ namespace Scatterer
 		public MeshRenderer Clouds2dMeshRenderer;
 		public Material CloudShadowMaterial;
 		public Material ParticleVolumetricsMaterial;
-		public Material RaymarchedVolumetricsMaterial;
 	}
 
 	public class EVEReflectionHandler
@@ -59,7 +58,6 @@ namespace Scatterer
 
 				Map2DLayer(ref cloudLayer, cloudObject, body);
 				MapParticleVolumetrics(ref cloudLayer, cloudObject, body);
-				MapRaymarchedVolumetrics(ref cloudLayer, cloudObject, body);
 
 				if (EVECloudLayers.ContainsKey(body))
                 {
@@ -161,37 +159,6 @@ namespace Scatterer
 			catch (Exception stupid)
 			{
 				Utils.LogDebug("Particle volumetric clouds error on planet: " + body + stupid.ToString());
-			}
-		}
-
-		private void MapRaymarchedVolumetrics(ref EVECloudLayer cloudLayer, object cloudObject, string body)
-		{
-			// TODO: refactor with previous function?
-
-			try
-			{
-				object cloudsPQS = cloudObject.GetType().GetField("cloudsPQS", flags)?.GetValue(cloudObject) as object;
-				object layerRaymarchedVolume = cloudsPQS?.GetType().GetField("layerRaymarchedVolume", flags)?.GetValue(cloudsPQS) as object;
-				if (layerRaymarchedVolume == null)
-				{
-					Utils.LogDebug("No raymarched volumetric cloud for layer on planet: " + body);
-					return;
-				}
-
-				Material RaymarchedMaterial = layerRaymarchedVolume.GetType().GetField("raymarchedCloudMaterial", flags)?.GetValue(layerRaymarchedVolume) as Material;
-
-				if (RaymarchedMaterial == null)
-				{
-					Utils.LogDebug("Raymarched volumetric cloud has no material on planet: " + body);
-					return;
-				}
-
-				cloudLayer.RaymarchedVolumetricsMaterial = RaymarchedMaterial;
-				Utils.LogDebug("Raymarched volumetric cloud mapped for layer on planet: " + body);
-			}
-			catch (Exception stupid)
-			{
-				Utils.LogDebug("Raymarched volumetric clouds error on planet: " + body + stupid.ToString());
 			}
 		}
 
