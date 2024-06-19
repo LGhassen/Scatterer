@@ -54,21 +54,36 @@ namespace Scatterer
 			scaledCamera.enabled = false;
 			scaledCamera.clearFlags = CameraClearFlags.Color;
 			scaledCamera.backgroundColor = Color.black;
-			scaledCamera.cullingMask = (1<<9) | (1<<10);
+			
+			// Setup and render scaled scene first
+			scaledCamera.cullingMask = ScaledCamera.Instance.galaxyCamera.cullingMask;
 
-			// The reflectionProbe camera has manually set viewMatrix and doesn't use the transforms, we want to keep everything the same except for position
-			Matrix4x4 viewMatrix = scaledCamera.worldToCameraMatrix;
-			viewMatrix.m03 = Scatterer.Instance.scaledSpaceCamera.transform.position.x;
-			viewMatrix.m13 = Scatterer.Instance.scaledSpaceCamera.transform.position.y;
-			viewMatrix.m23 = Scatterer.Instance.scaledSpaceCamera.transform.position.z;
+            // The reflectionProbe camera has manually set viewMatrix and doesn't use the transforms, we want to keep everything the same except for position
+            Matrix4x4 viewMatrix = scaledCamera.worldToCameraMatrix;
 
-			scaledCamera.worldToCameraMatrix = viewMatrix;
+            viewMatrix.m03 = ScaledCamera.Instance.galaxyCamera.transform.position.x;
+            viewMatrix.m13 = ScaledCamera.Instance.galaxyCamera.transform.position.y;
+            viewMatrix.m23 = ScaledCamera.Instance.galaxyCamera.transform.position.z;
+
+            scaledCamera.worldToCameraMatrix = viewMatrix;
 
 			scaledCamera.targetTexture = reflectionProbeCamera.targetTexture;
 			scaledCamera.Render ();
-		}
 
-		public void OnDestroy()
+            // Render scaled scene second
+            scaledCamera.clearFlags = CameraClearFlags.Depth;
+            scaledCamera.cullingMask = (1<<9) | (1<<10);
+
+            viewMatrix.m03 = Scatterer.Instance.scaledSpaceCamera.transform.position.x;
+            viewMatrix.m13 = Scatterer.Instance.scaledSpaceCamera.transform.position.y;
+            viewMatrix.m23 = Scatterer.Instance.scaledSpaceCamera.transform.position.z;
+
+            scaledCamera.worldToCameraMatrix = viewMatrix;
+
+            scaledCamera.Render();
+        }
+
+        public void OnDestroy()
 		{
 			if (scaledCamera)
 			{
