@@ -40,7 +40,7 @@ namespace Scatterer
 	{
 		private static AtmoPreprocessor instance;
 
-		public AtmoPreprocessor()
+		public void Awake()
         {
 			if (instance == null)
 			{
