@@ -1045,8 +1045,12 @@ namespace Scatterer
 
 			if (useEclipses)
 			{
-				// Split the main pass and the additive light passes into separate materials with different renderqueues so we can inject eclipses after the first pass, and make it apply only to the main pass
-				if (parentScaledTransform.GetComponent<PlanetSecondaryLightUpdater>() == null)
+                var deferred = ReflectionUtils.getType("Deferred.Deferred");
+				bool deferredInstalled = deferred != null;
+
+                // Split the main pass and the additive light passes into separate materials with different renderqueues so we can inject eclipses after the first pass, and make it apply only to the main pass
+				// But only if deferred is not installed, otherwise this breaks deferred rendering
+                if (parentScaledTransform.GetComponent<PlanetSecondaryLightUpdater>() == null && !deferredInstalled)
 				{
 					List<Material> materialsNoCityLights = new List<Material>(materials);
 					materialsNoCityLights.RemoveAll(x => x.shader.name == "EVE/PlanetCityLight");
