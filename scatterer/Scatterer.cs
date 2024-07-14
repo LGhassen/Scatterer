@@ -172,17 +172,27 @@ namespace Scatterer
 
 				if (mainSettings.useTemporalAntiAliasing)
 				{
-					TemporalAntiAliasing nearAA, farAA, scaledAA;
+                    ShaderReplacer.Instance.LoadedShaders.TryGetValue("Scatterer/Internal-MotionVectors", out Shader customMotionVectorsShader);
+
+                    if (customMotionVectorsShader != null)
+                    {
+                        GraphicsSettings.SetShaderMode(BuiltinShaderType.MotionVectors, BuiltinShaderMode.UseCustom);
+                        GraphicsSettings.SetCustomShader(BuiltinShaderType.MotionVectors, customMotionVectorsShader);
+                    }
+
+                    TemporalAntiAliasing nearAA, farAA, scaledAA;
 
 					nearAA = nearCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 					nearAA.checkOceanDepth = mainSettings.useOceanShaders;
+					nearAA.resetMotionVectors = false;
 					antiAliasingScripts.Add(nearAA);
 
 					if (!unifiedCameraMode && farCamera)
 					{
 						farAA = farCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 						farAA.checkOceanDepth = mainSettings.useOceanShaders;
-						antiAliasingScripts.Add(farAA);
+                        farAA.resetMotionVectors = false;
+                        antiAliasingScripts.Add(farAA);
 					}
 
                     // Cap the ridiculous clip plane (1e9) of the scaledCamera otherwise we get invalid motion vectors
@@ -639,7 +649,8 @@ namespace Scatterer
 					if(internalTAA == null)
 					{
 						internalTAA = internalCamera.gameObject.AddComponent<TemporalAntiAliasing>();
-						antiAliasingScripts.Add(internalTAA);
+                        internalTAA.resetMotionVectors = false;
+                        antiAliasingScripts.Add(internalTAA);
 					}
 				}
 			}

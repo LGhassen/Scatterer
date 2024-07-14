@@ -37,8 +37,12 @@ namespace Scatterer
 		DepthTextureMode originalDepthTextureMode;
 		public bool checkOceanDepth = false;
 		public bool jitterTransparencies = false;
+		public bool resetMotionVectors = true;
 
-		private static CameraEvent TAACameraEvent = CameraEvent.AfterForwardAlpha;  // BeforeImageEffects doesn't work well
+        private static int jitterProperty = Shader.PropertyToID("_Jitter");
+        private static int keepPreviousMotionVectorsProperty = Shader.PropertyToID("TAA_KeepPreviousMotionVectors");
+
+        private static CameraEvent TAACameraEvent = CameraEvent.AfterForwardAlpha;  // BeforeImageEffects doesn't work well
 
 		bool firstFrame = true;
 
@@ -129,7 +133,7 @@ namespace Scatterer
 			targetCamera.projectionMatrix = GetJitteredProjectionMatrix(targetCamera);
 			targetCamera.useJitteredProjectionMatrixForTransparentRendering = jitterTransparencies;
 
-			temporalAAMaterial.SetVector("_Jitter", jitter); // TODO: shader properties
+			temporalAAMaterial.SetVector(jitterProperty, jitter);
 		}
 		
 		RenderTexture CheckHistory(int id, CommandBuffer cmd)
@@ -221,6 +225,15 @@ namespace Scatterer
 
 				m_ResetHistory = false;
 				firstFrame = false;
+
+				if (resetMotionVectors)
+				{
+					Shader.SetGlobalInt(keepPreviousMotionVectorsProperty, 0);
+				}
+				else
+				{
+                    Shader.SetGlobalInt(keepPreviousMotionVectorsProperty, 1);
+                }
 			}
 			else
             {
