@@ -185,8 +185,11 @@ namespace Scatterer
 						antiAliasingScripts.Add(farAA);
 					}
 
-					// doesn't seem to hurt performance more
-					scaledAA = scaledSpaceCamera.gameObject.AddComponent<TemporalAntiAliasing>();
+                    // Cap the ridiculous clip plane (1e9) of the scaledCamera otherwise we get invalid motion vectors
+                    scaledSpaceCamera.farClipPlane = Mathf.Min(scaledSpaceCamera.farClipPlane, 1e6f);
+
+                    // doesn't seem to hurt performance more
+                    scaledAA = scaledSpaceCamera.gameObject.AddComponent<TemporalAntiAliasing>();
 					scaledAA.jitterTransparencies = true;
 					antiAliasingScripts.Add(scaledAA);
 
