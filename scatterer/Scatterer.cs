@@ -174,6 +174,7 @@ namespace Scatterer
 				{
                     ShaderReplacer.Instance.LoadedShaders.TryGetValue("Scatterer/Internal-MotionVectors", out Shader customMotionVectorsShader);
 
+                    // The custom motion vectors shader fixes NaN motion vectors on the scaled camera's skybox and combines the motion vectors of all cameras
                     if (customMotionVectorsShader != null)
                     {
                         GraphicsSettings.SetShaderMode(BuiltinShaderType.MotionVectors, BuiltinShaderMode.UseCustom);
@@ -194,9 +195,6 @@ namespace Scatterer
                         farAA.resetMotionVectors = false;
                         antiAliasingScripts.Add(farAA);
 					}
-
-                    // Cap the ridiculous clip plane (1e9) of the scaledCamera otherwise we get invalid motion vectors
-                    scaledSpaceCamera.farClipPlane = Mathf.Min(scaledSpaceCamera.farClipPlane, 1e6f);
 
                     // doesn't seem to hurt performance more
                     scaledAA = scaledSpaceCamera.gameObject.AddComponent<TemporalAntiAliasing>();
