@@ -68,8 +68,10 @@ namespace Scatterer
 				}
 				else
 				{
-					//we add null to the cameras we don't want to render on so we don't do a string compare every time
-					if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))	//I think this should be this way to scattering as well but test I guess
+                    // Add null to the cameras we don't want to render on so we don't do a string compare every time, including reflection probe cameras
+                    // DepthCamera and NearCamera render Kerbal portraits (also using dual camera system), they are disabled because of an issue with the screen copy
+					// and being mostly unnoticeable
+                    if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera") || (cam.name == "NearCamera") || (cam.name == "DepthCamera"))
 					{
 						cameraToScatteringCommandBuffer[cam] = null;
 					}
