@@ -12,7 +12,7 @@ namespace Scatterer
 		private CommandBuffer m_Buffer;
 		private Light m_Light;
 
-		public ShadowMapRetrieveCommandBuffer ()
+		public void Start ()
 		{
 			m_Buffer = new CommandBuffer();
 			m_Buffer.name = "ScattererShadowMapRetrieve";
