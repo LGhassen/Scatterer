@@ -571,7 +571,7 @@ namespace Scatterer
             Graphics.Blit(null, ozoneTransmittanceRT, ozoneTransmittanceMaterial);
         }
 
-        //Process in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
+        // Process in tiles because older GPUs (series 7xx and integrated hd 3xxx) crash when rendering the full res
         IEnumerator ProcessInTiles(Stopwatch stopwatch, Action<int, int> process)
 		{
 			for (int i = 0; i < xTiles; i++)
@@ -580,7 +580,11 @@ namespace Scatterer
 				{
 					process(i, j);
 				}
-				if (stopwatch.ElapsedMilliseconds > generationMsThreshold) { yield return new WaitForFixedUpdate(); stopwatch.Restart(); }
+
+				if (stopwatch.ElapsedMilliseconds > generationMsThreshold)
+				{
+					yield return new WaitForFixedUpdate(); stopwatch.Restart();
+				}
 			}
 		}
 
@@ -589,17 +593,32 @@ namespace Scatterer
 			ReleaseTextures();
 		}
 
+		private void ReleaseRT(RenderTexture rt)
+		{
+			if (rt != null)
+				rt.Release();
+		}
+
 		void ReleaseTextures()
 		{
-			ozoneTransmittanceRT.Release();
-			irradianceT[0].Release();
-			irradianceT[1].Release();
-			inscatterT[0].Release();
-			inscatterT[1].Release();
-			deltaET.Release();
-			deltaSRT.Release();
-			deltaSMT.Release();
-			deltaJT.Release();
+            ReleaseRT(ozoneTransmittanceRT);
+
+            if (irradianceT != null)
+            { 
+                ReleaseRT(irradianceT[0]);
+                ReleaseRT(irradianceT[1]);
+            }
+
+            if (inscatterT != null)
+            {
+                ReleaseRT(inscatterT[0]);
+                ReleaseRT(inscatterT[1]);
+            }
+
+            ReleaseRT(deltaET);
+            ReleaseRT(deltaSRT);
+            ReleaseRT(deltaSMT);
+            ReleaseRT(deltaJT);
 		}
 
 		void SaveAsHalf(RenderTexture rtex, string fileName)
