@@ -709,6 +709,11 @@ namespace Scatterer
 
             atlasDimensions = new Vector2(atlasWidth, atlasHeight);
 
+            if (atmosphereAtlas != null)
+            {
+                Destroy(atmosphereAtlas);
+            }
+
             atmosphereAtlas = new Texture2D(atlasWidth, atlasHeight, TextureFormat.RGBAHalf, false);
             atmosphereAtlas.wrapMode = TextureWrapMode.Clamp;
             atmosphereAtlas.filterMode = FilterMode.Bilinear;

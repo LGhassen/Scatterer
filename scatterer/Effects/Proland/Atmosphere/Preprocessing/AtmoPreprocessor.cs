@@ -266,16 +266,15 @@ namespace Scatterer
             {
 				xTiles = xTilesDefault; yTiles = yTilesDefault;
 			}
-
-			irradianceT = new RenderTexture[2];
-			inscatterT = new RenderTexture[2];
 			
 			ozoneTransmittanceRT = new RenderTexture(TRANSMITTANCE_W, TRANSMITTANCE_H, 0, RenderTextureFormat.ARGBFloat);
 			ozoneTransmittanceRT.wrapMode = TextureWrapMode.Clamp;
 			ozoneTransmittanceRT.filterMode = FilterMode.Bilinear;
 			ozoneTransmittanceRT.Create();
-			
-			irradianceT[0] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
+
+            irradianceT = new RenderTexture[2];
+
+            irradianceT[0] = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
 			irradianceT[0].wrapMode = TextureWrapMode.Clamp;
 			irradianceT[0].filterMode = FilterMode.Bilinear;
 			irradianceT[0].Create();
@@ -288,7 +287,9 @@ namespace Scatterer
 			deltaET = new RenderTexture(SKY_W, SKY_H, 0, RenderTextureFormat.ARGBFloat);
 			deltaET.Create();
 
-			inscatterT[0] = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
+            inscatterT = new RenderTexture[2];
+
+            inscatterT[0] = new RenderTexture((int)(scatteringLutDimensions.x * scatteringLutDimensions.y), (int)(scatteringLutDimensions.z * scatteringLutDimensions.w), 0, RenderTextureFormat.ARGBFloat);
 			inscatterT[0].wrapMode = TextureWrapMode.Clamp;
 			inscatterT[0].filterMode = FilterMode.Bilinear;
 			inscatterT[0].Create();
@@ -629,8 +630,9 @@ namespace Scatterer
 			temp.ReadPixels (new Rect (0, 0, rtex.width, rtex.height), 0, 0);
 			temp.Apply ();
 			
-			byte[] byteArray = temp.GetRawTextureData();
-			System.IO.File.WriteAllBytes(fileName + ".half", byteArray);
+			System.IO.File.WriteAllBytes(fileName + ".half", temp.GetRawTextureData());
+
+			Destroy(temp);
 		}
 	}
 }
