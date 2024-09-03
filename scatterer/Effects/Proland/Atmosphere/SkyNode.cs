@@ -1265,7 +1265,7 @@ namespace Scatterer
 			extinctionSunsetToNoonTransition = Mathf.Clamp01( ((extinctionSunsetToNoonTransition-0.2f) / 0.8f) * (1f - noonSunlightExtinctionStrength) );
 			extinction = Color.Lerp(extinction, Color.white, extinctionSunsetToNoonTransition);
 
-			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (prolandManager.mainSunLight, extinction);
+			SunlightModulatorsManager.Instance.ModulateByColor (prolandManager.mainSunLight, extinction);
 
 			foreach(SecondarySun secondarySun in prolandManager.secondarySuns)
 			{
@@ -1273,7 +1273,7 @@ namespace Scatterer
 				{
 					extinction = AtmosphereUtils.getExtinction (extinctionPosition, (secondarySun.celestialBody.GetTransform().position - prolandManager.parentCelestialBody.GetTransform().position).normalized,  Rt, Rg * atmosphereStartRadiusScale, HR*1000f, HM*1000f, m_betaR / 1000f, BETA_MSca / 1000f / 0.9f, useOzone, atmosphereAtlas, transmittanceTableDimensions, atlasScaleAndOffsets[2], atlasDimensions);
 					extinction = Color.Lerp(Color.white, extinction, interpolatedSettings.extinctionThickness);	//consider getting rid of extinction thickness and tint now
-					Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByColor (secondarySun.sunLight, extinction);
+					SunlightModulatorsManager.Instance.ModulateByColor (secondarySun.sunLight, extinction);
 				}
 			}
 		}
@@ -1326,7 +1326,7 @@ namespace Scatterer
 				eclipseTerm *= AtmosphereUtils.getEclipseShadow(Scatterer.Instance.nearCamera.transform.position, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
 			}
 
-			Scatterer.Instance.sunlightModulatorsManagerInstance.ModulateByAttenuation(prolandManager.mainSunLight, eclipseTerm);
+			SunlightModulatorsManager.Instance.ModulateByAttenuation(prolandManager.mainSunLight, eclipseTerm);
 		}
 
 		void InitKopernicusRings ()

@@ -37,6 +37,8 @@ namespace Scatterer
 				{
 					camToFixer[cam] = (ReflectionProbeFixer) cam.gameObject.AddComponent(typeof(ReflectionProbeFixer));
 
+                    SunlightModulatorsManager.AddRenderingHookToCamera(cam);
+
 					//Grab the reflection probe and set it's distance to 100km so reflections no longer disappear when using cameraTools stationary camera
 					ReflectionProbe[] probes = Resources.FindObjectsOfTypeAll<ReflectionProbe> ();
 					foreach (ReflectionProbe _probe in probes)

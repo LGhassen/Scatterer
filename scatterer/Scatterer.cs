@@ -27,7 +27,6 @@ namespace Scatterer
 		//public PlanetshineManager planetshineManager;
 
 		DisableAmbientLight ambientLightScript;
-		public SunlightModulatorsManager sunlightModulatorsManagerInstance;
 		
 		public ShadowRemoveFadeCommandBuffer shadowFadeRemover;
 		public TweakShadowCascades shadowCascadeTweaker;
@@ -241,11 +240,6 @@ namespace Scatterer
 				MapView.MapIsEnabled = false;
 			}
 
-			if (mainSettings.sunlightExtinction || (mainSettings.underwaterLightDimming && mainSettings.useOceanShaders))
-			{
-				sunlightModulatorsManagerInstance = new SunlightModulatorsManager();
-			}
-
 			coreInitiated = true;
 
 			Utils.LogDebug("Core setup done");
@@ -295,11 +289,6 @@ namespace Scatterer
 
 			if (isActive)
 			{
-				if (sunlightModulatorsManagerInstance != null)
-				{
-					sunlightModulatorsManagerInstance.Cleanup();
-				}
-
 //				if(planetshineManager != null)
 //				{
 //					planetshineManager.Cleanup();
@@ -444,7 +433,11 @@ namespace Scatterer
 					Utils.LogDebug("Override near clip plane from:"+nearCamera.nearClipPlane.ToString()+" to:"+mainSettings.nearClipPlane.ToString());
 					nearCamera.nearClipPlane = mainSettings.nearClipPlane;
 				}
-			}
+
+                SunlightModulatorsManager.AddRenderingHookToCamera(nearCamera);
+                SunlightModulatorsManager.AddRenderingHookToCamera(farCamera);
+                SunlightModulatorsManager.AddResetHookToCamera(scaledSpaceCamera);
+            }
 			else if (HighLogic.LoadedScene == GameScenes.MAINMENU)
 			{
 				// If are in main menu, where there is only 1 camera, affect all cameras to Landscape camera

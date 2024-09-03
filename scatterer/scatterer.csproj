@@ -121,8 +121,6 @@
     <Compile Include="Utilities\Math\Vector3d2.cs" />
     <Compile Include="Utilities\Math\Vector4d.cs" />
     <Compile Include="Effects\SunlightModulator\SunlightModulator.cs" />
-    <Compile Include="Effects\SunlightModulator\SunlightModulatorPostRenderHook.cs" />
-    <Compile Include="Effects\SunlightModulator\SunlightModulatorPreRenderHook.cs" />
     <Compile Include="Effects\PlanetShine\PlanetShineLight.cs" />
     <Compile Include="DataSerialization\MainSettingsReadWrite.cs" />
     <Compile Include="DataSerialization\PluginDataReadWrite.cs" />

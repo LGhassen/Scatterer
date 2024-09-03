@@ -215,7 +215,7 @@ namespace Scatterer
 				// If we use sunlightExtinction, reuse already computed extinction color
 				if (Scatterer.Instance.mainSettings.sunlightExtinction)
 				{
-					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNode.prolandManager.getIntensityModulatedSunColor() * Scatterer.Instance.sunlightModulatorsManagerInstance.GetLastModulateColor(targetLight));
+					compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNode.prolandManager.getIntensityModulatedSunColor() * SunlightModulatorsManager.Instance.GetLastModulationColor(targetLight));
 				}
 
 				renderingEnabled = true;
