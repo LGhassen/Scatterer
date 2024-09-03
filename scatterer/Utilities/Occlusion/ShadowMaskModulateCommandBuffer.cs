@@ -6,33 +6,33 @@ using System;
 
 namespace Scatterer
 {
-	public class ShadowMaskModulateCommandBuffer : MonoBehaviour
-	{
+    public class ShadowMaskModulateCommandBuffer : MonoBehaviour
+    {
 
-		private CommandBuffer m_Buffer;
-		private Light m_Light;
-		private Material m_ShadowMaskModulateMaterial;
+        private CommandBuffer m_Buffer;
+        private Light m_Light;
+        private Material m_ShadowMaskModulateMaterial;
 
-		public ShadowMaskModulateCommandBuffer ()
-		{
-			// after light's screenspace shadow mask is computed, copy it
-			m_Buffer = new CommandBuffer();
-			m_Buffer.name = "ScattererScreenspaceShadowMaskmodulate";
+        public ShadowMaskModulateCommandBuffer ()
+        {
+            // after light's screenspace shadow mask is computed, copy it
+            m_Buffer = new CommandBuffer();
+            m_Buffer.name = "ScattererScreenspaceShadowMaskmodulate";
 
-			m_ShadowMaskModulateMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ModulateShadowMaskWithOcclusion")]);
-//			m_ShadowMaskModulateMaterial.SetTexture ("OcclusionTexture", Core.Instance.bufferRenderingManager.occlusionTexture);
+            m_ShadowMaskModulateMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ModulateShadowMaskWithOcclusion")]);
+//            m_ShadowMaskModulateMaterial.SetTexture ("OcclusionTexture", Core.Instance.bufferRenderingManager.occlusionTexture);
 
-			//after light's screenspace shadow mask is computed, modulate it by occlusion texture
-//			m_Buffer.Blit (Core.Instance.bufferRenderingManager.occlusionTexture, BuiltinRenderTextureType.CurrentActive, m_ShadowMaskModulateMaterial);
+            //after light's screenspace shadow mask is computed, modulate it by occlusion texture
+//            m_Buffer.Blit (Core.Instance.bufferRenderingManager.occlusionTexture, BuiltinRenderTextureType.CurrentActive, m_ShadowMaskModulateMaterial);
 
-			m_Light = GetComponent<Light>();
-			m_Light.AddCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
-		}
+            m_Light = GetComponent<Light>();
+            m_Light.AddCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
+        }
 
-		public void OnDestroy ()
-		{
-			m_Light.RemoveCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
-		}
-	}
+        public void OnDestroy ()
+        {
+            m_Light.RemoveCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
+        }
+    }
 }
 

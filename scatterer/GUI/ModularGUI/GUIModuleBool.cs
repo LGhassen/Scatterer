@@ -10,37 +10,37 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public class GUIModuleBool  : AbstractGUIModule
-	{
-		bool localVariable = false;
-		string label = "";
+    public class GUIModuleBool  : AbstractGUIModule
+    {
+        bool localVariable = false;
+        string label = "";
 
-		object targetObject;
-		FieldInfo targetField;
+        object targetObject;
+        FieldInfo targetField;
 
-		public GUIModuleBool (string label, object targetObject, string fieldName)
-		{
-			this.label = label;
-			this.targetObject = targetObject;
+        public GUIModuleBool (string label, object targetObject, string fieldName)
+        {
+            this.label = label;
+            this.targetObject = targetObject;
 
-			Type targetType = targetObject.GetType ();
+            Type targetType = targetObject.GetType ();
 
-			this.targetField = targetType.GetField(fieldName, Flags);
-			this.localVariable = (bool) targetField.GetValue(targetObject);
-		}
+            this.targetField = targetType.GetField(fieldName, Flags);
+            this.localVariable = (bool) targetField.GetValue(targetObject);
+        }
 
-		public override void RenderGUI()
-		{
+        public override void RenderGUI()
+        {
 
-			GUILayout.BeginHorizontal ();
+            GUILayout.BeginHorizontal ();
 
-			GUILayout.Label (label);
-			GUILayout.TextField (targetField.GetValue(targetObject).ToString ());
-			if (GUILayout.Button ("Toggle"))
-			{
-				targetField.SetValue(targetObject, !(bool)targetField.GetValue(targetObject));
-			}
-			GUILayout.EndHorizontal ();
-		}
-	}
+            GUILayout.Label (label);
+            GUILayout.TextField (targetField.GetValue(targetObject).ToString ());
+            if (GUILayout.Button ("Toggle"))
+            {
+                targetField.SetValue(targetObject, !(bool)targetField.GetValue(targetObject));
+            }
+            GUILayout.EndHorizontal ();
+        }
+    }
 }

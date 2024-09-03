@@ -12,14 +12,14 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public abstract class AbstractGUIModule
-	{
-		static protected BindingFlags Flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
-		
-		public AbstractGUIModule ()
-		{
-		}
-		
-		public abstract void RenderGUI ();
-	}
+    public abstract class AbstractGUIModule
+    {
+        static protected BindingFlags Flags =  BindingFlags.FlattenHierarchy |  BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
+        
+        public AbstractGUIModule ()
+        {
+        }
+        
+        public abstract void RenderGUI ();
+    }
 }

@@ -6,142 +6,142 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public class SkySphereContainer
-	{
-		GameObject skySphereGO;
-		MeshRenderer skySphereMR;
+    public class SkySphereContainer
+    {
+        GameObject skySphereGO;
+        MeshRenderer skySphereMR;
 
-		public GameObject GameObject { get { return skySphereGO; } }
-		public MeshRenderer MeshRenderer { get { return skySphereMR; } }
+        public GameObject GameObject { get { return skySphereGO; } }
+        public MeshRenderer MeshRenderer { get { return skySphereMR; } }
 
-		Transform parentLocalTransform, parentScaledTransform;
+        Transform parentLocalTransform, parentScaledTransform;
 
-		MeshFilter skySphereMF;
-		
-		public SkySphereContainer(float size, Material material, Transform inParentLocalTransform, Transform inParentScaledTransform)
-		{
-			skySphereGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-			GameObject.Destroy (skySphereGO.GetComponent<Collider> ());
+        MeshFilter skySphereMF;
+        
+        public SkySphereContainer(float size, Material material, Transform inParentLocalTransform, Transform inParentScaledTransform)
+        {
+            skySphereGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            GameObject.Destroy (skySphereGO.GetComponent<Collider> ());
 
-			skySphereGO.transform.localScale = Vector3.one;
-			
-			skySphereMF = skySphereGO.GetComponent<MeshFilter>();
-			Vector3[] verts = skySphereMF.mesh.vertices;
-			for (int i = 0; i < verts.Length; i++)
-			{
-				verts[i] = verts[i].normalized * size;
-			}
-			skySphereMF.mesh.vertices = verts;
-			skySphereMF.mesh.RecalculateBounds();
-			skySphereMF.mesh.RecalculateNormals();
-			
-			skySphereMR = skySphereGO.GetComponent<MeshRenderer>();
-			skySphereMR.sharedMaterial = material;
-			Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", false);
+            skySphereGO.transform.localScale = Vector3.one;
+            
+            skySphereMF = skySphereGO.GetComponent<MeshFilter>();
+            Vector3[] verts = skySphereMF.mesh.vertices;
+            for (int i = 0; i < verts.Length; i++)
+            {
+                verts[i] = verts[i].normalized * size;
+            }
+            skySphereMF.mesh.vertices = verts;
+            skySphereMF.mesh.RecalculateBounds();
+            skySphereMF.mesh.RecalculateNormals();
+            
+            skySphereMR = skySphereGO.GetComponent<MeshRenderer>();
+            skySphereMR.sharedMaterial = material;
+            Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", false);
 
-			skySphereMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			skySphereMR.receiveShadows = false;
-			skySphereMR.motionVectorGenerationMode = MotionVectorGenerationMode.Camera;
-			skySphereMR.enabled = true;
+            skySphereMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            skySphereMR.receiveShadows = false;
+            skySphereMR.motionVectorGenerationMode = MotionVectorGenerationMode.Camera;
+            skySphereMR.enabled = true;
 
-			if (HighLogic.LoadedScene == GameScenes.MAINMENU)
-				skySphereGO.layer = 15;
-			else
-				skySphereGO.layer = 9;
+            if (HighLogic.LoadedScene == GameScenes.MAINMENU)
+                skySphereGO.layer = 15;
+            else
+                skySphereGO.layer = 9;
 
-			skySphereGO.transform.position = inParentScaledTransform.position;
-			skySphereGO.transform.parent = inParentScaledTransform;
+            skySphereGO.transform.position = inParentScaledTransform.position;
+            skySphereGO.transform.parent = inParentScaledTransform;
 
-			parentScaledTransform = inParentScaledTransform;
-			parentLocalTransform = inParentLocalTransform;
-		}
-		
-		public void SwitchLocalMode()
-		{
-			skySphereGO.layer = 15;
+            parentScaledTransform = inParentScaledTransform;
+            parentLocalTransform = inParentLocalTransform;
+        }
+        
+        public void SwitchLocalMode()
+        {
+            skySphereGO.layer = 15;
 
-			skySphereGO.transform.parent = null;
+            skySphereGO.transform.parent = null;
 
-			skySphereGO.transform.position = parentLocalTransform.position;
-			skySphereGO.transform.localScale = new Vector3(ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor);
-			skySphereGO.transform.parent = parentLocalTransform;
+            skySphereGO.transform.position = parentLocalTransform.position;
+            skySphereGO.transform.localScale = new Vector3(ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor, ScaledSpace.ScaleFactor);
+            skySphereGO.transform.parent = parentLocalTransform;
 
-			Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", true);
+            Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", true);
 
-			skySphereGO.AddComponent<SkySphereScreenCopy> ().Init(skySphereMR.sharedMaterial);
-		}
-		
-		public void SwitchScaledMode()
-		{
-			skySphereGO.layer = 9;
+            skySphereGO.AddComponent<SkySphereScreenCopy> ().Init(skySphereMR.sharedMaterial);
+        }
+        
+        public void SwitchScaledMode()
+        {
+            skySphereGO.layer = 9;
 
-			skySphereGO.transform.parent = null;
+            skySphereGO.transform.parent = null;
 
-			skySphereGO.transform.position = parentScaledTransform.position;
-			skySphereGO.transform.localScale = Vector3.one;
-			skySphereGO.transform.parent = parentScaledTransform;
+            skySphereGO.transform.position = parentScaledTransform.position;
+            skySphereGO.transform.localScale = Vector3.one;
+            skySphereGO.transform.parent = parentScaledTransform;
 
-			Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", false);
+            Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", false);
 
-			var scrCopy = skySphereGO.GetComponent<SkySphereScreenCopy> ();
+            var scrCopy = skySphereGO.GetComponent<SkySphereScreenCopy> ();
 
-			if (scrCopy)
-				UnityEngine.Component.DestroyImmediate (scrCopy);
+            if (scrCopy)
+                UnityEngine.Component.DestroyImmediate (scrCopy);
 
-		}
+        }
 
-		public void Resize(float size)
-		{	
-			Vector3[] verts = skySphereMF.mesh.vertices;
-			for (int i = 0; i < verts.Length; i++)
-			{
-				verts[i] = verts[i].normalized * size;
-			}
-			skySphereMF.mesh.vertices = verts;
-			skySphereMF.mesh.RecalculateBounds();
-			skySphereMF.mesh.RecalculateNormals();
-		}
+        public void Resize(float size)
+        {    
+            Vector3[] verts = skySphereMF.mesh.vertices;
+            for (int i = 0; i < verts.Length; i++)
+            {
+                verts[i] = verts[i].normalized * size;
+            }
+            skySphereMF.mesh.vertices = verts;
+            skySphereMF.mesh.RecalculateBounds();
+            skySphereMF.mesh.RecalculateNormals();
+        }
 
-		public void Cleanup()
-		{
-			if (skySphereMR != null)
-			{
-				skySphereMR.enabled = false;
-				UnityEngine.Component.DestroyImmediate (skySphereMR);
-			}
+        public void Cleanup()
+        {
+            if (skySphereMR != null)
+            {
+                skySphereMR.enabled = false;
+                UnityEngine.Component.DestroyImmediate (skySphereMR);
+            }
 
-			if (skySphereGO != null)
-			{
-				UnityEngine.Object.DestroyImmediate(skySphereGO);
-			}
-		}
-	}
+            if (skySphereGO != null)
+            {
+                UnityEngine.Object.DestroyImmediate(skySphereGO);
+            }
+        }
+    }
 
-	public class SkySphereScreenCopy : MonoBehaviour
-	{
-		Material material;
-		public void Init(Material material)
-		{
-			this.material = material;
-		}
+    public class SkySphereScreenCopy : MonoBehaviour
+    {
+        Material material;
+        public void Init(Material material)
+        {
+            this.material = material;
+        }
 
-		void OnWillRenderObject()
-		{
-			Camera cam = Camera.current;
-			
-			if (!cam)
-				return;
+        void OnWillRenderObject()
+        {
+            Camera cam = Camera.current;
+            
+            if (!cam)
+                return;
 
-			if (cam == Scatterer.Instance.nearCamera && !Scatterer.Instance.unifiedCameraMode)
-			{
-				material.SetFloat(ShaderProperties.renderSkyOnCurrentCamera_PROPERTY, 0f);
-			}
-			else
-			{
-				material.SetFloat(ShaderProperties.renderSkyOnCurrentCamera_PROPERTY, 1f);
-			}
+            if (cam == Scatterer.Instance.nearCamera && !Scatterer.Instance.unifiedCameraMode)
+            {
+                material.SetFloat(ShaderProperties.renderSkyOnCurrentCamera_PROPERTY, 0f);
+            }
+            else
+            {
+                material.SetFloat(ShaderProperties.renderSkyOnCurrentCamera_PROPERTY, 1f);
+            }
 
-			ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
-		}
-	}
+            ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
+        }
+    }
 }

@@ -31,7 +31,7 @@ namespace Scatterer
     }
 
     public static class RenderTextureUtils
-	{
+    {
         public static FlipFlop<RenderTexture> CreateFlipFlopRT(int width, int height, RenderTextureFormat format, FilterMode filterMode, TextureDimension dimension = TextureDimension.Tex2D, int depth = 0, bool randomReadWrite = false)
         {
             return new FlipFlop<RenderTexture>(

@@ -14,43 +14,43 @@ using KSP.IO;
 
 namespace Scatterer
 {
-	public class PlanetSecondaryLightUpdater : MonoBehaviour
-	{
-		Material sourceMaterial, targetMaterial;
+    public class PlanetSecondaryLightUpdater : MonoBehaviour
+    {
+        Material sourceMaterial, targetMaterial;
 
-		public PlanetSecondaryLightUpdater ()
-		{
-		}
+        public PlanetSecondaryLightUpdater ()
+        {
+        }
 
-		public void Init(Material inSourceMaterial, Material inTargetMaterial)
-		{
-			sourceMaterial = inSourceMaterial;
-			targetMaterial = inTargetMaterial;
+        public void Init(Material inSourceMaterial, Material inTargetMaterial)
+        {
+            sourceMaterial = inSourceMaterial;
+            targetMaterial = inTargetMaterial;
 
-			try {StartCoroutine(UpdateCoroutine ());}
-			catch (Exception e){Utils.LogError("Error when starting PlanetSecondaryLightUpdater::UpdateCoroutine coroutine "+e.Message);};
-		}
-		
-		IEnumerator UpdateCoroutine()
-		{
-			while (true)
-			{
-				if (sourceMaterial && targetMaterial)
-				{
-					targetMaterial.CopyPropertiesFromMaterial (sourceMaterial);
-					targetMaterial.SetShaderPassEnabled ("ForwardBase", false);
-					targetMaterial.SetShaderPassEnabled ("ForwardAdd", true);
-					targetMaterial.renderQueue = 2002;
-				}
-				
-				yield return new WaitForSeconds (1.3f);
-			}
-		}
+            try {StartCoroutine(UpdateCoroutine ());}
+            catch (Exception e){Utils.LogError("Error when starting PlanetSecondaryLightUpdater::UpdateCoroutine coroutine "+e.Message);};
+        }
+        
+        IEnumerator UpdateCoroutine()
+        {
+            while (true)
+            {
+                if (sourceMaterial && targetMaterial)
+                {
+                    targetMaterial.CopyPropertiesFromMaterial (sourceMaterial);
+                    targetMaterial.SetShaderPassEnabled ("ForwardBase", false);
+                    targetMaterial.SetShaderPassEnabled ("ForwardAdd", true);
+                    targetMaterial.renderQueue = 2002;
+                }
+                
+                yield return new WaitForSeconds (1.3f);
+            }
+        }
 
-		public void OnDestroy()
-		{
-			StopAllCoroutines ();
-		}
-	}
+        public void OnDestroy()
+        {
+            StopAllCoroutines ();
+        }
+    }
 }
 

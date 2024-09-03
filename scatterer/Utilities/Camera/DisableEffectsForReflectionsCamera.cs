@@ -15,38 +15,38 @@ using KSP.IO;
 
 namespace Scatterer
 {
-	public class DisableEffectsForReflectionsCamera : MonoBehaviour
-	{
-		public ProlandManager manager;
+    public class DisableEffectsForReflectionsCamera : MonoBehaviour
+    {
+        public ProlandManager manager;
 
-		public DisableEffectsForReflectionsCamera ()
-		{
-		}
+        public DisableEffectsForReflectionsCamera ()
+        {
+        }
 
-		//also add EVE cloud Projectors, EVE/PlanetLight, underwaterProjector, sunflare, should be all
-		//and scatteringProjector not disabling correctly
-		public void OnPreCull()
-		{
-			if (manager.GetSkyNode ().localScatteringContainer != null)
-			{
-				manager.GetSkyNode().localScatteringContainer.SetActivated (false);
-				manager.GetSkyNode().localScatteringContainer.UpdateContainer();
-			}
+        //also add EVE cloud Projectors, EVE/PlanetLight, underwaterProjector, sunflare, should be all
+        //and scatteringProjector not disabling correctly
+        public void OnPreCull()
+        {
+            if (manager.GetSkyNode ().localScatteringContainer != null)
+            {
+                manager.GetSkyNode().localScatteringContainer.SetActivated (false);
+                manager.GetSkyNode().localScatteringContainer.UpdateContainer();
+            }
 
-			if (manager.GetOceanNode())
-			{
-				manager.GetOceanNode().setWaterMeshrenderersEnabled (false);
-			}
-		}
+            if (manager.GetOceanNode())
+            {
+                manager.GetOceanNode().setWaterMeshrenderersEnabled (false);
+            }
+        }
 
-		public void OnPostRender()
-		{
-			if (manager.GetSkyNode ().localScatteringContainer != null)
-				manager.GetSkyNode().localScatteringContainer.SetActivated (true);
+        public void OnPostRender()
+        {
+            if (manager.GetSkyNode ().localScatteringContainer != null)
+                manager.GetSkyNode().localScatteringContainer.SetActivated (true);
 
-			if (manager.GetOceanNode())
-				manager.GetOceanNode().setWaterMeshrenderersEnabled (true);
-		}
-	}
+            if (manager.GetOceanNode())
+                manager.GetOceanNode().setWaterMeshrenderersEnabled (true);
+        }
+    }
 }
 

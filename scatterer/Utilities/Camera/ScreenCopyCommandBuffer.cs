@@ -13,48 +13,48 @@ using UnityEngine.Rendering;
 
 namespace Scatterer
 {
-	public class ScreenCopyCommandBuffer : MonoBehaviour
-	{
-		private static Dictionary<Camera,ScreenCopyCommandBuffer> CameraToCommandBufferHandler = new Dictionary<Camera,ScreenCopyCommandBuffer>();
-		
-		public static void EnableScreenCopyForFrame(Camera cam)
-		{
-			if (CameraToCommandBufferHandler.ContainsKey (cam))
-			{
-				if(CameraToCommandBufferHandler[cam])
-					CameraToCommandBufferHandler[cam].EnableScreenCopyForFrame();
-			}
-			else
-			{
-				ScreenCopyCommandBuffer handler = (ScreenCopyCommandBuffer) cam.gameObject.AddComponent(typeof(ScreenCopyCommandBuffer));
+    public class ScreenCopyCommandBuffer : MonoBehaviour
+    {
+        private static Dictionary<Camera,ScreenCopyCommandBuffer> CameraToCommandBufferHandler = new Dictionary<Camera,ScreenCopyCommandBuffer>();
+        
+        public static void EnableScreenCopyForFrame(Camera cam)
+        {
+            if (CameraToCommandBufferHandler.ContainsKey (cam))
+            {
+                if(CameraToCommandBufferHandler[cam])
+                    CameraToCommandBufferHandler[cam].EnableScreenCopyForFrame();
+            }
+            else
+            {
+                ScreenCopyCommandBuffer handler = (ScreenCopyCommandBuffer) cam.gameObject.AddComponent(typeof(ScreenCopyCommandBuffer));
 
-				if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))
-					handler.reflectionProbeMode = true;
-				
-				handler.Initialize();
-				CameraToCommandBufferHandler[cam] = handler;
-			}
-		}
+                if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))
+                    handler.reflectionProbeMode = true;
+                
+                handler.Initialize();
+                CameraToCommandBufferHandler[cam] = handler;
+            }
+        }
 
-		public bool reflectionProbeMode = false;
-		bool isEnabled = false;
-		bool isInitialized = false;
-		bool hdrEnabled = false;
-		int width, height;
+        public bool reflectionProbeMode = false;
+        bool isEnabled = false;
+        bool isInitialized = false;
+        bool hdrEnabled = false;
+        int width, height;
 
-		private Camera targetCamera;
-		private CommandBuffer screenCopyCommandBuffer;
-		private RenderTexture colorCopyRenderTexture;
-		
-		public ScreenCopyCommandBuffer ()
-		{
-		}
-		
-		public void Initialize()
-		{
-			targetCamera = GetComponent<Camera> ();
+        private Camera targetCamera;
+        private CommandBuffer screenCopyCommandBuffer;
+        private RenderTexture colorCopyRenderTexture;
+        
+        public ScreenCopyCommandBuffer ()
+        {
+        }
+        
+        public void Initialize()
+        {
+            targetCamera = GetComponent<Camera> ();
 
-			if (!reflectionProbeMode)
+            if (!reflectionProbeMode)
             {
                 targetCamera.forceIntoRenderTexture = true;
 
@@ -73,30 +73,30 @@ namespace Scatterer
             }
 
             screenCopyCommandBuffer = new CommandBuffer();
-			screenCopyCommandBuffer.name = "Scatterer screen copy CommandBuffer";
+            screenCopyCommandBuffer.name = "Scatterer screen copy CommandBuffer";
 
-			if (!reflectionProbeMode)
-			{
-				screenCopyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
-				screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", colorCopyRenderTexture);
-			}
-			else
-			{
-				screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", Texture2D.blackTexture);	//Hack but will stop sky flickering
-			}
-			
-			isInitialized = true;
-		}
+            if (!reflectionProbeMode)
+            {
+                screenCopyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
+                screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", colorCopyRenderTexture);
+            }
+            else
+            {
+                screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", Texture2D.blackTexture);    //Hack but will stop sky flickering
+            }
+            
+            isInitialized = true;
+        }
 
         private void InitRT()
         {
-			if (colorCopyRenderTexture!=null)
-				colorCopyRenderTexture.Release();
+            if (colorCopyRenderTexture!=null)
+                colorCopyRenderTexture.Release();
 
-			hdrEnabled = targetCamera.allowHDR;
+            hdrEnabled = targetCamera.allowHDR;
 
-			colorCopyRenderTexture = new RenderTexture(width, height, 0, hdrEnabled? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
-			colorCopyRenderTexture.anisoLevel = 1;
+            colorCopyRenderTexture = new RenderTexture(width, height, 0, hdrEnabled? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
+            colorCopyRenderTexture.anisoLevel = 1;
             colorCopyRenderTexture.antiAliasing = 1;
             colorCopyRenderTexture.volumeDepth = 0;
             colorCopyRenderTexture.useMipMap = false;
@@ -104,60 +104,60 @@ namespace Scatterer
             colorCopyRenderTexture.Create();
         }
 
-		private void Reinit()
+        private void Reinit()
         {
-			InitRT();
+            InitRT();
 
-			targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+            targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
 
-			if (!reflectionProbeMode)
-			{
-				screenCopyCommandBuffer.Clear();
-				screenCopyCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
-				screenCopyCommandBuffer.SetGlobalTexture("ScattererScreenCopyBeforeOcean", colorCopyRenderTexture);
-			}
-		}
+            if (!reflectionProbeMode)
+            {
+                screenCopyCommandBuffer.Clear();
+                screenCopyCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
+                screenCopyCommandBuffer.SetGlobalTexture("ScattererScreenCopyBeforeOcean", colorCopyRenderTexture);
+            }
+        }
 
         public void EnableScreenCopyForFrame()
-		{
-			if (!isEnabled && isInitialized)
-			{
-				if (hdrEnabled != targetCamera.allowHDR)
-					Reinit();
+        {
+            if (!isEnabled && isInitialized)
+            {
+                if (hdrEnabled != targetCamera.allowHDR)
+                    Reinit();
 
-				targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
-				isEnabled = true;
-			}
-		}
+                targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+                isEnabled = true;
+            }
+        }
 
-		void OnPostRender()
-		{
-			if (!isInitialized)
-			{
-				Initialize ();
-			}
-			else
-			{
-				if (isEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
-				{
-					targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
-					isEnabled = false;
-				}
-			}
-		}
-		
-		public void OnDestroy ()
-		{
-			if (targetCamera != null)
-			{
-				if (screenCopyCommandBuffer != null)
-				{
-					targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
-					colorCopyRenderTexture.Release();
-					isEnabled = false;
-				}
-			}
-		}
-	}
+        void OnPostRender()
+        {
+            if (!isInitialized)
+            {
+                Initialize ();
+            }
+            else
+            {
+                if (isEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
+                {
+                    targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+                    isEnabled = false;
+                }
+            }
+        }
+        
+        public void OnDestroy ()
+        {
+            if (targetCamera != null)
+            {
+                if (screenCopyCommandBuffer != null)
+                {
+                    targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+                    colorCopyRenderTexture.Release();
+                    isEnabled = false;
+                }
+            }
+        }
+    }
 }
 

@@ -6,28 +6,28 @@ using System;
 
 namespace Scatterer
 {
-	public class ShadowMapRetrieveCommandBuffer : MonoBehaviour
-	{
+    public class ShadowMapRetrieveCommandBuffer : MonoBehaviour
+    {
 
-		private CommandBuffer m_Buffer;
-		private Light m_Light;
+        private CommandBuffer m_Buffer;
+        private Light m_Light;
 
-		public void Start ()
-		{
-			m_Buffer = new CommandBuffer();
-			m_Buffer.name = "ScattererShadowMapRetrieve";
+        public void Start ()
+        {
+            m_Buffer = new CommandBuffer();
+            m_Buffer.name = "ScattererShadowMapRetrieve";
 
-			//instead of making a copy like shadowMapCopyCommandbuffer, here we just set the shadowmap as a global texture, for access in shader
-			m_Buffer.SetGlobalTexture (ShaderProperties._ShadowMapTextureScatterer_PROPERTY, new RenderTargetIdentifier(BuiltinRenderTextureType.CurrentActive));
-			
-			m_Light = GetComponent<Light>();
-			m_Light.AddCommandBuffer (LightEvent.AfterShadowMap, m_Buffer);
-		}
+            //instead of making a copy like shadowMapCopyCommandbuffer, here we just set the shadowmap as a global texture, for access in shader
+            m_Buffer.SetGlobalTexture (ShaderProperties._ShadowMapTextureScatterer_PROPERTY, new RenderTargetIdentifier(BuiltinRenderTextureType.CurrentActive));
+            
+            m_Light = GetComponent<Light>();
+            m_Light.AddCommandBuffer (LightEvent.AfterShadowMap, m_Buffer);
+        }
 
-		public void OnDestroy ()
-		{
-			m_Light.RemoveCommandBuffer (LightEvent.AfterShadowMap, m_Buffer);
-		}
-	}
+        public void OnDestroy ()
+        {
+            m_Light.RemoveCommandBuffer (LightEvent.AfterShadowMap, m_Buffer);
+        }
+    }
 }
 

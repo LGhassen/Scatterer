@@ -10,20 +10,20 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public class GUIModuleLabel : AbstractGUIModule
-	{
-		string label = "";
-		
-		public GUIModuleLabel (string label)
-		{
-			this.label = label;
-		}
-		
-		public override void RenderGUI()
-		{
-			GUILayout.BeginHorizontal ();
-			GUILayout.Label (label);
-			GUILayout.EndHorizontal ();
-		}
-	}
+    public class GUIModuleLabel : AbstractGUIModule
+    {
+        string label = "";
+        
+        public GUIModuleLabel (string label)
+        {
+            this.label = label;
+        }
+        
+        public override void RenderGUI()
+        {
+            GUILayout.BeginHorizontal ();
+            GUILayout.Label (label);
+            GUILayout.EndHorizontal ();
+        }
+    }
 }

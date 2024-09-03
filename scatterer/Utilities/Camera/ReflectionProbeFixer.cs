@@ -16,47 +16,47 @@ using KSP.IO;
 
 namespace Scatterer
 {
-	public class ReflectionProbeFixer : MonoBehaviour
-	{
-		Camera scaledCamera;
-		GameObject scaledCameraGO;
-		
-		Camera reflectionProbeCamera;
-		int tweakedCullingMask;
-		
-		public ReflectionProbeFixer ()
-		{
-		}
+    public class ReflectionProbeFixer : MonoBehaviour
+    {
+        Camera scaledCamera;
+        GameObject scaledCameraGO;
+        
+        Camera reflectionProbeCamera;
+        int tweakedCullingMask;
+        
+        public ReflectionProbeFixer ()
+        {
+        }
 
-		public void Awake()
-		{
-			// Create a camera that will render scaledSpace for reflection probes
-			scaledCameraGO = new GameObject("ScattererReflectionProbeScaledSpaceCamera");
-			scaledCamera = scaledCameraGO.AddComponent<Camera>();
-			scaledCamera.enabled = false;
-			reflectionProbeCamera = gameObject.GetComponent<Camera> ();
+        public void Awake()
+        {
+            // Create a camera that will render scaledSpace for reflection probes
+            scaledCameraGO = new GameObject("ScattererReflectionProbeScaledSpaceCamera");
+            scaledCamera = scaledCameraGO.AddComponent<Camera>();
+            scaledCamera.enabled = false;
+            reflectionProbeCamera = gameObject.GetComponent<Camera> ();
 
-			// Remove scaledSpace rendering from the stock reflection probe Camera
-			tweakedCullingMask = reflectionProbeCamera.cullingMask;
-			if ((tweakedCullingMask & (1 << 10)) != 0)
-			{
-				tweakedCullingMask = tweakedCullingMask - (1 << 10);
-			}
-		}
+            // Remove scaledSpace rendering from the stock reflection probe Camera
+            tweakedCullingMask = reflectionProbeCamera.cullingMask;
+            if ((tweakedCullingMask & (1 << 10)) != 0)
+            {
+                tweakedCullingMask = tweakedCullingMask - (1 << 10);
+            }
+        }
 
-		// We need to do this every frame as it gets reset
-		public void OnPreCull()
-		{
-			reflectionProbeCamera.cullingMask = tweakedCullingMask; 
-			reflectionProbeCamera.clearFlags = CameraClearFlags.Depth; // Clear only depth for this Camera, scaledCamera clears color+depth
+        // We need to do this every frame as it gets reset
+        public void OnPreCull()
+        {
+            reflectionProbeCamera.cullingMask = tweakedCullingMask; 
+            reflectionProbeCamera.clearFlags = CameraClearFlags.Depth; // Clear only depth for this Camera, scaledCamera clears color+depth
 
-			scaledCamera.CopyFrom(reflectionProbeCamera);
-			scaledCamera.enabled = false;
-			scaledCamera.clearFlags = CameraClearFlags.Color;
-			scaledCamera.backgroundColor = Color.black;
-			
-			// Setup and render scaled scene first
-			scaledCamera.cullingMask = ScaledCamera.Instance.galaxyCamera.cullingMask;
+            scaledCamera.CopyFrom(reflectionProbeCamera);
+            scaledCamera.enabled = false;
+            scaledCamera.clearFlags = CameraClearFlags.Color;
+            scaledCamera.backgroundColor = Color.black;
+            
+            // Setup and render scaled scene first
+            scaledCamera.cullingMask = ScaledCamera.Instance.galaxyCamera.cullingMask;
 
             // The reflectionProbe camera has manually set viewMatrix and doesn't use the transforms, we want to keep everything the same except for position
             Matrix4x4 viewMatrix = scaledCamera.worldToCameraMatrix;
@@ -67,8 +67,8 @@ namespace Scatterer
 
             scaledCamera.worldToCameraMatrix = viewMatrix;
 
-			scaledCamera.targetTexture = reflectionProbeCamera.targetTexture;
-			scaledCamera.Render ();
+            scaledCamera.targetTexture = reflectionProbeCamera.targetTexture;
+            scaledCamera.Render ();
 
             // Render scaled scene second
             scaledCamera.clearFlags = CameraClearFlags.Depth;
@@ -84,17 +84,17 @@ namespace Scatterer
         }
 
         public void OnDestroy()
-		{
-			if (scaledCamera)
-			{
-				Component.DestroyImmediate(scaledCamera);
-			}
+        {
+            if (scaledCamera)
+            {
+                Component.DestroyImmediate(scaledCamera);
+            }
 
-			if (scaledCameraGO)
-			{
-				UnityEngine.Object.DestroyImmediate (scaledCameraGO);
-			}
-		}
-	}
+            if (scaledCameraGO)
+            {
+                UnityEngine.Object.DestroyImmediate (scaledCameraGO);
+            }
+        }
+    }
 }
 

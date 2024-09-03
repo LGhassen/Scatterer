@@ -14,33 +14,33 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public class ModularGUI
-	{
+    public class ModularGUI
+    {
 
-		List<AbstractGUIModule> Modules = new List<AbstractGUIModule>();
+        List<AbstractGUIModule> Modules = new List<AbstractGUIModule>();
 
-		public ModularGUI ()
-		{
+        public ModularGUI ()
+        {
 
-		}
+        }
 
-		public void RenderGUI()
-		{
-			foreach (AbstractGUIModule module in Modules)
-			{
-				module.RenderGUI();
-			}
-		}
+        public void RenderGUI()
+        {
+            foreach (AbstractGUIModule module in Modules)
+            {
+                module.RenderGUI();
+            }
+        }
 
-		public void AddModule(AbstractGUIModule module)
-		{
-			this.Modules.Add (module);
-		}
+        public void AddModule(AbstractGUIModule module)
+        {
+            this.Modules.Add (module);
+        }
 
-		public void ClearModules()
-		{
-			Modules.Clear ();
-		}
-	}
+        public void ClearModules()
+        {
+            Modules.Clear ();
+        }
+    }
 }
 

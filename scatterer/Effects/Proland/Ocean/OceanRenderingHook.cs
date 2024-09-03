@@ -4,92 +4,92 @@ using UnityEngine.Rendering;
 
 namespace Scatterer
 {
-	public class OceanRenderingHook : MonoBehaviour
-	{
-		public bool isEnabled = false;
+    public class OceanRenderingHook : MonoBehaviour
+    {
+        public bool isEnabled = false;
 
-		public OceanRenderingHook ()
-		{
-		}
-		
-		public MeshRenderer targetRenderer;
-		public Material targetMaterial;
-		public string celestialBodyName;
+        public OceanRenderingHook ()
+        {
+        }
+        
+        public MeshRenderer targetRenderer;
+        public Material targetMaterial;
+        public string celestialBodyName;
 
-		//Dictionary to check if we added the OceanCommandBuffer to the camera
-		private Dictionary<Camera,OceanCommandBuffer> cameraToOceanCommandBuffer = new Dictionary<Camera,OceanCommandBuffer>();
-		
-		void OnWillRenderObject()
-		{
-			Camera cam = Camera.current;
-			
-			if (!cam || !targetRenderer || !targetMaterial)
-				return;
+        //Dictionary to check if we added the OceanCommandBuffer to the camera
+        private Dictionary<Camera,OceanCommandBuffer> cameraToOceanCommandBuffer = new Dictionary<Camera,OceanCommandBuffer>();
+        
+        void OnWillRenderObject()
+        {
+            Camera cam = Camera.current;
+            
+            if (!cam || !targetRenderer || !targetMaterial)
+                return;
 
-			// Render ocean MeshRenderer for this frame
-			// If projector mode render directly to screen
-			// If depth buffer mode render to separate buffer so we can have the ocean's color and depth to be used by the scattering shader
-			if (cameraToOceanCommandBuffer.ContainsKey (cam))
-			{
-				if (cameraToOceanCommandBuffer[cam] != null)
-				{
-					cameraToOceanCommandBuffer[cam].EnableForThisFrame();
+            // Render ocean MeshRenderer for this frame
+            // If projector mode render directly to screen
+            // If depth buffer mode render to separate buffer so we can have the ocean's color and depth to be used by the scattering shader
+            if (cameraToOceanCommandBuffer.ContainsKey (cam))
+            {
+                if (cameraToOceanCommandBuffer[cam] != null)
+                {
+                    cameraToOceanCommandBuffer[cam].EnableForThisFrame();
 
                     // Enable screen copying for this frame
                     if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions && (cam == Scatterer.Instance.farCamera || cam == Scatterer.Instance.nearCamera))
                         ScreenCopyCommandBuffer.EnableScreenCopyForFrame(cam);
                 }
-			}
-			else
-			{
-				//we add null to the cameras we don't want to render on so we don't do a string compare every time
-				if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera") || (cam.name == "DepthCamera") || (cam.name == "NearCamera"))
-				{
-					cameraToOceanCommandBuffer[cam] = null;
-				}
-				else
-				{
-					OceanCommandBuffer oceanCommandBuffer = (OceanCommandBuffer) cam.gameObject.AddComponent(typeof(OceanCommandBuffer));
-					oceanCommandBuffer.targetRenderer = targetRenderer;
-					oceanCommandBuffer.targetMaterial = targetMaterial;
-					oceanCommandBuffer.celestialBodyName = celestialBodyName;
-					oceanCommandBuffer.Initialize();
-					oceanCommandBuffer.EnableForThisFrame();
-					
-					cameraToOceanCommandBuffer[cam] = oceanCommandBuffer;
-				}
-			}
-		}
-		
-		public void OnDestroy ()
-		{
-			foreach (OceanCommandBuffer oceanCommandBuffer in cameraToOceanCommandBuffer.Values)
-			{
-				if (oceanCommandBuffer)
-					Component.DestroyImmediate(oceanCommandBuffer);
-			}
-		}
-	}
+            }
+            else
+            {
+                //we add null to the cameras we don't want to render on so we don't do a string compare every time
+                if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera") || (cam.name == "DepthCamera") || (cam.name == "NearCamera"))
+                {
+                    cameraToOceanCommandBuffer[cam] = null;
+                }
+                else
+                {
+                    OceanCommandBuffer oceanCommandBuffer = (OceanCommandBuffer) cam.gameObject.AddComponent(typeof(OceanCommandBuffer));
+                    oceanCommandBuffer.targetRenderer = targetRenderer;
+                    oceanCommandBuffer.targetMaterial = targetMaterial;
+                    oceanCommandBuffer.celestialBodyName = celestialBodyName;
+                    oceanCommandBuffer.Initialize();
+                    oceanCommandBuffer.EnableForThisFrame();
+                    
+                    cameraToOceanCommandBuffer[cam] = oceanCommandBuffer;
+                }
+            }
+        }
+        
+        public void OnDestroy ()
+        {
+            foreach (OceanCommandBuffer oceanCommandBuffer in cameraToOceanCommandBuffer.Values)
+            {
+                if (oceanCommandBuffer)
+                    Component.DestroyImmediate(oceanCommandBuffer);
+            }
+        }
+    }
 
-	public class OceanCommandBuffer : MonoBehaviour
-	{
-		bool renderingEnabled = false;
-		bool hdrEnabled = false;
+    public class OceanCommandBuffer : MonoBehaviour
+    {
+        bool renderingEnabled = false;
+        bool hdrEnabled = false;
 
-		public MeshRenderer targetRenderer;
-		public Material targetMaterial;
-		public string celestialBodyName;
+        public MeshRenderer targetRenderer;
+        public Material targetMaterial;
+        public string celestialBodyName;
 
-		private Camera targetCamera;
-		private CommandBuffer rendererCommandBuffer;
+        private Camera targetCamera;
+        private CommandBuffer rendererCommandBuffer;
 
-		private RenderTexture oceanRenderTexture, depthCopyRenderTexture;
-		private Material copyCameraDepthMaterial;
-		bool oceanScreenShotModeEnabled = false;
+        private RenderTexture oceanRenderTexture, depthCopyRenderTexture;
+        private Material copyCameraDepthMaterial;
+        bool oceanScreenShotModeEnabled = false;
 
-		int width = 0, height = 0;
+        int width = 0, height = 0;
 
-		public void Initialize()
+        public void Initialize()
         {
             targetCamera = GetComponent<Camera>();
 
@@ -171,13 +171,13 @@ namespace Scatterer
 
         private void CreateTextures(int targetWidth, int targetHeight)
         {
-			if (depthCopyRenderTexture)
-				depthCopyRenderTexture.Release();
+            if (depthCopyRenderTexture)
+                depthCopyRenderTexture.Release();
 
-			if (oceanRenderTexture)
-				oceanRenderTexture.Release();
+            if (oceanRenderTexture)
+                oceanRenderTexture.Release();
 
-			oceanRenderTexture = new RenderTexture(targetWidth, targetHeight, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
+            oceanRenderTexture = new RenderTexture(targetWidth, targetHeight, 0, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
             oceanRenderTexture.useMipMap = false;
             oceanRenderTexture.autoGenerateMips = false;
             oceanRenderTexture.Create();
@@ -190,8 +190,8 @@ namespace Scatterer
         }
 
         public void EnableForThisFrame()
-		{
-			if (!renderingEnabled)
+        {
+            if (!renderingEnabled)
             {
                 int targetWidth, targetHeight;
                 GetTargetDimensions(out targetWidth, out targetHeight);
@@ -202,15 +202,15 @@ namespace Scatterer
                     RecreateCommandBuffer();
                 }
 
-				bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
-				if (oceanScreenShotModeEnabled != screenShotModeEnabled)
+                bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
+                if (oceanScreenShotModeEnabled != screenShotModeEnabled)
                 {
-					// Resize textures
-					int superSizingFactor = screenShotModeEnabled ? Mathf.Max(GameSettings.SCREENSHOT_SUPERSIZE, 1) : 1;
-					CreateTextures(width * superSizingFactor, height * superSizingFactor);
+                    // Resize textures
+                    int superSizingFactor = screenShotModeEnabled ? Mathf.Max(GameSettings.SCREENSHOT_SUPERSIZE, 1) : 1;
+                    CreateTextures(width * superSizingFactor, height * superSizingFactor);
 
-					oceanScreenShotModeEnabled = screenShotModeEnabled;
-				}
+                    oceanScreenShotModeEnabled = screenShotModeEnabled;
+                }
 
                 targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer); //ocean renders on AfterImageEffectsOpaque, local scattering (with it's depth downscale) can render and copy to screen on afterForwardAlpha
                 renderingEnabled = true;
@@ -218,28 +218,28 @@ namespace Scatterer
         }
 
         void OnPostRender()
-		{
-			if (renderingEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
-			{
-				targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer);
-				renderingEnabled = false;
-			}
-		}
-		
-		public void OnDestroy ()
-		{
-			if (targetCamera && rendererCommandBuffer != null)
-			{
-				targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer);
+        {
+            if (renderingEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
+            {
+                targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer);
+                renderingEnabled = false;
+            }
+        }
+        
+        public void OnDestroy ()
+        {
+            if (targetCamera && rendererCommandBuffer != null)
+            {
+                targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, rendererCommandBuffer);
 
-				if (depthCopyRenderTexture)
-					depthCopyRenderTexture.Release();
-				
-				if (oceanRenderTexture)
-					oceanRenderTexture.Release();
+                if (depthCopyRenderTexture)
+                    depthCopyRenderTexture.Release();
+                
+                if (oceanRenderTexture)
+                    oceanRenderTexture.Release();
 
-				renderingEnabled = false;
-			}
-		}
-	}
+                renderingEnabled = false;
+            }
+        }
+    }
 }

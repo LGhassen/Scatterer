@@ -3,22 +3,22 @@ using System.Collections.Generic;
 
 namespace Scatterer
 {
-	public class SunlightModulatorsManager
-	{
-		private static SunlightModulatorsManager instance = null;
+    public class SunlightModulatorsManager
+    {
+        private static SunlightModulatorsManager instance = null;
 
-		public static SunlightModulatorsManager Instance
-		{
-			get
-			{
-				if (instance == null)
-				{ 
-					instance = new SunlightModulatorsManager();
+        public static SunlightModulatorsManager Instance
+        {
+            get
+            {
+                if (instance == null)
+                { 
+                    instance = new SunlightModulatorsManager();
                 }
 
-				return instance;
+                return instance;
             }
-		}
+        }
 
         private static Dictionary<Light, SunlightModulator> modulatorsDictionary = new Dictionary<Light, SunlightModulator>();
 
@@ -64,28 +64,28 @@ namespace Scatterer
         }
 
         public void ModulateByAttenuation(Light light, float inAttenuation)
-		{
-			FindOrCreateModulator (light).ModulateByAttenuation (inAttenuation);
-		}
-		
-		public void ModulateByColor(Light light, Color inColor)
-		{
+        {
+            FindOrCreateModulator (light).ModulateByAttenuation (inAttenuation);
+        }
+        
+        public void ModulateByColor(Light light, Color inColor)
+        {
             FindOrCreateModulator (light).ModulateByColor (inColor);
-		}
-		
-		public Color GetLastModulationColor(Light light)
-		{
-			return FindOrCreateModulator (light).LastModulationColor;
-		}
+        }
+        
+        public Color GetLastModulationColor(Light light)
+        {
+            return FindOrCreateModulator (light).LastModulationColor;
+        }
 
-		public void CamereOnPrecull()
-		{
-			foreach(var modulator in modulatorsDictionary.Values)
-			{
-				modulator.StoreOriginalColor();
-				modulator.ApplyColorModulation();
-			}
-		}
+        public void CamereOnPrecull()
+        {
+            foreach(var modulator in modulatorsDictionary.Values)
+            {
+                modulator.StoreOriginalColor();
+                modulator.ApplyColorModulation();
+            }
+        }
 
         public void CameraOnPostRender()
         {
@@ -116,7 +116,7 @@ namespace Scatterer
     {
         void OnPreCull()
         {
-			SunlightModulatorsManager.Instance.CamereOnPrecull();
+            SunlightModulatorsManager.Instance.CamereOnPrecull();
         }
 
         void OnPostRender()
@@ -126,65 +126,65 @@ namespace Scatterer
     }
 
     public class SunlightModulator
-	{
-		private Color originalColor = Color.white;
+    {
+        private Color originalColor = Color.white;
         private Color modulationColor = Color.white;
         private Color lastModulationColor;
 
         Light sunLight;
-		bool applyModulation = false;
-		bool originalColorStored = false;
+        bool applyModulation = false;
+        bool originalColorStored = false;
 
         public Color LastModulationColor { get => lastModulationColor; }
 
         public void Init(Light light)
-		{
-			sunLight = light;
-		}
+        {
+            sunLight = light;
+        }
 
-		public void StoreOriginalColor()
-		{
-			if (sunLight != null && sunLight.color != Color.black)
-			{
-				originalColor = sunLight.color;
-				originalColorStored = true;
-			}
-		}
+        public void StoreOriginalColor()
+        {
+            if (sunLight != null && sunLight.color != Color.black)
+            {
+                originalColor = sunLight.color;
+                originalColorStored = true;
+            }
+        }
 
-		public void ModulateByAttenuation(float inAttenuation)
-		{
-			modulationColor *= inAttenuation;
-			applyModulation = true;
-		}
+        public void ModulateByAttenuation(float inAttenuation)
+        {
+            modulationColor *= inAttenuation;
+            applyModulation = true;
+        }
 
-		public void ModulateByColor(Color inColor)
-		{
-			modulationColor *= inColor;
-			applyModulation = true;
-		}
+        public void ModulateByColor(Color inColor)
+        {
+            modulationColor *= inColor;
+            applyModulation = true;
+        }
 
-		public void ApplyColorModulation()
-		{
-			if (sunLight != null && applyModulation && originalColorStored)
-			{
-				sunLight.color = modulationColor * originalColor;
-				lastModulationColor = sunLight.color;
-			}
-		}
-		
-		public void RestoreOriginalColor()
-		{
-			if (sunLight != null && applyModulation && originalColorStored)
-			{
-				sunLight.color = originalColor;
-			}
-		}
+        public void ApplyColorModulation()
+        {
+            if (sunLight != null && applyModulation && originalColorStored)
+            {
+                sunLight.color = modulationColor * originalColor;
+                lastModulationColor = sunLight.color;
+            }
+        }
+        
+        public void RestoreOriginalColor()
+        {
+            if (sunLight != null && applyModulation && originalColorStored)
+            {
+                sunLight.color = originalColor;
+            }
+        }
 
-		public void ResetModulation()
-		{
+        public void ResetModulation()
+        {
             applyModulation = false;
             modulationColor = Color.white;
         }
-	}
+    }
 }
 

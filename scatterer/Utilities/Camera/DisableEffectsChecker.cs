@@ -16,52 +16,52 @@ using KSP.IO;
 
 namespace Scatterer
 {
-	public class DisableEffectsChecker : MonoBehaviour
-	{
-		Dictionary<Camera,DisableEffectsForReflectionsCamera> camToEffectsDisablerDictionary =  new Dictionary<Camera,DisableEffectsForReflectionsCamera>() ;
-		public ProlandManager manager;
+    public class DisableEffectsChecker : MonoBehaviour
+    {
+        Dictionary<Camera,DisableEffectsForReflectionsCamera> camToEffectsDisablerDictionary =  new Dictionary<Camera,DisableEffectsForReflectionsCamera>() ;
+        public ProlandManager manager;
 
-		public DisableEffectsChecker ()
-		{
-		}
+        public DisableEffectsChecker ()
+        {
+        }
 
-		public void OnWillRenderObject()
-		{
-			Camera cam = Camera.current;
-			if (!cam)
-				return;
+        public void OnWillRenderObject()
+        {
+            Camera cam = Camera.current;
+            if (!cam)
+                return;
 
-			if (!camToEffectsDisablerDictionary.ContainsKey(cam))
-			{
-				if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))
-				{
-					camToEffectsDisablerDictionary[cam] = (DisableEffectsForReflectionsCamera) cam.gameObject.AddComponent(typeof(DisableEffectsForReflectionsCamera));
-					camToEffectsDisablerDictionary[cam].manager = manager;
-					
-					Utils.LogDebug("Ocean effects disabled from reflections Camera "+cam.name);
-				}
-				else
-				{
-					//we add it anyway to avoid doing a string compare
-					camToEffectsDisablerDictionary[cam] = null;
-				}
-			}
+            if (!camToEffectsDisablerDictionary.ContainsKey(cam))
+            {
+                if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera"))
+                {
+                    camToEffectsDisablerDictionary[cam] = (DisableEffectsForReflectionsCamera) cam.gameObject.AddComponent(typeof(DisableEffectsForReflectionsCamera));
+                    camToEffectsDisablerDictionary[cam].manager = manager;
+                    
+                    Utils.LogDebug("Ocean effects disabled from reflections Camera "+cam.name);
+                }
+                else
+                {
+                    //we add it anyway to avoid doing a string compare
+                    camToEffectsDisablerDictionary[cam] = null;
+                }
+            }
 
 
-		}
+        }
 
-		public void OnDestroy()
-		{
-			if (camToEffectsDisablerDictionary.Count != 0) 
-			{
-				foreach (var _val in camToEffectsDisablerDictionary.Values)
-				{
-					Component.Destroy (_val);
-					UnityEngine.Object.Destroy (_val);
-				}
-				camToEffectsDisablerDictionary.Clear();
-			}
-		}
-	}
+        public void OnDestroy()
+        {
+            if (camToEffectsDisablerDictionary.Count != 0) 
+            {
+                foreach (var _val in camToEffectsDisablerDictionary.Values)
+                {
+                    Component.Destroy (_val);
+                    UnityEngine.Object.Destroy (_val);
+                }
+                camToEffectsDisablerDictionary.Clear();
+            }
+        }
+    }
 }
 

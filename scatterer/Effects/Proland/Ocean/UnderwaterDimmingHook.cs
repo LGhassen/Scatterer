@@ -2,14 +2,14 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public class UnderwaterDimmingHook : MonoBehaviour
-	{
-		public OceanNode oceanNode;
+    public class UnderwaterDimmingHook : MonoBehaviour
+    {
+        public OceanNode oceanNode;
 
-		public void OnPostRender()
-		{
-			oceanNode.applyUnderwaterDimming ();
-		}
-	}
+        public void OnPostRender()
+        {
+            oceanNode.applyUnderwaterDimming ();
+        }
+    }
 }
 

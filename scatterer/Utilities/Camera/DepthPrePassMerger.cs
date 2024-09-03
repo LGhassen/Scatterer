@@ -13,41 +13,41 @@ using UnityEngine.Rendering;
 
 namespace Scatterer
 {
-	// Merges the depth pre-pass result into the screenbuffer's depth to reduce overdraw and make the pre-pass more useful
-	// Only usable with MSAA off so only for depth buffer mode
-	public class DepthPrePassMerger : MonoBehaviour
-	{
-		Material copyCameraDepthMaterial;
-		CommandBuffer depthInitCommandBuffer;
-		Camera targetCamera;
+    // Merges the depth pre-pass result into the screenbuffer's depth to reduce overdraw and make the pre-pass more useful
+    // Only usable with MSAA off so only for depth buffer mode
+    public class DepthPrePassMerger : MonoBehaviour
+    {
+        Material copyCameraDepthMaterial;
+        CommandBuffer depthInitCommandBuffer;
+        Camera targetCamera;
 
-		public DepthPrePassMerger ()
-		{
-			Utils.LogInfo("Adding DepthPrePassMerger");
-			targetCamera = GetComponent<Camera> ();
+        public DepthPrePassMerger ()
+        {
+            Utils.LogInfo("Adding DepthPrePassMerger");
+            targetCamera = GetComponent<Camera> ();
 
-			Utils.LogInfo ("targetCamera.depthTextureMode " + targetCamera.depthTextureMode.ToString ());
+            Utils.LogInfo ("targetCamera.depthTextureMode " + targetCamera.depthTextureMode.ToString ());
 
-			if (QualitySettings.antiAliasing == 0)
-			{
-				if (targetCamera.depthTextureMode == DepthTextureMode.None)
-					targetCamera.depthTextureMode = DepthTextureMode.Depth;
+            if (QualitySettings.antiAliasing == 0)
+            {
+                if (targetCamera.depthTextureMode == DepthTextureMode.None)
+                    targetCamera.depthTextureMode = DepthTextureMode.Depth;
 
-				copyCameraDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/CopyCameraDepth"]);
-				depthInitCommandBuffer = new CommandBuffer();
-				depthInitCommandBuffer.name = "Scatterer depth merge commandbuffer";
-				depthInitCommandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, copyCameraDepthMaterial, 1);
-				targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
-			}
-		}
+                copyCameraDepthMaterial = new Material (ShaderReplacer.Instance.LoadedShaders["Scatterer/CopyCameraDepth"]);
+                depthInitCommandBuffer = new CommandBuffer();
+                depthInitCommandBuffer.name = "Scatterer depth merge commandbuffer";
+                depthInitCommandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, copyCameraDepthMaterial, 1);
+                targetCamera.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
+            }
+        }
 
-		public void OnDestroy()
-		{
-			if (targetCamera && depthInitCommandBuffer != null)
-			{
-				targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
-			}
-		}
-	}
+        public void OnDestroy()
+        {
+            if (targetCamera && depthInitCommandBuffer != null)
+            {
+                targetCamera.RemoveCommandBuffer(CameraEvent.BeforeForwardOpaque, depthInitCommandBuffer);
+            }
+        }
+    }
 }
 

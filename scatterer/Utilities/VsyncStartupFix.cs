@@ -5,19 +5,19 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	[KSPAddon(KSPAddon.Startup.Instantly, false)]
-	public class VsyncStartupFix : MonoBehaviour
-	{
-		public void Start()
-		{
-			FixVsync ();
-		}
-		
+    [KSPAddon(KSPAddon.Startup.Instantly, false)]
+    public class VsyncStartupFix : MonoBehaviour
+    {
+        public void Start()
+        {
+            FixVsync ();
+        }
+        
 
-		private void FixVsync()
-		{
-			QualitySettings.vSyncCount = 0;
-		}
-	}
+        private void FixVsync()
+        {
+            QualitySettings.vSyncCount = 0;
+        }
+    }
 }
 

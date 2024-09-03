@@ -13,34 +13,34 @@ using KSP.IO;
 
 namespace Scatterer
 {
-	public class SunflareCameraHook : MonoBehaviour
-	{
-		public SunFlare flare;
-		public float useDbufferOnCamera;
+    public class SunflareCameraHook : MonoBehaviour
+    {
+        public SunFlare flare;
+        public float useDbufferOnCamera;
 
-		public SunflareCameraHook ()
-		{
-		}
+        public SunflareCameraHook ()
+        {
+        }
 
-		public void OnPreRender()
-		{
-			if(flare)
-			{
-				flare.updateProperties ();
-				flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,1.0f);
-				flare.sunglareMaterial.SetFloat(ShaderProperties.useDbufferOnCamera_PROPERTY,useDbufferOnCamera);
-			}
-		}
+        public void OnPreRender()
+        {
+            if(flare)
+            {
+                flare.updateProperties ();
+                flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,1.0f);
+                flare.sunglareMaterial.SetFloat(ShaderProperties.useDbufferOnCamera_PROPERTY,useDbufferOnCamera);
+            }
+        }
 
-		public void OnPostRender()
-		{
-			if(flare)
-			{
-				flare.ClearExtinction ();
-				flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,0.0f);
-				flare.sunglareMaterial.SetFloat(ShaderProperties.useDbufferOnCamera_PROPERTY,useDbufferOnCamera);
-			}
-		}
-	}
+        public void OnPostRender()
+        {
+            if(flare)
+            {
+                flare.ClearExtinction ();
+                flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,0.0f);
+                flare.sunglareMaterial.SetFloat(ShaderProperties.useDbufferOnCamera_PROPERTY,useDbufferOnCamera);
+            }
+        }
+    }
 }
 

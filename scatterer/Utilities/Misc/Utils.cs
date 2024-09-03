@@ -12,237 +12,237 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public static class Utils
-	{		
-		private static string pluginPath;
-		public static string PluginPath
-		{
-			get
-			{
-				if (pluginPath == null)
-				{
-					string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
-					UriBuilder uri = new UriBuilder (codeBase);
-					pluginPath = Uri.UnescapeDataString (uri.Path);
-					pluginPath = Path.GetDirectoryName (pluginPath);					
-				}
-				return pluginPath;
-			}
-		}
-		
-		private static string gameDataPath;
-		public static string GameDataPath
-		{
-			get
-			{
-				if (gameDataPath==null)
-				{
-					gameDataPath= KSPUtil.ApplicationRootPath + "GameData/";				
-				}
-				return gameDataPath;
-			}
-		}
+    public static class Utils
+    {        
+        private static string pluginPath;
+        public static string PluginPath
+        {
+            get
+            {
+                if (pluginPath == null)
+                {
+                    string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
+                    UriBuilder uri = new UriBuilder (codeBase);
+                    pluginPath = Uri.UnescapeDataString (uri.Path);
+                    pluginPath = Path.GetDirectoryName (pluginPath);                    
+                }
+                return pluginPath;
+            }
+        }
+        
+        private static string gameDataPath;
+        public static string GameDataPath
+        {
+            get
+            {
+                if (gameDataPath==null)
+                {
+                    gameDataPath= KSPUtil.ApplicationRootPath + "GameData/";                
+                }
+                return gameDataPath;
+            }
+        }
 
-		public static void LogDebug(string log)
-		{
-			Debug.Log ("[Scatterer][Debug] " + log);
-		}
-		
-		public static void LogInfo(string log)
-		{
-			Debug.Log ("[Scatterer][Info] " + log);
-		}
-		
-		public static void LogError(string log)
-		{
-			Debug.LogError("[Scatterer][Error] " + log);
-		}
+        public static void LogDebug(string log)
+        {
+            Debug.Log ("[Scatterer][Debug] " + log);
+        }
+        
+        public static void LogInfo(string log)
+        {
+            Debug.Log ("[Scatterer][Info] " + log);
+        }
+        
+        public static void LogError(string log)
+        {
+            Debug.LogError("[Scatterer][Error] " + log);
+        }
 
-		public static GameObject GetMainMenuObject(CelestialBody celestialBody)
-		{
-			string name = celestialBody.name;
+        public static GameObject GetMainMenuObject(CelestialBody celestialBody)
+        {
+            string name = celestialBody.name;
 
-			GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("Scene")));
-			
-			if (!mainMenuObject)
-			{
-				throw new Exception("No correct main menu object found for "+celestialBody.name);
-			}
-			
-			return mainMenuObject;
-		}
-		
-		public static Transform GetScaledTransform (string body)
-		{
-			return (ScaledSpace.Instance.transform.FindChild (body));	
-		}
-		
-		public static void FixKopernicusRingsRenderQueue ()
-		{
-			foreach (CelestialBody _cb in FlightGlobals.Bodies) {
-				GameObject ringObject;
-				ringObject = GameObject.Find (_cb.name + "Ring");
-				if (ringObject) {
-					ringObject.GetComponent<MeshRenderer> ().material.renderQueue = 3005;
-					Utils.LogDebug ("Found rings for " + _cb.name);
-				}
-			}
-		}
-		
-		public static void FixSunsCoronaRenderQueue ()
-		{
-			foreach(ScattererCelestialBody _scattererCB in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
-			{
-				Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
-				if (scaledSunTransform != null)
-				{ 
-					foreach (Transform child in scaledSunTransform)
-					{
-						if (child != null)
-						{ 
-							MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
-							if (temp != null)
-							{ 
-								temp.material.renderQueue = 2998;
-							}
-						}
-					}
-				}
-			}
-		}
+            GameObject mainMenuObject = GameObject.FindObjectsOfType<GameObject>().FirstOrDefault(b => ( (b.name == name) && b.transform.parent.name.Contains("Scene")));
+            
+            if (!mainMenuObject)
+            {
+                throw new Exception("No correct main menu object found for "+celestialBody.name);
+            }
+            
+            return mainMenuObject;
+        }
+        
+        public static Transform GetScaledTransform (string body)
+        {
+            return (ScaledSpace.Instance.transform.FindChild (body));    
+        }
+        
+        public static void FixKopernicusRingsRenderQueue ()
+        {
+            foreach (CelestialBody _cb in FlightGlobals.Bodies) {
+                GameObject ringObject;
+                ringObject = GameObject.Find (_cb.name + "Ring");
+                if (ringObject) {
+                    ringObject.GetComponent<MeshRenderer> ().material.renderQueue = 3005;
+                    Utils.LogDebug ("Found rings for " + _cb.name);
+                }
+            }
+        }
+        
+        public static void FixSunsCoronaRenderQueue ()
+        {
+            foreach(ScattererCelestialBody _scattererCB in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
+            {
+                Transform scaledSunTransform = Utils.GetScaledTransform (_scattererCB.mainSunCelestialBody);
+                if (scaledSunTransform != null)
+                { 
+                    foreach (Transform child in scaledSunTransform)
+                    {
+                        if (child != null)
+                        { 
+                            MeshRenderer temp = child.gameObject.GetComponent<MeshRenderer> ();
+                            if (temp != null)
+                            { 
+                                temp.material.renderQueue = 2998;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-		public static RenderTexture CreateTexture(string name, int width, int height, int depth, RenderTextureFormat format, bool useMipmap, FilterMode filtermode, int antiAliasing)
-		{
-			
-			RenderTexture renderTexture = new RenderTexture ( width,height,depth, format);
-			renderTexture.name = name;
-			renderTexture.useMipMap=useMipmap;
-			renderTexture.filterMode = filtermode;
-			renderTexture.antiAliasing = antiAliasing;
-			renderTexture.Create ();
-			
-			return renderTexture;
-		}
+        public static RenderTexture CreateTexture(string name, int width, int height, int depth, RenderTextureFormat format, bool useMipmap, FilterMode filtermode, int antiAliasing)
+        {
+            
+            RenderTexture renderTexture = new RenderTexture ( width,height,depth, format);
+            renderTexture.name = name;
+            renderTexture.useMipMap=useMipmap;
+            renderTexture.filterMode = filtermode;
+            renderTexture.antiAliasing = antiAliasing;
+            renderTexture.Create ();
+            
+            return renderTexture;
+        }
 
-		// As of 1.9.1 there are two rendering modes in KSP, unified localCamera (Directx 11) and dual local cameras (the old mode)
-		// Sometimes we need to do some work on the first local camera to render, which can be either the unified camera or the far camera
-		public static Camera getEarliestLocalCamera()
-		{
-			return Scatterer.Instance.unifiedCameraMode ? Scatterer.Instance.nearCamera : Scatterer.Instance.farCamera;
-		}
+        // As of 1.9.1 there are two rendering modes in KSP, unified localCamera (Directx 11) and dual local cameras (the old mode)
+        // Sometimes we need to do some work on the first local camera to render, which can be either the unified camera or the far camera
+        public static Camera getEarliestLocalCamera()
+        {
+            return Scatterer.Instance.unifiedCameraMode ? Scatterer.Instance.nearCamera : Scatterer.Instance.farCamera;
+        }
 
-		// Will return true for zero, so be aware
-		public static bool IsPowerOfTwo(int x)
-		{
-			return (x & (x - 1)) == 0;
-		}
+        // Will return true for zero, so be aware
+        public static bool IsPowerOfTwo(int x)
+        {
+            return (x & (x - 1)) == 0;
+        }
 
-		// If condition is true, enable keywordOn and disable keywordOff, else do the opposite
-		public static void EnableOrDisableShaderKeywords(Material mat, string keywordOn, string keywordOff, bool enable) 
-		{
-			if (mat)
-			{
-				if (enable)
-				{
-					mat.EnableKeyword (keywordOn);
-					mat.DisableKeyword (keywordOff);
-				}
-				else
-				{
-					mat.EnableKeyword (keywordOff);
-					mat.DisableKeyword (keywordOn);
-				}
-			}
-		}
+        // If condition is true, enable keywordOn and disable keywordOff, else do the opposite
+        public static void EnableOrDisableShaderKeywords(Material mat, string keywordOn, string keywordOff, bool enable) 
+        {
+            if (mat)
+            {
+                if (enable)
+                {
+                    mat.EnableKeyword (keywordOn);
+                    mat.DisableKeyword (keywordOff);
+                }
+                else
+                {
+                    mat.EnableKeyword (keywordOff);
+                    mat.DisableKeyword (keywordOn);
+                }
+            }
+        }
 
-		//Thanks to linx for this snippet
-		public static Texture2D LoadDDSTexture(byte[] data, string name)
-		{
-			Texture2D texture=null;
-			
-			byte ddsSizeCheck = data[4];
-			if (ddsSizeCheck != 124)
-			{
-				LogError("This DDS texture is invalid - Unable to read the size check value from the header.");
-				return texture;
-			}
-			
-			
-			int height = data[13] * 256 + data[12];
-			int width = data[17] * 256 + data[16];
-			
-			int DDS_HEADER_SIZE = 128;
-			byte[] dxtBytes = new byte[data.Length - DDS_HEADER_SIZE];
-			Buffer.BlockCopy(data, DDS_HEADER_SIZE, dxtBytes, 0, data.Length - DDS_HEADER_SIZE);
-			int mipMapCount = (data[28]) | (data[29] << 8) | (data[30] << 16) | (data[31] << 24);
-			
-			TextureFormat format = TextureFormat.YUY2; //just an invalid type
-			if (data[84] == 'D')
-			{
-				if (data[87] == 49) //Also char '1'
-				{
-					format = TextureFormat.DXT1;
-				}
-				else if (data[87] == 53)    //Also char '5'
-				{
-					format = TextureFormat.DXT5;
-				}
-			}
-			
-			if (format == TextureFormat.YUY2)
-			{
-				LogError("Format of texture "+name+" unidentified");
-				return texture;
-			}
-			
-			if (mipMapCount == 1)
-			{
-				texture = new Texture2D(width, height, format, false);
-			}
-			else
-			{
-				texture = new Texture2D(width, height, format, true);
-			}
-			try
-			{
-				texture.LoadRawTextureData(dxtBytes);
-			}
-			catch
-			{
-				LogError("Texture "+name+" couldn't be loaded");
-				return texture;
-			}
-			texture.Apply();
-			
-			LogInfo ("Loaded texture " + name + " " + width.ToString () + "x" + height.ToString () + " mip count: " + mipMapCount.ToString ());
-			
-			return texture;
-		}
+        //Thanks to linx for this snippet
+        public static Texture2D LoadDDSTexture(byte[] data, string name)
+        {
+            Texture2D texture=null;
+            
+            byte ddsSizeCheck = data[4];
+            if (ddsSizeCheck != 124)
+            {
+                LogError("This DDS texture is invalid - Unable to read the size check value from the header.");
+                return texture;
+            }
+            
+            
+            int height = data[13] * 256 + data[12];
+            int width = data[17] * 256 + data[16];
+            
+            int DDS_HEADER_SIZE = 128;
+            byte[] dxtBytes = new byte[data.Length - DDS_HEADER_SIZE];
+            Buffer.BlockCopy(data, DDS_HEADER_SIZE, dxtBytes, 0, data.Length - DDS_HEADER_SIZE);
+            int mipMapCount = (data[28]) | (data[29] << 8) | (data[30] << 16) | (data[31] << 24);
+            
+            TextureFormat format = TextureFormat.YUY2; //just an invalid type
+            if (data[84] == 'D')
+            {
+                if (data[87] == 49) //Also char '1'
+                {
+                    format = TextureFormat.DXT1;
+                }
+                else if (data[87] == 53)    //Also char '5'
+                {
+                    format = TextureFormat.DXT5;
+                }
+            }
+            
+            if (format == TextureFormat.YUY2)
+            {
+                LogError("Format of texture "+name+" unidentified");
+                return texture;
+            }
+            
+            if (mipMapCount == 1)
+            {
+                texture = new Texture2D(width, height, format, false);
+            }
+            else
+            {
+                texture = new Texture2D(width, height, format, true);
+            }
+            try
+            {
+                texture.LoadRawTextureData(dxtBytes);
+            }
+            catch
+            {
+                LogError("Texture "+name+" couldn't be loaded");
+                return texture;
+            }
+            texture.Apply();
+            
+            LogInfo ("Loaded texture " + name + " " + width.ToString () + "x" + height.ToString () + " mip count: " + mipMapCount.ToString ());
+            
+            return texture;
+        }
 
-		public static void SetToneMapping(Material mat)
-		{
-			//mat.SetInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+        public static void SetToneMapping(Material mat)
+        {
+            //mat.SetInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
 
-			// set them globally for the composite clouds material
-			Shader.SetGlobalInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
+            // set them globally for the composite clouds material
+            Shader.SetGlobalInt("TONEMAPPING_MODE", Scatterer.Instance.mainSettings.scatteringTonemapper);
 
-			/*
-			if (Scatterer.Instance.mainSettings.scatteringTonemapper == 3)
-			{
-				HableCurve curve = new HableCurve();
-				curve.Init(
-						Scatterer.Instance.mainSettings.hableToeStrength,
-						Scatterer.Instance.mainSettings.hableToeLength,
-						Scatterer.Instance.mainSettings.hableShoulderStrength,
-						Scatterer.Instance.mainSettings.hableShoulderLength,
-						Scatterer.Instance.mainSettings.hableShoulderAngle,
-						Scatterer.Instance.mainSettings.hableGamma
-					);
+            /*
+            if (Scatterer.Instance.mainSettings.scatteringTonemapper == 3)
+            {
+                HableCurve curve = new HableCurve();
+                curve.Init(
+                        Scatterer.Instance.mainSettings.hableToeStrength,
+                        Scatterer.Instance.mainSettings.hableToeLength,
+                        Scatterer.Instance.mainSettings.hableShoulderStrength,
+                        Scatterer.Instance.mainSettings.hableShoulderLength,
+                        Scatterer.Instance.mainSettings.hableShoulderAngle,
+                        Scatterer.Instance.mainSettings.hableGamma
+                    );
 
-				curve.SetMaterialParams(mat);
-			}
-			*/
-		}
-	}
+                curve.SetMaterialParams(mat);
+            }
+            */
+        }
+    }
 }
 
