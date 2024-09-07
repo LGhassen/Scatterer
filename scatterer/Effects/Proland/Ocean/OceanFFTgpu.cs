@@ -24,6 +24,7 @@
  * 
  */
 
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Scatterer {
@@ -55,7 +56,7 @@ namespace Scatterer {
 
         public int m_fourierGridSize = 64;                                      //This is the fourier transform size, must pow2 number. Recommend no higher or lower than 64, 128 or 256.
 
-        private int m_varianceSize = 4;
+        private int m_varianceSize = 6;
         
         float m_fsize;
         float m_maxSlopeVariance;
@@ -139,8 +140,6 @@ namespace Scatterer {
             m_fourier = new FourierGPU(m_fourierGridSize);
             
             m_writeFloat = new WriteFloat(m_fourierGridSize, m_fourierGridSize);
-
-            m_varianceSize = SystemInfo.supportsComputeShaders ? 16 : 4;
 
             //Create the data needed to make the waves each frame
             CreateRenderTextures();
@@ -260,21 +259,15 @@ namespace Scatterer {
                 
                 //m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);                
                 m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
-                if (SystemInfo.supportsComputeShaders)
-                {
-                    m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceRenderTexture );
-                }
-                else
-                {
-                    m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceTexture);
-                }
+                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceTexture);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
-                m_oceanMaterial.SetVector (ShaderProperties._VarianceMax_PROPERTY, SystemInfo.supportsComputeShaders? Vector2.one : m_varianceMax);
-                
+
+                m_oceanMaterial.SetVector(ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
+
                 // don't need to be done every frame
                 if (waveInteractionHandler != null)
                 {
@@ -353,24 +346,9 @@ namespace Scatterer {
             m_WTable.enableRandomWrite = false;
             m_WTable.Create();
 
-            if (SystemInfo.supportsComputeShaders)
-            {
-                m_varianceRenderTexture = new RenderTexture(m_varianceSize, m_varianceSize, 0, RenderTextureFormat.RHalf);
-                m_varianceRenderTexture.volumeDepth = m_varianceSize;
-                m_varianceRenderTexture.wrapMode = TextureWrapMode.Clamp;
-                m_varianceRenderTexture.filterMode = FilterMode.Bilinear;
-                m_varianceRenderTexture.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-                m_varianceRenderTexture.enableRandomWrite = true;
-                m_varianceRenderTexture.useMipMap = true;
-                m_varianceRenderTexture.Create();
-            }
-            else
-            {
-                m_varianceTexture = new Texture3D (m_varianceSize, m_varianceSize, m_varianceSize, TextureFormat.ARGB32, true);
-                m_varianceTexture.wrapMode = TextureWrapMode.Clamp;
-                m_varianceTexture.filterMode = FilterMode.Bilinear;
-            }
-            
+            m_varianceTexture = new Texture3D (m_varianceSize, m_varianceSize, m_varianceSize, TextureFormat.R8, false);
+            m_varianceTexture.wrapMode = TextureWrapMode.Clamp;
+            m_varianceTexture.filterMode = FilterMode.Bilinear;            
         }
         
         protected void CreateBuffer(ref RenderTexture[] tex, RenderTextureFormat format)
@@ -498,7 +476,8 @@ namespace Scatterer {
             // Used by the BRDF rendering model
             float theoreticSlopeVariance = 0.0f;
             float k = 5e-3f;
-            while (k < 1e3f) {
+            while (k < 1e3f)
+            {
                 float nextK = k * 1.001f;
                 theoreticSlopeVariance += k * k * Spectrum(k, 0, true) * (nextK - k);
                 k = nextK;
@@ -507,14 +486,7 @@ namespace Scatterer {
             float[] spectrum01 = new float[m_fourierGridSize * m_fourierGridSize * 4];
             float[] spectrum23 = new float[m_fourierGridSize * m_fourierGridSize * 4];
 
-            int idx;
-            float i;
-            float j;
             float totalSlopeVariance = 0.0f;
-            Vector2 sample12XY;
-            Vector2 sample12ZW;
-            Vector2 sample34XY;
-            Vector2 sample34ZW;
             
             UnityEngine.Random.seed = 0;
             
@@ -522,14 +494,14 @@ namespace Scatterer {
             {
                 for (int y = 0; y < m_fourierGridSize; y++)
                 {
-                    idx = x + y * m_fourierGridSize;
-                    i = (x >= m_fourierGridSize / 2) ? (float)(x - m_fourierGridSize) : (float) x;
-                    j = (y >= m_fourierGridSize / 2) ? (float)(y - m_fourierGridSize) : (float) y;
-                    
-                    sample12XY = GetSpectrumSample(i, j, m_gridSizes.x, Mathf.PI / m_gridSizes.x);
-                    sample12ZW = GetSpectrumSample(i, j, m_gridSizes.y, Mathf.PI * m_fsize / m_gridSizes.x);
-                    sample34XY = GetSpectrumSample(i, j, m_gridSizes.z, Mathf.PI * m_fsize / m_gridSizes.y);
-                    sample34ZW = GetSpectrumSample(i, j, m_gridSizes.w, Mathf.PI * m_fsize / m_gridSizes.z);
+                    int idx = x + y * m_fourierGridSize;
+                    float i = (x >= m_fourierGridSize / 2) ? (float)(x - m_fourierGridSize) : (float) x;
+                    float j = (y >= m_fourierGridSize / 2) ? (float)(y - m_fourierGridSize) : (float) y;
+
+                    Vector2 sample12XY = GetSpectrumSample(i, j, m_gridSizes.x, Mathf.PI / m_gridSizes.x);
+                    Vector2 sample12ZW = GetSpectrumSample(i, j, m_gridSizes.y, Mathf.PI * m_fsize / m_gridSizes.x);
+                    Vector2 sample34XY = GetSpectrumSample(i, j, m_gridSizes.z, Mathf.PI * m_fsize / m_gridSizes.y);
+                    Vector2 sample34ZW = GetSpectrumSample(i, j, m_gridSizes.w, Mathf.PI * m_fsize / m_gridSizes.z);
 
                     spectrum01[idx * 4 + 0] = sample12XY.x;
                     spectrum01[idx * 4 + 1] = sample12XY.y;
@@ -554,87 +526,150 @@ namespace Scatterer {
             //This can be replaced by a texture2D now and the whole thing with a set raw data + apply
             m_writeFloat.WriteIntoRenderTexture(m_spectrum01, 4, spectrum01);
             m_writeFloat.WriteIntoRenderTexture(m_spectrum23, 4, spectrum23);
-            
-            if (!SystemInfo.supportsComputeShaders)
+
+            GenerateVarianceCPUParallel(theoreticSlopeVariance, spectrum01, spectrum23, totalSlopeVariance);
+        }
+
+        private void GenerateVarianceGPU(float theoreticSlopeVariance, float totalSlopeVariance)
+        {
+            m_varianceShader = ShaderReplacer.Instance.LoadedComputeShaders["SlopeVariance"];
+
+            m_varianceShader.SetFloat("_SlopeVarianceDelta", 0.5f * (theoreticSlopeVariance - totalSlopeVariance));
+            m_varianceShader.SetFloat("_VarianceSize", (float)m_varianceSize);
+            m_varianceShader.SetFloat("_Size", m_fsize);
+            m_varianceShader.SetVector("_GridSizes", m_gridSizes);
+            m_varianceShader.SetTexture(0, "_Spectrum01", m_spectrum01);
+            m_varianceShader.SetTexture(0, "_Spectrum23", m_spectrum23);
+            m_varianceShader.SetTexture(0, "des", m_varianceRenderTexture);
+
+            m_varianceShader.Dispatch(0, m_varianceSize / 4, m_varianceSize / 4, m_varianceSize / 4);
+
+            //Find the maximum value for slope variance
+            ComputeBuffer buffer = new ComputeBuffer(m_varianceSize * m_varianceSize * m_varianceSize, sizeof(float));
+            CBUtility.ReadFromRenderTexture(m_varianceRenderTexture, 1, buffer, ShaderReplacer.Instance.LoadedComputeShaders["ReadData"]);
+
+            float[] varianceData = new float[m_varianceSize * m_varianceSize * m_varianceSize];
+            buffer.GetData(varianceData);
+
+            m_maxSlopeVariance = 0.0f;
+            for (int v = 0; v < m_varianceSize * m_varianceSize * m_varianceSize; v++)
             {
-                // Compute variance for the BRDF, copied from the dx9 project
-                float slopeVarianceDelta = 0.5f * (theoreticSlopeVariance - totalSlopeVariance);
+                m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, varianceData[v]);
+            }
 
-                m_varianceMax = new Vector2 (float.NegativeInfinity, float.NegativeInfinity);
-            
-                Vector2[, , ] variance32bit = new Vector2[m_varianceSize, m_varianceSize, m_varianceSize];
-                Color[] variance8bit = new Color[m_varianceSize * m_varianceSize * m_varianceSize];
+            buffer.Release();
+        }
 
-                for (int x = 0; x < m_varianceSize; x++)
+        private void GenerateVarianceCPU(float theoreticSlopeVariance, float[] spectrum01, float[] spectrum23, float totalSlopeVariance)
+        {
+            // Compute variance for the BRDF
+            float slopeVarianceDelta = 0.5f * (theoreticSlopeVariance - totalSlopeVariance);
+
+            m_varianceMax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+
+            Vector2[,,] variance32bit = new Vector2[m_varianceSize, m_varianceSize, m_varianceSize];
+            Color32[] variance8bit = new Color32[m_varianceSize * m_varianceSize * m_varianceSize];
+
+            for (int x = 0; x < m_varianceSize; x++)
+            {
+                for (int y = 0; y < m_varianceSize; y++)
                 {
-                    for (int y = 0; y < m_varianceSize; y++)
+                    for (int z = 0; z < m_varianceSize; z++)
                     {
-                        for (int z = 0; z < m_varianceSize; z++)
-                        {
-                            variance32bit [x, y, z] = ComputeVariance (slopeVarianceDelta, spectrum01, spectrum23, x, y, z);
+                        variance32bit[x, y, z] = ComputeVariance(slopeVarianceDelta, spectrum01, spectrum23, x, y, z);
 
-                            if (variance32bit [x, y, z].x > m_varianceMax.x)
-                                m_varianceMax.x = variance32bit [x, y, z].x;
-                            if (variance32bit [x, y, z].y > m_varianceMax.y)
-                                m_varianceMax.y = variance32bit [x, y, z].y;
-                        }
+                        if (variance32bit[x, y, z].x > m_varianceMax.x)
+                            m_varianceMax.x = variance32bit[x, y, z].x;
+                        if (variance32bit[x, y, z].y > m_varianceMax.y)
+                            m_varianceMax.y = variance32bit[x, y, z].y;
+
+                        m_varianceMax.x = Mathf.Max(m_varianceMax.x, variance32bit[x, y, z].x);
+                        m_varianceMax.y = Mathf.Max(m_varianceMax.y, variance32bit[x, y, z].y);
                     }
                 }
-            
-                for (int x = 0; x < m_varianceSize; x++)
+            }
+
+            m_maxSlopeVariance = 0.0f;
+
+            for (int x = 0; x < m_varianceSize; x++)
+            {
+                for (int y = 0; y < m_varianceSize; y++)
                 {
-                    for (int y = 0; y < m_varianceSize; y++)
+                    for (int z = 0; z < m_varianceSize; z++)
                     {
-                        for (int z = 0; z < m_varianceSize; z++)
-                        {
-                            idx = x + y * m_varianceSize + z * m_varianceSize * m_varianceSize;
-                        
-                            variance8bit [idx] = new Color (variance32bit [x, y, z].x / m_varianceMax.x, variance32bit [x, y, z].y / m_varianceMax.y, 0.0f, 1.0f);
-                        }
+                        int idx = x + y * m_varianceSize + z * m_varianceSize * m_varianceSize;
+
+                        variance8bit[idx] = new Color(variance32bit[x, y, z].x / m_varianceMax.x, variance32bit[x, y, z].y / m_varianceMax.y, 0.0f, 1.0f);
+
+                        m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, variance8bit[idx].r * m_varianceMax.x);
+                        m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, variance8bit[idx].g * m_varianceMax.y);
                     }
                 }
-            
-                m_varianceTexture.SetPixels (variance8bit);
-                m_varianceTexture.Apply ();
-
-                m_maxSlopeVariance = 0.0f;
-                for (int v = 0; v < m_varianceSize*m_varianceSize*m_varianceSize; v++)
-                {
-                    m_maxSlopeVariance = Mathf.Max (m_maxSlopeVariance, variance8bit [v].r * m_varianceMax.x);
-                    m_maxSlopeVariance = Mathf.Max (m_maxSlopeVariance, variance8bit [v].g * m_varianceMax.y);
-                }
             }
-            else
+
+            m_varianceTexture.SetPixels32(variance8bit);
+            m_varianceTexture.Apply();
+        }
+
+        
+        private void GenerateVarianceCPUParallel(float theoreticSlopeVariance, float[] spectrum01, float[] spectrum23, float totalSlopeVariance)
+        {
+            // Compute variance for the BRDF
+            float slopeVarianceDelta = 0.5f * (theoreticSlopeVariance - totalSlopeVariance);
+
+            m_varianceMax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+
+            Vector2[,,] variance32bit = new Vector2[m_varianceSize, m_varianceSize, m_varianceSize];
+            Color32[] variance8bit = new Color32[m_varianceSize * m_varianceSize * m_varianceSize];
+
+            int totalIterations = m_varianceSize * m_varianceSize * m_varianceSize;
+
+            object lockObj = new object();  // Lock object to protect shared resources
+
+            // First pass: Calculate variance and find max values in parallel
+            Parallel.For(0, totalIterations, idx =>
             {
-                m_varianceShader = ShaderReplacer.Instance.LoadedComputeShaders["SlopeVariance"];
+                // Calculate the x, y, z indices from the linear index
+                int x = idx % m_varianceSize;
+                int y = (idx / m_varianceSize) % m_varianceSize;
+                int z = idx / (m_varianceSize * m_varianceSize);
 
-                m_varianceShader.SetFloat("_SlopeVarianceDelta", 0.5f * (theoreticSlopeVariance - totalSlopeVariance));
-                m_varianceShader.SetFloat("_VarianceSize", (float)m_varianceSize);
-                m_varianceShader.SetFloat("_Size", m_fsize);
-                m_varianceShader.SetVector("_GridSizes", m_gridSizes);
-                m_varianceShader.SetTexture(0, "_Spectrum01", m_spectrum01);
-                m_varianceShader.SetTexture(0, "_Spectrum23", m_spectrum23);
-                m_varianceShader.SetTexture(0, "des", m_varianceRenderTexture);
-                
-                m_varianceShader.Dispatch(0,m_varianceSize/4,m_varianceSize/4,m_varianceSize/4);
-                
-                //Find the maximum value for slope variance
-                ComputeBuffer buffer = new ComputeBuffer(m_varianceSize*m_varianceSize*m_varianceSize, sizeof(float));
-                CBUtility.ReadFromRenderTexture(m_varianceRenderTexture, 1, buffer, ShaderReplacer.Instance.LoadedComputeShaders["ReadData"]);
-                
-                float[] varianceData = new float[m_varianceSize*m_varianceSize*m_varianceSize];
-                buffer.GetData(varianceData);
-                
-                m_maxSlopeVariance = 0.0f;
-                for(int v = 0; v < m_varianceSize*m_varianceSize*m_varianceSize; v++) {
-                    m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, varianceData[v]);
+                variance32bit[x, y, z] = ComputeVariance(slopeVarianceDelta, spectrum01, spectrum23, x, y, z);
+
+                // Safely update the global max variance
+                lock (lockObj)
+                {
+                    m_varianceMax.x = Mathf.Max(m_varianceMax.x, variance32bit[x, y, z].x);
+                    m_varianceMax.y = Mathf.Max(m_varianceMax.y, variance32bit[x, y, z].y);
                 }
-                
-                buffer.Release();
-            }
-            
+            });
+
+            // Second pass: Normalize and compute m_maxSlopeVariance in parallel
+            m_maxSlopeVariance = 0.0f;
+
+            Parallel.For(0, totalIterations, idx =>
+            {
+                // Calculate the x, y, z indices from the linear index
+                int x = idx % m_varianceSize;
+                int y = (idx / m_varianceSize) % m_varianceSize;
+                int z = idx / (m_varianceSize * m_varianceSize);
+
+                // Store in the 8-bit array
+                variance8bit[idx] = new Color(variance32bit[x, y, z].x / m_varianceMax.x, variance32bit[x, y, z].y / m_varianceMax.y, 0.0f, 1.0f);
+
+                // Safely update m_maxSlopeVariance
+                lock (lockObj)
+                {
+                    m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, variance8bit[idx].r * m_varianceMax.x);
+                    m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, variance8bit[idx].g * m_varianceMax.y);
+                }
+            });
+
+            m_varianceTexture.SetPixels32(variance8bit);
+            m_varianceTexture.Apply();
         }
         
+
         void CreateWTable()
         {
             //Some values need for the InitWaveSpectrum function can be precomputed
