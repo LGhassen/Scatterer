@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Scatterer
 {
@@ -23,6 +24,8 @@ namespace Scatterer
         public object EVEInstance;
         private EventVoid onCloudsApplyEvent;
 
+        private Func<CommandBuffer, int, int, bool> EVEOceanShadowsMethodDelegate;
+
         private const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
 
         public EVEReflectionHandler ()
@@ -41,14 +44,14 @@ namespace Scatterer
             CleanUp();
             EVECloudLayers.Clear();
 
-            Type EVEType = null;
+            Type EVECloudsManagerType = null;
 
-            if (!GetEVETypeAndInstance(ref EVEType, ref EVEInstance))
+            if (!GetEVETypeAndInstance(ref EVECloudsManagerType, ref EVEInstance))
                 return;
 
-            GetOnApplyEvent(ref EVEType);
+            GetOnApplyEvent(ref EVECloudsManagerType);
 
-            IList objectList = EVEType.GetField("ObjectList", flags).GetValue(EVEInstance) as IList;
+            IList objectList = EVECloudsManagerType.GetField("ObjectList", flags).GetValue(EVEInstance) as IList;
 
             foreach (object cloudObject in objectList)
             {
@@ -71,6 +74,27 @@ namespace Scatterer
                     EVECloudLayers.Add(body, cloudsList);
                 }
             }
+
+            Type EVEScreenSpaceShadowsManagerType = null;
+            object EVEScreenSpaceShadowsManagerInstance = null;
+
+            if (!GetEVEScreenSpaceShadowsManager(ref EVEScreenSpaceShadowsManagerType, ref EVEScreenSpaceShadowsManagerInstance))
+                return;
+
+            MethodInfo methodInfo = EVEScreenSpaceShadowsManagerType.GetMethod("AddOceanShadowCommands");
+
+            EVEOceanShadowsMethodDelegate = (Func<CommandBuffer, int, int, bool>)Delegate.CreateDelegate(
+                    typeof(Func<CommandBuffer, int, int, bool>),
+                    EVEScreenSpaceShadowsManagerInstance,
+                    methodInfo);
+        }
+
+        public bool AddEVEOceanShadowCommands(CommandBuffer commandBuffer, int width, int height)
+        {
+            if (EVEOceanShadowsMethodDelegate == null || commandBuffer == null)
+                return false;
+
+            return EVEOceanShadowsMethodDelegate(commandBuffer, width, height);
         }
 
         private void Map2DLayer(ref EVECloudLayer cloudLayer, object cloudObject, string body)
@@ -103,27 +127,11 @@ namespace Scatterer
 
                 Material shadowMaterial = null;
 
-                object screenSpaceShadow = null;
-
                 try
                 {
-                    screenSpaceShadow = cloud2dObj.GetType().GetField("screenSpaceShadow", flags).GetValue(cloud2dObj) as object;
+                    shadowMaterial = cloud2dObj.GetType().GetField("screenSpaceShadowMaterial", flags).GetValue(cloud2dObj) as Material;
                 }
                 catch (Exception) { }
-
-                if (screenSpaceShadow != null)
-                {
-                    shadowMaterial = screenSpaceShadow.GetType().GetField("material", flags).GetValue(screenSpaceShadow) as Material;
-                }
-                else
-                {
-                    Projector shadowProjector = cloud2dObj.GetType().GetField("ShadowProjector", flags).GetValue(cloud2dObj) as Projector;
-
-                    if (shadowProjector != null && shadowProjector.material != null)
-                    {
-                        shadowMaterial = shadowProjector.material;
-                    }
-                }
 
                 cloudLayer.Clouds2dMeshRenderer = cloudmesh.GetComponent<MeshRenderer>();
                 cloudLayer.Clouds2dMaterial = cloudLayer.Clouds2dMeshRenderer.material;
@@ -172,6 +180,7 @@ namespace Scatterer
             {
                 object cloudsPQS = cloudObject.GetType().GetField("cloudsPQS", flags)?.GetValue(cloudObject) as object;
                 object layerRaymarchedVolume = cloudsPQS?.GetType().GetField("layerRaymarchedVolume", flags)?.GetValue(cloudsPQS) as object;
+
                 if (layerRaymarchedVolume == null)
                 {
                     Utils.LogDebug("No raymarched volumetric cloud for layer on planet: " + body);
@@ -195,15 +204,18 @@ namespace Scatterer
             }
         }
 
-        public void invokeClouds2dReassign(string celestialBodyName)
+        // TODO: set the right properties in the shaders so this doesn't need to be done/redone
+        public void InvokeClouds2dReassign(string celestialBodyName)
         {    
             foreach (var cloudLayer in EVECloudLayers[celestialBodyName])
             {
                 if (cloudLayer.CloudObject != null)
                 { 
                     object cloud2dObj = cloudLayer.CloudObject.GetType ().GetField ("layer2D", flags).GetValue (cloudLayer.CloudObject) as object;
-                    if (cloud2dObj == null) {
-                        Utils.LogDebug (" layer2d not found for layer on planet: " + celestialBodyName);
+                    
+                    if (cloud2dObj == null)
+                    {
+                        Utils.LogDebug ("Layer2d not found for layer on planet: " + celestialBodyName);
                         continue;
                     }
                 
@@ -254,6 +266,36 @@ namespace Scatterer
             }
 
             Utils.LogInfo("Successfully grabbed EVE Instance");
+            return true;
+        }
+
+        private bool GetEVEScreenSpaceShadowsManager(ref Type type, ref object instance)
+        {
+            type = ReflectionUtils.getType("Atmosphere.ScreenSpaceShadowsManager");
+
+            if (type == null)
+            {
+                Utils.LogDebug("Eve screen space shadows manager type not found");
+                return false;
+            }
+
+            try
+            {
+                instance = type.GetField("instance", flags).GetValue(null);
+            }
+            catch (Exception)
+            {
+                Utils.LogDebug("No EVE ScreenSpaceShadowsManager found");
+                return false;
+            }
+            if (instance == null)
+            {
+                Utils.LogError("EVE ScreenSpaceShadowsManager instance not created ");
+                return false;
+            }
+
+            Utils.LogInfo("Successfully grabbed EVE ScreenSpaceShadowsManager");
+
             return true;
         }
 

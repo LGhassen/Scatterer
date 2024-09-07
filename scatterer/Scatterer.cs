@@ -22,7 +22,7 @@ namespace Scatterer
         
         public ScattererCelestialBodiesManager scattererCelestialBodiesManager = new ScattererCelestialBodiesManager ();
         public SunflareManager sunflareManager; GameObject sunflareManagerGO;
-        public EVEReflectionHandler eveReflectionHandler;
+        public EVEReflectionHandler EveReflectionHandler;
         private Coroutine cloudReappliedCoroutine;
         //public PlanetshineManager planetshineManager;
 
@@ -93,7 +93,7 @@ namespace Scatterer
                 {
                     if (mainSettings.integrateWithEVEClouds)
                     {
-                        ShaderReplacer.Instance.replaceEVEshaders();
+                        ShaderReplacer.Instance.ReplaceEVEshaders();
                     }
                 }
             }
@@ -222,8 +222,8 @@ namespace Scatterer
 
             if (mainSettings.integrateWithEVEClouds)
             {
-                eveReflectionHandler = new EVEReflectionHandler();
-                eveReflectionHandler.Start();
+                EveReflectionHandler = new EVEReflectionHandler();
+                EveReflectionHandler.Start();
             }
 
             if (mainSettings.disableAmbientLight && !ambientLightScript)
@@ -361,8 +361,8 @@ namespace Scatterer
 
                 QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
 
-                if (eveReflectionHandler != null)
-                    eveReflectionHandler.CleanUp();
+                if (EveReflectionHandler != null)
+                    EveReflectionHandler.CleanUp();
 
                 pluginData.inGameWindowLocation=new Vector2(guiHandler.windowRect.x,guiHandler.windowRect.y);
                 SaveSettings();
@@ -588,8 +588,8 @@ namespace Scatterer
             yield return new WaitForFixedUpdate();
             yield return new WaitForFixedUpdate();
 
-            if (eveReflectionHandler != null)
-                eveReflectionHandler.OnCloudsReapplied();
+            if (EveReflectionHandler != null)
+                EveReflectionHandler.OnCloudsReapplied();
         }
 
         public void OnRenderTexturesLost()
@@ -601,7 +601,7 @@ namespace Scatterer
                     _cur.prolandManager.skyNode.ReInitMaterialUniformsOnRenderTexturesLoss ();
                     if (_cur.prolandManager.hasOcean && mainSettings.useOceanShaders && !_cur.prolandManager.skyNode.inScaledSpace)
                     {
-                        _cur.prolandManager.reBuildOcean ();
+                        _cur.prolandManager.RebuildOcean ();
                     }
                 }
             }

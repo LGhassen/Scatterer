@@ -106,6 +106,26 @@ namespace Scatterer
         {
             rendererCommandBuffer.Clear();
 
+            // Invoke EVE method to render cloud shadows, returns bool, use that to know if we enable shadows or not
+            // (also if EVE not installed)
+
+            // Also render regular shadows on top, but if EVE not installed not used, create your own texture here and render them
+            // also eclipses
+
+            // Then switch keyword or something
+            bool shadowsTextureCreated = Scatterer.Instance.EveReflectionHandler != null &&
+                Scatterer.Instance.EveReflectionHandler.AddEVEOceanShadowCommands(rendererCommandBuffer, width / 2, height / 2);
+
+            if (true) // check eclipses or regular shadows are needed
+            { 
+                if (!shadowsTextureCreated)
+                {
+                    // create 1/4 res texture manually
+                }
+
+                // render regular shadows and eclipses here
+            }
+
             // Init depth render texture
             rendererCommandBuffer.Blit(null, depthCopyRenderTexture, copyCameraDepthMaterial, 3);
 
@@ -119,24 +139,6 @@ namespace Scatterer
             // expose the new depth buffer
             rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
             rendererCommandBuffer.SetGlobalTexture("ScattererDepthCopy", depthCopyRenderTexture);
-
-            // enable cloud shadows
-            rendererCommandBuffer.SetGlobalFloat(ShaderProperties.render_ocean_cloud_shadow_PROPERTY, 1f);
-
-            // draw cloud shadows
-            if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
-            {
-                foreach (var clouds2d in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
-                {
-                    if (clouds2d.CloudShadowMaterial != null)
-                    {
-                        rendererCommandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, clouds2d.CloudShadowMaterial);
-                    }
-                }
-            }
-
-            // disable it for regular cloud shadows
-            rendererCommandBuffer.SetGlobalFloat(ShaderProperties.render_ocean_cloud_shadow_PROPERTY, 0f);
 
             // recopy the screen and expose it as input for the scattering
             rendererCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, new RenderTargetIdentifier(oceanRenderTexture));

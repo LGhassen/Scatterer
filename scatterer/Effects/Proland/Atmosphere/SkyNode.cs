@@ -764,9 +764,9 @@ namespace Scatterer
 
             // make the clouds2d material optional
             // add fields for volumetrics and raymarched volumetrics
-            if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
+            if (Scatterer.Instance.EveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
             {
-                foreach (EVECloudLayer eveCloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+                foreach (EVECloudLayer eveCloudLayer in Scatterer.Instance.EveReflectionHandler.EVECloudLayers[celestialBodyName])
                 {
                     if (eveCloudLayer.Clouds2dMaterial != null)
                     {
@@ -853,9 +853,9 @@ namespace Scatterer
             {
                 try
                 {    
-                    if(Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
+                    if(Scatterer.Instance.EveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
                     {
-                        foreach(var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+                        foreach(var cloudLayer in Scatterer.Instance.EveReflectionHandler.EVECloudLayers[celestialBodyName])
                         {
                             if (cloudLayer.Clouds2dMaterial != null)
                             {
@@ -1375,13 +1375,13 @@ namespace Scatterer
 
         public void InitEVEClouds()
         {
-            if ((Scatterer.Instance.eveReflectionHandler.EVEInstance != null) && Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
+            if ((Scatterer.Instance.EveReflectionHandler.EVEInstance != null) && Scatterer.Instance.EveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
             {
                 try
                 {
-                    Scatterer.Instance.eveReflectionHandler.invokeClouds2dReassign(celestialBodyName); // After the shader has been replaced by the modified scatterer shader, the properties are lost, this sets them again
+                    Scatterer.Instance.EveReflectionHandler.InvokeClouds2dReassign(celestialBodyName); // After the shader has been replaced by the modified scatterer shader, the properties are lost, this sets them again
 
-                    foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+                    foreach (var cloudLayer in Scatterer.Instance.EveReflectionHandler.EVECloudLayers[celestialBodyName])
                     {
                         if (cloudLayer.Clouds2dMaterial != null)
                         { 
@@ -1428,9 +1428,9 @@ namespace Scatterer
 
         void UpdateEVECloudMaterials ()
         {
-            if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey (celestialBodyName))
+            if (Scatterer.Instance.EveReflectionHandler.EVECloudLayers.ContainsKey (celestialBodyName))
             {
-                foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+                foreach (var cloudLayer in Scatterer.Instance.EveReflectionHandler.EVECloudLayers[celestialBodyName])
                 {
                     if (cloudLayer.Clouds2dMaterial != null)
                     { 
@@ -1492,9 +1492,9 @@ namespace Scatterer
             if (localScatteringContainer != null)
                 localScatteringContainer.SetUnderwater(value);
 
-            if ((Scatterer.Instance.eveReflectionHandler.EVEInstance != null) && Scatterer.Instance.eveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
+            if ((Scatterer.Instance.EveReflectionHandler.EVEInstance != null) && Scatterer.Instance.EveReflectionHandler.EVECloudLayers.ContainsKey(celestialBodyName))
             {
-                foreach (var cloudLayer in Scatterer.Instance.eveReflectionHandler.EVECloudLayers[celestialBodyName])
+                foreach (var cloudLayer in Scatterer.Instance.EveReflectionHandler.EVECloudLayers[celestialBodyName])
                 {
                     if (cloudLayer.ParticleVolumetricsMaterial != null)
                     {

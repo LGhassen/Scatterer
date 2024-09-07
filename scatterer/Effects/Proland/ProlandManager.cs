@@ -283,7 +283,7 @@ namespace Scatterer
 
         //TODO: change this so that it takes the new configNode and that's all? May not be possible depending on if it needs to recreate lightraysRenderer and stuff
         //Therefor add an option to init from configNode? yep
-        public void reBuildOcean()
+        public void RebuildOcean()
         {
             if (oceanNode)
             {

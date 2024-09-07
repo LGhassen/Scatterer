@@ -106,7 +106,7 @@ namespace Scatterer
             }
         }
 
-        public void replaceEVEshaders()
+        public void ReplaceEVEshaders()
         {
             Utils.LogDebug ("Replacing EVE shaders");
 
