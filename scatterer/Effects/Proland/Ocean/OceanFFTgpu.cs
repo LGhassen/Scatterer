@@ -45,7 +45,7 @@ namespace Scatterer {
         
         Material m_initSpectrumMat, m_initDisplacementMat;
         
-        public int mapsAniso = 2;
+        public int mapsAniso = 0;
 
         [Persistent] public float m_windSpeed = 5.0f;                            //A higher wind speed gives greater swell to the waves
         [Persistent] public float m_omega = 0.84f;                                //A lower number means the waves last longer and will build up larger waves
@@ -251,12 +251,20 @@ namespace Scatterer {
                 //every time the texture is renderer into. This impacts performance during fourier transform stage as mipmaps would be updated every pass
                 //and there is no way to disable and then enable mipmaps on render textures in Unity at time of writting.
                 
+                // I can remove these now but I have to make sure the PerformFFT code doesn't read mips and do derivatives
+
                 Graphics.Blit(m_fourierBuffer0[m_idx], m_map0);
                 Graphics.Blit(m_fourierBuffer1[m_idx], m_map1);
                 Graphics.Blit(m_fourierBuffer2[m_idx], m_map2);
                 Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
                 Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
-                
+
+                m_map0.GenerateMips();
+                m_map1.GenerateMips();
+                m_map2.GenerateMips();
+                m_map3.GenerateMips();
+                m_map4.GenerateMips();
+
                 //m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);                
                 m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceTexture);
@@ -309,15 +317,15 @@ namespace Scatterer {
         
         protected virtual void CreateRenderTextures()
         {
-            RenderTextureFormat mapFormat = RenderTextureFormat.ARGBFloat;
+            RenderTextureFormat mapFormat = RenderTextureFormat.ARGBHalf;
             RenderTextureFormat fourierTransformformat = RenderTextureFormat.ARGBHalf;
             
             //These texture hold the actual data use in the ocean renderer
-            CreateMap(ref m_map0, mapFormat, mapsAniso, true);
-            CreateMap(ref m_map1, mapFormat, mapsAniso, true);
-            CreateMap(ref m_map2, mapFormat, mapsAniso, true);
-            CreateMap(ref m_map3, mapFormat, mapsAniso, true);
-            CreateMap(ref m_map4, mapFormat, mapsAniso, true);
+            CreateMap(ref m_map0, mapFormat, mapsAniso, true, false);
+            CreateMap(ref m_map1, mapFormat, mapsAniso, true, false);
+            CreateMap(ref m_map2, mapFormat, mapsAniso, true, false);
+            CreateMap(ref m_map3, mapFormat, mapsAniso, true, false);
+            CreateMap(ref m_map4, mapFormat, mapsAniso, true, false);
             
             //These textures are used to perform the fourier transform
             CreateBuffer(ref m_fourierBuffer0, fourierTransformformat); //heights
@@ -327,20 +335,20 @@ namespace Scatterer {
             CreateBuffer(ref m_fourierBuffer4, fourierTransformformat); // displacement Y
             
             //These textures hold the specturm the fourier transform is performed on
-            m_spectrum01 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat);
+            m_spectrum01 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat, 0);
             m_spectrum01.filterMode = FilterMode.Point;
             m_spectrum01.wrapMode = TextureWrapMode.Repeat;
             m_spectrum01.enableRandomWrite = false;
             m_spectrum01.Create();
             
-            m_spectrum23 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat);
+            m_spectrum23 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat, 0);
             m_spectrum23.filterMode = FilterMode.Point;
             m_spectrum23.wrapMode = TextureWrapMode.Repeat;
             m_spectrum23.enableRandomWrite = false;
             m_spectrum23.Create();
             
 
-            m_WTable = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat);
+            m_WTable = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat, 0);
             m_WTable.filterMode = FilterMode.Point;
             m_WTable.wrapMode = TextureWrapMode.Clamp;
             m_WTable.enableRandomWrite = false;
@@ -357,20 +365,30 @@ namespace Scatterer {
             
             for (int i = 0; i < 2; i++)
             {
-                tex[i] = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
+                tex[i] = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format, 0);
                 tex[i].filterMode = FilterMode.Point;
                 tex[i].wrapMode = TextureWrapMode.Clamp;
                 tex[i].Create();
             }
         }
         
-        protected void CreateMap(ref RenderTexture map, RenderTextureFormat format, int ansio, bool useMipMaps)
+        protected void CreateMap(ref RenderTexture map, RenderTextureFormat format, int aniso, bool useMipMaps, bool autoGenerateMipMaps)
         {
             map = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
-            map.filterMode = FilterMode.Trilinear;
+
+            if (aniso > 0)
+            {
+                map.filterMode = FilterMode.Trilinear;
+                map.anisoLevel = aniso;
+            }
+            else
+            {
+                map.filterMode = FilterMode.Bilinear;
+            }
+
             map.wrapMode = TextureWrapMode.Repeat;
-            map.anisoLevel = ansio;
             map.useMipMap = useMipMaps;
+            map.autoGenerateMips = autoGenerateMipMaps;
             map.Create();
         }
         
@@ -611,7 +629,6 @@ namespace Scatterer {
             m_varianceTexture.Apply();
         }
 
-        
         private void GenerateVarianceCPUParallel(float theoreticSlopeVariance, float[] spectrum01, float[] spectrum23, float totalSlopeVariance)
         {
             // Compute variance for the BRDF
@@ -668,7 +685,8 @@ namespace Scatterer {
             m_varianceTexture.SetPixels32(variance8bit);
             m_varianceTexture.Apply();
         }
-        
+
+
 
         void CreateWTable()
         {
