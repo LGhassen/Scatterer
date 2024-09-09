@@ -44,8 +44,8 @@ namespace Scatterer {
         {
             RenderTextureFormat format = RenderTextureFormat.ARGBHalf;
             
-            CreateMap(ref m_foam0, format, foamAniso, true);
-            CreateMap(ref m_foam1, format, foamAniso, true);
+            CreateMap(ref m_foam0, format, foamAniso, true, false);
+            CreateMap(ref m_foam1, format, foamAniso, true, false);
             
             m_foam1.mipMapBias = m_foamMipMapBias;
             
@@ -99,8 +99,12 @@ namespace Scatterer {
 
                 //RenderTexture[] buffers = new RenderTexture[] {m_foam0, m_foam1};
                 //RTUtility.MultiTargetBlit(buffers, m_whiteCapsPrecomputeMat, 0); //causes mipmapping issue resulting in black ocean
+                                                                                    // -> maybe revisit this? Why would it happen if automip gen is disabled?
                 Graphics.Blit (null, m_foam0, m_whiteCapsPrecomputeMat, 0);
                 Graphics.Blit (null, m_foam1, m_whiteCapsPrecomputeMat, 1);
+
+                m_foam0.GenerateMips();
+                m_foam1.GenerateMips();
             }
         }
     }

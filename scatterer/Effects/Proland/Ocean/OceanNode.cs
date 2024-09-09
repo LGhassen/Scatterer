@@ -55,7 +55,13 @@ namespace Scatterer
         public Vector3 m_UnderwaterColor = new Vector3 (0.1f, 0.75f, 0.8f);
 
         //Size of each grid in the projected grid. (number of pixels on screen)
-        public int m_resolution = 4;
+        private int m_resolution = 4;
+
+        private int vertCountX, vertCountY;
+
+        public int VertCountX { get => vertCountX; }
+        public int VertCountY { get => vertCountY; }
+
 
         [Persistent]
         public float offScreenVertexStretch = 1.25f;
@@ -143,16 +149,14 @@ namespace Scatterer
 
             InitOceanMaterial ();
 
-            //Worth moving to projected Grid Class?
+            // Worth moving to projected Grid Class?
             CreateProjectedGridMeshes (true);
 
             oceanCameraProjectionMatModifier = waterGameObjects[0].AddComponent<OceanCameraUpdateHook>();
             oceanCameraProjectionMatModifier.oceanNode = this;
 
             oceanRenderingHook = waterGameObjects[0].AddComponent<OceanRenderingHook>();
-            oceanRenderingHook.targetMaterial = m_oceanMaterial;
-            oceanRenderingHook.targetRenderer = waterMeshRenderers [0];
-            oceanRenderingHook.celestialBodyName = prolandManager.parentCelestialBody.name;
+            oceanRenderingHook.Init(m_oceanMaterial, waterMeshRenderers[0], vertCountX, vertCountY);
 
             DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
             disableEffectsChecker.manager = this.prolandManager;
@@ -259,15 +263,15 @@ namespace Scatterer
             //split the mesh up into smaller meshes.
             m_resolution = Mathf.Max (1, m_resolution);
             //The number of squares in the grid on the x and y axis
-            int NX = Screen.width / m_resolution;
-            int NY = Screen.height / m_resolution;
+            vertCountX = Screen.width / m_resolution;
+            vertCountY = Screen.height / m_resolution;
             numGrids = 1;
 
-            const int MAX_VERTS = 65000; //The number of meshes need to make a grid of this resolution, if not using 32-bit index meshes
+            const int MAX_VERTS = 65000; //The number of meshes needed to make a grid of this resolution, if not using 32-bit index meshes
 
-            if (!use32BitIndexMesh && (NX * NY > MAX_VERTS))
+            if (!use32BitIndexMesh && (vertCountX * vertCountY > MAX_VERTS))
             {
-                numGrids += (NX * NY) / MAX_VERTS;
+                numGrids += (vertCountX * vertCountY) / MAX_VERTS;
             }
             m_screenGrids = new Mesh[numGrids];
             waterGameObjects = new GameObject[numGrids];
@@ -278,11 +282,13 @@ namespace Scatterer
             //projected as the ocean by the shader
             for (int i = 0; i < numGrids; i++)
             {
-                NY = Screen.height / numGrids / m_resolution;
-                if (use32BitIndexMesh)
-                    m_screenGrids [i] = MeshFactory.MakePlane32BitIndexFormat (NX, NY, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
+                int yAxisVertCountForGrid = Screen.height / numGrids / m_resolution;
+
+                if (use32BitIndexMesh && ((Screen.width / m_resolution) * (Screen.height / m_resolution) > MAX_VERTS))
+                    m_screenGrids [i] = MeshFactory.MakePlane32BitIndexFormat (vertCountX, yAxisVertCountForGrid, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
                 else
-                    m_screenGrids [i] = MeshFactory.MakePlane (NX, NY, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
+                    m_screenGrids [i] = MeshFactory.MakePlane (vertCountX, yAxisVertCountForGrid, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
+
                 m_screenGrids [i].bounds = new Bounds (Vector3.zero, new Vector3 (1e8f, 1e8f, 1e8f));
                 waterGameObjects [i] = new GameObject ();
                 waterGameObjects [i].transform.position = prolandManager.parentCelestialBody.transform.position;
@@ -296,7 +302,7 @@ namespace Scatterer
 
                 if (Scatterer.Instance.mainSettings.oceanPixelLights)
                 {
-                    m_oceanMaterial.SetPass (1); //Disable the main pass so we can render it with our commandbuffer. Pixel light passes render after scattering in depth buffer mode, and before scattering in projector mode
+                    m_oceanMaterial.SetPass (1); // Disable the main pass so we can render it with our commandbuffer. Pixel light passes render after scattering in depth buffer mode, and before scattering in projector mode
                     waterMeshRenderers [i].sharedMaterial = m_oceanMaterial;
                     waterMeshRenderers [i].material = m_oceanMaterial;
                 }

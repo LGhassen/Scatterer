@@ -6,19 +6,21 @@ namespace Scatterer
 {
     public class OceanRenderingHook : MonoBehaviour
     {
-        public bool isEnabled = false;
-
-        public OceanRenderingHook ()
-        {
-        }
-        
-        public MeshRenderer targetRenderer;
-        public Material targetMaterial;
-        public string celestialBodyName;
+        private MeshRenderer targetRenderer;
+        private Material targetMaterial;
+        private int vertCountX, vertCountY;
 
         //Dictionary to check if we added the OceanCommandBuffer to the camera
         private Dictionary<Camera,OceanCommandBuffer> cameraToOceanCommandBuffer = new Dictionary<Camera,OceanCommandBuffer>();
         
+        public void Init(Material targetMaterial, MeshRenderer targetRenderer, int vertCountX, int vertCountY)
+        {
+            this.targetMaterial = targetMaterial;
+            this.targetRenderer = targetRenderer;
+            this.vertCountX = vertCountX;
+            this.vertCountY = vertCountY;
+        }
+
         void OnWillRenderObject()
         {
             Camera cam = Camera.current;
@@ -50,10 +52,8 @@ namespace Scatterer
                 else
                 {
                     OceanCommandBuffer oceanCommandBuffer = (OceanCommandBuffer) cam.gameObject.AddComponent(typeof(OceanCommandBuffer));
-                    oceanCommandBuffer.targetRenderer = targetRenderer;
-                    oceanCommandBuffer.targetMaterial = targetMaterial;
-                    oceanCommandBuffer.celestialBodyName = celestialBodyName;
-                    oceanCommandBuffer.Initialize();
+
+                    oceanCommandBuffer.Init(targetRenderer, targetMaterial, vertCountX, vertCountY);
                     oceanCommandBuffer.EnableForThisFrame();
                     
                     cameraToOceanCommandBuffer[cam] = oceanCommandBuffer;
@@ -76,9 +76,9 @@ namespace Scatterer
         bool renderingEnabled = false;
         bool hdrEnabled = false;
 
-        public MeshRenderer targetRenderer;
-        public Material targetMaterial;
-        public string celestialBodyName;
+        private MeshRenderer targetRenderer;
+        private Material targetMaterial;
+        private int vertCountX, vertCountY;
 
         private Camera targetCamera;
         private CommandBuffer rendererCommandBuffer;
@@ -89,8 +89,15 @@ namespace Scatterer
 
         int width = 0, height = 0;
 
-        public void Initialize()
+        MeshRenderer dummyRenderer;
+
+        public void Init(MeshRenderer targetRenderer, Material targetMaterial, int vertCountX, int vertCountY)
         {
+            this.targetRenderer = targetRenderer;
+            this.targetMaterial = targetMaterial;
+            this.vertCountX = vertCountX;
+            this.vertCountY = vertCountY;
+
             targetCamera = GetComponent<Camera>();
 
             copyCameraDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders["Scatterer/CopyCameraDepth"]);
@@ -99,12 +106,82 @@ namespace Scatterer
             rendererCommandBuffer = new CommandBuffer();
             rendererCommandBuffer.name = "Ocean MeshRenderer CommandBuffer";
 
+            var dummyGO = GameObject.CreatePrimitive(PrimitiveType.Quad);
+
+            var collider = dummyGO.GetComponent<Collider>();
+
+            if (collider != null )
+            {
+                Component.Destroy(collider);
+            }
+
+            dummyGO.SetActive(false);
+            dummyRenderer = dummyGO.GetComponent<MeshRenderer>();
+
             RecreateCommandBuffer();
         }
 
         private void RecreateCommandBuffer()
         {
             rendererCommandBuffer.Clear();
+
+            int vertWorldPositionsTextureId = Shader.PropertyToID("oceanVertWorldPositionsTextureId");
+            int vertOceanPositionsTextureId = Shader.PropertyToID("oceanVertOceanPositionsTextureId");
+
+            rendererCommandBuffer.GetTemporaryRT(vertWorldPositionsTextureId, vertCountX, vertCountY, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat); // TODO: reuse the last channel
+            rendererCommandBuffer.GetTemporaryRT(vertOceanPositionsTextureId, vertCountX, vertCountY, 0, FilterMode.Point, RenderTextureFormat.RGFloat);
+
+            RenderTargetIdentifier[] oceanVertexPosRenderTextures = { new RenderTargetIdentifier(vertWorldPositionsTextureId), new RenderTargetIdentifier(vertOceanPositionsTextureId) };
+
+
+            rendererCommandBuffer.SetRenderTarget(oceanVertexPosRenderTextures, vertWorldPositionsTextureId); // ideally you don't set this depth texture
+            rendererCommandBuffer.ClearRenderTarget(false, true, Color.black);
+            //rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, 3);  // ocean verts pass // Need a quad though
+            rendererCommandBuffer.DrawRenderer(dummyRenderer, targetMaterial, 0, 3);  // ocean verts pass
+            //rendererCommandBuffer.Blit(null, oceanVertexPosRenderTextures, targetMaterial, 3, 0);
+
+            rendererCommandBuffer.SetGlobalTexture("oceanVertWorldPositions", vertWorldPositionsTextureId);
+            rendererCommandBuffer.SetGlobalTexture("oceanVertOceanPositions", vertOceanPositionsTextureId);
+
+            // Start by blitting quad to multiple RT to calculate these, using that renderer's material
+
+            // Next rasterize them and output normals (try 10-bit), foam and sigmaSQ (8-bit each)
+            int oceanGbufferDepthTextureId = Shader.PropertyToID("oceanGbufferDepth");
+            int oceanGbufferNormalsTextureId = Shader.PropertyToID("oceanGbufferNormals");
+            int oceanGbufferSigmaSqTextureId = Shader.PropertyToID("SigmaSq");
+            int oceanGbufferFoamTextureId = Shader.PropertyToID("oceanGbufferFoam");
+
+            rendererCommandBuffer.GetTemporaryRT(oceanGbufferDepthTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.RFloat);
+            //rendererCommandBuffer.GetTemporaryRT(oceanGbufferNormalsTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB2101010);
+            rendererCommandBuffer.GetTemporaryRT(oceanGbufferNormalsTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.RG16);
+            rendererCommandBuffer.GetTemporaryRT(oceanGbufferSigmaSqTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.R8);
+            rendererCommandBuffer.GetTemporaryRT(oceanGbufferFoamTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.R8);
+
+            RenderTargetIdentifier[] oceanGbufferRenderTextures = { new RenderTargetIdentifier(oceanGbufferDepthTextureId), new RenderTargetIdentifier(oceanGbufferNormalsTextureId),
+                                                                    new RenderTargetIdentifier(oceanGbufferSigmaSqTextureId), new RenderTargetIdentifier(oceanGbufferFoamTextureId)};
+
+            rendererCommandBuffer.SetRenderTarget(oceanGbufferRenderTextures, BuiltinRenderTextureType.CameraTarget); // setting this as depth works for culling
+            rendererCommandBuffer.ClearRenderTarget(false, true, Color.black);
+            rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, 2);  // ocean gbuffer pass
+
+            rendererCommandBuffer.SetGlobalTexture("oceanGbufferDepth", oceanGbufferDepthTextureId);
+            rendererCommandBuffer.SetGlobalTexture("oceanGbufferNormals", oceanGbufferNormalsTextureId);
+            rendererCommandBuffer.SetGlobalTexture("oceanGbufferSigmaSq", oceanGbufferSigmaSqTextureId);
+            rendererCommandBuffer.SetGlobalTexture("oceanGbufferFoam", oceanGbufferFoamTextureId);
+
+
+            int oceanDownscaledReflectionsTextureId = Shader.PropertyToID("oceanDownscaledReflections");
+            //rendererCommandBuffer.GetTemporaryRT(oceanDownscaledReflectionsTextureId, width / 2, height / 2, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+            rendererCommandBuffer.GetTemporaryRT(oceanDownscaledReflectionsTextureId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+            //rendererCommandBuffer.GetTemporaryRT(oceanDownscaledReflectionsTextureId, width / 2, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+
+            rendererCommandBuffer.SetRenderTarget(oceanDownscaledReflectionsTextureId);
+            rendererCommandBuffer.ClearRenderTarget(false, true, Color.black);
+            rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, 5);  // downscaled reflections pass
+
+            rendererCommandBuffer.SetGlobalTexture("oceanDownscaledReflections", oceanDownscaledReflectionsTextureId);
+
+            // rasterize all that shit to gbuffer
 
             // Invoke EVE method to render cloud shadows, returns bool, use that to know if we enable shadows or not
             // (also if EVE not installed)
@@ -135,6 +212,10 @@ namespace Scatterer
             rendererCommandBuffer.SetRenderTarget(oceanRenderTargets, BuiltinRenderTextureType.CameraTarget);
             rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, 0);   //this doesn't work with pixel lights so render only the main pass here and render pixel lights the regular way
                                                                                         //they will render on top of depth buffer scattering but that's not a noticeable issue, especially since ocean lights are soft additive
+
+
+            rendererCommandBuffer.SetRenderTarget(new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), BuiltinRenderTextureType.CameraTarget);
+            rendererCommandBuffer.DrawRenderer(dummyRenderer, targetMaterial, 0, 4);  // main pass but from gbuffer
 
             // expose the new depth buffer
             rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
@@ -241,6 +322,11 @@ namespace Scatterer
                     oceanRenderTexture.Release();
 
                 renderingEnabled = false;
+            }
+
+            if (dummyRenderer != null)
+            {
+                GameObject.Destroy(dummyRenderer.gameObject);
             }
         }
     }
