@@ -120,7 +120,7 @@ namespace Scatterer
 
             mesh = Instantiate(tempGO.GetComponent<MeshFilter>().mesh);
 
-            GameObject.DestroyImmediate(tempGO);
+            GameObject.Destroy(tempGO);
 
             return true;
         }

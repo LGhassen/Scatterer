@@ -68,7 +68,7 @@ namespace Scatterer
 
             foreach (SunFlare customSunFlare in scattererSunFlares.Values)
             {
-                Component.DestroyImmediate (customSunFlare);
+                Component.Destroy (customSunFlare);
             }
         }
         

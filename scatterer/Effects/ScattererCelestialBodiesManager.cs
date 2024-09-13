@@ -167,7 +167,7 @@ namespace Scatterer
         void unloadEffectsForBody(ScattererCelestialBody scattererCelestialBody)
         {
             scattererCelestialBody.prolandManager.OnDestroy ();
-            UnityEngine.Object.DestroyImmediate (scattererCelestialBody.prolandManager);
+            UnityEngine.Object.Destroy (scattererCelestialBody.prolandManager);
             scattererCelestialBody.prolandManager = null;
             scattererCelestialBody.active = false;
             Utils.LogDebug ("Effects unloaded for " + scattererCelestialBody.celestialBodyName);
@@ -180,7 +180,7 @@ namespace Scatterer
                 if (scattererCelestialBody.active)
                 {
                     scattererCelestialBody.prolandManager.OnDestroy ();
-                    UnityEngine.Object.DestroyImmediate (scattererCelestialBody.prolandManager);
+                    UnityEngine.Object.Destroy (scattererCelestialBody.prolandManager);
                     scattererCelestialBody.prolandManager = null;
                     scattererCelestialBody.active = false;
                     Utils.LogDebug ("Effects unloaded for " + scattererCelestialBody.celestialBodyName);

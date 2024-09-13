@@ -62,7 +62,7 @@ namespace Scatterer
             {
                 //destroy any duplicate instances that may be created by a duplicate install
                 Utils.LogError("Destroying duplicate instance, check your install for duplicate scatterer folders, or nested GameData folders");
-                UnityEngine.Object.DestroyImmediate(this);
+                UnityEngine.Object.Destroy(this);
             }
 
             Utils.LogInfo ("Version:"+versionNumber);
@@ -156,7 +156,7 @@ namespace Scatterer
                 {
                     if (antiAliasing)
                     {
-                        Component.DestroyImmediate(antiAliasing);
+                        Component.Destroy(antiAliasing);
                     }
                 }
 
@@ -301,62 +301,62 @@ namespace Scatterer
 
                 if (ambientLightScript)
                 {
-                    Component.DestroyImmediate(ambientLightScript);
+                    Component.Destroy(ambientLightScript);
                 }                
 
                 if (nearCamera)
                 {
                     if (nearCamera.gameObject.GetComponent (typeof(Wireframe)))
-                        Component.DestroyImmediate (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
+                        Component.Destroy (nearCamera.gameObject.GetComponent (typeof(Wireframe)));
                     
                     if (farCamera && farCamera.gameObject.GetComponent (typeof(Wireframe)))
-                        Component.DestroyImmediate (farCamera.gameObject.GetComponent (typeof(Wireframe)));
+                        Component.Destroy (farCamera.gameObject.GetComponent (typeof(Wireframe)));
                     
                     if (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)))
-                        Component.DestroyImmediate (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
+                        Component.Destroy (scaledSpaceCamera.gameObject.GetComponent (typeof(Wireframe)));
                 }
 
                 if (sunflareManager)
                 {
-                    UnityEngine.Component.DestroyImmediate(sunflareManager);
-                    GameObject.DestroyImmediate(sunflareManagerGO);
+                    UnityEngine.Component.Destroy(sunflareManager);
+                    GameObject.Destroy(sunflareManagerGO);
                 }
 
                 if (shadowFadeRemover)
                 {
-                    Component.DestroyImmediate(shadowFadeRemover);
+                    Component.Destroy(shadowFadeRemover);
                 }
 
                 if (shadowCascadeTweaker)
                 {
-                    Component.DestroyImmediate(shadowCascadeTweaker);
+                    Component.Destroy(shadowCascadeTweaker);
                 }
 
                 if (farDepthCommandbuffer)
-                    Component.DestroyImmediate (farDepthCommandbuffer);
+                    Component.Destroy (farDepthCommandbuffer);
                 
                 if (nearDepthCommandbuffer)
-                    Component.DestroyImmediate (nearDepthCommandbuffer);
+                    Component.Destroy (nearDepthCommandbuffer);
 
                 if (nearDepthPassMerger)
-                    Component.DestroyImmediate (nearDepthPassMerger);
+                    Component.Destroy (nearDepthPassMerger);
 
                 foreach (GenericAntiAliasing antiAliasing in antiAliasingScripts)
                 {
                     if (antiAliasing)
                     {
-                        Component.DestroyImmediate(antiAliasing);
+                        Component.Destroy(antiAliasing);
                     }
                 }
 
                 if (reflectionProbeChecker)
                 {
-                    Component.DestroyImmediate (reflectionProbeChecker);
+                    Component.Destroy (reflectionProbeChecker);
                 }
 
                 if (ReflectionProbeCheckerGO)
                 {
-                    UnityEngine.GameObject.DestroyImmediate (ReflectionProbeCheckerGO);
+                    UnityEngine.GameObject.Destroy (ReflectionProbeCheckerGO);
                 }
 
                 QualitySettings.antiAliasing = GameSettings.ANTI_ALIASING;
@@ -368,7 +368,7 @@ namespace Scatterer
                 SaveSettings();
             }
 
-            UnityEngine.Object.DestroyImmediate (guiHandler);
+            UnityEngine.Object.Destroy (guiHandler);
             
         }
 
@@ -669,7 +669,7 @@ namespace Scatterer
 
                 foreach (var ivaSmaaScript in ivaSmaaScripts)
                 {
-                    Component.DestroyImmediate(ivaSmaaScript);
+                    Component.Destroy(ivaSmaaScript);
                 }
             }
         }

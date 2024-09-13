@@ -48,7 +48,7 @@ namespace Scatterer
                 }
 
                 Component.Destroy(projector);
-                GameObject.DestroyImmediate(scatteringGO);
+                GameObject.Destroy(scatteringGO);
                 projector = null;
                 scatteringGO = null;
             }

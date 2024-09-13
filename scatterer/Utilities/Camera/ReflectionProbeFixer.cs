@@ -87,12 +87,12 @@ namespace Scatterer
         {
             if (scaledCamera)
             {
-                Component.DestroyImmediate(scaledCamera);
+                Component.Destroy(scaledCamera);
             }
 
             if (scaledCameraGO)
             {
-                UnityEngine.Object.DestroyImmediate (scaledCameraGO);
+                UnityEngine.Object.Destroy (scaledCameraGO);
             }
         }
     }

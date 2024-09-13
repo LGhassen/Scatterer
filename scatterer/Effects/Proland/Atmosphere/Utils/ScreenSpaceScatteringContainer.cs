@@ -95,7 +95,7 @@ namespace Scatterer
             {
                 if (scatteringCommandBuffer)
                 {
-                    Component.DestroyImmediate(scatteringCommandBuffer);
+                    Component.Destroy(scatteringCommandBuffer);
                 }
             }
         }
@@ -320,8 +320,8 @@ namespace Scatterer
                 {
                         scatteringGO.transform.parent = null;
                 }
-                Component.DestroyImmediate(screenSpaceScattering);
-                GameObject.DestroyImmediate(scatteringGO);
+                Component.Destroy(screenSpaceScattering);
+                GameObject.Destroy(scatteringGO);
             }
         }
     }

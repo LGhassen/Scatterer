@@ -66,7 +66,7 @@ namespace Scatterer
                 {
                     if (_val)
                     {
-                        Component.DestroyImmediate (_val);
+                        Component.Destroy (_val);
                     }
                 }
                 camToFixer.Clear();

@@ -86,7 +86,7 @@ namespace Scatterer
             var scrCopy = skySphereGO.GetComponent<SkySphereScreenCopy> ();
 
             if (scrCopy)
-                UnityEngine.Component.DestroyImmediate (scrCopy);
+                UnityEngine.Component.Destroy (scrCopy);
 
         }
 
@@ -107,12 +107,12 @@ namespace Scatterer
             if (skySphereMR != null)
             {
                 skySphereMR.enabled = false;
-                UnityEngine.Component.DestroyImmediate (skySphereMR);
+                UnityEngine.Component.Destroy (skySphereMR);
             }
 
             if (skySphereGO != null)
             {
-                UnityEngine.Object.DestroyImmediate(skySphereGO);
+                UnityEngine.Object.Destroy(skySphereGO);
             }
         }
     }

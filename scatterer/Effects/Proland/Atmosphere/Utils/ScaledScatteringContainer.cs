@@ -27,7 +27,7 @@ namespace Scatterer
 
             if (existingGoTransform != null)
             {
-                GameObject.DestroyImmediate(existingGoTransform.gameObject);
+                GameObject.Destroy(existingGoTransform.gameObject);
             }
 
             scaledScatteringGO = new GameObject (goName);

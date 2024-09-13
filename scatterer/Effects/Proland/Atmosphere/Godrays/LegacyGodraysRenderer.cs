@@ -345,12 +345,12 @@ namespace Scatterer
 
             if (volumeDepthGO)
             {
-                DestroyImmediate(volumeDepthGO);
+                Destroy(volumeDepthGO);
             }
 
 //            if (cloudShadowGO)
 //            {
-//                DestroyImmediate(cloudShadowGO);
+//                Destroy(cloudShadowGO);
 //            }
         }
     }

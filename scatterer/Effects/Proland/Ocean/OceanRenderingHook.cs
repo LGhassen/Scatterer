@@ -66,7 +66,7 @@ namespace Scatterer
             foreach (OceanCommandBuffer oceanCommandBuffer in cameraToOceanCommandBuffer.Values)
             {
                 if (oceanCommandBuffer)
-                    Component.DestroyImmediate(oceanCommandBuffer);
+                    Component.Destroy(oceanCommandBuffer);
             }
         }
     }

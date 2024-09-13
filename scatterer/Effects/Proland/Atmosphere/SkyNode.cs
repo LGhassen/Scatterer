@@ -820,7 +820,7 @@ namespace Scatterer
 
             if (atmosphereAtlas)
             {
-                UnityEngine.Object.DestroyImmediate(atmosphereAtlas);
+                UnityEngine.Object.Destroy(atmosphereAtlas);
             }
 
             if (skySphere != null)
@@ -840,12 +840,12 @@ namespace Scatterer
 
             if (legacyGodraysRenderer)
             {
-                Component.DestroyImmediate(legacyGodraysRenderer);
+                Component.Destroy(legacyGodraysRenderer);
             }
 
             if (raymarchedGodraysRenderer)
             {
-                Component.DestroyImmediate(raymarchedGodraysRenderer);
+                Component.Destroy(raymarchedGodraysRenderer);
             }
 
             //disable eve integration scatterer flag

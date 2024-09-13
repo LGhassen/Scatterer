@@ -287,7 +287,7 @@ namespace Scatterer
         {
             if (oceanNode)
             {
-                Component.DestroyImmediate(oceanNode);
+                Component.Destroy(oceanNode);
 
                 if (Scatterer.Instance.mainSettings.oceanFoam)
                     oceanNode = (OceanFFTgpu) Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(OceanWhiteCaps));
