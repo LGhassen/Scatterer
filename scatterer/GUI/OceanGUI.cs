@@ -103,7 +103,7 @@ namespace Scatterer
             }
             
             if (GUILayout.Button ("Load ocean")) {
-                Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ().loadFromConfigNode ();
+                Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ().LoadFromConfigNode ();
                 buildOceanGUI (selectedPlanet);
             }
             GUILayout.EndHorizontal ();

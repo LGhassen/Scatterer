@@ -757,7 +757,7 @@ namespace Scatterer {
         {
             if (waveInteractionHandler != null && prolandManager.GetSkyNode().simulateOceanInteraction)
             {
-                waterHeightAtCameraPosition = waveInteractionHandler.UpdateInteractions(height, waterHeightAtCameraPosition, ux.ToVector3(), uy.ToVector3(), offsetVector3);
+                waterHeightAtCameraPosition = waveInteractionHandler.UpdateInteractions(height, waterHeightAtCameraPosition, ux.ToVector3(), uy.ToVector3(), OffsetVector3);
             }
         }
     }

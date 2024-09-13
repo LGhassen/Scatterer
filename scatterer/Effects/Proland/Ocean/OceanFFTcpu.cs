@@ -468,8 +468,8 @@ namespace Scatterer {
                         {
                             Vector3 relativePartPos = part.partBuoyancy.transform.position-Scatterer.Instance.nearCamera.transform.position;
                             
-                            float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+offsetVector3.x,
-                                                                    Vector3.Dot(relativePartPos,uy.ToVector3())+offsetVector3.y,
+                            float newheight= findHeight(new Vector3(Vector3.Dot(relativePartPos,ux.ToVector3())+OffsetVector3.x,
+                                                                    Vector3.Dot(relativePartPos,uy.ToVector3())+OffsetVector3.y,
                                                                     0f),0.02f);
                             
                             part.partBuoyancy.waterLevel=newheight;

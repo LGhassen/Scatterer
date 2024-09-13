@@ -24,17 +24,6 @@
  *
  */
 using UnityEngine;
-using System.Collections;
-using System.IO;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using UnityEngine.Rendering;
-
-using KSP.IO;
 
 namespace Scatterer
 {
@@ -48,14 +37,8 @@ namespace Scatterer
         public Material m_oceanMaterial;
         OceanRenderingHook oceanRenderingHook;
 
-        [Persistent]
-        public Vector3 m_oceanUpwellingColor = new Vector3 (0.0039f, 0.0156f, 0.047f);
-
-        [Persistent]
-        public Vector3 m_UnderwaterColor = new Vector3 (0.1f, 0.75f, 0.8f);
-
-        //Size of each grid in the projected grid. (number of pixels on screen)
-        private int m_resolution = 4;
+        // Size of each grid in the projected grid. (number of pixels on screen)
+        private int projectedGridPixelSize = 4;
 
         private int vertCountX, vertCountY;
 
@@ -63,40 +46,31 @@ namespace Scatterer
         public int VertCountY { get => vertCountY; }
 
 
-        [Persistent]
-        public float offScreenVertexStretch = 1.25f;
-
-        [Persistent]
-        public float alphaRadius = 3000f;
-
-        [Persistent]
-        public float transparencyDepth = 60f;
-
-        [Persistent]
-        public float darknessDepth = 1000f;
-
-        [Persistent]
-        public float refractionIndex = 1.33f;
-
-        [Persistent]
-        public float skyReflectionStrength = 1f;
+        [Persistent] public float offScreenVertexStretch = 1.25f;
+        [Persistent] public float alphaRadius = 3000f;
+        [Persistent] public float transparencyDepth = 60f;
+        [Persistent] public float darknessDepth = 1000f;
+        [Persistent] public float refractionIndex = 1.33f;
+        [Persistent] public float skyReflectionStrength = 1f;
+        [Persistent] public Vector3 m_oceanUpwellingColor = new Vector3(0.0039f, 0.0156f, 0.047f);
+        [Persistent] public Vector3 m_UnderwaterColor = new Vector3(0.1f, 0.75f, 0.8f);
 
         public bool isUnderwater = false;
         bool underwaterMode = false;
-        bool oceanDraw = true;
+        bool drawOcean = true;
 
-        public int numGrids;
-        Mesh[] m_screenGrids;
+        Mesh oceanScreenGrid;
 
-        GameObject[] waterGameObjects;
-        public MeshRenderer[] waterMeshRenderers;
-        MeshFilter[] waterMeshFilters;
+        GameObject waterGameObject;
+        public MeshRenderer waterMeshRenderer;
         
         public GenericLocalAtmosphereContainer underwaterScattering;
         public Material underwaterMaterial;
 
-        public Vector3 offsetVector3{
-            get {
+        public Vector3 OffsetVector3
+        {
+            get
+            {
                 return offset.ToVector3();
             }
         }
@@ -105,7 +79,7 @@ namespace Scatterer
         public Vector3d2 m_Offset = Vector3d2.Zero();
         public Vector3d2 offset = Vector3d2.Zero(), ux=Vector3d2.Zero(), uy=Vector3d2.Zero(), uz=Vector3d2.Zero(), oo=Vector3d2.Zero();
 
-        OceanCameraUpdateHook oceanCameraProjectionMatModifier;
+        OceanCameraUpdateHook oceanCameraPropertiesUpdater;
         UnderwaterDimmingHook underwaterDimmingHook;
 
         public float planetOpacity=1f; //planetOpacity to fade out the ocean when PQS is fading out
@@ -115,26 +89,16 @@ namespace Scatterer
         public abstract float GetMaxSlopeVariance ();
 
         //caustics
-        [Persistent]
-        public string causticsTexturePath="";
-        [Persistent]
-        public Vector2 causticsLayer1Scale;
-        [Persistent]
-        public Vector2 causticsLayer1Speed;
-        [Persistent]
-        public Vector2 causticsLayer2Scale;
-        [Persistent]
-        public Vector2 causticsLayer2Speed;
-        [Persistent]
-        public float causticsMultiply;
-        [Persistent]
-        public float causticsUnderwaterLightBoost;
-        [Persistent]
-        public float causticsMinBrightness;
-        [Persistent]
-        public float causticsBlurDepth;
-        [Persistent]
-        public float lightRaysStrength=1f;
+        [Persistent] public string causticsTexturePath="";
+        [Persistent] public Vector2 causticsLayer1Scale;
+        [Persistent] public Vector2 causticsLayer1Speed;
+        [Persistent] public Vector2 causticsLayer2Scale;
+        [Persistent] public Vector2 causticsLayer2Speed;
+        [Persistent] public float causticsMultiply;
+        [Persistent] public float causticsUnderwaterLightBoost;
+        [Persistent] public float causticsMinBrightness;
+        [Persistent] public float causticsBlurDepth;
+        [Persistent] public float lightRaysStrength=1f;
 
         public CausticsShadowMaskModulate causticsShadowMaskModulator;
         public CausticsLightRaysRenderer causticsLightRaysRenderer;
@@ -143,24 +107,23 @@ namespace Scatterer
 
         public virtual void Init (ProlandManager manager)
         {
-            m_resolution = Scatterer.Instance.mainSettings.oceanMeshResolution;
+            projectedGridPixelSize = Scatterer.Instance.mainSettings.oceanMeshResolution;
             prolandManager = manager;
-            loadFromConfigNode ();
+            
+            LoadFromConfigNode();
+            InitOceanMaterial();
+            CreateProjectedGridMesh();
 
-            InitOceanMaterial ();
+            oceanCameraPropertiesUpdater = waterGameObject.AddComponent<OceanCameraUpdateHook>(); // Why not just make this a general script you add to the waterGameObject?
+            oceanCameraPropertiesUpdater.oceanNode = this;
 
-            // Worth moving to projected Grid Class?
-            CreateProjectedGridMeshes (true);
+            oceanRenderingHook = waterGameObject.AddComponent<OceanRenderingHook>(); // Why not merge this with the above?
+            oceanRenderingHook.Init(m_oceanMaterial, waterMeshRenderer, vertCountX, vertCountY, oceanScreenGrid);
 
-            oceanCameraProjectionMatModifier = waterGameObjects[0].AddComponent<OceanCameraUpdateHook>();
-            oceanCameraProjectionMatModifier.oceanNode = this;
-
-            oceanRenderingHook = waterGameObjects[0].AddComponent<OceanRenderingHook>();
-            oceanRenderingHook.Init(m_oceanMaterial, waterMeshRenderers[0], vertCountX, vertCountY);
-
-            DisableEffectsChecker disableEffectsChecker = waterGameObjects[0].AddComponent<DisableEffectsChecker>();
+            DisableEffectsChecker disableEffectsChecker = waterGameObject.AddComponent<DisableEffectsChecker>(); 
             disableEffectsChecker.manager = this.prolandManager;
 
+            // I think this shouldn't be needed with the commandBuffer rendering method, but I'll test it to be sure
             if (Scatterer.Instance.mainSettings.shadowsOnOcean || Scatterer.Instance.mainSettings.oceanLightRays)
             {
                 ShadowMapRetrieveCommandBuffer retriever = prolandManager.mainSunLight.gameObject.GetComponent<ShadowMapRetrieveCommandBuffer>();
@@ -190,17 +153,17 @@ namespace Scatterer
                 if(!causticsShadowMaskModulator.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
                                                      causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth, prolandManager.mainSunLight))
                 {
-                    UnityEngine.Object.DestroyImmediate (causticsShadowMaskModulator);
+                    UnityEngine.Object.Destroy (causticsShadowMaskModulator);
                     causticsShadowMaskModulator = null;
                 }
 
                 if (Scatterer.Instance.mainSettings.oceanLightRays)
                 {
-                    causticsLightRaysRenderer = (CausticsLightRaysRenderer) waterGameObjects[0].AddComponent<CausticsLightRaysRenderer>();
+                    causticsLightRaysRenderer = (CausticsLightRaysRenderer) waterGameObject.AddComponent<CausticsLightRaysRenderer>();
                     if (!causticsLightRaysRenderer.Init(causticsTexturePath, causticsLayer1Scale, causticsLayer1Speed, causticsLayer2Scale, causticsLayer2Speed,
                                                         causticsMultiply, causticsMinBrightness, (float)manager.GetRadius(), causticsBlurDepth, this, lightRaysStrength))
                     {
-                        UnityEngine.Object.DestroyImmediate (causticsLightRaysRenderer);
+                        UnityEngine.Object.Destroy (causticsLightRaysRenderer);
                         causticsLightRaysRenderer = null;
                     }
                 }
@@ -209,25 +172,22 @@ namespace Scatterer
 
         public virtual void UpdateNode ()
         {
-            oceanDraw = !MapView.MapIsEnabled && !prolandManager.skyNode.inScaledSpace;
+            drawOcean = !MapView.MapIsEnabled && !prolandManager.skyNode.inScaledSpace;
 
-            foreach (MeshRenderer _mr in waterMeshRenderers)
-            {
-                _mr.enabled = oceanDraw;
-            }
+            waterMeshRenderer.enabled = drawOcean;
 
             isUnderwater = height < waterHeightAtCameraPosition;
 
             underwaterScattering.SetActivated(isUnderwater);
 
-            if (underwaterMode ^ isUnderwater)
+            if (underwaterMode ^ isUnderwater) // why do you write code like this
             {
                 toggleUnderwaterMode();
             }
 
             if (causticsShadowMaskModulator)
             {
-                causticsShadowMaskModulator.isEnabled = oceanDraw && (prolandManager.GetSkyNode().altitude < 6000f);
+                causticsShadowMaskModulator.isEnabled = drawOcean && (prolandManager.GetSkyNode().altitude < 6000f);
                 causticsShadowMaskModulator.UpdateCaustics ();
             }            
         }
@@ -255,70 +215,77 @@ namespace Scatterer
             }
         }
 
-        void CreateProjectedGridMeshes (bool use32BitIndexMesh)
+        void CreateProjectedGridMesh ()
         {
-            //Create the projected grid. The resolution is the size in pixels
-            //of each square in the grid. If not using 32-bit index meshes, the verts of
-            //the mesh will exceed the max verts for a mesh in Unity. In this case
-            //split the mesh up into smaller meshes.
-            m_resolution = Mathf.Max (1, m_resolution);
+            
+            projectedGridPixelSize = Mathf.Max (1, projectedGridPixelSize);
+            
             //The number of squares in the grid on the x and y axis
-            vertCountX = Screen.width / m_resolution;
-            vertCountY = Screen.height / m_resolution;
-            numGrids = 1;
+            vertCountX = Screen.width / projectedGridPixelSize;
+            vertCountY = Screen.height / projectedGridPixelSize;
 
-            const int MAX_VERTS = 65000; //The number of meshes needed to make a grid of this resolution, if not using 32-bit index meshes
+            const int maxVertCountIn16BitIndexMesh = 65000; //The number of meshes needed to make a grid of this resolution, if not using 32-bit index meshes
 
-            if (!use32BitIndexMesh && (vertCountX * vertCountY > MAX_VERTS))
+            waterGameObject = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            waterGameObject.name = "Scatterer ocean water display";
+            waterGameObject.transform.position = prolandManager.parentCelestialBody.transform.position;
+            waterGameObject.transform.parent = prolandManager.parentCelestialBody.transform;
+            waterGameObject.layer = 15;
+
+            var collider =  waterGameObject.GetComponent<Collider>();
+
+            if (collider != null)
             {
-                numGrids += (vertCountX * vertCountY) / MAX_VERTS;
+                Destroy(collider);
             }
-            m_screenGrids = new Mesh[numGrids];
-            waterGameObjects = new GameObject[numGrids];
-            waterMeshRenderers = new MeshRenderer[numGrids];
-            waterMeshFilters = new MeshFilter[numGrids];
-            //Make the meshes. The end product will be a grid of verts that cover
-            //the screen on the x and y axis with the z depth at 0. This grid is then
-            //projected as the ocean by the shader
-            for (int i = 0; i < numGrids; i++)
+
+            // Make the mesh. The end product will be a grid of verts that covers
+            // the screen on the x and y axis with the z depth at 0. This grid is then
+            // projected as the ocean by the shader
+            if (vertCountX * vertCountY > maxVertCountIn16BitIndexMesh)
+            { 
+                oceanScreenGrid = MeshFactory.MakePlane32BitIndexFormat (vertCountX, vertCountY, MeshFactory.PLANE.XY, false, true, 0f, 1.0f);
+            }
+            else
+            { 
+                oceanScreenGrid = MeshFactory.MakePlane (vertCountX, vertCountY, MeshFactory.PLANE.XY, false, true, 0f, 1f);
+            }
+
+            oceanScreenGrid.bounds = new Bounds (Vector3.zero, new Vector3 (1e8f, 1e8f, 1e8f));
+
+            var waterMeshFilter = waterGameObject.GetComponent<MeshFilter> ();
+            waterMeshFilter.mesh.bounds = new Bounds(Vector3.zero, new Vector3(1e8f, 1e8f, 1e8f));
+
+            waterMeshRenderer = waterGameObject.GetComponent<MeshRenderer> ();
+
+            if (Scatterer.Instance.mainSettings.oceanPixelLights)
             {
-                int yAxisVertCountForGrid = Screen.height / numGrids / m_resolution;
+                //m_oceanMaterial.SetPass (1); // This doesn't work it seems? check if main ocean is rendered twice, because it seems that all pases after 1 still render
 
-                if (use32BitIndexMesh && ((Screen.width / m_resolution) * (Screen.height / m_resolution) > MAX_VERTS))
-                    m_screenGrids [i] = MeshFactory.MakePlane32BitIndexFormat (vertCountX, yAxisVertCountForGrid, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
-                else
-                    m_screenGrids [i] = MeshFactory.MakePlane (vertCountX, yAxisVertCountForGrid, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
+                // These work perfectly
+                m_oceanMaterial.SetShaderPassEnabled("MainPass", false);
+                m_oceanMaterial.SetShaderPassEnabled("GbufferWrite", false);
+                m_oceanMaterial.SetShaderPassEnabled("VertexPositions", false);
+                m_oceanMaterial.SetShaderPassEnabled("GbufferMainLightingPass", false);
+                m_oceanMaterial.SetShaderPassEnabled("DeferredReflections", false);
 
-                m_screenGrids [i].bounds = new Bounds (Vector3.zero, new Vector3 (1e8f, 1e8f, 1e8f));
-                waterGameObjects [i] = new GameObject ();
-                waterGameObjects [i].transform.position = prolandManager.parentCelestialBody.transform.position;
-                waterGameObjects [i].transform.parent = prolandManager.parentCelestialBody.transform;
-                //might be redundant
-                waterMeshFilters [i] = waterGameObjects [i].AddComponent<MeshFilter> ();
-                waterMeshFilters [i].mesh.Clear ();
-                waterMeshFilters [i].mesh = m_screenGrids [i];
-                waterGameObjects [i].layer = 15;
-                waterMeshRenderers [i] = waterGameObjects [i].AddComponent<MeshRenderer> ();
-
-                if (Scatterer.Instance.mainSettings.oceanPixelLights)
-                {
-                    m_oceanMaterial.SetPass (1); // Disable the main pass so we can render it with our commandbuffer. Pixel light passes render after scattering in depth buffer mode, and before scattering in projector mode
-                    waterMeshRenderers [i].sharedMaterial = m_oceanMaterial;
-                    waterMeshRenderers [i].material = m_oceanMaterial;
-                }
-                else
-                {
-                    waterMeshRenderers [i].material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
-                }
-                waterMeshRenderers [i].receiveShadows = Scatterer.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable);
-                waterMeshRenderers [i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                waterMeshRenderers [i].enabled = true;
+                waterMeshRenderer.sharedMaterial = m_oceanMaterial;
+                waterMeshRenderer.material = m_oceanMaterial;
             }
+            else
+            {
+                waterMeshRenderer.material = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/invisible")]);
+            }
+
+            waterMeshRenderer.receiveShadows = Scatterer.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable);
+            waterMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            waterMeshRenderer.enabled = true;
         }
 
         void InitOceanMaterial ()
         {
-            m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/OceanWhiteCaps")]);
+            //m_oceanMaterial = new Material (ShaderReplacer.Instance.LoadedShaders [("Scatterer/OceanWhiteCaps")]);
+            m_oceanMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/OceanWhiteCapsDeferred")]);
 
             Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "SKY_REFLECTIONS_ON", "SKY_REFLECTIONS_OFF", Scatterer.Instance.mainSettings.oceanSkyReflections);
             Utils.EnableOrDisableShaderKeywords (m_oceanMaterial, "PLANETSHINE_ON", "PLANETSHINE_OFF", (prolandManager.secondarySuns.Count > 0) || Scatterer.Instance.mainSettings.usePlanetShine);
@@ -350,7 +317,7 @@ namespace Scatterer
             
             m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
             m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
-            m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
+            m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)projectedGridPixelSize / (float)Screen.width, (float)projectedGridPixelSize / (float)Screen.height));
 
             //oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
             m_oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(prolandManager.GetRadius()));
@@ -408,27 +375,23 @@ namespace Scatterer
 
         public virtual void OnDestroy ()
         {    
-            if (oceanCameraProjectionMatModifier)
+            if (oceanCameraPropertiesUpdater)
             {
-                Component.Destroy (oceanCameraProjectionMatModifier);
-                UnityEngine.Object.Destroy (oceanCameraProjectionMatModifier);
+                Component.Destroy (oceanCameraPropertiesUpdater);
+                UnityEngine.Object.Destroy (oceanCameraPropertiesUpdater);
             }
             
-            for (int i = 0; i < numGrids; i++)
-            {
-                DestroyImmediate(waterGameObjects[i]);
-                Component.DestroyImmediate(waterMeshFilters[i]);
-                Component.DestroyImmediate(waterMeshRenderers[i]);
+
+            Destroy(waterGameObject);
                 
-                UnityEngine.Object.DestroyImmediate(m_screenGrids [i]);
-            }
+            UnityEngine.Object.Destroy(oceanScreenGrid);
             
             
-            UnityEngine.Object.DestroyImmediate(m_oceanMaterial);
-            UnityEngine.Object.DestroyImmediate(underwaterMaterial);
+            UnityEngine.Object.Destroy(m_oceanMaterial);
+            UnityEngine.Object.Destroy(underwaterMaterial);
             
             if (underwaterDimmingHook)
-                Component.DestroyImmediate(underwaterDimmingHook);
+                Component.Destroy(underwaterDimmingHook);
             
             if (underwaterScattering!=null)
             {
@@ -437,17 +400,17 @@ namespace Scatterer
 
             if (causticsShadowMaskModulator)
             {
-                UnityEngine.Object.DestroyImmediate (causticsShadowMaskModulator);
+                UnityEngine.Object.Destroy (causticsShadowMaskModulator);
             }
 
             if (causticsLightRaysRenderer)
             {
-                UnityEngine.Object.DestroyImmediate(causticsLightRaysRenderer);
+                UnityEngine.Object.Destroy(causticsLightRaysRenderer);
             }
 
             if (oceanRenderingHook)
             {
-                Component.DestroyImmediate(oceanRenderingHook);
+                Component.Destroy(oceanRenderingHook);
             }
         }
 
@@ -499,7 +462,7 @@ namespace Scatterer
             }
         }
         
-        public void loadFromConfigNode ()
+        public void LoadFromConfigNode ()
         {
             ConfigNode cnToLoad = new ConfigNode();
             ConfigNode[] configNodeArray;
@@ -534,16 +497,13 @@ namespace Scatterer
                 
                 (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Find(_cb => _cb.celestialBodyName == prolandManager.parentCelestialBody.name)).hasOcean = false;
                 
-                UnityEngine.Component.DestroyImmediate (this);
+                UnityEngine.Component.Destroy (this);
             }
         }
 
         public void setWaterMeshrenderersEnabled (bool enabled)
         {
-            for (int i=0; i < numGrids; i++)
-            {
-                waterMeshRenderers[i].enabled=enabled && oceanDraw;
-            }
+            waterMeshRenderer.enabled = enabled && drawOcean;
         }
     }
 }
