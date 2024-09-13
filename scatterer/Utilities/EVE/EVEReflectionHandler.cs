@@ -24,7 +24,7 @@ namespace Scatterer
         public object EVEInstance;
         private EventVoid onCloudsApplyEvent;
 
-        private Func<CommandBuffer, int, int, bool> EVEOceanShadowsMethodDelegate;
+        private Func<CommandBuffer, int, int, int, bool> EVEOceanShadowsMethodDelegate;
 
         private const BindingFlags flags = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
 
@@ -83,18 +83,18 @@ namespace Scatterer
 
             MethodInfo methodInfo = EVEScreenSpaceShadowsManagerType.GetMethod("AddOceanShadowCommands");
 
-            EVEOceanShadowsMethodDelegate = (Func<CommandBuffer, int, int, bool>)Delegate.CreateDelegate(
-                    typeof(Func<CommandBuffer, int, int, bool>),
+            EVEOceanShadowsMethodDelegate = (Func<CommandBuffer, int, int, int, bool>)Delegate.CreateDelegate(
+                    typeof(Func<CommandBuffer, int, int, int, bool>),
                     EVEScreenSpaceShadowsManagerInstance,
                     methodInfo);
         }
 
-        public bool AddEVEOceanShadowCommands(CommandBuffer commandBuffer, int width, int height)
+        public bool AddEVEOceanShadowCommands(CommandBuffer commandBuffer, int width, int height, int oceanDepthTextureIdentifier)
         {
             if (EVEOceanShadowsMethodDelegate == null || commandBuffer == null)
                 return false;
 
-            return EVEOceanShadowsMethodDelegate(commandBuffer, width, height);
+            return EVEOceanShadowsMethodDelegate(commandBuffer, width, height, oceanDepthTextureIdentifier);
         }
 
         private void Map2DLayer(ref EVECloudLayer cloudLayer, object cloudObject, string body)

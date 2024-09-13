@@ -163,9 +163,9 @@ namespace Scatterer
             // Also render regular shadows on top, but if EVE not installed or not used, create your own texture here and render them
             // also eclipses
 
-            // Then switch keyword or something
+            // If EVE has shadows to render it will provided a low-res ocean shadows texture and downscaled ocean depth for upscaling
             bool shadowsTextureCreated = Scatterer.Instance.EveReflectionHandler != null &&
-                Scatterer.Instance.EveReflectionHandler.AddEVEOceanShadowCommands(rendererCommandBuffer, width / 2, height / 2);
+                Scatterer.Instance.EveReflectionHandler.AddEVEOceanShadowCommands(rendererCommandBuffer, width, height, oceanGbufferDepthTextureId);
 
             if (true) // check eclipses or regular shadows are needed
             { 
