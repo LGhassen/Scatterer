@@ -134,27 +134,25 @@ namespace Scatterer
 
             // Rasterize them and output normals, foam and roughness
             int oceanGbufferDepthTextureId = Shader.PropertyToID("oceanGbufferDepth");
-            int oceanGbufferNormalsTextureId = Shader.PropertyToID("oceanGbufferNormals");
-            int oceanGbufferSigmaSqTextureId = Shader.PropertyToID("SigmaSq");
+            int oceanGbufferNormalsAndSigmaTextureId = Shader.PropertyToID("oceanGbufferNormalsAndSigma");
             int oceanGbufferFoamTextureId = Shader.PropertyToID("oceanGbufferFoam");
 
             rendererCommandBuffer.GetTemporaryRT(oceanGbufferDepthTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.RFloat);
-            rendererCommandBuffer.GetTemporaryRT(oceanGbufferNormalsTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.RG32); // RG16 led to banding issues on sunsets, packed RG32 is better than A2R10G10B10 (16-bit per channel instead of 10) for the same size
-            rendererCommandBuffer.GetTemporaryRT(oceanGbufferSigmaSqTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.R8);
+            rendererCommandBuffer.GetTemporaryRT(oceanGbufferNormalsAndSigmaTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB2101010);
             rendererCommandBuffer.GetTemporaryRT(oceanGbufferFoamTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.R8);
 
             rendererCommandBuffer.SetRenderTarget(oceanGbufferDepthTextureId);
             rendererCommandBuffer.ClearRenderTarget(false, true, SystemInfo.usesReversedZBuffer ? Color.black : Color.white);
 
-            RenderTargetIdentifier[] oceanGbufferRenderTextures = { new RenderTargetIdentifier(oceanGbufferDepthTextureId), new RenderTargetIdentifier(oceanGbufferNormalsTextureId),
-                                                                    new RenderTargetIdentifier(oceanGbufferSigmaSqTextureId), new RenderTargetIdentifier(oceanGbufferFoamTextureId)};
+            RenderTargetIdentifier[] oceanGbufferRenderTextures = { new RenderTargetIdentifier(oceanGbufferDepthTextureId),
+                                                                    new RenderTargetIdentifier(oceanGbufferNormalsAndSigmaTextureId),
+                                                                    new RenderTargetIdentifier(oceanGbufferFoamTextureId)};
 
             rendererCommandBuffer.SetRenderTarget(oceanGbufferRenderTextures, BuiltinRenderTextureType.CameraTarget);   // Setting this as depth works for z-testing
             rendererCommandBuffer.DrawMesh(oceanScreenGrid, Matrix4x4.identity, targetMaterial, 0, 1);                  // Ocean gbuffer pass
 
             rendererCommandBuffer.SetGlobalTexture("oceanGbufferDepth", oceanGbufferDepthTextureId);
-            rendererCommandBuffer.SetGlobalTexture("oceanGbufferNormals", oceanGbufferNormalsTextureId);
-            rendererCommandBuffer.SetGlobalTexture("oceanGbufferSigmaSq", oceanGbufferSigmaSqTextureId);
+            rendererCommandBuffer.SetGlobalTexture("oceanGbufferNormalsAndSigma", oceanGbufferNormalsAndSigmaTextureId);
             rendererCommandBuffer.SetGlobalTexture("oceanGbufferFoam", oceanGbufferFoamTextureId);
 
             // Invoke EVE method to render cloud shadows, returns bool, use that to know if we enable shadows or not
@@ -163,7 +161,7 @@ namespace Scatterer
             // Also render regular shadows on top, but if EVE not installed or not used, create your own texture here and render them
             // also eclipses
 
-            // If EVE has shadows to render it will provided a low-res ocean shadows texture and downscaled ocean depth for upscaling
+            // If EVE has shadows to render it will provided a low-res ocean shadows texture and downscaled ocean depth "ScattererDownscaledOceanDepthTexture" for upscaling
             bool shadowsTextureCreated = Scatterer.Instance.EveReflectionHandler != null &&
                 Scatterer.Instance.EveReflectionHandler.AddEVEOceanShadowCommands(rendererCommandBuffer, width, height, oceanGbufferDepthTextureId);
 
