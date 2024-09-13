@@ -132,14 +132,14 @@ namespace Scatterer
             rendererCommandBuffer.SetGlobalTexture("oceanVertWorldPositionsXYZOceanPositionsX", vertWorldPositionsXYZOceanPositionsXId);
             rendererCommandBuffer.SetGlobalTexture("oceanVertOceanPositionsY", vertOceanPositionsYId);
 
-            // Rasterize them and output normals, foam and roughness (all 8-bit apart from depth)
+            // Rasterize them and output normals, foam and roughness
             int oceanGbufferDepthTextureId = Shader.PropertyToID("oceanGbufferDepth");
             int oceanGbufferNormalsTextureId = Shader.PropertyToID("oceanGbufferNormals");
             int oceanGbufferSigmaSqTextureId = Shader.PropertyToID("SigmaSq");
             int oceanGbufferFoamTextureId = Shader.PropertyToID("oceanGbufferFoam");
 
             rendererCommandBuffer.GetTemporaryRT(oceanGbufferDepthTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.RFloat);
-            rendererCommandBuffer.GetTemporaryRT(oceanGbufferNormalsTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.RG16);
+            rendererCommandBuffer.GetTemporaryRT(oceanGbufferNormalsTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.RG32); // RG16 led to banding issues on sunsets, packed RG32 is better than A2R10G10B10 (16-bit per channel instead of 10) for the same size
             rendererCommandBuffer.GetTemporaryRT(oceanGbufferSigmaSqTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.R8);
             rendererCommandBuffer.GetTemporaryRT(oceanGbufferFoamTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.R8);
 
