@@ -75,11 +75,21 @@ namespace Scatterer
 
     public class OceanCommandBuffer : MonoBehaviour
     {
+        public class OceanShaderPasses
+        {
+            public const int VertexPositions = 0;
+            public const int GbufferWrite = 1;
+            public const int GbufferMainLightingPass = 2;
+            public const int GbufferForwardAdd = 3;
+            public const int DeferredShadows = 4;
+        }
+
         bool renderingEnabled = false;
         bool hdrEnabled = false;
 
         private MeshRenderer targetRenderer;
         private Material targetMaterial;
+        private Material downscaleDepthMaterial;
         private int vertCountX, vertCountY;
         private Mesh oceanScreenGrid;
 
@@ -108,6 +118,8 @@ namespace Scatterer
             rendererCommandBuffer = new CommandBuffer();
             rendererCommandBuffer.name = "Ocean MeshRenderer CommandBuffer";
 
+            downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/DownscaleDepth")]);
+
             RecreateCommandBuffer();
         }
 
@@ -127,7 +139,7 @@ namespace Scatterer
 
             rendererCommandBuffer.SetRenderTarget(oceanVertexPosRenderTextures, vertWorldPositionsXYZOceanPositionsXId);
             rendererCommandBuffer.ClearRenderTarget(false, true, Color.black);
-            rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, 0);  // ocean verts pass
+            rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, OceanShaderPasses.VertexPositions);
 
             rendererCommandBuffer.SetGlobalTexture("oceanVertWorldPositionsXYZOceanPositionsX", vertWorldPositionsXYZOceanPositionsXId);
             rendererCommandBuffer.SetGlobalTexture("oceanVertOceanPositionsY", vertOceanPositionsYId);
@@ -148,8 +160,8 @@ namespace Scatterer
                                                                     new RenderTargetIdentifier(oceanGbufferNormalsAndSigmaTextureId),
                                                                     new RenderTargetIdentifier(oceanGbufferFoamTextureId)};
 
-            rendererCommandBuffer.SetRenderTarget(oceanGbufferRenderTextures, BuiltinRenderTextureType.CameraTarget);   // Setting this as depth works for z-testing
-            rendererCommandBuffer.DrawMesh(oceanScreenGrid, Matrix4x4.identity, targetMaterial, 0, 1);                  // Ocean gbuffer pass
+            rendererCommandBuffer.SetRenderTarget(oceanGbufferRenderTextures, BuiltinRenderTextureType.CameraTarget);                       // Setting this as depth works for z-testing
+            rendererCommandBuffer.DrawMesh(oceanScreenGrid, Matrix4x4.identity, targetMaterial, 0, OceanShaderPasses.GbufferWrite);         // Ocean gbuffer pass
 
             rendererCommandBuffer.SetGlobalTexture("oceanGbufferDepth", oceanGbufferDepthTextureId);
             rendererCommandBuffer.SetGlobalTexture("oceanGbufferNormalsAndSigma", oceanGbufferNormalsAndSigmaTextureId);
@@ -165,19 +177,36 @@ namespace Scatterer
             bool shadowsTextureCreated = Scatterer.Instance.EveReflectionHandler != null &&
                 Scatterer.Instance.EveReflectionHandler.AddEVEOceanShadowCommands(rendererCommandBuffer, width, height, oceanGbufferDepthTextureId);
 
-            if (true) // check eclipses or regular shadows are needed
+            // check eclipses or regular shadows are needed
+            if (Scatterer.Instance.mainSettings.useEclipses || (Scatterer.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable)))
             { 
                 if (!shadowsTextureCreated)
                 {
-                    // create 1/4 res texture manually
+                    
+                    // Get temporary RTs
+                    int downscaledOceanDepthIdentifier = Shader.PropertyToID("ScattererDownscaledOceanDepthTexture");
+                    int shadowsTextureId = Shader.PropertyToID("ScattererOceanShadowsTexture");
+
+                    rendererCommandBuffer.GetTemporaryRT(downscaledOceanDepthIdentifier, width / 2, height / 2, 0, FilterMode.Point, RenderTextureFormat.RFloat);
+                    rendererCommandBuffer.GetTemporaryRT(shadowsTextureId, width / 2, height / 2, 0, FilterMode.Bilinear, RenderTextureFormat.R8);
+
+                    // Downscale depth
+                    rendererCommandBuffer.SetGlobalTexture("ScattererDepthCopy", oceanGbufferDepthTextureId);
+                    rendererCommandBuffer.Blit(null, downscaledOceanDepthIdentifier, downscaleDepthMaterial, 1);
+                    rendererCommandBuffer.SetGlobalTexture("ScattererDownscaledOceanDepthTexture", downscaledOceanDepthIdentifier);
+
+                    // Clear shadows RT
+                    rendererCommandBuffer.SetRenderTarget(shadowsTextureId);
+                    rendererCommandBuffer.ClearRenderTarget(false, true, Color.white);
                 }
 
-                // render regular shadows and eclipses here
+                // Rendertarget is already set by EVE or the above code
+                rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, OceanShaderPasses.DeferredShadows);  // Shadows and eclipses pass
             }
 
             // Draw ocean color using gbuffer, color only, we already have ocean depth
             rendererCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-            rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, 2);  // Main pass, render a quad and read all shading info from gbuffer
+            rendererCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, OceanShaderPasses.GbufferMainLightingPass);  // Main pass, render a quad and read all shading info from gbuffer
 
             // Blend the resolved camera depth buffer and the ocean depth buffer to get a final depth buffer to use for other effects
             rendererCommandBuffer.Blit(null, depthCopyRenderTexture, copyCameraDepthMaterial, 4);

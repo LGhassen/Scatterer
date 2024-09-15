@@ -263,11 +263,16 @@ namespace Scatterer
                 //m_oceanMaterial.SetPass (1); // This doesn't work it seems? check if main ocean is rendered twice, because it seems that all pases after 1 still render
 
                 // These work perfectly
+
+                // forward shader
                 m_oceanMaterial.SetShaderPassEnabled("MainPass", false);
-                m_oceanMaterial.SetShaderPassEnabled("GbufferWrite", false);
+
+                // deferred shader
                 m_oceanMaterial.SetShaderPassEnabled("VertexPositions", false);
+                m_oceanMaterial.SetShaderPassEnabled("GbufferWrite", false);
                 m_oceanMaterial.SetShaderPassEnabled("GbufferMainLightingPass", false);
-                m_oceanMaterial.SetShaderPassEnabled("DeferredReflections", false);
+                m_oceanMaterial.SetShaderPassEnabled("DeferredShadows", false);
+                
 
                 waterMeshRenderer.sharedMaterial = m_oceanMaterial;
                 waterMeshRenderer.material = m_oceanMaterial;
