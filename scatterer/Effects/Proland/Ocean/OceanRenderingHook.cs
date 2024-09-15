@@ -150,7 +150,11 @@ namespace Scatterer
             int oceanGbufferFoamTextureId = Shader.PropertyToID("oceanGbufferFoam");
 
             rendererCommandBuffer.GetTemporaryRT(oceanGbufferDepthTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.RFloat);
-            rendererCommandBuffer.GetTemporaryRT(oceanGbufferNormalsAndSigmaTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB2101010);
+            rendererCommandBuffer.GetTemporaryRT(oceanGbufferNormalsAndSigmaTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB2101010); // pack normals x and y in RG, sigma in B
+                                                                                                                                                             // and sign of normal z in A.
+                                                                                                                                                             // since these are signed worldNormals, we need the sign of z
+                                                                                                                                                             // which can't be recovered by the formula z = sqrt(1-x^2-y^2)
+
             rendererCommandBuffer.GetTemporaryRT(oceanGbufferFoamTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.R8);
 
             rendererCommandBuffer.SetRenderTarget(oceanGbufferDepthTextureId);
