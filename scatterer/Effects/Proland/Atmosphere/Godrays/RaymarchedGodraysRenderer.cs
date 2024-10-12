@@ -38,6 +38,8 @@ namespace Scatterer
         private bool godraysScreenShotModeEnabled = false;
         private int screenshotModeIterations = 8;
 
+        private static CameraEvent ScatteringOcclusionCameraEvent = CameraEvent.AfterImageEffectsOpaque;
+
         public RaymarchedGodraysRenderer()
         {
 
@@ -265,7 +267,7 @@ namespace Scatterer
                 commandBuffer.SetGlobalTexture(ShaderProperties._godrayDepthTexture_PROPERTY, RenderTargets[0]);
                 commandBuffer.SetGlobalTexture(ShaderProperties.downscaledGodrayDepth_PROPERTY, downscaledDepth);
 
-                targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, commandBuffer); // This renders after the ocean even though they are on the same event because it gets added later (OnPreRender vs OnWillRenderObject)
+                targetCamera.AddCommandBuffer(ScatteringOcclusionCameraEvent, commandBuffer); // This renders after the ocean even though they are on the same event because it gets added later (OnPreRender vs OnWillRenderObject)
             }
         }
 
@@ -300,7 +302,7 @@ namespace Scatterer
                 bool isRightEye = targetCamera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right;
                 var commandBuffer = godraysCommandBuffer[isRightEye];
 
-                targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, commandBuffer);
+                targetCamera.RemoveCommandBuffer(ScatteringOcclusionCameraEvent, commandBuffer);
 
                 previousP[isRightEye] = GL.GetGPUProjectionMatrix(VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera), false);
                 previousV[isRightEye] = VRUtils.GetViewMatrixForCamera(targetCamera);
@@ -323,10 +325,10 @@ namespace Scatterer
             { 
                 if (godraysCommandBuffer[true] != null)
                 {
-                    targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, godraysCommandBuffer[true]);
+                    targetCamera.RemoveCommandBuffer(ScatteringOcclusionCameraEvent, godraysCommandBuffer[true]);
                 }
 
-                targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, godraysCommandBuffer[false]);
+                targetCamera.RemoveCommandBuffer(ScatteringOcclusionCameraEvent, godraysCommandBuffer[false]);
             }
             
             if (downscaledDepth != null)
