@@ -38,7 +38,7 @@ namespace Scatterer
         private bool godraysScreenShotModeEnabled = false;
         private int screenshotModeIterations = 8;
 
-        private static CameraEvent ScatteringOcclusionCameraEvent = CameraEvent.AfterImageEffectsOpaque;
+        private static CameraEvent ScatteringOcclusionCameraEvent = CameraEvent.AfterForwardOpaque;
 
         public RaymarchedGodraysRenderer()
         {
