@@ -45,7 +45,9 @@ namespace Scatterer
         private Camera targetCamera;
         private CommandBuffer screenCopyCommandBuffer;
         private RenderTexture colorCopyRenderTexture;
-        
+
+        private static CameraEvent ScreenCopyCameraEvent = CameraEvent.AfterImageEffectsOpaque;
+
         public ScreenCopyCommandBuffer ()
         {
         }
@@ -108,7 +110,7 @@ namespace Scatterer
         {
             InitRT();
 
-            targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+            targetCamera.RemoveCommandBuffer(ScreenCopyCameraEvent, screenCopyCommandBuffer);
 
             if (!reflectionProbeMode)
             {
@@ -125,7 +127,7 @@ namespace Scatterer
                 if (hdrEnabled != targetCamera.allowHDR)
                     Reinit();
 
-                targetCamera.AddCommandBuffer(CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+                targetCamera.AddCommandBuffer(ScreenCopyCameraEvent, screenCopyCommandBuffer);
                 isEnabled = true;
             }
         }
@@ -140,7 +142,7 @@ namespace Scatterer
             {
                 if (isEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
                 {
-                    targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+                    targetCamera.RemoveCommandBuffer (ScreenCopyCameraEvent, screenCopyCommandBuffer);
                     isEnabled = false;
                 }
             }
@@ -152,7 +154,7 @@ namespace Scatterer
             {
                 if (screenCopyCommandBuffer != null)
                 {
-                    targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+                    targetCamera.RemoveCommandBuffer (ScreenCopyCameraEvent, screenCopyCommandBuffer);
                     colorCopyRenderTexture.Release();
                     isEnabled = false;
                 }
