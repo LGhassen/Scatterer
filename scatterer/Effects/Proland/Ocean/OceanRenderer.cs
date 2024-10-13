@@ -228,19 +228,23 @@ namespace Scatterer
 
             // If we use transparency/refractions, copy the screen here. With the addition of SSR and reflections (including reflection probe) being done later
             // we can no longer rely on the screen copy that was made for the sky at the beginning of the frame
-            // TODO: if statement?
             int oceanBackgroundScreenCopyTextureId = Shader.PropertyToID("oceanBackgroundScreenCopy");
-
-            oceanShadingCommandBuffer.GetTemporaryRT(oceanBackgroundScreenCopyTextureId, currentWidth, currentHeight, 0, FilterMode.Bilinear, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
-            oceanShadingCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, oceanBackgroundScreenCopyTextureId);
-            oceanShadingCommandBuffer.SetGlobalTexture("oceanBackgroundScreenCopy", oceanBackgroundScreenCopyTextureId);
+            if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions)
+            { 
+                oceanShadingCommandBuffer.GetTemporaryRT(oceanBackgroundScreenCopyTextureId, currentWidth, currentHeight, 0, FilterMode.Bilinear, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
+                oceanShadingCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, oceanBackgroundScreenCopyTextureId);
+                oceanShadingCommandBuffer.SetGlobalTexture("oceanBackgroundScreenCopy", oceanBackgroundScreenCopyTextureId);
+            }
 
             // Draw ocean color using gbuffer, color only, we already have ocean depth
             oceanShadingCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
             oceanShadingCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, OceanShaderPasses.GbufferMainLightingPass);  // Main pass, render a quad and read all shading info from gbuffer
 
             // Release the background/refractions screen copy which we no longer need
-            oceanShadingCommandBuffer.ReleaseTemporaryRT(oceanBackgroundScreenCopyTextureId);
+            if (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions)
+            {
+                oceanShadingCommandBuffer.ReleaseTemporaryRT(oceanBackgroundScreenCopyTextureId);
+            }
 
             // Blend the resolved camera depth buffer and the ocean depth buffer to get a final depth buffer to use for other effects
             oceanShadingCommandBuffer.Blit(null, depthCopyRenderTexture, copyCameraDepthMaterial, 4);
