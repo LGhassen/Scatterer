@@ -423,6 +423,12 @@ namespace Scatterer
         public static int PRECOMPUTED_SCTR_LUT_DIM_PROPERTY { get { return PRECOMPUTED_SCTR_LUT_DIM; } }
         private static int PRECOMPUTED_SCTR_LUT_DIM;
 
+        public static int ScattererOceanActiveOnCurrentCamera_PROPERTY { get { return ScattererOceanActiveOnCurrentCamera; } }
+        private static int ScattererOceanActiveOnCurrentCamera;
+
+        public static int ScattererLocalSkyActiveOnCurrentCamera_PROPERTY { get { return ScattererLocalSkyActiveOnCurrentCamera; } }
+        private static int ScattererLocalSkyActiveOnCurrentCamera;
+
         private void Awake()
         {
             Rg = Shader.PropertyToID("Rg");
@@ -609,6 +615,9 @@ namespace Scatterer
             TransmittanceAtlasScaleAndOffset = Shader.PropertyToID("TransmittanceAtlasScaleAndOffset");
             PRECOMPUTED_SCTR_LUT_DIM = Shader.PropertyToID("PRECOMPUTED_SCTR_LUT_DIM");
             AtmosphereAtlasDimensions = Shader.PropertyToID("AtmosphereAtlasDimensions");
+
+            ScattererOceanActiveOnCurrentCamera = Shader.PropertyToID("ScattererOceanActiveOnCurrentCamera");
+            ScattererLocalSkyActiveOnCurrentCamera = Shader.PropertyToID("ScattererLocalSkyActiveOnCurrentCamera");
         }
     }
 }

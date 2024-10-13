@@ -35,7 +35,7 @@ namespace Scatterer
         public ProlandManager prolandManager;
 
         public Material m_oceanMaterial;
-        OceanRenderingHook oceanRenderingHook;
+        OceanRenderer oceanRenderer;
 
         // Size of each grid in the projected grid. (number of pixels on screen)
         private int projectedGridPixelSize = 4;
@@ -117,8 +117,8 @@ namespace Scatterer
             oceanCameraPropertiesUpdater = waterGameObject.AddComponent<OceanCameraUpdateHook>(); // Why not just make this a general script you add to the waterGameObject?
             oceanCameraPropertiesUpdater.oceanNode = this;
 
-            oceanRenderingHook = waterGameObject.AddComponent<OceanRenderingHook>(); // Why not merge this with the above?
-            oceanRenderingHook.Init(m_oceanMaterial, waterMeshRenderer, vertCountX, vertCountY, oceanScreenGrid);
+            oceanRenderer = waterGameObject.AddComponent<OceanRenderer>(); // Why not merge this with the above?
+            oceanRenderer.Init(m_oceanMaterial, waterMeshRenderer, vertCountX, vertCountY, oceanScreenGrid);
 
             DisableEffectsChecker disableEffectsChecker = waterGameObject.AddComponent<DisableEffectsChecker>(); 
             disableEffectsChecker.manager = this.prolandManager;
@@ -387,13 +387,10 @@ namespace Scatterer
             }
             
 
-            Destroy(waterGameObject);
-                
-            UnityEngine.Object.Destroy(oceanScreenGrid);
-            
-            
-            UnityEngine.Object.Destroy(m_oceanMaterial);
-            UnityEngine.Object.Destroy(underwaterMaterial);
+            Destroy(waterGameObject);    
+            Destroy(oceanScreenGrid);
+            Destroy(m_oceanMaterial);
+            Destroy(underwaterMaterial);
             
             if (underwaterDimmingHook)
                 Component.Destroy(underwaterDimmingHook);
@@ -405,17 +402,17 @@ namespace Scatterer
 
             if (causticsShadowMaskModulator)
             {
-                UnityEngine.Object.Destroy (causticsShadowMaskModulator);
+                Destroy (causticsShadowMaskModulator);
             }
 
             if (causticsLightRaysRenderer)
             {
-                UnityEngine.Object.Destroy(causticsLightRaysRenderer);
+                Destroy(causticsLightRaysRenderer);
             }
 
-            if (oceanRenderingHook)
+            if (oceanRenderer)
             {
-                Component.Destroy(oceanRenderingHook);
+                Destroy(oceanRenderer);
             }
         }
 

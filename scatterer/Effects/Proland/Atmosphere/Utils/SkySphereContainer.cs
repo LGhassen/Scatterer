@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Scatterer
 {
@@ -37,6 +35,9 @@ namespace Scatterer
             
             skySphereMR = skySphereGO.GetComponent<MeshRenderer>();
             skySphereMR.sharedMaterial = material;
+
+            material.SetShaderPassEnabled("localSky", false); // Local pass will render manually via CommandBuffer
+
             Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", false);
 
             skySphereMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -68,7 +69,7 @@ namespace Scatterer
 
             Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", true);
 
-            skySphereGO.AddComponent<SkySphereScreenCopy> ().Init(skySphereMR.sharedMaterial);
+            skySphereGO.AddComponent<SkySphereLocalRenderer> ().Init(skySphereMR.sharedMaterial, skySphereMR, skySphereGO);
         }
         
         public void SwitchScaledMode()
@@ -83,7 +84,7 @@ namespace Scatterer
 
             Utils.EnableOrDisableShaderKeywords (skySphereMR.sharedMaterial, "LOCAL_SKY_ON", "LOCAL_SKY_OFF", false);
 
-            var scrCopy = skySphereGO.GetComponent<SkySphereScreenCopy> ();
+            var scrCopy = skySphereGO.GetComponent<SkySphereLocalRenderer> ();
 
             if (scrCopy)
                 UnityEngine.Component.Destroy (scrCopy);
@@ -117,18 +118,25 @@ namespace Scatterer
         }
     }
 
-    public class SkySphereScreenCopy : MonoBehaviour
+    public class SkySphereLocalRenderer : MonoBehaviour
     {
         Material material;
-        public void Init(Material material)
+        Renderer renderer;
+        GameObject skySphereGO;
+
+        Dictionary<Camera, SkySphereLocalCommandBuffer> cameraToLocalSkyCommandBuffer = new Dictionary<Camera, SkySphereLocalCommandBuffer>();
+
+        public void Init(Material material, Renderer renderer, GameObject skySphereGO)
         {
             this.material = material;
+            this.renderer = renderer;
+            this.skySphereGO = skySphereGO;
         }
 
         void OnWillRenderObject()
         {
             Camera cam = Camera.current;
-            
+
             if (!cam)
                 return;
 
@@ -141,7 +149,100 @@ namespace Scatterer
                 material.SetFloat(ShaderProperties.renderSkyOnCurrentCamera_PROPERTY, 1f);
             }
 
-            ScreenCopyCommandBuffer.EnableScreenCopyForFrame (cam);
+            ScreenCopyCommandBuffer.EnableScreenCopyForFrame(cam);
+
+            if (skySphereGO.layer == 15)
+            {
+                RenderLocalSkyForFrame(cam);
+            }
+        }
+
+        private void RenderLocalSkyForFrame(Camera cam)
+        {
+            if (cameraToLocalSkyCommandBuffer.ContainsKey(cam))
+            {
+                if (cameraToLocalSkyCommandBuffer[cam])
+                    cameraToLocalSkyCommandBuffer[cam].EnableForFrame();
+            }
+            else
+            {
+                SkySphereLocalCommandBuffer renderer = (SkySphereLocalCommandBuffer)cam.gameObject.AddComponent(typeof(SkySphereLocalCommandBuffer));
+                renderer.Init(cam, material, this.renderer);
+
+                cameraToLocalSkyCommandBuffer[cam] = renderer;
+            }
+        }
+
+        public void OnDestroy()
+        {
+            if (cameraToLocalSkyCommandBuffer != null)
+            {
+                foreach (var component in cameraToLocalSkyCommandBuffer.Values)
+                {
+                    Destroy(component);
+                }
+            }
+        }
+    }
+
+    public class SkySphereLocalCommandBuffer : MonoBehaviour
+    {
+        Camera targetCamera;
+        CommandBuffer commandBuffer;
+
+        bool isEnabled = false;
+
+        private static CameraEvent localSkySphereEvent = CameraEvent.BeforeImageEffectsOpaque;
+
+        public void Init(Camera targetCamera, Material material, Renderer renderer)
+        {
+            commandBuffer = new CommandBuffer();
+            commandBuffer.name = "Scatterer local sky commandBuffer";
+            commandBuffer.DrawRenderer(renderer, material, 0, 2); // Local pass
+
+            this.targetCamera = targetCamera;
+        }
+
+        public void EnableForFrame()
+        {
+            if (!isEnabled && commandBuffer != null)
+            {
+                targetCamera.AddCommandBuffer(localSkySphereEvent, commandBuffer);
+                isEnabled = true;
+            }
+        }
+
+        public void OnPreRender()
+        {
+            if (isEnabled)
+            {
+                // This is for the volumetrics compose pass, since the scatterer sky composes the clouds on the sky early
+                // For the SSR to see it
+                Shader.SetGlobalInt(ShaderProperties.ScattererLocalSkyActiveOnCurrentCamera_PROPERTY, 1);
+            }
+        }
+
+        public void OnPostRender()
+        {
+            if (isEnabled)
+            {
+                targetCamera.RemoveCommandBuffer(localSkySphereEvent, commandBuffer);
+                Shader.SetGlobalInt(ShaderProperties.ScattererLocalSkyActiveOnCurrentCamera_PROPERTY, 0);
+                isEnabled = false;
+            }
+        }
+
+        public void OnDestroy()
+        {
+            if (targetCamera != null && commandBuffer != null)
+            {
+                targetCamera.RemoveCommandBuffer(localSkySphereEvent, commandBuffer);
+            }
+
+            if (commandBuffer != null)
+            {
+                commandBuffer.Release();
+            }
         }
     }
 }

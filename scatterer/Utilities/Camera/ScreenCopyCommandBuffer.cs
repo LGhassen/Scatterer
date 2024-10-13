@@ -46,7 +46,7 @@ namespace Scatterer
         private CommandBuffer screenCopyCommandBuffer;
         private RenderTexture colorCopyRenderTexture;
 
-        private static CameraEvent ScreenCopyCameraEvent = CameraEvent.AfterImageEffectsOpaque;
+        private static CameraEvent ScreenCopyCameraEvent = CameraEvent.BeforeImageEffectsOpaque;
 
         public ScreenCopyCommandBuffer ()
         {

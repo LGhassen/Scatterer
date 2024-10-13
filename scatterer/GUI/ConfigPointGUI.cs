@@ -18,7 +18,6 @@ namespace Scatterer
         float volumetricsColorMultiplier=1f;
         
         float godrayStrength = 1.0f;
-        //        float godrayCloudAlphaThreshold = 0.1f;
         
         float extinctionThickness = 1f;
         float skyExtinctionTint = 1f;

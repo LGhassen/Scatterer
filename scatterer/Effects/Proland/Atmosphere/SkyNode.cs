@@ -14,14 +14,14 @@ namespace Scatterer
     {
         [Persistent] protected string name;
 
-        public float Rg;    //The radius of the planet
-        public float Rt;    //Radius of the atmosphere, calculated automatically from HR and HM and the scattering factors
+        public float Rg;    // The radius of the planet
+        public float Rt;    // Radius of the atmosphere, calculated automatically from HR and HM and the scattering factors
         [Persistent] public float atmosphereStartRadiusScale = 1f;
-        [Persistent] public float HR = 8.0f;    //Half heights for the atmosphere air density (HR) and particle density (HM), this is the height in km that half the particles are found below
+        [Persistent] public float HR = 8.0f;    // Half heights for the atmosphere air density (HR) and particle density (HM), this is the height in km that half the particles are found below
         [Persistent] public float HM = 1.2f;
         [Persistent] public Vector3 m_betaR = new Vector3 (5.8e-3f, 1.35e-2f, 3.31e-2f);
         [Persistent] public Vector3 BETA_MSca = new Vector3 (4e-3f, 4e-3f, 4e-3f); //scatter coefficient for mie
-        [Persistent] public float m_mieG = 0.85f; //Asymmetry factor for the mie phase function, a higher number means more light is scattered in the forward direction
+        [Persistent] public float m_mieG = 0.85f; // Asymmetry factor for the mie phase function, a higher number means more light is scattered in the forward direction
 
         [Persistent] public Vector3 ozoneAbsorption = new Vector3(0.0003426f, 0.0008298f, 0.000036f); // From Physically Based Sky, Atmosphere & Cloud Rendering in Frostbite (2016), these look better than other coefficients I found in the literature
         [Persistent] public float ozoneHeight = 25f;    // Ozone density is highest at ozoneHeight(km) and decreases linearly away from that altitude until ozoneFalloff(km), as per Bruneton (2017)
@@ -45,14 +45,13 @@ namespace Scatterer
 
         [Persistent] public float noonSunlightExtinctionStrength = 1f;
 
-        [Persistent] public float cloudColorMultiplier=3f;
-        [Persistent] public float cloudScatteringMultiplier=0.2f;
-        [Persistent] public float cloudSkyIrradianceMultiplier=0.05f;
+        [Persistent] public float cloudColorMultiplier = 3f;
+        [Persistent] public float cloudScatteringMultiplier = 0.2f;
+        [Persistent] public float cloudSkyIrradianceMultiplier = 0.05f;
         [Persistent] public float volumetricsColorMultiplier = 1f;
         [Persistent] public bool EVEIntegration_preserveCloudColors = false;
-//        [Persistent] public float godrayCloudAlphaThreshold = 0.25f;
 
-        [Persistent] public List < ConfigPoint > configPoints = new List < ConfigPoint > ();
+        [Persistent] public List<ConfigPoint> configPoints = new List<ConfigPoint>();
 
         [Persistent] public bool adjustScaledTexture = false;
 
@@ -64,13 +63,11 @@ namespace Scatterer
         [Persistent] public float scaledOceanContrastAdjust   = 1f;
         [Persistent] public float scaledOceanSaturationAdjust = 1f;
 
-        //Texture2D m_inscatter, m_irradiance, m_ozoneTransmittance = Texture2D.whiteTexture;
-
         Texture2D atmosphereAtlas; // Combine all the lookup tables to save texture slots on Mac
         Vector2 atlasDimensions;
         List<Vector4> atlasScaleAndOffsets = new List<Vector4> { Vector4.zero, Vector4.zero, Vector4.zero, Vector4.zero};
 
-        //Dimensions of the tables
+        // Dimensions of the tables
         const int TRANSMITTANCE_W = 512;
         const int TRANSMITTANCE_H = 128;
         Vector2 transmittanceTableDimensions = new Vector2(TRANSMITTANCE_W, TRANSMITTANCE_H);
