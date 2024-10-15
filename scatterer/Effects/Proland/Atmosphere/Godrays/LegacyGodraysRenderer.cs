@@ -115,6 +115,7 @@ namespace Scatterer
             inverseShadowMatricesBuffer = new ComputeBuffer (4, 16 * sizeof(float));
 
             shadowVolumeCB = new CommandBuffer();
+            shadowVolumeCB.name = "Scatterer legacy godrays CommandBuffer";
             shadowVolumeCB.SetComputeBufferParam (inverseShadowMatricesComputeShader, 0, "resultBuffer", inverseShadowMatricesBuffer);
             shadowVolumeCB.DispatchCompute(inverseShadowMatricesComputeShader, 0, 4, 1, 1);
 

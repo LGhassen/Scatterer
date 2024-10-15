@@ -118,6 +118,17 @@ namespace Scatterer
 
             godraysCommandBuffer = new FlipFlop<CommandBuffer>(VRUtils.VREnabled() ? new CommandBuffer() : null, new CommandBuffer());
 
+            if (godraysCommandBuffer[false] != null)
+            {
+                godraysCommandBuffer[false].name = "Scatterer raymarched godrays CommandBuffer";
+            }
+
+            if (godraysCommandBuffer[true] != null)
+            {
+                godraysCommandBuffer[true].name = "Scatterer raymarched godrays CommandBuffer";
+            }
+
+
             GameObject tempGO = GameObject.CreatePrimitive(PrimitiveType.Quad);
 
             mesh = Instantiate(tempGO.GetComponent<MeshFilter>().mesh);

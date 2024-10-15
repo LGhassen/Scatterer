@@ -66,6 +66,7 @@ namespace Scatterer
         private void CreateTextureCopyCB()
         {
             textureCopyBuffer = new CommandBuffer();
+            textureCopyBuffer.name = "Scatterer shadowMap copy CommandBuffer";
             textureCopyBuffer.CopyTexture (BuiltinRenderTextureType.CurrentActive, ShadowMapCopy.RenderTexture);
         }
 
@@ -81,6 +82,7 @@ namespace Scatterer
         private CommandBuffer CreateCopyCascadeCB(RenderTexture targetRt, float startX, float startY, float width, float height)
         {
             CommandBuffer cascadeCopyCB = new CommandBuffer();
+            cascadeCopyCB.name = "Scatterer shadowMap cascade copy CommandBuffer";
             Rect cascadeRect = new Rect ((int)(startX * targetRt.width), (int)(startY * targetRt.height), (int)(width * targetRt.width), (int)(height * targetRt.height));
 
             cascadeCopyCB.EnableScissorRect(cascadeRect);

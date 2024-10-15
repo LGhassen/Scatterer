@@ -85,6 +85,7 @@ namespace Scatterer
                                                                                                                     //only use depth mode when we force it for the IVA camera
 
             SMAACommandBuffer = new CommandBuffer ();
+            SMAACommandBuffer.name = $"Scatterer SMAA CommandBuffer for {targetCamera.name}";
         }
 
         static readonly int MainTextureProperty = Shader.PropertyToID("_MainTexture");

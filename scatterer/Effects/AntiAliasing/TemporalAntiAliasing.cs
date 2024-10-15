@@ -66,11 +66,7 @@ namespace Scatterer
             temporalAAMaterial.SetVector("_FinalBlendParameters", new Vector4(stationaryBlending, motionBlending, kMotionAmplification, 0f));
 
             temporalAACommandBuffer = new CommandBuffer ();
-        }
-
-        internal DepthTextureMode GetCameraFlags()
-        {
-            return DepthTextureMode.Depth | DepthTextureMode.MotionVectors;
+            temporalAACommandBuffer.name = $"Scatterer TAA CommandBuffer for {targetCamera.name}";
         }
         
         internal void ResetHistory()

@@ -176,7 +176,8 @@ namespace Scatterer
             compositeLightRaysMaterial.SetVector ("_Underwater_Color", oceanNodeIn.m_UnderwaterColor);
 
             commandBuffer = new CommandBuffer();
-            
+            commandBuffer.name = "Scatterer caustics renderer CommandBuffer";
+
             //downscale depth to 1/16
             commandBuffer.Blit(null, downscaledDepthRT, downscaleDepthMaterial, 0);
             commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT);

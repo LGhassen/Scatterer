@@ -115,10 +115,10 @@ namespace Scatterer
             CreateRenderTextures();
 
             oceanGbufferCommandBuffer = new CommandBuffer();
-            oceanGbufferCommandBuffer.name = "Ocean Geometry CommandBuffer";
+            oceanGbufferCommandBuffer.name = "Scatterer ocean Geometry CommandBuffer";
 
             oceanShadingCommandBuffer = new CommandBuffer();
-            oceanShadingCommandBuffer.name = "Ocean Shading CommandBuffer";
+            oceanShadingCommandBuffer.name = "Scatterer ocean Shading CommandBuffer";
 
             downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/DownscaleDepth")]);
 
