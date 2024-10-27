@@ -266,6 +266,7 @@ namespace Scatterer
                             Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanTransparencyAndRefractions, "Transparency and refractions");
                             Scatterer.Instance.mainSettings.oceanFoam = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanFoam, "Foam");
                             Scatterer.Instance.mainSettings.oceanSkyReflections = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanSkyReflections, "Sky reflections");
+                            Scatterer.Instance.mainSettings.oceanScreenSpaceReflections = GUILayout.Toggle(Scatterer.Instance.mainSettings.oceanScreenSpaceReflections, "Screenspace reflections (requires deferred)");
                             Scatterer.Instance.mainSettings.shadowsOnOcean = GUILayout.Toggle (Scatterer.Instance.mainSettings.shadowsOnOcean, "Surface receives shadows");
                             Scatterer.Instance.mainSettings.oceanPixelLights = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanPixelLights, "Secondary lights compatibility");
                             Scatterer.Instance.mainSettings.oceanCaustics = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCaustics, "Underwater caustics");

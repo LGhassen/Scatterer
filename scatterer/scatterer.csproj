@@ -111,6 +111,7 @@
     <Compile Include="Effects\Tonemapping\HableCurve.cs" />
     <Compile Include="GUI\GUIhandler.cs" />
     <Compile Include="GUI\ToolbarButton.cs" />
+    <Compile Include="Utilities\DeferredReflectionHandler.cs" />
     <Compile Include="Utilities\Math\MathUtility.cs" />
     <Compile Include="Utilities\Math\Matrix3x3.cs" />
     <Compile Include="Utilities\Math\Matrix3x3d.cs" />

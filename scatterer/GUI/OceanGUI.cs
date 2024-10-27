@@ -87,7 +87,7 @@ namespace Scatterer
             GUILayout.EndScrollView ();
             GUILayout.BeginHorizontal ();
             if (GUILayout.Button ("Apply settings/Rebuild ocean")) {
-                Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ().saveToConfigNode ();
+                Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ().SaveToConfigNode ();
                 Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.RebuildOcean ();
                 buildOceanGUI(selectedPlanet);
             }
@@ -98,7 +98,7 @@ namespace Scatterer
             {
                 if (GUILayout.Button ("Save ocean"))
                 {
-                    Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ().saveToConfigNode ();
+                    Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ().SaveToConfigNode ();
                 }
             }
             

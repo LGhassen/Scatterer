@@ -266,15 +266,17 @@ namespace Scatterer {
                 m_map4.GenerateMips();
 
                 //m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, m_oceanLevel);                
-                m_oceanMaterial.SetFloat (ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f);
-                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Variance_PROPERTY, m_varianceTexture);
+
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
                 m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
 
-                m_oceanMaterial.SetVector(ShaderProperties._VarianceMax_PROPERTY, m_varianceMax);
+                m_oceanMaterial.SetFloat(ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f); // doesn't need to be in update
+                m_oceanMaterial.SetTexture(ShaderProperties._Ocean_Variance_PROPERTY, m_varianceTexture); // doesn't need to be in update
+                m_oceanMaterial.SetVector(ShaderProperties._VarianceMax_PROPERTY, m_varianceMax); // doesn't need to be in update
+                Shader.SetGlobalVector(ShaderProperties._VarianceMax_PROPERTY, m_varianceMax); // this is just for the SSR atm
 
                 // don't need to be done every frame
                 if (waveInteractionHandler != null)

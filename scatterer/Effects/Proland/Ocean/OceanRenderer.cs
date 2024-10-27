@@ -58,7 +58,23 @@ namespace Scatterer
                 }
             }
         }
-        
+
+        public void RegisterOrUnregisterSSR(bool register)
+        {
+            foreach(var key in cameraToOceanCommandBuffer.Keys)
+            {
+                if (register && Scatterer.Instance.mainSettings.oceanScreenSpaceReflections)
+                {
+                    DeferredReflectionHandler.Instance.RegisterScattererOceanForCamera(key, out bool unused);
+                }
+                else
+                {
+                    DeferredReflectionHandler.Instance.UnregisterScattererOceanForCamera(key);
+                }
+            }
+        }
+
+
         public void OnDestroy ()
         {
             foreach (OceanCommandBuffer oceanCommandBuffer in cameraToOceanCommandBuffer.Values)
@@ -150,7 +166,7 @@ namespace Scatterer
             int oceanGbufferDepthTextureId = Shader.PropertyToID("oceanGbufferDepth");
             int oceanGbufferNormalsAndSigmaTextureId = Shader.PropertyToID("oceanGbufferNormalsAndSigma");
             int oceanGbufferFoamTextureId = Shader.PropertyToID("oceanGbufferFoam");
-            
+
             oceanGbufferCommandBuffer.GetTemporaryRT(oceanGbufferDepthTextureId, currentWidth, currentHeight, 0, FilterMode.Point, RenderTextureFormat.RFloat);
             oceanGbufferCommandBuffer.GetTemporaryRT(oceanGbufferNormalsAndSigmaTextureId, currentWidth, currentHeight, 0, FilterMode.Point, RenderTextureFormat.ARGB2101010); // pack normals x and y in RG, sigma in B
                                                                                                                                                              // and sign of normal z in A.
@@ -164,7 +180,7 @@ namespace Scatterer
 
             RenderTargetIdentifier[] oceanGbufferRenderTextures = { new RenderTargetIdentifier(oceanGbufferDepthTextureId),
                                                                     new RenderTargetIdentifier(oceanGbufferNormalsAndSigmaTextureId),
-                                                                    new RenderTargetIdentifier(oceanGbufferFoamTextureId)};
+                                                                    new RenderTargetIdentifier(oceanGbufferFoamTextureId) };
 
             int screenshotDepthTextureId = Shader.PropertyToID("screenshotDepthTextureId");
 
@@ -175,11 +191,13 @@ namespace Scatterer
             }
             else
             {
-                // In screenshot mode unity throws the error "Dimensions of color surface does not match dimensions of depth surface" because even though
-                // the built-in depth is resized for the screenshot, unity's API is stupid and still checks the original dimensions
-                // Get around this by doing our own depth texture for ztesting the ocean, so stupid.
+                // In screenshot mode unity throws the error "Dimensions of color surface does not match dimensions of depth surface"
+                // This is because even though unity renders a high-res screenshot, it doesn't appear to render internally at high resolution
+                // Instead it appears to jitter the viewport and render the scene multiple times, at the same resolution but with jittered positions
+                // to build a higher-res image. This is challenging to support correctly with nothing exposed in the API, for now most of my
+                // post-processing effects just render at higher internal resolution (but also means they render multiple times at high-res which is wasteful)
+                // Here just get around this by doing our own depth texture for ztesting the ocean which we copy from the built-in one.
                 // We won't have z-test on the ocean for later particles also but that's not an issue
-
                 oceanGbufferCommandBuffer.GetTemporaryRT(screenshotDepthTextureId, currentWidth, currentHeight, 32, FilterMode.Point, RenderTextureFormat.Depth);
                 oceanGbufferCommandBuffer.Blit(null, new RenderTargetIdentifier(screenshotDepthTextureId), copyCameraDepthMaterial, 0); // Init from resolved depth
 
@@ -189,11 +207,17 @@ namespace Scatterer
                 oceanGbufferCommandBuffer.ReleaseTemporaryRT(screenshotDepthTextureId);
             }
 
+            // Blend the resolved camera depth buffer and the ocean depth buffer to get a final depth buffer to use for other effects
+            oceanGbufferCommandBuffer.Blit(null, depthCopyRenderTexture, copyCameraDepthMaterial, 4);
+
+            // Expose the new depth buffer
+            oceanGbufferCommandBuffer.SetGlobalTexture("ScattererDepthCopy", depthCopyRenderTexture);
+
             oceanGbufferCommandBuffer.SetGlobalTexture("oceanGbufferDepth", oceanGbufferDepthTextureId);
             oceanGbufferCommandBuffer.SetGlobalTexture("oceanGbufferNormalsAndSigma", oceanGbufferNormalsAndSigmaTextureId);
             oceanGbufferCommandBuffer.SetGlobalTexture("oceanGbufferFoam", oceanGbufferFoamTextureId);
 
-            
+
             // If EVE has shadows to render it will provided a low-res ocean shadows texture and downscaled ocean depth "ScattererDownscaledOceanDepthTexture" for upscaling
             bool shadowsTextureCreated = Scatterer.Instance.EveReflectionHandler != null &&
                 Scatterer.Instance.EveReflectionHandler.AddEVEOceanShadowCommands(oceanGbufferCommandBuffer, currentWidth, currentHeight, oceanGbufferDepthTextureId);
@@ -226,6 +250,18 @@ namespace Scatterer
 
             oceanShadingCommandBuffer.Clear();
 
+            // Check if SSR is enabled on Deferred on the current camera
+            bool ssrEnabled = false;
+            bool halfResolutionSSR = false;
+
+            if (Scatterer.Instance.mainSettings.oceanScreenSpaceReflections)
+            {
+                ssrEnabled = DeferredReflectionHandler.Instance.RegisterScattererOceanForCamera(targetCamera, out halfResolutionSSR);
+            }
+
+            oceanShadingCommandBuffer.SetGlobalInt("useOceanSSR", ssrEnabled ? 1 : 0);
+            oceanShadingCommandBuffer.SetGlobalInt("halfResolutionOceanSSR", halfResolutionSSR ? 1 : 0);
+
             // If we use transparency/refractions, copy the screen here. With the addition of SSR and reflections (including reflection probe) being done later
             // we can no longer rely on the screen copy that was made for the sky at the beginning of the frame
             int oceanBackgroundScreenCopyTextureId = Shader.PropertyToID("oceanBackgroundScreenCopy");
@@ -245,13 +281,6 @@ namespace Scatterer
             {
                 oceanShadingCommandBuffer.ReleaseTemporaryRT(oceanBackgroundScreenCopyTextureId);
             }
-
-            // Blend the resolved camera depth buffer and the ocean depth buffer to get a final depth buffer to use for other effects
-            oceanShadingCommandBuffer.Blit(null, depthCopyRenderTexture, copyCameraDepthMaterial, 4);
-
-            // Expose the new depth buffer
-            oceanShadingCommandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-            oceanShadingCommandBuffer.SetGlobalTexture("ScattererDepthCopy", depthCopyRenderTexture);
         }
 
         private void GetTargetDimensions(out int screenWidth, out int screenHeight)

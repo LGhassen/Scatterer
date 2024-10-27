@@ -8,7 +8,7 @@ namespace Scatterer
 
         public void OnPostRender()
         {
-            oceanNode.applyUnderwaterDimming ();
+            oceanNode.ApplyUnderwaterDimming ();
         }
     }
 }

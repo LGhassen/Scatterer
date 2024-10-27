@@ -42,6 +42,9 @@ namespace Scatterer
         public bool oceanSkyReflections = true;
 
         [Persistent]
+        public bool oceanScreenSpaceReflections = true;
+
+        [Persistent]
         public bool oceanCaustics = true;
 
         [Persistent]
@@ -254,6 +257,7 @@ namespace Scatterer
 
                  OldConfig.shadowsOnOcean != shadowsOnOcean ||
                  OldConfig.oceanSkyReflections != oceanSkyReflections ||
+                 OldConfig.oceanScreenSpaceReflections != oceanScreenSpaceReflections ||
                  OldConfig.oceanCaustics != oceanCaustics ||
                  OldConfig.oceanLightRays != oceanLightRays ||
 

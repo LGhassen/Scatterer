@@ -35,7 +35,7 @@ namespace Scatterer
 
             if (manager.GetOceanNode())
             {
-                manager.GetOceanNode().setWaterMeshrenderersEnabled (false);
+                manager.GetOceanNode().SetWaterMeshrenderersEnabled (false);
             }
         }
 
@@ -45,7 +45,7 @@ namespace Scatterer
                 manager.GetSkyNode().localScatteringContainer.SetActivated (true);
 
             if (manager.GetOceanNode())
-                manager.GetOceanNode().setWaterMeshrenderersEnabled (true);
+                manager.GetOceanNode().SetWaterMeshrenderersEnabled (true);
         }
     }
 }

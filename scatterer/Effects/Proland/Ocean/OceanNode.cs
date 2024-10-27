@@ -58,6 +58,7 @@ namespace Scatterer
         public bool isUnderwater = false;
         bool underwaterMode = false;
         bool drawOcean = true;
+        bool inScaledSpace = false;
 
         Mesh oceanScreenGrid;
 
@@ -172,6 +173,12 @@ namespace Scatterer
 
         public virtual void UpdateNode ()
         {
+            if (inScaledSpace != prolandManager.skyNode.inScaledSpace)
+            {
+                inScaledSpace = prolandManager.skyNode.inScaledSpace;
+                oceanRenderer.RegisterOrUnregisterSSR(!inScaledSpace);
+            }
+
             drawOcean = !MapView.MapIsEnabled && !prolandManager.skyNode.inScaledSpace;
 
             waterMeshRenderer.enabled = drawOcean;
@@ -412,11 +419,12 @@ namespace Scatterer
 
             if (oceanRenderer)
             {
+                oceanRenderer.RegisterOrUnregisterSSR(false);
                 Destroy(oceanRenderer);
             }
         }
 
-        public void applyUnderwaterDimming () //called OnPostRender of scaledSpace Camera by hook, needs to be done before farCamera onPreCull where the color is set
+        public void ApplyUnderwaterDimming () //called OnPostRender of scaledSpace Camera by hook, needs to be done before farCamera onPreCull where the color is set
         {
             if (!MapView.MapIsEnabled && isUnderwater)
             {
@@ -435,7 +443,7 @@ namespace Scatterer
             }    
         }
 
-        public void saveToConfigNode ()
+        public void SaveToConfigNode ()
         {
             ConfigNode[] configNodeArray;
             bool found = false;
@@ -503,7 +511,7 @@ namespace Scatterer
             }
         }
 
-        public void setWaterMeshrenderersEnabled (bool enabled)
+        public void SetWaterMeshrenderersEnabled (bool enabled)
         {
             waterMeshRenderer.enabled = enabled && drawOcean;
         }
