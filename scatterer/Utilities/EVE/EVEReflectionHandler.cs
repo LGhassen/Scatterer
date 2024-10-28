@@ -14,7 +14,7 @@ namespace Scatterer
         public MeshRenderer Clouds2dMeshRenderer;
         public Material CloudShadowMaterial;
         public Material ParticleVolumetricsMaterial;
-        public Material RaymarchedVolumetricsMaterial;
+        public Material RaymarchedVolumetricsMaterial, ReflectionProbeRaymarchedVolumetricsMaterial;
     }
 
     public class EVEReflectionHandler
@@ -196,6 +196,18 @@ namespace Scatterer
                 }
 
                 cloudLayer.RaymarchedVolumetricsMaterial = RaymarchedMaterial;
+
+                Material RefProbeRaymarchedMaterial = layerRaymarchedVolume.GetType().GetField("reflectionProbeRaymarchedCloudMaterial", flags)?.GetValue(layerRaymarchedVolume) as Material;
+
+                if (RefProbeRaymarchedMaterial == null)
+                {
+                    Utils.LogDebug("Raymarched volumetric cloud has no reflection probe material on planet: " + body);
+                }
+                else
+                {
+                    cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial = RefProbeRaymarchedMaterial;
+                }
+
                 Utils.LogDebug("Raymarched volumetric cloud mapped for layer on planet: " + body);
             }
             catch (Exception stupid)

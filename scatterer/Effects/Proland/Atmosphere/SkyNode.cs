@@ -782,6 +782,12 @@ namespace Scatterer
                         InitUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
                         InitPostprocessMaterialUniforms(eveCloudLayer.RaymarchedVolumetricsMaterial);
                     }
+
+                    if (eveCloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial != null)
+                    {
+                        InitUniforms(eveCloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial);
+                        InitPostprocessMaterialUniforms(eveCloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial);
+                    }
                 }
             }
 
@@ -873,6 +879,13 @@ namespace Scatterer
                                 cloudLayer.RaymarchedVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
                                 cloudLayer.RaymarchedVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
                                 cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
+                            }
+
+                            if (cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial != null)
+                            {
+                                cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial.DisableKeyword("SCATTERER_ON");
+                                cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial.EnableKeyword("SCATTERER_OFF");
+                                cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
                             }
                         }
                     }
@@ -1407,6 +1420,15 @@ namespace Scatterer
                             cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("scattererEnabled", 1f);
                         }
 
+                        if (cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial != null)
+                        {
+                            Utils.EnableOrDisableShaderKeywords(cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial, "SCATTERER_ON", "SCATTERER_OFF", true);
+                            InitUniforms(cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial);
+                            InitPostprocessMaterialUniforms(cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial);
+                            cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial.SetFloat("isUnderwater", 0f);
+                            cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial.SetFloat("scattererEnabled", 1f);
+                        }
+
                         if (cloudLayer.CloudShadowMaterial != null)
                         {
                             Utils.EnableOrDisableShaderKeywords(cloudLayer.CloudShadowMaterial, "SCATTERER_OCEAN_ON", "SCATTERER_OCEAN_OFF", Scatterer.Instance.mainSettings.useOceanShaders && prolandManager.hasOcean);
@@ -1450,6 +1472,14 @@ namespace Scatterer
                         SetUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
                         UpdatePostProcessMaterialUniforms(cloudLayer.RaymarchedVolumetricsMaterial);
                         cloudLayer.RaymarchedVolumetricsMaterial.SetVector(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);    // not sure if needed
+                    }
+
+                    if (cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial != null)
+                    {
+                        InitUniforms(cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial); //temporary until I fix the issue with raymarched volumetrics
+                        SetUniforms(cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial);
+                        UpdatePostProcessMaterialUniforms(cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial);
+                        cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial.SetVector(ShaderProperties._PlanetWorldPos_PROPERTY, parentLocalTransform.position);    // not sure if needed
                     }
                 }
             }
@@ -1498,6 +1528,11 @@ namespace Scatterer
                     if (cloudLayer.RaymarchedVolumetricsMaterial != null)
                     {
                         cloudLayer.RaymarchedVolumetricsMaterial.SetFloat("isUnderwater", value ? 1f : 0f);
+                    }
+
+                    if (cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial != null)
+                    {
+                        cloudLayer.ReflectionProbeRaymarchedVolumetricsMaterial.SetFloat("isUnderwater", value ? 1f : 0f);
                     }
                 }
             }
