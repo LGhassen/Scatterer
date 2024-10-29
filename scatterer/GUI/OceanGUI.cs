@@ -1,13 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Runtime;
-using KSP;
-using KSP.IO;
 using UnityEngine;
 
 namespace Scatterer
@@ -21,7 +11,7 @@ namespace Scatterer
         {
         }
 
-        public void buildOceanGUI(int selectedPlanet)
+        public void BuildOceanGUI(int selectedPlanet)
         {
             OceanFFTgpu oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ();
             
@@ -40,13 +30,16 @@ namespace Scatterer
 
             oceanModularGUI.AddModule(new GUIModuleLabel(""));
             oceanModularGUI.AddModule (new GUIModuleLabel ("Surface shading settings"));
-            oceanModularGUI.AddModule(new GUIModuleVector3("Ocean Upwelling Color", oceanNode, "m_oceanUpwellingColor"));
-            oceanModularGUI.AddModule(new GUIModuleFloat("Transparency Depth", oceanNode, "transparencyDepth"));
+            oceanModularGUI.AddModule(new GUIModuleVector3("Ocean upwelling color", oceanNode, "m_oceanUpwellingColor"));
+            oceanModularGUI.AddModule(new GUIModuleFloat("Transparency depth", oceanNode, "transparencyDepth"));
             oceanModularGUI.AddModule(new GUIModuleFloat("Foam strength (m_whiteCapStr)", oceanNode, "m_whiteCapStr"));
             oceanModularGUI.AddModule(new GUIModuleFloat("Shore/shallow foam strength", oceanNode, "shoreFoam"));
             oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength (m_farWhiteCapStr)", oceanNode, "m_farWhiteCapStr"));
             oceanModularGUI.AddModule(new GUIModuleFloat("Far foam strength radius (alphaRadius)", oceanNode, "alphaRadius"));
             oceanModularGUI.AddModule(new GUIModuleFloat("Sky reflection strength", oceanNode, "skyReflectionStrength"));
+            oceanModularGUI.AddModule(new GUIModuleFloat("Sun reflection strength", oceanNode, "sunReflectionStrength"));
+            oceanModularGUI.AddModule(new GUIModuleVector3("Reflection color", oceanNode, "reflectionColor"));
+            oceanModularGUI.AddModule(new GUIModuleVector3("Ambient color", oceanNode, "ambientColor"));
 
             oceanModularGUI.AddModule(new GUIModuleLabel(""));
             oceanModularGUI.AddModule (new GUIModuleLabel ("Underwater shading Settings"));
@@ -76,7 +69,7 @@ namespace Scatterer
             oceanModularGUI.AddModule (new GUIModuleLabel ("Current mesh resolution (change from KSC menu): " + Scatterer.Instance.mainSettings.oceanMeshResolution.ToString ()));
         }
         
-        public void drawOceanGUI (int selectedPlanet)
+        public void DrawOceanGUI (int selectedPlanet)
         {
             OceanFFTgpu oceanNode = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ();
             //GUItoggle("Toggle ocean", ref stockOcean);
@@ -89,7 +82,7 @@ namespace Scatterer
             if (GUILayout.Button ("Apply settings/Rebuild ocean")) {
                 Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ().SaveToConfigNode ();
                 Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.RebuildOcean ();
-                buildOceanGUI(selectedPlanet);
+                BuildOceanGUI(selectedPlanet);
             }
             GUILayout.EndHorizontal ();
             GUILayout.BeginHorizontal ();
@@ -104,7 +97,7 @@ namespace Scatterer
             
             if (GUILayout.Button ("Load ocean")) {
                 Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode ().LoadFromConfigNode ();
-                buildOceanGUI (selectedPlanet);
+                BuildOceanGUI (selectedPlanet);
             }
             GUILayout.EndHorizontal ();
             GUILayout.BeginHorizontal ();

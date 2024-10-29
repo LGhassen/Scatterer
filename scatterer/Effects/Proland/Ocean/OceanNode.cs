@@ -52,6 +52,9 @@ namespace Scatterer
         [Persistent] public float darknessDepth = 1000f;
         [Persistent] public float refractionIndex = 1.33f;
         [Persistent] public float skyReflectionStrength = 1f;
+        [Persistent] public float sunReflectionStrength = 1f;
+        [Persistent] public Vector3 reflectionColor = Vector3.one;
+        [Persistent] public Vector3 ambientColor = Vector3.one;
         [Persistent] public Vector3 m_oceanUpwellingColor = new Vector3(0.0039f, 0.0156f, 0.047f);
         [Persistent] public Vector3 m_UnderwaterColor = new Vector3(0.1f, 0.75f, 0.8f);
 
@@ -337,6 +340,11 @@ namespace Scatterer
             m_oceanMaterial.SetFloat (ShaderProperties.alphaRadius_PROPERTY, alphaRadius);
 
             m_oceanMaterial.SetFloat ("skyReflectionStrength", skyReflectionStrength);
+            m_oceanMaterial.SetFloat("sunReflectionStrength", sunReflectionStrength);
+
+            m_oceanMaterial.SetVector("reflectionColor", reflectionColor);
+            m_oceanMaterial.SetVector("ambientColor", ambientColor);
+
             m_oceanMaterial.SetFloat ("refractionIndex", refractionIndex); //these don't need to be updated every frame
             m_oceanMaterial.SetFloat ("transparencyDepth", transparencyDepth);
             m_oceanMaterial.SetFloat ("darknessDepth", darknessDepth);

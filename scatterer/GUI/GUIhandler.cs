@@ -140,7 +140,7 @@ namespace Scatterer
                         }
                         else
                         {
-                            oceanGUI.drawOceanGUI (selectedPlanet);
+                            oceanGUI.DrawOceanGUI (selectedPlanet);
                         }
                     }
                 
@@ -172,7 +172,7 @@ namespace Scatterer
 
                     if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
                     {
-                        oceanGUI.buildOceanGUI (selectedPlanet);
+                        oceanGUI.BuildOceanGUI (selectedPlanet);
                     }
                 }
             }
@@ -185,7 +185,7 @@ namespace Scatterer
 
                     if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].active && Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].hasOcean)
                     {
-                        oceanGUI.buildOceanGUI (selectedPlanet);
+                        oceanGUI.BuildOceanGUI (selectedPlanet);
                     }
                 }
             }
@@ -258,7 +258,7 @@ namespace Scatterer
 
             if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.GetOceanNode())
             {
-                oceanGUI.buildOceanGUI (planetIndex);
+                oceanGUI.BuildOceanGUI (planetIndex);
             }
         }
     }
