@@ -207,12 +207,6 @@ namespace Scatterer
                 oceanGbufferCommandBuffer.ReleaseTemporaryRT(screenshotDepthTextureId);
             }
 
-            // Blend the resolved camera depth buffer and the ocean depth buffer to get a final depth buffer to use for other effects
-            oceanGbufferCommandBuffer.Blit(null, depthCopyRenderTexture, copyCameraDepthMaterial, 4);
-
-            // Expose the new depth buffer
-            oceanGbufferCommandBuffer.SetGlobalTexture("ScattererDepthCopy", depthCopyRenderTexture);
-
             oceanGbufferCommandBuffer.SetGlobalTexture("oceanGbufferDepth", oceanGbufferDepthTextureId);
             oceanGbufferCommandBuffer.SetGlobalTexture("oceanGbufferNormalsAndSigma", oceanGbufferNormalsAndSigmaTextureId);
             oceanGbufferCommandBuffer.SetGlobalTexture("oceanGbufferFoam", oceanGbufferFoamTextureId);
@@ -236,7 +230,7 @@ namespace Scatterer
 
                     // Downscale depth
                     oceanGbufferCommandBuffer.SetGlobalTexture("ScattererDepthCopy", oceanGbufferDepthTextureId);
-                    oceanGbufferCommandBuffer.Blit(null, downscaledOceanDepthIdentifier, downscaleDepthMaterial, 1);
+                    oceanGbufferCommandBuffer.Blit(null, downscaledOceanDepthIdentifier, downscaleDepthMaterial, 1); // This conflicts with the global ScattererDepthCopy used for depth buffer  scattering
                     oceanGbufferCommandBuffer.SetGlobalTexture("ScattererDownscaledOceanDepthTexture", downscaledOceanDepthIdentifier);
 
                     // Clear shadows RT
@@ -247,6 +241,12 @@ namespace Scatterer
                 // Rendertarget is already set by EVE or the above code
                 oceanGbufferCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, OceanShaderPasses.DeferredShadows);  // Shadows and eclipses pass
             }
+
+            // Blend the resolved camera depth buffer and the ocean depth buffer to get a final depth buffer to use for other effects
+            oceanGbufferCommandBuffer.Blit(null, depthCopyRenderTexture, copyCameraDepthMaterial, 4);
+
+            // Expose the new depth buffer
+            oceanGbufferCommandBuffer.SetGlobalTexture("ScattererDepthCopy", depthCopyRenderTexture);
 
             oceanShadingCommandBuffer.Clear();
 
