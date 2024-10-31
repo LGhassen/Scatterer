@@ -23,6 +23,7 @@
  *
  *
  */
+using CameraFXModules;
 using UnityEngine;
 
 namespace Scatterer
@@ -356,6 +357,31 @@ namespace Scatterer
             m_oceanMaterial.SetFloat("_ScattererCameraOverlap",camerasOverlap);
 
             m_oceanMaterial.SetFloat ("offScreenVertexStretch", offScreenVertexStretch);
+
+
+            ReflectionProbe probeComponent = null;
+            var flightCamera = FlightCamera.fetch;
+            if (flightCamera != null)
+            {
+                var reflectionProbe = flightCamera.reflectionProbe;
+                if (reflectionProbe != null)
+                {
+                    probeComponent = reflectionProbe.probeComponent;
+                }
+            }
+
+            if (HighLogic.LoadedScene == GameScenes.SPACECENTER && DeferredReflectionHandler.Instance.DeferredInstalled)
+            {
+                m_oceanMaterial.SetInt("reflectionProbeOceanAmbient", 1);
+            }
+            else if (probeComponent != null)
+            {
+                m_oceanMaterial.SetInt("reflectionProbeOceanAmbient", probeComponent.enabled ? 1 : 0);
+            }
+            else
+            { 
+                m_oceanMaterial.SetInt("reflectionProbeOceanAmbient", 0);
+            }
         }
         
         void InitUnderwaterMaterial ()
