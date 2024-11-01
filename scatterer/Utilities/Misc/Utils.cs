@@ -243,6 +243,11 @@ namespace Scatterer
 			}
 			*/
 		}
-	}
+
+        public static float ReplaceNaNWithZero(float val)
+        {
+            return float.IsNaN(val) ? 0f : val;
+        }
+    }
 }
 

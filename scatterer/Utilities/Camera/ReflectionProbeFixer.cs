@@ -61,9 +61,9 @@ namespace Scatterer
             // The reflectionProbe camera has manually set viewMatrix and doesn't use the transforms, we want to keep everything the same except for position
             Matrix4x4 viewMatrix = scaledCamera.worldToCameraMatrix;
 
-            viewMatrix.m03 = ScaledCamera.Instance.galaxyCamera.transform.position.x;
-            viewMatrix.m13 = ScaledCamera.Instance.galaxyCamera.transform.position.y;
-            viewMatrix.m23 = ScaledCamera.Instance.galaxyCamera.transform.position.z;
+            viewMatrix.m03 = Utils.ReplaceNaNWithZero(ScaledCamera.Instance.galaxyCamera.transform.position.x);
+            viewMatrix.m13 = Utils.ReplaceNaNWithZero(ScaledCamera.Instance.galaxyCamera.transform.position.y);
+            viewMatrix.m23 = Utils.ReplaceNaNWithZero(ScaledCamera.Instance.galaxyCamera.transform.position.z);
 
             scaledCamera.worldToCameraMatrix = viewMatrix;
 
@@ -74,9 +74,9 @@ namespace Scatterer
             scaledCamera.clearFlags = CameraClearFlags.Depth;
             scaledCamera.cullingMask = (1<<9) | (1<<10);
 
-            viewMatrix.m03 = Scatterer.Instance.scaledSpaceCamera.transform.position.x;
-            viewMatrix.m13 = Scatterer.Instance.scaledSpaceCamera.transform.position.y;
-            viewMatrix.m23 = Scatterer.Instance.scaledSpaceCamera.transform.position.z;
+            viewMatrix.m03 = Utils.ReplaceNaNWithZero(Scatterer.Instance.scaledSpaceCamera.transform.position.x);
+            viewMatrix.m13 = Utils.ReplaceNaNWithZero(Scatterer.Instance.scaledSpaceCamera.transform.position.y);
+            viewMatrix.m23 = Utils.ReplaceNaNWithZero(Scatterer.Instance.scaledSpaceCamera.transform.position.z);
 
             scaledCamera.worldToCameraMatrix = viewMatrix;
 
