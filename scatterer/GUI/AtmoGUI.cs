@@ -59,7 +59,7 @@ namespace Scatterer
             GUILayout.TextField((AtmoPreprocessor.CalculateRt (Rg*atmosphereStartRadiusScale, HR, HM, m_betaR, BETA_MSca, useOzone, ozoneHeight, ozoneFalloff)-Rg*atmosphereStartRadiusScale).ToString());
             GUILayout.EndHorizontal();
 
-            GUIvector3NoButton ("Rayleigh Scattering - Beta_R:", ref m_betaR);
+            GUIvector3NoButton ("Rayleigh Scattering Coefficients - in km^-1:", ref m_betaR);
             
             GUILayout.BeginHorizontal();
             GUILayout.Label("Thicken");
@@ -71,7 +71,7 @@ namespace Scatterer
             }
             GUILayout.EndHorizontal();
 
-            GUIvector3NoButton ("Mie Scattering - Beta_MSca:", ref BETA_MSca);
+            GUIvector3NoButton ("Mie Scattering Coefficients - in km^-1:", ref BETA_MSca);
             
             GUILayout.BeginHorizontal();
             GUILayout.Label("Thicken");
@@ -106,7 +106,7 @@ namespace Scatterer
             HM=(float)(float.Parse(GUILayout.TextField(HM.ToString())));
             GUILayout.EndHorizontal();
 
-            GUIvector3NoButton("Ozone absorption:", ref ozoneAbsorption);
+            GUIvector3NoButton("Ozone absorption - in km^-1:", ref ozoneAbsorption);
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Thicken");
