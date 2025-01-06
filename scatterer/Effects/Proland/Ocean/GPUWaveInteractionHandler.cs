@@ -31,16 +31,6 @@ namespace Scatterer
 
             findHeightsShader = ShaderReplacer.Instance.LoadedComputeShaders["FindHeights"];
 
-            if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance)
-            {
-                PhysicsGlobals.BuoyancyCrashToleranceMult = Scatterer.Instance.mainSettings.buoyancyCrashToleranceMultOverride;
-            }
-
-            if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag)
-            {
-                PhysicsGlobals.BuoyancyWaterDragTimer = double.NegativeInfinity; // this is needed to avoid the excessive drag that is applied when first hitting the water and which basically kills seaplanes with the smallest waves
-            }
-
             if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
             {
                 GameEvents.onGamePause.Add(ForcePauseMenuSaving);
@@ -169,19 +159,23 @@ namespace Scatterer
                 waterHeightAtCameraPosition = heights[heights.Length - 1];
             }
 
+            float waveHeightFactor = 1f;
+
+            if (FlightGlobals.ActiveVessel != null)
+            {
+                var speed = FlightGlobals.ActiveVessel.GetSrfVelocity().magnitude;
+
+                // Fade out wave heights for craft going fast, makes seaplanes workable the dumb way
+                waveHeightFactor = Mathf.Lerp(1f, 0f, Mathf.Min(speed / 50f, 1f));
+            }
+
             if (partsBuoyancies!=null)
             {
                 for (int i = 0; i < partsBuoyancies.Count; i++)
                 {
                     if (partsBuoyancies[i] != null)
                     {
-                        partsBuoyancies[i].waterLevel = heights[i];
-
-                        if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag)
-                        { 
-                            partsBuoyancies[i].wasSplashed = true;            // changing these is also need so the game doesn't apply excessive drag on splashes which makes seaplanes unusable
-                            partsBuoyancies[i].splashed = true;
-                        }
+                        partsBuoyancies[i].waterLevel = heights[i] * waveHeightFactor;
                     }
                 }
             }

@@ -279,14 +279,6 @@ namespace Scatterer
                                     GUILayout.Label ("\t");
                                     GUILayout.BeginVertical ();
                                     {
-                                        Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance, "Override water crash tolerance");
-                                        if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideWaterCrashTolerance) {
-                                            GUILayout.BeginHorizontal ();
-                                            GUILayout.Label ("Crash tolerance (default is 1.2)");
-                                            Scatterer.Instance.mainSettings.buoyancyCrashToleranceMultOverride = float.Parse (GUILayout.TextField (Scatterer.Instance.mainSettings.buoyancyCrashToleranceMultOverride.ToString ("00.00")));
-                                            GUILayout.EndHorizontal ();
-                                        }
-                                        Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideDrag, "Override water drag");
                                         Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity = GUILayout.Toggle (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity, "Override max water recovery velocity");
                                         if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity) {
                                             GUILayout.BeginHorizontal ();

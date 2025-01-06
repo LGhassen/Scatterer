@@ -54,15 +54,6 @@ namespace Scatterer
         public bool oceanCraftWaveInteractions = true;
 
         [Persistent]
-        public bool oceanCraftWaveInteractionsOverrideWaterCrashTolerance = true;
-        
-        [Persistent]
-        public float buoyancyCrashToleranceMultOverride=1.2f * 3f;
-
-        [Persistent]
-        public bool oceanCraftWaveInteractionsOverrideDrag = true;
-
-        [Persistent]
         public bool oceanCraftWaveInteractionsOverrideRecoveryVelocity = true;
 
         [Persistent]
@@ -262,9 +253,6 @@ namespace Scatterer
                  OldConfig.oceanLightRays != oceanLightRays ||
 
                  OldConfig.oceanCraftWaveInteractions != oceanCraftWaveInteractions ||
-                 OldConfig.oceanCraftWaveInteractionsOverrideWaterCrashTolerance != oceanCraftWaveInteractionsOverrideWaterCrashTolerance || 
-                 OldConfig.buoyancyCrashToleranceMultOverride != buoyancyCrashToleranceMultOverride || 
-                 OldConfig.oceanCraftWaveInteractionsOverrideDrag != oceanCraftWaveInteractionsOverrideDrag || 
                  OldConfig.oceanCraftWaveInteractionsOverrideRecoveryVelocity != oceanCraftWaveInteractionsOverrideRecoveryVelocity || 
                  OldConfig.waterMaxRecoveryVelocity != waterMaxRecoveryVelocity || 
 
