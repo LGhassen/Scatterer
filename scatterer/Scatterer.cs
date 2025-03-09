@@ -35,7 +35,7 @@ namespace Scatterer
         DepthToDistanceCommandBuffer farDepthCommandbuffer, nearDepthCommandbuffer;
         public DepthPrePassMerger nearDepthPassMerger;
         
-        public Light sunLight, scaledSpaceSunLight, mainMenuLight;
+        public Light sunLight, scaledSpaceSunLight, mainMenuLight, ivaLight;
         public Light[] lights;
         public Camera farCamera, scaledSpaceCamera, nearCamera;
         static float originalShadowDistance = 0f;
@@ -240,6 +240,8 @@ namespace Scatterer
                 MapView.MapIsEnabled = false;
             }
 
+            GameEvents.OnCameraChange.Add(RegisterIVACameraAndLightForSunlightModulator);
+
             coreInitiated = true;
 
             Utils.LogDebug("Core setup done");
@@ -286,6 +288,7 @@ namespace Scatterer
         {
             GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
             GameEvents.OnCameraChange.Remove(AddTAAToInternalCamera);
+            GameEvents.OnCameraChange.Remove(RegisterIVACameraAndLightForSunlightModulator);
 
             if (isActive)
             {
@@ -671,6 +674,22 @@ namespace Scatterer
                 {
                     Component.Destroy(ivaSmaaScript);
                 }
+            }
+        }
+
+        public void RegisterIVACameraAndLightForSunlightModulator(CameraManager.CameraMode cameraMode)
+        {
+            if (cameraMode == CameraManager.CameraMode.IVA && InternalCamera.Instance != null)
+            {
+                var ivaSun = InternalSpace.Instance.transform.Find("IVASun");
+
+                if (ivaSun != null)
+                {
+                    ivaLight = ivaSun.GetComponent<Light>();
+                }
+
+                Camera internalCamera = InternalCamera.Instance.GetComponentInChildren<Camera>();
+                SunlightModulatorsManager.AddRenderingHookToCamera(internalCamera);
             }
         }
 

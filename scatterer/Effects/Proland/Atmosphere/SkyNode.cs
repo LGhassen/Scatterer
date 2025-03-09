@@ -1274,6 +1274,11 @@ namespace Scatterer
 
             SunlightModulatorsManager.Instance.ModulateByColor (prolandManager.mainSunLight, extinction);
 
+            if (Scatterer.Instance.ivaLight != null)
+            {
+                SunlightModulatorsManager.Instance.ModulateByColor(Scatterer.Instance.ivaLight, extinction);
+            }
+
             foreach(SecondarySun secondarySun in prolandManager.secondarySuns)
             {
                 if (secondarySun.sunLight)
@@ -1334,6 +1339,11 @@ namespace Scatterer
             }
 
             SunlightModulatorsManager.Instance.ModulateByAttenuation(prolandManager.mainSunLight, eclipseTerm);
+
+            if (Scatterer.Instance.ivaLight != null)
+            {
+                SunlightModulatorsManager.Instance.ModulateByAttenuation(Scatterer.Instance.ivaLight, eclipseTerm);
+            }
         }
 
         void InitKopernicusRings ()
