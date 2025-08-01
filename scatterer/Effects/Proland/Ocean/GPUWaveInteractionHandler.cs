@@ -24,12 +24,21 @@ namespace Scatterer
         private float maxWaveInteractionShipAltitude = 500.0f;
         private bool isHomeworld = false;
 
+        public const int WAVE_HEIGHT_GROUP_SIZE = 64;
+        public const int BUFFER_SIZE = 4096;
+
         public GPUWaveInteractionHandler(float inMaxWaveInteractionShipAltitude, bool inIsHomeworld)
         {
             maxWaveInteractionShipAltitude = inMaxWaveInteractionShipAltitude;
             isHomeworld = inIsHomeworld;
 
             findHeightsShader = ShaderReplacer.Instance.LoadedComputeShaders["FindHeights"];
+
+            positionsBuffer = new ComputeBuffer(BUFFER_SIZE, 2 * sizeof(float));
+            heightsBuffer = new ComputeBuffer(BUFFER_SIZE, sizeof(float));
+
+            findHeightsShader.SetBuffer(0, "positions", positionsBuffer);
+            findHeightsShader.SetBuffer(0, "result", heightsBuffer);
 
             if (Scatterer.Instance.mainSettings.oceanCraftWaveInteractionsOverrideRecoveryVelocity)
             {
@@ -124,7 +133,7 @@ namespace Scatterer
         {
             foreach (Vessel vessel in FlightGlobals.VesselsLoaded)
             {
-                if (vessel.altitude <= Mathf.Abs(maxWaveInteractionShipAltitude))
+                if (vessel.altitude <= maxWaveInteractionShipAltitude)
                 {
                     foreach (Part part in vessel.parts)
                     {
@@ -171,7 +180,7 @@ namespace Scatterer
 
             if (partsBuoyancies!=null)
             {
-                for (int i = 0; i < partsBuoyancies.Count; i++)
+                for (int i = 0; i < Mathf.Min(partsBuoyancies.Count, BUFFER_SIZE); i++)
                 {
                     if (partsBuoyancies[i] != null)
                     {
@@ -191,13 +200,11 @@ namespace Scatterer
             int size = positionsList.Count;
             if (size > 0)
             {
-                positionsBuffer = new ComputeBuffer(size, 2 * sizeof(float));
-                positionsBuffer.SetData(positionsList);
-                findHeightsShader.SetBuffer(0, "positions", positionsBuffer);
-                heightsBuffer = new ComputeBuffer(size, sizeof(float));
-                findHeightsShader.SetBuffer(0, "result", heightsBuffer);
+                positionsBuffer.SetData(positionsList, 0, 0, size);
+                findHeightsShader.SetInt(ShaderProperties.positionsCount_PROPERTY, size);
 
-                findHeightsShader.Dispatch(0, size, 1, 1); //worry about figuring out threads and groups later
+                var threadGroups = (int)Mathf.Ceil((float)size / WAVE_HEIGHT_GROUP_SIZE);
+                findHeightsShader.Dispatch(0, threadGroups, 1, 1);
 
                 AsyncGPUReadback.Request(heightsBuffer, OnCompletePartHeightsReadback);
                 frameLatencyCounter = 1;
@@ -215,9 +222,6 @@ namespace Scatterer
 
             heights = request.GetData<float>().ToArray();
             heightsRequestInProgress = false;
-
-            positionsBuffer.Dispose();
-            heightsBuffer.Dispose();
         }
 
         public void ForcePauseMenuSaving()
@@ -243,6 +247,9 @@ namespace Scatterer
         {
             GameEvents.onGamePause.Remove(ForcePauseMenuSaving);
             GameEvents.onGameUnpause.Remove(UnPause);
+
+            positionsBuffer.Dispose();
+            heightsBuffer.Dispose();
         }
     }
 }

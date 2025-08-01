@@ -429,6 +429,9 @@ namespace Scatterer
         public static int ScattererLocalSkyActiveOnCurrentCamera_PROPERTY { get { return ScattererLocalSkyActiveOnCurrentCamera; } }
         private static int ScattererLocalSkyActiveOnCurrentCamera;
 
+        public static int positionsCount_PROPERTY { get { return positionsCount; } }
+        private static int positionsCount;
+
         private void Awake()
         {
             Rg = Shader.PropertyToID("Rg");
@@ -618,6 +621,8 @@ namespace Scatterer
 
             ScattererOceanActiveOnCurrentCamera = Shader.PropertyToID("ScattererOceanActiveOnCurrentCamera");
             ScattererLocalSkyActiveOnCurrentCamera = Shader.PropertyToID("ScattererLocalSkyActiveOnCurrentCamera");
+
+            positionsCount = Shader.PropertyToID("positionsCount");
         }
     }
 }
