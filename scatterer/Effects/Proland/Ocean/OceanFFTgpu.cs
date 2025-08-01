@@ -688,8 +688,6 @@ namespace Scatterer {
             m_varianceTexture.Apply();
         }
 
-
-
         void CreateWTable()
         {
             //Some values need for the InitWaveSpectrum function can be precomputed
@@ -725,36 +723,8 @@ namespace Scatterer {
 
             m_writeFloat.WriteIntoRenderTexture(m_WTable, 4, table);
         }
-        
-        Vector2 GetSpectrum(float t, float w, float s0x, float s0y, float s0cx, float s0cy)
-        {
-            float c = Mathf.Cos(w * t);
-            float s = Mathf.Sin(w * t);
-            return new Vector2((s0x + s0cx) * c - (s0y + s0cy) * s, (s0x - s0cx) * s + (s0y - s0cy) * c);
-        }
-        
-        Vector2 COMPLEX(Vector2 z)
-        {
-            return new Vector2(-z.y, z.x); // returns i times z (complex number)
-        }
-        
-        int BitReverse(int i)
-        {
-            int j = i;
-            int Sum = 0;
-            int W = 1;
-            int M = m_fourierGridSize / 2;
-            while (M != 0)
-            {
-                j = ((i & M) > M - 1) ? 1 : 0;
-                Sum += j * W;
-                W *= 2;
-                M /= 2;
-            }
-            return Sum;
-        }
 
-        //FixedUpdate is responsible for physics, apply part displacement here
+        // FixedUpdate is responsible for physics, apply part displacement here
         public void FixedUpdate()
         {
             if (waveInteractionHandler != null && prolandManager.GetSkyNode().simulateOceanInteraction)

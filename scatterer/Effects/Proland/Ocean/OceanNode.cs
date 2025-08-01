@@ -296,6 +296,8 @@ namespace Scatterer
             waterMeshRenderer.receiveShadows = Scatterer.Instance.mainSettings.shadowsOnOcean && (QualitySettings.shadows != ShadowQuality.Disable);
             waterMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             waterMeshRenderer.enabled = true;
+
+            m_oceanMaterial.SetVector("OceanVertCounts", new Vector2(vertCountX, vertCountY));
         }
 
         void InitOceanMaterial ()
