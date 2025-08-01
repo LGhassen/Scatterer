@@ -2,12 +2,8 @@
 using UnityEngine;
 
 public class Matrix3x3d  
-{
-    //Members varibles
-    
+{   
     public double[,] m = new double[3,3];
-    
-    //Constructors
     
     public Matrix3x3d() {}
     
@@ -30,11 +26,10 @@ public class Matrix3x3d
     {
         System.Array.Copy(m.m, this.m, 9);
     }
-    
-    //Operator Overloads
+
     
     public static Matrix3x3d operator +(Matrix3x3d m1, Matrix3x3d m2) 
-       {
+    {
         Matrix3x3d kSum = new Matrix3x3d();
         for (int iRow = 0; iRow < 3; iRow++) {
             for (int iCol = 0; iCol < 3; iCol++) {
@@ -42,10 +37,10 @@ public class Matrix3x3d
             }
         }
         return kSum;
-       }
+    }
     
     public static Matrix3x3d operator -(Matrix3x3d m1, Matrix3x3d m2) 
-       {
+    {
         Matrix3x3d kSum = new Matrix3x3d();
         for (int iRow = 0; iRow < 3; iRow++) {
             for (int iCol = 0; iCol < 3; iCol++) {
@@ -53,10 +48,10 @@ public class Matrix3x3d
             }
         }
         return kSum;
-       }
+    }
     
     public static Matrix3x3d operator *(Matrix3x3d m1, Matrix3x3d m2) 
-       {
+    {
         Matrix3x3d kProd = new Matrix3x3d();
         for (int iRow = 0; iRow < 3; iRow++) {
             for (int iCol = 0; iCol < 3; iCol++) {
@@ -66,7 +61,7 @@ public class Matrix3x3d
             }
         }
         return kProd;
-       }
+    }
     
     public static Vector3d2 operator *(Matrix3x3d m, Vector3d2 v)
     {
@@ -90,8 +85,6 @@ public class Matrix3x3d
         return kProd;
     }
     
-    //Functions
-    
     public override string ToString()
        {
         return  m[0,0] + "," + m[0,1] + "," + m[0,2] + "\n" + 
@@ -110,18 +103,7 @@ public class Matrix3x3d
         return kTranspose;
     }
     
-    private double Determinant()
-    {
-        double fCofactor00 = m[1,1] * m[2,2] - m[1,2] * m[2,1];
-        double fCofactor10 = m[1,2] * m[2,0] - m[1,0] * m[2,2];
-        double fCofactor20 = m[1,0] * m[2,1] - m[1,1] * m[2,0];
-        
-        double fDet = m[0,0] * fCofactor00 + m[0,1] * fCofactor10 + m[0,2] * fCofactor20;
-        
-        return fDet;
-    }
-    
-    //public bool Inverse(ref Matrix3x3d mInv, double tolerance = 1e-06)
+
     public bool Inverse(ref Matrix3x3d mInv, double tolerance)
     {
         // Invert a 3x3 using cofactors.  This is about 8 times faster than
@@ -152,7 +134,6 @@ public class Matrix3x3d
         return true;
     }
     
-    //public Matrix3x3d Inverse(double tolerance = 1e-06)
     public Matrix3x3d Inverse(double tolerance)
     {
         Matrix3x3d kInverse = new Matrix3x3d();
@@ -207,30 +188,4 @@ public class Matrix3x3d
     {
         return new Matrix3x3d(1,0,0,0,1,0,0,0,1);
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

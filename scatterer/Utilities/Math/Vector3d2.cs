@@ -3,11 +3,7 @@ using UnityEngine;
 
 public class Vector3d2
 {
-    //Member varibles
-    
     public double x, y, z;
-    
-    //Constructors
     
     public Vector3d2()
     {

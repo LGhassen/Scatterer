@@ -1,8 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using KSP;
-using KSP.IO;
-using UnityEngine;
 
 namespace Scatterer
 {
@@ -22,12 +18,14 @@ namespace Scatterer
             baseConfigs = GameDatabase.Instance.GetConfigs ("Scatterer_config"); //only used for displaying filepath
 
             ConfigNode[] confNodes = GameDatabase.Instance.GetConfigNodes ("Scatterer_planetsList");
-            if (confNodes.Length == 0) {
+            if (confNodes.Length == 0)
+            {
                 Utils.LogError ("No planetsList file found, check your install");
                 return;
             }
             
-            if (confNodes.Length > 1) {
+            if (confNodes.Length > 1)
+            {
                 Utils.LogError ("Multiple planetsList files detected, check your install");
             }
 

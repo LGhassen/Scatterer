@@ -2,11 +2,7 @@
 
 public class Vector4d
 {
-    //Member varibles
-    
     public double x, y, z, w;
-    
-    //Constructors
     
     public Vector4d()
     {
@@ -117,21 +113,23 @@ public class Vector4d
         return new Vector4d(v1.x/v2.x, v1.y/v2.y, v1.z/v2.z, v1.w/v2.w);
        }
     
-    //Functions
-    
-    public override string ToString() {
+    public override string ToString()
+    {
         return "(" + x + "," + y + "," + z + "," + w + ")";
        }
 
-    public Vector4 ToVector4() {
+    public Vector4 ToVector4()
+    {
         return new Vector4((float)x,(float)y,(float)z, (float)w);
     }
     
-    public Vector3d2 XYZ() {
+    public Vector3d2 XYZ()
+    {
         return new Vector3d2(x,y,z);    
     }
 
-    public Vector4d XYZ0() {
+    public Vector4d XYZ0()
+    {
         return new Vector4d(x,y,z,0);    
     }
 

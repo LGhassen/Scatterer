@@ -1,15 +1,12 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 
 #pragma warning disable 660, 661
 
 public class Matrix4x4d  
 {
-    //Members varibles
     
     public double[,] m = new double[4,4];
     
-    //Constructors
     
     public Matrix4x4d() {}
     
@@ -44,10 +41,9 @@ public class Matrix4x4d
         System.Array.Copy(m.m, this.m, 16);
     }
     
-    //Operator Overloads
     
     public static Matrix4x4d operator +(Matrix4x4d m1, Matrix4x4d m2) 
-       {
+    {
         Matrix4x4d kSum = new Matrix4x4d();
         for (int iRow = 0; iRow < 4; iRow++) {
             for (int iCol = 0; iCol < 4; iCol++) {
@@ -55,25 +51,28 @@ public class Matrix4x4d
             }
         }
         return kSum;
-       }
+    }
     
     public static Matrix4x4d operator -(Matrix4x4d m1, Matrix4x4d m2) 
-       {
+    {
         Matrix4x4d kSum = new Matrix4x4d();
-        for (int iRow = 0; iRow < 4; iRow++) {
-            for (int iCol = 0; iCol < 4; iCol++) {
+        for (int iRow = 0; iRow < 4; iRow++)
+        {
+            for (int iCol = 0; iCol < 4; iCol++)
+            {
                 kSum.m[iRow,iCol] = m1.m[iRow,iCol] - m2.m[iRow,iCol];
             }
         }
         return kSum;
-       }
+    }
     
     public static Matrix4x4d operator *(Matrix4x4d m1, Matrix4x4d m2) 
-       {
+    {
         Matrix4x4d kProd = new Matrix4x4d();
-        for (int iRow = 0; iRow < 4; iRow++) {
-            for (int iCol = 0; iCol < 4; iCol++) {
-                
+        for (int iRow = 0; iRow < 4; iRow++)
+        {
+            for (int iCol = 0; iCol < 4; iCol++)
+            {    
                 kProd.m[iRow,iCol] = m1.m[iRow,0] * m2.m[0,iCol] + 
                                      m1.m[iRow,1] * m2.m[1,iCol] + 
                                      m1.m[iRow,2] * m2.m[2,iCol] +
@@ -81,7 +80,7 @@ public class Matrix4x4d
             }
         }
         return kProd;
-       }
+    }
     
     public static Vector3d2 operator *(Matrix4x4d m, Vector3d2 v)
     {
@@ -140,9 +139,7 @@ public class Matrix4x4d
         
         return false;
     }
-    
-    //Functions
-    
+
     public override string ToString()
        {
         return  m[0,0] + "," + m[0,1] + "," + m[0,2] + "," + m[0,3] + "\n" + 
@@ -255,127 +252,9 @@ public class Matrix4x4d
         return mat;
     }
 
-    //Static Function
-    
-    static public Matrix4x4d ToMatrix4x4d(Matrix4x4 matf)
-    {
-        Matrix4x4d mat = new Matrix4x4d();
-        
-        mat.m[0,0] = matf.m00; mat.m[0,1] = matf.m01; mat.m[0,2] = matf.m02; mat.m[0,3] = matf.m03;
-        mat.m[1,0] = matf.m10; mat.m[1,1] = matf.m11; mat.m[1,2] = matf.m12; mat.m[1,3] = matf.m13;
-        mat.m[2,0] = matf.m20; mat.m[2,1] = matf.m21; mat.m[2,2] = matf.m22; mat.m[2,3] = matf.m23;
-        mat.m[3,0] = matf.m30; mat.m[3,1] = matf.m31; mat.m[3,2] = matf.m32; mat.m[3,3] = matf.m33;
-        
-        return mat;
-    }
-
-    static public Matrix4x4d Translate(Vector3d2 v)
-    {
-        return new Matrix4x4d(    1, 0, 0, v.x,
-                                  0, 1, 0, v.y,
-                                  0, 0, 1, v.z,
-                                  0, 0, 0, 1);
-    }
-
-    static public Matrix4x4d Translate(Vector3 v)
-    {
-        return new Matrix4x4d(    1, 0, 0, v.x,
-                                0, 1, 0, v.y,
-                                  0, 0, 1, v.z,
-                                  0, 0, 0, 1);
-    }
-
-    static public Matrix4x4d Scale(Vector3d2 v)
-    {
-        return new Matrix4x4d(    v.x, 0, 0, 0,
-                                  0, v.y, 0, 0,
-                                  0, 0, v.z, 0,
-                                  0, 0, 0, 1);
-    }
-
-    static public Matrix4x4d Scale(Vector3 v)
-    {
-        return new Matrix4x4d(    v.x, 0, 0, 0,
-                                  0, v.y, 0, 0,
-                                  0, 0, v.z, 0,
-                                  0, 0, 0, 1);
-    }
-    
-    static  public Matrix4x4d RotateX(double angle)
-    {
-        double ca = System.Math.Cos(angle * System.Math.PI / 180.0);
-        double sa = System.Math.Sin(angle * System.Math.PI / 180.0);
-        
-        return new Matrix4x4d(    1, 0, 0, 0,
-                                  0, ca, -sa, 0,
-                                  0, sa, ca, 0,
-                                  0, 0, 0, 1);
-    }
-    
-    static  public Matrix4x4d RotateY(double angle)
-    {
-        double ca = System.Math.Cos(angle * System.Math.PI / 180.0);
-        double sa = System.Math.Sin(angle * System.Math.PI / 180.0);
-        
-        return new Matrix4x4d(    ca, 0, sa, 0,
-                                  0, 1, 0, 0,
-                                  -sa, 0, ca, 0,
-                                  0, 0, 0, 1);
-    }
-
-    static  public Matrix4x4d RotateZ(double angle)
-    {
-        double ca = System.Math.Cos(angle * System.Math.PI / 180.0);
-        double sa = System.Math.Sin(angle * System.Math.PI / 180.0);
-        
-        return new Matrix4x4d(    ca, -sa, 0, 0,
-                                  sa, ca, 0, 0,
-                                  0, 0, 1, 0,
-                                  0, 0, 0, 1);
-    }
-
-    static public Matrix4x4d Rotate(Vector3 rotation)
-    {
-        Quat x = new Quat(new Vector3d2(1,0,0), rotation.x * MathUtility.Deg2Rad );
-        Quat y = new Quat(new Vector3d2(0,1,0), rotation.y * MathUtility.Deg2Rad );
-        Quat z = new Quat(new Vector3d2(0,0,1), rotation.z * MathUtility.Deg2Rad );
-        
-        return (z*y*x).ToMatrix4x4d();
-    }
-
-    static public Matrix4x4d Rotate(Vector3d2 rotation)
-    {
-        Quat x = new Quat(new Vector3d2(1,0,0), rotation.x * MathUtility.Deg2Rad );
-        Quat y = new Quat(new Vector3d2(0,1,0), rotation.y * MathUtility.Deg2Rad );
-        Quat z = new Quat(new Vector3d2(0,0,1), rotation.z * MathUtility.Deg2Rad );
-        
-        return (z*y*x).ToMatrix4x4d();
-    }
-    
-    static  public Matrix4x4d Perspective(double fovy, double aspect, double zNear, double zFar)
-    {
-        double f = 1.0 / System.Math.Tan((fovy * System.Math.PI / 180.0) / 2.0);
-        return new Matrix4x4d(    f / aspect,0,0,0,
-                                  0,f,0,0,
-                                  0,0,(zFar + zNear) / (zNear - zFar), (2.0*zFar*zNear) / (zNear - zFar),
-                                  0,0,-1,0);
-    }
-    
-    static  public Matrix4x4d Ortho(double xRight, double xLeft, double yTop, double yBottom, double zNear, double zFar)
-    {
-        double tx, ty, tz;
-        tx = - (xRight + xLeft) / (xRight - xLeft);
-        ty = - (yTop + yBottom) / (yTop - yBottom);
-        tz = - (zFar + zNear) / (zFar - zNear);
-        return new Matrix4x4d(    2.0 / (xRight - xLeft),0,0,tx,
-                                   0,2.0 / (yTop - yBottom),0,ty,
-                                   0,0,-2.0 / (zFar - zNear), tz,
-                                   0,0,0,1);
-    }
-    
     static public Matrix4x4d Identity()
     {
-        return new Matrix4x4d(    1,0,0,0,
+        return new Matrix4x4d(  1,0,0,0,
                                 0,1,0,0,
                                 0,0,1,0,
                                 0,0,0,1);

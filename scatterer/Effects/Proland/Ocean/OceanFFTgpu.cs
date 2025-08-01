@@ -166,7 +166,8 @@ namespace Scatterer {
             }
         }
         
-        Vector2 GetSlopeVariances(Vector2 k, float A, float B, float C, float spectrumX, float spectrumY) {
+        Vector2 GetSlopeVariances(Vector2 k, float A, float B, float C, float spectrumX, float spectrumY)
+        {
             float w = 1.0f - Mathf.Exp(A * k.x * k.x + B * k.x * k.y + C * k.y * k.y);
             return new Vector2((k.x * k.x) * w, (k.y * k.y) * w) * (spectrumX * spectrumX + spectrumY * spectrumY) * 2.0f;
         }
@@ -225,6 +226,7 @@ namespace Scatterer {
             {
                 m_fourierBuffer3[1], m_fourierBuffer4[1]
             };
+
             m_initDisplacementMat.SetTexture (ShaderProperties._Buffer1_PROPERTY, m_fourierBuffer1[1]);
             m_initDisplacementMat.SetTexture (ShaderProperties._Buffer2_PROPERTY, m_fourierBuffer2[1]);
             //            RTUtility.MultiTargetBlit(buffers34, m_initDisplacementMat);
@@ -330,7 +332,7 @@ namespace Scatterer {
             CreateMap(ref m_map4, mapFormat, mapsAniso, true, false);
             
             //These textures are used to perform the fourier transform
-            CreateBuffer(ref m_fourierBuffer0, fourierTransformformat); //heights
+            CreateBuffer(ref m_fourierBuffer0, fourierTransformformat); // heights
             CreateBuffer(ref m_fourierBuffer1, fourierTransformformat); // slopes X
             CreateBuffer(ref m_fourierBuffer2, fourierTransformformat); // slopes Y
             CreateBuffer(ref m_fourierBuffer3, fourierTransformformat); // displacement X
@@ -394,14 +396,16 @@ namespace Scatterer {
             map.Create();
         }
         
-        float sqr(float x) {
+        float Sqr(float x)
+        {
             return x * x;
         }
         
-        float omega(float k)
+        float Omega(float k)
         {
-            return Mathf.Sqrt(m_gravity * k * (1.0f + sqr(k / WAVE_KM)));
-        } // Eq 24
+            // Eq 24
+            return Mathf.Sqrt(m_gravity * k * (1.0f + Sqr(k / WAVE_KM)));
+        }
         
         float Spectrum(float kx, float ky, bool omnispectrum)
         {
@@ -415,32 +419,32 @@ namespace Scatterer {
             
             // phase speed
             float k = Mathf.Sqrt(kx * kx + ky * ky);
-            float c = omega(k) / k;
+            float c = Omega(k) / k;
             
             // spectral peak
-            float kp = m_gravity * sqr(m_omega / U10); // after Eq 3
-            float cp = omega(kp) / kp;
+            float kp = m_gravity * Sqr(m_omega / U10); // after Eq 3
+            float cp = Omega(kp) / kp;
             
             // friction velocity
-            float z0 = 3.7e-5f * sqr(U10) / m_gravity * Mathf.Pow(U10 / cp, 0.9f); // Eq 66
+            float z0 = 3.7e-5f * Sqr(U10) / m_gravity * Mathf.Pow(U10 / cp, 0.9f); // Eq 66
             float u_star = 0.41f * U10 / Mathf.Log(10.0f / z0); // Eq 60
             
-            float Lpm = Mathf.Exp(-5.0f / 4.0f * sqr(kp / k)); // after Eq 3
+            float Lpm = Mathf.Exp(-5.0f / 4.0f * Sqr(kp / k)); // after Eq 3
             float gamma = (m_omega < 1.0f) ? 1.7f : 1.7f + 6.0f * Mathf.Log(m_omega); // after Eq 3 // log10 or log?
             float sigma = 0.08f * (1.0f + 4.0f / Mathf.Pow(m_omega, 3.0f)); // after Eq 3
-            float Gamma = Mathf.Exp(-1.0f / (2.0f * sqr(sigma)) * sqr(Mathf.Sqrt(k / kp) - 1.0f));
+            float Gamma = Mathf.Exp(-1.0f / (2.0f * Sqr(sigma)) * Sqr(Mathf.Sqrt(k / kp) - 1.0f));
             float Jp = Mathf.Pow(gamma, Gamma); // Eq 3
             float Fp = Lpm * Jp * Mathf.Exp(-m_omega / Mathf.Sqrt(10.0f) * (Mathf.Sqrt(k / kp) - 1.0f)); // Eq 32
             float alphap = 0.006f * Mathf.Sqrt(m_omega); // Eq 34
             float Bl = 0.5f * alphap * cp / c * Fp; // Eq 31
             
             float alpham = 0.01f * (u_star < WAVE_CM ? 1.0f + Mathf.Log(u_star / WAVE_CM) : 1.0f + 3.0f * Mathf.Log(u_star / WAVE_CM)); // Eq 44
-            float Fm = Mathf.Exp(-0.25f * sqr(k / WAVE_KM - 1.0f)); // Eq 41
+            float Fm = Mathf.Exp(-0.25f * Sqr(k / WAVE_KM - 1.0f)); // Eq 41
             float Bh = 0.5f * alpham * WAVE_CM / c * Fm * Lpm; // Eq 40 (fixed)
             
             Bh *= Lpm; // bug fix???
             
-            if (omnispectrum) return AMP * (Bl + Bh) / (k * sqr(k)); // Eq 30
+            if (omnispectrum) return AMP * (Bl + Bh) / (k * Sqr(k)); // Eq 30
             
             float a0 = Mathf.Log(2.0f) / 4.0f;
             float ap = 4.0f;
@@ -457,7 +461,7 @@ namespace Scatterer {
             // remove waves perpendicular to wind dir
             float tweak = Mathf.Sqrt(Mathf.Max(kx / Mathf.Sqrt(kx * kx + ky * ky), 0.0f));
             
-            return AMP * (Bl + Bh) * (1.0f + Delta * Mathf.Cos(2.0f * phi)) / (2.0f * Mathf.PI * sqr(sqr(k))) * tweak; // Eq 67
+            return AMP * (Bl + Bh) * (1.0f + Delta * Mathf.Cos(2.0f * phi)) / (2.0f * Mathf.PI * Sqr(Sqr(k))) * tweak; // Eq 67
         }
         
         Vector2 GetSpectrumSample(float i, float j, float lengthScale, float kMin)
