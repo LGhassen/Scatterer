@@ -302,7 +302,7 @@ namespace Scatterer
             }
             if (instance == null)
             {
-                Utils.LogError("EVE ScreenSpaceShadowsManager instance not created ");
+                Utils.LogDebug("EVE ScreenSpaceShadowsManager instance not created");
                 return false;
             }
 

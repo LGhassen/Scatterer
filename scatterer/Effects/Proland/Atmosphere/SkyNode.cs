@@ -209,6 +209,8 @@ namespace Scatterer
 
             Shader.SetGlobalFloat(ShaderProperties.scattererCloudLightVolumeEnabled_PROPERTY, 0f); // Temporary way to initialize the light volume godrays, if raymarched volumetrics are loaded they override this then enable/disable as needed
 
+            Shader.SetGlobalTexture(ShaderProperties.scattererReconstructedCloud_PROPERTY, Texture2D.whiteTexture); // This is used to composite clouds with sky early for SSR, if raymarched volumetrics are loaded they override this
+
             skyNodeInitiated = true;
             Utils.LogDebug("Skynode initiated for "+celestialBodyName);
         }

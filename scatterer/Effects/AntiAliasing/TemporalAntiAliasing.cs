@@ -41,6 +41,7 @@ namespace Scatterer
 
         private static int jitterProperty = Shader.PropertyToID("_Jitter");
         private static int keepPreviousMotionVectorsProperty = Shader.PropertyToID("TAA_KeepPreviousMotionVectors");
+        private static int useVolumetricCloudsMotionVectorsProperty = Shader.PropertyToID("TAA_UseVolumetricCloudsMotionVectors");
 
         private static CameraEvent TAACameraEvent = CameraEvent.AfterForwardAlpha;  // BeforeImageEffects doesn't work well
 
@@ -64,6 +65,10 @@ namespace Scatterer
             const float kMotionAmplification = 100f * 60f;
             temporalAAMaterial.SetFloat("_Sharpness", sharpness);
             temporalAAMaterial.SetVector("_FinalBlendParameters", new Vector4(stationaryBlending, motionBlending, kMotionAmplification, 0f));
+
+            Shader.SetGlobalTexture(ShaderProperties.scattererReconstructedCloud_PROPERTY, Texture2D.whiteTexture); // This is used to blend cloud motion vectors with scene motion vectors, if raymarched volumetrics are loaded they override this
+
+            temporalAAMaterial.SetInt(useVolumetricCloudsMotionVectorsProperty, targetCamera == Scatterer.Instance.nearCamera ? 1 : 0);
 
             temporalAACommandBuffer = new CommandBuffer ();
             temporalAACommandBuffer.name = $"Scatterer TAA CommandBuffer for {targetCamera.name}";

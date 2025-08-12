@@ -112,13 +112,9 @@
     <Compile Include="GUI\GUIhandler.cs" />
     <Compile Include="GUI\ToolbarButton.cs" />
     <Compile Include="Utilities\DeferredReflectionHandler.cs" />
-    <Compile Include="Utilities\Math\MathUtility.cs" />
-    <Compile Include="Utilities\Math\Matrix3x3.cs" />
     <Compile Include="Utilities\Math\Matrix3x3d.cs" />
     <Compile Include="Utilities\Math\Matrix4x4d.cs" />
-    <Compile Include="Utilities\Math\Quat.cs" />
     <Compile Include="Utilities\Math\Vector2d.cs" />
-    <Compile Include="Utilities\Math\Vector2i.cs" />
     <Compile Include="Utilities\Math\Vector3d2.cs" />
     <Compile Include="Utilities\Math\Vector4d.cs" />
     <Compile Include="Effects\SunlightModulator\SunlightModulator.cs" />
