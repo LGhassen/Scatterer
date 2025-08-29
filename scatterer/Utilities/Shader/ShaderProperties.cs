@@ -432,6 +432,10 @@ namespace Scatterer
         public static int positionsCount_PROPERTY { get { return positionsCount; } }
         private static int positionsCount;
 
+        public static int godrayFrameNumber_PROPERTY { get { return godrayFrameNumber; } }
+        private static int godrayFrameNumber;
+        
+
         private void Awake()
         {
             Rg = Shader.PropertyToID("Rg");
@@ -623,6 +627,8 @@ namespace Scatterer
             ScattererLocalSkyActiveOnCurrentCamera = Shader.PropertyToID("ScattererLocalSkyActiveOnCurrentCamera");
 
             positionsCount = Shader.PropertyToID("positionsCount");
+
+            godrayFrameNumber = Shader.PropertyToID("godrayFrameNumber");
         }
     }
 }

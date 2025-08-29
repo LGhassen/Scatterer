@@ -111,6 +111,8 @@ namespace Scatterer
                 renderHeight = screenHeight / 4;
             }
 
+            scatteringOcclusionMaterial.SetVector("godrayRenderingResolution", new Vector2(renderWidth, renderHeight));
+
             godraysRT = VRUtils.CreateVRFlipFlopRT(supportVR, renderWidth, renderHeight, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
             depthRT = VRUtils.CreateVRFlipFlopRT(supportVR, renderWidth, renderHeight, RenderTextureFormat.RFloat, FilterMode.Point);
 
@@ -175,6 +177,8 @@ namespace Scatterer
             mat.SetFloat(ShaderProperties.godraysStepCount_PROPERTY, stepCount);
         }
 
+        int frame = 0;
+
         void OnPreRender()
         {
             if (parentSkyNode && !parentSkyNode.inScaledSpace)
@@ -218,8 +222,8 @@ namespace Scatterer
 
                 CommandBuffer commandBuffer = godraysCommandBuffer[isRightEye];
 
-                int frame = Time.frameCount % ShaderReplacer.stbnDimensions.z;
-                commandBuffer.SetGlobalFloat(ShaderProperties.frameNumber_PROPERTY, frame);
+                frame = frame % ShaderReplacer.stbnDimensions.z;
+                scatteringOcclusionMaterial.SetFloat(ShaderProperties.godrayFrameNumber_PROPERTY, frame);
 
                 commandBuffer.Clear();
 
@@ -268,7 +272,7 @@ namespace Scatterer
                     commandBuffer.ClearRenderTarget(false, true, Color.clear);
                     for (int i=0;i< screenshotModeIterations;i++)
                     {
-                        commandBuffer.SetGlobalFloat(ShaderProperties.frameNumber_PROPERTY, frame);
+                        scatteringOcclusionMaterial.SetFloat(ShaderProperties.godrayFrameNumber_PROPERTY, frame);
                         commandBuffer.DrawMesh(mesh, Matrix4x4.identity, scatteringOcclusionMaterial, 0, 1);
                         frame++;
                         frame = frame % ShaderReplacer.stbnDimensions.z;
@@ -324,6 +328,7 @@ namespace Scatterer
                 {
                     renderingEnabled = false;
                     useFlipBuffer = !useFlipBuffer;
+                    frame++;
                 }
 
                 Shader.SetGlobalTexture(ShaderProperties._godrayDepthTexture_PROPERTY, Texture2D.blackTexture);
