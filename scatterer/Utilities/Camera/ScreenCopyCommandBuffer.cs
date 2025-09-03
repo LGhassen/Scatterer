@@ -40,11 +40,10 @@ namespace Scatterer
 		bool isEnabled = false;
 		bool isInitialized = false;
 		bool hdrEnabled = false;
-		int width, height;
 
 		private Camera targetCamera;
 		private CommandBuffer screenCopyCommandBuffer;
-		private RenderTexture colorCopyRenderTexture;
+		private int colorCopyRenderTextureNameID;
 		
 		public ScreenCopyCommandBuffer ()
 		{
@@ -57,64 +56,33 @@ namespace Scatterer
 			if (!reflectionProbeMode)
             {
                 targetCamera.forceIntoRenderTexture = true;
-
-                if (targetCamera.activeTexture)
-                {
-                    width = targetCamera.activeTexture.width;
-                    height = targetCamera.activeTexture.height;
-                }
-                else
-                {
-                    width = Screen.width;
-                    height = Screen.height;
-                }
-
-                InitRT();
             }
+
+			colorCopyRenderTextureNameID = Shader.PropertyToID(nameof(colorCopyRenderTextureNameID));
 
             screenCopyCommandBuffer = new CommandBuffer();
 			screenCopyCommandBuffer.name = "Scatterer screen copy CommandBuffer";
 
-			if (!reflectionProbeMode)
-			{
-				screenCopyCommandBuffer.Blit (BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
-				screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", colorCopyRenderTexture);
-			}
-			else
-			{
-				screenCopyCommandBuffer.SetGlobalTexture ("ScattererScreenCopyBeforeOcean", Texture2D.blackTexture);	//Hack but will stop sky flickering
-			}
+			Reinit();
 			
 			isInitialized = true;
 		}
 
-        private void InitRT()
-        {
-			if (colorCopyRenderTexture!=null)
-				colorCopyRenderTexture.Release();
-
-			hdrEnabled = targetCamera.allowHDR;
-
-			colorCopyRenderTexture = new RenderTexture(width, height, 0, hdrEnabled? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
-			colorCopyRenderTexture.anisoLevel = 1;
-            colorCopyRenderTexture.antiAliasing = 1;
-            colorCopyRenderTexture.volumeDepth = 0;
-            colorCopyRenderTexture.useMipMap = false;
-            colorCopyRenderTexture.autoGenerateMips = false;
-            colorCopyRenderTexture.Create();
-        }
-
 		private void Reinit()
         {
-			InitRT();
-
 			targetCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
+
+			screenCopyCommandBuffer.Clear();
 
 			if (!reflectionProbeMode)
 			{
-				screenCopyCommandBuffer.Clear();
-				screenCopyCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, colorCopyRenderTexture);
-				screenCopyCommandBuffer.SetGlobalTexture("ScattererScreenCopyBeforeOcean", colorCopyRenderTexture);
+				screenCopyCommandBuffer.GetTemporaryRT(colorCopyRenderTextureNameID, -1, -1, 0, FilterMode.Point, hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32);
+				screenCopyCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, colorCopyRenderTextureNameID);
+				screenCopyCommandBuffer.SetGlobalTexture("ScattererScreenCopyBeforeOcean", colorCopyRenderTextureNameID);
+			}
+			else
+			{
+				screenCopyCommandBuffer.SetGlobalTexture("ScattererScreenCopyBeforeOcean", Texture2D.blackTexture); //Hack but will stop sky flickering
 			}
 		}
 
@@ -153,7 +121,8 @@ namespace Scatterer
 				if (screenCopyCommandBuffer != null)
 				{
 					targetCamera.RemoveCommandBuffer (CameraEvent.AfterImageEffectsOpaque, screenCopyCommandBuffer);
-					colorCopyRenderTexture.Release();
+					screenCopyCommandBuffer.Release();
+					screenCopyCommandBuffer = null;
 					isEnabled = false;
 				}
 			}
