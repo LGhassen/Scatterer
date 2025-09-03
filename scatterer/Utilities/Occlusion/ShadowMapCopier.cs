@@ -62,12 +62,13 @@ namespace Scatterer
 			CreateTextureCopyCB ();
 		}
 
-		//Adds one one commandbuffer which does an optimized pixel-by-pixel texture copy
-		private void CreateTextureCopyCB()
-		{
-			textureCopyBuffer = new CommandBuffer();
-			textureCopyBuffer.CopyTexture (BuiltinRenderTextureType.CurrentActive, ShadowMapCopy.RenderTexture);
-		}
+        //Adds one one commandbuffer which does an optimized pixel-by-pixel texture copy
+        private void CreateTextureCopyCB()
+        {
+            textureCopyBuffer = new CommandBuffer();
+            textureCopyBuffer.name = "Scatterer shadowMap copy CommandBuffer";
+            textureCopyBuffer.CopyTexture (BuiltinRenderTextureType.CurrentActive, ShadowMapCopy.RenderTexture);
+        }
 
 		//These are adapted for copying one cascade and then rendering other stuff on top, like clouds, however since I'm going to render them separately, better do a fast copytexture
 		private void CreateCopyCascadeCBs()
@@ -78,10 +79,11 @@ namespace Scatterer
 			copyCascadeCB3 = CreateCopyCascadeCB (ShadowMapCopy.RenderTexture, 0.5f, 0.5f, 0.5f, 0.5f);
 		}
 
-		private CommandBuffer CreateCopyCascadeCB(RenderTexture targetRt, float startX, float startY, float width, float height)
-		{
-			CommandBuffer cascadeCopyCB = new CommandBuffer();
-			Rect cascadeRect = new Rect ((int)(startX * targetRt.width), (int)(startY * targetRt.height), (int)(width * targetRt.width), (int)(height * targetRt.height));
+        private CommandBuffer CreateCopyCascadeCB(RenderTexture targetRt, float startX, float startY, float width, float height)
+        {
+            CommandBuffer cascadeCopyCB = new CommandBuffer();
+            cascadeCopyCB.name = "Scatterer shadowMap cascade copy CommandBuffer";
+            Rect cascadeRect = new Rect ((int)(startX * targetRt.width), (int)(startY * targetRt.height), (int)(width * targetRt.width), (int)(height * targetRt.height));
 
 			cascadeCopyCB.EnableScissorRect(cascadeRect);
 			cascadeCopyCB.SetShadowSamplingMode(BuiltinRenderTextureType.CurrentActive, ShadowSamplingMode.RawDepth);

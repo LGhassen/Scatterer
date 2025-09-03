@@ -12,17 +12,17 @@ namespace Scatterer
 		private CommandBuffer m_Buffer;
 		private Light m_Light;
 
-		public ShadowMaskCopyCommandBuffer ()
-		{
-			// after light's screenspace shadow mask is computed, copy it
-			m_Buffer = new CommandBuffer();
-			m_Buffer.name = "ScattererScreenspaceShadowMaskCopy";
-			
-//			m_Buffer.Blit (BuiltinRenderTextureType.CurrentActive, Core.Instance.bufferRenderingManager.occlusionTexture);
-			
-			m_Light = GetComponent<Light>();
-			m_Light.AddCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
-		}
+        public ShadowMaskCopyCommandBuffer ()
+        {
+            // after light's screenspace shadow mask is computed, copy it
+            m_Buffer = new CommandBuffer();
+            m_Buffer.name = "Scatterer ScreenspaceShadowMaskCopy CommandBuffer";
+            
+//            m_Buffer.Blit (BuiltinRenderTextureType.CurrentActive, Core.Instance.bufferRenderingManager.occlusionTexture);
+            
+            m_Light = GetComponent<Light>();
+            m_Light.AddCommandBuffer (LightEvent.AfterScreenspaceMask, m_Buffer);
+        }
 
 		public void OnDestroy ()
 		{

@@ -175,14 +175,15 @@ namespace Scatterer
 			compositeLightRaysMaterial.SetColor(ShaderProperties._sunColor_PROPERTY, oceanNodeIn.prolandManager.getIntensityModulatedSunColor());
 			compositeLightRaysMaterial.SetVector ("_Underwater_Color", oceanNodeIn.m_UnderwaterColor);
 
-			commandBuffer = new CommandBuffer();
-			
-			//downscale depth to 1/16
-			commandBuffer.Blit(null, downscaledDepthRT, downscaleDepthMaterial, 0);
-			commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT);
-			
-			//render
-			commandBuffer.Blit(null, targetRT, CausticsLightRaysMaterial);
+            commandBuffer = new CommandBuffer();
+            commandBuffer.name = "Scatterer caustics renderer CommandBuffer";
+
+            //downscale depth to 1/16
+            commandBuffer.Blit(null, downscaledDepthRT, downscaleDepthMaterial, 0);
+            commandBuffer.SetGlobalTexture("ScattererDownscaledDepth", downscaledDepthRT);
+            
+            //render
+            commandBuffer.Blit(null, targetRT, CausticsLightRaysMaterial);
 
 			//bilateral blur, 2 taps seems enough
 			commandBuffer.SetGlobalVector ("BlurDir", new Vector2(0,1));

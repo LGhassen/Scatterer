@@ -84,8 +84,9 @@ namespace Scatterer
 			quality = (Quality)((Int32) Mathf.Clamp( (float) Scatterer.Instance.mainSettings.smaaQuality,1f,2f));	//limit to 1 and 2, 1 and 2 are image-based. 0 is depth-based and would make performance worse by having to run for each camera's depth
 																													//only use depth mode when we force it for the IVA camera
 
-			SMAACommandBuffer = new CommandBuffer ();
-		}
+            SMAACommandBuffer = new CommandBuffer ();
+            SMAACommandBuffer.name = $"Scatterer SMAA CommandBuffer for {targetCamera.name}";
+        }
 
         static readonly int MainTextureProperty = Shader.PropertyToID("_MainTexture");
         static readonly int BlendTexproperty = Shader.PropertyToID("_BlendTex");

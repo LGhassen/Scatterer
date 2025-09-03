@@ -65,33 +65,34 @@ namespace Scatterer
 			temporalAAMaterial.SetFloat("_Sharpness", sharpness);
 			temporalAAMaterial.SetVector("_FinalBlendParameters", new Vector4(stationaryBlending, motionBlending, kMotionAmplification, 0f));
 
-			temporalAACommandBuffer = new CommandBuffer ();
-		}
+			temporalAACommandBuffer = new CommandBuffer();
+			temporalAACommandBuffer.name = $"Scatterer TAA CommandBuffer for {targetCamera.name}";
+	}
 
 		internal DepthTextureMode GetCameraFlags()
 		{
 			return DepthTextureMode.Depth | DepthTextureMode.MotionVectors;
-		}
-		
-		internal void ResetHistory()
-		{
-			m_ResetHistory = true;
-		}
-		
-		Vector2 GenerateRandomOffset()
-		{
-			// The variance between 0 and the actual halton sequence values reveals noticeable instability
-			// in Unity's shadow maps, so we avoid index 0.
-			var offset = new Vector2(
-				HaltonSeq.Get((sampleIndex & 1023) + 1, 2) - 0.5f,
-				HaltonSeq.Get((sampleIndex & 1023) + 1, 3) - 0.5f
-				);
-			
-			if (++sampleIndex >= k_SampleCount)
-				sampleIndex = 0;
-			
-			return offset;
-		}
+        }
+        
+        internal void ResetHistory()
+        {
+            m_ResetHistory = true;
+        }
+        
+        Vector2 GenerateRandomOffset()
+        {
+            // The variance between 0 and the actual halton sequence values reveals noticeable instability
+            // in Unity's shadow maps, so we avoid index 0.
+            var offset = new Vector2(
+                HaltonSeq.Get((sampleIndex & 1023) + 1, 2) - 0.5f,
+                HaltonSeq.Get((sampleIndex & 1023) + 1, 3) - 0.5f
+                );
+            
+            if (++sampleIndex >= k_SampleCount)
+                sampleIndex = 0;
+            
+            return offset;
+        }
 
 		/// Gets a jittered perspective projection matrix for a given camera.
 		public static Matrix4x4 GetJitteredPerspectiveProjectionMatrix(Camera camera, Vector2 offset)
