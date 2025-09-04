@@ -25,7 +25,7 @@ namespace Scatterer
 		const int k_SampleCount = 8;
 		
 		// Ping-pong between two history textures as we can't read & write the same target in the same pass
-		const int eyesCount = 1; const int historyTexturesCount = 2;
+		const int eyesCount = 2; const int historyTexturesCount = 2;
 		RenderTexture[][] historyTextures = new RenderTexture[eyesCount][];
 
 		int[] m_HistoryPingPong = new int [eyesCount];
@@ -137,10 +137,8 @@ namespace Scatterer
 			temporalAAMaterial.SetVector(jitterProperty, jitter);
 		}
 		
-		RenderTexture CheckHistory(int id, CommandBuffer cmd)
-		{
-			int activeEye = 0;
-			
+		RenderTexture CheckHistory(int id, CommandBuffer cmd, int activeEye)
+		{	
 			if (historyTextures[activeEye] == null)
 				historyTextures[activeEye] = new RenderTexture[historyTexturesCount];
 
@@ -193,11 +191,11 @@ namespace Scatterer
 			{ 
 				temporalAACommandBuffer.Clear();
 
-				int activeEye = 0;
+				int activeEye = targetCamera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right ? 1 : 0;
 
 				int pingPongIndex = m_HistoryPingPong[activeEye];
-				RenderTexture historyRead = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
-				RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
+				RenderTexture historyRead = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer, activeEye);
+				RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer, activeEye);
 				m_HistoryPingPong[activeEye] = ++pingPongIndex % 2;
 
 				if (firstFrame)
@@ -280,6 +278,7 @@ namespace Scatterer
 
 			sampleIndex = 0;
 			m_HistoryPingPong[0] = 0;
+			m_HistoryPingPong[1] = 1;
 
 			ResetHistory();
 
