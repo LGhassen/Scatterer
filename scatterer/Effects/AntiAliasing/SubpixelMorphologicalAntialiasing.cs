@@ -23,9 +23,11 @@ namespace Scatterer
 			initialized = false;
 		}
 
-		RenderTexture flip, flop;
+		int flipRenderTargetNameID, flopRenderTargetNameID;
+
 		static Texture2D areaTex, searchTex;
 		bool initialized = false;
+		bool hdrEnabled = false;
 
         public Quality QualityUsed { get => quality; }
 
@@ -35,41 +37,11 @@ namespace Scatterer
 			
 			targetCamera.forceIntoRenderTexture = true;
 
-			int width, height;
-			
-			if (targetCamera.activeTexture)
-			{
-				width = targetCamera.activeTexture.width;
-				height = targetCamera.activeTexture.height;
-			}
-			else
-			{
-				width = Screen.width;
-				height = Screen.height;
-			}
+			hdrEnabled = targetCamera.allowHDR;
 
-			bool hdrEnabled = targetCamera.allowHDR;
-			var colorFormat = hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32;
-
-			flip = new RenderTexture (width, height, 0, colorFormat);
-			flip.anisoLevel = 1;
-			flip.antiAliasing = 1;
-			flip.volumeDepth = 0;
-			flip.useMipMap = false;
-			flip.autoGenerateMips = false;
-			flip.wrapMode = TextureWrapMode.Clamp;
-			flip.filterMode = FilterMode.Bilinear;
-			flip.Create ();
-
-			flop = new RenderTexture (width, height, 0, colorFormat);
-			flop.anisoLevel = 1;
-			flop.antiAliasing = 1;
-			flop.volumeDepth = 0;
-			flop.useMipMap = false;
-			flop.autoGenerateMips = false;
-			flip.wrapMode = TextureWrapMode.Clamp;
-			flip.filterMode = FilterMode.Bilinear;
-			flop.Create ();
+			// surely there are better names for these?  They're both temporaries
+			flipRenderTargetNameID = Shader.PropertyToID("_SMAA_Flip");
+			flopRenderTargetNameID = Shader.PropertyToID("_SMAA_Flop");
 
 			SMAAMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/SubpixelMorphologicalAntialiasing")]);
 
@@ -93,37 +65,44 @@ namespace Scatterer
 
         public void OnPreCull()
 		{
-			bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
-
-			if (!initialized && !screenShotModeEnabled)
+			if (!initialized || targetCamera.allowHDR != hdrEnabled)
 			{
 				SMAACommandBuffer.Clear ();
-			
-				SMAACommandBuffer.SetRenderTarget (flop);
+
+				hdrEnabled = targetCamera.allowHDR;
+				var colorFormat = hdrEnabled ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.ARGB32;
+
+				SMAACommandBuffer.GetTemporaryRT(flipRenderTargetNameID, -1, -1, 0, FilterMode.Bilinear, colorFormat);
+				// TODO: how do we make sure to match the previous settings?  Do we need to use RenderTextureDescriptor?
+				//flip.anisoLevel = 1;
+				//flip.antiAliasing = 1;
+				//flip.volumeDepth = 0;
+				//flip.useMipMap = false;
+				//flip.autoGenerateMips = false;
+				//flip.wrapMode = TextureWrapMode.Clamp;
+				//flip.filterMode = FilterMode.Bilinear;
+
+				SMAACommandBuffer.GetTemporaryRT(flopRenderTargetNameID, -1, -1, 0, FilterMode.Bilinear, colorFormat);
+
+				SMAACommandBuffer.SetRenderTarget (flopRenderTargetNameID);
 				SMAACommandBuffer.ClearRenderTarget (false, true, Color.clear);
 			
-				SMAACommandBuffer.SetRenderTarget (flip);
+				SMAACommandBuffer.SetRenderTarget (flipRenderTargetNameID);
 				SMAACommandBuffer.ClearRenderTarget (false, true, Color.clear);
 			
 				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, BuiltinRenderTextureType.CameraTarget);
 
-				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.EdgeDetection + (int)quality);		//screen to flip with edge detection
+				SMAACommandBuffer.Blit (null, flipRenderTargetNameID, SMAAMaterial, (int)Pass.EdgeDetection + (int)quality);		//screen to flip with edge detection
 			
-				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, flip);
-				SMAACommandBuffer.Blit (null, flop, SMAAMaterial, (int)Pass.BlendWeights + (int)quality);		//flip to flop with blendweights
-				SMAACommandBuffer.SetGlobalTexture (BlendTexproperty, flop);
+				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, flipRenderTargetNameID);
+				SMAACommandBuffer.Blit (null, flopRenderTargetNameID, SMAAMaterial, (int)Pass.BlendWeights + (int)quality);		//flip to flop with blendweights
+				SMAACommandBuffer.SetGlobalTexture (BlendTexproperty, flopRenderTargetNameID);
 				SMAACommandBuffer.SetGlobalTexture (MainTextureProperty, BuiltinRenderTextureType.CameraTarget);
-				SMAACommandBuffer.Blit (null, flip, SMAAMaterial, (int)Pass.NeighborhoodBlending);				//neighborhood blending to flip
-				SMAACommandBuffer.Blit (flip, BuiltinRenderTextureType.CameraTarget);							//blit back to screen
+				SMAACommandBuffer.Blit (null, flipRenderTargetNameID, SMAAMaterial, (int)Pass.NeighborhoodBlending);				//neighborhood blending to flip
+				SMAACommandBuffer.Blit (flipRenderTargetNameID, BuiltinRenderTextureType.CameraTarget);							//blit back to screen
 			
 				targetCamera.AddCommandBuffer (SMAACameraEvent, SMAACommandBuffer);
 				initialized = true;
-			}
-
-			if (initialized && screenShotModeEnabled)
-            {
-				targetCamera.RemoveCommandBuffer(SMAACameraEvent, SMAACommandBuffer);
-				initialized = false;
 			}
 		}
 		
@@ -135,13 +114,10 @@ namespace Scatterer
 			{
 				targetCamera.RemoveCommandBuffer (SMAACameraEvent, SMAACommandBuffer);
 				SMAACommandBuffer.Clear();
+				SMAACommandBuffer.Release();
+				SMAACommandBuffer = null;
+				initialized = false;
 			}
-			
-			if (flip)
-				flip.Release ();
-
-			if (flop)
-				flop.Release ();
 		}
 	}
 }
