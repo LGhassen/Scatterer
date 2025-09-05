@@ -35,6 +35,7 @@ using System.Text;
 using UnityEngine.Rendering;
 
 using KSP.IO;
+using UnityEngine.XR;
 
 namespace Scatterer
 {
@@ -56,6 +57,8 @@ namespace Scatterer
 
 		//Size of each grid in the projected grid. (number of pixels on screen)
 		public int m_resolution = 4;
+		int m_screenWidth;
+		int m_screenHeight;
 
 		[Persistent]
 		public float offScreenVertexStretch = 1.25f;
@@ -138,6 +141,14 @@ namespace Scatterer
 		public virtual void Init (ProlandManager manager)
 		{
 			m_resolution = Scatterer.Instance.mainSettings.oceanMeshResolution;
+			m_screenWidth = Screen.width;
+			m_screenHeight = Screen.height;
+			if (XRSettings.loadedDeviceName != string.Empty)
+			{
+				m_screenWidth = Math.Max(m_screenWidth, XRSettings.eyeTextureWidth);
+				m_screenHeight = Math.Max(m_screenHeight, XRSettings.eyeTextureHeight);
+			}
+
 			prolandManager = manager;
 			loadFromConfigNode ();
 
@@ -259,8 +270,8 @@ namespace Scatterer
 			//split the mesh up into smaller meshes.
 			m_resolution = Mathf.Max (1, m_resolution);
 			//The number of squares in the grid on the x and y axis
-			int NX = Screen.width / m_resolution;
-			int NY = Screen.height / m_resolution;
+			int NX = m_screenWidth / m_resolution;
+			int NY = m_screenHeight / m_resolution;
 			numGrids = 1;
 
 			const int MAX_VERTS = 65000; //The number of meshes need to make a grid of this resolution, if not using 32-bit index meshes
@@ -278,7 +289,7 @@ namespace Scatterer
 			//projected as the ocean by the shader
 			for (int i = 0; i < numGrids; i++)
 			{
-				NY = Screen.height / numGrids / m_resolution;
+				NY = m_screenHeight / numGrids / m_resolution;
 				if (use32BitIndexMesh)
 					m_screenGrids [i] = MeshFactory.MakePlane32BitIndexFormat (NX, NY, MeshFactory.PLANE.XY, false, true, (float)i / (float)numGrids, 1.0f / (float)numGrids);
 				else
@@ -344,7 +355,7 @@ namespace Scatterer
 			
 			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
 			m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
-			m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)Screen.width, (float)m_resolution / (float)Screen.height));
+			m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)m_resolution / (float)m_screenWidth, (float)m_resolution / (float)m_screenHeight));
 
 			//oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
 			m_oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(prolandManager.GetRadius()));
