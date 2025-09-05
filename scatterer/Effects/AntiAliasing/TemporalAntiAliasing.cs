@@ -281,7 +281,7 @@ namespace Scatterer
 				}
 				else
                 {
-					ConfigureJitteredProjectionMatrix();
+					ConfigureJitteredProjectionMatrix(targetCamera);
 
 					//TODO: move to shader properties
 					if (checkOceanDepth)
