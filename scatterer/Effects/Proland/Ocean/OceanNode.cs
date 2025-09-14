@@ -25,6 +25,18 @@
  */
 using CameraFXModules;
 using UnityEngine;
+using System.Collections;
+using System.IO;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using UnityEngine.Rendering;
+
+using KSP.IO;
+using UnityEngine.XR;
 
 namespace Scatterer
 {
@@ -46,6 +58,8 @@ namespace Scatterer
         public int VertCountX { get => vertCountX; }
         public int VertCountY { get => vertCountY; }
 
+		int m_screenWidth;
+		int m_screenHeight;
 
         [Persistent] public float offScreenVertexStretch = 1.25f;
         [Persistent] public float alphaRadius = 3000f;
@@ -113,8 +127,18 @@ namespace Scatterer
         public virtual void Init (ProlandManager manager)
         {
             projectedGridPixelSize = Scatterer.Instance.mainSettings.oceanMeshResolution;
-            prolandManager = manager;
             
+            m_screenWidth = Screen.width;
+            m_screenHeight = Screen.height;
+            
+            if (XRSettings.loadedDeviceName != string.Empty)
+            {
+                m_screenWidth = Math.Max(m_screenWidth, XRSettings.eyeTextureWidth);
+                m_screenHeight = Math.Max(m_screenHeight, XRSettings.eyeTextureHeight);
+            }
+
+            prolandManager = manager;
+
             LoadFromConfigNode();
             InitOceanMaterial();
             CreateProjectedGridMesh();
@@ -228,12 +252,11 @@ namespace Scatterer
 
         void CreateProjectedGridMesh ()
         {
-            
             projectedGridPixelSize = Mathf.Max (1, projectedGridPixelSize);
             
             //The number of squares in the grid on the x and y axis
-            vertCountX = Screen.width / projectedGridPixelSize;
-            vertCountY = Screen.height / projectedGridPixelSize;
+            vertCountX = m_screenWidth / projectedGridPixelSize;
+            vertCountY = m_screenHeight / projectedGridPixelSize;
 
             const int maxVertCountIn16BitIndexMesh = 65000; //The number of meshes needed to make a grid of this resolution, if not using 32-bit index meshes
 
@@ -332,10 +355,11 @@ namespace Scatterer
                 m_oceanMaterial.SetTexture(ShaderProperties._customDepthTexture_PROPERTY, DepthToDistanceCommandBuffer.RenderTexture);
 
             m_oceanMaterial.renderQueue=2502;
-            
-            m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
-            m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
-            m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)projectedGridPixelSize / (float)Screen.width, (float)projectedGridPixelSize / (float)Screen.height));
+			
+			m_oceanMaterial.SetVector (ShaderProperties._Ocean_Color_PROPERTY, m_oceanUpwellingColor);
+			m_oceanMaterial.SetVector ("_Underwater_Color", m_UnderwaterColor);
+			m_oceanMaterial.SetVector (ShaderProperties._Ocean_ScreenGridSize_PROPERTY, new Vector2 ((float)projectedGridPixelSize / (float)m_screenWidth, (float)projectedGridPixelSize / (float)m_screenHeight));
+
 
             //oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(radius+m_oceanLevel));
             m_oceanMaterial.SetFloat (ShaderProperties._Ocean_Radius_PROPERTY, (float)(prolandManager.GetRadius()));

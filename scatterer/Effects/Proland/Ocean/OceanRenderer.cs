@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.XR;
 
 namespace Scatterer
 {
@@ -73,7 +75,6 @@ namespace Scatterer
                 }
             }
         }
-
 
         public void OnDestroy ()
         {
@@ -294,6 +295,12 @@ namespace Scatterer
             {
                 screenWidth = Screen.width;
                 screenHeight = Screen.height;
+            }
+
+            if (XRSettings.loadedDeviceName != string.Empty)
+            {
+                screenWidth = Math.Max(screenWidth, XRSettings.eyeTextureWidth);
+                screenHeight = Math.Max(screenHeight, XRSettings.eyeTextureHeight);
             }
         }
 
