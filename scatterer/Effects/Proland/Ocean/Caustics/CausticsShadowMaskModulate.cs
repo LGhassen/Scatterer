@@ -60,9 +60,9 @@ namespace Scatterer
 
 				sunLight = inputSunlight;
 
-				m_Buffer = new CommandBuffer ();
-				m_Buffer.name = "CausticsShadowMaskmodulate";			
-				m_Buffer.Blit (null, BuiltinRenderTextureType.CurrentActive, CausticsShadowMaskModulateMaterial);
+                m_Buffer = new CommandBuffer ();
+                m_Buffer.name = "Scatterer caustics shadowMask modulate CommandBuffer";
+                m_Buffer.Blit (null, BuiltinRenderTextureType.CurrentActive, CausticsShadowMaskModulateMaterial);
 
 				AddCommandBuffer ();
 				isEnabled = true;

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.XR;
 
 namespace Scatterer
 {
@@ -25,7 +26,7 @@ namespace Scatterer
 		const int k_SampleCount = 8;
 		
 		// Ping-pong between two history textures as we can't read & write the same target in the same pass
-		const int eyesCount = 1; const int historyTexturesCount = 2;
+		const int eyesCount = 2; const int historyTexturesCount = 2;
 		RenderTexture[][] historyTextures = new RenderTexture[eyesCount][];
 
 		int[] m_HistoryPingPong = new int [eyesCount];
@@ -65,34 +66,37 @@ namespace Scatterer
 			temporalAAMaterial.SetFloat("_Sharpness", sharpness);
 			temporalAAMaterial.SetVector("_FinalBlendParameters", new Vector4(stationaryBlending, motionBlending, kMotionAmplification, 0f));
 
-			temporalAACommandBuffer = new CommandBuffer ();
-		}
+			temporalAACommandBuffer = new CommandBuffer();
+			temporalAACommandBuffer.name = $"Scatterer TAA CommandBuffer for {targetCamera.name}";
+	}
 
 		internal DepthTextureMode GetCameraFlags()
 		{
 			return DepthTextureMode.Depth | DepthTextureMode.MotionVectors;
-		}
-		
-		internal void ResetHistory()
-		{
-			m_ResetHistory = true;
-		}
-		
-		Vector2 GenerateRandomOffset()
-		{
-			// The variance between 0 and the actual halton sequence values reveals noticeable instability
-			// in Unity's shadow maps, so we avoid index 0.
-			var offset = new Vector2(
-				HaltonSeq.Get((sampleIndex & 1023) + 1, 2) - 0.5f,
-				HaltonSeq.Get((sampleIndex & 1023) + 1, 3) - 0.5f
-				);
-			
-			if (++sampleIndex >= k_SampleCount)
-				sampleIndex = 0;
-			
-			return offset;
-		}
+        }
+        
+        internal void ResetHistory()
+        {
+            m_ResetHistory = true;
+        }
+        
+        Vector2 GenerateRandomOffset()
+        {
+            // The variance between 0 and the actual halton sequence values reveals noticeable instability
+            // in Unity's shadow maps, so we avoid index 0.
+            var offset = new Vector2(
+                HaltonSeq.Get((sampleIndex & 1023) + 1, 2) - 0.5f,
+                HaltonSeq.Get((sampleIndex & 1023) + 1, 3) - 0.5f
+                );
+            
+            if (++sampleIndex >= k_SampleCount)
+                sampleIndex = 0;
+            
+            return offset;
+        }
 
+		private static class RuntimeUtilities
+		{
 		/// Gets a jittered perspective projection matrix for a given camera.
 		public static Matrix4x4 GetJitteredPerspectiveProjectionMatrix(Camera camera, Vector2 offset)
 		{
@@ -113,6 +117,43 @@ namespace Scatterer
 			return matrix;
 		}
 		
+			public static Matrix4x4 GetJitteredOrthographicProjectionMatrix(Camera camera, Vector2 offset)
+			{
+				float vertical = camera.orthographicSize;
+				float horizontal = vertical * camera.aspect;
+
+				offset.x *= horizontal / (0.5f * camera.pixelWidth);
+				offset.y *= vertical / (0.5f * camera.pixelHeight);
+
+				float left = offset.x - horizontal;
+				float right = offset.x + horizontal;
+				float top = offset.y + vertical;
+				float bottom = offset.y - vertical;
+
+				return Matrix4x4.Ortho(left, right, bottom, top, camera.nearClipPlane, camera.farClipPlane);
+			}
+
+			public static Matrix4x4 GenerateJitteredProjectionMatrixFromOriginal(int screenWidth, int screenHeight, Matrix4x4 origProj, Vector2 jitter)
+			{
+				var planes = origProj.decomposeProjection;
+
+				float vertFov = Mathf.Abs(planes.top) + Mathf.Abs(planes.bottom);
+				float horizFov = Mathf.Abs(planes.left) + Mathf.Abs(planes.right);
+
+				var planeJitter = new Vector2(jitter.x * horizFov / screenWidth,
+					jitter.y * vertFov / screenHeight);
+
+				planes.left += planeJitter.x;
+				planes.right += planeJitter.x;
+				planes.top += planeJitter.y;
+				planes.bottom += planeJitter.y;
+
+				var jitteredMatrix = Matrix4x4.Frustum(planes);
+
+				return jitteredMatrix;
+			}
+		}
+		
 		/// Generates a jittered projection matrix for a given camera.
 		public Matrix4x4 GetJitteredProjectionMatrix(Camera camera)
 		{
@@ -120,7 +161,9 @@ namespace Scatterer
 			jitter = GenerateRandomOffset();
 			jitter *= jitterSpread;
 
-			cameraProj = GetJitteredPerspectiveProjectionMatrix(camera, jitter);
+			cameraProj = camera.orthographic
+				? RuntimeUtilities.GetJitteredOrthographicProjectionMatrix(camera, jitter)
+				: RuntimeUtilities.GetJitteredPerspectiveProjectionMatrix(camera, jitter);
 
 			jitter = new Vector2(jitter.x / camera.pixelWidth, jitter.y / camera.pixelHeight);
 			return cameraProj;
@@ -128,18 +171,51 @@ namespace Scatterer
 		
 		
 		/// Prepares the jittered and non jittered projection matrices
-		public void ConfigureJitteredProjectionMatrix()
+		public void ConfigureJitteredProjectionMatrix(Camera camera)
 		{
-			targetCamera.projectionMatrix = GetJitteredProjectionMatrix(targetCamera);
-			targetCamera.useJitteredProjectionMatrixForTransparentRendering = jitterTransparencies;
+			// camera.nonJitteredProjectionMatrix = camera.projectionMatrix; // should this be here?  it's in the stock postprocess code
+			camera.projectionMatrix = GetJitteredProjectionMatrix(camera);
+			camera.useJitteredProjectionMatrixForTransparentRendering = jitterTransparencies;
+		}
 
-			temporalAAMaterial.SetVector(jitterProperty, jitter);
+		public void ConfigureStereoJitteredProjectionMatrices(Camera camera)
+		{
+            jitter = GenerateRandomOffset();
+            jitter *= jitterSpread;
+
+			// see PostProcessRenderContext.camera set property
+			int screenWidth, screenHeight;
+			if (camera.stereoEnabled)
+			{
+				screenWidth = XRSettings.eyeTextureWidth;
+				screenHeight = XRSettings.eyeTextureHeight;
+			}
+			else
+			{
+				screenWidth = camera.pixelWidth;
+				screenHeight = camera.pixelHeight;
+			}
+
+            for (var eye = Camera.StereoscopicEye.Left; eye <= Camera.StereoscopicEye.Right; eye++)
+            {
+                // This saves off the device generated projection matrices as non-jittered
+                camera.CopyStereoDeviceProjectionMatrixToNonJittered(eye);
+                var originalProj = camera.GetStereoNonJitteredProjectionMatrix(eye);
+
+                // Currently no support for custom jitter func, as VR devices would need to provide
+                // original projection matrix as input along with jitter
+                var jitteredMatrix = RuntimeUtilities.GenerateJitteredProjectionMatrixFromOriginal(screenWidth, screenHeight, originalProj, jitter);
+                camera.SetStereoProjectionMatrix(eye, jitteredMatrix);
+            }
+
+            // jitter has to be scaled for the actual eye texture size, not just the intermediate texture size
+            // which could be double-wide in certain stereo rendering scenarios
+            jitter = new Vector2(jitter.x / screenWidth, jitter.y / screenHeight);
+            camera.useJitteredProjectionMatrixForTransparentRendering = jitterTransparencies;
 		}
 		
-		RenderTexture CheckHistory(int id, CommandBuffer cmd)
-		{
-			int activeEye = 0;
-			
+		RenderTexture CheckHistory(int id, CommandBuffer cmd, int activeEye)
+		{	
 			if (historyTextures[activeEye] == null)
 				historyTextures[activeEye] = new RenderTexture[historyTexturesCount];
 
@@ -192,11 +268,11 @@ namespace Scatterer
 			{ 
 				temporalAACommandBuffer.Clear();
 
-				int activeEye = 0;
+				int activeEye = targetCamera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right ? 1 : 0;
 
 				int pingPongIndex = m_HistoryPingPong[activeEye];
-				RenderTexture historyRead = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
-				RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer);
+				RenderTexture historyRead = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer, activeEye);
+				RenderTexture historyWrite = CheckHistory(++pingPongIndex % 2, temporalAACommandBuffer, activeEye);
 				m_HistoryPingPong[activeEye] = ++pingPongIndex % 2;
 
 				if (firstFrame)
@@ -205,7 +281,7 @@ namespace Scatterer
 				}
 				else
                 {
-					ConfigureJitteredProjectionMatrix();
+					ConfigureJitteredProjectionMatrix(targetCamera);
 
 					//TODO: move to shader properties
 					if (checkOceanDepth)
@@ -279,6 +355,7 @@ namespace Scatterer
 
 			sampleIndex = 0;
 			m_HistoryPingPong[0] = 0;
+			m_HistoryPingPong[1] = 1;
 
 			ResetHistory();
 
