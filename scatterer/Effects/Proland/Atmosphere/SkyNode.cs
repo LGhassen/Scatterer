@@ -1069,14 +1069,14 @@ namespace Scatterer
                     List<Material> materialsNoCityLights = new List<Material>(materials);
                     materialsNoCityLights.RemoveAll(x => x.shader.name == "EVE/PlanetCityLight");
 
-                    Material planetScaledSpaceMaterial = materialsNoCityLights.ElementAt(0);
+                    Material planetScaledSpaceMaterial = materialsNoCityLights[0];
 
                     planetScaledSpaceMaterial.SetShaderPassEnabled("ForwardBase", true);
                     planetScaledSpaceMaterial.SetShaderPassEnabled("ForwardAdd", false);
 
                     materials.Add(Material.Instantiate(planetScaledSpaceMaterial));
 
-                    materials.Last().CopyPropertiesFromMaterial(materialsNoCityLights.ElementAt(0));
+                    materials.Last().CopyPropertiesFromMaterial(materialsNoCityLights[0]);
                     materials.Last().SetShaderPassEnabled("ForwardBase", false);
                     materials.Last().SetShaderPassEnabled("ForwardAdd", true);
                     materials.Last().renderQueue = 2002;

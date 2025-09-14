@@ -308,7 +308,10 @@ namespace Scatterer
         
         public static int _ReadBuffer1_PROPERTY { get { return _ReadBuffer1; } }
         private static int _ReadBuffer1;
-        
+
+        public static int _ReadBuffer2_PROPERTY { get { return _ReadBuffer2; } }
+        private static int _ReadBuffer2;
+
         public static int _MainTex_PROPERTY { get { return _MainTex; } }
         private static int _MainTex;
                 
@@ -572,6 +575,7 @@ namespace Scatterer
             _ButterFlyLookUp = Shader.PropertyToID("_ButterFlyLookUp");
             _ReadBuffer0 = Shader.PropertyToID("_ReadBuffer0");
             _ReadBuffer1 = Shader.PropertyToID("_ReadBuffer1");
+            _ReadBuffer2 = Shader.PropertyToID("_ReadBuffer2");
             _MainTex = Shader.PropertyToID("_MainTex");
             _ZwriteVariable = Shader.PropertyToID("_ZwriteVariable");
             warpTime = Shader.PropertyToID("warpTime");

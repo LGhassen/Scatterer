@@ -174,7 +174,7 @@ namespace Scatterer
                 
                 m_fourier.SetTexture(ShaderProperties._ReadBuffer0_PROPERTY, data0[idx1]);
                 m_fourier.SetTexture(ShaderProperties._ReadBuffer1_PROPERTY, data1[idx1]);
-                m_fourier.SetTexture("_ReadBuffer2", data2[idx1]);
+                m_fourier.SetTexture(ShaderProperties._ReadBuffer2_PROPERTY, data2[idx1]);
                 
                 if(idx == 0)
                     RTUtility.MultiTargetBlit(pass0, m_fourier, PASS_X_3);
@@ -191,7 +191,7 @@ namespace Scatterer
                 
                 m_fourier.SetTexture(ShaderProperties._ReadBuffer0_PROPERTY, data0[idx1]);
                 m_fourier.SetTexture(ShaderProperties._ReadBuffer1_PROPERTY, data1[idx1]);
-                m_fourier.SetTexture("_ReadBuffer2", data2[idx1]);
+                m_fourier.SetTexture(ShaderProperties._ReadBuffer2_PROPERTY, data2[idx1]);
                 
                 if(idx == 0)
                     RTUtility.MultiTargetBlit(pass0, m_fourier, PASS_Y_3);
