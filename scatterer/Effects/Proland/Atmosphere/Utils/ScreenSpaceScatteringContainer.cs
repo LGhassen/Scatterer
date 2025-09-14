@@ -65,10 +65,10 @@ namespace Scatterer
                 }
                 else
                 {
-                    // Add null to the cameras we don't want to render on so we don't do a string compare every time, including reflection probe cameras
+                    // Add null to the cameras we don't want to render on so we don't do a string compare every time
                     // DepthCamera and NearCamera render Kerbal portraits (also using dual camera system), they are disabled because of an issue with the screen copy
                     // and being mostly unnoticeable
-                    if ((cam.name == "TRReflectionCamera") || (cam.name=="Reflection Probes Camera") || (cam.name == "NearCamera") || (cam.name == "DepthCamera"))
+                    if ((cam.name == "NearCamera") || (cam.name == "DepthCamera"))
                     {
                         cameraToScatteringCommandBuffer[cam] = null;
                     }
@@ -102,7 +102,8 @@ namespace Scatterer
     {
         bool renderingEnabled = false;
         bool screenShotModeEnabledOnLastFrame = false;
-        
+        bool reflectionProbeCamera = false;
+
         public MeshRenderer targetRenderer;
         public Material targetMaterial;
         
@@ -118,6 +119,11 @@ namespace Scatterer
         public void Initialize(bool inHasOcean, bool quarterRes)
         {
             targetCamera = GetComponent<Camera>();
+
+            if (targetCamera.name == "TRReflectionCamera" || targetCamera.name == "Reflection Probes Camera")
+                reflectionProbeCamera = true;
+
+            inHasOcean = inHasOcean && !reflectionProbeCamera;
 
             targetCamera.depthTextureMode = targetCamera.depthTextureMode | DepthTextureMode.Depth;
 
@@ -138,7 +144,7 @@ namespace Scatterer
                 downscaleDepthMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/DownscaleDepth")]);
                 compositeScatteringMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/CompositeDownscaledScattering")]);
                 Utils.EnableOrDisableShaderKeywords(compositeScatteringMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", inHasOcean);
-                compositeScatteringMaterial.SetInt(ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean ? 1 : 0);
+                compositeScatteringMaterial.SetInt(ShaderProperties._ZwriteVariable_PROPERTY, inHasOcean? 1 : 0);
                 Utils.SetToneMapping(compositeScatteringMaterial);
 
                 quarterResRendererCommandBuffer = new CommandBuffer();
@@ -157,9 +163,9 @@ namespace Scatterer
 
             // Downscale depth
             if (inHasOcean)
-                quarterResRendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 1);        //ocean depth buffer downsample
+                quarterResRendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 1);        // ocean depth buffer downsample
             else
-                quarterResRendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 0);        //default depth buffer downsample
+                quarterResRendererCommandBuffer.Blit(null, downscaledDepthRenderTexture, downscaleDepthMaterial, 0);        // default depth buffer downsample
 
             quarterResRendererCommandBuffer.SetGlobalTexture("ScattererDownscaledScatteringDepth", downscaledDepthRenderTexture);
 
