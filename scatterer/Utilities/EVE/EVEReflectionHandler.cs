@@ -6,15 +6,17 @@ using UnityEngine;
 
 namespace Scatterer
 {
-	public struct EVECloudLayer
-	{
-		public object CloudObject;
-		public Material Clouds2dMaterial;
-		public MeshRenderer Clouds2dMeshRenderer;
-		public Material CloudShadowMaterial;
-		public Material ParticleVolumetricsMaterial;
-		public Material RaymarchedVolumetricsMaterial;
-	}
+    public class EVECloudLayer
+    {
+        public object CloudObject;
+        public Material Clouds2dMaterial;
+        public MeshRenderer Clouds2dMeshRenderer;
+        public Material CloudShadowMaterial;
+        public Material ParticleVolumetricsMaterial;
+        public Material RaymarchedVolumetricsMaterial;
+        public float Altitude;
+        public float CurrentDistanceToCamera;
+    }
 
 	public class EVEReflectionHandler
 	{
@@ -54,8 +56,9 @@ namespace Scatterer
             {
                 String body = cloudObject.GetType().GetField("body", flags).GetValue(cloudObject) as String;
 
-				EVECloudLayer cloudLayer = new EVECloudLayer();
-				cloudLayer.CloudObject = cloudObject;
+                EVECloudLayer cloudLayer = new EVECloudLayer();
+                cloudLayer.CloudObject = cloudObject;
+                cloudLayer.Altitude = (float)cloudObject.GetType().GetField("altitude", flags).GetValue(cloudObject);
 
 				Map2DLayer(ref cloudLayer, cloudObject, body);
 				MapParticleVolumetrics(ref cloudLayer, cloudObject, body);

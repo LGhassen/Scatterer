@@ -1,6 +1,7 @@
 // Manages loading,unloading and updating for all the Scatterer-enabled celestial bodies
 // Will spawn/delete/update a ProlandManager for each body if within range
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -16,14 +17,16 @@ namespace Scatterer
 		bool customOceanEnabledOnScattererPlanet = false;
 		public bool isCustomOceanEnabledOnScattererPlanet{get{return customOceanEnabledOnScattererPlanet;}}
 
-		public ScattererCelestialBodiesManager ()
-		{
-		}
+        public const int startingScaledRenderQueue = 2900;
 
-		public void Init()
-		{
-			findCelestialBodies ();
-		}
+        public ScattererCelestialBodiesManager ()
+        {
+        }
+
+        public void Init()
+        {
+            FindCelestialBodies ();
+        }
 
 		public void Update()
 		{
@@ -36,43 +39,82 @@ namespace Scatterer
 			underwater = false;
 			customOceanEnabledOnScattererPlanet = false;
 
-			foreach (ScattererCelestialBody scattererCelestialBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
-			{
-				float minDistance;	//smallest distance to either the camera or ship
-				if (scattererCelestialBody.isFound)
-				{
-					minDistance = Vector3.Distance (Scatterer.Instance.scaledSpaceCamera.transform.position, scattererCelestialBody.transform.position) * ScaledSpace.ScaleFactor;
-					minDistance = FlightGlobals.ActiveVessel ? Mathf.Min(minDistance, Vector3.Distance (FlightGlobals.ActiveVessel.transform.position, ScaledSpace.ScaledToLocalSpace (scattererCelestialBody.transform.position))) : minDistance;
+            foreach (ScattererCelestialBody scattererCelestialBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
+            {
+                float minDistance;    //smallest distance to either the camera or ship
+                if (scattererCelestialBody.isFound)
+                {
+                    scattererCelestialBody.currentDistanceFromCamera = Vector3.Distance (Scatterer.Instance.scaledSpaceCamera.transform.position, scattererCelestialBody.transform.position) * ScaledSpace.ScaleFactor;
+                    minDistance = FlightGlobals.ActiveVessel ? Mathf.Min(scattererCelestialBody.currentDistanceFromCamera, Vector3.Distance (FlightGlobals.ActiveVessel.transform.position, ScaledSpace.ScaledToLocalSpace (scattererCelestialBody.transform.position))) : scattererCelestialBody.currentDistanceFromCamera;
 
-					if (scattererCelestialBody.active)
-					{
-						if (minDistance > scattererCelestialBody.unloadDistance)
-						{
-							unloadEffectsForBody(scattererCelestialBody);
-							break;
-						}
-						else
-						{
-							updateBody (scattererCelestialBody, ref pqsEnabledOnScattererPlanet, ref underwater, ref customOceanEnabledOnScattererPlanet);
-						}
-					}
-					else
-					{	
-						if (minDistance < scattererCelestialBody.loadDistance && scattererCelestialBody.transform && scattererCelestialBody.celestialBody)
-						{
-							loadEffectsForBody (scattererCelestialBody);
-							break;
-						}
-					}
-				}
-			}
-		}
+                    if (scattererCelestialBody.active)
+                    {
+                        if (minDistance > scattererCelestialBody.unloadDistance)
+                        {
+                            UnloadEffectsForBody(scattererCelestialBody);
+                            break;
+                        }
+                        else
+                        {
+                            UpdateBody (scattererCelestialBody, ref pqsEnabledOnScattererPlanet, ref underwater, ref customOceanEnabledOnScattererPlanet);
+                        }
+                    }
+                    else
+                    {    
+                        if (minDistance < scattererCelestialBody.loadDistance && scattererCelestialBody.transform && scattererCelestialBody.celestialBody)
+                        {
+                            LoadEffectsForBody (scattererCelestialBody);
+                            break;
+                        }
+                    }
+                }
+            }
 
-		void findCelestialBodies()
-		{
-			foreach (ScattererCelestialBody sctBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
-			{
-				Utils.LogDebug("Finding ScattererCelestialBody name: "+sctBody.celestialBodyName+". TransformName: "+sctBody.transformName);
+            // Sort planets and cloud layers back to front to set the correct renderqueue for atmosphere and clouds
+            // TODO: Do the same thing for planetary rings, needs splitting wring mesh in multiple parts to set behind/in-front
+            List<ScattererCelestialBody> farthestToClosestActiveFound = Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies
+                .Where(b => b.isFound && b.active)
+                .ToList();
+
+            farthestToClosestActiveFound.Sort((a, b) => b.currentDistanceFromCamera.CompareTo(a.currentDistanceFromCamera));
+
+            int currentRenderqueue = startingScaledRenderQueue - 1;
+
+            foreach (ScattererCelestialBody scattererCelestialBody in farthestToClosestActiveFound)
+            {
+                scattererCelestialBody.prolandManager.skyNode.scaledScatteringMaterial.renderQueue = currentRenderqueue++;
+                scattererCelestialBody.prolandManager.skyNode.skyMaterial.renderQueue = currentRenderqueue++;
+
+                if (Scatterer.Instance.eveReflectionHandler.EVECloudLayers.TryGetValue(scattererCelestialBody.celestialBodyName, out var layers))
+                {
+                    var cameraAltitude = scattererCelestialBody.currentDistanceFromCamera - (float)scattererCelestialBody.celestialBody.Radius;
+
+                    foreach (EVECloudLayer eveCloudLayer in layers)
+                    {
+                        if (eveCloudLayer.Clouds2dMaterial != null)
+                        { 
+                            eveCloudLayer.CurrentDistanceToCamera = Mathf.Abs(eveCloudLayer.Altitude - cameraAltitude);
+                        }
+                    }
+
+                    layers.Sort((a, b) => b.CurrentDistanceToCamera.CompareTo(a.CurrentDistanceToCamera));
+
+                    foreach (EVECloudLayer eveCloudLayer in layers)
+                    {
+                        if (eveCloudLayer.Clouds2dMaterial != null)
+                        { 
+                            eveCloudLayer.Clouds2dMaterial.renderQueue = currentRenderqueue++;
+                        }
+                    }
+                }
+            }
+        }
+
+        void FindCelestialBodies()
+        {
+            foreach (ScattererCelestialBody sctBody in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
+            {
+                Utils.LogDebug("Finding ScattererCelestialBody name: "+sctBody.celestialBodyName+". TransformName: "+sctBody.transformName);
 
 				var celBody = FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.bodyName == sctBody.celestialBodyName);
 				
@@ -108,70 +150,70 @@ namespace Scatterer
 			}
 		}
 
-		void loadEffectsForBody (ScattererCelestialBody scattererCelestialBody)
-		{
-			try
-			{
-				if (HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
-					scattererCelestialBody.hasOcean = false;
-				
-				scattererCelestialBody.prolandManager = new ProlandManager ();
-				scattererCelestialBody.prolandManager.Init (scattererCelestialBody);
-				scattererCelestialBody.active = true;
-				
-				if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Contains (scattererCelestialBody))
-				{
-					Scatterer.Instance.guiHandler.LoadPlanet(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (scattererCelestialBody));
-				}
-				else
-				{
-					throw new Exception ("Planet already removed from planets list");
-				}
-				
-				Utils.LogDebug ("Effects loaded for " + scattererCelestialBody.celestialBodyName);
-			}
-			catch (Exception exception)
-			{
-				if (HighLogic.LoadedScene != GameScenes.MAINMENU || !exception.Message.Contains("No correct main menu object found for "))
-					Utils.LogError ("Effects couldn't be loaded for " + scattererCelestialBody.celestialBodyName + ", " + exception.ToString ());
-				
-				try {
-					scattererCelestialBody.prolandManager.OnDestroy ();
-				}
-				catch (Exception exception2) {
-					Utils.LogDebug ("manager couldn't be removed for " + scattererCelestialBody.celestialBodyName + " because of exception: " + exception2.ToString ());
-				}
-				
-				Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Remove (scattererCelestialBody);
-				
-				if (HighLogic.LoadedScene != GameScenes.MAINMENU)
-				{
-					Utils.LogDebug ("" + scattererCelestialBody.celestialBodyName + " removed from active planets.");
-				}
-				
-				return;
-			}
-		}
+        void LoadEffectsForBody (ScattererCelestialBody scattererCelestialBody)
+        {
+            try
+            {
+                if (HighLogic.LoadedScene == GameScenes.TRACKSTATION || HighLogic.LoadedScene == GameScenes.MAINMENU)
+                    scattererCelestialBody.hasOcean = false;
+                
+                scattererCelestialBody.prolandManager = new ProlandManager ();
+                scattererCelestialBody.prolandManager.Init (scattererCelestialBody);
+                scattererCelestialBody.active = true;
+                
+                if (Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Contains (scattererCelestialBody))
+                {
+                    Scatterer.Instance.guiHandler.LoadPlanet(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.IndexOf (scattererCelestialBody));
+                }
+                else
+                {
+                    throw new Exception ("Planet already removed from planets list");
+                }
+                
+                Utils.LogDebug ("Effects loaded for " + scattererCelestialBody.celestialBodyName);
+            }
+            catch (Exception exception)
+            {
+                if (HighLogic.LoadedScene != GameScenes.MAINMENU || !exception.Message.Contains("No correct main menu object found for "))
+                    Utils.LogError ("Effects couldn't be loaded for " + scattererCelestialBody.celestialBodyName + ", " + exception.ToString ());
+                
+                try {
+                    scattererCelestialBody.prolandManager.OnDestroy ();
+                }
+                catch (Exception exception2) {
+                    Utils.LogDebug ("manager couldn't be removed for " + scattererCelestialBody.celestialBodyName + " because of exception: " + exception2.ToString ());
+                }
+                
+                Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies.Remove (scattererCelestialBody);
+                
+                if (HighLogic.LoadedScene != GameScenes.MAINMENU)
+                {
+                    Utils.LogDebug ("" + scattererCelestialBody.celestialBodyName + " removed from active planets.");
+                }
+                
+                return;
+            }
+        }
 
-		ScattererCelestialBody updateBody (ScattererCelestialBody scattererCelestialBody, ref bool inPqsEnabledOnScattererPlanet, ref bool inUnderwater, ref bool inCustomOceanEnabledOnScattererPlanet)
-		{
-			scattererCelestialBody.prolandManager.Update ();
-			inPqsEnabledOnScattererPlanet = inPqsEnabledOnScattererPlanet || !scattererCelestialBody.prolandManager.skyNode.inScaledSpace;
-			if (inPqsEnabledOnScattererPlanet && scattererCelestialBody.prolandManager.GetOceanNode()) {
-				inCustomOceanEnabledOnScattererPlanet = true;
-				inUnderwater = scattererCelestialBody.prolandManager.GetOceanNode ().isUnderwater;
-			}
-			return scattererCelestialBody;
-		}
-		
-		void unloadEffectsForBody(ScattererCelestialBody scattererCelestialBody)
-		{
-			scattererCelestialBody.prolandManager.OnDestroy ();
-			UnityEngine.Object.DestroyImmediate (scattererCelestialBody.prolandManager);
-			scattererCelestialBody.prolandManager = null;
-			scattererCelestialBody.active = false;
-			Utils.LogDebug ("Effects unloaded for " + scattererCelestialBody.celestialBodyName);
-		}
+        ScattererCelestialBody UpdateBody (ScattererCelestialBody scattererCelestialBody, ref bool inPqsEnabledOnScattererPlanet, ref bool inUnderwater, ref bool inCustomOceanEnabledOnScattererPlanet)
+        {
+            scattererCelestialBody.prolandManager.Update ();
+            inPqsEnabledOnScattererPlanet = inPqsEnabledOnScattererPlanet || !scattererCelestialBody.prolandManager.skyNode.inScaledSpace;
+            if (inPqsEnabledOnScattererPlanet && scattererCelestialBody.prolandManager.GetOceanNode()) {
+                inCustomOceanEnabledOnScattererPlanet = true;
+                inUnderwater = scattererCelestialBody.prolandManager.GetOceanNode ().isUnderwater;
+            }
+            return scattererCelestialBody;
+        }
+        
+        void UnloadEffectsForBody(ScattererCelestialBody scattererCelestialBody)
+        {
+            scattererCelestialBody.prolandManager.OnDestroy ();
+            UnityEngine.Object.Destroy (scattererCelestialBody.prolandManager);
+            scattererCelestialBody.prolandManager = null;
+            scattererCelestialBody.active = false;
+            Utils.LogDebug ("Effects unloaded for " + scattererCelestialBody.celestialBodyName);
+        }
 
 		public void Cleanup()
 		{

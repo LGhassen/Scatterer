@@ -23,19 +23,21 @@ namespace Scatterer
 
 		[Persistent] public List<SecondarySunConfig> secondarySuns=new List<SecondarySunConfig> {};
 
-		[Persistent] public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
-			
-		public CelestialBody celestialBody;
-		public Transform transform;
-		public bool isFound = false;
-		public bool active;
-		public ProlandManager prolandManager;
-		
-		public ScattererCelestialBody ()
-		{
-			
-		}
-	}
+        [Persistent] public List<AtmoPlanetShineSource> planetshineSources=new List<AtmoPlanetShineSource> {};
+            
+        public CelestialBody celestialBody;
+        public Transform transform;
+        public bool isFound = false;
+        public bool active;
+        public ProlandManager prolandManager;
+
+        public float currentDistanceFromCamera = 0f;
+
+        public ScattererCelestialBody ()
+        {
+            
+        }
+    }
 
 	public class SecondarySunConfig
 	{
