@@ -29,6 +29,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Threading;
+using Scatterer.Burst;
 
 
 
@@ -203,44 +204,21 @@ namespace Scatterer {
             
         }
         
-        Vector2 GetSlopeVariances(Vector2 k, float A, float B, float C, float spectrumX, float spectrumY) {
-            float w = 1.0f - Mathf.Exp(A * k.x * k.x + B * k.x * k.y + C * k.y * k.y);
-            return new Vector2((k.x * k.x) * w, (k.y * k.y) * w) * (spectrumX * spectrumX + spectrumY * spectrumY) * 2.0f;
-        }
-        
-        
         
         /// <summary>
         /// Iterate over the spectrum and find the variance.
         /// Use in the BRDF equations.
         /// </summary>
         Vector2 ComputeVariance(float slopeVarianceDelta, float[] inSpectrum01, float[] inSpectrum23, float idxX, float idxY, float idxZ) {
-            const float SCALE = 10.0f;
-            
-            float A = Mathf.Pow(idxX / ((float) m_varianceSize - 1.0f), 4.0f) * SCALE;
-            float C = Mathf.Pow(idxZ / ((float) m_varianceSize - 1.0f), 4.0f) * SCALE;
-            float B = (2.0f * idxY / ((float) m_varianceSize - 1.0f) - 1.0f) * Mathf.Sqrt(A * C);
-            A = -0.5f * A;
-            B = -B;
-            C = -0.5f * C;
-            
-            Vector2 slopeVariances = new Vector2(slopeVarianceDelta, slopeVarianceDelta);
-            
-            for (int x = 0; x < m_fourierGridSize; x++) {
-                for (int y = 0; y < m_fourierGridSize; y++) {
-                    int i = x >= m_fsize / 2.0f ? x - m_fourierGridSize : x;
-                    int j = y >= m_fsize / 2.0f ? y - m_fourierGridSize : y;
-                    
-                    Vector2 k = new Vector2(i, j) * 2.0f * Mathf.PI;
-                    
-                    slopeVariances += GetSlopeVariances(k / m_gridSizes.x, A, B, C, inSpectrum01[(x + y * m_fourierGridSize) * 4 + 0], inSpectrum01[(x + y * m_fourierGridSize) * 4 + 1]);
-                    slopeVariances += GetSlopeVariances(k / m_gridSizes.y, A, B, C, inSpectrum01[(x + y * m_fourierGridSize) * 4 + 2], inSpectrum01[(x + y * m_fourierGridSize) * 4 + 3]);
-                    slopeVariances += GetSlopeVariances(k / m_gridSizes.z, A, B, C, inSpectrum23[(x + y * m_fourierGridSize) * 4 + 0], inSpectrum23[(x + y * m_fourierGridSize) * 4 + 1]);
-                    slopeVariances += GetSlopeVariances(k / m_gridSizes.w, A, B, C, inSpectrum23[(x + y * m_fourierGridSize) * 4 + 2], inSpectrum23[(x + y * m_fourierGridSize) * 4 + 3]);
-                }
-            }
-            
-            return slopeVariances;
+            OceanFFT fft = new OceanFFT
+            {
+                m_varianceSize = m_varianceSize,
+                m_fourierGridSize = m_fourierGridSize,
+                m_fsize = m_fsize,
+                m_gridSizes = m_gridSizes
+            };
+
+            return fft.ComputeVariance(slopeVarianceDelta, inSpectrum01, inSpectrum23, idxX, idxY, idxZ);
         }
         
         
