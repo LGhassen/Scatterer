@@ -620,7 +620,7 @@ namespace Scatterer {
 
             m_varianceMax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
 
-            Vector2[,,] variance32bit = new Vector2[m_varianceSize, m_varianceSize, m_varianceSize];
+            Vector2[] variance32bit = new Vector2[m_varianceSize * m_varianceSize * m_varianceSize];
             Color32[] variance8bit = new Color32[m_varianceSize * m_varianceSize * m_varianceSize];
 
             int totalIterations = m_varianceSize * m_varianceSize * m_varianceSize;
@@ -637,7 +637,7 @@ namespace Scatterer {
                     int z = idx / (m_varianceSize * m_varianceSize);
 
                     var variance = ComputeVariance(slopeVarianceDelta, spectrum01, spectrum23, x, y, z);
-                    variance32bit[x, y, z] = variance;
+                    variance32bit[idx] = variance;
                     return variance;
                 })
                 .Aggregate(
@@ -645,27 +645,13 @@ namespace Scatterer {
                     (a, b) => new Vector2(Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y))
                 );
 
-            // Second pass: Normalize and compute m_maxSlopeVariance in parallel
-            m_maxSlopeVariance = Enumerable
-                .Range(0, totalIterations)
-                .AsParallel()
-                .Select(idx =>
-                {
-                    // Calculate the x, y, z indices from the linear index
-                    int x = idx % m_varianceSize;
-                    int y = (idx / m_varianceSize) % m_varianceSize;
-                    int z = idx / (m_varianceSize * m_varianceSize);
-
-                    // Store in the 8-bit array
-                    var variance = new Color(variance32bit[x, y, z].x / m_varianceMax.x, variance32bit[x, y, z].y / m_varianceMax.y, 0.0f, 1.0f);
-                    variance8bit[idx] = variance;
-
-                    return Mathf.Max(
-                        variance8bit[idx].r * m_varianceMax.x,
-                        variance8bit[idx].g * m_varianceMax.y
-                    );
-                })
-                .Aggregate(0f, Mathf.Max);
+            // Second pass: Normalize and compute m_maxSlopeVariance
+            m_maxSlopeVariance = OceanFFT.UpdateVariance8bit(
+                m_varianceSize,
+                variance32bit,
+                variance8bit,
+                m_varianceMax
+            );
 
             m_varianceTexture.SetPixels32(variance8bit);
             m_varianceTexture.Apply();
