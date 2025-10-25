@@ -24,6 +24,7 @@
  * 
  */
 
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -647,46 +648,43 @@ namespace Scatterer {
 
             int totalIterations = m_varianceSize * m_varianceSize * m_varianceSize;
 
-            object lockObj = new object();  // Lock object to protect shared resources
-
             // First pass: Calculate variance and find max values in parallel
-            Parallel.For(0, totalIterations, idx =>
-            {
-                // Calculate the x, y, z indices from the linear index
-                int x = idx % m_varianceSize;
-                int y = (idx / m_varianceSize) % m_varianceSize;
-                int z = idx / (m_varianceSize * m_varianceSize);
-
-                variance32bit[x, y, z] = ComputeVariance(slopeVarianceDelta, spectrum01, spectrum23, x, y, z);
-
-                // Safely update the global max variance
-                lock (lockObj)
+            m_varianceMax = Enumerable
+                .Range(0, totalIterations)
+                .AsParallel()
+                .Select(idx =>
                 {
-                    m_varianceMax.x = Mathf.Max(m_varianceMax.x, variance32bit[x, y, z].x);
-                    m_varianceMax.y = Mathf.Max(m_varianceMax.y, variance32bit[x, y, z].y);
-                }
-            });
+                    // Calculate the x, y, z indices from the linear index
+                    int x = idx % m_varianceSize;
+                    int y = (idx / m_varianceSize) % m_varianceSize;
+                    int z = idx / (m_varianceSize * m_varianceSize);
+
+                    var variance = ComputeVariance(slopeVarianceDelta, spectrum01, spectrum23, x, y, z);
+                    variance32bit[x, y, z] = variance;
+
+                    return variance;
+                })
+                .Aggregate(m_varianceMax, (a, b) => new Vector2(Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y)));
 
             // Second pass: Normalize and compute m_maxSlopeVariance in parallel
-            m_maxSlopeVariance = 0.0f;
-
-            Parallel.For(0, totalIterations, idx =>
-            {
-                // Calculate the x, y, z indices from the linear index
-                int x = idx % m_varianceSize;
-                int y = (idx / m_varianceSize) % m_varianceSize;
-                int z = idx / (m_varianceSize * m_varianceSize);
-
-                // Store in the 8-bit array
-                variance8bit[idx] = new Color(variance32bit[x, y, z].x / m_varianceMax.x, variance32bit[x, y, z].y / m_varianceMax.y, 0.0f, 1.0f);
-
-                // Safely update m_maxSlopeVariance
-                lock (lockObj)
+            m_maxSlopeVariance = Enumerable
+                .Range(0, totalIterations)
+                .AsParallel()
+                .Select(idx =>
                 {
-                    m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, variance8bit[idx].r * m_varianceMax.x);
-                    m_maxSlopeVariance = Mathf.Max(m_maxSlopeVariance, variance8bit[idx].g * m_varianceMax.y);
-                }
-            });
+                    // Calculate the x, y, z indices from the linear index
+                    int x = idx % m_varianceSize;
+                    int y = (idx / m_varianceSize) % m_varianceSize;
+                    int z = idx / (m_varianceSize * m_varianceSize);
+
+                    var variance = variance32bit[x, y, z];
+
+                    // Store in the 8-bit array
+                    variance8bit[idx] = new Color(variance.x / m_varianceMax.x, variance.y / m_varianceMax.y, 0.0f, 1.0f);
+
+                    return Mathf.Max(variance.x, variance.y);
+                })
+                .Aggregate(0f, Mathf.Max);
 
             m_varianceTexture.SetPixels32(variance8bit);
             m_varianceTexture.Apply();
