@@ -24,6 +24,7 @@
  * 
  */
 
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -464,14 +465,12 @@ namespace Scatterer {
             return AMP * (Bl + Bh) * (1.0f + Delta * Mathf.Cos(2.0f * phi)) / (2.0f * Mathf.PI * Sqr(Sqr(k))) * tweak; // Eq 67
         }
         
-        Vector2 GetSpectrumSample(float i, float j, float lengthScale, float kMin)
+        Vector2 GetSpectrumSample(float i, float j, float lengthScale, float rnd, float kMin)
         {
             float dk = 2.0f * Mathf.PI / lengthScale;
             float kx = i * dk;
             float ky = j * dk;
             Vector2 result = new Vector2(0.0f, 0.0f);
-            
-            float rnd = UnityEngine.Random.value;
             
             if (Mathf.Abs(kx) >= kMin || Mathf.Abs(ky) >= kMin) {
                 float S = Spectrum(kx, ky, false);
@@ -484,7 +483,7 @@ namespace Scatterer {
             
             return result;
         }
-        
+
         float GetSlopeVariance(float kx, float ky, Vector2 spectrumSample)
         {
             float kSquare = kx * kx + ky * ky;
@@ -492,6 +491,15 @@ namespace Scatterer {
             float img = spectrumSample.y;
             float hSquare = real * real + img * img;
             return kSquare * hSquare * 2.0f;
+        }
+
+        struct SlotEntry
+        {
+            public int idx;
+            public float rnd0;
+            public float rnd1;
+            public float rnd2;
+            public float rnd3;
         }
         
         void GenerateWavesSpectrum()
@@ -510,42 +518,58 @@ namespace Scatterer {
             float[] spectrum01 = new float[m_fourierGridSize * m_fourierGridSize * 4];
             float[] spectrum23 = new float[m_fourierGridSize * m_fourierGridSize * 4];
 
-            float totalSlopeVariance = 0.0f;
-            
             UnityEngine.Random.seed = 0;
             
-            for (int x = 0; x < m_fourierGridSize; x++)
-            {
-                for (int y = 0; y < m_fourierGridSize; y++)
+            float totalSlopeVariance = Enumerable
+                .Range(0, m_fourierGridSize * m_fourierGridSize)
+                .Select(idx => new SlotEntry
+                    {
+                        idx = idx,
+                        rnd0 = UnityEngine.Random.value,
+                        rnd1 = UnityEngine.Random.value,
+                        rnd2 = UnityEngine.Random.value,
+                        rnd3 = UnityEngine.Random.value
+                    }
+                )
+                .AsParallel()
+                .Select(entry =>
                 {
-                    int idx = x + y * m_fourierGridSize;
-                    float i = (x >= m_fourierGridSize / 2) ? (float)(x - m_fourierGridSize) : (float) x;
-                    float j = (y >= m_fourierGridSize / 2) ? (float)(y - m_fourierGridSize) : (float) y;
+                    int idx = entry.idx;
 
-                    Vector2 sample12XY = GetSpectrumSample(i, j, m_gridSizes.x, Mathf.PI / m_gridSizes.x);
-                    Vector2 sample12ZW = GetSpectrumSample(i, j, m_gridSizes.y, Mathf.PI * m_fsize / m_gridSizes.x);
-                    Vector2 sample34XY = GetSpectrumSample(i, j, m_gridSizes.z, Mathf.PI * m_fsize / m_gridSizes.y);
-                    Vector2 sample34ZW = GetSpectrumSample(i, j, m_gridSizes.w, Mathf.PI * m_fsize / m_gridSizes.z);
+                    // Note we try to keep xs together here so that memory accesses
+                    // remain linear and we avoid false sharing between threads.
+                    int x = idx % m_fourierGridSize;
+                    int y = idx / m_fourierGridSize;
+                    
+                    float i = (x >= m_fourierGridSize / 2) ? (float)(x - m_fourierGridSize) : (float)x;
+                    float j = (y >= m_fourierGridSize / 2) ? (float)(y - m_fourierGridSize) : (float)y;
+
+                    Vector2 sample12XY = GetSpectrumSample(i, j, m_gridSizes.x, entry.rnd0, Mathf.PI / m_gridSizes.x);
+                    Vector2 sample12ZW = GetSpectrumSample(i, j, m_gridSizes.y, entry.rnd1, Mathf.PI * m_fsize / m_gridSizes.x);
+                    Vector2 sample34XY = GetSpectrumSample(i, j, m_gridSizes.z, entry.rnd2, Mathf.PI * m_fsize / m_gridSizes.y);
+                    Vector2 sample34ZW = GetSpectrumSample(i, j, m_gridSizes.w, entry.rnd3, Mathf.PI * m_fsize / m_gridSizes.z);
 
                     spectrum01[idx * 4 + 0] = sample12XY.x;
                     spectrum01[idx * 4 + 1] = sample12XY.y;
                     spectrum01[idx * 4 + 2] = sample12ZW.x;
                     spectrum01[idx * 4 + 3] = sample12ZW.y;
-                    
+
                     spectrum23[idx * 4 + 0] = sample34XY.x;
                     spectrum23[idx * 4 + 1] = sample34XY.y;
                     spectrum23[idx * 4 + 2] = sample34ZW.x;
                     spectrum23[idx * 4 + 3] = sample34ZW.y;
-                    
+
                     i *= 2.0f * Mathf.PI;
                     j *= 2.0f * Mathf.PI;
-                    
-                    totalSlopeVariance += GetSlopeVariance(i / m_gridSizes.x, j / m_gridSizes.x, sample12XY);
-                    totalSlopeVariance += GetSlopeVariance(i / m_gridSizes.y, j / m_gridSizes.y, sample12ZW);
-                    totalSlopeVariance += GetSlopeVariance(i / m_gridSizes.z, j / m_gridSizes.z, sample34XY);
-                    totalSlopeVariance += GetSlopeVariance(i / m_gridSizes.w, j / m_gridSizes.w, sample34ZW);
-                }
-            }
+
+                    float slopeVariance = 0f;
+                    slopeVariance += GetSlopeVariance(i / m_gridSizes.x, j / m_gridSizes.x, sample12XY);
+                    slopeVariance += GetSlopeVariance(i / m_gridSizes.y, j / m_gridSizes.y, sample12ZW);
+                    slopeVariance += GetSlopeVariance(i / m_gridSizes.z, j / m_gridSizes.z, sample34XY);
+                    slopeVariance += GetSlopeVariance(i / m_gridSizes.w, j / m_gridSizes.w, sample34ZW);
+                    return slopeVariance;
+                })
+                .Aggregate(0f, (a, b) => a + b);
 
             //This can be replaced by a texture2D now and the whole thing with a set raw data + apply
             m_writeFloat.WriteIntoRenderTexture(m_spectrum01, 4, spectrum01);
