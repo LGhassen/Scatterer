@@ -252,7 +252,7 @@ namespace Scatterer
 
 		public void UpdateGraphicsUniforms()
 		{
-			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && localScatteringContainer!=null)
+			if (!inScaledSpace && !MapView.MapIsEnabled && postprocessingEnabled && localScatteringContainer != null)
 			{
 				UpdatePostProcessMaterialUniforms (localScatteringContainer.material);
 			}
@@ -269,7 +269,7 @@ namespace Scatterer
 				UpdateSunflareExtinctions ();
 			}
 
-			if (scaledScatteringContainer != null)
+			if (scaledScatteringContainer != null && scaledScatteringContainer.MeshRenderer != null)
 				scaledScatteringContainer.MeshRenderer.enabled = stockScaledPlanetMeshRenderer.enabled;
 
 			if (localScatteringContainer != null)
@@ -290,7 +290,9 @@ namespace Scatterer
 				
 				scaledEclipseMaterial.SetMatrix (ShaderProperties.lightOccluders1_PROPERTY, castersMatrix1);
 				scaledEclipseMaterial.SetMatrix (ShaderProperties.lightOccluders2_PROPERTY, castersMatrix2);
-				scaledEclipseMaterial.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
+
+				if (prolandManager.sunCelestialBody != null)
+					scaledEclipseMaterial.SetVector (ShaderProperties.sunPosAndRadius_PROPERTY, new Vector4 (sunPosRelPlanet.x, sunPosRelPlanet.y,
 				                                                                                         sunPosRelPlanet.z, (float)prolandManager.sunCelestialBody.Radius));
 			}
 		}
