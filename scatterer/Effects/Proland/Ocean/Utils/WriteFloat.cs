@@ -2,6 +2,9 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.IO;
+using System.Runtime.InteropServices;
+using JetBrains.Annotations;
+using System.CodeDom;
 
 namespace Scatterer
 {
@@ -229,45 +232,45 @@ namespace Scatterer
             
             Write(w, h, channels, min, max, tex, map);
         }
-        
+
         /// <summary>
         /// Write the encoded float in map into texture.
         /// </summary>
         void Write(int w, int h, int c, float min, float max, RenderTexture tex, Color[] map)
         {
-            
-            for(int x = 0; x < w; x++)
+
+            for (int x = 0; x < w; x++)
             {
-                for(int y = 0; y < h; y++)
+                for (int y = 0; y < h; y++)
                 {
-                    
-                    if(c > 0)
-                        m_mapR.SetPixel(x, y, map[(x+y*w)*c+0]);
+
+                    if (c > 0)
+                        m_mapR.SetPixel(x, y, map[(x + y * w) * c + 0]);
                     else
                         m_mapR.SetPixel(x, y, Color.clear);
-                    
-                    if(c > 1)
-                        m_mapG.SetPixel(x, y, map[(x+y*w)*c+1]);
+
+                    if (c > 1)
+                        m_mapG.SetPixel(x, y, map[(x + y * w) * c + 1]);
                     else
                         m_mapG.SetPixel(x, y, Color.clear);
-                    
-                    if(c > 2)
-                        m_mapB.SetPixel(x, y, map[(x+y*w)*c+2]);
+
+                    if (c > 2)
+                        m_mapB.SetPixel(x, y, map[(x + y * w) * c + 2]);
                     else
                         m_mapB.SetPixel(x, y, Color.clear);
-                    
-                    if(c > 3)
-                        m_mapA.SetPixel(x, y, map[(x+y*w)*c+3]);
+
+                    if (c > 3)
+                        m_mapA.SetPixel(x, y, map[(x + y * w) * c + 3]);
                     else
                         m_mapA.SetPixel(x, y, Color.clear);
                 }
             }
-            
+
             m_mapR.Apply();
             m_mapG.Apply();
             m_mapB.Apply();
             m_mapA.Apply();
-            
+
             m_writeToFloat.SetFloat("_Max", max);
             m_writeToFloat.SetFloat("_Min", min);
             m_writeToFloat.SetTexture("_TexR", m_mapR);
@@ -276,29 +279,30 @@ namespace Scatterer
             m_writeToFloat.SetTexture("_TexA", m_mapA);
             Graphics.Blit(null, tex, m_writeToFloat);
         }
-        
+
         /// <summary>
         /// Encode a float into 4 bytes as normilized floats.
         /// </summary>
-        float[] EncodeFloatRGBA(float val)
+        RGBAF EncodeFloatRGBA(float val)
         {
-            
-            float[] kEncodeMul = new float[]{ 1.0f, 255.0f, 65025.0f, 160581375.0f };
-            float kEncodeBit = 1.0f / 255.0f;            
-            for( int i = 0; i < kEncodeMul.Length; ++i )
-            {
-                kEncodeMul[i] *= val;
-                // Frac
-                kEncodeMul[i] = ( float )( kEncodeMul[i] - System.Math.Truncate( kEncodeMul[i] ) );
-            }
-            
-            // enc -= enc.yzww * kEncodeBit;
-            float[] yzww = new float[] { kEncodeMul[1], kEncodeMul[2], kEncodeMul[3], kEncodeMul[3] };
-            for( int i = 0; i < kEncodeMul.Length; ++i )
-            {
-                kEncodeMul[i] -= yzww[i] * kEncodeBit;
-            }
-            
+            const float kEncodeBit = 1.0f / 255.0f;
+            RGBAF kEncodeMul = new RGBAF { r = 1.0f, g = 255.0f, b = 65025.0f, a = 160581375.0f };
+
+            kEncodeMul.r *= val;
+            kEncodeMul.g *= val;
+            kEncodeMul.b *= val;
+            kEncodeMul.a *= val;
+
+            kEncodeMul.r -= (float)Math.Truncate(kEncodeMul.r);
+            kEncodeMul.g -= (float)Math.Truncate(kEncodeMul.g);
+            kEncodeMul.b -= (float)Math.Truncate(kEncodeMul.b);
+            kEncodeMul.a -= (float)Math.Truncate(kEncodeMul.a);
+
+            kEncodeMul.r -= kEncodeMul.r * kEncodeBit;
+            kEncodeMul.g -= kEncodeMul.g * kEncodeBit;
+            kEncodeMul.b -= kEncodeMul.b * kEncodeBit;
+            kEncodeMul.a -= kEncodeMul.a * kEncodeBit;
+
             return kEncodeMul;
         }
         
@@ -426,23 +430,67 @@ namespace Scatterer
                 //does not work on value of one
                 if(normalizedData >= 1.0f) normalizedData = MAX_VALUE;
                 
-                float[] farray = EncodeFloatRGBA(normalizedData);
-                
-                map[x] = new Color(farray[0], farray[1], farray[2], farray[3]);
+                map[x] = EncodeFloatRGBA(normalizedData);
             };
         }
 
 
-        public void OnDestroy ()
+
+
+        public void OnDestroy()
         {
             UnityEngine.Object.Destroy(m_mapA);
             UnityEngine.Object.Destroy(m_mapR);
             UnityEngine.Object.Destroy(m_mapG);
             UnityEngine.Object.Destroy(m_mapB);
-            UnityEngine.Object.Destroy (m_writeToFloat);
+            UnityEngine.Object.Destroy(m_writeToFloat);
 
         }
         
+        
+        [StructLayout(LayoutKind.Sequential)]
+        struct RGBAF
+        {
+            public float r;
+            public float g;
+            public float b;
+            public float a;
+
+            public int Length => 4;
+
+            public unsafe float this[int idx]
+            {
+                get
+                {
+                    fixed (RGBAF* p = &this)
+                    {
+                        if (idx < 0 || idx >= 4)
+                            return 0f;
+                        return ((float*)p)[idx];
+                    }
+                }
+                set
+                {
+                    fixed (RGBAF* p = &this)
+                    {
+                        if (idx < 0 || idx >= 4)
+                            return;
+                        ((float*)p)[idx] = value;
+                    }
+                }
+            }
+            
+            public static implicit operator Color(RGBAF rgba)
+            {
+                Color color = default;
+                color.r = rgba.r;
+                color.g = rgba.g;
+                color.b = rgba.b;
+                color.a = rgba.a;
+                return color;
+            }
+        }
+
     }
     
 }
