@@ -531,6 +531,7 @@ namespace Scatterer {
                         rnd3 = UnityEngine.Random.value
                     }
                 )
+                .ToList()
                 .AsParallel()
                 .Select(entry =>
                 {
