@@ -288,20 +288,18 @@ namespace Scatterer
             const float kEncodeBit = 1.0f / 255.0f;
             RGBAF kEncodeMul = new RGBAF { r = 1.0f, g = 255.0f, b = 65025.0f, a = 160581375.0f };
 
-            kEncodeMul.r *= val;
-            kEncodeMul.g *= val;
-            kEncodeMul.b *= val;
-            kEncodeMul.a *= val;
+            for (int i = 0; i < 4; ++i)
+            {
+                kEncodeMul[i] *= val;
+                kEncodeMul[i] = (float)(kEncodeMul[i] - System.Math.Truncate(kEncodeMul[i]));
+            }
 
-            kEncodeMul.r -= (float)Math.Truncate(kEncodeMul.r);
-            kEncodeMul.g -= (float)Math.Truncate(kEncodeMul.g);
-            kEncodeMul.b -= (float)Math.Truncate(kEncodeMul.b);
-            kEncodeMul.a -= (float)Math.Truncate(kEncodeMul.a);
-
-            kEncodeMul.r -= kEncodeMul.r * kEncodeBit;
-            kEncodeMul.g -= kEncodeMul.g * kEncodeBit;
-            kEncodeMul.b -= kEncodeMul.b * kEncodeBit;
-            kEncodeMul.a -= kEncodeMul.a * kEncodeBit;
+            // enc -= enc.yzww * kEncodeBit;
+            var yzww = new RGBAF { r = kEncodeMul[1], g = kEncodeMul[2], b = kEncodeMul[3], a = kEncodeMul[3] };
+            for (int i = 0; i < 4; ++i)
+            {
+                kEncodeMul[i] -= yzww[i] * kEncodeBit;
+            }
 
             return kEncodeMul;
         }
