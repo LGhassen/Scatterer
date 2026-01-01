@@ -157,7 +157,6 @@ namespace Scatterer
             RenderTargetIdentifier[] oceanVertexPosRenderTextures = { new RenderTargetIdentifier(vertWorldPositionsXYZOceanPositionsXId), new RenderTargetIdentifier(vertOceanPositionsYId) };
 
             oceanGbufferCommandBuffer.SetRenderTarget(oceanVertexPosRenderTextures, vertWorldPositionsXYZOceanPositionsXId);
-            oceanGbufferCommandBuffer.ClearRenderTarget(false, true, Color.black);
             oceanGbufferCommandBuffer.DrawRenderer(targetRenderer, targetMaterial, 0, OceanShaderPasses.VertexPositions);
 
             oceanGbufferCommandBuffer.SetGlobalTexture("oceanVertWorldPositionsXYZOceanPositionsX", vertWorldPositionsXYZOceanPositionsXId);
