@@ -11,6 +11,8 @@ namespace Scatterer
         private List<PartBuoyancy> partsBuoyancies = new List<PartBuoyancy>();
         private bool heightsRequestInProgress = false;
         private bool cameraHeightRequested = false;
+        private bool queriesReady = false;
+        private int querySize;
         private float[] heights = { };
         private ComputeBuffer positionsBuffer, heightsBuffer;
         private int frameLatencyCounter = 1;
@@ -68,15 +70,23 @@ namespace Scatterer
             }
         }
 
-        public void SetMaterialProperties(Vector4 choppyness, Vector4 gridSizes, RenderTexture map0, RenderTexture map3, RenderTexture map4)
+        public void PerformQueries(Vector4 choppyness, Vector4 gridSizes, RenderTexture map0, RenderTexture map3, RenderTexture map4)
         {
-            findHeightsShader.SetVector(ShaderProperties._Ocean_Choppyness_PROPERTY, choppyness);
-            findHeightsShader.SetVector(ShaderProperties._Ocean_GridSizes_PROPERTY, gridSizes);
+            if (queriesReady)
+            {
+                findHeightsShader.SetVector(ShaderProperties._Ocean_Choppyness_PROPERTY, choppyness);
+                findHeightsShader.SetVector(ShaderProperties._Ocean_GridSizes_PROPERTY, gridSizes);
 
-            findHeightsShader.SetTexture(0, ShaderProperties._Ocean_Map0_PROPERTY, map0);
-            findHeightsShader.SetTexture(0, ShaderProperties._Ocean_Map3_PROPERTY, map3);
-            findHeightsShader.SetTexture(0, ShaderProperties._Ocean_Map4_PROPERTY, map4);
-        }
+                findHeightsShader.SetTexture(0, ShaderProperties._Ocean_Map0_PROPERTY, map0);
+                findHeightsShader.SetTexture(0, ShaderProperties._Ocean_Map3_PROPERTY, map3);
+                findHeightsShader.SetTexture(0, ShaderProperties._Ocean_Map4_PROPERTY, map4);
+
+                findHeightsShader.Dispatch(0, querySize, 1, 1);
+                AsyncGPUReadback.Request(heightsBuffer, OnCompletePartHeightsReadback);
+
+                queriesReady = false;
+            }
+            }
 
         public float UpdateInteractions(double cameraHeight, float waterHeightAtCameraPosition, Vector3 ux, Vector3 uy, Vector3 offsetVector3)
         {
@@ -93,6 +103,7 @@ namespace Scatterer
                 List<Vector2> positionsList = new List<Vector2>();
                 BuildPartsPositionsList(positionsList, partsBuoyancies, ux, uy, offsetVector3);
                 AddCameraPosition(positionsList, cameraHeight, new Vector2(offsetVector3.x, offsetVector3.y));
+                
                 RequestAsyncWaterLevelHeights(positionsList);
             }
             else
@@ -204,11 +215,12 @@ namespace Scatterer
                 findHeightsShader.SetInt(ShaderProperties.positionsCount_PROPERTY, size);
 
                 var threadGroups = (int)Mathf.Ceil((float)size / WAVE_HEIGHT_GROUP_SIZE);
-                findHeightsShader.Dispatch(0, threadGroups, 1, 1);
+                
+                querySize = threadGroups;
 
-                AsyncGPUReadback.Request(heightsBuffer, OnCompletePartHeightsReadback);
                 frameLatencyCounter = 1;
                 heightsRequestInProgress = true;
+                queriesReady = true;
             }
         }
 

@@ -67,7 +67,6 @@ namespace Scatterer
 
         RenderTexture[] m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2;
         RenderTexture[] m_fourierBuffer3, m_fourierBuffer4;
-        public RenderTexture m_map0, m_map1, m_map2, m_map3, m_map4;
 
         RenderTexture normalizedVarianceRenderTexture;
         Vector2 m_varianceMax;
@@ -233,40 +232,25 @@ namespace Scatterer
                 m_idx = m_fourier.PeformFFT(m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
                 m_fourier.PeformFFT(m_fourierBuffer3, m_fourierBuffer4);
                 
-                //Copy the contents of the completed fourier transform to the map textures.
-                //You could just use the buffer textures (m_fourierBuffer0,1,2,etc) to read from for the ocean shader 
-                //but they need to have mipmaps and unity updates the mipmaps
-                //every time the texture is renderer into. This impacts performance during fourier transform stage as mipmaps would be updated every pass
-                //and there is no way to disable and then enable mipmaps on render textures in Unity at time of writting.
-                
-                // I can remove these now but I have to make sure the PerformFFT code doesn't read mips and do derivatives
+                m_fourierBuffer0[m_idx].GenerateMips();
+                m_fourierBuffer1[m_idx].GenerateMips();
+                m_fourierBuffer2[m_idx].GenerateMips();
+                m_fourierBuffer3[m_idx].GenerateMips();
+                m_fourierBuffer4[m_idx].GenerateMips();         
 
-                Graphics.Blit(m_fourierBuffer0[m_idx], m_map0);
-                Graphics.Blit(m_fourierBuffer1[m_idx], m_map1);
-                Graphics.Blit(m_fourierBuffer2[m_idx], m_map2);
-                Graphics.Blit(m_fourierBuffer3[m_idx], m_map3);
-                Graphics.Blit(m_fourierBuffer4[m_idx], m_map4);
-
-                m_map0.GenerateMips();
-                m_map1.GenerateMips();
-                m_map2.GenerateMips();
-                m_map3.GenerateMips();
-                m_map4.GenerateMips();         
-
-                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_map0);
-                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_map1);
-                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_map2);
-                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_map3);
-                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_map4);
+                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map0_PROPERTY, m_fourierBuffer0[m_idx]);
+                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map1_PROPERTY, m_fourierBuffer1[m_idx]);
+                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map2_PROPERTY, m_fourierBuffer2[m_idx]);
+                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map3_PROPERTY, m_fourierBuffer3[m_idx]);
+                m_oceanMaterial.SetTexture (ShaderProperties._Ocean_Map4_PROPERTY, m_fourierBuffer4[m_idx]);
 
                 m_oceanMaterial.SetFloat(ShaderProperties._Ocean_HeightOffset_PROPERTY, 0f); // doesn't need to be in update
                 m_oceanMaterial.SetVector(ShaderProperties._VarianceMax_PROPERTY, m_varianceMax); // doesn't need to be in update
                 Shader.SetGlobalVector(ShaderProperties._VarianceMax_PROPERTY, m_varianceMax); // this is just for the SSR atm
 
-                // don't need to be done every frame
                 if (waveInteractionHandler != null)
                 {
-                    waveInteractionHandler.SetMaterialProperties(m_choppyness, m_gridSizes, m_map0, m_map3, m_map4);
+                    waveInteractionHandler.PerformQueries(m_choppyness, m_gridSizes, m_fourierBuffer0[m_idx], m_fourierBuffer3[m_idx], m_fourierBuffer4[m_idx]);
                 }
             }
 
@@ -276,12 +260,6 @@ namespace Scatterer
         public override void OnDestroy()
         {
             base.OnDestroy();
-            
-            m_map0.Release();
-            m_map1.Release();
-            m_map2.Release();
-            m_map3.Release();
-            m_map4.Release();
             
             m_spectrum01.Release();
             m_spectrum23.Release();
@@ -307,29 +285,19 @@ namespace Scatterer
         protected virtual void CreateRenderTextures()
         {
             RenderTextureFormat mapFormat = RenderTextureFormat.ARGBHalf;
-            RenderTextureFormat fourierTransformformat = RenderTextureFormat.ARGBHalf;
+
+            CreateBuffer(ref m_fourierBuffer0, mapFormat, mapsAniso, true, false); // heights
+            CreateBuffer(ref m_fourierBuffer1, mapFormat, mapsAniso, true, false); // slopes X
+            CreateBuffer(ref m_fourierBuffer2, mapFormat, mapsAniso, true, false); // slopes Y
+            CreateBuffer(ref m_fourierBuffer3, mapFormat, mapsAniso, true, false); // displacement X
+            CreateBuffer(ref m_fourierBuffer4, mapFormat, mapsAniso, true, false); // displacement Y
             
-            //These texture hold the actual data use in the ocean renderer
-            CreateMap(ref m_map0, mapFormat, mapsAniso, true, false);
-            CreateMap(ref m_map1, mapFormat, mapsAniso, true, false);
-            CreateMap(ref m_map2, mapFormat, mapsAniso, true, false);
-            CreateMap(ref m_map3, mapFormat, mapsAniso, true, false);
-            CreateMap(ref m_map4, mapFormat, mapsAniso, true, false);
-            
-            //These textures are used to perform the fourier transform
-            CreateBuffer(ref m_fourierBuffer0, fourierTransformformat); // heights
-            CreateBuffer(ref m_fourierBuffer1, fourierTransformformat); // slopes X
-            CreateBuffer(ref m_fourierBuffer2, fourierTransformformat); // slopes Y
-            CreateBuffer(ref m_fourierBuffer3, fourierTransformformat); // displacement X
-            CreateBuffer(ref m_fourierBuffer4, fourierTransformformat); // displacement Y
-            
-            //These textures hold the specturm the fourier transform is performed on
-            m_spectrum01 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat, 0);
+            m_spectrum01 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, mapFormat, 0);
             m_spectrum01.filterMode = FilterMode.Point;
             m_spectrum01.wrapMode = TextureWrapMode.Repeat;
             m_spectrum01.Create();
             
-            m_spectrum23 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat, 0);
+            m_spectrum23 = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, mapFormat, 0);
             m_spectrum23.filterMode = FilterMode.Point;
             m_spectrum23.wrapMode = TextureWrapMode.Repeat;
             m_spectrum23.Create();
@@ -348,16 +316,13 @@ namespace Scatterer
             normalizedVarianceRenderTexture.Create();
         }
         
-        protected void CreateBuffer(ref RenderTexture[] tex, RenderTextureFormat format)
+        protected void CreateBuffer(ref RenderTexture[] tex, RenderTextureFormat format, int aniso, bool useMipMaps, bool autoGenerateMipMaps)
         {
             tex = new RenderTexture[2];
             
             for (int i = 0; i < 2; i++)
             {
-                tex[i] = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format, 0);
-                tex[i].filterMode = FilterMode.Point;
-                tex[i].wrapMode = TextureWrapMode.Clamp;
-                tex[i].Create();
+                CreateMap(ref tex[i], format, aniso, useMipMaps, autoGenerateMipMaps);
             }
         }
         

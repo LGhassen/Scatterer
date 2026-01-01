@@ -50,9 +50,9 @@ namespace Scatterer {
             m_foam1.mipMapBias = m_foamMipMapBias;
             
             //These textures are used to perform the fourier transform
-            CreateBuffer(ref m_fourierBuffer5, format); // Jacobians XX
-            CreateBuffer(ref m_fourierBuffer6, format); // Jacobians YY
-            CreateBuffer(ref m_fourierBuffer7, format); // Jacobians XY
+            CreateBuffer(ref m_fourierBuffer5, format, 0, false, false); // Jacobians XX
+            CreateBuffer(ref m_fourierBuffer6, format, 0, false, false); // Jacobians YY
+            CreateBuffer(ref m_fourierBuffer7, format, 0, false, false); // Jacobians XY
             
             //Make sure the base textures are also created
             base.CreateRenderTextures();
