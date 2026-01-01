@@ -1,6 +1,4 @@
 using UnityEngine;
-using System.Collections;
-
 
 namespace Scatterer
 {
@@ -16,30 +14,66 @@ namespace Scatterer
         Texture2D[] m_butterflyLookupTable = null;
         Material m_fourier;
 
+        ComputeShader computeShader;
+        int kernelInputCount1, kernelInputCount2, kernelInputCount3;
+
+        bool useCompute = false;
+
         public FourierGPU(int size)
-        {    
-            if(!Mathf.IsPowerOfTwo(size))
+        {
+            // The size is limited by the groupshared memory size for single-pass compute
+            // Any size above 256 is already overkill / diminishing returns regardless
+            if (size > 512)
+            {
+                Utils.LogDebug("FourierGPU::FourierGPU - fourier grid size must not be greater than 512, changing to 512");
+                size = 512;
+            }
+
+            if (!Mathf.IsPowerOfTwo(size))
             {
                 Utils.LogDebug("FourierGPU::FourierGPU - fourier grid size must be pow2 number, changing to nearest pow2 number");
                 size = Mathf.NextPowerOfTwo(size);
             }
-            
-            Shader shader = ShaderReplacer.Instance.LoadedShaders[("Scatterer/Fourier")];
-
-            if(shader == null)
-                Utils.LogDebug("FourierGPU::FourierGPU - Could not find shader Scatterer/Fourier");
-        
-            m_fourier = new Material(shader);
 
             m_size = size;
-            m_fsize = (float)m_size;
-            m_passes = (int)(Mathf.Log(m_fsize)/Mathf.Log(2.0f));
-            
-            m_butterflyLookupTable = new Texture2D[m_passes];
-            
-            ComputeButterflyLookupTable();
-            
-            m_fourier.SetFloat("_Size", m_fsize);
+
+            useCompute = SystemInfo.supportsComputeShaders;
+
+            if (useCompute)
+            {
+                computeShader = ShaderReplacer.Instance.LoadedComputeShaders["Fourier"];
+
+                var kernel1 = $"FFT_{size}_1";
+                var kernel2 = $"FFT_{size}_2";
+                var kernel3 = $"FFT_{size}_3";
+
+                if(!computeShader.HasKernel(kernel1) || !computeShader.HasKernel(kernel2) || !computeShader.HasKernel(kernel3))
+                {
+                    Utils.LogError($"Compute kernels for FFT size {size} not found");
+                }
+
+                kernelInputCount1 = computeShader.FindKernel(kernel1);
+                kernelInputCount2 = computeShader.FindKernel(kernel2);
+                kernelInputCount3 = computeShader.FindKernel(kernel3);
+            }
+            else
+            {
+                Shader shader = ShaderReplacer.Instance.LoadedShaders[("Scatterer/Fourier")];
+
+                if (shader == null)
+                    Utils.LogError("FourierGPU::FourierGPU - Could not find shader Scatterer/Fourier");
+
+                m_fourier = new Material(shader);
+
+                m_fsize = (float)m_size;
+                m_passes = (int)(Mathf.Log(m_fsize) / Mathf.Log(2.0f));
+
+                m_butterflyLookupTable = new Texture2D[m_passes];
+
+                ComputeButterflyLookupTable();
+
+                m_fourier.SetFloat("_Size", m_fsize);
+            }
         }
 
         int BitReverse(int i)
@@ -103,8 +137,112 @@ namespace Scatterer
                 m_butterflyLookupTable[i].Apply();
             }
         }
-        
-        public int PeformFFT(RenderTexture[] data0, RenderTexture[] data1)
+
+
+        public int PerformFFT(RenderTexture[] data0)
+        {
+            if (useCompute)
+            {
+                return PerformFFTCompute(data0);
+            }
+            else
+            {
+                return PerformFFTGraphics(data0);
+            }
+        }
+
+        public int PerformFFTCompute(RenderTexture[] data0)
+        {
+            int kernel = kernelInputCount1;
+            int readWriteIndex = 1;
+
+            computeShader.SetTexture(kernel, "input0", data0[readWriteIndex]);
+
+            // Horizontal pass
+            computeShader.SetInt("verticalPass", 0);
+            computeShader.Dispatch(kernel, 1, m_size, 1);
+
+            // Vertical pass
+            computeShader.SetInt("verticalPass", 1);
+            computeShader.Dispatch(kernel, 1, m_size, 1);
+
+            return readWriteIndex;
+        }
+
+        public int PerformFFTGraphics(RenderTexture[] data0)
+        {
+            RenderTexture[] pass0 = new RenderTexture[] { data0[0] };
+            RenderTexture[] pass1 = new RenderTexture[] { data0[1] };
+
+            int i;
+            int idx = 0; int idx1;
+            int j = 0;
+
+            for (i = 0; i < m_passes; i++, j++)
+            {
+                idx = j % 2;
+                idx1 = (j + 1) % 2;
+
+                m_fourier.SetTexture(ShaderProperties._ButterFlyLookUp_PROPERTY, m_butterflyLookupTable[i]);
+
+                m_fourier.SetTexture(ShaderProperties._ReadBuffer0_PROPERTY, data0[idx1]);
+
+                if (idx == 0)
+                    RTUtility.MultiTargetBlit(pass0, m_fourier, PASS_X_1);
+                else
+                    RTUtility.MultiTargetBlit(pass1, m_fourier, PASS_X_1);
+            }
+
+            for (i = 0; i < m_passes; i++, j++)
+            {
+                idx = j % 2;
+                idx1 = (j + 1) % 2;
+
+                m_fourier.SetTexture(ShaderProperties._ButterFlyLookUp_PROPERTY, m_butterflyLookupTable[i]);
+
+                m_fourier.SetTexture(ShaderProperties._ReadBuffer0_PROPERTY, data0[idx1]);
+
+                if (idx == 0)
+                    RTUtility.MultiTargetBlit(pass0, m_fourier, PASS_Y_1);
+                else
+                    RTUtility.MultiTargetBlit(pass1, m_fourier, PASS_Y_1);
+            }
+
+            return idx;
+        }
+
+        public int PerformFFT(RenderTexture[] data0, RenderTexture[] data1)
+        {
+            if (useCompute)
+            {
+                return PerformFFTCompute(data0, data1);
+            }
+            else
+            {
+                return PerformFFTGraphics(data0, data1);
+            }
+        }
+
+        public int PerformFFTCompute(RenderTexture[] data0, RenderTexture[] data1)
+        {
+            int kernel = kernelInputCount2;
+            int readWriteIndex = 1;
+
+            computeShader.SetTexture(kernel, "input0", data0[readWriteIndex]);
+            computeShader.SetTexture(kernel, "input1", data1[readWriteIndex]);
+
+            // Horizontal pass
+            computeShader.SetInt("verticalPass", 0);
+            computeShader.Dispatch(kernel, 1, m_size, 1);
+
+            // Vertical pass
+            computeShader.SetInt("verticalPass", 1);
+            computeShader.Dispatch(kernel, 1, m_size, 1);
+
+            return readWriteIndex;
+        }
+
+        public int PerformFFTGraphics(RenderTexture[] data0, RenderTexture[] data1)
         {
             RenderTexture[] pass0 = new RenderTexture[]{ data0[0], data1[0] };
             RenderTexture[] pass1 = new RenderTexture[]{ data0[1], data1[1] };
@@ -148,7 +286,39 @@ namespace Scatterer
             return idx;
         }
 
-        public int PeformFFT(RenderTexture[] data0, RenderTexture[] data1, RenderTexture[] data2)
+        public int PerformFFT(RenderTexture[] data0, RenderTexture[] data1, RenderTexture[] data2)
+        {
+            if (useCompute)
+            {
+                return PerformFFTCompute(data0, data1, data2);
+            }
+            else
+            {
+                return PerformFFTGraphics(data0, data1, data2);
+            }
+        }
+
+        public int PerformFFTCompute(RenderTexture[] data0, RenderTexture[] data1, RenderTexture[] data2)
+        {
+            int kernel = kernelInputCount3;
+            int readWriteIndex = 1;
+
+            computeShader.SetTexture(kernel, "input0", data0[readWriteIndex]);
+            computeShader.SetTexture(kernel, "input1", data1[readWriteIndex]);
+            computeShader.SetTexture(kernel, "input2", data2[readWriteIndex]);
+
+            // Horizontal pass
+            computeShader.SetInt("verticalPass", 0);
+            computeShader.Dispatch(kernel, 1, m_size, 1);
+
+            // Vertical pass
+            computeShader.SetInt("verticalPass", 1);
+            computeShader.Dispatch(kernel, 1, m_size, 1);
+
+            return readWriteIndex;
+        }
+
+        public int PerformFFTGraphics(RenderTexture[] data0, RenderTexture[] data1, RenderTexture[] data2)
         {
             RenderTexture[] pass0 = new RenderTexture[]{ data0[0], data1[0], data2[0] };
             RenderTexture[] pass1 = new RenderTexture[]{ data0[1], data1[1], data2[1] };

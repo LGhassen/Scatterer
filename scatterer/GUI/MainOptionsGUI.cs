@@ -256,7 +256,7 @@ namespace Scatterer
                         GUILayout.BeginVertical ();
                         {
                             GUILayout.BeginHorizontal ();
-                            GUILayout.Label ("Fourier grid size (64:fast,128:normal,256:HQ)");
+                            GUILayout.Label ("Fourier grid size (64:fast,128:normal,256:HQ,512:overkill)");
                             Scatterer.Instance.mainSettings.m_fourierGridSize = (Int32)(Convert.ToInt32 (GUILayout.TextField (Scatterer.Instance.mainSettings.m_fourierGridSize.ToString ())));
                             GUILayout.EndHorizontal ();
                             GUILayout.BeginHorizontal ();

@@ -107,13 +107,13 @@ namespace Scatterer
 
             m_fourierGridSize = Scatterer.Instance.mainSettings.m_fourierGridSize;
             
-            if (m_fourierGridSize > 256) {
-                Utils.LogDebug("Proland::OceanFFT::Start    - fourier grid size must not be greater than 256, changing to 256");
-                m_fourierGridSize = 256;
+            if (m_fourierGridSize > 512) {
+                Utils.LogDebug("Fourier grid size must not be greater than 512, changing to 512");
+                m_fourierGridSize = 512;
             }
             
             if (!Mathf.IsPowerOfTwo(m_fourierGridSize)) {
-                Utils.LogDebug("Proland::OceanFFT::Start    - fourier grid size must be pow2 number, changing to nearest pow2 number");
+                Utils.LogDebug("Fourier grid size must be pow2 number, changing to nearest pow2 number");
                 m_fourierGridSize = Mathf.NextPowerOfTwo(m_fourierGridSize);
             }
             
@@ -150,47 +150,6 @@ namespace Scatterer
                 waveInteractionHandler = new GPUWaveInteractionHandler(maxWaveInteractionShipAltitude, prolandManager.parentCelestialBody.isHomeWorld);
             }
         }
-        
-        Vector2 GetSlopeVariances(Vector2 k, float A, float B, float C, float spectrumX, float spectrumY)
-        {
-            float w = 1.0f - Mathf.Exp(A * k.x * k.x + B * k.x * k.y + C * k.y * k.y);
-            return new Vector2((k.x * k.x) * w, (k.y * k.y) * w) * (spectrumX * spectrumX + spectrumY * spectrumY) * 2.0f;
-        }
-        
-
-        /// <summary>
-        /// Iterate over the spectrum and find the variance.
-        /// Use in the BRDF equations.
-        /// </summary>
-        Vector2 ComputeVariance(float slopeVarianceDelta, float[] inSpectrum01, float[] inSpectrum23, float idxX, float idxY, float idxZ) {
-            const float SCALE = 10.0f;
-            
-            float A = Mathf.Pow(idxX / ((float) m_varianceSize - 1.0f), 4.0f) * SCALE;
-            float C = Mathf.Pow(idxZ / ((float) m_varianceSize - 1.0f), 4.0f) * SCALE;
-            float B = (2.0f * idxY / ((float) m_varianceSize - 1.0f) - 1.0f) * Mathf.Sqrt(A * C);
-            A = -0.5f * A;
-            B = -B;
-            C = -0.5f * C;
-            
-            Vector2 slopeVariances = new Vector2(slopeVarianceDelta, slopeVarianceDelta);
-            
-            for (int x = 0; x < m_fourierGridSize; x++) {
-                for (int y = 0; y < m_fourierGridSize; y++) {
-                    int i = x >= m_fsize / 2.0f ? x - m_fourierGridSize : x;
-                    int j = y >= m_fsize / 2.0f ? y - m_fourierGridSize : y;
-                    
-                    Vector2 k = new Vector2(i, j) * 2.0f * Mathf.PI;
-                    
-                    slopeVariances += GetSlopeVariances(k / m_gridSizes.x, A, B, C, inSpectrum01[(x + y * m_fourierGridSize) * 4 + 0], inSpectrum01[(x + y * m_fourierGridSize) * 4 + 1]);
-                    slopeVariances += GetSlopeVariances(k / m_gridSizes.y, A, B, C, inSpectrum01[(x + y * m_fourierGridSize) * 4 + 2], inSpectrum01[(x + y * m_fourierGridSize) * 4 + 3]);
-                    slopeVariances += GetSlopeVariances(k / m_gridSizes.z, A, B, C, inSpectrum23[(x + y * m_fourierGridSize) * 4 + 0], inSpectrum23[(x + y * m_fourierGridSize) * 4 + 1]);
-                    slopeVariances += GetSlopeVariances(k / m_gridSizes.w, A, B, C, inSpectrum23[(x + y * m_fourierGridSize) * 4 + 2], inSpectrum23[(x + y * m_fourierGridSize) * 4 + 3]);
-                }
-            }
-            
-            return slopeVariances;
-        }
-        
         
         /*
          * Initializes the data to the shader that needs to 
@@ -229,8 +188,8 @@ namespace Scatterer
                 InitWaveSpectrum(t);
                 
                 //Perform fourier transform and record what is the current index
-                m_idx = m_fourier.PeformFFT(m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
-                m_fourier.PeformFFT(m_fourierBuffer3, m_fourierBuffer4);
+                m_idx = m_fourier.PerformFFT(m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2);
+                m_fourier.PerformFFT(m_fourierBuffer3, m_fourierBuffer4);
                 
                 m_fourierBuffer0[m_idx].GenerateMips();
                 m_fourierBuffer1[m_idx].GenerateMips();
@@ -311,7 +270,7 @@ namespace Scatterer
             normalizedVarianceRenderTexture.wrapMode = TextureWrapMode.Clamp;
             normalizedVarianceRenderTexture.filterMode = FilterMode.Bilinear;
             normalizedVarianceRenderTexture.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
-            normalizedVarianceRenderTexture.enableRandomWrite = SystemInfo.supportsComputeShaders && Scatterer.Instance.usingDirectX;
+            normalizedVarianceRenderTexture.enableRandomWrite = SystemInfo.supportsComputeShaders;
             normalizedVarianceRenderTexture.useMipMap = false;
             normalizedVarianceRenderTexture.Create();
         }
@@ -322,11 +281,11 @@ namespace Scatterer
             
             for (int i = 0; i < 2; i++)
             {
-                CreateMap(ref tex[i], format, aniso, useMipMaps, autoGenerateMipMaps);
+                CreateMap(ref tex[i], format, aniso, useMipMaps, autoGenerateMipMaps, SystemInfo.supportsComputeShaders);
             }
         }
         
-        protected void CreateMap(ref RenderTexture map, RenderTextureFormat format, int aniso, bool useMipMaps, bool autoGenerateMipMaps)
+        protected void CreateMap(ref RenderTexture map, RenderTextureFormat format, int aniso, bool useMipMaps, bool autoGenerateMipMaps, bool randomReadWrite = false)
         {
             map = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, format);
 
@@ -343,6 +302,7 @@ namespace Scatterer
             map.wrapMode = TextureWrapMode.Repeat;
             map.useMipMap = useMipMaps;
             map.autoGenerateMips = autoGenerateMipMaps;
+            map.enableRandomWrite = randomReadWrite;
             map.Create();
         }
         
@@ -467,7 +427,7 @@ namespace Scatterer
 
         private void GenerateVarianceGPU(float theoreticSlopeVariance, RenderTexture slopeVarianceTexture)
         {
-            if (SystemInfo.supportsComputeShaders && Scatterer.Instance.usingDirectX)
+            if (SystemInfo.supportsComputeShaders)
             {
                 GenerateVarianceCompute(theoreticSlopeVariance, slopeVarianceTexture);   
             }

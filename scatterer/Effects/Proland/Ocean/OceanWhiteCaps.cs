@@ -89,7 +89,7 @@ namespace Scatterer {
 
             if (!MapView.MapIsEnabled && prolandManager.skyNode.simulateOceanInteraction)
             {
-                m_fourier.PeformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
+                m_fourier.PerformFFT(m_fourierBuffer5, m_fourierBuffer6, m_fourierBuffer7);
                 
                 //fixed block, two passes, fixes mipmapping issue resulting in black ocean
                 m_whiteCapsPrecomputeMat.SetTexture(ShaderProperties._Map5_PROPERTY, m_fourierBuffer5[m_idx]);
