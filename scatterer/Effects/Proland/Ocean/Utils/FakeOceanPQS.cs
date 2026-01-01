@@ -1,9 +1,5 @@
-using System;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace Scatterer
 {

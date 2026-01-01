@@ -125,7 +125,6 @@
     <Compile Include="DataSerialization\ConfigReader.cs" />
     <Compile Include="Utilities\ReflectionUtils.cs" />
     <Compile Include="Effects\PlanetShine\PlanetshineManager.cs" />
-    <Compile Include="Effects\Proland\Ocean\FourierCPU.cs" />
     <Compile Include="Effects\Proland\Ocean\FourierGPU.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanFFTgpu.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanNode.cs" />
@@ -134,7 +133,6 @@
     <Compile Include="Effects\Proland\Ocean\Utils\FakeOceanPQS.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\OceanUtils.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\RTUtility.cs" />
-    <Compile Include="Effects\Proland\Ocean\Utils\WriteFloat.cs" />
     <Compile Include="Effects\Proland\Atmosphere\SkyNode.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmospherePQS.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereUtils.cs" />
@@ -168,7 +166,6 @@
     <Compile Include="Utilities\Camera\DisableEffectsForReflectionsCamera.cs" />
     <Compile Include="Utilities\Camera\ReflectionProbeFixer.cs" />
     <Compile Include="Utilities\Camera\ReflectionProbeChecker.cs" />
-    <Compile Include="Effects\Proland\Ocean\Utils\CBUtility.cs" />
     <Compile Include="Effects\Proland\Ocean\Caustics\CausticsLightRaysRenderer.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanCameraUpdateHook.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Godrays\LegacyGodraysRenderer.cs" />

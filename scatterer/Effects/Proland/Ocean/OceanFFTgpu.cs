@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Proland: a procedural landscape rendering library.
  * Copyright (c) 2008-2011 INRIA
  *
@@ -24,20 +24,18 @@
  * 
  */
 
-using System.Linq;
 using UnityEngine;
 
-namespace Scatterer {
+namespace Scatterer
+{
     /*
      * Extend the base class OceanNode to provide the data need 
      * to create the waves using fourier transform which can then be applied
      * to the projected grid handled by the OceanNode.
      * All the fourier transforms are performed on the GPU
      */
-    public class OceanFFTgpu: OceanNode {
-
-        WriteFloat m_writeFloat;
-
+    public class OceanFFTgpu: OceanNode
+    {
         public float WAVE_CM = 0.23f;    // Eq 59
         public float WAVE_KM = 370.0f;    // Eq 59
 
@@ -65,13 +63,7 @@ namespace Scatterer {
         protected Vector4 m_inverseGridSizes;
         
         protected RenderTexture m_spectrum01, m_spectrum23;
-        protected RenderTexture m_WTable;
-        
-        public bool rendertexturesCreated {
-            get {
-                return (m_WTable.IsCreated());
-            }
-        }
+        protected Texture2D m_WTable;
 
         RenderTexture[] m_fourierBuffer0, m_fourierBuffer1, m_fourierBuffer2;
         RenderTexture[] m_fourierBuffer3, m_fourierBuffer4;
@@ -133,10 +125,7 @@ namespace Scatterer {
             float factor = 2.0f * Mathf.PI * m_fsize;
             m_inverseGridSizes = new Vector4(factor / m_gridSizes.x, factor / m_gridSizes.y, factor / m_gridSizes.z, factor / m_gridSizes.w);
             
-            
             m_fourier = new FourierGPU(m_fourierGridSize);
-            
-            m_writeFloat = new WriteFloat(m_fourierGridSize, m_fourierGridSize);
 
             //Create the data needed to make the waves each frame
             CreateRenderTextures();
@@ -296,8 +285,8 @@ namespace Scatterer {
             
             m_spectrum01.Release();
             m_spectrum23.Release();
-            
-            m_WTable.Release();
+
+            Object.Destroy(m_WTable);
             
             for (int i = 0; i < 2; i++) {
                 m_fourierBuffer0[i].Release();
@@ -344,11 +333,10 @@ namespace Scatterer {
             m_spectrum23.filterMode = FilterMode.Point;
             m_spectrum23.wrapMode = TextureWrapMode.Repeat;
             m_spectrum23.Create();
-            
-            m_WTable = new RenderTexture(m_fourierGridSize, m_fourierGridSize, 0, fourierTransformformat, 0);
+
+            m_WTable = new Texture2D(m_fourierGridSize, m_fourierGridSize, TextureFormat.RGBAHalf, false, true);
             m_WTable.filterMode = FilterMode.Point;
             m_WTable.wrapMode = TextureWrapMode.Clamp;
-            m_WTable.Create();
 
             normalizedVarianceRenderTexture = new RenderTexture(m_varianceSize, m_varianceSize, 0, RenderTextureFormat.RHalf);
             normalizedVarianceRenderTexture.volumeDepth = m_varianceSize;
@@ -654,16 +642,19 @@ namespace Scatterer {
             maxVarianceRenderTexture.Release();
         }
 
+        // WTable is a precomputed dispersion relation texture that stores the angular
+        // frequencies for wave propagation over time, not strictly needed on modern hardware
         void CreateWTable()
         {
-            //Some values need for the InitWaveSpectrum function can be precomputed
             Vector2 uv, st;
             float k1, k2, k3, k4, w1, w2, w3, w4;
-            
-            float[] table = new float[m_fourierGridSize * m_fourierGridSize * 4];
-            
-            for (int x = 0; x < m_fourierGridSize; x++) {
-                for (int y = 0; y < m_fourierGridSize; y++) {
+
+            Color[] pixels = new Color[m_fourierGridSize * m_fourierGridSize];
+
+            for (int x = 0; x < m_fourierGridSize; x++)
+            {
+                for (int y = 0; y < m_fourierGridSize; y++)
+                {
                     uv = new Vector2(x, y) / m_fsize;
                     
                     st.x = uv.x > 0.5f ? uv.x - 1.0f : uv.x;
@@ -678,16 +669,14 @@ namespace Scatterer {
                     w2 = Mathf.Sqrt(m_gravity * k2 * (1.0f + k2 * k2 / (WAVE_KM * WAVE_KM)));
                     w3 = Mathf.Sqrt(m_gravity * k3 * (1.0f + k3 * k3 / (WAVE_KM * WAVE_KM)));
                     w4 = Mathf.Sqrt(m_gravity * k4 * (1.0f + k4 * k4 / (WAVE_KM * WAVE_KM)));
-                    
-                    table[(x + y * m_fourierGridSize) * 4 + 0] = w1;
-                    table[(x + y * m_fourierGridSize) * 4 + 1] = w2;
-                    table[(x + y * m_fourierGridSize) * 4 + 2] = w3;
-                    table[(x + y * m_fourierGridSize) * 4 + 3] = w4;
-                    
+
+                    pixels[x + y * m_fourierGridSize] = new Color(w1, w2, w3, w4);
+
                 }
             }
 
-            m_writeFloat.WriteIntoRenderTexture(m_WTable, 4, table);
+            m_WTable.SetPixels(pixels);
+            m_WTable.Apply();
         }
 
         // FixedUpdate is responsible for physics, apply part displacement here
