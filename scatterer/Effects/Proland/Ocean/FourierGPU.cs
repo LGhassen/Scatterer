@@ -18,25 +18,20 @@ namespace Scatterer
 
         public FourierGPU(int size)
         {    
-            if(size > 256)
-            {
-                Utils.LogDebug("FourierGPU::FourierGPU - fourier grid size must not be greater than 256, changing to 256");
-                size = 256;
-            }
-            
             if(!Mathf.IsPowerOfTwo(size))
             {
                 Utils.LogDebug("FourierGPU::FourierGPU - fourier grid size must be pow2 number, changing to nearest pow2 number");
                 size = Mathf.NextPowerOfTwo(size);
             }
             
-                Shader shader = ShaderReplacer.Instance.LoadedShaders[("Scatterer/Fourier")];
+            Shader shader = ShaderReplacer.Instance.LoadedShaders[("Scatterer/Fourier")];
 
-            if(shader == null) Utils.LogDebug("FourierGPU::FourierGPU - Could not find shader Math/Fourier");
+            if(shader == null)
+                Utils.LogDebug("FourierGPU::FourierGPU - Could not find shader Scatterer/Fourier");
         
             m_fourier = new Material(shader);
 
-            m_size = size; //must be pow2 num
+            m_size = size;
             m_fsize = (float)m_size;
             m_passes = (int)(Mathf.Log(m_fsize)/Mathf.Log(2.0f));
             
@@ -65,7 +60,7 @@ namespace Scatterer
         
         Texture2D Make1DTex(int i)
         {
-            Texture2D tex = new Texture2D(m_size, 1, TextureFormat.ARGB32, false, true);
+            Texture2D tex = new Texture2D(m_size, 1, TextureFormat.RGBAHalf, false, true);
             tex.filterMode = FilterMode.Point;
             tex.wrapMode = TextureWrapMode.Clamp;
             return tex;
@@ -73,7 +68,6 @@ namespace Scatterer
 
         void ComputeButterflyLookupTable()
         {
-            
             for(int i = 0; i < m_passes; i++) 
             {
                 int nBlocks  = (int) Mathf.Pow(2, m_passes - 1 - i);
@@ -101,10 +95,8 @@ namespace Scatterer
                             j2 = i2;
                         }
                         
-                        m_butterflyLookupTable[i].SetPixel(i1, 0, new Color( (float)j1 / 255.0f, (float)j2 / 255.0f, (float)(k*nBlocks) / 255.0f, 0));
-                        
-                        m_butterflyLookupTable[i].SetPixel(i2, 0, new Color( (float)j1 / 255.0f, (float)j2 / 255.0f, (float)(k*nBlocks) / 255.0f, 1));
-                        
+                        m_butterflyLookupTable[i].SetPixel(i1, 0, new Color( (float)j1, (float)j2, (float)(k * nBlocks), 0));
+                        m_butterflyLookupTable[i].SetPixel(i2, 0, new Color( (float)j1, (float)j2, (float)(k * nBlocks), 1));
                     }
                 }
                 
