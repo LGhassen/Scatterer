@@ -47,6 +47,7 @@ namespace Scatterer
         bool coreInitiated = false;
         public bool isActive = false;
         public bool unifiedCameraMode = false;
+        public bool usingDirectX = false;
         public string versionNumber = "0.0902";
 
         public List<GenericAntiAliasing> antiAliasingScripts = new List<GenericAntiAliasing>();
@@ -79,6 +80,8 @@ namespace Scatterer
             Utils.LogInfo ("Game resolution: " + Screen.width.ToString() + "x" +Screen.height.ToString());
             Utils.LogInfo ("Compute shader support: " + SystemInfo.supportsComputeShaders.ToString());
             Utils.LogInfo ("Async GPU readback support: " + SystemInfo.supportsAsyncGPUReadback.ToString());
+
+            usingDirectX = SystemInfo.graphicsDeviceVersion.Contains("Direct3D 1");
 
             LoadSettings ();
             scattererCelestialBodiesManager.Init ();
