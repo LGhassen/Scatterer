@@ -32,6 +32,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Collections;
 using System.Diagnostics;
+using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
 
 namespace Scatterer 
 {
@@ -386,7 +388,7 @@ namespace Scatterer
                 Directory.CreateDirectory(assetPath);
 
             var atmosphereAtlas = PackTextures(new RenderTexture[] { inscatterT[READ], irradianceT[READ], ozoneTransmittanceRT });
-            SaveAsHalf(atmosphereAtlas, assetPath + "/atlas");
+            yield return SaveAsHalf(atmosphereAtlas, assetPath + "/atlas");
 
             atmosphereAtlas.Release();
 
@@ -622,17 +624,41 @@ namespace Scatterer
             ReleaseRT(deltaJT);
         }
 
-        void SaveAsHalf(RenderTexture rtex, string fileName)
+        IEnumerator SaveAsHalf(RenderTexture rtex, string fileName)
         {
-            Texture2D temp = new Texture2D(rtex.width, rtex.height, TextureFormat.RGBAHalf, false, false);
-            
-            RenderTexture.active = rtex;
-            temp.ReadPixels (new Rect (0, 0, rtex.width, rtex.height), 0, 0);
-            temp.Apply ();
-            
-            System.IO.File.WriteAllBytes(fileName + ".half", temp.GetRawTextureData());
+            byte[] byteArray = null;
+            var gformat = GraphicsFormatUtility.GetGraphicsFormat(TextureFormat.RGBAHalf, false);
 
-            Destroy(temp);
+            if (SystemInfo.supportsAsyncGPUReadback && 
+                SystemInfo.IsFormatSupported(gformat, FormatUsage.ReadPixels))
+            {
+                var request = AsyncGPUReadback.Request(rtex, 0, gformat);
+                yield return new WaitUntil(() => request.done);
+
+                if (request.hasError)
+                {
+                    Utils.LogError("Failed to read texture data using AsyncGPUReadback");
+                }
+                else
+                {
+                    var data = request.GetData<byte>();
+                    byteArray = data.ToArray();
+                }
+            }
+
+            if (byteArray is null)
+            {
+                Texture2D temp = new Texture2D(rtex.width, rtex.height, TextureFormat.RGBAHalf, false, false);
+                
+                RenderTexture.active = rtex;
+                temp.ReadPixels (new Rect (0, 0, rtex.width, rtex.height), 0, 0);
+                
+                byteArray = temp.GetRawTextureData();
+
+                Texture.Destroy(temp);
+            }
+
+            File.WriteAllBytes(fileName + ".half", byteArray);
         }
-    }
+	}
 }
