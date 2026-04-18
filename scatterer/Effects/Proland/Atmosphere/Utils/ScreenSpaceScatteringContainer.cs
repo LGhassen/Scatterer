@@ -306,7 +306,12 @@ namespace Scatterer
         
         void OnPreRender()
         {
-            targetMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, targetCamera.cameraToWorldMatrix);
+            targetMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, Utils.GetGPUCameraToWorldMatrix(targetCamera.cameraToWorldMatrix));
+
+            var currentP = GL.GetGPUProjectionMatrix(VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera), false);
+            var currentV = VRUtils.GetViewMatrixForCamera(targetCamera);
+
+            targetMaterial.SetMatrix(ShaderProperties.currentVP_PROPERTY, currentP * currentV);
         }
 
         void OnPostRender()

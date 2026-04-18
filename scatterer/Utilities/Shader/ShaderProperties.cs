@@ -332,7 +332,10 @@ namespace Scatterer
         
         public static int CameraToWorld_PROPERTY { get { return CameraToWorld; } }
         private static int CameraToWorld;
-        
+
+        public static int GPUCameraToWorld_PROPERTY { get { return GPUCameraToWorld; } }
+        private static int GPUCameraToWorld;
+
         public static int WorldToLight_PROPERTY { get { return WorldToLight; } }
         private static int WorldToLight;
 
@@ -386,6 +389,9 @@ namespace Scatterer
 
         public static int historyGodrayDepthBuffer_PROPERTY { get { return historyGodrayDepthBuffer; } }
         private static int historyGodrayDepthBuffer;
+
+        public static int currentVP_PROPERTY { get { return currentVP; } }
+        private static int currentVP;
 
         public static int previousVP_PROPERTY { get { return previousVP; } }
         private static int previousVP;
@@ -584,6 +590,7 @@ namespace Scatterer
             shoreFoam = Shader.PropertyToID("shoreFoam");
 
             CameraToWorld = Shader.PropertyToID("CameraToWorld");
+            GPUCameraToWorld = Shader.PropertyToID("GPUCameraToWorld");
             WorldToLight = Shader.PropertyToID("WorldToLight");
             LightDir = Shader.PropertyToID("LightDir");
             PlanetOrigin = Shader.PropertyToID("PlanetOrigin");
@@ -610,6 +617,7 @@ namespace Scatterer
             downscaledDepth = Shader.PropertyToID("downscaledDepth");
             historyGodrayOcclusionBuffer = Shader.PropertyToID("historyGodrayOcclusionBuffer");
             historyGodrayDepthBuffer = Shader.PropertyToID("historyGodrayDepthBuffer");
+            currentVP = Shader.PropertyToID("previousVP");
             previousVP = Shader.PropertyToID("previousVP");
             inverseProjection = Shader.PropertyToID("inverseProjection");
             downscaledGodrayDepth = Shader.PropertyToID("downscaledGodrayDepth");

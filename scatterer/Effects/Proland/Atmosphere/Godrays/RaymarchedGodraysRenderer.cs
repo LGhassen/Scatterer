@@ -214,7 +214,8 @@ namespace Scatterer
                 parentSkyNode.SetUniforms(scatteringOcclusionMaterial);
                 parentSkyNode.UpdatePostProcessMaterialUniforms(scatteringOcclusionMaterial);
 
-                scatteringOcclusionMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, targetCamera.cameraToWorldMatrix);
+
+                scatteringOcclusionMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, Utils.GetGPUCameraToWorldMatrix(targetCamera.cameraToWorldMatrix));
 
                 scatteringOcclusionMaterial.SetVector(ShaderProperties._planetPos_PROPERTY, parentSkyNode.parentLocalTransform.position); // check if needed
 
