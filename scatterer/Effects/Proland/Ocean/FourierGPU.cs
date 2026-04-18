@@ -37,7 +37,7 @@ namespace Scatterer
 
             m_size = size;
 
-            useCompute = SystemInfo.supportsComputeShaders;
+            useCompute = SystemInfo.supportsComputeShaders && !SystemInfo.graphicsDeviceVersion.Contains("OpenGL");
 
             if (useCompute)
             {
