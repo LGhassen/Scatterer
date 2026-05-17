@@ -185,6 +185,7 @@ namespace Scatterer
                     nearAA = nearCamera.gameObject.AddComponent<TemporalAntiAliasing>();
                     nearAA.checkOceanDepth = mainSettings.useOceanShaders;
                     nearAA.resetMotionVectors = false;
+                    nearAA.useSharedJitter = true;
                     antiAliasingScripts.Add(nearAA);
 
                     if (!unifiedCameraMode && farCamera)
@@ -192,12 +193,15 @@ namespace Scatterer
                         farAA = farCamera.gameObject.AddComponent<TemporalAntiAliasing>();
                         farAA.checkOceanDepth = mainSettings.useOceanShaders;
                         farAA.resetMotionVectors = false;
+                        farAA.useSharedJitter = true;
+                        farAA.role = TemporalAntiAliasing.Role.JitterOnly;
                         antiAliasingScripts.Add(farAA);
                     }
 
-                    // doesn't seem to hurt performance more
                     scaledAA = scaledSpaceCamera.gameObject.AddComponent<TemporalAntiAliasing>();
                     scaledAA.jitterTransparencies = true;
+                    scaledAA.useSharedJitter = true;
+                    scaledAA.role = TemporalAntiAliasing.Role.JitterOnly;
                     antiAliasingScripts.Add(scaledAA);
 
                     if (!mainSettings.useSubpixelMorphologicalAntialiasing)
