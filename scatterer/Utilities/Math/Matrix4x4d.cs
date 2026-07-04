@@ -205,6 +205,86 @@ public class Matrix4x4d
 	{
 	    return Adjoint() * (1.0f / Determinant());
 	}
+
+	// ===== Non-allocating variants (Matrix4x4d is a class, so every operator/Inverse call above
+	// allocates a new matrix + its backing array; these write into caller-provided instances for
+	// per-frame hot paths such as the ocean camera hook). Math is identical to the allocating
+	// versions. =====
+
+	public void Set(double m00, double m01, double m02, double m03,
+					double m10, double m11, double m12, double m13,
+					double m20, double m21, double m22, double m23,
+					double m30, double m31, double m32, double m33)
+	{
+		m[0,0] = m00; m[0,1] = m01; m[0,2] = m02; m[0,3] = m03;
+		m[1,0] = m10; m[1,1] = m11; m[1,2] = m12; m[1,3] = m13;
+		m[2,0] = m20; m[2,1] = m21; m[2,2] = m22; m[2,3] = m23;
+		m[3,0] = m30; m[3,1] = m31; m[3,2] = m32; m[3,3] = m33;
+	}
+
+	public void CopyFrom(Matrix4x4d other)
+	{
+		for (int iRow = 0; iRow < 4; iRow++) {
+			for (int iCol = 0; iCol < 4; iCol++) {
+				m[iRow,iCol] = other.m[iRow,iCol];
+			}
+		}
+	}
+
+	// dest = m1 * m2 (same math as operator*). dest must not alias m1 or m2.
+	public static void Multiply(Matrix4x4d m1, Matrix4x4d m2, Matrix4x4d dest)
+	{
+		for (int iRow = 0; iRow < 4; iRow++) {
+			for (int iCol = 0; iCol < 4; iCol++) {
+				dest.m[iRow,iCol] = m1.m[iRow,0] * m2.m[0,iCol] +
+									m1.m[iRow,1] * m2.m[1,iCol] +
+									m1.m[iRow,2] * m2.m[2,iCol] +
+									m1.m[iRow,3] * m2.m[3,iCol];
+			}
+		}
+	}
+
+	// dest = this * v (same math as operator*(Matrix4x4d, Vector3d2)). Alias-safe (v may be dest).
+	public void MultiplyPoint(Vector3d2 v, Vector3d2 dest)
+	{
+		double vx = v.x, vy = v.y, vz = v.z;
+		double fInvW = 1.0 / (m[3,0] * vx + m[3,1] * vy + m[3,2] * vz + m[3,3]);
+		dest.x = (m[0,0] * vx + m[0,1] * vy + m[0,2] * vz + m[0,3]) * fInvW;
+		dest.y = (m[1,0] * vx + m[1,1] * vy + m[1,2] * vz + m[1,3]) * fInvW;
+		dest.z = (m[2,0] * vx + m[2,1] * vy + m[2,2] * vz + m[2,3]) * fInvW;
+	}
+
+	// dest = upper-left 3x3 of this * v (same math as ToMatrix3x3d() followed by the Matrix3x3d
+	// operator*, without allocating the intermediate Matrix3x3d). Alias-safe (v may be dest).
+	public void MultiplyVector3x3(Vector3d2 v, Vector3d2 dest)
+	{
+		double vx = v.x, vy = v.y, vz = v.z;
+		dest.x = m[0,0] * vx + m[0,1] * vy + m[0,2] * vz;
+		dest.y = m[1,0] * vx + m[1,1] * vy + m[1,2] * vz;
+		dest.z = m[2,0] * vx + m[2,1] * vy + m[2,2] * vz;
+	}
+
+	// dest = this.Inverse() (same math as Adjoint() * (1.0f / Determinant())). dest must not alias this.
+	public void InverseInto(Matrix4x4d dest)
+	{
+		double s = 1.0f / Determinant();
+		dest.m[0,0] =  MINOR(1, 2, 3, 1, 2, 3) * s;
+		dest.m[0,1] = -MINOR(0, 2, 3, 1, 2, 3) * s;
+		dest.m[0,2] =  MINOR(0, 1, 3, 1, 2, 3) * s;
+		dest.m[0,3] = -MINOR(0, 1, 2, 1, 2, 3) * s;
+		dest.m[1,0] = -MINOR(1, 2, 3, 0, 2, 3) * s;
+		dest.m[1,1] =  MINOR(0, 2, 3, 0, 2, 3) * s;
+		dest.m[1,2] = -MINOR(0, 1, 3, 0, 2, 3) * s;
+		dest.m[1,3] =  MINOR(0, 1, 2, 0, 2, 3) * s;
+		dest.m[2,0] =  MINOR(1, 2, 3, 0, 1, 3) * s;
+		dest.m[2,1] = -MINOR(0, 2, 3, 0, 1, 3) * s;
+		dest.m[2,2] =  MINOR(0, 1, 3, 0, 1, 3) * s;
+		dest.m[2,3] = -MINOR(0, 1, 2, 0, 1, 3) * s;
+		dest.m[3,0] = -MINOR(1, 2, 3, 0, 1, 2) * s;
+		dest.m[3,1] =  MINOR(0, 2, 3, 0, 1, 2) * s;
+		dest.m[3,2] = -MINOR(0, 1, 3, 0, 1, 2) * s;
+		dest.m[3,3] =  MINOR(0, 1, 2, 0, 1, 2) * s;
+	}
 	
 	public Vector4d GetColumn(int iCol)
 	{
