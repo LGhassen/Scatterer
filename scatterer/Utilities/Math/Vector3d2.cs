@@ -156,6 +156,34 @@ public class Vector3d2
 	{
 		return new Vector3d2(y*v.z - z*v.y, z*v.x - x*v.z, x*v.y - y*v.x);
 	}
+
+	// ===== Non-allocating variants (Vector3d2 is a class, so the methods above allocate on every
+	// call; these write into caller-provided instances for per-frame hot paths). Math is identical. =====
+
+	public void Set(double x, double y, double z)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+
+	public void CopyFrom(Vector3d2 v)
+	{
+		x = v.x;
+		y = v.y;
+		z = v.z;
+	}
+
+	// dest = this x v (same math as Cross). Alias-safe (dest may be this or v).
+	public void CrossInto(Vector3d2 v, Vector3d2 dest)
+	{
+		double rx = y*v.z - z*v.y;
+		double ry = z*v.x - x*v.z;
+		double rz = x*v.y - y*v.x;
+		dest.x = rx;
+		dest.y = ry;
+		dest.z = rz;
+	}
 	
 	public Vector2d XY()
 	{
