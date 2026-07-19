@@ -617,7 +617,7 @@ namespace Scatterer
             downscaledDepth = Shader.PropertyToID("downscaledDepth");
             historyGodrayOcclusionBuffer = Shader.PropertyToID("historyGodrayOcclusionBuffer");
             historyGodrayDepthBuffer = Shader.PropertyToID("historyGodrayDepthBuffer");
-            currentVP = Shader.PropertyToID("previousVP");
+            currentVP = Shader.PropertyToID("currentVP");
             previousVP = Shader.PropertyToID("previousVP");
             inverseProjection = Shader.PropertyToID("inverseProjection");
             downscaledGodrayDepth = Shader.PropertyToID("downscaledGodrayDepth");
