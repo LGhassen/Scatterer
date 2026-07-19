@@ -179,7 +179,7 @@ namespace Scatterer
 
         int frame = 0;
 
-        void OnPreRender()
+        void OnPreCull()
         {
             if (parentSkyNode && !parentSkyNode.inScaledSpace)
             {
@@ -283,7 +283,7 @@ namespace Scatterer
                 commandBuffer.SetGlobalTexture(ShaderProperties._godrayDepthTexture_PROPERTY, RenderTargets[0]);
                 commandBuffer.SetGlobalTexture(ShaderProperties.downscaledGodrayDepth_PROPERTY, downscaledDepth);
 
-                targetCamera.AddCommandBuffer(ScatteringOcclusionCameraEvent, commandBuffer); // This renders after the ocean even though they are on the same event because it gets added later (OnPreRender vs OnWillRenderObject)
+                OrderedAfterForwardOpaqueCommandBuffer.AddCommandBuffer(targetCamera, commandBuffer, 1);
             }
         }
 
@@ -318,7 +318,7 @@ namespace Scatterer
                 bool isRightEye = targetCamera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right;
                 var commandBuffer = godraysCommandBuffer[isRightEye];
 
-                targetCamera.RemoveCommandBuffer(ScatteringOcclusionCameraEvent, commandBuffer);
+                OrderedAfterForwardOpaqueCommandBuffer.RemoveCommandBuffer(targetCamera, commandBuffer);
 
                 previousP[isRightEye] = GL.GetGPUProjectionMatrix(VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera), false);
                 previousV[isRightEye] = VRUtils.GetViewMatrixForCamera(targetCamera);
@@ -342,10 +342,10 @@ namespace Scatterer
             { 
                 if (godraysCommandBuffer[true] != null)
                 {
-                    targetCamera.RemoveCommandBuffer(ScatteringOcclusionCameraEvent, godraysCommandBuffer[true]);
+                    OrderedAfterForwardOpaqueCommandBuffer.RemoveCommandBuffer(targetCamera, godraysCommandBuffer[true]);
                 }
 
-                targetCamera.RemoveCommandBuffer(ScatteringOcclusionCameraEvent, godraysCommandBuffer[false]);
+                OrderedAfterForwardOpaqueCommandBuffer.RemoveCommandBuffer(targetCamera, godraysCommandBuffer[false]);
             }
             
             if (downscaledDepth != null)
@@ -355,6 +355,7 @@ namespace Scatterer
 
             VRUtils.ReleaseVRFlipFlopRT(ref godraysRT);
             VRUtils.ReleaseVRFlipFlopRT(ref depthRT);
+
         }
     }
 }

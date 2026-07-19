@@ -205,6 +205,7 @@ namespace Scatterer
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Map EVE clouds"))
                 {
+                    ShaderReplacer.Instance.ReplaceEVEshaders();
                     Scatterer.Instance.EveReflectionHandler.MapEVEClouds();
                     foreach (ScattererCelestialBody _cel in Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies)
                     {

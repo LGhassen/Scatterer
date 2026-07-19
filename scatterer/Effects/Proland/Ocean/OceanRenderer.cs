@@ -344,7 +344,8 @@ namespace Scatterer
                     oceanScreenShotModeEnabled = screenShotModeEnabled;
                 }
 
-                targetCamera.AddCommandBuffer(OceanGBufferCameraEvent, oceanGbufferCommandBuffer);
+                OrderedAfterForwardOpaqueCommandBuffer.AddCommandBuffer(targetCamera, oceanGbufferCommandBuffer, 0);
+
                 targetCamera.AddCommandBuffer(OceanShadingCameraEvent, oceanShadingCommandBuffer);
 
                 // This is for the volumetrics compose pass, since the scatterer sky composes the clouds on the sky early
@@ -359,7 +360,7 @@ namespace Scatterer
         {
             if (renderingEnabled && targetCamera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Left)
             {
-                targetCamera.RemoveCommandBuffer(OceanGBufferCameraEvent, oceanGbufferCommandBuffer);
+                OrderedAfterForwardOpaqueCommandBuffer.RemoveCommandBuffer(targetCamera, oceanGbufferCommandBuffer);
                 targetCamera.RemoveCommandBuffer(OceanShadingCameraEvent, oceanShadingCommandBuffer);
 
                 Shader.SetGlobalInt(ShaderProperties.ScattererOceanActiveOnCurrentCamera_PROPERTY, 0);
@@ -371,7 +372,7 @@ namespace Scatterer
         {
             if (targetCamera && oceanGbufferCommandBuffer != null)
             {
-                targetCamera.RemoveCommandBuffer(OceanGBufferCameraEvent, oceanGbufferCommandBuffer);
+                OrderedAfterForwardOpaqueCommandBuffer.RemoveCommandBuffer(targetCamera, oceanGbufferCommandBuffer);
                 targetCamera.RemoveCommandBuffer(OceanShadingCameraEvent, oceanShadingCommandBuffer);
 
                 oceanGbufferCommandBuffer.Release();
