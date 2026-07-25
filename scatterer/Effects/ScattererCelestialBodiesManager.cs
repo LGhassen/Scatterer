@@ -82,7 +82,8 @@ namespace Scatterer
 
             foreach (ScattererCelestialBody scattererCelestialBody in farthestToClosestActiveFound)
             {
-                scattererCelestialBody.prolandManager.skyNode.scaledScatteringMaterial.renderQueue = currentRenderqueue++;
+                scattererCelestialBody.prolandManager.skyNode.scaledDepthBufferScatteringMaterial.renderQueue = currentRenderqueue++;
+
                 scattererCelestialBody.prolandManager.skyNode.skyMaterial.renderQueue = currentRenderqueue++;
 
                 if (Scatterer.Instance.EveReflectionHandler.EVECloudLayers.TryGetValue(scattererCelestialBody.celestialBodyName, out var layers))

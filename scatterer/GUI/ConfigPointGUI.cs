@@ -169,7 +169,6 @@ namespace Scatterer
             if (GUILayout.Button ("Set")) {
                 Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.flattenScaledSpaceMesh = flattenScaledSpaceMesh;
                 Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.TweakScaledMesh();
-                Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.scaledScatteringContainer.ApplyNewMesh(Scatterer.Instance.planetsConfigsReader.scattererCelestialBodies [selectedPlanet].prolandManager.skyNode.parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh);
             }
             GUILayout.EndHorizontal ();
 

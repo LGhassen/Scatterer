@@ -99,8 +99,9 @@ namespace Scatterer
         GameObject stockSkyGameObject;
         MeshRenderer stockScaledPlanetMeshRenderer;
         Mesh originalScaledMesh, tweakedScaledmesh;
+        public ScaledDepthBufferScatteringContainer scaledDepthBufferScatteringContainer;
         public ScaledScatteringContainer scaledScatteringContainer;
-        public Material localScatteringMaterial, skyMaterial, scaledScatteringMaterial, sunflareExtinctionMaterial, scaledEclipseMaterial;
+        public Material localScatteringMaterial, skyMaterial, scaledDepthBufferScatteringMaterial, scaledScatteringMaterial, sunflareExtinctionMaterial, scaledEclipseMaterial;
         public GenericLocalAtmosphereContainer localScatteringContainer;
         public LegacyGodraysRenderer legacyGodraysRenderer;
         public RaymarchedGodraysRenderer raymarchedGodraysRenderer;
@@ -124,10 +125,14 @@ namespace Scatterer
             InitOrRequestPrecomputedAtmo ();
 
             skyMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/SkySphere")]);
+            scaledDepthBufferScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledDepthBufferScattering")]);
             scaledScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/ScaledPlanetScattering")]);
             localScatteringMaterial = new Material (ShaderReplacer.Instance.LoadedShaders[("Scatterer/DepthBufferScattering")]);
 
+            GetComponent<Camera>().depthTextureMode |= DepthTextureMode.Depth;
+
             skyMaterial.SetOverrideTag ("IgnoreProjector", "True");
+            scaledDepthBufferScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
             scaledScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
             localScatteringMaterial.SetOverrideTag ("IgnoreProjector", "True");
 
@@ -236,24 +241,26 @@ namespace Scatterer
             InitUniforms (skyMaterial);
         }
 
-        public void InitScaledScattering ()
+        public void InitScaledDepthBufferScattering ()
         {
-            scaledScatteringContainer = new ScaledScatteringContainer (parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh, scaledScatteringMaterial, parentLocalTransform, parentScaledTransform);
+            scaledDepthBufferScatteringContainer = new ScaledDepthBufferScatteringContainer(scaledDepthBufferScatteringMaterial, parentScaledTransform);
+            scaledDepthBufferScatteringMaterial.renderQueue = 2997;
+            InitUniforms(scaledDepthBufferScatteringMaterial);
+        }
 
-            if (HighLogic.LoadedScene != GameScenes.MAINMENU)
-            {
-                if (prolandManager.parentCelestialBody.pqsController != null && prolandManager.parentCelestialBody.pqsController.isActive && HighLogic.LoadedScene != GameScenes.TRACKSTATION)
-                {
-                    scaledScatteringContainer.SwitchLocalMode ();
-                }
-                else
-                {
-                    scaledScatteringContainer.SwitchScaledMode ();
-                }
-            }
+        public void InitScaledScatteringFallback()
+        {
+            if (HighLogic.LoadedScene == GameScenes.MAINMENU || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+                return;
 
+            // This local-camera mesh is only a fallback for pixels beyond the local scattering depth range.
+            // If the scaled planet is tessellated and no longer matches this mesh perfectly, the fallback may
+            // visibly differ from scaled mode. Fixing that correctly requires an additional scaled-depth copy.
+            scaledScatteringContainer = new ScaledScatteringContainer(parentScaledTransform.GetComponent<MeshFilter>().sharedMesh,
+                                                                       scaledScatteringMaterial, parentLocalTransform, parentScaledTransform);
             scaledScatteringMaterial.renderQueue = 2997;
-            InitUniforms (scaledScatteringMaterial);
+            InitUniforms(scaledScatteringMaterial);
+            scaledScatteringContainer.SetEnabled(!inScaledSpace && stockScaledPlanetMeshRenderer.enabled);
         }
         
         public void OnPreRender()
@@ -285,8 +292,13 @@ namespace Scatterer
                 UpdateSunflareExtinctions ();
             }
 
+            bool useScaledDepthBufferScattering = inScaledSpace || HighLogic.LoadedScene == GameScenes.MAINMENU;
+
+            if (scaledDepthBufferScatteringContainer != null)
+                scaledDepthBufferScatteringContainer.SetEnabled(useScaledDepthBufferScattering && stockScaledPlanetMeshRenderer.enabled);
+
             if (scaledScatteringContainer != null)
-                scaledScatteringContainer.MeshRenderer.enabled = stockScaledPlanetMeshRenderer.enabled;
+                scaledScatteringContainer.SetEnabled(!useScaledDepthBufferScattering && stockScaledPlanetMeshRenderer.enabled);
 
             if (localScatteringContainer != null)
             {
@@ -295,7 +307,18 @@ namespace Scatterer
             }
 
             SetUniforms (skyMaterial);
-            SetUniforms (scaledScatteringMaterial);
+            SetUniforms(scaledDepthBufferScatteringMaterial);
+            SetUniforms(scaledScatteringMaterial);
+            scaledDepthBufferScatteringMaterial.SetVector(ShaderProperties._scaledPlanetPos_PROPERTY, parentScaledTransform.position);
+            scaledDepthBufferScatteringMaterial.SetFloat(ShaderProperties.scaledSpaceFactor_PROPERTY, ScaledSpace.ScaleFactor);
+
+            Camera targetCamera = GetComponent<Camera>();
+            scaledDepthBufferScatteringMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, Utils.GetGPUCameraToWorldMatrix(targetCamera.cameraToWorldMatrix));
+
+            Matrix4x4 currentP = GL.GetGPUProjectionMatrix(VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera), false);
+            Matrix4x4 currentV = VRUtils.GetViewMatrixForCamera(targetCamera);
+
+            scaledDepthBufferScatteringMaterial.SetMatrix(ShaderProperties.currentVP_PROPERTY, currentP * currentV);
 
             if (sunflareExtinctionMaterial)
                 SetUniforms (sunflareExtinctionMaterial);
@@ -353,7 +376,8 @@ namespace Scatterer
                     InitSkySphere ();
 
                     InitPostprocessMaterialUniforms (localScatteringMaterial);
-                    InitScaledScattering ();
+                    InitScaledDepthBufferScattering ();
+                    InitScaledScatteringFallback();
 
                     try {StartCoroutine(DelayedTweakStockPlanet ());}
                     catch (Exception e){Utils.LogError("Error when starting SkyNode::DelayedTweakStockPlanet coroutine "+e.Message);};
@@ -382,8 +406,10 @@ namespace Scatterer
 
             if (skySphere != null)
                 skySphere.SwitchScaledMode ();
+            if (scaledDepthBufferScatteringContainer != null)
+                scaledDepthBufferScatteringContainer.SetEnabled(stockScaledPlanetMeshRenderer.enabled);
             if (scaledScatteringContainer != null)
-                scaledScatteringContainer.SwitchScaledMode ();
+                scaledScatteringContainer.SetEnabled(false);
             if (localScatteringContainer != null)
                 localScatteringContainer.SetActivated(false);
         }
@@ -394,8 +420,13 @@ namespace Scatterer
 
             if (skySphere != null)
                 skySphere.SwitchLocalMode();
+            if (scaledDepthBufferScatteringContainer != null)
+                scaledDepthBufferScatteringContainer.SetEnabled(false);
             if (scaledScatteringContainer != null)
-                scaledScatteringContainer.SwitchLocalMode ();
+            {
+                scaledScatteringContainer.SwitchLocalMode();
+                scaledScatteringContainer.SetEnabled(stockScaledPlanetMeshRenderer.enabled);
+            }
             if (localScatteringContainer != null)
                 localScatteringContainer.SetActivated(true);
         }
@@ -752,6 +783,8 @@ namespace Scatterer
                 InitUniforms(scaledEclipseMaterial);
             if (skyMaterial)
                 InitUniforms(skyMaterial);
+            if (scaledDepthBufferScatteringMaterial)
+                InitUniforms(scaledDepthBufferScatteringMaterial);
             if (scaledScatteringMaterial)
                 InitUniforms(scaledScatteringMaterial);
             if (sunflareExtinctionMaterial)
@@ -829,6 +862,11 @@ namespace Scatterer
             if (skySphere != null)
             {
                 skySphere.Cleanup ();
+            }
+
+            if (scaledDepthBufferScatteringContainer != null)
+            {
+                scaledDepthBufferScatteringContainer.Cleanup ();
             }
 
             if (scaledScatteringContainer != null)
@@ -1218,6 +1256,9 @@ namespace Scatterer
             tweakedScaledmesh.RecalculateBounds ();
             
             parentScaledTransform.GetComponent<MeshFilter> ().sharedMesh = tweakedScaledmesh;
+
+            if (scaledScatteringContainer != null)
+                scaledScatteringContainer.ApplyNewMesh(tweakedScaledmesh);
         }
 
         public void InterpolateVariables ()
