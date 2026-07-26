@@ -175,6 +175,7 @@
     <Compile Include="Utilities\Occlusion\ShadowMapCopier.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\SkySphereContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\ScaledDepthBufferScatteringContainer.cs" />
+    <Compile Include="Effects\Proland\Atmosphere\Utils\ScaledScatteringContainer.cs" />
     <Compile Include="DataSerialization\QualityPresetsLoader.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\ScreenSpaceScatteringContainer.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmosphereProjectorContainer.cs" />

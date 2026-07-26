@@ -399,6 +399,12 @@ namespace Scatterer
         public static int currentVP_PROPERTY { get { return currentVP; } }
         private static int currentVP;
 
+        public static int ScattererCameraDepthTexture_PROPERTY { get { return ScattererCameraDepthTexture; } }
+        private static int ScattererCameraDepthTexture;
+
+        public static int ScattererUseCustomDepthTexture_PROPERTY { get { return ScattererUseCustomDepthTexture; } }
+        private static int ScattererUseCustomDepthTexture;
+
         public static int previousVP_PROPERTY { get { return previousVP; } }
         private static int previousVP;
 
@@ -626,6 +632,8 @@ namespace Scatterer
             historyGodrayOcclusionBuffer = Shader.PropertyToID("historyGodrayOcclusionBuffer");
             historyGodrayDepthBuffer = Shader.PropertyToID("historyGodrayDepthBuffer");
             currentVP = Shader.PropertyToID("currentVP");
+            ScattererCameraDepthTexture = Shader.PropertyToID("ScattererCameraDepthTexture");
+            ScattererUseCustomDepthTexture = Shader.PropertyToID("ScattererUseCustomDepthTexture");
             previousVP = Shader.PropertyToID("previousVP");
             inverseProjection = Shader.PropertyToID("inverseProjection");
             downscaledGodrayDepth = Shader.PropertyToID("downscaledGodrayDepth");

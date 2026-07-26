@@ -299,6 +299,9 @@ namespace Scatterer
 		//adapted from the original render() method
 		public void OnPreCull()
 		{
+            Shader.SetGlobalInt(ShaderProperties.ScattererUseCustomDepthTexture_PROPERTY,
+                targetCamera == Scatterer.Instance.scaledSpaceCamera && targetCamera.actualRenderingPath == RenderingPath.DeferredShading ? 1 : 0);
+
 			bool screenShotModeEnabled = GameSettings.TAKE_SCREENSHOT.GetKeyDown(false);
 
 			float currentFps = 1.0f / Time.deltaTime;
