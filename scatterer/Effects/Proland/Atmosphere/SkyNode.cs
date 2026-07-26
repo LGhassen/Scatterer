@@ -246,21 +246,29 @@ namespace Scatterer
             scaledDepthBufferScatteringContainer = new ScaledDepthBufferScatteringContainer(scaledDepthBufferScatteringMaterial, parentScaledTransform);
             scaledDepthBufferScatteringMaterial.renderQueue = 2997;
             InitUniforms(scaledDepthBufferScatteringMaterial);
+            scaledDepthBufferScatteringContainer.SetEnabled(inScaledSpace
+                && HighLogic.LoadedScene != GameScenes.MAINMENU
+                && stockScaledPlanetMeshRenderer.enabled);
         }
 
         public void InitScaledScatteringFallback()
         {
-            if (HighLogic.LoadedScene == GameScenes.MAINMENU || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+            if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
                 return;
 
-            // This local-camera mesh is only a fallback for pixels beyond the local scattering depth range.
-            // If the scaled planet is tessellated and no longer matches this mesh perfectly, the fallback may
-            // visibly differ from scaled mode. Fixing that correctly requires an additional scaled-depth copy.
+            // Outside the main menu this local-camera mesh is only a fallback for pixels beyond the local
+            // scattering depth range. If the scaled planet is tessellated and no longer matches this mesh
+            // perfectly, the fallback may visibly differ from scaled mode. Fixing that correctly requires
+            // an additional scaled-depth copy.
             scaledScatteringContainer = new ScaledScatteringContainer(parentScaledTransform.GetComponent<MeshFilter>().sharedMesh,
                                                                        scaledScatteringMaterial, parentLocalTransform, parentScaledTransform);
+            if (HighLogic.LoadedScene != GameScenes.MAINMENU)
+                scaledScatteringContainer.SwitchLocalMode();
+
             scaledScatteringMaterial.renderQueue = 2997;
             InitUniforms(scaledScatteringMaterial);
-            scaledScatteringContainer.SetEnabled(!inScaledSpace && stockScaledPlanetMeshRenderer.enabled);
+            scaledScatteringContainer.SetEnabled((!inScaledSpace || HighLogic.LoadedScene == GameScenes.MAINMENU)
+                && stockScaledPlanetMeshRenderer.enabled);
         }
         
         public void OnPreRender()
@@ -292,7 +300,7 @@ namespace Scatterer
                 UpdateSunflareExtinctions ();
             }
 
-            bool useScaledDepthBufferScattering = inScaledSpace || HighLogic.LoadedScene == GameScenes.MAINMENU;
+            bool useScaledDepthBufferScattering = inScaledSpace && HighLogic.LoadedScene != GameScenes.MAINMENU;
 
             if (scaledDepthBufferScatteringContainer != null)
                 scaledDepthBufferScatteringContainer.SetEnabled(useScaledDepthBufferScattering && stockScaledPlanetMeshRenderer.enabled);
@@ -406,10 +414,13 @@ namespace Scatterer
 
             if (skySphere != null)
                 skySphere.SwitchScaledMode ();
+
+            bool useScaledDepthBufferScattering = HighLogic.LoadedScene != GameScenes.MAINMENU;
+
             if (scaledDepthBufferScatteringContainer != null)
-                scaledDepthBufferScatteringContainer.SetEnabled(stockScaledPlanetMeshRenderer.enabled);
+                scaledDepthBufferScatteringContainer.SetEnabled(useScaledDepthBufferScattering && stockScaledPlanetMeshRenderer.enabled);
             if (scaledScatteringContainer != null)
-                scaledScatteringContainer.SetEnabled(false);
+                scaledScatteringContainer.SetEnabled(!useScaledDepthBufferScattering && stockScaledPlanetMeshRenderer.enabled);
             if (localScatteringContainer != null)
                 localScatteringContainer.SetActivated(false);
         }
