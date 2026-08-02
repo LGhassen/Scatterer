@@ -84,14 +84,6 @@ namespace Scatterer
             scattererCelestialBodiesManager.Init ();
             guiHandler.Init();
 
-            if (mainSettings.useOceanShaders)
-            {
-                OceanUtils.removeStockOceansIfNotDone();
-            }
-            else
-            {
-                OceanUtils.restoreOceansIfNeeded();
-            }
 
             if (HighLogic.LoadedScene == GameScenes.MAINMENU)
             {
@@ -122,6 +114,13 @@ namespace Scatterer
 
         void Init()
         {
+            // PSystemSetup and PQS lifecycle patches such as BurstPQS must finish their initial
+            // SetupMods pass before Scatterer suppresses the stock ocean.
+            if (mainSettings.useOceanShaders)
+                OceanUtils.RemoveStockOceansIfNotDone();
+            else
+                OceanUtils.RestoreOceansIfNeeded();
+
             SetupMainCameras ();
 
             FindSunlights ();
@@ -288,6 +287,12 @@ namespace Scatterer
             }
         } 
 
+
+        void LateUpdate()
+        {
+            if (isActive && mainSettings.useOceanShaders)
+                OceanUtils.EnforceStockOceanSuppression();
+        }
         void OnDestroy ()
         {
             GameEvents.OnCameraChange.Remove(SMAAOnCameraChange);
