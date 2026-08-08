@@ -1,19 +1,13 @@
-//rendering steps
-//scaledSpaceCamera.OnPrecull -> skynodes update the extinction texture one after one
-//camerahook on the relevant scaledSpace or farCamera -> clear the extinction texture before the next frame
-//while taking care of keeping it around until the rendering has finished (either nearCamera or scaledCamera)
+// rendering steps
+// scaledSpaceCamera.OnPrecull -> skynodes update the extinction texture one after one
+// camerahook on the relevant scaledSpace or farCamera -> clear the extinction texture before the next frame
+// while taking care of keeping it around until the rendering has finished (either nearCamera or scaledCamera)
 
 using UnityEngine;
-using System.Collections;
 using System.IO;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
-using KSP.IO;
 
 namespace Scatterer
 {
@@ -56,7 +50,7 @@ namespace Scatterer
         SunflareSettingsV1 settingsV1;
         SunflareSettingsV2 settingsV2;
 
-        public void start()
+        public void Start()
         {
             LoadSettings ();
 
@@ -129,7 +123,7 @@ namespace Scatterer
             Utils.LogDebug ("Added custom sun flare for "+sourceName);
         }
 
-        public void updateProperties()
+        public void UpdateProperties()
         {
             var sunViewPortPos = Scatterer.Instance.scaledSpaceCamera.WorldToViewportPoint (sourceScaledTransform.position);
             hitStatus=false;

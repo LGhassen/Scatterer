@@ -1,15 +1,4 @@
-
 using UnityEngine;
-using System.Collections;
-using System.IO;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
-using KSP.IO;
 
 namespace Scatterer
 {
@@ -26,7 +15,7 @@ namespace Scatterer
         {
             if(flare)
             {
-                flare.updateProperties ();
+                flare.UpdateProperties ();
                 flare.sunglareMaterial.SetFloat(ShaderProperties.renderOnCurrentCamera_PROPERTY,1.0f);
                 flare.sunglareMaterial.SetFloat(ShaderProperties.useDbufferOnCamera_PROPERTY,useDbufferOnCamera);
             }

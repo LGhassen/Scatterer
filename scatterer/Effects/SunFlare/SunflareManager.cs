@@ -43,7 +43,7 @@ namespace Scatterer
                     try
                     {
                         customSunFlare.Configure(source, _cn.name, sourceScaledTransform, _cn);
-                        customSunFlare.start ();
+                        customSunFlare.Start ();
                         scattererSunFlares.Add (_cn.name, customSunFlare);
                     }
                     catch (Exception exception)
@@ -73,7 +73,7 @@ namespace Scatterer
             if (this)
                 StopAllCoroutines();
 
-            ReenableStockSunflares ();
+            ReEnableStockSunflares ();
 
             foreach (SunFlare customSunFlare in scattererSunFlares.Values)
             {
@@ -96,7 +96,7 @@ namespace Scatterer
             }
         }
         
-        void ReenableStockSunflares ()
+        void ReEnableStockSunflares ()
         {
             global::SunFlare[] stockFlares = (global::SunFlare[]) global::SunFlare.FindObjectsOfType(typeof( global::SunFlare));
             foreach(global::SunFlare _flare in stockFlares)

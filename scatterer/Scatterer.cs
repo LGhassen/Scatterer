@@ -117,9 +117,9 @@ namespace Scatterer
             // PSystemSetup and PQS lifecycle patches such as BurstPQS must finish their initial
             // SetupMods pass before Scatterer suppresses the stock ocean.
             if (mainSettings.useOceanShaders)
-                OceanUtils.RemoveStockOceansIfNotDone();
+                StockOceanDisabler.RemoveStockOceansIfNotDone();
             else
-                OceanUtils.RestoreOceansIfNeeded();
+                StockOceanDisabler.RestoreOceansIfNeeded();
 
             SetupMainCameras ();
 
@@ -291,7 +291,7 @@ namespace Scatterer
         void LateUpdate()
         {
             if (isActive && mainSettings.useOceanShaders)
-                OceanUtils.EnforceStockOceanSuppression();
+                StockOceanDisabler.EnforceStockOceanSuppression();
         }
         void OnDestroy ()
         {
