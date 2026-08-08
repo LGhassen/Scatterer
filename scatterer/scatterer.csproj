@@ -10,10 +10,11 @@
     <RootNamespace>scatterer</RootNamespace>
     <AssemblyName>scatterer</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <PathMap>$(MSBuildProjectDirectory)=scatterer/scatterer</PathMap>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
@@ -23,7 +24,8 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>portable</DebugType>
     <Optimize>True</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -33,6 +35,7 @@
     <CustomCommands>
       <CustomCommands>
         <Command type="AfterBuild" command="xcopy &quot;${ProjectDir}\bin\release\scatterer.dll&quot; &quot;C:\Steam\steamapps\common\Kerbal Space Program\GameData\scatterer&quot; /Y" />
+        <Command type="AfterBuild" command="xcopy &quot;${ProjectDir}\bin\release\scatterer.pdb&quot; &quot;C:\Steam\steamapps\common\Kerbal Space Program\GameData\scatterer&quot; /Y" />
         <Command type="AfterBuild" command="&quot;C:\Steam\steamapps\common\Kerbal Space Program\dx11.bat&quot;" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
@@ -202,7 +205,8 @@
   </ItemGroup>
   <ItemGroup />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(ProjectDir)bin\Release\scatterer.dll" "C:\Steam\steamapps\common\Kerbal Space Program\GameData\scatterer" /Y
+    <PostBuildEvent>xcopy "$(TargetPath)" "C:\Steam\steamapps\common\Kerbal Space Program\GameData\scatterer" /Y
+xcopy "$(TargetDir)$(TargetName).pdb" "C:\Steam\steamapps\common\Kerbal Space Program\GameData\scatterer" /Y
 
 "C:\Steam\steamapps\common\Kerbal Space Program\dx11.bat"</PostBuildEvent>
   </PropertyGroup>
