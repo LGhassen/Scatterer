@@ -275,6 +275,8 @@ namespace Scatterer
 
         public void OnDestroy()
         {
+            flareRendering = false;
+
             if (nearCameraHook)
             {
                 Component.Destroy (nearCameraHook);
@@ -292,6 +294,15 @@ namespace Scatterer
                 extinctionTexture.Release();
                 UnityEngine.Object.Destroy (extinctionTexture);
             }
+
+            if (sunflareGameObject)
+                UnityEngine.Object.Destroy (sunflareGameObject);
+
+            if (sunglareMaterial)
+                UnityEngine.Object.Destroy (sunglareMaterial);
+
+            if (screenMesh)
+                UnityEngine.Object.Destroy (screenMesh);
         }
 
         public void Configure(CelestialBody source, string sourceName, Transform sourceScaledTransform, ConfigNode configNodeToLoad)

@@ -29,17 +29,26 @@ namespace Scatterer
                     if (scattererSunFlares.ContainsKey(_cn.name))
                         continue;
 
-                    SunFlare customSunFlare = (SunFlare)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent (typeof(SunFlare));
+                    CelestialBody source = FlightGlobals.Bodies.SingleOrDefault(_cb => _cb.GetName() == _cn.name);
+                    Transform sourceScaledTransform = Utils.GetScaledTransform(_cn.name);
+
+                    if (source == null || sourceScaledTransform == null)
+                    {
+                        Utils.LogError("Custom sunflare cannot be added to " + _cn.name +
+                                       ": source or scaled transform not found");
+                        continue;
+                    }
+
+                    SunFlare customSunFlare = (SunFlare)Scatterer.Instance.scaledSpaceCamera.gameObject.AddComponent(typeof(SunFlare));
                     try
                     {
-                        customSunFlare.Configure(FlightGlobals.Bodies.SingleOrDefault (_cb => _cb.GetName () == _cn.name),
-                                                 _cn.name,Utils.GetScaledTransform (_cn.name), _cn);
+                        customSunFlare.Configure(source, _cn.name, sourceScaledTransform, _cn);
                         customSunFlare.start ();
                         scattererSunFlares.Add (_cn.name, customSunFlare);
                     }
                     catch (Exception exception)
                     {
-                        Utils.LogDebug ("Custom sunflare cannot be added to " + _cn.name + " " + exception.ToString ());
+                        Utils.LogError ("Custom sunflare cannot be added to " + _cn.name + " " + exception.ToString ());
                         Component.Destroy (customSunFlare);
                         UnityEngine.Object.Destroy (customSunFlare);
                         continue;
