@@ -644,19 +644,39 @@ namespace Scatterer
         
         public void AddTAAToInternalCamera(CameraManager.CameraMode cameraMode)
         {
+            TemporalAntiAliasing nearTAA = nearCamera ? nearCamera.GetComponent<TemporalAntiAliasing>() : null;
             if (cameraMode == CameraManager.CameraMode.IVA)
             {
                 Camera internalCamera = Camera.allCameras.FirstOrDefault (_cam => _cam.name == "InternalCamera");
                 if (internalCamera)
                 {
+                    if (nearTAA)
+                        nearTAA.role = TemporalAntiAliasing.Role.JitterOnly;
+
                     TemporalAntiAliasing internalTAA = internalCamera.GetComponent<TemporalAntiAliasing>();
                     if(internalTAA == null)
                     {
                         internalTAA = internalCamera.gameObject.AddComponent<TemporalAntiAliasing>();
-                        internalTAA.resetMotionVectors = false;
                         antiAliasingScripts.Add(internalTAA);
                     }
+
+                    internalTAA.resetMotionVectors = false;
+                    internalTAA.useSharedJitter = true;
+                    internalTAA.role = TemporalAntiAliasing.Role.JitterAndResolve;
                 }
+            }
+            else
+            {
+                if (nearTAA)
+                    nearTAA.role = TemporalAntiAliasing.Role.JitterAndResolve;
+
+                var ivaTaaScripts = antiAliasingScripts.OfType<TemporalAntiAliasing>()
+                    .Where(x => x && x.GetComponent<Camera>().name == "InternalCamera").ToList();
+
+                antiAliasingScripts.RemoveAll(script => ivaTaaScripts.Contains(script));
+
+                foreach (var ivaTaaScript in ivaTaaScripts)
+                    Component.Destroy(ivaTaaScript);
             }
         }
 

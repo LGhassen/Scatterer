@@ -320,6 +320,8 @@ namespace Scatterer
 
 				if (effectiveRole == Role.JitterAndResolve)
 				{
+					ConfigureJitteredProjectionMatrix(targetCamera);
+					temporalAAMaterial.SetVector(jitterProperty, jitter);
 					temporalAACommandBuffer.Clear();
 
 					int activeEye = targetCamera.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right ? 1 : 0;
@@ -335,8 +337,6 @@ namespace Scatterer
 					}
 					else
 					{
-						ConfigureJitteredProjectionMatrix(targetCamera);
-
 						//TODO: move to shader properties
 						if (checkOceanDepth)
 							Utils.EnableOrDisableShaderKeywords(temporalAAMaterial, "CUSTOM_OCEAN_ON", "CUSTOM_OCEAN_OFF", Scatterer.Instance.scattererCelestialBodiesManager.isCustomOceanEnabledOnScattererPlanet);
