@@ -134,7 +134,7 @@
     <Compile Include="Effects\Proland\Ocean\OceanNode.cs" />
     <Compile Include="Effects\Proland\Ocean\OceanWhiteCaps.cs" />
     <Compile Include="Effects\Proland\Ocean\UnderwaterDimmingHook.cs" />
-    <Compile Include="Effects\Proland\Ocean\Utils\OceanUtils.cs" />
+    <Compile Include="Effects\Proland\Ocean\Utils\StockOceanDisabler.cs" />
     <Compile Include="Effects\Proland\Ocean\Utils\RTUtility.cs" />
     <Compile Include="Effects\Proland\Atmosphere\SkyNode.cs" />
     <Compile Include="Effects\Proland\Atmosphere\Utils\AtmospherePQS.cs" />

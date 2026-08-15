@@ -213,6 +213,9 @@ namespace Scatterer
         public static int _scaledPlanetPos_PROPERTY { get { return _scaledPlanetPos; } }
         private static int _scaledPlanetPos;
 
+        public static int _scaledAtmosphereScreenBounds_PROPERTY { get { return _scaledAtmosphereScreenBounds; } }
+        private static int _scaledAtmosphereScreenBounds;
+
         public static int scaledSpaceFactor_PROPERTY { get { return scaledSpaceFactor; } }
         private static int scaledSpaceFactor;
 
@@ -560,6 +563,7 @@ namespace Scatterer
             extinctionThickness = Shader.PropertyToID("extinctionThickness");
             _planetPos = Shader.PropertyToID("_planetPos");
             _scaledPlanetPos = Shader.PropertyToID("_scaledPlanetPos");
+            _scaledAtmosphereScreenBounds = Shader.PropertyToID("_scaledAtmosphereScreenBounds");
             scaledSpaceFactor = Shader.PropertyToID("scaledSpaceFactor");
             planetShineSources = Shader.PropertyToID("planetShineSources");
             planetShineRGB = Shader.PropertyToID("planetShineRGB");

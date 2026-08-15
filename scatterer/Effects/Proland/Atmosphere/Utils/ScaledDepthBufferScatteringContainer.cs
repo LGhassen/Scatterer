@@ -42,6 +42,64 @@ namespace Scatterer
         {
             scaledDepthScatteringMR.enabled = value;
         }
+
+        public void UpdateScreenBounds(Camera targetCamera, Matrix4x4 projectionMatrix, Matrix4x4 viewMatrix,
+                                       Vector3 atmosphereCenter, float atmosphereRadius)
+        {
+            Vector3 viewCenter = viewMatrix.MultiplyPoint3x4(atmosphereCenter);
+            Vector4 screenBounds;
+
+            if (viewCenter.z - atmosphereRadius >= 0f)
+            {
+                screenBounds = new Vector4(2f, 2f, 2f, 2f);
+            }
+            else if (viewCenter.sqrMagnitude <= atmosphereRadius * atmosphereRadius || viewCenter.z + atmosphereRadius >= -targetCamera.nearClipPlane)
+            {
+                screenBounds = new Vector4(-1f, -1f, 1f, 1f);
+            }
+            else
+            {
+                Vector2 horizontalTangents = GetProjectedTangentBounds(
+                    new Vector2(viewCenter.x, viewCenter.z), viewCenter, atmosphereRadius, projectionMatrix, true);
+                Vector2 verticalTangents = GetProjectedTangentBounds(
+                    new Vector2(viewCenter.y, viewCenter.z), viewCenter, atmosphereRadius, projectionMatrix, false);
+
+                float horizontalPadding = 2f / Mathf.Max(1, targetCamera.pixelWidth);
+                float verticalPadding = 2f / Mathf.Max(1, targetCamera.pixelHeight);
+                screenBounds = new Vector4(horizontalTangents.x - horizontalPadding,
+                                           verticalTangents.x - verticalPadding,
+                                           horizontalTangents.y + horizontalPadding,
+                                           verticalTangents.y + verticalPadding);
+            }
+
+            scaledDepthScatteringMR.sharedMaterial.SetVector(ShaderProperties._scaledAtmosphereScreenBounds_PROPERTY, screenBounds);
+        }
+
+        private static Vector2 GetProjectedTangentBounds(Vector2 circleCenter, Vector3 viewCenter, float radius,
+                                                          Matrix4x4 projectionMatrix, bool horizontal)
+        {
+            float centerDistanceSquared = circleCenter.sqrMagnitude;
+            float tangentDistance = Mathf.Sqrt(centerDistanceSquared - radius * radius);
+            Vector2 tangentCenter = circleCenter * ((centerDistanceSquared - radius * radius) / centerDistanceSquared);
+            Vector2 tangentOffset = new Vector2(-circleCenter.y, circleCenter.x)
+                * (radius * tangentDistance / centerDistanceSquared);
+
+            Vector2 tangentA = tangentCenter + tangentOffset;
+            Vector2 tangentB = tangentCenter - tangentOffset;
+            Vector3 pointA = horizontal
+                ? new Vector3(tangentA.x, viewCenter.y, tangentA.y)
+                : new Vector3(viewCenter.x, tangentA.x, tangentA.y);
+            Vector3 pointB = horizontal
+                ? new Vector3(tangentB.x, viewCenter.y, tangentB.y)
+                : new Vector3(viewCenter.x, tangentB.x, tangentB.y);
+
+            Vector4 clipA = projectionMatrix * new Vector4(pointA.x, pointA.y, pointA.z, 1f);
+            Vector4 clipB = projectionMatrix * new Vector4(pointB.x, pointB.y, pointB.z, 1f);
+            float projectedA = horizontal ? clipA.x / clipA.w : clipA.y / clipA.w;
+            float projectedB = horizontal ? clipB.x / clipB.w : clipB.y / clipB.w;
+
+            return new Vector2(Mathf.Min(projectedA, projectedB), Mathf.Max(projectedA, projectedB));
+        }
         
         public void Cleanup()
         {

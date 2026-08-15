@@ -323,10 +323,14 @@ namespace Scatterer
             Camera targetCamera = GetComponent<Camera>();
             scaledDepthBufferScatteringMaterial.SetMatrix(ShaderProperties.CameraToWorld_PROPERTY, Utils.GetGPUCameraToWorldMatrix(targetCamera.cameraToWorldMatrix));
 
-            Matrix4x4 currentP = GL.GetGPUProjectionMatrix(VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera), false);
+            Matrix4x4 nonJitteredProjection = VRUtils.GetNonJitteredProjectionMatrixForCamera(targetCamera);
+            Matrix4x4 currentP = GL.GetGPUProjectionMatrix(nonJitteredProjection, false);
             Matrix4x4 currentV = VRUtils.GetViewMatrixForCamera(targetCamera);
 
             scaledDepthBufferScatteringMaterial.SetMatrix(ShaderProperties.currentVP_PROPERTY, currentP * currentV);
+            if (scaledDepthBufferScatteringContainer != null)
+                scaledDepthBufferScatteringContainer.UpdateScreenBounds(targetCamera, nonJitteredProjection, currentV,
+                    parentScaledTransform.position, Rt / ScaledSpace.ScaleFactor);
 
             if (sunflareExtinctionMaterial)
                 SetUniforms (sunflareExtinctionMaterial);
