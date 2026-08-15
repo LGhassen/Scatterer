@@ -67,15 +67,31 @@ namespace Scatterer
 
         private static int jitterProperty = Shader.PropertyToID("_Jitter");
         private static int keepPreviousMotionVectorsProperty = Shader.PropertyToID("TAA_KeepPreviousMotionVectors");
+        private static int useFloatingOriginCameraMotionProperty = Shader.PropertyToID("TAA_UseFloatingOriginCameraMotion");
+        private static int previousFrameTransformProperty = Shader.PropertyToID("TAA_PreviousFrameTransform");
         private static int useVolumetricCloudsMotionVectorsProperty = Shader.PropertyToID("TAA_UseVolumetricCloudsMotionVectors");
 
         private static CameraEvent TAACameraEvent = CameraEvent.AfterForwardAlpha;  // BeforeImageEffects doesn't work well
 
+        private Vector3d previousCameraPosition;
+        private Vector3d previousRenderCameraPosition;
+        private Vector3d accumulatedFloatingOriginOffset;
+        private int previousCameraFrame = -1;
+        private bool previousCameraMapView;
+        private bool registeredForFloatingOriginShifts;
 		bool firstFrame = true;
 
 		public void Awake()
 		{
 			targetCamera = GetComponent<Camera>();
+            if (targetCamera == Scatterer.Instance.scaledSpaceCamera
+                || targetCamera == Scatterer.Instance.farCamera
+                || targetCamera == Scatterer.Instance.nearCamera)
+            {
+                GameEvents.onFloatingOriginShift.Add(OnFloatingOriginShift);
+                registeredForFloatingOriginShifts = true;
+            }
+
 			originalDepthTextureMode = targetCamera.depthTextureMode;
 			targetCamera.depthTextureMode = DepthTextureMode.Depth | DepthTextureMode.MotionVectors;
 			targetCamera.forceIntoRenderTexture = true;
@@ -296,9 +312,52 @@ namespace Scatterer
 			return historyTextures[activeEye][id];
 		}
 		
+        private void OnFloatingOriginShift(Vector3d offset, Vector3d nonFrameOffset)
+        {
+            // Celestial and terrain geometry is outside the Krakensbane frame, so its
+            // authoritative shift includes the additional non-frame component.
+            accumulatedFloatingOriginOffset += offset + nonFrameOffset;
+        }
+
+        private void UpdateFloatingOriginCameraMotion()
+        {
+            bool isScaledCamera = targetCamera == Scatterer.Instance.scaledSpaceCamera;
+            Shader.SetGlobalInt(useFloatingOriginCameraMotionProperty, registeredForFloatingOriginShifts ? 1 : 0);
+
+            if (!registeredForFloatingOriginShifts)
+                return;
+
+            // Track floating-origin shifts directly in double precision. Comparing the resulting
+            // real movement with movement already visible on the Unity camera isolates only the
+            // translation missing from Unity's previous view-projection matrix.
+            Vector3d currentRenderCameraPosition = targetCamera.transform.position;
+            Vector3d currentCameraPosition = isScaledCamera
+                ? (ScaledSpace.ScaledToLocalSpace(currentRenderCameraPosition) + accumulatedFloatingOriginOffset)
+                    * ScaledSpace.InverseScaleFactor
+                : currentRenderCameraPosition + accumulatedFloatingOriginOffset;
+
+            Matrix4x4 previousFrameTransform = Matrix4x4.identity;
+            bool mapView = MapView.MapIsEnabled;
+            if (previousCameraFrame == Time.frameCount - 1 && previousCameraMapView == mapView)
+            {
+                Vector3d realCameraMovement = currentCameraPosition - previousCameraPosition;
+                Vector3d renderCameraMovement = currentRenderCameraPosition - previousRenderCameraPosition;
+                Vector3d missingCameraMovement = realCameraMovement - renderCameraMovement;
+                previousFrameTransform = Matrix4x4.Translate((Vector3)missingCameraMovement);
+            }
+
+            Shader.SetGlobalMatrix(previousFrameTransformProperty, previousFrameTransform);
+
+            previousCameraPosition = currentCameraPosition;
+            previousRenderCameraPosition = currentRenderCameraPosition;
+            previousCameraFrame = Time.frameCount;
+            previousCameraMapView = mapView;
+        }
+
 		//adapted from the original render() method
 		public void OnPreCull()
 		{
+            UpdateFloatingOriginCameraMotion();
             Shader.SetGlobalInt(ShaderProperties.ScattererUseCustomDepthTexture_PROPERTY,
                 targetCamera == Scatterer.Instance.scaledSpaceCamera && targetCamera.actualRenderingPath == RenderingPath.DeferredShading ? 1 : 0);
 
@@ -396,6 +455,9 @@ namespace Scatterer
 
 		public void OnDestroy()
 		{
+            if (registeredForFloatingOriginShifts)
+                GameEvents.onFloatingOriginShift.Remove(OnFloatingOriginShift);
+
 			if (commandBufferAttached && temporalAACommandBuffer != null)
 			{
 				targetCamera.RemoveCommandBuffer(TAACameraEvent, temporalAACommandBuffer);
