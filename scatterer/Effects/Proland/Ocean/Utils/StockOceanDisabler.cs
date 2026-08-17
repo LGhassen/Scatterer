@@ -163,8 +163,20 @@ namespace Scatterer
             if (!ocean.gameObject.activeInHierarchy)
                 return;
 
-            if (ocean.isActive && ocean.quads != null && ocean.quads.Length == 6)
-                ocean.DeactivateSphere();
+            if (ocean.quads != null && ocean.quads.Length == 6)
+            {
+                if (ocean.isActive)
+                    ocean.DeactivateSphere();
+
+                // StartSphere creates and shows initial quads before the child sphere becomes
+                // active. This happens when a scene is loaded directly above PQS altitude, where
+                // DeactivateSphere would otherwise be a no-op because isActive is still false.
+                for (int i = 0; i < ocean.quads.Length; i++)
+                {
+                    if (ocean.quads[i] != null)
+                        ocean.quads[i].SetMasterInvisible();
+                }
+            }
 
             // The stock UpdateSphere coroutine remains alive but skips all PQS work while this
             // flag is set. LateUpdate reasserts it after any stock lifecycle reactivation.
