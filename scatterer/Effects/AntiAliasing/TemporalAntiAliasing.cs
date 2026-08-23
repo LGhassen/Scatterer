@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.XR;
+using System.Collections.Generic;
 
 namespace Scatterer
 {
@@ -79,6 +80,16 @@ namespace Scatterer
         private int previousCameraFrame = -1;
         private bool previousCameraMapView;
         private bool registeredForFloatingOriginShifts;
+        private bool registeredForVesselChanges;
+        private const float vesselRendererMotionThreshold = 0.00001f;
+        private readonly Dictionary<Vessel, List<VesselRendererMotionState>> vesselRendererMotionStates =
+            new Dictionary<Vessel, List<VesselRendererMotionState>>();
+
+        private class VesselRendererMotionState
+        {
+            public Renderer renderer;
+            public Matrix4x4 previousLocalToWorldMatrix;
+        }
 		bool firstFrame = true;
 
 		public void Awake()
@@ -90,6 +101,19 @@ namespace Scatterer
             {
                 GameEvents.onFloatingOriginShift.Add(OnFloatingOriginShift);
                 registeredForFloatingOriginShifts = true;
+            }
+
+            if (targetCamera == Scatterer.Instance.nearCamera)
+            {
+                GameEvents.onVesselLoaded.Add(RegisterVesselRenderers);
+                GameEvents.onVesselWasModified.Add(RegisterVesselRenderers);
+                GameEvents.onVesselPartCountChanged.Add(RegisterVesselRenderers);
+                GameEvents.onVesselUnloaded.Add(UnregisterVesselRenderers);
+                GameEvents.onVesselWillDestroy.Add(UnregisterVesselRenderers);
+                registeredForVesselChanges = true;
+
+                foreach (Vessel vessel in FlightGlobals.VesselsLoaded)
+                    RegisterVesselRenderers(vessel);
             }
 
 			originalDepthTextureMode = targetCamera.depthTextureMode;
@@ -319,6 +343,75 @@ namespace Scatterer
             accumulatedFloatingOriginOffset += offset + nonFrameOffset;
         }
 
+        private void RegisterVesselRenderers(Vessel vessel)
+        {
+            if (vessel == null)
+                return;
+
+            List<VesselRendererMotionState> rendererStates = new List<VesselRendererMotionState>();
+            foreach (Part part in vessel.parts)
+            {
+                foreach (Renderer renderer in part.FindModelComponents<Renderer>())
+                {
+                    if (renderer == null)
+                        continue;
+
+                    renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+                    rendererStates.Add(new VesselRendererMotionState
+                    {
+                        renderer = renderer,
+                        previousLocalToWorldMatrix = renderer.localToWorldMatrix
+                    });
+                }
+            }
+
+            vesselRendererMotionStates[vessel] = rendererStates;
+        }
+
+        private void UnregisterVesselRenderers(Vessel vessel)
+        {
+            if (vessel != null)
+                vesselRendererMotionStates.Remove(vessel);
+        }
+
+        private static bool HasModelMatrixChanged(Matrix4x4 current, Matrix4x4 previous)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                if (Mathf.Abs(current[i] - previous[i]) > vesselRendererMotionThreshold)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void UpdateVesselRendererMotionModes()
+        {
+            foreach (List<VesselRendererMotionState> rendererStates in vesselRendererMotionStates.Values)
+            {
+                for (int i = rendererStates.Count - 1; i >= 0; i--)
+                {
+                    VesselRendererMotionState rendererState = rendererStates[i];
+                    if (rendererState.renderer == null)
+                    {
+                        rendererStates.RemoveAt(i);
+                        continue;
+                    }
+
+                    Matrix4x4 currentLocalToWorldMatrix = rendererState.renderer.localToWorldMatrix;
+                    MotionVectorGenerationMode motionVectorMode =
+                        HasModelMatrixChanged(currentLocalToWorldMatrix, rendererState.previousLocalToWorldMatrix)
+                            ? MotionVectorGenerationMode.Object
+                            : MotionVectorGenerationMode.ForceNoMotion;
+
+                    if (rendererState.renderer.motionVectorGenerationMode != motionVectorMode)
+                        rendererState.renderer.motionVectorGenerationMode = motionVectorMode;
+
+                    rendererState.previousLocalToWorldMatrix = currentLocalToWorldMatrix;
+                }
+            }
+        }
+
         private void UpdateFloatingOriginCameraMotion()
         {
             bool isScaledCamera = targetCamera == Scatterer.Instance.scaledSpaceCamera;
@@ -337,12 +430,17 @@ namespace Scatterer
                 : currentRenderCameraPosition + accumulatedFloatingOriginOffset;
 
             Matrix4x4 previousFrameTransform = Matrix4x4.identity;
+            Vector3d realCameraMovement = Vector3d.zero;
+            Vector3d renderCameraMovement = Vector3d.zero;
+            Vector3d missingCameraMovement = Vector3d.zero;
             bool mapView = MapView.MapIsEnabled;
-            if (previousCameraFrame == Time.frameCount - 1 && previousCameraMapView == mapView)
+            bool hasPreviousCameraFrame =
+                previousCameraFrame == Time.frameCount - 1 && previousCameraMapView == mapView;
+            if (hasPreviousCameraFrame)
             {
-                Vector3d realCameraMovement = currentCameraPosition - previousCameraPosition;
-                Vector3d renderCameraMovement = currentRenderCameraPosition - previousRenderCameraPosition;
-                Vector3d missingCameraMovement = realCameraMovement - renderCameraMovement;
+                realCameraMovement = currentCameraPosition - previousCameraPosition;
+                renderCameraMovement = currentRenderCameraPosition - previousRenderCameraPosition;
+                missingCameraMovement = realCameraMovement - renderCameraMovement;
                 previousFrameTransform = Matrix4x4.Translate((Vector3)missingCameraMovement);
             }
 
@@ -357,6 +455,9 @@ namespace Scatterer
 		//adapted from the original render() method
 		public void OnPreCull()
 		{
+            if (registeredForVesselChanges)
+                UpdateVesselRendererMotionModes();
+
             UpdateFloatingOriginCameraMotion();
             Shader.SetGlobalInt(ShaderProperties.ScattererUseCustomDepthTexture_PROPERTY,
                 targetCamera == Scatterer.Instance.scaledSpaceCamera && targetCamera.actualRenderingPath == RenderingPath.DeferredShading ? 1 : 0);
@@ -457,6 +558,16 @@ namespace Scatterer
 		{
             if (registeredForFloatingOriginShifts)
                 GameEvents.onFloatingOriginShift.Remove(OnFloatingOriginShift);
+
+            if (registeredForVesselChanges)
+            {
+                GameEvents.onVesselLoaded.Remove(RegisterVesselRenderers);
+                GameEvents.onVesselWasModified.Remove(RegisterVesselRenderers);
+                GameEvents.onVesselPartCountChanged.Remove(RegisterVesselRenderers);
+                GameEvents.onVesselUnloaded.Remove(UnregisterVesselRenderers);
+                GameEvents.onVesselWillDestroy.Remove(UnregisterVesselRenderers);
+                vesselRendererMotionStates.Clear();
+            }
 
 			if (commandBufferAttached && temporalAACommandBuffer != null)
 			{
