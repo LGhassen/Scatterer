@@ -1372,26 +1372,26 @@ namespace Scatterer
         
         void UpdateEclipseCasters ()
         {
-            float scaleFactor = ScaledSpace.ScaleFactor;
-            sunPosRelPlanet = Vector3.zero;
-            sunPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.sunCelestialBody.transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
+            Vector3d planetPosition = prolandManager.parentCelestialBody.position;
+            sunPosRelPlanet = (Vector3) (prolandManager.sunCelestialBody.position - planetPosition);
             castersMatrix1 = Matrix4x4.zero;
             castersMatrix2 = Matrix4x4.zero;
             Vector3 casterPosRelPlanet;
+            Vector3 cameraPosRelPlanet = (Vector3) ((Vector3d) Scatterer.Instance.nearCamera.transform.position - planetPosition);
 
             float eclipseTerm = 1f;
 
             for (int i = 0; i < Mathf.Min (4, prolandManager.eclipseCasters.Count); i++)
             {
-                casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor)); //wtf is this? this is doing local to scaled and back to local?
+                casterPosRelPlanet = (Vector3) (prolandManager.eclipseCasters [i].position - planetPosition);
                 castersMatrix1.SetRow (i, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
-                eclipseTerm *= AtmosphereUtils.getEclipseShadow(Scatterer.Instance.nearCamera.transform.position, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
+                eclipseTerm *= AtmosphereUtils.getEclipseShadow(cameraPosRelPlanet, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
             }
             for (int i = 4; i < Mathf.Min (8, prolandManager.eclipseCasters.Count); i++)
             {
-                casterPosRelPlanet = Vector3.Scale (ScaledSpace.LocalToScaledSpace (prolandManager.eclipseCasters [i].transform.position), new Vector3 (scaleFactor, scaleFactor, scaleFactor));
+                casterPosRelPlanet = (Vector3) (prolandManager.eclipseCasters [i].position - planetPosition);
                 castersMatrix2.SetRow (i - 4, new Vector4 (casterPosRelPlanet.x, casterPosRelPlanet.y, casterPosRelPlanet.z, (float)prolandManager.eclipseCasters [i].Radius));
-                eclipseTerm *= AtmosphereUtils.getEclipseShadow(Scatterer.Instance.nearCamera.transform.position, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
+                eclipseTerm *= AtmosphereUtils.getEclipseShadow(cameraPosRelPlanet, sunPosRelPlanet, casterPosRelPlanet, (float)prolandManager.eclipseCasters[i].Radius, (float)prolandManager.sunCelestialBody.Radius);
             }
 
             SunlightModulatorsManager.Instance.ModulateByAttenuation(prolandManager.mainSunLight, eclipseTerm);
