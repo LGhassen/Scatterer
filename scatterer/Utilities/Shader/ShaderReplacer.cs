@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -9,6 +10,7 @@ namespace Scatterer
     public class ShaderReplacer
     {
         private static ShaderReplacer instance;
+
         public Dictionary<string, Shader> LoadedShaders = new Dictionary<string, Shader>();
         public Dictionary<string, ComputeShader> LoadedComputeShaders = new Dictionary<string, ComputeShader>();
         public Dictionary<string, Texture> LoadedTextures = new Dictionary<string, Texture>();
@@ -43,63 +45,48 @@ namespace Scatterer
 
         private void Init()
         {
-            string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
-            UriBuilder uri = new UriBuilder (codeBase);
-            path = Uri.UnescapeDataString (uri.Path);
-            path = Path.GetDirectoryName (path);
+            path = GetPluginPath();
 
-            LoadAssetBundle ();
+            LoadAssets();
         }
 
         public void LoadAssetBundle()
         {
-            string shaderspath;
+            LoadAssets();
+        }
 
-            if (Application.platform == RuntimePlatform.WindowsPlayer && SystemInfo.graphicsDeviceVersion.StartsWith("Direct"))
-                shaderspath = path + "/shaders/scatterershaders-directx";
-            else
-                shaderspath = path+"/shaders/scatterershaders-opengl";
+        private void LoadAssets()
+        {
+            FinishAssetBundleLoad();
 
             LoadedShaders.Clear ();
             LoadedComputeShaders.Clear ();
             LoadedTextures.Clear ();
 
-            using (WWW www = new WWW("file://"+shaderspath))
+            if (bundle != null)
             {
-                AssetBundle bundle = www.assetBundle;
-                Shader[] shaders = bundle.LoadAllAssets<Shader>();
-                
-                foreach (Shader shader in shaders)
-                {
-                    //Utils.Log (""+shader.name+" loaded. Supported?"+shader.isSupported.ToString());
+                foreach (Shader shader in bundle.LoadAllAssets<Shader>())
                     LoadedShaders.Add(shader.name, shader);
-                }
 
-                ComputeShader[] computeShaders = bundle.LoadAllAssets<ComputeShader>();
-                
-                foreach (ComputeShader computeShader in computeShaders)
-                {
-                    //Utils.LogInfo ("Compute shader "+computeShader.name+" loaded.");
+                foreach (ComputeShader computeShader in bundle.LoadAllAssets<ComputeShader>())
                     LoadedComputeShaders.Add(computeShader.name, computeShader);
-                }
 
-                Texture[] textures = bundle.LoadAllAssets<Texture>();
-
-                foreach (Texture texture in textures)
-                {
+                foreach (Texture texture in bundle.LoadAllAssets<Texture>())
                     LoadedTextures.Add(texture.name, texture);
-                }
 
-                bundle.Unload(false); // unload the raw asset bundle
-                www.Dispose();
+                // The loaded assets stay alive, we just don't need the raw bundle any more
+                bundle.Unload(false);
+                bundle = null;
             }
 
             if (stbn == null)
             {
-                stbn = new Texture2D((int)stbnDimensions.x, (int)(stbnDimensions.y * stbnDimensions.z), TextureFormat.R8, false);
-                stbn.filterMode = FilterMode.Point;
-                stbn.wrapMode = TextureWrapMode.Repeat;
-                stbn.LoadRawTextureData(System.IO.File.ReadAllBytes(path + "/stbn.R8"));
+                stbn = new Texture2D((int)stbnDimensions.x, (int)(stbnDimensions.y * stbnDimensions.z), TextureFormat.R8, false)
+                {
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Repeat
+                };
+                stbn.LoadRawTextureData(File.ReadAllBytes(path + "/stbn.R8"));
                 stbn.Apply();
 
                 Utils.LogDebug("Stbn loaded");
@@ -211,5 +198,94 @@ namespace Scatterer
             }
             return null;
         }
+    
+        #region Asset Bundle Preloading
+        private static AssetBundle bundle;
+        private static AssetBundleCreateRequest bundleCreateRequest;
+        private static AssetBundleRequest assetsRequest;
+
+        private static string GetPluginPath()
+        {
+            string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
+            UriBuilder uri = new UriBuilder (codeBase);
+            return Path.GetDirectoryName (Uri.UnescapeDataString (uri.Path));
+        }
+
+        private static string GetBundlePath()
+        {
+            string bundleName = Application.platform == RuntimePlatform.WindowsPlayer && SystemInfo.graphicsDeviceVersion.StartsWith("Direct")
+                ? "scatterershaders-directx"
+                : "scatterershaders-opengl";
+
+            return Path.Combine(GetPluginPath(), "shaders", bundleName);
+        }
+
+        private static void FinishAssetBundleLoad()
+        {
+            if (bundleCreateRequest != null)
+            {
+                // Blocks until the async load completes
+                bundle = bundleCreateRequest.assetBundle;
+                bundleCreateRequest = null;
+            }
+
+            if (bundle == null)
+                bundle = AssetBundle.LoadFromFile(GetBundlePath());
+
+            if (bundle == null)
+            {
+                Utils.LogError("Failed to load shader asset bundle at " + GetBundlePath());
+                assetsRequest = null;
+                return;
+            }
+
+            if (assetsRequest != null)
+            {
+                // Wait for the async asset load so we don't unload the bundle underneath it
+                _ = assetsRequest.allAssets;
+                assetsRequest = null;
+            }
+        }
+
+        internal static IEnumerator PreloadAssetBundle()
+        {
+            if (instance != null)
+                yield break;
+
+            var request = AssetBundle.LoadFromFileAsync(GetBundlePath());
+            bundleCreateRequest = request;
+
+            if (!request.isDone)
+                yield return request;
+
+            // Somebody has forcibly completed the bundle load
+            if (bundleCreateRequest != request)
+                yield break;
+
+            bundleCreateRequest = null;
+            bundle = request.assetBundle;
+
+            if (bundle == null)
+            {
+                Utils.LogError("Failed to load shader asset bundle at " + GetBundlePath());
+                yield break;
+            }
+
+            var assets = bundle.LoadAllAssetsAsync();
+            assetsRequest = assets;
+
+            if (!assets.isDone)
+                yield return assets;
+
+            // Somebody has forcibly completed the asset load
+            if (assetsRequest != assets)
+                yield break;
+
+            assetsRequest = null;
+            EnsureLoaded();
+        }
+
+        internal static void EnsureLoaded() => _ = Instance;
+        #endregion
     }
 }

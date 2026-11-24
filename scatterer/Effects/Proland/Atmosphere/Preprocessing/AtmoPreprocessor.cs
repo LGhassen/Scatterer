@@ -41,19 +41,19 @@ namespace Scatterer
     public class AtmoPreprocessor : MonoBehaviour
     {
         private static AtmoPreprocessor instance;
+        private bool initialized;
 
         public void Awake()
         {
-            if (instance == null)
+            if (instance != null)
             {
-                instance = this;
-                instance.InitMaterials();
-                Utils.LogDebug("AtmoPreprocessor instance created");
+                Utils.LogError("Attempted to create a second AtmoPreprocessor instance, destroying it");
+                Destroy(this);
+                return;
             }
-            else
-            {
-                throw new UnityException("Attempted double instance!");
-            }
+
+            instance = this;
+            Utils.LogDebug("AtmoPreprocessor instance created");
         }
 
         public static AtmoPreprocessor Instance
@@ -64,9 +64,11 @@ namespace Scatterer
             }
         }
 
-        public void Start()
+        public IEnumerator Start()
         {
             DontDestroyOnLoad(this);
+            yield return StartCoroutine(ShaderReplacer.PreloadAssetBundle());
+            InitMaterials();
         }
 
         private static bool atmoGenerationRunning = false;
@@ -124,6 +126,9 @@ namespace Scatterer
 
         private void InitMaterials()
         {
+            if (initialized)
+                return;
+
             transmittanceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Transmittance")]);
             ozoneTransmittanceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/OzoneTransmittance")]);
             irradianceNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/IrradianceN")]);
@@ -135,6 +140,7 @@ namespace Scatterer
             copyInscatterNMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyInscatterN")]);
             copyIrradianceMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/CopyIrradiance")]);
             atlasMaterial = new Material(ShaderReplacer.Instance.LoadedShaders[("Scatterer/Preprocessing/Atlas")]);
+            initialized = true;
         }
         
         public static float CalculateRt(float inRg, float inHR, float inHM, Vector3 in_betaR, Vector3 in_BETA_MSca, bool useOzone, float ozoneHeight, float ozoneFalloff)
@@ -196,7 +202,6 @@ namespace Scatterer
 
         public static string GetAtmoHash(float inRG, float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inAverageGroundRreflectance, bool inMultiple, Vector4 inPRECOMPUTED_SCTR_LUT_DIM, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
         {
-
             AtmoHashData atmoHashData = new AtmoHashData(
                 inRG,
                 inRT,
@@ -231,6 +236,8 @@ namespace Scatterer
 
         IEnumerator GenerateAndSaveAtmoCoroutine(float inRG, float inRT, Vector4 inBETA_R, Vector4 inBETA_MSca, float inMIE_G, float inHR, float inHM, float inGRref, bool inMultiple, Vector4 inScatteringLutDimensions, bool previewMode, string assetPath, bool inUseOzone, Vector4 inOzoneAbsorption, float inOzoneHeight, float inOzoneFalloff)
         {
+            InitMaterials();
+
             atmoGenerationRunning = true;
 
             //Rescale to a fixed radius which we know never causes issues
